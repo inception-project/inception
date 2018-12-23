@@ -36,6 +36,7 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
@@ -110,7 +111,7 @@ public class LinkFeatureTraitsEditor
         defaultSlots.setChoiceRenderer(new ChoiceRenderer<>("name"));
         form.add(defaultSlots);        
         
-        DropDownChoice<TagSet> tagset = new DropDownChoice<>("tagset");
+        DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
         tagset.setOutputMarkupId(true);
         tagset.setChoiceRenderer(new ChoiceRenderer<>("name"));

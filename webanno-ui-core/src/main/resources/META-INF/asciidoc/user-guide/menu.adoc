@@ -26,8 +26,8 @@ Here, you can navigate to one of the currently seven options:
   * <<sect_curation>> - Compare and merge annotations from multiple users (only for _curators_)
   * <<sect_correction>> - Correcting automatic annotation (under development)
   * <<sect_automation>> - Creating automatically annotated data
-  * <<sect_projects>> - Set up or change annotation projects (only for _administrators_)
-  * <<sect_monitoring>> - Allows you to see the projects, their progress and change document status (only for _administrators_ and _curators_)
+  * <<sect_projects>> - Set up or change annotation projects (only for _administrators_ and _managers_)
+  * <<sect_monitoring>> - Allows you to see the projects, their progress and change document status (only for _managers_ and _curators_)
   * <<sect_users>> - Allows you to manage the rights of users
 
 Please click on the functionality you need. The individual functionalities will be explained in 

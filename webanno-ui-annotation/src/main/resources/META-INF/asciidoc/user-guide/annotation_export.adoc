@@ -24,4 +24,4 @@ image::annotation_export.jpg[align="center"]
 
 Choose your preferred format. Please take note of the facts that the plain text format does not contain any annotations and that the files in the binary format need to be unpacked before further usage. For further information the supported formats, please consult the corresponding chapter <<sect_formats>>.
 
-The document will be saved to your local disk, and can be re-imported via adding the document to a project by a project administrator. Please export your data periodically, at least when finishing a document or not continuing annotations for an extended period of time. 
+The document will be saved to your local disk, and can be re-imported via adding the document to a project by a project manager. Please export your data periodically, at least when finishing a document or not continuing annotations for an extended period of time. 

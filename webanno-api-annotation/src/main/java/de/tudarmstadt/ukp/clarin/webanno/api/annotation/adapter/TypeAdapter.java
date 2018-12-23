@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -98,12 +99,26 @@ public interface TypeAdapter
     /**
      * Delete a annotation from CAS.
      *
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
      * @param aJCas
      *            the CAS object
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(AnnotatorState aState, JCas aJCas, VID aVid);
+    void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid);
+
+    /**
+     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
+     *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
+     */
+    @Deprecated
+    default void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    {
+        delete(aState.getDocument(), aState.getUser().getUsername(), aJCas, aVid);
+    }
 
     /**
      * @return the layer for which this adapter has been created.
@@ -120,6 +135,10 @@ public interface TypeAdapter
     /**
      * Set the value of the given feature.
      * 
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
      * @param aJcas
      *            the JCas.
      * @param aAddress
@@ -129,8 +148,21 @@ public interface TypeAdapter
      * @param aValue
      *            the value.
      */
-    void setFeatureValue(AnnotatorState aState, JCas aJcas, int aAddress,
+    void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas, int aAddress,
             AnnotationFeature aFeature, Object aValue);
+
+    /**
+     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
+     *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
+     */
+    @Deprecated
+    default void setFeatureValue(AnnotatorState aState, JCas aJCas, int aAddress,
+            AnnotationFeature aFeature, Object aValue)
+    {
+        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
+                aFeature, aValue);
+    }
+
 
     /**
      * Get the value of the given feature.

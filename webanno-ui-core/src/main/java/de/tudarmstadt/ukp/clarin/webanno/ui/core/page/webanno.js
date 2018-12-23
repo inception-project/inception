@@ -26,21 +26,6 @@ $(document)
         document.getElementById('spinner').style.display = 'inline';
       }
 
-      function clickFunc(eventData) {
-        var clickedElement = (window.event) ? event.srcElement : eventData.target;
-        if (clickedElement.parentNode && ((
-            clickedElement.tagName.toUpperCase() == 'BUTTON'
-            || (clickedElement.tagName.toUpperCase() == 'INPUT' && (
-                clickedElement.type.toUpperCase() == 'BUTTON' 
-                || clickedElement.type.toUpperCase() == 'SUBMIT'))
-          )
-          && clickedElement.parentNode.id.toUpperCase() != 'NOBUSY'))
-        {
-          showBusysign();
-        }
-      }
-
-      document.getElementsByTagName('body')[0].onclick = clickFunc;
       hideBusysign();
       if (typeof Wicket != 'undefined') {
         Wicket.Event.subscribe('/ajax/call/beforeSend', function(

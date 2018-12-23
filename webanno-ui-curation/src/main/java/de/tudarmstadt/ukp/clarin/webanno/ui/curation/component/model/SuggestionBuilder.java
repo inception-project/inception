@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -50,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -177,6 +180,8 @@ public class SuggestionBuilder
                     (System.currentTimeMillis() - start));
         }
 
+        List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, aBModel.getProject());
+
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
         int count = 0;
@@ -189,8 +194,8 @@ public class SuggestionBuilder
                         segmentBeginEnd.size());
             }
 
-            DiffResult diff = CasDiff2.doDiffSingle(annotationService, aBModel.getProject(),
-                    entryTypes, LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, begin, end);
+            DiffResult diff = CasDiff2.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
+                    jCases, begin, end);
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
@@ -369,7 +374,7 @@ public class SuggestionBuilder
      * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is
      * the CAS for the CORRECTION_USER and in CURATION mode it is the CAS for the CURATION user.
      *
-     * @param aBratAnnotatorModel
+     * @param aState
      *            the model.
      * @param aDocument
      *            the source document.
@@ -387,52 +392,57 @@ public class SuggestionBuilder
      * @throws AnnotationException
      *             hum?
      */
-    public JCas getMergeCas(AnnotatorState aBratAnnotatorModel, SourceDocument aDocument,
+    public JCas getMergeCas(AnnotatorState aState, SourceDocument aDocument,
             Map<String, JCas> jCases, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         JCas mergeJCas = null;
         try {
-            if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
-                    || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
+            if (aState.getMode().equals(Mode.AUTOMATION)
+                    || aState.getMode().equals(Mode.CORRECTION)) {
                 // Upgrading should be an explicit action during the opening of a document at the
-                // end
-                // of the open dialog - it must not happen during editing because the CAS addresses
-                // are used as IDs in the UI
+                // end of the open dialog - it must not happen during editing because the CAS 
+                // addresses are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = correctionDocumentService.readCorrectionCas(aDocument);
                 if (aUpgrade) {
                     correctionDocumentService.upgradeCorrectionCas(mergeJCas.getCas(), aDocument);
                     correctionDocumentService.writeCorrectionCas(mergeJCas, aDocument);
+                    updateDocumentTimestampAfterWrite(aState, correctionDocumentService
+                            .getCorrectionCasTimestamp(aState.getDocument()));
                 }
             }
             else {
                 // Upgrading should be an explicit action during the opening of a document at the
-                // end
-                // of the open dialog - it must not happen during editing because the CAS addresses
-                // are used as IDs in the UI
+                // end of the open dialog - it must not happen during editing because the CAS 
+                // addresses are used as IDs in the UI
                 // repository.upgradeCasAndSave(aDocument, aBratAnnotatorModel.getMode(),
                 // aBratAnnotatorModel.getUser().getUsername());
                 mergeJCas = curationDocumentService.readCurationCas(aDocument);
                 if (aUpgrade) {
                     curationDocumentService.upgradeCurationCas(mergeJCas.getCas(), aDocument);
                     curationDocumentService.writeCurationCas(mergeJCas, aDocument, true);
+                    updateDocumentTimestampAfterWrite(aState, curationDocumentService
+                            .getCurationCasTimestamp(aState.getDocument()));
                 }
             }
         }
-        // Create jcas, if it could not be loaded from the file system
+        // Create JCas, if it could not be loaded from the file system
         catch (Exception e) {
-
-            if (aBratAnnotatorModel.getMode().equals(Mode.AUTOMATION)
-                    || aBratAnnotatorModel.getMode().equals(Mode.CORRECTION)) {
-                mergeJCas = createCorrectionCas(mergeJCas, aBratAnnotatorModel,
+            if (aState.getMode().equals(Mode.AUTOMATION)
+                    || aState.getMode().equals(Mode.CORRECTION)) {
+                mergeJCas = createCorrectionCas(mergeJCas, aState,
                         randomAnnotationDocument);
+                updateDocumentTimestampAfterWrite(aState, correctionDocumentService
+                        .getCorrectionCasTimestamp(aState.getDocument()));
             }
             else {
-                mergeJCas = createCurationCas(aBratAnnotatorModel.getProject(),
+                mergeJCas = createCurationCas(aState.getProject(),
                         randomAnnotationDocument, jCases,
-                        aBratAnnotatorModel.getAnnotationLayers());
+                        aState.getAnnotationLayers());
+                updateDocumentTimestampAfterWrite(aState, curationDocumentService
+                        .getCurationCasTimestamp(aState.getDocument()));
             }
         }
         return mergeJCas;
@@ -527,19 +537,20 @@ public class SuggestionBuilder
 
         curationDocumentService.writeCurationCas(mergeJCas, randomAnnotationDocument.getDocument(),
                 false);
+        
         return mergeJCas;
     }
 
-    private JCas createCorrectionCas(JCas mergeJCas, AnnotatorState aBratAnnotatorModel,
-            AnnotationDocument randomAnnotationDocument)
+    private JCas createCorrectionCas(JCas mergeJCas, AnnotatorState aState,
+            AnnotationDocument aRandomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        User userLoggedIn = userRepository
-                .get(SecurityContextHolder.getContext().getAuthentication().getName());
-        mergeJCas = documentService.readAnnotationCas(aBratAnnotatorModel.getDocument(),
-                userLoggedIn);
+        User user = userRepository.getCurrentUser();
+        mergeJCas = documentService.readAnnotationCas(aState.getDocument(), user);
         correctionDocumentService.writeCorrectionCas(mergeJCas,
-                randomAnnotationDocument.getDocument());
+                aRandomAnnotationDocument.getDocument());
+        updateDocumentTimestampAfterWrite(aState, correctionDocumentService
+                .getCorrectionCasTimestamp(aState.getDocument()));
         return mergeJCas;
     }
 }

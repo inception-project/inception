@@ -61,19 +61,16 @@ public class SemPredArgLayerInitializer
     public void configure(Project aProject) throws IOException
     {
         AnnotationLayer semArgLayer = new AnnotationLayer(SemArg.class.getName(), "SemArg",
-                SPAN_TYPE, aProject, true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
         semArgLayer.setAllowStacking(true);
         semArgLayer.setCrossSentence(false);
-        semArgLayer.setAnchoringMode(AnchoringMode.TOKENS);
         
         annotationSchemaService.createLayer(semArgLayer);
         
-        
         AnnotationLayer semPredLayer = new AnnotationLayer(SemPred.class.getName(), "SemPred",
-                SPAN_TYPE, aProject, true);
+                SPAN_TYPE, aProject, true, AnchoringMode.TOKENS);
         semPredLayer.setAllowStacking(true);
         semPredLayer.setCrossSentence(false);
-        semPredLayer.setAnchoringMode(AnchoringMode.TOKENS);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, semPredLayer,
                 "category", "category", CAS.TYPE_NAME_STRING,

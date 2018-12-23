@@ -46,6 +46,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -120,7 +121,7 @@ public class AnnotationPreferencesDialogContent
             List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
                     .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
                     .collect(Collectors.toList());
-            DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor",
+            DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor",
                     editorChoices, new ChoiceRenderer<>("value"));
             editor.setVisible(editorChoices.size() > 1);
             add(editor);
@@ -140,9 +141,8 @@ public class AnnotationPreferencesDialogContent
                     EnumSet.allOf(ReadonlyColoringBehaviour.class));
             Model<ReadonlyColoringBehaviour> initialSelected = Model
                     .of(getModelObject().readonlyLayerColoringBehaviour);
-            DropDownChoice<ReadonlyColoringBehaviour> rolayer_color = 
-                    new DropDownChoice<ReadonlyColoringBehaviour>("readonlylayercoloring", 
-                            initialSelected, choices, choiceRenderer);
+            DropDownChoice<ReadonlyColoringBehaviour> rolayer_color = new BootstrapSelect<>(
+                    "readonlylayercoloring", initialSelected, choices, choiceRenderer);
             rolayer_color.add(new AjaxFormComponentUpdatingBehavior("change")
             {
                 private static final long serialVersionUID = 1060397773470276585L;
@@ -302,9 +302,8 @@ public class AnnotationPreferencesDialogContent
                 Model<ColoringStrategyType> initialSelected = Model
                         .of(form.getModelObject().colorPerLayer
                                 .get(item.getModelObject().getId()));
-                DropDownChoice<ColoringStrategyType> layer_color = 
-                        new DropDownChoice<ColoringStrategyType>( "layercoloring", 
-                                initialSelected, choices, choiceRenderer);
+                DropDownChoice<ColoringStrategyType> layer_color = new BootstrapSelect<>(
+                        "layercoloring", initialSelected, choices, choiceRenderer);
                 layer_color.add(new AjaxFormComponentUpdatingBehavior("change")
                 {
                     private static final long serialVersionUID = 1060397773470276585L;

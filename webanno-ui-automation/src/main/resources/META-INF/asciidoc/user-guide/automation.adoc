@@ -17,9 +17,7 @@
 [[sect_automation]]
 == Automation
 
-NOTE: This functionality is only available to *project managers* and 
-      *administrators*. Annotators and project managers only see projects in which
-      they hold the respective roles. 
+NOTE: This functionality is only available to *managers* and  *administrators*.
 
 This functionality gives the possibility to choose features and documents, which can be used for training of all layers that are offered in WebAnno (lemma, NER, POS and co-ref).
 

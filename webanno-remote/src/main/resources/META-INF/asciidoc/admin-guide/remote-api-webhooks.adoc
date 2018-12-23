@@ -1,0 +1,46 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_remote_api_webhooks]]
+== Webhooks
+
+Webhooks allow {product-name} to notify external services about certain events. For example, an 
+external service can be triggered when an annotator marks a document as finished or when all 
+documents in a project have been completely curated.
+
+Webhooks are declared in the `settings.properties` file. For every webhook, it is necessary to 
+specify an URL (`url`) and a set of topics (`topics`) about with the remote service listening at the
+given URL is notified. If the remote service is accessible via https and the certificate is not
+known to the JVM running {product-name}, the certificate verification can be disabled
+(`verify-certificates`). 
+
+The following topics are supported:
+
+* `DOCUMENT_STATE` - events related to the change of a document state such as when any user starts
+  annotating or curating the document.
+* `ANNOTATION_STATE` - events related to the change of an annotation state such as when a user
+  starts or completes the annotation of a document.
+* `PROJECT_STATE` - events related to the change of an entire project such as when all documents
+  have been curated.
+
+.Example webhook configuration
+----
+webhooks.globalHooks[0].url=http://localhost:3333/
+webhooks.globalHooks[0].topics[0]=DOCUMENT_STATE
+webhooks.globalHooks[0].topics[1]=ANNOTATION_STATE
+webhooks.globalHooks[0].topics[2]=PROJECT_STATE
+webhooks.globalHooks[0].verify-certificates=false
+----

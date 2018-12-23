@@ -181,7 +181,8 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Get an annotation using the begin/offsets and its type
+     * Get an annotation using the begin/offsets and its type. If there is more than one annotation
+     * at this point, get one of them.
      *
      * @param aJcas
      *            the JCas.

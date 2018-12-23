@@ -58,12 +58,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
@@ -285,8 +285,9 @@ public class CorrectionPage
                 super.onConfigure();
                 
                 AnnotatorState state = CorrectionPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
 
@@ -351,7 +352,7 @@ public class CorrectionPage
                         SecurityContextHolder.getContext().getAuthentication().getName());
                 List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
                 for (Project project : projectService.listProjects()) {
-                    if (SecurityUtil.isAnnotator(project, projectService, user)
+                    if (projectService.isAnnotator(project, user)
                             && WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                         allowedProject.add(DecoratedObject.of(project));
                     }
@@ -361,6 +362,12 @@ public class CorrectionPage
         };
     }
 
+    @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
+    }
+
     private DocumentNamePanel createDocumentInfoLabel()
     {
         return new DocumentNamePanel("documentNamePanel", getModel());
@@ -368,7 +375,7 @@ public class CorrectionPage
 
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -643,6 +650,10 @@ public class CorrectionPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
+
+            // Initialize timestamp in state
+            AnnotatorStateUtils.updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));

@@ -17,9 +17,7 @@
 [[sect_curation]]
 == Curation
 
-NOTE: This functionality is only available to *project managers* (managers of existing projects), 
-      *curators*, and *administrators*. Curators and project managers only see projects in which
-      they hold the respective roles.
+NOTE: This functionality is only available to *curators*.
 
 When navigating to the *Curation Page*, the procedure for opening projects and documents is the same as in <<sect_annotation>>. The navigation within the document is also equivalent to <<sect_annotation>>.
 

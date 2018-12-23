@@ -17,8 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.projectStateToString;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
 
 public class ProjectStateChangeMessage
 {
@@ -38,8 +39,8 @@ public class ProjectStateChangeMessage
         projectId = aEvent.getProject().getId();
         projectName = aEvent.getProject().getName();
         
-        projectState = RemoteApiController2.projectStateToString(aEvent.getNewState());
-        projectPreviousState = RemoteApiController2.projectStateToString(aEvent.getPreviousState());
+        projectState = projectStateToString(aEvent.getNewState());
+        projectPreviousState = projectStateToString(aEvent.getPreviousState());
     }
 
     public long getProjectId()

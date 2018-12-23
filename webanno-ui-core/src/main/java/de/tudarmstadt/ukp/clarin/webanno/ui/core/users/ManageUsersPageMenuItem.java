@@ -21,16 +21,13 @@ import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 public class ManageUsersPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRepository;
     
     @Override
     public String getPath()
@@ -56,7 +53,7 @@ public class ManageUsersPageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
-        return SecurityUtil.isSuperAdmin(projectService, userRepo.getCurrentUser());
+        return userRepository.isAdministrator(userRepository.getCurrentUser());
     }
     
     @Override

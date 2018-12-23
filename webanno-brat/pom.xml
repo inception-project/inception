@@ -147,6 +147,10 @@
       <artifactId>wicket-jquery-ui</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-less</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.agilecoders.wicket.webjars</groupId>
       <artifactId>wicket-webjars</artifactId>
     </dependency>

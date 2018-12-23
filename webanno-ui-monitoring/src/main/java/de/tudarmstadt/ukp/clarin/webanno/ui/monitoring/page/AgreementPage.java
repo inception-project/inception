@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isCurator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static java.util.Arrays.asList;
 
@@ -68,10 +67,10 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
 import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
@@ -137,7 +136,8 @@ public class AgreementPage
         
         if (project.isPresent()) {
             // Check access to project
-            if (project != null && !isCurator(project.get(), projectService, user)) {
+            if (project != null && !(projectService.isCurator(project.get(), user)
+                    || projectService.isManager(project.get(), user))) {
                 error("You have no permission to access project [" + project.get().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
@@ -195,7 +195,7 @@ public class AgreementPage
         Project project = projectSelectionForm.getModelObject().project;
 
         List<User> users = projectService.listProjectUsersWithPermissions(project,
-                PermissionLevel.USER);
+                PermissionLevel.ANNOTATOR);
 
         List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
 
@@ -291,12 +291,12 @@ public class AgreementPage
                     new StringResourceModel("legend.content", legend), config));
             agreementResults.add(legend);
             
-            add(measureDropDown = new DropDownChoice<>("measure",
+            add(measureDropDown = new BootstrapSelect<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
             addUpdateAgreementTableBehavior(measureDropDown);
 
-            add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
+            add(linkCompareBehaviorDropDown = new BootstrapSelect<LinkCompareBehavior>(
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
             {
@@ -320,7 +320,7 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            agreementResults.add(new DropDownChoice<AgreementReportExportFormat>("exportFormat",
+            agreementResults.add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
                             .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
@@ -625,8 +625,8 @@ public class AgreementPage
 
             List<Project> allProjects = projectService.listProjects();
             for (Project project : allProjects) {
-                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                        || SecurityUtil.isCurator(project, projectService, user)) {
+                if (projectService.isManager(project, user)
+                        || projectService.isCurator(project, user)) {
                     allowedProject.add(project);
                 }
             }

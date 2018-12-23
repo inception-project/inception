@@ -62,6 +62,7 @@
     <security:intercept-url access="permitAll" pattern="/assets/**" />
     <security:intercept-url access="permitAll" pattern="/images/**" />
     <security:intercept-url access="permitAll" pattern="/wicket/resource/**" />
+    <security:intercept-url access="hasAnyRole('ROLE_REMOTE')" pattern="/swagger-ui.html" />
     <security:intercept-url access="hasAnyRole('ROLE_ADMIN')" pattern="/admin/**" />
     <security:intercept-url access="hasAnyRole('ROLE_ADMIN', 'ROLE_USER')" pattern="/**" />
     <security:form-login login-page='/login.html' />

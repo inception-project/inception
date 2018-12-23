@@ -30,9 +30,11 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
@@ -49,10 +51,26 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public class PrimitiveUimaFeatureSupport
     implements FeatureSupport<Void>, InitializingBean
 {
+    private final PrimitiveUimaFeatureSupportProperties properties;
+    
     private List<FeatureType> primitiveTypes;
 
     private String featureSupportId;
     
+    /*
+     * Constructor for use in unit tests to avoid having to always instantiate the properties.
+     */
+    public PrimitiveUimaFeatureSupport()
+    {
+        properties = new PrimitiveUimaFeatureSupportProperties();
+    }
+
+    @Autowired(required = true)
+    public PrimitiveUimaFeatureSupport(PrimitiveUimaFeatureSupportProperties aProperties)
+    {
+        properties = aProperties;
+    }
+
     @Override
     public String getId()
     {
@@ -170,14 +188,15 @@ public class PrimitiveUimaFeatureSupport
                     // If there is no tagset, use a simple input field
                     editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
                 }
-                else if (aFeatureStateModel.getObject().tagset.size() < 75) {
+                else if (aFeatureStateModel.getObject().tagset.size() < properties
+                        .getAutoCompleteThreshold()) {
                     // For smaller tagsets, use a combobox
                     editor = new KendoComboboxTextFeatureEditor(aId, aOwner, aFeatureStateModel);
                 }
                 else {
                     // For larger ones, use an auto-complete field
-                    editor = new KendoAutoCompleteTextFeatureEditor(aId, aOwner,
-                            aFeatureStateModel);
+                    editor = new KendoAutoCompleteTextFeatureEditor(aId, aOwner, aFeatureStateModel,
+                            properties.getAutoCompleteMaxResults());
                 }
                 break;
             }

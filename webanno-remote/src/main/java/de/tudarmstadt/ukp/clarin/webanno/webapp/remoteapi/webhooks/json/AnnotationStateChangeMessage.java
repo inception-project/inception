@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AnnotationStateChangeEvent;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 public class AnnotationStateChangeMessage
 {
@@ -48,9 +48,9 @@ public class AnnotationStateChangeMessage
 
         annotationUser = aEvent.getAnnotationDocument().getUser();
         
-        annotationState = RemoteApiController2
+        annotationState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getNewState());
-        annotationPreviousState = RemoteApiController2
+        annotationPreviousState = AeroRemoteApiController
                 .annotationDocumentStateToString(aEvent.getPreviousState());
     }
 

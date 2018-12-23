@@ -29,6 +29,7 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -377,7 +378,24 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
+    /**
+     * Returns the custom types define in the project excluding built-in types.
+     */
     TypeSystemDescription getProjectTypes(Project aProject);
+
+    /**
+     * Returns the full type system for the project including any internal types such as
+     * {@link CASMetadata}.
+     */
+    TypeSystemDescription getFullProjectTypeSystem(Project aProject)
+        throws ResourceInitializationException;
+
+    /**
+     * Returns the full type system for the project optionally including any internal types such as
+     * {@link CASMetadata}.
+     */
+    TypeSystemDescription getFullProjectTypeSystem(Project aProject, boolean aIncludeInternalTypes)
+        throws ResourceInitializationException;
     
     /**
      * Upgrade the CAS to the current project type system. This also compacts the CAS and removes

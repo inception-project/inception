@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -80,15 +81,36 @@ public class PermissionsExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
-        for (ExportedProjectPermission importedPermission : aExProject
-                .getProjectPermissions()) {
+        // Import permissions - always import permissions for the importing user but skip
+        // permissions for other users unless permission import was requested.
+        for (ExportedProjectPermission importedPermission : aExProject.getProjectPermissions()) {
+            boolean isPermissionOfImportingUser = aRequest.getManager()
+                    .map(User::getUsername)
+                    .map(importedPermission.getUser()::equals)
+                    .orElse(false);
+            if (isPermissionOfImportingUser || aRequest.isImportPermissions()) {
+                ProjectPermission permission = new ProjectPermission();
+                permission.setLevel(importedPermission.getLevel());
+                permission.setProject(aProject);
+                permission.setUser(importedPermission.getUser());
+                projectService.createProjectPermission(permission);
+            }
+        }
+        
+        // Give all permissions to the importing user if requested
+        if (aRequest.getManager().isPresent()
+                && !projectService.isManager(aProject, aRequest.getManager().get())) {
             ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(importedPermission.getLevel());
+            permission.setLevel(PermissionLevel.MANAGER);
+            permission.setLevel(PermissionLevel.CURATOR);
+            permission.setLevel(PermissionLevel.ANNOTATOR);
             permission.setProject(aProject);
-            permission.setUser(importedPermission.getUser());
+            permission.setUser(aRequest.getManager().get().getUsername());
             projectService.createProjectPermission(permission);
         }
         
+        // Add any users that are referenced by the project but missing in the current instance.
+        // Users are added without passwords and disabled.
         if (aRequest.isCreateMissingUsers()) {
             Set<String> users = new HashSet<>();
             

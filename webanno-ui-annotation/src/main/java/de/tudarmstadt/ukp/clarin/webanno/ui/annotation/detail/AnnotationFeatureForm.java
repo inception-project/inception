@@ -47,7 +47,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -64,6 +63,7 @@ import org.apache.wicket.util.time.Duration;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -339,12 +339,21 @@ public class AnnotationFeatureForm
             new PropertyModel<>(this, "annotationLayers"));
     }
 
-    private Label createSelectedTextLabel()
+    private LambdaAjaxLink createSelectedTextLabel()
     {
-        Label selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
-                "selection.text"));
-        selectedTextLabel.setOutputMarkupId(true);
-        return selectedTextLabel;
+        LambdaAjaxLink link = new LambdaAjaxLink("jumpToAnnotation",
+                this::actionJumpToAnnotation);
+        link.add(new Label("selectedText", PropertyModel.of(getModelObject(),
+                "selection.text")).setOutputMarkupId(true));
+        link.setOutputMarkupId(true);
+        return link;
+    }
+    
+    private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
+    {
+        editorPanel.getEditorPage().actionShowSelectedDocument(aTarget,
+                getModelObject().getDocument(), getModelObject().getSelection().getBegin(),
+                getModelObject().getSelection().getEnd());
     }
 
     private LambdaAjaxLink createClearButton()
@@ -706,7 +715,7 @@ public class AnnotationFeatureForm
     }
 
     protected class LayerSelector
-        extends DropDownChoice<AnnotationLayer>
+        extends BootstrapSelect<AnnotationLayer>
     {
         private static final long serialVersionUID = 2233133653137312264L;
 

@@ -41,7 +41,6 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
@@ -54,7 +53,6 @@ public class LogoutPanel
     private static final long serialVersionUID = 3725185820083021070L;
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectService projectService;
 
     public LogoutPanel(String id)
     {

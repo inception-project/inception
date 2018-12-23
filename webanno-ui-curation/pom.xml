@@ -144,6 +144,10 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-extensions</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -197,24 +201,4 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies combine.children="append">
-              <!--
-                - Maven dependency analyzer fails to handle transitive dependencies of test jars
-              -->
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.io.conll-asl</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>

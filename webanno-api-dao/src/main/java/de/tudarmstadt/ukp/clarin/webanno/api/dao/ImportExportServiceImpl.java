@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
-import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
@@ -49,7 +48,6 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
@@ -246,11 +244,7 @@ public class ImportExportServiceImpl
         throws UIMAException, IOException
     {
         // Prepare a CAS with the project type system
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = annotationService.getProjectTypes(aProject);
-        TypeSystemDescription allTypes = CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
+        TypeSystemDescription allTypes = annotationService.getFullProjectTypeSystem(aProject);
         CAS cas = JCasFactory.createJCas(allTypes).getCas();
 
         // Convert the source document to CAS
@@ -404,14 +398,11 @@ public class ImportExportServiceImpl
                 + PROJECT_FOLDER + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/"
                 + aDocument.getId() + "/" + SOURCE_FOLDER);
         DocumentMetaData documentMetadata = DocumentMetaData.get(cas.getJCas());
+        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setDocumentUri(new File(currentDocumentUri, aFileName).toURI().toURL()
                 .toExternalForm());
-        documentMetadata.setDocumentBaseUri(currentDocumentUri.toURI().toURL().toExternalForm());
         documentMetadata.setCollectionId(currentDocumentUri.toURI().toURL().toExternalForm());
-        documentMetadata.setDocumentUri(
-                new File(repositoryProperties.getPath().getAbsolutePath() + "/" + PROJECT_FOLDER
-                        + "/" + project.getId() + "/" + DOCUMENT_FOLDER + "/" + aDocument.getId()
-                        + "/" + SOURCE_FOLDER + "/" + aFileName).toURI().toURL().toExternalForm());
+        documentMetadata.setDocumentId(aFileName);
 
         // update with the correct tagset name
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(project);
@@ -434,8 +425,11 @@ public class ImportExportServiceImpl
             AnalysisEngineDescription writer = aFormat.getWriterDescription(aDocument.getProject(),
                     cas);
             ConfigurationParameterFactory.addConfigurationParameters(writer,
+                    JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
+                    JCasFileWriter_ImplBase.PARAM_ESCAPE_DOCUMENT_ID, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
+
             runPipeline(cas, writer);
     
             // If the writer produced more than one file, we package it up as a ZIP file

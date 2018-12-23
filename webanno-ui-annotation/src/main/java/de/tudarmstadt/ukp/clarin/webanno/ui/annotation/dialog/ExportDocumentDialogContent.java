@@ -38,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
@@ -80,10 +81,10 @@ public class ExportDocumentDialogContent
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
         
-        form.add(new DropDownChoice<String>("format", writeableFormats));
+        form.add(new BootstrapSelect<>("format", writeableFormats));
 
         // FIXME Use EnumChoiceRenderer?
-        DropDownChoice<String> documentType = new DropDownChoice<>("documentType",
+        DropDownChoice<String> documentType = new BootstrapSelect<>("documentType",
                 Model.of(SELECTEXPORT.ANNOTATED.toString()), Arrays.asList(
                         SELECTEXPORT.ANNOTATED.toString(), SELECTEXPORT.AUTOMATED.toString()));
         documentType.setVisible(state.getObject().getMode().equals(Mode.AUTOMATION));

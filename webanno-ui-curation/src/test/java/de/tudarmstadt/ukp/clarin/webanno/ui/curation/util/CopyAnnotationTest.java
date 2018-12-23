@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -86,7 +87,7 @@ public class CopyAnnotationTest
         project = new Project();
         
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
-                SPAN_TYPE, null, true);
+                SPAN_TYPE, null, true, AnchoringMode.SINGLE_TOKEN);
         
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -98,7 +99,7 @@ public class CopyAnnotationTest
         tokenPosFeature.setVisible(true);
         
         posLayer = new AnnotationLayer(POS.class.getName(), "POS",
-                SPAN_TYPE, project, true);
+                SPAN_TYPE, project, true, AnchoringMode.SINGLE_TOKEN);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         
@@ -112,7 +113,7 @@ public class CopyAnnotationTest
         posFeature.setVisible(true);
         
         slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE,
-                SPAN_TYPE, project, false);
+                SPAN_TYPE, project, false, AnchoringMode.SINGLE_TOKEN);
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
         slotFeature.setEnabled(true);

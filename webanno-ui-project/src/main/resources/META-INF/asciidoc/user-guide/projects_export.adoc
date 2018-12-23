@@ -1,3 +1,4 @@
+[[sect_projects_export]]
 == Export
 
 image::project_export.jpg[align="center"]

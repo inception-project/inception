@@ -17,10 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isCurator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -66,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -193,7 +191,7 @@ public class CurationPage
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
 
-        curationPanel = new CurationPanel("curationPanel", new Model<>(
+        curationPanel = new CurationPanel("curationPanel", this, new Model<>(
                 curationContainer))
         {
             private static final long serialVersionUID = 2175915644696513166L;
@@ -240,7 +238,7 @@ public class CurationPage
                         upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
-                        curationPanel.editor.loadFeatureEditorModels(aTarget);
+                        curationPanel.getEditor().loadFeatureEditorModels(aTarget);
                     }
                     catch (Exception e) {
                         LOG.error("Unable to load data", e);
@@ -306,8 +304,9 @@ public class CurationPage
                 super.onConfigure();
                 
                 AnnotatorState state = CurationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
         
@@ -398,7 +397,7 @@ public class CurationPage
                 List<Project> projectsWithFinishedAnnos = projectService
                         .listProjectsWithFinishedAnnos();
                 for (Project project : projectService.listProjects()) {
-                    if (SecurityUtil.isCurator(project, projectService, user)) {
+                    if (projectService.isCurator(project, user)) {
                         DecoratedObject<Project> dp = DecoratedObject.of(project);
                         if (projectsWithFinishedAnnos.contains(project)) {
                             dp.setColor("green");
@@ -412,6 +411,12 @@ public class CurationPage
                 return allowedProject;
             }
         };
+    }
+
+    @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
     }
 
     @Override
@@ -575,7 +580,7 @@ public class CurationPage
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(curationPanel.editor);
+            aCallbackTarget.add(curationPanel.getEditor());
             aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
@@ -678,6 +683,10 @@ public class CurationPage
             state.getPreferences()
                     .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
+            // Initialize timestamp in state
+            updateDocumentTimestampAfterWrite(state, curationDocumentService
+                    .getCurationCasTimestamp(state.getDocument()));
+                        
             // Initialize the visible content
             state.moveToUnit(mergeJCas, aFocus);
             gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
@@ -694,7 +703,7 @@ public class CurationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
-            curationPanel.editor.reset(aTarget);
+            curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
             updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);
@@ -792,7 +801,7 @@ public class CurationPage
         
         // Check access to project
         if (project != null
-                && !isCurator(project, projectService, getModelObject().getUser())) {
+                && !projectService.isCurator(project, getModelObject().getUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }

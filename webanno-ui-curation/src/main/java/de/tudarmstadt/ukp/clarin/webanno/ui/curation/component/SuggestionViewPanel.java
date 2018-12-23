@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
@@ -30,7 +31,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.Feature;
@@ -347,22 +347,14 @@ public class SuggestionViewPanel
                 || aState.getMode().equals(Mode.CORRECTION)) {
             documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
 
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = documentService.getAnnotationCasTimestamp(
-                    aState.getDocument(), aState.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                aState.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+            updateDocumentTimestampAfterWrite(aState, documentService.getAnnotationCasTimestamp(
+                    aState.getDocument(), aState.getUser().getUsername()));
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
             curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
 
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = curationDocumentService
-                    .getCurationCasTimestamp(aState.getDocument());
-            if (diskTimestamp.isPresent()) {
-                aState.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+            updateDocumentTimestampAfterWrite(aState, curationDocumentService
+                    .getCurationCasTimestamp(aState.getDocument()));
         }
     }
 
@@ -396,7 +388,8 @@ public class SuggestionViewPanel
         }
         
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aBratAnnotatorModel, aJcas, layersToRender);
+        preRenderer.render(vdoc, aBratAnnotatorModel.getWindowBeginOffset(),
+                aBratAnnotatorModel.getWindowEndOffset(), aJcas, layersToRender);
         
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,

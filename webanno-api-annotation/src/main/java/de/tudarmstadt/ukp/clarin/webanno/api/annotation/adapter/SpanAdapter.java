@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -58,9 +59,6 @@ public class SpanAdapter
     extends TypeAdapter_ImplBase
     implements AutomationTypeAdapter
 {
-    // value NILL for a token when the training file do not have annotations provided
-    private final static String NILL = "__nill__";
-
     public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Collection<AnnotationFeature> aFeatures)
@@ -69,8 +67,23 @@ public class SpanAdapter
     }
 
     /**
+     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
+     *             {@link #add(SourceDocument, String, JCas, int, int)} instead.
+     */
+    @Deprecated
+    public Integer add(AnnotatorState aState, JCas aJCas, int aBegin, int aEnd)
+        throws AnnotationException
+    {
+        return add(aState.getDocument(), aState.getUser().getUsername(), aJCas, aBegin, aEnd);
+    }
+
+    /**
      * Add new span annotation into the CAS and return the the id of the span annotation
      *
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
      * @param aJCas
      *            the JCas.
      * @param aBegin
@@ -81,17 +94,17 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(AnnotatorState aState, JCas aJCas, int aBegin, int aEnd)
+    public Integer add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin, int aEnd)
         throws AnnotationException
     {
         // if zero-offset annotation is requested
         if (aBegin == aEnd) {
-            return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+            return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
         }
         if (getLayer().isCrossSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
             switch (getLayer().getAnchoringMode()) {
             case CHARACTERS: {
-                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
             }
             case SINGLE_TOKEN: {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
@@ -100,22 +113,22 @@ public class SpanAdapter
                     throw new AnnotationException("No token is found to annotate");
                 }
                 
-                return createAnnotation(aState, aJCas.getCas(), tokens.get(0).getBegin(),
-                        tokens.get(0).getEnd());
+                return createAnnotation(aDocument, aUsername, aJCas.getCas(),
+                        tokens.get(0).getBegin(), tokens.get(0).getEnd());
             }
             case TOKENS: {
                 List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection)
                 aBegin = tokens.get(0).getBegin();
                 aEnd = tokens.get(tokens.size() - 1).getEnd();
-                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
             }
             case SENTENCES: {
                 List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aBegin, aEnd);
                 // update the begin and ends (no sub token selection)
                 aBegin = sentences.get(0).getBegin();
                 aEnd = sentences.get(sentences.size() - 1).getEnd();
-                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
+                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
             }
             default:
                 throw new IllegalStateException(
@@ -180,7 +193,8 @@ public class SpanAdapter
     /**
      * A Helper method to add annotation to CAS
      */
-    private Integer createAnnotation(AnnotatorState aState, CAS aCas, int aBegin, int aEnd)
+    private Integer createAnnotation(SourceDocument aDocument, String aUsername, CAS aCas,
+            int aBegin, int aEnd)
         throws AnnotationException
     {
         // If stacking is not allowed and there already is an annotation, then return the address
@@ -211,14 +225,13 @@ public class SpanAdapter
         
         aCas.addFsToIndexes(newAnnotation);
         
-        publishEvent(new SpanCreatedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), newAnnotation));
+        publishEvent(new SpanCreatedEvent(this, aDocument, aUsername, newAnnotation));
         
         return getAddr(newAnnotation);
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
         AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
@@ -233,19 +246,18 @@ public class SpanAdapter
             }
         }
         
-        publishEvent(new SpanDeletedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), fs));
+        publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
-            int aEnd, Object aValue)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
+            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
         Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aState, aJCas, new VID(getAddr(fs)));
+                    delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
                 }
             }
         }

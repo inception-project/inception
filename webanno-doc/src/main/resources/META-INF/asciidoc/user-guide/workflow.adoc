@@ -6,7 +6,7 @@ image::progress_workflow.jpg[align="center"]
 
 First, the projects need to be set up. In more detail, this means that users are to be added, 
 guidelines need to be provided, documents have to be uploaded, tagsets need to be defined and uploaded,
-etc. The process of setting up and administrating a project are explicitly described in <<sect_projects>>.
+etc. The process of setting up and managing a project are explicitly described in <<sect_projects>>.
 
 After the setup of a project, the users who were assigned with the task of annotation annotate the
 documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.

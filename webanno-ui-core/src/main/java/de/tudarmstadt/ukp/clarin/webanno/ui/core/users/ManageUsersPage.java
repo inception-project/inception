@@ -21,7 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -43,7 +45,6 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.ValidationError;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiProperties;
 
 /**
  * Manage Application wide Users.
@@ -66,7 +68,7 @@ public class ManageUsersPage
     public static final String PARAM_USER = "user";
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean ProjectService projectRepository;
+    private @SpringBean RemoteApiProperties remoteApiProperties;
 
     private class DetailForm
         extends Form<User>
@@ -108,7 +110,7 @@ public class ManageUsersPage
             
             add(new EqualPasswordInputValidator(passwordField, repeatPasswordField));
             
-            add(new ListMultipleChoice<>("roles", new ArrayList<>(Role.getRoles()))
+            add(new ListMultipleChoice<>("roles", getRoles())
                     .add(this::validateRoles)
                     .add(visibleWhen(ManageUsersPage.this::isAdmin)));
             
@@ -292,6 +294,15 @@ public class ManageUsersPage
     
     private boolean isAdmin()
     {
-        return SecurityUtil.isSuperAdmin(projectRepository, userRepository.getCurrentUser());
+        return userRepository.isAdministrator(userRepository.getCurrentUser());
+    }
+    
+    private List<Role> getRoles()
+    {
+        List<Role> roles = new ArrayList<>(Arrays.asList(Role.values()));
+        if (!remoteApiProperties.isEnabled()) {
+            roles.remove(Role.ROLE_REMOTE);
+        }
+        return roles;
     }
 }

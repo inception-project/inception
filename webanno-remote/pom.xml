@@ -134,6 +134,10 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-autoconfigure</artifactId>
+    </dependency>
     
     <!-- Spring security -->
     <dependency>
@@ -142,6 +146,11 @@
     </dependency>
 
     <!-- Swagger / Springfox -->
+    <dependency>
+      <groupId>io.springfox</groupId>
+      <artifactId>springfox-core</artifactId>
+      <version>${springfox.version}</version>
+    </dependency>
     <dependency>
       <groupId>io.springfox</groupId>
       <artifactId>springfox-swagger2</artifactId>
@@ -195,11 +204,6 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
       <groupId>org.apache.tomcat.embed</groupId>
       <artifactId>tomcat-embed-core</artifactId>
       <scope>test</scope>
@@ -221,6 +225,12 @@
         </exclusion>
       </exclusions>
       -->
+      <exclusions>
+        <exclusion>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-starter-logging</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>

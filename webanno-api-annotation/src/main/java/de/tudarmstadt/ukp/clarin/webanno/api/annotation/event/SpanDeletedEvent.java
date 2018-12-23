@@ -20,23 +20,29 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class SpanDeletedEvent extends ApplicationEvent
+public class SpanDeletedEvent
+    extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
     
     private final SourceDocument document;
     private final String user;
+    private final AnnotationLayer layer;
     private final AnnotationFS annotation;
     
     public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFS aAnnotation)
+            AnnotationLayer aLayer, AnnotationFS aAnnotation)
     {
         super(aSource);
         document = aDocument;
         user = aUser;
         annotation = aAnnotation;
+        layer = aLayer;
     }
     
     public SourceDocument getDocument()
@@ -52,6 +58,11 @@ public class SpanDeletedEvent extends ApplicationEvent
     public AnnotationFS getAnnotation()
     {
         return annotation;
+    }
+    
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
     
     @Override

@@ -36,7 +36,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -50,6 +49,7 @@ import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTag;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSet;
@@ -109,7 +109,7 @@ public class TagSetEditorPanel
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
         
-        form.add(new DropDownChoice<>("format", exportFormat,
+        form.add(new BootstrapSelect<>("format", exportFormat,
                 LambdaModel.of(this::supportedFormats))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change",  (t) -> { })));
         form.add(new AjaxDownloadLink("export", LambdaModel.of(this::export)));

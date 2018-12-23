@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
 import static org.apache.commons.io.IOUtils.copyLarge;
@@ -34,8 +35,10 @@ import java.io.OutputStream;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -159,8 +162,17 @@ public class DocumentServiceImpl
     @Transactional
     public boolean existsAnnotationDocument(SourceDocument aDocument, User aUser)
     {
-        Validate.notNull(aDocument, "Source document must be specified");
         Validate.notNull(aUser, "User must be specified");
+        
+        return existsAnnotationDocument(aDocument, aUser.getUsername());
+    }
+    
+    @Override
+    @Transactional
+    public boolean existsAnnotationDocument(SourceDocument aDocument, String aUsername)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aUsername, "Username must be specified");
         
         try {
             entityManager
@@ -169,7 +181,7 @@ public class DocumentServiceImpl
                                     + " AND document = :document AND user = :user",
                             AnnotationDocument.class)
                     .setParameter("project", aDocument.getProject())
-                    .setParameter("document", aDocument).setParameter("user", aUser.getUsername())
+                    .setParameter("document", aDocument).setParameter("user", aUsername)
                     .getSingleResult();
             return true;
         }
@@ -431,21 +443,6 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Source document must be specified");
-        
-        return entityManager
-                .createQuery(
-                        "FROM AnnotationDocument WHERE project = :project AND document = :document",
-                        AnnotationDocument.class)
-                .setParameter("project", aDocument.getProject())
-                .setParameter("document", aDocument)
-                .getResultList();
-    }
-
-    @Override
-    @Transactional(noRollbackFor = NoResultException.class)
     public List<SourceDocument> listSourceDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -550,6 +547,7 @@ public class DocumentServiceImpl
             throw new IOException(e.getMessage(), e);
         }
 
+        log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
         applicationEventPublisher
                 .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, jcas));
         
@@ -692,52 +690,6 @@ public class DocumentServiceImpl
     }
     
     @Override
-    public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
-            User aUser)
-    {
-        // First get the source documents
-        List<SourceDocument> sourceDocuments = entityManager
-                .createQuery(
-                        "FROM SourceDocument " +
-                        "WHERE project = (:project)",
-                        SourceDocument.class)
-                .setParameter("project", aProject)
-                .getResultList();
-
-        // Next we get all the annotation document records. We can use these to filter out
-        // documents which are IGNOREed for given users.
-        List<AnnotationDocument> annotationDocuments = entityManager
-                .createQuery(
-                        "FROM AnnotationDocument " +
-                        "WHERE user = (:username) AND project = (:project)",
-                        AnnotationDocument.class)
-                .setParameter("username", aUser.getUsername())
-                .setParameter("project", aProject)
-                .getResultList();
-
-        // First we add all the source documents
-        Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
-        for (SourceDocument doc : sourceDocuments) {
-            map.put(doc, null);
-        }
-
-        // Now we link the source documents to the annotation documents and remove IGNOREed
-        // documents
-        for (AnnotationDocument adoc : annotationDocuments) {
-            switch (adoc.getState()) {
-            case IGNORE:
-                map.remove(adoc.getDocument());
-                break;
-            default:
-                map.put(adoc.getDocument(), adoc);
-                break;
-            }
-        }
-
-        return map;
-    }
-    
-    @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public boolean isAnnotationFinished(SourceDocument aDocument, User aUser)
     {
@@ -792,6 +744,76 @@ public class DocumentServiceImpl
     }
 
     @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        return entityManager
+                .createQuery(
+                        "FROM AnnotationDocument WHERE project = :project AND document = :document",
+                        AnnotationDocument.class)
+                .setParameter("project", aDocument.getProject())
+                .setParameter("document", aDocument)
+                .getResultList();
+    }
+
+    @Override
+    public Map<SourceDocument, AnnotationDocument> listAnnotatableDocuments(Project aProject,
+            User aUser)
+    {
+        Map<SourceDocument, AnnotationDocument> map = listAllDocuments(aProject, aUser);
+
+        Iterator<Entry<SourceDocument, AnnotationDocument>> i = map.entrySet().iterator();
+        while (i.hasNext()) {
+            Entry<SourceDocument, AnnotationDocument> e = i.next();
+            if (e.getValue() != null && IGNORE.equals(e.getValue().getState())) {
+                i.remove();
+            }
+        }
+        
+        return map;
+    }
+    
+    @Override
+    public Map<SourceDocument, AnnotationDocument> listAllDocuments(Project aProject,
+            User aUser)
+    {
+        // First get the source documents
+        List<SourceDocument> sourceDocuments = entityManager
+                .createQuery(
+                        "FROM SourceDocument " +
+                        "WHERE project = (:project)",
+                        SourceDocument.class)
+                .setParameter("project", aProject)
+                .getResultList();
+
+        // Next we get all the annotation document records. We can use these to filter out
+        // documents which are IGNOREed for given users.
+        List<AnnotationDocument> annotationDocuments = entityManager
+                .createQuery(
+                        "FROM AnnotationDocument " +
+                        "WHERE user = (:username) AND project = (:project)",
+                        AnnotationDocument.class)
+                .setParameter("username", aUser.getUsername())
+                .setParameter("project", aProject)
+                .getResultList();
+
+        // First we add all the source documents
+        Map<SourceDocument, AnnotationDocument> map = new TreeMap<>(SourceDocument.NAME_COMPARATOR);
+        for (SourceDocument doc : sourceDocuments) {
+            map.put(doc, null);
+        }
+
+        // Now we link the source documents to the annotation documents and remove IGNOREed
+        // documents
+        for (AnnotationDocument adoc : annotationDocuments) {
+            map.put(adoc.getDocument(), adoc);
+        }
+
+        return map;
+    }
+    @Override
     public int numberOfExpectedAnnotationDocuments(Project aProject)
     {
 
@@ -843,7 +865,7 @@ public class DocumentServiceImpl
                 .createQuery(
                         "SELECT DISTINCT user FROM ProjectPermission WHERE project = :project "
                                 + "AND level = :level", String.class)
-                .setParameter("project", aProject).setParameter("level", PermissionLevel.USER)
+                .setParameter("project", aProject).setParameter("level", PermissionLevel.ANNOTATOR)
                 .getResultList();
 
         // check if the username is in the Users database (imported projects

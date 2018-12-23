@@ -1,3 +1,8 @@
+/* -------------------------------------------------------------------------- */
+/* NOTE: THIS FILE IS NOT USED AND KEPT ONLY FOR HISTORICAL REFERENCE. IT WAS */
+/*       AUTOMATICALLY CONVERTED TO LESS AND THEN FURTHER ADAPTED AND IS NOW  */
+/*       MAINTAINED AS "style-vis.less"                                       */
+/* -------------------------------------------------------------------------- */
 /*
  * ## brat ##
  * Copyright (C) 2010-2012 The brat contributors, all rights reserved.
@@ -629,3 +634,20 @@ fieldset legend {
 #commentpopup.comment_ChangedAnnotation {
   background-color: #ffcccc;
 }
+
+/* WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers */
+.highlight .matchfocus {
+  fill: orange;
+  -webkit-animation-name: flash;
+  animation-name: flash;
+  -webkit-animation-duration: 1s;
+  animation-duration: 1s;
+  -webkit-animation-fill-mode: both;
+  animation-fill-mode: both;
+}
+
+.highlight rect.match {
+  fill: orange;
+  opacity: 0.25;
+}
+/* WEBANNO EXTENSION END - #1119 - Improve control over markers */

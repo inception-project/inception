@@ -1,12 +1,21 @@
 == Import
 
-NOTE: This functionality is only available to *administrators*.
+Here, you can import project archives such as the example projects provided on our website or
+projects exported from the <<sect_projects_export>> tab.
 
-Projects are associated with the accounts of users that act as project managers, annotators, or
-curators. When importing a previously exported project, you can choose to automatically *generate
-missing users* (enabled by default). If this option is disabled, projects still maintain their
-association to users by name. If the respective user accounts are created manually after the import,
-the users will start showing up in the projects.
+When a user with the role *project creator* imports a project, that user automatically becomes a
+*manager* of the imported project. However, no permissions for the project are imported!
 
-NOTE: Generated users are disabled and have no password. They must be explicitly enabled and a
-      password must be set before the users can log in again.
+NOTE: If the current instance has users with the same name as those who originally worked on the
+      import project, the manager can add these users to the project and they can access their annotations.
+      Otherwise, only the imported source documents are accessible.
+      
+When a user with the role *administrator* imports a project, the user can choose whether to *import
+the permissions* and whether to *automatically create users* who have permissions on the imported
+project but so far do not exist. If this option to create missing users disabled, but the option to
+import permissions is enabled, then projects still maintain their association to users by name.
+If the respective user accounts are created manually after the import, the users will start showing
+up in the projects.
+
+NOTE: Automatically added users are disabled and have no password. They must be explicitly enabled
+      and a password must be set before the users can log in.

@@ -37,4 +37,10 @@ include::{include-dir}systemproperties.adoc[]
 
 <<<
 
+include::{include-dir}remote-api.adoc[]
+include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
+
+<<<
+
 include::{include-dir}settings.adoc[]
+include::{include-dir}security-preauth.adoc[leveloffset=+1]

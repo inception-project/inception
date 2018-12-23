@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
@@ -60,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -313,8 +313,9 @@ public class AutomationPage
                 super.onConfigure();
                 
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
         
@@ -372,7 +373,7 @@ public class AutomationPage
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, projectService, user)
+                if (projectService.isAnnotator(project, user)
                         && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
@@ -381,9 +382,15 @@ public class AutomationPage
         });
     }
 
+    @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
+    }
+
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -740,6 +747,10 @@ public class AutomationPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
+
+            // Initialize timestamp in state
+            updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));

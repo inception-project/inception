@@ -40,11 +40,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -234,7 +234,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
         if (aVid.getSubId() == VID.NONE) {
             deleteSpan(aJCas, aVid.getId());
@@ -364,10 +364,10 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
-            int aEnd, Object aValue)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
+            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
-        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
     }
 
     @Override

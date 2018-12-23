@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import java.util.List;
+import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -97,4 +98,15 @@ public interface UserDao
      */
     List<Authority> listAuthorities(User user);
 
+    /**
+     * Check if the user has global administrator permissions.
+     */
+    public boolean isAdministrator(User aUser);
+
+    /**
+     * Check if the user has the permission to create projects.
+     */
+    public boolean isProjectCreator(User aUser);
+
+    public Set<String> getRoles(User aUser);
 }

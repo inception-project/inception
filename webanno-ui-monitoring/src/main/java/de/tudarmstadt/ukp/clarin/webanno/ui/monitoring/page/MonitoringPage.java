@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isCurator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
@@ -97,7 +96,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -211,7 +209,8 @@ public class MonitoringPage
         
         if (project.isPresent()) {
             // Check access to project
-            if (project != null && !isCurator(project.get(), projectService, user)) {
+            if (project != null && !(projectService.isCurator(project.get(), user)
+                    || projectService.isManager(project.get(), user))) {
                 error("You have no permission to access project [" + project.get().getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
@@ -350,8 +349,8 @@ public class MonitoringPage
 
                             List<Project> allProjects = projectService.listProjects();
                             for (Project project : allProjects) {
-                                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                                        || SecurityUtil.isCurator(project, projectService, user)) {
+                                if (projectService.isManager(project, user)
+                                        || projectService.isCurator(project, user)) {
                                     allowedProject.add(project);
                                 }
                             }
@@ -425,7 +424,7 @@ public class MonitoringPage
 
             // List of users with USER permission level
             List<User> users = projectService.listProjectUsersWithPermissions(
-                    projectSelectionModel.project, PermissionLevel.USER);
+                    projectSelectionModel.project, PermissionLevel.ANNOTATOR);
 
             for (User user : users) {
                 documentListAsColumnHeader.add(user.getUsername());
@@ -512,7 +511,7 @@ public class MonitoringPage
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.USER)) {
+                    PermissionLevel.ANNOTATOR)) {
                 for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
                     if (documentService.isAnnotationFinished(document, user)) {
                         if (annotatorsProgress.get(user.getUsername()) == null) {
@@ -537,7 +536,7 @@ public class MonitoringPage
         Map<String, Integer> annotatorsProgress = new HashMap<>();
         if (aProject != null) {
             for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.USER)) {
+                    PermissionLevel.ANNOTATOR)) {
                 int finished = 0;
                 int ignored = 0;
                 int totalDocs = 0;
@@ -568,8 +567,8 @@ public class MonitoringPage
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.get(username);
         for (Project project : projectService.listProjects()) {
-            if (SecurityUtil.isCurator(project, projectService, user)
-                    || SecurityUtil.isProjectAdmin(project, projectService, user)) {
+            if (projectService.isCurator(project, user)
+                    || projectService.isManager(project, user)) {
                 int annoFinished = documentService.listFinishedAnnotationDocuments(project).size();
                 int allAnno = documentService.numberOfExpectedAnnotationDocuments(project);
                 int progress = (int) Math.round((double) (annoFinished * 100) / (allAnno));
@@ -957,7 +956,7 @@ public class MonitoringPage
                     @Override
                     protected void onEvent(AjaxRequestTarget aTarget)
                     {
-                        if (!SecurityUtil.isCurator(project, projectService, user)) {
+                        if (!projectService.isCurator(project, user)) {
                             aTarget.appendJavaScript(
                                     "alert('the state can only be changed explicitly by the curator')");
                             return;

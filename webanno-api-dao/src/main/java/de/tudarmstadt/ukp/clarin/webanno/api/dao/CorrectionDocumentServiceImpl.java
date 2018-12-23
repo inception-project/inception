@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
@@ -85,5 +87,13 @@ public class CorrectionDocumentServiceImpl
         throws UIMAException, IOException
     {
         annotationService.upgradeCas(aCas, aDocument, CORRECTION_USER);
+    }
+    
+    @Override
+    public Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        return casStorageService.getCasTimestamp(aDocument, CORRECTION_USER);
     }
 }

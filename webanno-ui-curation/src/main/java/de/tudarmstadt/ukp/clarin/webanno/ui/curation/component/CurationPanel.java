@@ -46,6 +46,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.util.ListModel;
@@ -64,6 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -93,8 +96,9 @@ public class CurationPanel
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer crossSentAnnoView;
 
+    private AnnotationPageBase annotationPageBase;
     private AnnotationEditorBase annotationEditor;
-    public AnnotationDetailEditorPanel editor;
+    private AnnotationDetailEditorPanel editor;
     private AnnotatorState state;
 
     private ListView<String> crossSentAnnoList;
@@ -112,9 +116,11 @@ public class CurationPanel
     private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
             new HashMap<>();
 
-    public CurationPanel(String id, final IModel<CurationContainer> cCModel)
+    public CurationPanel(String id, AnnotationPageBase aPage, IModel<CurationContainer> cCModel)
     {
         super(id, cCModel);
+        
+        annotationPageBase = aPage;
         
         setOutputMarkupId(true);
         
@@ -165,9 +171,11 @@ public class CurationPanel
                 }
             }
         };
+        suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
+        suggestionViewPanel.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(suggestionViewPanel);
     
-        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel",
+        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", annotationPageBase,
                 PropertyModel.of(CurationPanel.this, "state"))
         {
             private static final long serialVersionUID = 2857345299480098279L;
@@ -218,13 +226,16 @@ public class CurationPanel
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(state), editor,
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
+        annotationEditor.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
     
         // add container for the list of sentences where annotations exists crossing multiple
         // sentences outside of the current page
         crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
-        crossSentAnnoView.setOutputMarkupId(true);
+        crossSentAnnoView.setOutputMarkupPlaceholderTag(true);
+        crossSentAnnoView.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(crossSentAnnoView);
         crossSentAnnoList = new ListView<String>("crossSentAnnoList",
                 this::invisibleCrossSentenceAnnotations)
@@ -254,18 +265,18 @@ public class CurationPanel
             }
     
         };
-        crossSentAnnoList.setOutputMarkupId(true);
         crossSentAnnoView.add(crossSentAnnoList);
     
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
-        sentencesListView.setOutputMarkupId(true);
+        sentencesListView.setOutputMarkupPlaceholderTag(true);
+        sentencesListView.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
         add(sentencesListView);
-        sentencesListView.add(new ListView<SourceListView>("sentencesList", () -> 
-                getModelObject().getCurationViews())
+        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+                LoadableDetachableModel.of(() -> getModelObject().getCurationViews()))
         {
             private static final long serialVersionUID = 8539162089561432091L;
-    
+
             @Override
             protected void populateItem(ListItem<SourceListView> item)
             {
@@ -511,5 +522,10 @@ public class CurationPanel
             tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
             tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
         }
+    }
+    
+    public AnnotationDetailEditorPanel getEditor()
+    {
+        return editor;
     }
 }
