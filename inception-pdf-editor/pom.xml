@@ -104,9 +104,9 @@
     </dependency>
 
     <dependency>
-        <groupId>paperai</groupId>
-        <artifactId>pdfextract</artifactId>
-        <version>0.3.2-SNAPSHOT</version>
+      <groupId>de.tudarmstadt.ukp.inception.pdfextract</groupId>
+      <artifactId>pdfextract</artifactId>
+      <version>0.3.2.1</version>
     </dependency>
   </dependencies>
   <build>
