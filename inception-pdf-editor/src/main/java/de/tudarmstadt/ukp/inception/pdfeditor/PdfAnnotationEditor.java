@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
@@ -98,7 +97,7 @@ public class PdfAnnotationEditor
             PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
             VDocument vdoc = render(jCas, 0, Integer.MAX_VALUE);
             AnnoFile annoFile = PdfAnnoRenderer.render(getModelObject(),
-                vdoc, jCas, annotationService, pdfExtractFile);
+                vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
             return annoFile;
         }
 

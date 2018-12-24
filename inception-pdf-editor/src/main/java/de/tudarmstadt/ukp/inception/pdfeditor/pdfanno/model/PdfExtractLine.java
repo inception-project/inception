@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.util.Objects;
+
 /**
  * Represents a line within a PDFExtract file.
  */
@@ -81,5 +83,21 @@ public class PdfExtractLine
     public void setDisplayPositions(String displayPositions)
     {
         this.displayPositions = displayPositions;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PdfExtractLine that = (PdfExtractLine) o;
+        return page == that.page &&
+            position == that.position &&
+            Objects.equals(value, that.value) &&
+            Objects.equals(displayPositions, that.displayPositions);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(page, position, value, displayPositions);
     }
 }

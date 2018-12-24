@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Queue;
 
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +45,7 @@ public class PdfAnnoRenderer
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnoRenderer.class);
 
 
-    public static AnnoFile render(AnnotatorState aState, VDocument aVDoc, JCas aJCas,
+    public static AnnoFile render(AnnotatorState aState, VDocument aVDoc, String documentText,
                                   AnnotationSchemaService aAnnotationService,
                                   PdfExtractFile pdfExtractFile)
     {
@@ -77,29 +76,29 @@ public class PdfAnnoRenderer
                     color = vspan.getColorHint();
                 }
 
-                annoFile.addSpan(convertToPdfAnnotation(vspan, color, aJCas, pdfExtractFile));
+                annoFile.addSpan(
+                    convertToPdfAnnotation(vspan, color, documentText, pdfExtractFile));
             }
         }
         return annoFile;
     }
 
-    private static Span convertToPdfAnnotation(VSpan vspan, String color, JCas aJCas,
+    private static Span convertToPdfAnnotation(VSpan vspan, String color, String documentText,
                                                      PdfExtractFile pdfExtractFile)
     {
-        String docText = aJCas.getDocumentText();
         VRange range = vspan.getRanges().get(0); // TODO: handle multiple ranges
         // use offset pre and post string to increase uniqueness of annotation text
         int offset = 20;
         int start = range.getBegin() <= offset ? 0 : range.getBegin() - offset;
-        int end = range.getEnd() < docText.length() - offset
-            ? range.getEnd() + offset : docText.length() - 1;
+        int end = range.getEnd() < documentText.length() - offset
+            ? range.getEnd() + offset : documentText.length() - 1;
 
-        String annotatedText = docText.substring(start, end);
+        String annotatedText = documentText.substring(start, end);
         String preText = annotatedText.substring(0,
             (range.getBegin() <= offset ? range.getBegin() - start : offset));
         String postText = annotatedText.substring(annotatedText.length() -
-            (range.getEnd() < docText.length() - offset
-                ? offset : docText.length() - range.getEnd()), annotatedText.length()) ;
+            (range.getEnd() < documentText.length() - offset
+                ? offset : documentText.length() - range.getEnd()), annotatedText.length()) ;
         // remove whitespaces as they are not present in PDFExtract text
         String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
 

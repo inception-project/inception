@@ -33,7 +33,6 @@ import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
