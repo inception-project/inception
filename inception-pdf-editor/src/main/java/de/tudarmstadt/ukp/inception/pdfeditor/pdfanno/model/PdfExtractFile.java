@@ -27,13 +27,13 @@ public class PdfExtractFile
 
     private String pdftxt;
 
-    private String strContent;
+    private String stringContent;
 
     /**
      * Contains position mapping for a character between PDFExtract string
      * including and excluding Draw Operations.
      */
-    private Map<Integer, Integer> positionMap;
+    private Map<Integer, Integer> stringPositionMap;
 
     private Map<Integer, PdfExtractLine> extractLines;
 
@@ -44,7 +44,7 @@ public class PdfExtractFile
 
     public void setPdftxt(String pdftxt)
     {
-        this.positionMap = new HashMap<>();
+        this.stringPositionMap = new HashMap<>();
         this.extractLines = new HashMap<>();
         this.pdftxt = pdftxt;
 
@@ -68,13 +68,13 @@ public class PdfExtractFile
             if (!extractLine.getValue().matches("^\\[.*\\]$"))
             {
                 sb.append(extractLine.getValue());
-                positionMap.put(strContentIndex, extractLineIndex);
+                stringPositionMap.put(strContentIndex, extractLineIndex);
                 strContentIndex++;
             }
             extractLineIndex++;
         }
 
-        strContent = sb.toString();
+        stringContent = sb.toString();
     }
 
     public String getPdftxt()
@@ -82,29 +82,29 @@ public class PdfExtractFile
         return pdftxt;
     }
 
-    public String getStrContent()
+    public String getStringContent()
     {
-        return strContent;
+        return stringContent;
     }
 
     /**
-     * Gets PdfExtractLines between the given range
+     * Gets PdfExtractLines between the given range in the string-only content
      * @param start
      * @param end
      * @return
      */
-    public List<PdfExtractLine> getPdfExtractLines(int start, int end)
+    public List<PdfExtractLine> getStringPdfExtractLines(int start, int end)
     {
         List<PdfExtractLine> lines = new ArrayList<>();
         for (int i = start; i <= end; i++)
         {
-            lines.add(extractLines.get(positionMap.get(i)));
+            lines.add(getStringPdfExtractLine(i));
         }
         return lines;
     }
 
-    public PdfExtractLine getPdfExtractLine(int position)
+    public PdfExtractLine getStringPdfExtractLine(int position)
     {
-        return extractLines.get(positionMap.get(position));
+        return extractLines.get(stringPositionMap.get(position));
     }
 }

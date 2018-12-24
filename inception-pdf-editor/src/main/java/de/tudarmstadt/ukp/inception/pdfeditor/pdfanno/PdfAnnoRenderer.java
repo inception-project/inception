@@ -103,15 +103,15 @@ public class PdfAnnoRenderer
         // remove whitespaces as they are not present in PDFExtract text
         String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
 
-        int index = pdfExtractFile.getStrContent().indexOf(cleanAnnotatedText);
+        int index = pdfExtractFile.getStringContent().indexOf(cleanAnnotatedText);
         if (index < 0) {
             LOG.error("Could not map exisiting annotation with id " + vspan.getVid().toString());
             return null;
         } else {
             start = index + preText.replaceAll("\\s", "").length() + 1;
             end = index + cleanAnnotatedText.length() - postText.replaceAll("\\s", "").length();
-            PdfExtractLine first = pdfExtractFile.getPdfExtractLine(start);
-            PdfExtractLine last = pdfExtractFile.getPdfExtractLine(end);
+            PdfExtractLine first = pdfExtractFile.getStringPdfExtractLine(start);
+            PdfExtractLine last = pdfExtractFile.getStringPdfExtractLine(end);
             return new Span(vspan.getVid().getId(), first.getPage(), color,
                 cleanAnnotatedText.substring(start - index, end - index).replaceAll("\\s", ""),
                 first.getPosition(), last.getPosition());
