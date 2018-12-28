@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_users]]
-== User Management
+= User Management
 
 NOTE: This functionality is only available to *administrators*.
 

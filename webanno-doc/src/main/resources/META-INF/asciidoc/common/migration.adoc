@@ -14,11 +14,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-=== Version 3.2.x to 3.3.0
+= Migration notes
+
+== Version 3.2.x to 3.3.0
 
 * When upgrading from 3.2.x or earlier to 3.3.0 or later, Automation projects break.
 
-=== Version 2.3.1 to 3.0.0
+== Version 2.3.1 to 3.0.0
 
 * The access permissions of administrators have changed. Administrators can no longer access
   annotation, curation, and monitoring pages for all projects. They can only access them if they

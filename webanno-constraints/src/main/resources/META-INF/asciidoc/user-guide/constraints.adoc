@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_constraints]]
-== Constraints
+= Constraints
 
 Constraints reorder the choice of tags based on the context of an annotation. For instance, for a
 given lemma, not all possible part-of-speech tags are sensible. Constraint rules can be set up to
@@ -25,6 +25,13 @@ up the annotation process as the annotator can choose from the relevant tags mor
 The choice of tags is not limited, only the order in which they are presented to the annotator. Thus, if
 the project manager has forgotten to set up a constraint or did possible not consider an oddball case,
 the annotator can still make a decision. 
+
+
+== Importing constraints
+
+To import a constraints file, go to *Project* and click on the particular project name. On the left side of the screen, a tab bar opens. Choose *Constraints*. You can now choose a constraint file by clicking on *Choose Files*. Then, click on *Import*. Upon import, the application checks if the constraints file is well formed. If they conform to the rules of writing constraints, the constraints are applied. 
+
+== Implementing constraint sets
 
 A *constraint set* consists of two components:
 
@@ -39,7 +46,11 @@ import <fully_qualified_name_of_layer> as <shortName>;
 
 It is necessary to declare short names for all fully qualified names because only short names can be used when writing a constraint rule. Short names cannot contain any dots or special characters, only letters, numbers, and the underscore.
 
-NOTE: If you are not sure what the fully qualified name of a layer is, you can look it up going to *Layers* in *Project settings*. Click on a particular layer and you can view the fully qualified name under *Technical Properties*.
+NOTE: All identifiers used in constraint statements are *case sensitive*.
+
+NOTE: If you are not sure what the fully qualified name of a layer is, you can look it up going 
+      to *Layers* in *Project settings*. Click on a particular layer and you can view the fully qualified 
+      name under *Technical Properties*.
 
 *Scopes* consist of a *scope name* and one or more *rules* that refer to a particular annotation layer and define restrictions for particular conditions. For example, it is possible to reorder the applicable tags for a POS layer, based on what kind of word the annotator is focusing on. 
 
@@ -110,7 +121,7 @@ pos.PosValue
 
 Hereby all annotations of type `<shortLayerName>` at the same position as the current context are found.
 
-=== Comments
+== Comments
 
 The constraint language supports block comments which start with `/*` and end with `*/`. These
 comments may span across multiple lines.
@@ -126,7 +137,7 @@ comments may span across multiple lines.
 ----
 
 
-=== Conditional features
+== Conditional features
 
 Constraints can be used to set up conditional features, that is features that only become available
 in the UI if another feature has a specific value. Let's say that for example you want to annotate

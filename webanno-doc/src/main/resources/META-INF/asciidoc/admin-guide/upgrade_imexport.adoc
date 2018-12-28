@@ -1,0 +1,33 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Upgrading via export/import
+
+This option can be used when performing an upgrade by exporting all data from once instance of
+the application into another instance which may potentially reside on a different machine. It
+is a very tedious approach because there is no option to bulk-export all projects.
+
+* Log into WebAnno and export all the projects that you wish to migrate using the *Export* pane in the project settings
+* Move your WebAnno home folder to a safe location so that WebAnno and create a new home folder in the old location
+* Copy the *settings.properties* back from your moved folder
+* Start the new WebAnno version to initialize the database
+* Recreate the users
+** If you are using MySQL
+*** create a new database for the new WebAnno version and update the *settings.properties* accordingly
+*** use link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] to dump the tables `users` and `authorities` from the old database and load it back into the new database
+** If you are not using MySQL, you have to recreate the users manually
+* When upgrading to WebAnno 2.x from a pre 2.x version, remove the *format.properties* file from the WebAnno home folder
+* Restart WebAnno and import the previously exported projects

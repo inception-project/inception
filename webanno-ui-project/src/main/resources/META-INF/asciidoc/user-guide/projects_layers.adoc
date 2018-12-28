@@ -1,9 +1,9 @@
 [[sect_projects_layers]]
-== Layers 
+= Layers 
 
 All annotations belong to an annotation *layer*. Each layer has a structural *type* that defines if it is a *span*, a *relation*, or a *chain*. It also defines how the annotations behave and what kind of features it carries.
 
-=== Creating a custom layer
+== Creating a custom layer
 
 This section provides a short walkthrough on the creation of a custom layer. The following sections act as reference documentation providing additional details on each step. In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
 
@@ -31,7 +31,7 @@ This section provides a short walkthrough on the creation of a custom layer. The
 
 Now you have created your first custom layer.
 
-=== Built-in layers
+== Built-in layers
 
 {product-name} comes with a set of built-in layers that allow you to start annotating immediately. Also, many import/export formats only work with these layers as their semantics are known. For this reason, the ability to customize the behaviors of built-in layers is limited and it is not possible to extend them with custom features.
 
@@ -93,7 +93,7 @@ The coloring of the layers signal the following:
 To create a custom layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed. 
 
 [[sect_projects_layers_properties]]
-=== Properties 
+== Properties 
 
 image::layer1.jpg[align="center"]
 
@@ -118,7 +118,7 @@ e.g. used when exporting data or in constraint rules.
 image::layer_details.png[align="center"]
 
 [[sect_projects_layers_technical_properties]]
-=== Technical Properties 
+== Technical Properties 
 
 In the frame *Technical Properties*, the user may select the type of annation that will be made with this layer: span, relation, or chain.
 
@@ -167,7 +167,7 @@ NOTE: Currently for each span layer there can be at most one relation layer atta
 NOTE: It is currently not possible to create relations between spans in different layers. For example if you define span layers called *Men* and *Women*, it is impossible to define a relation layer *Married to* between the two. To work around this limitation, create a single span layer *Person* with a feature *Gender* instead. You can now set the feature *Gender* to *Man* or *Woman* and eventually define a relation layer *Married to* attaching to the *Person* layer.
 
 [[sect_projects_layers_behaviours]]
-=== Behaviours
+== Behaviours
 
 .Behaviors
 [cols="1v,2", options="header"]
@@ -196,7 +196,7 @@ _(chain)_
 |====
 
 [[sect_projects_layers_features]]
-=== Features
+== Features
 
 image::layer3.jpg[align="center"]
 

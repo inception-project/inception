@@ -1,6 +1,41 @@
-== Features
+= Features
 
-FeatureSupport
-FeatureSupportRegistry
+The features mechanism allows supporting different types of annotation features, e.g. string
+features, numeric features, boolean features, link features, etc.
+It consists of the following classes and interfaces:
 
-traits editor
+* The `FeatureSupport` interface provides the API for implementing feature types.
+* The `FeatureSupportRegistry` interface and its default implementation `FeatureSupportRegistryImpl`
+  serve as an access point to the different supported feature types.
+* The `FeatureType` class which represents a short summary of a supported feature type. It is used
+  when selecting the type of a feature in the UI.
+* The `TypeAdapter` interface provides methods to create, manipulate or delete annotations on the
+  given type of layer.
+
+To add support for a new type of feature, create a Spring component class which implements the
+`FeatureSupport` interface. Note that a single featre support class can handle multiple feature types. 
+However, it is generally recommended to implement a separate layer support for every feature type.
+Implement the following methods:
+
+* `getId()` to return a unique identifier for the new feature type. Typically the Spring bean name
+  is returned here.
+* `getSupportedFeatureTypes()` to return a list of all the supported feature types handled by the new
+  feature support. This values returned here are used to populate the feature type choice when
+  creating a new feature in the project settings.
+* `accepts(AnnotationLayer)` to return `true` for any annotation layer that is handled by the new
+  layer support. I.e. `AnnotationLayer.getType()` must return a layer type identifier that was produced
+  by the given layer support.
+* `generateFeature(TypeSystemDescription, TypeDescription, AnnotationFeature)` add the UIMA feature
+  definition for the given annotation feature to the given type.
+
+If the new feature has special configuration settings, then implement the following methods:
+
+* `readTraits(AnnotationFeature)` to extract the special settings form the given annotation feature
+  definition. It is expected that the traits are stored as a JSON string in the `traits` field
+  of `AnnotationFeature`. If the `traits` field is `null`, a new traits object must be returned.
+* `writeTraits(AnnotationFeature, T)` to encode the layer-specific traits object into a JSON string
+  and store it in the `traits` field of `AnnotationFeature`.
+* `createTraitsEditor(String, IModel<AnnotationFeature>` to create a custom UI for the special feature
+  settings. This UI is shown below the standard settings in the feature detail editor on the 
+  *Layers* tab of the project settings.
+

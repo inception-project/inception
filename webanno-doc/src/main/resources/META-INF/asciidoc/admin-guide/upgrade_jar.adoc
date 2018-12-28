@@ -14,19 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_systemproperties]]
-= System Properties
+= Upgrading with embedded Tomcat
 
-[cols="4*", options="header"]
-|===
-| Setting
-| Description
-| Default
-| Example
-
-| wicket.configuration
-| Enable Wicket debug mode
-| deployment
-| development
-|===
-
+* Stop the WebAnno service
+* Replace the `webanno.jar` file with the new version
+* Ensure that the file has the right owner/group (usually `www-data`)
+* Start the WebAnno service again

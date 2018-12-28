@@ -1,4 +1,4 @@
-== Workflow
+= Workflow
 
 The following image shows an exemplary workflow of an annotation project with {product-name}.
 

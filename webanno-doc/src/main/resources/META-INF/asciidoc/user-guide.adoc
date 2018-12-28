@@ -17,118 +17,121 @@
 = {product-name} User Guide
 The {product-name} Team
 
-include::{include-dir}intro.adoc[]
+This guide summarizes the functionality of {product-name} from the user's perspective.
+
+NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
+
+All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
+
+
+
+= Introduction
+
+include::{include-dir}getting-started.adoc[leveloffset=+1]
 
 <<<
 
-include::common/systemrequirements.adoc[]
+include::{include-dir}workflow.adoc[leveloffset=+1]
+
+
+
+= Core functionalities
+
+include::{include-dir}login.adoc[leveloffset=+1]
+
+include::{include-dir}menubar.adoc[leveloffset=+1]
+
+include::{include-dir}menu.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}workflow.adoc[]
+include::{include-dir}annotation.adoc[leveloffset=+1]
+
+include::{include-dir}annotation_open.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_settings.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_export.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}installation.adoc[]
-
-include::{include-dir}upgrade.adoc[leveloffset=+1]
+include::{include-dir}curation.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}login.adoc[]
+include::{include-dir}monitoring.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}menubar.adoc[]
+include::{include-dir}agreement.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}menu.adoc[]
+include::{include-dir}projects.adoc[leveloffset=+1]
+
+include::{include-dir}projects_import.adoc[leveloffset=+2]
+
+include::{include-dir}projects_users.adoc[leveloffset=+2]
+
+include::{include-dir}projects_documents.adoc[leveloffset=+2]
+
+include::{include-dir}projects_layers.adoc[leveloffset=+2]
+
+include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
+
+include::{include-dir}projects_export.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}annotation.adoc[]
+include::{include-dir}users.adoc[leveloffset=+1]
 
-include::{include-dir}annotation_open.adoc[leveloffset=+1]
 
-include::{include-dir}annotation_navigation.adoc[leveloffset=+1]
 
-include::{include-dir}annotation_create-annotations.adoc[leveloffset=+1]
-
-include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+2]
-
-include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+2]
-
-include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+2]
-
-include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+2]
-
-include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+2]
-
-include::{include-dir}annotation_settings.adoc[leveloffset=+1]
-
-include::{include-dir}annotation_export.adoc[leveloffset=+1]
+= Advanced functionalities
 
 <<<
 
-include::{include-dir}curation.adoc[]
+include::{include-dir}correction.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}correction.adoc[]
+include::{include-dir}automation.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}automation.adoc[]
+include::{include-dir}constraints.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}monitoring.adoc[]
+include::{include-dir}casdoctor.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}agreement.adoc[]
+include::{include-dir}guidelines.adoc[leveloffset=+1]
+
+
+= Appendices
+
+include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}projects.adoc[]
-
-include::{include-dir}projects_import.adoc[leveloffset=+1]
-
-include::{include-dir}projects_users.adoc[leveloffset=+1]
-
-include::{include-dir}projects_documents.adoc[leveloffset=+1]
-
-include::{include-dir}projects_layers.adoc[leveloffset=+1]
-
-include::{include-dir}projects_tagsets.adoc[leveloffset=+1]
-
-include::{include-dir}projects_constraints.adoc[leveloffset=+1]
-
-include::{include-dir}projects_guidelines.adoc[leveloffset=+1]
-
-include::{include-dir}projects_export.adoc[leveloffset=+1]
+include::{include-dir}formats.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}constraints.adoc[]
-
-<<<
-
-include::{include-dir}users.adoc[]
-
-<<<
-
-include::{include-dir}formats.adoc[]
-
-<<<
-
-include::{include-dir}webannotsv.adoc[]
-
-<<<
-
-include::{include-dir}casdoctor.adoc[]
-
-<<<
-
-include::{include-dir}troubleshooting.adoc[]
+include::{include-dir}troubleshooting.adoc[leveloffset=+1]

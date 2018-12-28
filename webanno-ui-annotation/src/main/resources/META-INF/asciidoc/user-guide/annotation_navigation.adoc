@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Navigation
+= Navigation
 
 Sentence  numbers  on  the  left  side  of  the  annotation  page  show  the  exact sentence numbers in the document. 
 

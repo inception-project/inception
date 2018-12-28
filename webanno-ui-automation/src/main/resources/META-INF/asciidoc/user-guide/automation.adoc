@@ -15,13 +15,13 @@
 // limitations under the License.
 
 [[sect_automation]]
-== Automation
+= Automation
 
 NOTE: This functionality is only available to *managers* and  *administrators*.
 
 This functionality gives the possibility to choose features and documents, which can be used for training of all layers that are offered in WebAnno (lemma, NER, POS and co-ref).
 
-=== Setup
+== Setup
 
 After clicking on *Create Project* on the <<sect_projects>> page, select *automation* as your project type. The detailed description may be found in <<sect_projects>>.
 
@@ -63,7 +63,7 @@ After choosing the training files, uploading them in the right format and import
 
 You can see that the automation has finished either by the fact that the *Start Automation* button is enabled again, or on the <<sect_monitoring>> page, by choosing the project in <<sect_monitoring>> and looking at the progress shown in the *Training results /status* frame.
 
-=== Annotation
+== Annotation
 
 To see the tags that were automatically created during the previously described, go to *Home* and choose the *Automation* page.
 Then select a project and a file, analogically to Annotation. The page, which is demonstrated below will be displayed. 

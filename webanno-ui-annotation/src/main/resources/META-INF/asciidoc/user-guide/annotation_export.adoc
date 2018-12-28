@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Export
+= Export
 
 Annotations are always immediately persistent in the backend database. Thus, it is not necessary to  save the annotations explicitly. Also, losing the connection through network issues or timeouts does not cause data loss. To obtain a local copy of the current document, click on *export* button. The following frame will appear:
 

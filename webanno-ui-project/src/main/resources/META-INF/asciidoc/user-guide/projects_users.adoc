@@ -1,4 +1,4 @@
-== Users
+= Users
 
 After clicking on *Users*, you are displayed a new pane in which you can add new users by clicking on the button *Add User*.  After doing so, you get a list of users in the system which can be added to the project. By making a tick in front of the login, you can chose a new user.
 

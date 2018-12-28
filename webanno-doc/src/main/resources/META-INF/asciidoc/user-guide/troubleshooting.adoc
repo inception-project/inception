@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_troubleshooting]]
-== Troubleshooting
+= Troubleshooting
 
 If the tool is kept open in the browser, but not used for a long period of time, you will have to
 log in again. For this, press the reload button of your browser.

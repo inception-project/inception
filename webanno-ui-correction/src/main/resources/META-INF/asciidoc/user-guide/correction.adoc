@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_correction]]
-== Correction
+= Correction
 
 NOTE: This functionality is only available to *annotators* and *managers*. 
 

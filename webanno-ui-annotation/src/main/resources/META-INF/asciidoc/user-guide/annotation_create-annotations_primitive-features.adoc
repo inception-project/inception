@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Primitive Features
+= Primitive Features
 
 Supported primitive features types are string, boolean, integer, and float.
 Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 

@@ -14,9 +14,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_systemproperties]]
-= System Properties
+= General Settings
 
+.General settings
 [cols="4*", options="header"]
 |===
 | Setting
@@ -24,9 +24,24 @@
 | Default
 | Example
 
-| wicket.configuration
-| Enable Wicket debug mode
-| deployment
-| development
+| warnings.unsupportedBrowser
+| Warn about unsupported browser
+| true
+| false
+
+| debug.showExceptionPage
+| Show a page with a stack trace instead of an "Internal error" page. Do not use in production!
+| false
+| true
+
+| login.message
+| Custom message to appear on the login page, such as project web-site, annotation guideline link, ... The message can be an HTML content.
+| _unset_
+| `<span style="color:red; font-size: 200%;">Use are your own risk.</span>`
+
+| user.profile.accessible
+| Whether regular users can access their own profile to change their password and other profile information. This setting has no effect if WebAnno is running in pre-authentication mode.
+| false
+| true
 |===
 

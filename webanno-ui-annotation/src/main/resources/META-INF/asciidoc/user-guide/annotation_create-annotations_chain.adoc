@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Chains
+= Chains
 
 A chain layer includes both, span and relation annotations, into a single structural layer. Creating
 a span annotation in a chain layer basically creates a chain of length one. Creating a relation

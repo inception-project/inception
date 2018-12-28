@@ -1,0 +1,64 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Application home folder
+
+The WebAnno home folder is the place where WebAnno's configuration file `settings.properties`
+resides and where WebAnno stores its data. Mind that if you are using a MySQL database server
+(recommended), then WebAnno also stores some data in the MySQL database. This is important when
+you plan to perform a backup, as both the home folder and the database content need to be
+included in the backup.
+
+Now, let's go through the steps of setting up a home folder for WebAnno and creating a
+configuration file instructing WebAnno to access the previously prepared MySQL database.
+
+* Create WebAnno home folder. This is the directory where WebAnno settings files and projects (documents, annotations, etc.) are stored
++
+[source,bash]
+----
+$ mkdir /srv/webanno
+----
+////
+// FIXME How to reference to sample data?
+* *Optional* If you want to test WebAnno with some sample data, skip the _Users and permissions_ section and follow the instruction at [Sampledata], then come back here.
+////
+* Edit `/srv/webanno/settings.properties` to define the database connection as well as internal backup properties:
++
+[source,text]
+----
+database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
+database.driver=com.mysql.jdbc.Driver
+database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
+database.username=webanno
+database.password=t0t4llYSecreT
+
+# 60 * 60 * 24 * 30 = 30 days
+backup.keep.time=2592000
+
+# 60 * 5 = 5 minutes
+backup.interval=300
+
+backup.keep.number=10
+----
++
+* Fix permissions in WebAnno home folder
++
+[source,bash]
+----
+$ chown -R www-data /srv/webanno
+----
+
+

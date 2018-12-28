@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Relations
+= Relations
 
 To create a relation annotation, click on a span annotation and drag the mouse to another span
 annotation. While you drag, an arc is drawn. It is not possible to create arbitrary relation

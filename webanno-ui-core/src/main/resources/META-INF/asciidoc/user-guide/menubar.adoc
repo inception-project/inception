@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_menubar]]
-== Menu bar
+= Menu bar
 
 At the top of the screen, there is always a menu bar visible which allows a quick navigation within
 the application. It offers the following items:
