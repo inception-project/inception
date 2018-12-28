@@ -21,16 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -57,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class SpanAdapter
     extends TypeAdapter_ImplBase
-    implements AutomationTypeAdapter
 {
     public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -250,20 +244,6 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
-    {
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
-                }
-            }
-        }
-    }
-
-    @Override
     public long getTypeId()
     {
         return getLayer().getId();
@@ -289,28 +269,6 @@ public class SpanAdapter
     {
         return getLayer().getAttachFeature() == null ? null
                 : getLayer().getAttachFeature().getName();
-    }
-
-    @Override
-    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
-    {
-        CAS cas = aSentence.getCAS();
-        
-        Type type = getType(cas, getAnnotationTypeName());
-        List<String> annotations = new ArrayList<>();
-
-        for (Token token : selectCovered(Token.class, aSentence)) {
-            List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
-            if (tokenLevelAnnotations.size() > 0) {
-                AnnotationFS anno = tokenLevelAnnotations.get(0);
-                Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
-                annotations.add(anno.getFeatureValueAsString(labelFeature));
-            }
-            else {
-                annotations.add(NILL);
-            }
-        }
-        return annotations;
     }
 
     /**
