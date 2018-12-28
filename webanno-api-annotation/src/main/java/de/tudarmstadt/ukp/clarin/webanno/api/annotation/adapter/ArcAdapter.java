@@ -24,9 +24,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
@@ -47,14 +45,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
 public class ArcAdapter
     extends TypeAdapter_ImplBase
-    implements AutomationTypeAdapter
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -270,12 +266,6 @@ public class ArcAdapter
         return attachFeatureName;
     }
 
-    @Override
-    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
-    {
-        return new ArrayList<>();
-    }
-
     public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
             AnnotationFeature aFeature, int aBegin, int aEnd, String aDepCoveredText,
             String aGovCoveredText, Object aValue)
@@ -374,12 +364,5 @@ public class ArcAdapter
     public String getTargetFeatureName()
     {
         return targetFeatureName;
-    }
-
-    @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
-    {
-        throw new UnsupportedOperationException();
     }
 }

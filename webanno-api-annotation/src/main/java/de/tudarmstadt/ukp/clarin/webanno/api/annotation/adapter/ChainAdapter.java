@@ -45,7 +45,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -53,7 +52,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class ChainAdapter
     extends TypeAdapter_ImplBase
-    implements AutomationTypeAdapter
 {
 //    private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -355,19 +353,6 @@ public class ChainAdapter
     public String getAttachFeatureName()
     {
         return null;
-    }
-
-    @Override
-    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
-    {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
-    {
-        throw new UnsupportedOperationException();
     }
 
     @Override

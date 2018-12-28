@@ -46,6 +46,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -64,11 +65,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.AutomationTypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
@@ -91,7 +92,6 @@ import edu.lium.mira.Mira;
  */
 public class AutomationUtil
 {
-
     private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
@@ -314,8 +314,7 @@ public class AutomationUtil
                     aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                    .getAdapter(aFeature.getLayer());
+            TypeAdapter adapter = aAnnotationService.getAdapter(aFeature.getLayer());
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -324,7 +323,8 @@ public class AutomationUtil
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                        adapter.delete(aBModel, jCas, aFeature, sentence.getBegin() + i,
+                        deleteSpanAnnotation(adapter, aBModel, jCas, aFeature,
+                                sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1, aValue);
                     }
                 }
@@ -333,6 +333,21 @@ public class AutomationUtil
         }
     }
 
+    @Deprecated
+    private static void deleteSpanAnnotation(TypeAdapter aAdapter, AnnotatorState aState,
+            JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    {
+        Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
+                    aAdapter.delete(aState.getDocument(), aState.getUser().getUsername(), aJCas,
+                            new VID(getAddr(fs)));
+                }
+            }
+        }
+    }
+    
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
@@ -410,8 +425,7 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                    .getAdapter(feature.getLayer());
+            TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
             for (TrainingDocument trainingDocument : aAutomationService
                     .listTrainingDocuments(feature.getProject())) {
                 if ((trainingDocument.getFeature() != null
@@ -439,8 +453,7 @@ public class AutomationUtil
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(aFeature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(aFeature.getLayer());
         List<String> annotations = new ArrayList<>();
         // this is training - all training documents will be converted to a single training file
         if (aSourceDocument == null) {
@@ -456,7 +469,7 @@ public class AutomationUtil
                                         .values());
                         break;
                     case SINGLE_TOKEN:
-                        annotations.addAll(adapter.getAnnotation(sentence, aFeature));
+                        annotations.addAll(getAnnotation(adapter, sentence, aFeature));
                     default:
                         throw new IllegalStateException("Unsupported anchoring mode: ["
                                 + aFeature.getLayer().getAnchoringMode() + "]");
@@ -478,7 +491,7 @@ public class AutomationUtil
                             getMultipleAnnotation(aAnnotationService, sentence, aFeature).values());
                     break;
                 case SINGLE_TOKEN:
-                    annotations.addAll(adapter.getAnnotation(sentence, aFeature));
+                    annotations.addAll(getAnnotation(adapter, sentence, aFeature));
                     break;
                 default:
                     throw new IllegalStateException("Unsupported anchoring mode: ["
@@ -608,8 +621,7 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(feature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         List<TrainingDocument> trainingDocuments = aAutomationService
                 .listTrainingDocuments(feature.getProject());
@@ -713,8 +725,7 @@ public class AutomationUtil
 
         User user = aUserDao.getCurrentUser();
         AnnotationFeature feature = aTemplate.getTrainFeature();
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(feature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             File predFile = new File(miraDir, document.getId() + ".pred.ft");
             BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
@@ -737,7 +748,7 @@ public class AutomationUtil
     }
 
     private static StringBuffer getMiraLine(AnnotationSchemaService aAnnotationService,
-            Sentence sentence, AnnotationFeature aLayerFeature, AutomationTypeAdapter aAdapter)
+            Sentence sentence, AnnotationFeature aLayerFeature, TypeAdapter aAdapter)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
@@ -750,7 +761,7 @@ public class AutomationUtil
             case TOKENS:
                 multAnno = getMultipleAnnotation(aAnnotationService, sentence, aLayerFeature);
             case SINGLE_TOKEN:
-                annotations = aAdapter.getAnnotation(sentence, aLayerFeature);
+                annotations = getAnnotation(aAdapter, sentence, aLayerFeature);
             default:
                 throw new IllegalStateException("Unsupported anchoring mode: ["
                         + aLayerFeature.getLayer().getAnchoringMode() + "]");
@@ -1790,5 +1801,27 @@ public class AutomationUtil
             }
         }
         return multAnno;
+    }
+    
+    private static List<String> getAnnotation(TypeAdapter aAdapter, Sentence aSentence,
+            AnnotationFeature aFeature)
+    {
+        CAS cas = aSentence.getCAS();
+        
+        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        List<String> annotations = new ArrayList<>();
+
+        for (Token token : selectCovered(Token.class, aSentence)) {
+            List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
+            if (tokenLevelAnnotations.size() > 0) {
+                AnnotationFS anno = tokenLevelAnnotations.get(0);
+                Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
+                annotations.add(anno.getFeatureValueAsString(labelFeature));
+            }
+            else {
+                annotations.add(NILL);
+            }
+        }
+        return annotations;
     }
 }
