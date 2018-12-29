@@ -136,8 +136,12 @@ public class SpanAdapter
     private CreateSpanAnnotationRequest applyAnchoringMode(CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
-        if (aRequest.getBegin() == aRequest.getEnd()
-                && getLayer().getAnchoringMode().isZeroSpanAllowed()) {
+        if (aRequest.getBegin() == aRequest.getEnd()) {
+            if (!getLayer().getAnchoringMode().isZeroSpanAllowed()) {
+                throw new AnnotationException(
+                        "Cannot create zero-width annotation on layers that lock to token boundaries.");
+            }
+
             return aRequest;
         }
         
