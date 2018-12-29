@@ -65,6 +65,7 @@ public class RecommenderEvaluationResultEventAdapter
         try {
             Details details = new Details();
 
+            details.recommenderId = aEvent.getRecommender().getId();
             details.score = aEvent.getScore();
             details.active = aEvent.isActive();
 
@@ -86,6 +87,7 @@ public class RecommenderEvaluationResultEventAdapter
     public static class Details
     {
         // Recommender configuration
+        public Long recommenderId;
         public String layer;
         public String feature;
         public String tool;
