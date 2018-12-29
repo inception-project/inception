@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static java.util.Arrays.asList;
+import static org.apache.uima.cas.CAS.TYPE_NAME_ANNOTATION;
 
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
@@ -30,7 +33,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -70,54 +72,47 @@ public class RelationLayerSupport
     {
         layerSupportId = aBeanName;
     }
-    
+
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        types = asList(new LayerType(WebAnnoConst.RELATION_TYPE, "Relation", layerSupportId));
+        types = asList(new LayerType(RELATION_TYPE, "Relation", layerSupportId));
     }
-    
+
     @Override
     public List<LayerType> getSupportedLayerTypes()
     {
         return types;
     }
-    
+
     @Override
     public boolean accepts(AnnotationLayer aLayer)
     {
-        return WebAnnoConst.RELATION_TYPE.equals(aLayer.getType());
+        return RELATION_TYPE.equals(aLayer.getType());
     }
-    
+
     @Override
     public ArcAdapter createAdapter(AnnotationLayer aLayer)
     {
         ArcAdapter adapter = new ArcAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                aLayer.getId(), aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET,
-                WebAnnoConst.FEAT_REL_SOURCE,
-                aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
-                aLayer.getAttachType().getName(), schemaService.listAnnotationFeature(aLayer));
-
-        adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-        adapter.setAllowStacking(aLayer.isAllowStacking());
+                FEAT_REL_TARGET, FEAT_REL_SOURCE, schemaService.listAnnotationFeature(aLayer));
 
         return adapter;
     }
-    
+
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+        TypeDescription td = aTsd.addType(aLayer.getName(), "", TYPE_NAME_ANNOTATION);
         AnnotationLayer attachType = aLayer.getAttachType();
 
-        td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
-        td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
+        td.addFeature(FEAT_REL_TARGET, "", attachType.getName());
+        td.addFeature(FEAT_REL_SOURCE, "", attachType.getName());
 
         generateFeatures(aTsd, td, aLayer);
     }
-    
-    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
+
+    void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD, AnnotationLayer aLayer)
     {
         List<AnnotationFeature> features = schemaService.listAnnotationFeature(aLayer);
         for (AnnotationFeature feature : features) {
@@ -125,7 +120,7 @@ public class RelationLayerSupport
             fs.generateFeature(aTSD, aTD, feature);
         }
     }
-    
+
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
