@@ -27,7 +27,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -285,44 +284,6 @@ public class ArcAdapter
         return Optional.ofNullable(getLayer().getAttachFeature())
                 .map(AnnotationFeature::getName)
                 .orElse(null);
-    }
-
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFeature aFeature, int aBegin, int aEnd, String aDepCoveredText,
-            String aGovCoveredText, Object aValue)
-    {
-        Feature dependentFeature = getAnnotationType(aJCas.getCas())
-                .getFeatureByBaseName(getTargetFeatureName());
-        Feature governorFeature = getAnnotationType(aJCas.getCas())
-                .getFeatureByBaseName(getSourceFeatureName());
-
-        AnnotationFS dependentFs = null;
-        AnnotationFS governorFs = null;
-        
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        Type spanType = getType(aJCas.getCas(), getAttachTypeName());
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(getAttachFeatureName());
-        
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-            if (getAttachFeatureName() != null) {
-                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
-                        arcSpanFeature);
-                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature).getFeatureValue(
-                        arcSpanFeature);
-
-            }
-            else {
-                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
-            }
-            
-            if (aDepCoveredText.equals(dependentFs.getCoveredText())
-                    && aGovCoveredText.equals(governorFs.getCoveredText())) {
-                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
-                }
-            }
-        }
     }
 
     @Override
