@@ -17,20 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.Collection;
 import java.util.Optional;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -168,44 +165,6 @@ public class ArcAdapter
     public String getAnnotationTypeName()
     {
         return getLayer().getName();
-    }
-
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
-            AnnotationFeature aFeature, int aBegin, int aEnd, String aDepCoveredText,
-            String aGovCoveredText, Object aValue)
-    {
-        Feature dependentFeature = getAnnotationType(aJCas.getCas())
-                .getFeatureByBaseName(getTargetFeatureName());
-        Feature governorFeature = getAnnotationType(aJCas.getCas())
-                .getFeatureByBaseName(getSourceFeatureName());
-
-        AnnotationFS dependentFs = null;
-        AnnotationFS governorFs = null;
-        
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        Type spanType = getType(aJCas.getCas(), getAttachTypeName());
-        Feature arcSpanFeature = spanType.getFeatureByBaseName(getAttachFeatureName());
-        
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-            if (getAttachFeatureName() != null) {
-                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature).getFeatureValue(
-                        arcSpanFeature);
-                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature).getFeatureValue(
-                        arcSpanFeature);
-
-            }
-            else {
-                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
-            }
-            
-            if (aDepCoveredText.equals(dependentFs.getCoveredText())
-                    && aGovCoveredText.equals(governorFs.getCoveredText())) {
-                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
-                }
-            }
-        }
     }
 
     @Override
