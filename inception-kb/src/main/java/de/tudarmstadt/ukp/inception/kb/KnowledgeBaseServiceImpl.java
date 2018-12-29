@@ -689,44 +689,52 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public Optional<KBInstance> readInstance(KnowledgeBase kb, String aIdentifier)
+    public Optional<KBInstance> readInstance(KnowledgeBase aKB, String aIdentifier)
         throws QueryEvaluationException
     {
-        try (RepositoryConnection conn = getConnection(kb)) {
-            ValueFactory vf = conn.getValueFactory();
-            // Try to figure out the type of the instance - we ignore the inferred types here
-            // and only make use of the explicitly asserted types
-            RepositoryResult<Statement> conceptStmts = RdfUtils
-                .getStatementsSparql(conn, vf.createIRI(aIdentifier), kb.getTypeIri(), null,
-                    kb.getMaxResults(), false, null);
-
-            String conceptIdentifier = null;
-            while (conceptStmts.hasNext() && conceptIdentifier == null) {
-                Statement stmt = conceptStmts.next();
-                String id = stmt.getObject().stringValue();
-                if (!hasImplicitNamespace(id) && id.contains(":")) {
-                    conceptIdentifier = stmt.getObject().stringValue();
-                }
+        // Get concept for instance
+        KBHandle conceptForInstance = null;
+        List<KBHandle> concepts = getConceptForInstance(aKB, aIdentifier, true);
+        for (KBHandle concept : concepts) {
+            String id = concept.getIdentifier();
+            if (!hasImplicitNamespace(id) && id.contains(":")) {
+                conceptForInstance = concept;
+                break;
             }
+        }
+        // Didn't find a suitable concept for the instance - consider the instance as
+        // non-existing
+        if (conceptForInstance == null) {
+            return Optional.empty();
+        }
 
-            // Didn't find a suitable concept for the instance - consider the instance as
-            // non-existing
-            if (conceptIdentifier == null) {
-                return Optional.empty();
-            }
+        String conceptIdentifier = conceptForInstance.getIdentifier();
 
-            // Read the instance
-            try (RepositoryResult<Statement> instanceStmts = RdfUtils.getStatements(conn,
-                    vf.createIRI(aIdentifier), kb.getTypeIri(), vf.createIRI(conceptIdentifier),
-                    true, kb.getMaxResults())) {
-                if (instanceStmts.hasNext()) {
-                    Statement kbStmt = instanceStmts.next();
-                    KBInstance kbInst = KBInstance.read(conn, kbStmt, kb);
-                    return Optional.of(kbInst);
-                } else {
-                    return Optional.empty();
-                }
-            }
+        Set<KBHandle> labels = getSubPropertyLabels(aKB);
+        List<KBHandle> resultList = read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.readInstance(aKB, 1, labels);
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
+            tupleQuery.setBinding("oConcept", vf.createIRI(conceptIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
+            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
+            tupleQuery.setIncludeInferred(false);
+            return evaluateListQuery(aKB, tupleQuery, true, true, "oItem");
+        });
+
+        if (resultList.isEmpty()) {
+            return Optional.empty();
+        }
+        else {
+            KBInstance kbInstance = new KBInstance();
+            kbInstance.setIdentifier(resultList.get(0).getIdentifier());
+            kbInstance.setName(resultList.get(0).getName());
+            kbInstance.setDescription(resultList.get(0).getDescription());
+            kbInstance.setLanguage(resultList.get(0).getLanguage());
+            return Optional.of(kbInstance);
         }
     }
     
@@ -1218,7 +1226,7 @@ public class KnowledgeBaseServiceImpl
             }
             Binding label = bindings.getBinding("l");
             Binding description = bindings.getBinding("d");
-            Binding labelGeneral = bindings.getBinding("labelGeneral");
+            Binding labelGeneral = bindings.getBinding("lGen");
             Binding descGeneral = bindings.getBinding("descGeneral");
             Binding subPropertyLabel = bindings.getBinding("spl");
             
@@ -1425,9 +1433,9 @@ public class KnowledgeBaseServiceImpl
                     vf.createIRI(aIdentifier), aKb.getTypeIri(), aKb.getClassIri(), true,
                 aKb.getMaxResults());
             if (stmts.hasNext()) {
-                KBConcept kbConcept = KBConcept.read(conn, vf.createIRI(aIdentifier), aKb);
-                if (kbConcept != null) {
-                    return Optional.of(kbConcept);
+                Optional<KBConcept> kbConcept = readConcept(aKb, aIdentifier, false);
+                if (kbConcept.isPresent()) {
+                    return kbConcept.flatMap((c) -> Optional.of(c));
                 }
             }
             // In case we don't get the identifier as a concept we look for property/instance. 
@@ -1439,7 +1447,7 @@ public class KnowledgeBaseServiceImpl
                 else {
                     Optional<KBInstance> kbInstance = readInstance(aKb, aIdentifier);
                     if (kbInstance.isPresent()) {
-                        return kbInstance.flatMap((p) -> Optional.of(p));
+                        return kbInstance.flatMap((i) -> Optional.of(i));
                     }
                 }
             }

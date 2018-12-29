@@ -1244,8 +1244,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
-            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
+            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
+            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")

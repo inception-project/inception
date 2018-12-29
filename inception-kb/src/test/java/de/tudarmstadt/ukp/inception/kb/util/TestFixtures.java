@@ -83,6 +83,7 @@ public class TestFixtures
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);
+        kb.setDefaultLanguage("en");
         return kb;
     }
 

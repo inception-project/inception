@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -56,6 +57,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
@@ -145,9 +147,23 @@ public class KnowledgeBaseSubPropertyLabelTest
         assertThat(instanceKBHandle.stream().map(KBHandle::getName))
                     .as("Check that child concept is retreived")
                     .contains("Abele, Familie");
-    } 
-    
-    
+    }
+
+    @Test
+    public void readInstance_ShouldReturnInstanceWithSubPropertyLabel()
+    {
+
+        String instanceId = "http://d-nb.info/gnd/7509336-4";
+        Optional<KBInstance> instance = sut.readInstance(kb, instanceId);
+
+        assertThat(instance).as("Check that instance is present")
+            .isPresent();
+        assertThat(instance.get().getName())
+            .as("Check that correct label is retrieved")
+            .contains("Abingdon, Bettine");
+    }
+
+
     //Helper
     
     private Project createProject(String name) {
