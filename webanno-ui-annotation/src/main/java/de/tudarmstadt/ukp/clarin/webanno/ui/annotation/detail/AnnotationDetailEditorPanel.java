@@ -203,8 +203,9 @@ public abstract class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
 
         // Creating a relation
-        AnnotationFS arc = aAdapter.add(originFs, targetFs, aJCas, state.getWindowBeginOffset(),
-            state.getWindowEndOffset());
+        AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
+                originFs, targetFs, aJCas, state.getWindowBeginOffset(),
+                state.getWindowEndOffset());
         selection.selectArc(new VID(arc), originFs, targetFs);
     }
 
@@ -860,7 +861,8 @@ public abstract class AnnotationDetailEditorPanel
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
         if (adapter instanceof ArcAdapter) {
             // If no features, still create arc #256
-            AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+            AnnotationFS arc = ((ArcAdapter) adapter).add(state.getDocument(),
+                    state.getUser().getUsername(), targetFs, originFs, jCas,
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
