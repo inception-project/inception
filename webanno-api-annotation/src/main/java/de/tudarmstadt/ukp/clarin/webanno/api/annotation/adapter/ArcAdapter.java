@@ -18,11 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -35,12 +32,9 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -53,8 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class ArcAdapter
     extends TypeAdapter_ImplBase
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
@@ -121,106 +113,25 @@ public class ArcAdapter
             AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin, int aWindowEnd)
         throws AnnotationException
     {
-        return add(new CreateRelationAnnotationRequest(aDocument, aUsername, aJCas, aOriginFs,
+        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aJCas, aOriginFs,
                 aTargetFs, aWindowBegin, aWindowEnd));
     }
 
-    public AnnotationFS add(CreateRelationAnnotationRequest aRequest)
+    public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)
         throws AnnotationException
     {
         CreateRelationAnnotationRequest request = aRequest;
         
-        request = applyCrossSentenceBehavior(request);
+        request = new RelationCrossSentenceBehavior().apply(this, request);
         
-        request = applyStackingBehavior(request);
+        request = new RelationStackingBehavior().apply(this, request);
         
-        request = applyAttachFeatureBehavior(request);
+        request = new RelationAttachmentBehavior().apply(this, request);
         
         return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
                 request.getTargetFs());
     }
 
-    private CreateRelationAnnotationRequest applyAttachFeatureBehavior(
-            CreateRelationAnnotationRequest aRequest)
-    {
-        if (getLayer().getAttachFeature() == null) {
-            return aRequest;
-        }
-        
-        final CAS cas = aRequest.getJcas().getCas();
-        final Type spanType = getType(cas, getLayer().getAttachType().getName());
-        AnnotationFS originFS = aRequest.getOriginFs();
-        AnnotationFS targetFS = aRequest.getTargetFs();
-        targetFS = selectCovered(cas, spanType, targetFS.getBegin(), targetFS.getEnd()).get(0);
-        originFS = selectCovered(cas, spanType, originFS.getBegin(), originFS.getEnd()).get(0);
-        return aRequest.changeRelation(originFS, targetFS);
-    }
-
-    private CreateRelationAnnotationRequest applyStackingBehavior(
-            CreateRelationAnnotationRequest aRequest)
-        throws AnnotationException
-    {
-        final JCas jcas = aRequest.getJcas();
-        final int windowBegin = aRequest.getWindowBegin();
-        final int windowEnd = aRequest.getWindowEnd();
-        final AnnotationFS originFS = aRequest.getOriginFs();
-        final AnnotationFS targetFS = aRequest.getTargetFs();
-        final Type type = getType(jcas.getCas(), getLayer().getName());
-        final Feature dependentFeature = type.getFeatureByBaseName(targetFeatureName);
-        final Feature governorFeature = type.getFeatureByBaseName(sourceFeatureName);
-        
-        // Locate the governor and dependent annotations - looking at the annotations that are
-        // presently visible on screen is sufficient - we don't have to scan the whole CAS.
-        for (AnnotationFS fs : selectCovered(jcas.getCas(), type, windowBegin, windowEnd)) {
-            AnnotationFS existingTargetFS;
-            AnnotationFS existingOriginFS;
-            
-            if (getLayer().getAttachFeature() != null) {
-                final Type spanType = getType(jcas.getCas(), getLayer().getAttachType().getName());
-                Feature arcSpanFeature = spanType
-                        .getFeatureByBaseName(getLayer().getAttachFeature().getName());
-                existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature)
-                        .getFeatureValue(arcSpanFeature);
-                existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature)
-                        .getFeatureValue(arcSpanFeature);
-            }
-            else {
-                existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-                existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature);
-            }
-        
-            if (existingTargetFS == null || existingOriginFS == null) {
-                log.warn("Relation [" + getLayer().getName() + "] with id [" + getAddr(fs)
-                        + "] has loose ends - ignoring during while checking for duplicates.");
-                continue;
-            }
-
-            // If stacking is not allowed and we would be creating a duplicate arc, then instead
-            // update the label of the existing arc
-            if (!getLayer().isAllowStacking()
-                    && isDuplicate(existingOriginFS, originFS, existingTargetFS, targetFS)) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
-                        + getLayer().getUiName() + "] at this location - stacking is not "
-                        + "enabled for this layer.");
-            }
-        }
-        
-        return aRequest;
-    }
-    
-    private CreateRelationAnnotationRequest applyCrossSentenceBehavior(
-            CreateRelationAnnotationRequest aRequest)
-        throws AnnotationException
-    {
-        if (!getLayer().isCrossSentence() && !isSameSentence(aRequest.getJcas(),
-                aRequest.getOriginFs().getBegin(), aRequest.getTargetFs().getEnd())) {
-            throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
-                    + "limit your annotation to single sentence!");
-        }
-
-        return aRequest;
-    }
-    
     private AnnotationFS createRelationAnnotation(CAS cas, AnnotationFS originFS,
             AnnotationFS targetFS)
         throws AnnotationException
@@ -253,38 +164,10 @@ public class ArcAdapter
         aJCas.removeFsFromIndexes(fs);
     }
 
-    private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,
-            AnnotationFS aAnnotationFSNewOrigin, AnnotationFS aAnnotationFSOldTarget,
-            AnnotationFS aAnnotationFSNewTarget)
-    {
-        return isSame(aAnnotationFSOldOrigin, aAnnotationFSNewOrigin)
-                && isSame(aAnnotationFSOldTarget, aAnnotationFSNewTarget);
-    }
-
-    @Override
-    public long getTypeId()
-    {
-        return getLayer().getId();
-    }
-
-    @Override
-    public Type getAnnotationType(CAS cas)
-    {
-        return CasUtil.getType(cas, getLayer().getName());
-    }
-
     @Override
     public String getAnnotationTypeName()
     {
         return getLayer().getName();
-    }
-
-    @Override
-    public String getAttachFeatureName()
-    {
-        return Optional.ofNullable(getLayer().getAttachFeature())
-                .map(AnnotationFeature::getName)
-                .orElse(null);
     }
 
     public void delete(SourceDocument aDocument, String aUsername, JCas aJCas,
@@ -323,6 +206,14 @@ public class ArcAdapter
                 }
             }
         }
+    }
+
+    @Override
+    public String getAttachFeatureName()
+    {
+        return Optional.ofNullable(getLayer().getAttachFeature())
+                .map(AnnotationFeature::getName)
+                .orElse(null);
     }
 
     @Override

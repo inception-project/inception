@@ -92,11 +92,8 @@ public class ChainLayerSupport
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
-        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher,
-                aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
-                "first", "next", schemaService.listAnnotationFeature(aLayer));
-
-        adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
+                aLayer.getName() + ChainAdapter.CHAIN, schemaService.listAnnotationFeature(aLayer));
 
         return adapter;
     }

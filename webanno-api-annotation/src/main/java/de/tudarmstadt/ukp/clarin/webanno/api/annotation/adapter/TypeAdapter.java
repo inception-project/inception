@@ -22,6 +22,7 @@ import java.util.Collection;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -48,10 +49,10 @@ public interface TypeAdapter
      */
     String FEATURE_SEPARATOR = " | ";
 
-    /**
-     * @return the database ID of the type.
-     */
-    long getTypeId();
+    default long getTypeId()
+    {
+        return getLayer().getId();
+    }
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}
@@ -60,7 +61,10 @@ public interface TypeAdapter
      *            the CAS.
      * @return the type.
      */
-    Type getAnnotationType(CAS cas);
+    default Type getAnnotationType(CAS cas)
+    {
+        return CasUtil.getType(cas, getAnnotationTypeName());
+    }
 
     /**
      * Get the CAS type of the this {@link TypeAdapter}

@@ -278,8 +278,8 @@ public abstract class AnnotationDetailEditorPanel
             }
         }
         
-        selection.setAnnotation(new VID(
-            aAdapter.addSpan(aJCas, selection.getBegin(), selection.getEnd())));
+        selection.setAnnotation(new VID(aAdapter.addSpan(state.getDocument(),
+                state.getUser().getUsername(), aJCas, selection.getBegin(), selection.getEnd())));
         selection.setText(
             aJCas.getDocumentText().substring(selection.getBegin(), selection.getEnd()));
     }
@@ -295,7 +295,8 @@ public abstract class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
 
         // Creating a new chain link
-        int addr = aAdapter.addArc(aJCas, originFs, targetFs);
+        int addr = aAdapter.addArc(state.getDocument(), state.getUser().getUsername(), aJCas,
+                originFs, targetFs);
         selection.selectArc(new VID(addr), originFs, targetFs);
     }
 
