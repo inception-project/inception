@@ -298,7 +298,8 @@ public class HtmlAnnotationEditor
             JCas jcas = getJCasProvider().get();
 
             VDocument vdoc = new VDocument();
-            preRenderer.render(vdoc, aState, jcas, getLayersToRender());
+            preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
+                    jcas, getLayersToRender());
 
             List<Annotation> annotations = new ArrayList<>();
 
