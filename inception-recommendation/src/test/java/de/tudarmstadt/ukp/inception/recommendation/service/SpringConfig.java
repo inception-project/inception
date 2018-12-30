@@ -30,7 +30,7 @@ import org.springframework.context.annotation.ComponentScan;
         })
 @EntityScan(
         basePackages = {
-            "de.tudarmstadt.ukp.inception.recommendation.service",
+            "de.tudarmstadt.ukp.inception.recommendation.api.model",
             "de.tudarmstadt.ukp.clarin.webanno.security.model",
             "de.tudarmstadt.ukp.clarin.webanno.model"
 })

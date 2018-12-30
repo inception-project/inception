@@ -30,8 +30,9 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = SpringConfig.class)
@@ -47,14 +48,15 @@ public class RecommendationServiceImplIntegrationTest
 
     private RecommendationServiceImpl sut;
     private Project project;
-    private User layer;
+    private AnnotationLayer layer;
+    private Recommender rec;
 
     @Before
     public void setUp() throws Exception
     {
         sut = new RecommendationServiceImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
-        layer = createAnnotationType(LAYERNAME);
+        layer = createAnnotationLayer(LAYERNAME);
     }
 
     @After
@@ -67,6 +69,33 @@ public class RecommendationServiceImplIntegrationTest
     public void thatApplicationContextStarts()
     {
     }
+    
+//    @Test
+//    public void getLoggedEvents_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
+//    {
+//        rec = buildRecommender(project, layer);
+//
+//        sut.createOrUpdateRecommender(rec);
+//
+//        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
+//
+//        assertThat(enabledRecommenders).as("Check that only the previously created recommender is found")
+//                .hasSize(1).contains(rec);
+//    }
+
+
+    private Recommender buildRecommender(Project aProject, AnnotationLayer aLayer)
+    {
+        Recommender recommender = new Recommender();
+        recommender.setLayer(aLayer);
+        recommender.setLayer(aLayer);
+        recommender.setAlwaysSelected(true);
+        recommender.setEnabled(true);
+        recommender.setSkipEvaluation(false);
+        recommender.setMaxRecommendations(3);
+        
+        return recommender;
+    }
 
     // Helper
     private Project createProject(String aName)
@@ -77,10 +106,16 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(project);
     }
 
-    public User createAnnotationType(String aUsername)
+    public AnnotationLayer createAnnotationLayer(String aUsername)
     {
-        User user = new User();
-        user.setUsername(aUsername);
-        return testEntityManager.persist(user);
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setEnabled(true);
+        layer.setName("annotation type name");
+        layer.setReadonly(false);
+        layer.setType("test type");
+        layer.setUiName("test ui name");
+        layer.setAnchoringMode(false, false);
+       
+        return testEntityManager.persist(layer);
     }
 }
