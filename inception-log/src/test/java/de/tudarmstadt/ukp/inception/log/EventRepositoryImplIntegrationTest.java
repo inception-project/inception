@@ -47,7 +47,8 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 public class EventRepositoryImplIntegrationTest  {
     private static final String PROJECT_NAME = "Test project";
     private static final String USERNAME = "Test user";
-    private static final String DETAIL_JSON = "{}";
+    private static final int RECOMMENDER_ID = 7;
+    private static final String DETAIL_JSON = "{\"recommenderId\":" + RECOMMENDER_ID + "}";
     private static final String EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT = "RecommenderEvaluationResultEvent";
 
     @Autowired
@@ -83,7 +84,7 @@ public class EventRepositoryImplIntegrationTest  {
 
         sut.create(le);
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that only the previously created logged event is found")
                 .hasSize(1).contains(le);
@@ -93,7 +94,7 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithoutLoggedEvent_ShouldReturnEmptyList()
     {
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -106,7 +107,7 @@ public class EventRepositoryImplIntegrationTest  {
         sut.create(le);
 
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -120,7 +121,7 @@ public class EventRepositoryImplIntegrationTest  {
         sut.create(le);
         
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -128,14 +129,13 @@ public class EventRepositoryImplIntegrationTest  {
     @Test
     public void getLoggedEvents_WithLoggedEventOfOtherType_ShouldReturnEmptyList()
     {
-        project = createProject("otherProject");
         le = buildLoggedEvent(project, user.getUsername());
         le.setEvent("OTHER_TYPE");
 
         sut.create(le);
         
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -152,7 +152,7 @@ public class EventRepositoryImplIntegrationTest  {
         }
         
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that the number of logged events is 5").hasSize(5);
     }
@@ -172,14 +172,29 @@ public class EventRepositoryImplIntegrationTest  {
         }
         
         List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
         
+        assertThat(loggedEvents).as("Check that the returned list is not empty").isNotEmpty();
         
-        for (int i = 1; i < loggedEvents.size(); i++) {
+        for (int i = 1; i < 5; i++) {
             assertThat(loggedEvents.get(i - 1).getCreated())
                     .as("Check that the list of logged events is ordered by created time in descending order")
                     .isAfterOrEqualsTo(loggedEvents.get(i).getCreated());
         }
+    }
+    
+    @Test
+    public void getLoggedEvents_WithLoggedEventOfOtherRecommenderId_ShouldReturnEmptyList()
+    {
+        le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+        sut.create(le);
+        
+        int otherRecommenderId = 6;
+        
+        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
     
     // Helper
