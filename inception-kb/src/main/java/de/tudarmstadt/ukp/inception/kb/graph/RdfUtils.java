@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.ExceptionConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.Iteration;
@@ -36,9 +35,10 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.repository.RepositoryResult;
-import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class RdfUtils
 {
@@ -87,31 +87,6 @@ public class RdfUtils
 
         return new RepositoryResult<Statement>(eci);
     }
-    
-    public static RepositoryResult<Statement> getPropertyStatementsSparql(RepositoryConnection conn,
-            Resource subj, IRI pred, Value obj, boolean includeInferred,
-            String language, KnowledgeBase aKB)
-        throws QueryEvaluationException
-    {
-        String QUERY = SPARQLQueryStore.queryForPropertyStatementsLanguageFiltered(aKB, language);
-
-        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-        if (subj != null) {
-            tupleQuery.setBinding("s", subj);
-        }
-        if (pred != null) {
-            tupleQuery.setBinding("p", pred);
-        }
-        if (obj != null) {
-            tupleQuery.setBinding("o", obj);
-        }
-        tupleQuery.setIncludeInferred(includeInferred);
-        TupleQueryResult result = tupleQuery.evaluate();
-
-        ExceptionConvertingIteration eci = getExceptionConvertingIteration(result, "s", "p", "o");
-        
-        return new RepositoryResult<Statement>(eci);
-    }
 
     private static ExceptionConvertingIteration getExceptionConvertingIteration(
         TupleQueryResult aResult, String aSubjBinding, String aPredBinding, String aObjBinding)
@@ -128,8 +103,8 @@ public class RdfUtils
             }
         };
 
-        ExceptionConvertingIteration<Statement, RepositoryException> i2 = new ExceptionConvertingIteration<>(
-            i1)
+        ExceptionConvertingIteration<Statement, RepositoryException> i2 =
+            new ExceptionConvertingIteration<>(i1)
         {
             @Override protected RepositoryException convert(Exception aE)
             {

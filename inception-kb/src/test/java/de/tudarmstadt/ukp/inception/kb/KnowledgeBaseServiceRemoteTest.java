@@ -155,7 +155,7 @@ public class KnowledgeBaseServiceRemoteTest
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        PROFILES = readKnowledgeBaseProfiles();
+        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -412,17 +412,6 @@ public class KnowledgeBaseServiceRemoteTest
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(sutConfig.getKnowledgeBase(), fileName, is);
-        }
-    }
-
-    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
-    {
-        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
-                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
         }
     }
 

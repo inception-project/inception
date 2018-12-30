@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -33,6 +34,7 @@ public class KnwoledgeBaseSchemaProfileTest
         String classIri = "http://www.w3.org/2002/07/owl#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
@@ -40,7 +42,7 @@ public class KnwoledgeBaseSchemaProfileTest
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
+        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri, subPropertyIri,
             descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
             fullTextSearchIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();

@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -65,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -334,7 +334,7 @@ public class AccessSpecificSettingsPanel
                 link.add(AttributeModifier.append("title",
                     new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                         .setParameters(
-                            SchemaProfile.checkSchemaProfile(item.getModelObject()).getLabel(),
+                            SchemaProfile.checkSchemaProfile(item.getModelObject()).getUiLabel(),
                             getAccessTypeLabel(item.getModelObject()))));
 
                 item.add(link);

@@ -271,12 +271,6 @@ public class KnowledgeBaseSubPropertyLabelTest
    
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
     {
-        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
-                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
-        }
+        return KnowledgeBaseProfile.readKnowledgeBaseProfiles();
     }
 }
