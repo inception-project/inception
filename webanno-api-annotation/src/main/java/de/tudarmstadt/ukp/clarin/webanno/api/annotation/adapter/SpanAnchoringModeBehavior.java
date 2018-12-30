@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.util.List;
 
-import org.apache.commons.lang.math.IntRange;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -46,20 +45,19 @@ public class SpanAnchoringModeBehavior
             return aRequest;
         }
         
-        IntRange originalRange = new IntRange(aRequest.getBegin(), aRequest.getEnd());
-        IntRange adjustedRange = adjust(aRequest.getJcas(), aAdapter.getLayer().getAnchoringMode(),
+        int[] originalRange = new int[] { aRequest.getBegin(), aRequest.getEnd() };
+        int[] adjustedRange = adjust(aRequest.getJcas(), aAdapter.getLayer().getAnchoringMode(),
                 originalRange);
         
         if (adjustedRange.equals(originalRange)) {
             return aRequest;
         }
         else {
-            return aRequest.changeSpan(adjustedRange.getMinimumInteger(),
-                    adjustedRange.getMaximumInteger());
+            return aRequest.changeSpan(adjustedRange[0], adjustedRange[1]);
         }
     }
     
-    public static IntRange adjust(JCas aJCas, AnchoringMode aMode, IntRange aRange)
+    public static int[] adjust(JCas aJCas, AnchoringMode aMode, int[] aRange)
         throws AnnotationException
     {
         switch (aMode) {
@@ -67,33 +65,31 @@ public class SpanAnchoringModeBehavior
             return aRange;
         }
         case SINGLE_TOKEN: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class,
-                    aRange.getMinimumInteger(), aRange.getMaximumInteger());
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
-                throw new AnnotationException("No tokens found int range ["
-                        + aRange.getMinimumInteger() + "-" + aRange.getMaximumInteger() + "]");
+                throw new AnnotationException(
+                        "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
                         
-            return new IntRange(tokens.get(0).getBegin(), tokens.get(0).getEnd());
+            return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class,
-                    aRange.getMinimumInteger(), aRange.getMaximumInteger());
+            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
             // update the begin and ends (no sub token selection)
             int begin = tokens.get(0).getBegin();
             int end = tokens.get(tokens.size() - 1).getEnd();
             
-            return new IntRange(begin, end);
+            return new int[] { begin, end };
         }
         case SENTENCES: {
-            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class,
-                    aRange.getMinimumInteger(), aRange.getMaximumInteger());
+            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aRange[0],
+                    aRange[1]);
             // update the begin and ends (no sub token selection)
             int begin = sentences.get(0).getBegin();
             int end = sentences.get(sentences.size() - 1).getEnd();
             
-            return new IntRange(begin, end);
+            return new int[] { begin, end };
         }
         default:
             throw new IllegalArgumentException("Unsupported anchoring mode: [" + aMode + "]");
