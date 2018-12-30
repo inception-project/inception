@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -189,15 +190,33 @@ public class LearningCurveChartPanel
         // value of the event
         String eventType = "RecommenderEvaluationResultEvent";
 
-        List<LoggedEvent> loggedEvents = eventRepo.listLoggedEvents(model.getObject().getProject(),
-                model.getObject().getUser().getUsername(), eventType, maxPointsToPlot);
+        List<LoggedEvent> loggedEvents = new ArrayList<LoggedEvent>();
+        
+        List<Recommender> listEnabledRecommenders = recommendationService
+                .listEnabledRecommenders(model.getObject().getProject());
+        
+        if (listEnabledRecommenders.isEmpty())        {
+            log.warn("The project has no enabled recommender");
 
+            error("Cannot plot the learning curve. There is not recommender in the project.");
+
+            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+        }
+        
+        for (Recommender recommender : listEnabledRecommenders) {
+            List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEvents(
+                    model.getObject().getProject(), model.getObject().getUser().getUsername(),
+                    eventType, maxPointsToPlot, recommender.getId());
+            
+            // we want to show the latest record on the right side of the graph
+            Collections.reverse(tempLoggedEvents);
+            
+            loggedEvents.addAll(tempLoggedEvents);
+        }
+                
         if (CollectionUtils.isEmpty(loggedEvents)) {
             return new ArrayListValuedHashMap<String, Double>();
         }
-
-        // we want to show the latest record on the right side of the graph
-        Collections.reverse(loggedEvents);
 
         MultiValuedMap<String, Double> recommenderScoreMap = new ArrayListValuedHashMap<>();
 

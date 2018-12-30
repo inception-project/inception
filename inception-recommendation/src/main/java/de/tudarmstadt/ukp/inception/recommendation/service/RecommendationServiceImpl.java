@@ -246,7 +246,6 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
     {
-        //TODO: add layer condition
         String query = String.join("\n",
                 "FROM Recommender WHERE ",
                 "id = :id AND ",
@@ -254,6 +253,20 @@ public class RecommendationServiceImpl
 
         return entityManager.createQuery(query, Recommender.class)
                 .setParameter("id", aRecommenderId)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
                 .setParameter("enabled", true)
                 .getResultList();
     }

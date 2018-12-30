@@ -59,19 +59,21 @@ public class EventRepositoryImpl
     @Override
     @Transactional
     public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
-            int aSize)
+            int aSize, long recommenderId)
     {
         String query = String.join("\n",
                 "FROM LoggedEvent WHERE ",
                 "user=:user AND ",
                 "project = :project AND ",
-                "event = :event ",
+                "event = :event AND ",
+                "details LIKE :details ",
                 "ORDER BY created DESC");
 
         return entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("user", aUsername)
                 .setParameter("project", aProject.getId())
                 .setParameter("event", aEventType)
+                .setParameter("details", "%\"recommenderId\":" + recommenderId + "%")
                 .setMaxResults(aSize)
                 .getResultList();
     }

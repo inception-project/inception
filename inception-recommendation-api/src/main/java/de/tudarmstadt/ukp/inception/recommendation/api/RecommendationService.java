@@ -61,6 +61,8 @@ public interface RecommendationService
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
     List<Recommender> getEnabledRecommenders(Long aRecommenderId);
+    
+    List<Recommender> listEnabledRecommenders(Project aProject);
 
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
