@@ -20,10 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 
 import java.util.List;
+import java.util.Map;
 
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -94,5 +98,12 @@ public class SpanAnchoringModeBehavior
         default:
             throw new IllegalArgumentException("Unsupported anchoring mode: [" + aMode + "]");
         }    
+    }
+    
+    @Override
+    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
+    {
+        // Still needs to be implemented
     }
 }

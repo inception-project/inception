@@ -38,7 +38,6 @@ import java.util.Set;
 
 import javax.persistence.NoResultException;
 
-import org.apache.commons.lang.math.IntRange;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -268,13 +267,13 @@ public abstract class AnnotationDetailEditorPanel
             // If stacking is not allowed, try fetching the feature value of a potentially existing
             // annotation
             if (!layer.isAllowStacking()) {
-                IntRange adjustedRange = SpanAnchoringModeBehavior.adjust(aJCas,
-                        layer.getAnchoringMode(), new IntRange(selection.getBegin(),
-                                selection.getEnd()));
+                int[] adjustedRange = SpanAnchoringModeBehavior.adjust(aJCas,
+                        layer.getAnchoringMode(), new int[] { selection.getBegin(),
+                                selection.getEnd() });
                 
                 Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
-                for (AnnotationFS fs : selectCovered(aJCas.getCas(), type,
-                        adjustedRange.getMinimumInteger(), adjustedRange.getMaximumInteger())) {
+                for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, adjustedRange[0],
+                        adjustedRange[1])) {
                     if (fs.getBegin() == selection.getBegin()
                             && fs.getEnd() == selection.getEnd()) {
                         spanValue = aAdapter.getFeatureValue(featureState.feature, fs);

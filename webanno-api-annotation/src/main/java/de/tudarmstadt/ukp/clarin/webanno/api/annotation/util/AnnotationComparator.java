@@ -15,21 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
-import java.util.Map;
+import java.util.Comparator;
 
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-
-public interface SpanLayerBehavior
+/**
+ * Sort ascending by begin and descending by end.
+ */
+public class AnnotationComparator
+    implements Comparator<AnnotationFS>
 {
-    CreateSpanAnnotationRequest apply(TypeAdapter aAdapter, CreateSpanAnnotationRequest aRequest)
-        throws AnnotationException;
-
-    void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx);
+    @Override
+    public int compare(AnnotationFS arg0, AnnotationFS arg1)
+    {
+        int beginDiff = arg0.getBegin() - arg1.getBegin();
+        if (beginDiff == 0) {
+            return arg1.getEnd() - arg0.getEnd();
+        }
+        else {
+            return beginDiff;
+        }
+    }
 }

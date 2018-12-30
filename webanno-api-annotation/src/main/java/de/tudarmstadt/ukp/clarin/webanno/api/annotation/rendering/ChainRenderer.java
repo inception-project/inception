@@ -22,7 +22,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
@@ -33,6 +35,8 @@ import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainStackingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -55,7 +59,8 @@ public class ChainRenderer
             int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+                .filter(f -> f.isVisible() && f.isEnabled())
+                .collect(Collectors.toList());
         
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
@@ -76,6 +81,9 @@ public class ChainRenderer
         Type chainType = typeAdapter.getAnnotationType(aJcas.getCas());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
+        // Sorted index mapping annotations to the corresponding rendered spans
+        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        
         int colorIndex = 0;
         // Iterate over the chains
         for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
@@ -113,9 +121,13 @@ public class ChainRenderer
                     VRange offsets = new VRange(linkFs.getBegin() - windowBeginOffset,
                             linkFs.getEnd() - windowBeginOffset);
 
-                    aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
+                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
                             colorIndex, singletonMap("label", bratLabelText), 
-                            singletonMap("label", bratHoverText)));
+                            singletonMap("label", bratHoverText));
+                    
+                    annoToSpanIdx.put(linkFs, span);
+                    
+                    aResponse.add(span);
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -142,11 +154,6 @@ public class ChainRenderer
                 // Render errors if required features are missing
                 renderRequiredFeatureErrors(visibleFeatures, linkFs, aResponse);
 
-                // if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
-                // log.error("Loop in CAS detected, aborting rendering of chains");
-                // break;
-                // }
-
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
@@ -156,5 +163,9 @@ public class ChainRenderer
             // particular the color of a chain should not change when switching pages/scrolling.
             colorIndex++;
         }
+        
+        new ChainStackingBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+
+        new SpanCrossSentenceBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
     }
 }

@@ -17,14 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 
 public class SpanStackingBehavior
     implements SpanLayerBehavior
@@ -34,6 +45,10 @@ public class SpanStackingBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
+        if (aAdapter.getLayer().isAllowStacking()) {
+            return aRequest;
+        }
+
         final CAS aCas = aRequest.getJcas().getCas();
         final int aBegin = aRequest.getBegin();
         final int aEnd = aRequest.getEnd();
@@ -43,14 +58,52 @@ public class SpanStackingBehavior
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         for (AnnotationFS fs : selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!aAdapter.getLayer().isAllowStacking()) {
-                    throw new AnnotationException("Cannot create another annotation of layer ["
-                            + aAdapter.getLayer().getUiName()
-                            + "] at this location - stacking is not " + "enabled for this layer.");
-                }
+                throw new AnnotationException("Cannot create another annotation of layer ["
+                        + aAdapter.getLayer().getUiName()
+                        + "] at this location - stacking is not " + "enabled for this layer.");
             }
         }
 
         return aRequest;
+    }
+    
+    @Override
+    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VSpan> annoToSpanIdx)
+    {
+        if (aAdapter.getLayer().isAllowStacking()) {
+            return;
+        }
+        
+        // The following code requires annotations with the same offsets to be adjacent during 
+        // iteration, so we sort the entries here
+        AnnotationComparator cmp = new AnnotationComparator();
+        List<Entry<AnnotationFS, VSpan>> sortedEntries = annoToSpanIdx.entrySet().stream()
+                .sorted((e1, e2) -> cmp.compare(e1.getKey(), e2.getKey()))
+                .collect(Collectors.toList());
+
+        // Render error if annotations are stacked but stacking is not allowed
+        AnnotationFS prevFS = null;
+        boolean prevFSErrorGenerated = false;
+        for (Entry<AnnotationFS, VSpan> e : sortedEntries) {
+            AnnotationFS fs = e.getKey();
+            if (prevFS != null && prevFS.getBegin() == fs.getBegin()
+                    && prevFS.getEnd() == fs.getEnd()) {
+                // If the current annotation is stacked with the previous one, generate an error
+                aResponse.add(new VComment(new VID(fs), ERROR, "Stacking is not permitted."));
+                
+                // If we did not already generate an error for the previous one, also generate an
+                // error for that one. This ensures that all stacked annotations get the error
+                // marker, not only the 2nd, 3rd, and so on.
+                if (!prevFSErrorGenerated) {
+                    aResponse.add(new VComment(new VID(prevFS), ERROR, "Stacking is not permitted."));
+                }
+            }
+            else {
+                prevFSErrorGenerated = false;
+            }
+
+            prevFS = fs;
+        }
     }
 }

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -25,6 +24,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,11 +35,12 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanStackingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -75,6 +76,9 @@ public class SpanRenderer
         List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, aWindowBegin,
                 aWindowEnd);
         
+        // Sorted index mapping annotations to the corresponding rendered spans
+        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        
         // Iterate over the span annotations of the current type and render each of them
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         List<AnnotationFS> annotations = selectCovered(aJcas.getCas(), type, aWindowBegin,
@@ -86,18 +90,15 @@ public class SpanRenderer
             List<VRange> ranges = calculateRanges(aJcas, visibleSentences, aResponse,
                     aWindowBegin, aWindowEnd, fs);
 
-            aResponse.add(new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
-                    hoverFeatures));
+            VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
+                    hoverFeatures);
+            
+            annoToSpanIdx.put(fs, span);
+            
+            aResponse.add(span);
             
             // Render errors if required features are missing
             renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
-
-            // Render error if annotation crosses sentence boundaries but crossing sentence
-            // boundaries is prohibited per layer configuration
-            renderCrossingSentenceErrors(ranges, fs, aResponse);
-
-            // Render error if annotations are stacked but stacking is not allowed
-            renderStackingErrors(fs, aResponse);
 
             // Render slots
             int fi = 0;
@@ -115,44 +116,12 @@ public class SpanRenderer
                 fi++;
             }
         }
+        
+        new SpanStackingBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+
+        new SpanCrossSentenceBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
     }
     
-    private AnnotationFS prevFS = null;
-    private boolean prevFSErrorGenerated = false;
-    
-    private void renderStackingErrors(AnnotationFS aFS, VDocument aResponse)
-    {
-        // This code exploits the fact that renderStackingErrors is called for every annotation
-        // and that the annotations are sorted. So all annotations that have the same offsets
-        // appear on after another.
-        if (prevFS != null && prevFS.getBegin() == aFS.getBegin()
-                && prevFS.getEnd() == aFS.getEnd()) {
-            // If the current annotation is stacked with the previous one, generate an error
-            aResponse.add(new VComment(new VID(aFS), ERROR, "Stacking is not permitted."));
-            
-            // If we did not already generate an error for the previous one, also generate an
-            // error for that one. This ensures that all stacked annotations get the error marker,
-            // not only the 2nd, 3rd, and so on.
-            if (!prevFSErrorGenerated) {
-                aResponse.add(new VComment(new VID(prevFS), ERROR, "Stacking is not permitted."));
-            }
-        }
-        else {
-            prevFSErrorGenerated = false;
-        }
-
-        prevFS = aFS;
-    }
-
-    private void renderCrossingSentenceErrors(List<VRange> aRanges, AnnotationFS aFS,
-            VDocument aResponse)
-    {
-        if (!getTypeAdapter().getLayer().isCrossSentence() && aRanges.size() > 1) {
-            aResponse.add(new VComment(new VID(aFS), ERROR,
-                    "Crossing sentence bounardies is not permitted."));
-        }
-    }
-
     private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,
             VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
     {

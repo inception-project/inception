@@ -23,7 +23,6 @@ import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -39,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -345,25 +345,6 @@ public class ChainAdapter
         }
 
         return links;
-    }
-
-    /**
-     * Sort ascending by begin and descending by end.
-     */
-    private static class AnnotationComparator
-        implements Comparator<AnnotationFS>
-    {
-        @Override
-        public int compare(AnnotationFS arg0, AnnotationFS arg1)
-        {
-            int beginDiff = arg0.getBegin() - arg1.getBegin();
-            if (beginDiff == 0) {
-                return arg1.getEnd() - arg0.getEnd();
-            }
-            else {
-                return beginDiff;
-            }
-        }
     }
 
     /**

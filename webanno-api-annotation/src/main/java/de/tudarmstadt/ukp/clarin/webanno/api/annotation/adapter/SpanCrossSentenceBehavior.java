@@ -17,10 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
 public class SpanCrossSentenceBehavior
     implements SpanLayerBehavior
@@ -30,12 +40,31 @@ public class SpanCrossSentenceBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
-        if (!aAdapter.getLayer().isCrossSentence()
-                && !isSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
+        if (aAdapter.getLayer().isCrossSentence()) {
+            return aRequest;
+        }
+        
+        if (!isSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
 
         return aRequest;
+    }
+    
+    @Override
+    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VSpan> annoToSpanIdx)
+    {
+        if (aAdapter.getLayer().isCrossSentence()) {
+            return;
+        }
+        
+        for (Entry<AnnotationFS, VSpan> e : annoToSpanIdx.entrySet()) {
+            if (e.getValue().getRanges().size() > 1) {
+                aResponse.add(new VComment(new VID(e.getKey()), ERROR,
+                        "Crossing sentence bounardies is not permitted."));
+            }
+        }
     }
 }

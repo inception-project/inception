@@ -27,7 +27,7 @@ import org.apache.uima.fit.util.CasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 public class ChainStackingBehavior
-    implements SpanLayerBehavior
+    extends SpanStackingBehavior
 {
     @Override
     public CreateSpanAnnotationRequest apply(TypeAdapter aAdapter,
