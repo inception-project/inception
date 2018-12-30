@@ -42,14 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
-    private FeatureSupportRegistry featureSupportRegistry;
-    private ApplicationEventPublisher applicationEventPublisher;
+    private final FeatureSupportRegistry featureSupportRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
     
-    private AnnotationLayer layer;
+    private final AnnotationLayer layer;
 
-    private Map<String, AnnotationFeature> features;
-
-    private boolean deletable;
+    private final Map<String, AnnotationFeature> features;
 
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -77,17 +75,6 @@ public abstract class TypeAdapter_ImplBase
     public Collection<AnnotationFeature> listFeatures()
     {
         return features.values();
-    }
-    
-    public void setDeletable(boolean deletable)
-    {
-        this.deletable = deletable;
-    }
-
-    @Override
-    public boolean isDeletable()
-    {
-        return deletable;
     }
     
     @Override

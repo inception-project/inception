@@ -94,13 +94,6 @@ public interface TypeAdapter
     String getAttachTypeName();
 
     /**
-     * Check if the annotation type is deletable
-     *
-     * @return if the layer is deletable.
-     */
-    boolean isDeletable();
-
-    /**
      * Delete a annotation from CAS.
      *
      * @param aDocument
