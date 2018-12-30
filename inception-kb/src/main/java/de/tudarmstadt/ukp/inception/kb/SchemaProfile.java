@@ -31,39 +31,41 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public enum SchemaProfile
 {
-    RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT),
+    RDFSCHEMA("RDF", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
 
     WIKIDATASCHEMA("WIKIDATA", IriConstants.WIKIDATA_CLASS, IriConstants.WIKIDATA_SUBCLASS,
-        IriConstants.WIKIDATA_TYPE, RDFS.COMMENT, RDFS.LABEL, IriConstants.WIKIDATA_PROPERTY_TYPE,
-        RDFS.LABEL, RDFS.COMMENT),
+            IriConstants.WIKIDATA_TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT, RDFS.LABEL,
+            IriConstants.WIKIDATA_PROPERTY_TYPE, RDFS.LABEL, RDFS.COMMENT),
 
-    OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY,
-        RDFS.LABEL, RDFS.COMMENT),
+    OWLSCHEMA("OWL", OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT),
 
-    SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.COMMENT, SKOS.PREF_LABEL,
-        RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
+    SKOSSCHEMA("SKOS", SKOS.CONCEPT, SKOS.BROADER, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
+            SKOS.PREF_LABEL, RDF.PROPERTY, SKOS.PREF_LABEL, RDFS.COMMENT),
 
-    CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL,
-        RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
+    CUSTOMSCHEMA("CUSTOM", RDFS.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.SUBPROPERTYOF, RDFS.COMMENT,
+            RDFS.LABEL, RDF.PROPERTY, RDFS.LABEL, RDFS.COMMENT);
 
-    private final String label;
+    private final String uiLabel;
     private final IRI classIri;
     private final IRI subclassIri;
     private final IRI typeIri;
+    private final IRI subPropertyIri;
     private final IRI descriptionIri;
     private final IRI labelIri;
     private final IRI propertyTypeIri;
     private final IRI propertyLabelIri;
     private final IRI propertyDescriptionIri;
 
-    private SchemaProfile(String aLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
-        IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri, IRI aPropertyLabelIri,
-        IRI aPropertyDescriptionIri)
+    private SchemaProfile(String aUiLabel, IRI aClassIri, IRI aSubclassIri, IRI aTypeIri,
+            IRI aSubPropertyIri, IRI aDescriptionIri, IRI aLabelIri, IRI aPropertyTypeIri,
+            IRI aPropertyLabelIri, IRI aPropertyDescriptionIri)
     {
-        label = aLabel;
+        uiLabel = aUiLabel;
         classIri = aClassIri;
         subclassIri = aSubclassIri;
+        subPropertyIri = aSubPropertyIri;
         typeIri = aTypeIri;
         descriptionIri = aDescriptionIri;
         labelIri = aLabelIri;
@@ -72,9 +74,9 @@ public enum SchemaProfile
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public String getLabel()
+    public String getUiLabel()
     {
-        return label;
+        return uiLabel;
     }
 
     public IRI getClassIri()
@@ -90,6 +92,11 @@ public enum SchemaProfile
     public IRI getTypeIri()
     {
         return typeIri;
+    }
+
+    public IRI getSubPropertyIri()
+    {
+        return subPropertyIri;
     }
 
     public IRI getDescriptionIri()

@@ -39,6 +39,9 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonProperty("instance-of")
     private IRI typeIri;
 
+    @JsonProperty("subproperty-of")
+    private IRI subPropertyIri;
+
     @JsonProperty("description")
     private IRI descriptionIri;
 
@@ -57,26 +60,31 @@ public class KnowledgeBaseMapping implements Serializable
     @JsonProperty("full-text-search")
     private IRI fullTextSearchIri;
     
+   
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
         @JsonProperty("subclass-of") String aSubclassIri,
         @JsonProperty("instance-of") String aTypeIri,
+        @JsonProperty("subproperty-of") String aSubPropertyIri,
         @JsonProperty("description") String aDescriptionIri,
         @JsonProperty("label") String aLabelIri,
         @JsonProperty("property-type") String aPropertyTypeIri,
         @JsonProperty("property-label") String aPropertyLabelIri,
         @JsonProperty("property-description") String aPropertyDescriptionIri,
         @JsonProperty("full-text-search") String aFullTextSearchIri)
+
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         classIri = vf.createIRI(aClassIri);
         subclassIri = vf.createIRI(aSubclassIri);
         typeIri = vf.createIRI(aTypeIri);
+        subPropertyIri = vf.createIRI(aSubPropertyIri);
         descriptionIri = vf.createIRI(aDescriptionIri);
         labelIri = vf.createIRI(aLabelIri);
         propertyTypeIri = vf.createIRI(aPropertyTypeIri);
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
         propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
         fullTextSearchIri = vf.createIRI(aFullTextSearchIri);
+
     }
     
     public KnowledgeBaseMapping() {
@@ -111,6 +119,16 @@ public class KnowledgeBaseMapping implements Serializable
     public void setTypeIri(IRI aTypeIri)
     {
         typeIri = aTypeIri;
+    }
+
+    public IRI getSubPropertyIri()
+    {
+        return subPropertyIri;
+    }
+
+    public void setSubPropertyIri(IRI subPropertyIri)
+    {
+        this.subPropertyIri = subPropertyIri;
     }
 
     public IRI getDescriptionIri()

@@ -77,6 +77,8 @@ public class KnowledgeBaseIriPanel
                 kbModel.bind("kb.subclassIri"), IriConstants.SUBCLASS_IRIS);
         ComboBox<String> typeField = buildComboBox("typeIri", kbModel.bind("kb.typeIri"),
                 IriConstants.TYPE_IRIS);
+        ComboBox<String> subPropertyField = buildComboBox("subPropertyIri",
+            kbModel.bind("kb.subPropertyIri"), IriConstants.SUBPROPERTY_IRIS);
         ComboBox<String> descriptionField = buildComboBox("descriptionIri",
                 kbModel.bind("kb.descriptionIri"), IriConstants.DESCRIPTION_IRIS);
         ComboBox<String> labelField = buildComboBox("labelIri",
@@ -87,11 +89,12 @@ public class KnowledgeBaseIriPanel
                 kbModel.bind("kb.propertyLabelIri"), IriConstants.PROPERTY_LABEL_IRIS);
         ComboBox<String> propertyDescriptionField = buildComboBox("propertyDescriptionIri",
                 kbModel.bind("kb.propertyDescriptionIri"), IriConstants.PROPERTY_DESCRIPTION_IRIS);
-        comboBoxWrapper.add(classField, subclassField, typeField, descriptionField, labelField,
-                propertyTypeField, propertyLabelField, propertyDescriptionField);
+        comboBoxWrapper
+            .add(classField, subclassField, typeField, subPropertyField, descriptionField,
+                labelField, propertyTypeField, propertyLabelField, propertyDescriptionField);
         
         // RadioGroup to select the IriSchemaType
-        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<SchemaProfile>(
+        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<>(
                 "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
                 new EnumChoiceRenderer<>(this))
         {

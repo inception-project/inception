@@ -524,6 +524,17 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
+     * Returns whether the given identifier is a subproperty of the label IRI defined for this
+     * knowledge base
+     *
+     * @param aKB the knowledge base
+     * @param aIdentifier the identifier of the label
+     * @return true if the identifier is a subproperty of the label IRI defined for this
+     * knowledge base, false otherwise
+     */
+    boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
+
+    /**
      * Checks whether a property is a base property
      * @param propertyIdentifier the property that is to be checked
      * @param aKB the KB
@@ -550,8 +561,8 @@ public interface KnowledgeBaseService
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 
-    /**
-     * List all Instances of a given knowledge base
+   /**
+     *  List all Instances of a given knowledge base
      * @param aKB the knowledge base
      * @param aAll indicates whether to include everything
      * @return list of all the instances {@link KBHandle}
@@ -571,4 +582,13 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
         ConceptFeatureValueType aValueType, Project project);
+
+    /**
+     * Gets a list of sub-property of label 
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @return set of properties
+     */
+    Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
 }

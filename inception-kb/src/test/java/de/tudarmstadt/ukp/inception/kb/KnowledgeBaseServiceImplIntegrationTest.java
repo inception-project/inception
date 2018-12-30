@@ -330,7 +330,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
                 kb.getTypeIri().stringValue() };
         
-        assertEquals(listProperties.size(), 4);
+        assertEquals(listProperties.size(), 5);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
@@ -1244,8 +1244,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
-            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
+            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
+            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1519,6 +1519,25 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 assertThat(key).isNotNull();
             });
 
+    }
+
+    @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        String conceptId = sut.createConcept(kb, buildConcept()).getIdentifier();
+        String instanceId = sut.createInstance(kb, buildInstance()).getIdentifier();
+        String propertyId = sut.createProperty(kb, buildProperty()).getIdentifier();
+
+        assertThat(sut.readKBIdentifier(kb, conceptId).get())
+            .as("Check that reading a concept id returns an instance of KBConcept")
+            .isInstanceOf(KBConcept.class);
+        assertThat(sut.readKBIdentifier(kb, instanceId).get())
+            .as("Check that reading an instance id returns an instance of KBInstance")
+            .isInstanceOf(KBInstance.class);
+        assertThat(sut.readKBIdentifier(kb, propertyId).get())
+            .as("Check that reading a property id returns an instance of KBProperty")
+            .isInstanceOf(KBProperty.class);
     }
 
     // Helper

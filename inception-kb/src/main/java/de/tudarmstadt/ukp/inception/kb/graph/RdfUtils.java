@@ -23,13 +23,11 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import org.eclipse.rdf4j.common.iteration.ConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.ExceptionConvertingIteration;
 import org.eclipse.rdf4j.common.iteration.Iteration;
-import org.eclipse.rdf4j.common.iteration.Iterations;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-
 import org.eclipse.rdf4j.query.BindingSet;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
@@ -41,22 +39,9 @@ import org.eclipse.rdf4j.repository.RepositoryResult;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
-import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 
 public class RdfUtils
 {
-    public static Optional<Value> readFirstValue(RepositoryConnection conn, Resource subj,
-        IRI pred, KnowledgeBase aKB, Resource... contexts)
-    {
-        Optional<Statement> statement = readFirst(conn, subj, pred, null, aKB);
-        if (statement.isPresent()) {
-            return Optional.of(statement.get().getObject());
-        }
-        else {
-            return Optional.empty();
-        }
-    }
-
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
             Value obj, String language, KnowledgeBase aKB)
     {

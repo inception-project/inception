@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+
 
 @Component
 public class LabelColoringStrategyImpl implements StatementColoringStrategy
 {
+    private @Autowired KnowledgeBaseService kbService;
+
     private String coloringStrategyId;
 
     @Override
@@ -52,6 +57,7 @@ public class LabelColoringStrategyImpl implements StatementColoringStrategy
     @Override
     public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB)
     {
-        return aPropertyIdentifier.equals(aKB.getLabelIri().stringValue());
+        return aPropertyIdentifier.equals(aKB.getLabelIri().stringValue()) || kbService
+            .isSubpropertyLabel(aKB, aPropertyIdentifier);
     }
 }
