@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -58,6 +59,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
@@ -70,7 +73,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 public class KnowledgeBaseSubPropertyLabelTest
 {
     private static final String PROJECT_NAME = "Test project";
-    private static final String KB_NAME = "GND";
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -109,18 +111,13 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
-        kb = buildKnowledgeBase(project, KB_NAME);
-        String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
-
     }
 
     @After
@@ -130,9 +127,13 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
     
     @Test
-    public void thatChildConceptsLabel()
+    public void thatChildConceptsLabel() throws IOException
     {
-        
+        kb = buildRemoteKnowledgeBase(project, "GND");
+        String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
+
         long duration = System.currentTimeMillis();
         String concept = "http://d-nb.info/standards/elementset/gnd#Family";
         List<KBHandle> instanceKBHandle = sut.listInstances(kb, concept, true);
@@ -150,8 +151,12 @@ public class KnowledgeBaseSubPropertyLabelTest
     }
 
     @Test
-    public void readInstance_ShouldReturnInstanceWithSubPropertyLabel()
+    public void readInstance_ShouldReturnInstanceWithSubPropertyLabel() throws IOException
     {
+        kb = buildRemoteKnowledgeBase(project, "GND");
+        String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
         String instanceId = "http://d-nb.info/gnd/7509336-4";
         Optional<KBInstance> instance = sut.readInstance(kb, instanceId);
@@ -163,6 +168,30 @@ public class KnowledgeBaseSubPropertyLabelTest
             .contains("Abingdon, Bettine");
     }
 
+    @Test
+    public void readProperty_ShouldReturnPropertyWithSubPropertyLabel() throws IOException
+    {
+        kb = buildLocalKnowledgeBase(project, "Wine");
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        KBHandle subpropertylabel = createSubPropertyLabel(kb);
+
+        KBProperty property = testFixtures.buildProperty();
+        //set name to null so that the subproperty label becomes the main label
+        property.setName(null);
+        sut.createProperty(kb, property);
+
+        String labelLiteral = "Sub Property Label";
+        createStmtWithLiteral(kb, KBHandle.of(property), subpropertylabel, labelLiteral);
+
+        Optional<KBProperty> optProperty = sut.readProperty(kb, property.getIdentifier());
+        assertThat(optProperty).as("Check that property is present")
+            .isPresent();
+        assertThat(optProperty.get().getName())
+            .as("Check that correct label is retrieved")
+            .contains(labelLiteral);
+    }
+
 
     //Helper
     
@@ -170,7 +199,8 @@ public class KnowledgeBaseSubPropertyLabelTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException {
+    private KnowledgeBase buildRemoteKnowledgeBase(Project project, String name) throws IOException
+    {
         PROFILES = readKnowledgeBaseProfiles();
         KnowledgeBase gnd = new KnowledgeBase();
         gnd.setProject(project);
@@ -181,8 +211,61 @@ public class KnowledgeBaseSubPropertyLabelTest
         gnd.setReification(reification);
         gnd.setDefaultLanguage("en");
         gnd.setMaxResults(1000);
-       
+
         return gnd;
+    }
+
+    private KnowledgeBase buildLocalKnowledgeBase(Project project, String name) throws IOException
+    {
+        PROFILES = readKnowledgeBaseProfiles();
+        KnowledgeBase wine = new KnowledgeBase();
+        wine.setProject(project);
+        wine.setName(name);
+        wine.setType(RepositoryType.LOCAL);
+        wine.applyMapping(PROFILES.get("wine_ontology").getMapping());
+        wine.applyRootConcepts(PROFILES.get("wine_ontology"));
+        wine.setReification(reification);
+        wine.setDefaultLanguage("en");
+        wine.setMaxResults(1000);
+
+        return wine;
+    }
+
+    private KBHandle createSubPropertyLabel(KnowledgeBase aKB)
+    {
+        KBProperty subLabel = testFixtures.buildProperty();
+        KBHandle subLabelHandle = sut.createProperty(aKB, subLabel);
+
+        KBHandle subPropertyHandle = new KBHandle(aKB.getSubPropertyIri().stringValue());
+
+        KBStatement subPropertyStmt = new KBStatement(subLabelHandle, subPropertyHandle,
+            aKB.getLabelIri());
+
+        upsertStatement(aKB, subPropertyStmt);
+
+        return subLabelHandle;
+    }
+
+    private void createStmtWithLiteral(KnowledgeBase aKB, KBHandle aSubject, KBHandle aProperty,
+        String aLiteral)
+    {
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        KBStatement stmt = new KBStatement(aSubject, aProperty, vf.createLiteral(aLiteral));
+        upsertStatement(aKB, stmt);
+    }
+
+    private void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
+    {
+        //set reification to NONE just for "upserting" the statement, then restore old value
+        Reification kbReification = kb.getReification();
+        try {
+            kb.setReification(Reification.NONE);
+            sut.upsertStatement(aKB, aStatement);
+
+        }
+        finally {
+            kb.setReification(kbReification);
+        }
     }
 
    

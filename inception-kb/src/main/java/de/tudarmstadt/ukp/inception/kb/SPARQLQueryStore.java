@@ -207,7 +207,32 @@ public final class SPARQLQueryStore
             , "} "
             , "LIMIT " + limit);
     }
-    
+
+    /**
+     * Query to read a propery from a knowledge base
+     */
+    public static final String readProperty(KnowledgeBase aKB, int limit,
+        Set<KBHandle> labelProperties)
+    {
+        return String.join("\n"
+            , SPARQL_PREFIX
+            , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) ((?desc) AS ?d) ?descGeneral ?spl ?dom ?range WHERE {"
+            , "  { ?s ?pTYPE ?oPROPERTY .}"
+            , "  UNION "
+            , "  { ?s a ?prop"
+            , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty }"
+            , "  }"
+            , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
+            , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
+            , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?s","?desc")
+            , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?s","?descGeneral")
+            , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
+            , optionalLanguageFilteredValue("?pDOMAIN", null, "?s", "?dom")
+            , optionalLanguageFilteredValue("?pRANGE", null, "?s", "?range")
+            , "}"
+            , "LIMIT " + limit);
+    }
+
     /** 
      * Query to read concept label and description from a knowledge base.
      */
@@ -216,7 +241,7 @@ public final class SPARQLQueryStore
     {
         StringBuilder query = new StringBuilder();
         query.append(SPARQL_PREFIX + "\n" +
-                "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?dGen WHERE { "
+                "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ?lGen ?descGeneral WHERE { "
                 + "\n"
                 + "{?oItem ?p ?o . }"
                 + "\n"
@@ -227,7 +252,7 @@ public final class SPARQLQueryStore
         }
         if (desc) {
             query.append("\n" +
-                    optionalLanguageFilteredValue("?pDESCRIPTION", null, "?oItem", "?dGen"));
+                    optionalLanguageFilteredValue("?pDESCRIPTION", null, "?oItem", "?descGeneral"));
         }
         query.append("\n" + "} " + "\n" + "LIMIT " + limit);        
         return query.toString();
@@ -237,11 +262,12 @@ public final class SPARQLQueryStore
     /** 
      * Query to list properties from a knowledge base.
      */
-    public static final String queryForPropertyList(KnowledgeBase aKB)
+    public static final String queryForPropertyList(KnowledgeBase aKB,
+        Set<KBHandle> labelProperties)
     {
         return String.join("\n"
                 , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) WHERE {"
+                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) ?spl WHERE {"
                 , "  { ?s ?pTYPE ?oPROPERTY .}"
                 , "  UNION "
                 , "  { ?s a ?prop" 
@@ -249,7 +275,8 @@ public final class SPARQLQueryStore
                 , "  }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , "}"
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
+            , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
         
@@ -271,7 +298,8 @@ public final class SPARQLQueryStore
      * Query to get property specific domain elements including properties which do not have a 
      * domain specified.
      */
-    public static final String queryForPropertyListWithDomain(KnowledgeBase aKB)
+    public static final String queryForPropertyListWithDomain(KnowledgeBase aKB,
+        Set<KBHandle> labelProperties)
     {
         return String.join("\n"
                 , SPARQL_PREFIX
@@ -283,6 +311,7 @@ public final class SPARQLQueryStore
                 , "    FILTER NOT EXISTS {  ?s rdfs:domain/(owl:unionOf/rdf:rest*/rdf:first)* ?x } }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
+                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
                 , "}"
                 , "LIMIT " + aKB.getMaxResults());
     }
@@ -317,7 +346,7 @@ public final class SPARQLQueryStore
                 , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
                 , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , "}");
+            , "}");
 
     }
     
