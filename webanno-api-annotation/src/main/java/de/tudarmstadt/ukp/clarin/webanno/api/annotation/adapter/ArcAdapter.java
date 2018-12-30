@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.Collection;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -165,22 +164,6 @@ public class ArcAdapter
     public String getAnnotationTypeName()
     {
         return getLayer().getName();
-    }
-
-    @Override
-    public String getAttachFeatureName()
-    {
-        return Optional.ofNullable(getLayer().getAttachFeature())
-                .map(AnnotationFeature::getName)
-                .orElse(null);
-    }
-
-    @Override
-    public String getAttachTypeName()
-    {
-        return Optional.ofNullable(getLayer().getAttachType())
-                .map(AnnotationLayer::getName)
-                .orElse(null);
     }
 
     public String getSourceFeatureName()

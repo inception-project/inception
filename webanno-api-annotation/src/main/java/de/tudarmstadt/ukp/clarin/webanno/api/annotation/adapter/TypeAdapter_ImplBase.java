@@ -96,7 +96,7 @@ public abstract class TypeAdapter_ImplBase
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
 
-        Object oldValue =  getValue(fs, aFeature);
+        Object oldValue = getValue(fs, aFeature);
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
@@ -145,5 +145,22 @@ public abstract class TypeAdapter_ImplBase
     public void initialize(AnnotationSchemaService aSchemaService)
     {
         // Nothing to do
+    }
+    
+    @Override
+    public String getAttachFeatureName()
+    {
+        return getLayer().getAttachFeature() == null ? null
+                : getLayer().getAttachFeature().getName();
+    }
+
+    /**
+     * A field that takes the name of the annotation to attach to, e.g.
+     * "de.tudarmstadt...type.Token" (Token.class.getName())
+     */
+    @Override
+    public String getAttachTypeName()
+    {
+        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
 }

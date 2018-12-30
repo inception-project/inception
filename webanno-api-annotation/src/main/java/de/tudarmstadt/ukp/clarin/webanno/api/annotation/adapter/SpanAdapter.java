@@ -17,13 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 
-import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -41,8 +37,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa.
@@ -74,81 +68,32 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin, int aEnd)
+    public AnnotationFS add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+            int aEnd)
         throws AnnotationException
     {
         return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
     }
     
-    public Integer handle(CreateSpanAnnotationRequest aRequest)
-            throws AnnotationException
+    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
         CreateSpanAnnotationRequest request = aRequest;
-        
+
         request = new SpanCrossSentenceBehavior().apply(this, request);
-        
+
         request = new SpanAnchoringModeBehavior().apply(this, request);
 
         request = new SpanStackingBehavior().apply(this, request);
-        
+
         AnnotationFS newAnnotation = createSpanAnnotation(request.getJcas().getCas(),
                 request.getBegin(), request.getEnd());
-        
+
         publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getUsername(),
                 newAnnotation));
-        
-        return getAddr(newAnnotation);
+
+        return newAnnotation;
     }
     
-    // get feature Value of existing span annotation 
-    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            String aLabelValue)
-    {
-        if (getLayer().isAllowStacking()) {
-            return null;
-        }
-        
-        int begin;
-        int end;
-        // update the begin and ends (no sub token selection)
-        switch (getLayer().getAnchoringMode()) {
-        case CHARACTERS:
-            begin = aBegin;
-            end = aEnd;
-            break;
-        case SINGLE_TOKEN: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-            break;
-        }
-        case TOKENS: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-            break;
-        }
-        case SENTENCES: {
-            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aBegin, aEnd);
-            begin = sentences.get(0).getBegin();
-            end = sentences.get(sentences.size() - 1).getEnd();
-            break;
-        }
-        default:
-            throw new IllegalStateException(
-                    "Unsupported anchoring mode: [" + getLayer().getAnchoringMode() + "]");
-        }
-        
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, begin, end)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                return getFeatureValue(aFeature, fs);
-            }
-        }
-        
-        return null;
-    }
-
     /**
      * A Helper method to add annotation to CAS
      */
@@ -202,22 +147,5 @@ public class SpanAdapter
     public String getAnnotationTypeName()
     {
         return getLayer().getName();
-    }
-
-    @Override
-    public String getAttachFeatureName()
-    {
-        return getLayer().getAttachFeature() == null ? null
-                : getLayer().getAttachFeature().getName();
-    }
-
-    /**
-     * A field that takes the name of the annotation to attach to, e.g.
-     * "de.tudarmstadt...type.Token" (Token.class.getName())
-     */
-    @Override
-    public String getAttachTypeName()
-    {
-        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
 }

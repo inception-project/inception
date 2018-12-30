@@ -17,16 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
-public class SpanStackingBehavior
+public class ChainStackingBehavior
     implements SpanLayerBehavior
 {
     @Override
@@ -40,7 +40,7 @@ public class SpanStackingBehavior
 
         // If stacking is not allowed and there already is an annotation, then return the address
         // of the existing annotation.
-        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
+        Type type = CasUtil.getType(aCas, aAdapter.getLayer().getName() + ChainAdapter.LINK);
         for (AnnotationFS fs : selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!aAdapter.getLayer().isAllowStacking()) {

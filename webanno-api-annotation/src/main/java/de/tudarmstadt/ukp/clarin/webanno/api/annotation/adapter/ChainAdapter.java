@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -45,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * A class that is used to create Brat chain to CAS and vice-versa
@@ -72,13 +69,14 @@ public class ChainAdapter
         annotationTypeName = aTypeName;
     }
 
-    public int addSpan(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin, int aEnd)
+    public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+            int aEnd)
         throws AnnotationException
     {
         return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
     }
 
-    public int handle(CreateSpanAnnotationRequest aRequest)
+    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
         CreateSpanAnnotationRequest request = aRequest;
@@ -87,12 +85,12 @@ public class ChainAdapter
         
         request = new SpanAnchoringModeBehavior().apply(this, request);
         
-        request = new SpanStackingBehavior().apply(this, request);
+        request = new ChainStackingBehavior().apply(this, request);
         
         return createChainElementAnnotation(request);
     }
     
-    private int createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
+    private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
     {
         // Add the link annotation on the span
         AnnotationFS newLink = newLink(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd());
@@ -100,25 +98,7 @@ public class ChainAdapter
         // The added link is a new chain on its own - add the chain head FS
         newChain(aRequest.getJcas(), newLink);
 
-        return WebAnnoCasUtil.getAddr(newLink);
-    }
-    
-    // get feature Value of existing span annotation
-    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            String aLabelValue)
-    {
-        List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-        int begin = tokens.get(0).getBegin();
-        int end = tokens.get(tokens.size() - 1).getEnd();
-        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
-        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
-        
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), linkType, begin, end)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                return getFeatureValue(aFeature, fs);
-            }
-        }
-        return null;
+        return newLink;
     }
     
     public int addArc(SourceDocument aDocument, String aUsername, JCas aJCas,
@@ -322,18 +302,6 @@ public class ChainAdapter
     public String getAnnotationTypeName()
     {
         return annotationTypeName;
-    }
-
-    @Override
-    public String getAttachFeatureName()
-    {
-        return null;
-    }
-
-    @Override
-    public String getAttachTypeName()
-    {
-        return null;
     }
 
     /**

@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -37,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
@@ -59,95 +62,42 @@ public class SpanRenderer
     
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
-        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         SpanAdapter typeAdapter = getTypeAdapter();
-        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
-        int windowBegin = windowBeginOffset;
-        int windowEnd = windowEndOffset;
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled())
+                .collect(Collectors.toList());
 
-        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, windowBegin,
-                windowEnd);
+        // Collect the visible sentences. The sentence boundary information is used to generate
+        // multiple ranges for annotations crossing sentence boundaries
+        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, aWindowBegin,
+                aWindowEnd);
         
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
+        // Iterate over the span annotations of the current type and render each of them
+        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
+        List<AnnotationFS> annotations = selectCovered(aJcas.getCas(), type, aWindowBegin,
+                aWindowEnd);
+        for (AnnotationFS fs : annotations) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
-            
-            Sentence beginSent = null;
-            Sentence endSent = null;
-            
-            // check if annotation extends beyond viewable window - if yes, then constrain it to 
-            // the visible window
-            for (Sentence sent : visibleSentences) {
-                if (beginSent == null) {
-                    // Here we catch the first sentence in document order which covers the begin
-                    // offset of the current annotation.
-                    if (sent.getBegin() <= fs.getBegin() && fs.getBegin() <= sent.getEnd()) {
-                        beginSent = sent;
-                    }
-                    // Make sure that zero-width annotations always start and end in the same
-                    // sentence. Zero-width annotations that are on the boundary of two directly
-                    // adjacent sentences (i.e. without whitespace between them) are considered
-                    // to be at the end of the first sentence rather than at the beginning of the
-                    // second sentence.
-                    if (fs.getBegin() == fs.getEnd()) {
-                        endSent = sent;
-                    }
-                }
-                
-                if (endSent == null) {
-                    if (sent.getBegin() <= fs.getEnd() && fs.getEnd() <= sent.getEnd()) {
-                        endSent = sent;
-                    }
-                }
-                
-                if (beginSent != null && endSent != null) {
-                    break;
-                }
-            }
-            
-            if (beginSent == null || endSent == null) {
-                throw new IllegalStateException(
-                        "Unable to determine sentences in which the annotation starts/ends: " + fs);
-            }
+            List<VRange> ranges = calculateRanges(aJcas, visibleSentences, aResponse,
+                    aWindowBegin, aWindowEnd, fs);
 
-            List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
-                    endSent.getEnd());
-            List<VRange> ranges = new ArrayList<>();
-            if (sentences.size() > 1) {
-                for (Sentence sentence : sentences) {
-                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
-                        ranges.add(new VRange(fs.getBegin() - windowBegin,
-                                sentence.getEnd() - windowBegin));
-                    }
-                    else if (sentence.getBegin() <= fs.getEnd()
-                            && fs.getEnd() <= sentence.getEnd()) {
-                        ranges.add(new VRange(sentence.getBegin() - windowBegin,
-                                fs.getEnd() - windowBegin));
-                    }
-                    else {
-                        ranges.add(new VRange(sentence.getBegin() - windowBegin,
-                                sentence.getEnd() - windowBegin));
-                    }
-                }
-                aResponse.add(
-                        new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features, 
-                                hoverFeatures));
-            }
-            else {
-                // FIXME It should be possible to remove this case and the if clause because
-                // the case that a FS is inside a single sentence is just a special case
-                aResponse.add(new VSpan(typeAdapter.getLayer(), fs, bratTypeName,
-                        new VRange(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin),
-                        features, hoverFeatures));
-            }
+            aResponse.add(new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
+                    hoverFeatures));
             
             // Render errors if required features are missing
             renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
+
+            // Render error if annotation crosses sentence boundaries but crossing sentence
+            // boundaries is prohibited per layer configuration
+            renderCrossingSentenceErrors(ranges, fs, aResponse);
+
+            // Render error if annotations are stacked but stacking is not allowed
+            renderStackingErrors(fs, aResponse);
 
             // Render slots
             int fi = 0;
@@ -164,6 +114,112 @@ public class SpanRenderer
                 }
                 fi++;
             }
+        }
+    }
+    
+    private AnnotationFS prevFS = null;
+    private boolean prevFSErrorGenerated = false;
+    
+    private void renderStackingErrors(AnnotationFS aFS, VDocument aResponse)
+    {
+        // This code exploits the fact that renderStackingErrors is called for every annotation
+        // and that the annotations are sorted. So all annotations that have the same offsets
+        // appear on after another.
+        if (prevFS != null && prevFS.getBegin() == aFS.getBegin()
+                && prevFS.getEnd() == aFS.getEnd()) {
+            // If the current annotation is stacked with the previous one, generate an error
+            aResponse.add(new VComment(new VID(aFS), ERROR, "Stacking is not permitted."));
+            
+            // If we did not already generate an error for the previous one, also generate an
+            // error for that one. This ensures that all stacked annotations get the error marker,
+            // not only the 2nd, 3rd, and so on.
+            if (!prevFSErrorGenerated) {
+                aResponse.add(new VComment(new VID(prevFS), ERROR, "Stacking is not permitted."));
+            }
+        }
+        else {
+            prevFSErrorGenerated = false;
+        }
+
+        prevFS = aFS;
+    }
+
+    private void renderCrossingSentenceErrors(List<VRange> aRanges, AnnotationFS aFS,
+            VDocument aResponse)
+    {
+        if (!getTypeAdapter().getLayer().isCrossSentence() && aRanges.size() > 1) {
+            aResponse.add(new VComment(new VID(aFS), ERROR,
+                    "Crossing sentence bounardies is not permitted."));
+        }
+    }
+
+    private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,
+            VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
+    {
+        Sentence beginSent = null;
+        Sentence endSent = null;
+
+        // check if annotation extends beyond viewable window - if yes, then constrain it to
+        // the visible window
+        for (Sentence sent : aVisibleSentences) {
+            if (beginSent == null) {
+                // Here we catch the first sentence in document order which covers the begin
+                // offset of the current annotation.
+                if (sent.getBegin() <= aFS.getBegin() && aFS.getBegin() <= sent.getEnd()) {
+                    beginSent = sent;
+                }
+                // Make sure that zero-width annotations always start and end in the same
+                // sentence. Zero-width annotations that are on the boundary of two directly
+                // adjacent sentences (i.e. without whitespace between them) are considered
+                // to be at the end of the first sentence rather than at the beginning of the
+                // second sentence.
+                if (aFS.getBegin() == aFS.getEnd()) {
+                    endSent = sent;
+                }
+            }
+
+            if (endSent == null) {
+                if (sent.getBegin() <= aFS.getEnd() && aFS.getEnd() <= sent.getEnd()) {
+                    endSent = sent;
+                }
+            }
+
+            if (beginSent != null && endSent != null) {
+                break;
+            }
+        }
+
+        if (beginSent == null || endSent == null) {
+            throw new IllegalStateException(
+                    "Unable to determine sentences in which the annotation starts/ends: " + aFS);
+        }
+
+        // If the annotation extends across sentence boundaries, create multiple ranges for the
+        // annotation, one for every sentence.
+        List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
+                endSent.getEnd());
+        List<VRange> ranges = new ArrayList<>();
+        if (sentences.size() > 1) {
+            for (Sentence sentence : sentences) {
+                if (sentence.getBegin() <= aFS.getBegin() && aFS.getBegin() < sentence.getEnd()) {
+                    ranges.add(new VRange(aFS.getBegin() - aWindowBegin,
+                            sentence.getEnd() - aWindowBegin));
+                }
+                else if (sentence.getBegin() <= aFS.getEnd() && aFS.getEnd() <= sentence.getEnd()) {
+                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
+                            aFS.getEnd() - aWindowBegin));
+                }
+                else {
+                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
+                            sentence.getEnd() - aWindowBegin));
+                }
+            }
+
+            return ranges;
+        }
+        else {
+            return asList(
+                    new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin));
         }
     }
 }

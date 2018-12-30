@@ -167,7 +167,6 @@ public interface TypeAdapter
                 aFeature, aValue);
     }
 
-
     /**
      * Get the value of the given feature.
      * 

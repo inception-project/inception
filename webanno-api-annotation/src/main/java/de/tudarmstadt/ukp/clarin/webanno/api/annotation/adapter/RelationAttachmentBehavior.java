@@ -36,11 +36,11 @@ public class RelationAttachmentBehavior
         }
 
         final CAS cas = aRequest.getJcas().getCas();
-        final Type spanType = getType(cas, aAdapter.getLayer().getAttachType().getName());
+        final Type attachType = getType(cas, aAdapter.getLayer().getAttachType().getName());
         AnnotationFS originFS = aRequest.getOriginFs();
         AnnotationFS targetFS = aRequest.getTargetFs();
-        targetFS = selectCovered(cas, spanType, targetFS.getBegin(), targetFS.getEnd()).get(0);
-        originFS = selectCovered(cas, spanType, originFS.getBegin(), originFS.getEnd()).get(0);
+        targetFS = selectCovered(cas, attachType, targetFS.getBegin(), targetFS.getEnd()).get(0);
+        originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
     }
 }
