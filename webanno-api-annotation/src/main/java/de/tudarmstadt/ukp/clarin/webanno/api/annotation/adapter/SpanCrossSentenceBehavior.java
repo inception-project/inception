@@ -36,7 +36,7 @@ public class SpanCrossSentenceBehavior
     implements SpanLayerBehavior
 {
     @Override
-    public CreateSpanAnnotationRequest apply(TypeAdapter aAdapter,
+    public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
@@ -53,7 +53,7 @@ public class SpanCrossSentenceBehavior
     }
     
     @Override
-    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx)
     {
         if (aAdapter.getLayer().isCrossSentence()) {

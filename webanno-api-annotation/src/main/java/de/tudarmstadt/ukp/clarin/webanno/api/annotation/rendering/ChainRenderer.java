@@ -164,8 +164,8 @@ public class ChainRenderer
             colorIndex++;
         }
         
-        new ChainStackingBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+        new ChainStackingBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
 
-        new SpanCrossSentenceBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+        new SpanCrossSentenceBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
     }
 }

@@ -30,7 +30,7 @@ public class ChainStackingBehavior
     extends SpanStackingBehavior
 {
     @Override
-    public CreateSpanAnnotationRequest apply(TypeAdapter aAdapter,
+    public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {

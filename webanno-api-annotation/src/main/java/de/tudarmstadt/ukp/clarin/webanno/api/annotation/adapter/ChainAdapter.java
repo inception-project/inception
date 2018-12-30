@@ -81,11 +81,11 @@ public class ChainAdapter
     {
         CreateSpanAnnotationRequest request = aRequest;
         
-        request = new SpanCrossSentenceBehavior().apply(this, request);
+        request = new SpanCrossSentenceBehavior().onCreate(this, request);
         
-        request = new SpanAnchoringModeBehavior().apply(this, request);
+        request = new SpanAnchoringModeBehavior().onCreate(this, request);
         
-        request = new ChainStackingBehavior().apply(this, request);
+        request = new ChainStackingBehavior().onCreate(this, request);
         
         return createChainElementAnnotation(request);
     }

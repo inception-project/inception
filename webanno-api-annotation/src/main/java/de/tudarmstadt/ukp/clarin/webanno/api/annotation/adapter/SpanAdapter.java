@@ -79,11 +79,11 @@ public class SpanAdapter
     {
         CreateSpanAnnotationRequest request = aRequest;
 
-        request = new SpanCrossSentenceBehavior().apply(this, request);
+        request = new SpanCrossSentenceBehavior().onCreate(this, request);
 
-        request = new SpanAnchoringModeBehavior().apply(this, request);
+        request = new SpanAnchoringModeBehavior().onCreate(this, request);
 
-        request = new SpanStackingBehavior().apply(this, request);
+        request = new SpanStackingBehavior().onCreate(this, request);
 
         AnnotationFS newAnnotation = createSpanAnnotation(request.getJcas().getCas(),
                 request.getBegin(), request.getEnd());

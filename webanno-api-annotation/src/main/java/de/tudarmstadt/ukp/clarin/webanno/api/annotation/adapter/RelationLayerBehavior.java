@@ -21,7 +21,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 
 public interface RelationLayerBehavior
 {
-    CreateRelationAnnotationRequest apply(ArcAdapter aAdapter,
+    CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
         throws AnnotationException;
 }

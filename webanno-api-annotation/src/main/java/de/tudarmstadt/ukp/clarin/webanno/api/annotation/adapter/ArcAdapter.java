@@ -118,11 +118,11 @@ public class ArcAdapter
     {
         CreateRelationAnnotationRequest request = aRequest;
         
-        request = new RelationCrossSentenceBehavior().apply(this, request);
+        request = new RelationCrossSentenceBehavior().onCreate(this, request);
         
-        request = new RelationStackingBehavior().apply(this, request);
+        request = new RelationStackingBehavior().onCreate(this, request);
         
-        request = new RelationAttachmentBehavior().apply(this, request);
+        request = new RelationAttachmentBehavior().onCreate(this, request);
         
         return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
                 request.getTargetFs());

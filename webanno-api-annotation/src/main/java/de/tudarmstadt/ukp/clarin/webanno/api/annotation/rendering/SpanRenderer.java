@@ -117,9 +117,9 @@ public class SpanRenderer
             }
         }
         
-        new SpanStackingBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+        new SpanStackingBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
 
-        new SpanCrossSentenceBehavior().renderErrors(typeAdapter, aResponse, annoToSpanIdx);
+        new SpanCrossSentenceBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
     }
     
     private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,

@@ -27,9 +27,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
 public interface SpanLayerBehavior
 {
-    CreateSpanAnnotationRequest apply(TypeAdapter aAdapter, CreateSpanAnnotationRequest aRequest)
+    CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter, CreateSpanAnnotationRequest aRequest)
         throws AnnotationException;
 
-    void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+    void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx);
 }

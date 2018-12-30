@@ -36,7 +36,7 @@ public class SpanAnchoringModeBehavior
     implements SpanLayerBehavior
 {
     @Override
-    public CreateSpanAnnotationRequest apply(TypeAdapter aAdapter,
+    public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
@@ -101,7 +101,7 @@ public class SpanAnchoringModeBehavior
     }
     
     @Override
-    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
     {
         // Still needs to be implemented

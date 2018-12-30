@@ -41,7 +41,7 @@ public class SpanStackingBehavior
     implements SpanLayerBehavior
 {
     @Override
-    public CreateSpanAnnotationRequest apply(TypeAdapter aAdapter,
+    public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
@@ -68,7 +68,7 @@ public class SpanStackingBehavior
     }
     
     @Override
-    public void renderErrors(TypeAdapter aAdapter, VDocument aResponse,
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx)
     {
         if (aAdapter.getLayer().isAllowStacking()) {

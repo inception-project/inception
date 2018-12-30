@@ -28,7 +28,7 @@ public class RelationAttachmentBehavior
     implements RelationLayerBehavior
 {
     @Override
-    public CreateRelationAnnotationRequest apply(ArcAdapter aAdapter,
+    public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
     {
         if (aAdapter.getLayer().getAttachFeature() == null) {
