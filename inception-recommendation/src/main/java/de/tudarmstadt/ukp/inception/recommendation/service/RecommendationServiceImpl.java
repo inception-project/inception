@@ -92,6 +92,15 @@ public class RecommendationServiceImpl
     @Value("${show.learning.curve.diagram:false}")
     public Boolean showLearningCurveDiagram;
     
+    public RecommendationServiceImpl()
+    {
+    }
+    
+    public RecommendationServiceImpl(EntityManager entityManager)
+    {
+        this.entityManager = entityManager;
+    }
+
     private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
@@ -235,18 +244,16 @@ public class RecommendationServiceImpl
     
     @Override
     @Transactional
-    public List<Recommender> getEnabledRecommenders(Project aProject, String aLayer, String aTool)
+    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
     {
         //TODO: add layer condition
         String query = String.join("\n",
                 "FROM Recommender WHERE ",
-                "project = :project AND ",
-                "tool = :tool AND",
+                "id = :id AND ",
                 "enabled = :enabled" );
 
         return entityManager.createQuery(query, Recommender.class)
-                .setParameter("project", aProject)
-                .setParameter("tool", aTool)
+                .setParameter("id", aRecommenderId)
                 .setParameter("enabled", true)
                 .getResultList();
     }

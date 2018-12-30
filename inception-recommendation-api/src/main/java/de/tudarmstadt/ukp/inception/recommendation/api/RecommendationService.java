@@ -60,7 +60,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
-    List<Recommender> getEnabledRecommenders(Project aProject, String aLayer, String aTool);
+    List<Recommender> getEnabledRecommenders(Long aRecommenderId);
 
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.

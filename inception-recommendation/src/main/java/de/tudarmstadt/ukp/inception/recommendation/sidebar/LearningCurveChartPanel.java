@@ -126,8 +126,9 @@ public class LearningCurveChartPanel
             String recommenderName = recommenderClass[recommenderClass.length - 1];
 
             // define chart type for the recommender
+            chartType.append("'");
             chartType.append(recommenderName);
-            chartType.append(": 'step', ");
+            chartType.append("': 'step', ");
             dataColumns.append(recommenderName);
 
             // append data columns
@@ -209,8 +210,7 @@ public class LearningCurveChartPanel
 
                 //do not include the scores from disabled recommenders
                 List<Recommender> recommenderIfActive = recommendationService
-                        .getEnabledRecommenders(model.getObject().getProject(), detail.layer,
-                                detail.tool);
+                        .getEnabledRecommenders(detail.recommenderId);
                 if (recommenderIfActive.isEmpty()) {
                     continue;
                 }
@@ -219,8 +219,9 @@ public class LearningCurveChartPanel
                 if (!Double.isFinite(detail.score)) {
                     continue;
                 }
-
-                recommenderScoreMap.put(detail.tool, detail.score);
+                
+                //recommenderIfActive only has one member
+                recommenderScoreMap.put(recommenderIfActive.get(0).getName(), detail.score);
             }
             catch (IOException e) {
                 log.error("Invalid logged Event detail. Skipping record with logged event id: "
