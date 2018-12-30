@@ -39,7 +39,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -58,17 +57,6 @@ public class SpanAdapter
             Collection<AnnotationFeature> aFeatures)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-    }
-
-    /**
-     * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-     *             {@link #add(SourceDocument, String, JCas, int, int)} instead.
-     */
-    @Deprecated
-    public Integer add(AnnotatorState aState, JCas aJCas, int aBegin, int aEnd)
-        throws AnnotationException
-    {
-        return add(aState.getDocument(), aState.getUser().getUsername(), aJCas, aBegin, aEnd);
     }
 
     /**
@@ -91,47 +79,107 @@ public class SpanAdapter
     public Integer add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin, int aEnd)
         throws AnnotationException
     {
-        // if zero-offset annotation is requested
-        if (aBegin == aEnd) {
-            return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
-        }
-        if (getLayer().isCrossSentence() || isSameSentence(aJCas, aBegin, aEnd)) {
-            switch (getLayer().getAnchoringMode()) {
-            case CHARACTERS: {
-                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
-            }
-            case SINGLE_TOKEN: {
-                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-
-                if (tokens.isEmpty()) {
-                    throw new AnnotationException("No token is found to annotate");
+        return perform(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
+    }
+    
+    public Integer perform(CreateSpanAnnotationRequest aRequest)
+            throws AnnotationException
+    {
+        CreateSpanAnnotationRequest request = aRequest;
+        
+        request = applyCrossSentenceBehavior(request);
+        
+        request = applyAnchoringMode(request);
+        
+        request = applyStackingBehavior(request);
+        
+        return createSpanAnnotation(request.getDocument(), request.getUsername(),
+                request.getJcas().getCas(), request.getBegin(), request.getEnd());
+    }
+    
+    private CreateSpanAnnotationRequest applyStackingBehavior(CreateSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        final CAS aCas = aRequest.getJcas().getCas();
+        final int aBegin = aRequest.getBegin();
+        final int aEnd = aRequest.getEnd();
+        
+        // If stacking is not allowed and there already is an annotation, then return the address
+        // of the existing annotation.
+        Type type = CasUtil.getType(aCas, getAnnotationTypeName());
+        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (!getLayer().isAllowStacking()) {
+                    throw new AnnotationException("Cannot create another annotation of layer ["
+                            + getLayer().getUiName() + "] at this location - stacking is not "
+                            + "enabled for this layer.");
                 }
-                
-                return createAnnotation(aDocument, aUsername, aJCas.getCas(),
-                        tokens.get(0).getBegin(), tokens.get(0).getEnd());
-            }
-            case TOKENS: {
-                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-                // update the begin and ends (no sub token selection)
-                aBegin = tokens.get(0).getBegin();
-                aEnd = tokens.get(tokens.size() - 1).getEnd();
-                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
-            }
-            case SENTENCES: {
-                List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aBegin, aEnd);
-                // update the begin and ends (no sub token selection)
-                aBegin = sentences.get(0).getBegin();
-                aEnd = sentences.get(sentences.size() - 1).getEnd();
-                return createAnnotation(aDocument, aUsername, aJCas.getCas(), aBegin, aEnd);
-            }
-            default:
-                throw new IllegalStateException(
-                        "Unsupported anchoring mode: [" + getLayer().getAnchoringMode() + "]");
             }
         }
-        else {
-            throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
+        
+        return aRequest;
+    }
+
+    private CreateSpanAnnotationRequest applyCrossSentenceBehavior(
+            CreateSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        if (!getLayer().isCrossSentence()
+                && !isSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
+            throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
+        }
+        
+        return aRequest;
+    }
+    
+    private CreateSpanAnnotationRequest applyAnchoringMode(CreateSpanAnnotationRequest aRequest)
+        throws AnnotationException
+    {
+        if (aRequest.getBegin() == aRequest.getEnd()) {
+            if (!getLayer().getAnchoringMode().isZeroSpanAllowed()) {
+                throw new AnnotationException(
+                        "Cannot create zero-width annotation on layers that lock to token boundaries.");
+            }
+
+            return aRequest;
+        }
+        
+        switch (getLayer().getAnchoringMode()) {
+        case CHARACTERS: {
+            return aRequest;
+        }
+        case SINGLE_TOKEN: {
+            List<Token> tokens = selectOverlapping(aRequest.getJcas(), Token.class,
+                    aRequest.getBegin(), aRequest.getEnd());
+
+            if (tokens.isEmpty()) {
+                throw new AnnotationException("No token is found to annotate");
+            }
+                        
+            return aRequest.changeSpan(tokens.get(0).getBegin(), tokens.get(0).getEnd());
+        }
+        case TOKENS: {
+            List<Token> tokens = selectOverlapping(aRequest.getJcas(), Token.class,
+                    aRequest.getBegin(), aRequest.getEnd());
+            // update the begin and ends (no sub token selection)
+            int begin = tokens.get(0).getBegin();
+            int end = tokens.get(tokens.size() - 1).getEnd();
+            
+            return aRequest.changeSpan(begin, end);
+        }
+        case SENTENCES: {
+            List<Sentence> sentences = selectOverlapping(aRequest.getJcas(), Sentence.class,
+                    aRequest.getBegin(), aRequest.getEnd());
+            // update the begin and ends (no sub token selection)
+            int begin = sentences.get(0).getBegin();
+            int end = sentences.get(sentences.size() - 1).getEnd();
+            
+            return aRequest.changeSpan(begin, end);
+        }
+        default:
+            throw new IllegalStateException(
+                    "Unsupported anchoring mode: [" + getLayer().getAnchoringMode() + "]");
         }
     }
     
@@ -187,21 +235,11 @@ public class SpanAdapter
     /**
      * A Helper method to add annotation to CAS
      */
-    private Integer createAnnotation(SourceDocument aDocument, String aUsername, CAS aCas,
+    private Integer createSpanAnnotation(SourceDocument aDocument, String aUsername, CAS aCas,
             int aBegin, int aEnd)
         throws AnnotationException
     {
-        // If stacking is not allowed and there already is an annotation, then return the address
-        // of the existing annotation.
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!getLayer().isAllowStacking()) {
-                    return getAddr(fs);
-                }
-            }
-        }
-        
         AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
         
         // If if the layer attaches to a feature, then set the attach-feature to the newly

@@ -622,7 +622,7 @@ public class MergeCas
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
             throw new AnnotationException(
-                    "Same Annotation exists on the mergeview. Please add it manually.");
+                    "Same annotation already exists on the mergeview. Please add it manually.");
         }
 
         // a) if stacking allowed add this new annotation to the mergeview

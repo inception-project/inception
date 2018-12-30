@@ -168,7 +168,7 @@ public class AutomationUtil
                 governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
             }
 
-            if (adapter.isCrossMultipleSentence()) {
+            if (adapter.getLayer().isCrossSentence()) {
                 List<AnnotationFS> mSpanAnnos = new ArrayList<>(
                         getAllAnnoFss(jCas, governorFs.getType()));
                 repeatRelation(aState, 0, jCas.getDocumentText().length() - 1, aFeature, aValue,
@@ -200,7 +200,8 @@ public class AutomationUtil
         for (AnnotationFS fs : aSpanAnnos) {
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
-                    AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
+                    AnnotationFS arc = adapter.add(aState.getDocument(),
+                            aState.getUser().getUsername(), g, fs, jCas, aStart, aEnd);
                     adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
                             jCas, getAddr(arc), aFeature, aValue);
                     g = null;
@@ -215,7 +216,8 @@ public class AutomationUtil
             // we don't use else, in case gov and dep are the same
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
-                    AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
+                    AnnotationFS arc = adapter.add(aState.getDocument(),
+                            aState.getUser().getUsername(), fs, d, jCas, aStart, aEnd);
                     adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
                             jCas, getAddr(arc), aFeature, aValue);
                     g = null;
@@ -390,12 +392,51 @@ public class AutomationUtil
             String depCoveredText = dependentFs.getCoveredText();
             String govCoveredText = governorFs.getCoveredText();
 
-            adapter.delete(aBModel.getDocument(), aBModel.getUser().getUsername(), jCas, aFeature,
-                    beginOffset, endOffset, depCoveredText, govCoveredText, aValue);
+            deleteRelationAnnotation(adapter, aBModel.getDocument(),
+                    aBModel.getUser().getUsername(), jCas, aFeature, beginOffset, endOffset,
+                    depCoveredText, govCoveredText, aValue);
             aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }
 
+    private static void deleteRelationAnnotation(ArcAdapter aAdapter, SourceDocument aDocument,
+            String aUsername, JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
+            String aDepCoveredText, String aGovCoveredText, Object aValue)
+    {
+        Feature dependentFeature = aAdapter.getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(aAdapter.getTargetFeatureName());
+        Feature governorFeature = aAdapter.getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(aAdapter.getSourceFeatureName());
+
+        AnnotationFS dependentFs = null;
+        AnnotationFS governorFs = null;
+
+        Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
+        Type spanType = getType(aJCas.getCas(), aAdapter.getAttachTypeName());
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
+
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+            if (aAdapter.getAttachFeatureName() != null) {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
+                        .getFeatureValue(arcSpanFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
+                        .getFeatureValue(arcSpanFeature);
+
+            }
+            else {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+            }
+
+            if (aDepCoveredText.equals(dependentFs.getCoveredText())
+                    && aGovCoveredText.equals(governorFs.getCoveredText())) {
+                if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
+                    aAdapter.delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
+                }
+            }
+        }
+    }
+    
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
