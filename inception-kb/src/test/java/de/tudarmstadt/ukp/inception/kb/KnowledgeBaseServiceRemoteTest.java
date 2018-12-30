@@ -90,7 +90,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.printf("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================\n");
         };
     };
 

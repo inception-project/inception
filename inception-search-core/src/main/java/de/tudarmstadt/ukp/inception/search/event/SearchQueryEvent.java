@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.search.event;
 
+import java.util.Optional;
+
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public class SearchQueryEvent
     extends ApplicationEvent
@@ -29,21 +32,41 @@ public class SearchQueryEvent
     private final Project project;
     private final String user;
     private final String query;
+    private final SourceDocument sourceDocument;
 
     public SearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery)
+    {
+        this(aSource, aProject, aUser, aQuery, null);
+    }
+
+    /**
+     * @param aSource
+     *            event source
+     * @param aProject
+     *            related project
+     * @param aUser
+     *            user executing the query
+     * @param aQuery
+     *            the query
+     * @param aSourceDocument
+     *            to which to limit the query
+     */
+    public SearchQueryEvent(Object aSource, Project aProject, String aUser, String aQuery,
+            SourceDocument aSourceDocument)
     {
         super(aSource);
 
         project = aProject;
         user = aUser;
         query = aQuery;
+        sourceDocument = aSourceDocument;
     }
 
     public String getUser()
     {
         return user;
     }
-
+    
     public Project getProject()
     {
         return project;
@@ -52,6 +75,14 @@ public class SearchQueryEvent
     public String getQuery()
     {
         return query;
+    }
+    
+    /**
+     * Query is limited to the given document.
+     */
+    public Optional<SourceDocument> getSourceDocument()
+    {
+        return Optional.ofNullable(sourceDocument);
     }
 
     @Override

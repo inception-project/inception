@@ -86,7 +86,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -1372,14 +1371,6 @@ public class KnowledgeBaseServiceImpl
             return Optional.empty();
         }
         return Optional.empty();
-    }
-
-    @Override
-    public File readKbFileFromClassPathResource(String aLocation) throws IOException
-    {
-        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        File kbFile = resolver.getResource(aLocation).getFile();
-        return kbFile;
     }
 
     @Override

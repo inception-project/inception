@@ -399,16 +399,19 @@ public class AccessSpecificSettingsPanel
 
                 String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
+                FileUploadDownloadHelper fileUploadDownloadHelper =
+                    new FileUploadDownloadHelper(getApplication());
+
                 if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                    FileUploadDownloadHelper fileUploadDownloadHelper =
-                        new FileUploadDownloadHelper(getApplication());
+
                     File tmpFile = fileUploadDownloadHelper
                         .writeFileDownloadToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
                 }
                 else {
                     // import from classpath
-                    File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
+                    File kbFile = fileUploadDownloadHelper
+                        .writeClasspathResourceToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
 
