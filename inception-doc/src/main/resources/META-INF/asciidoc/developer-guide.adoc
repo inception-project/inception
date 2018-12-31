@@ -40,4 +40,9 @@ include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}log.adoc[leveloffset=+1]
+include::{include-dir}log-adapter.adoc[leveloffset=+2]
+
+<<<
+
 include::{include-dir}systemproperties.adoc[]
