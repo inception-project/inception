@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_monitoring_agreement]]
-== Agreement
+= Agreement
 
 Agreement can be inspected on a per-feature basis and is calculated pair-wise between all 
 annotators across all documents.

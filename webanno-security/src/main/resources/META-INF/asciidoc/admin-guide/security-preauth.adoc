@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_security_preauth]]
-== External pre-authentication
+= External pre-authentication
 
 WebAnno can be used in conjunction with header-based external per-authentication. In this mode,
 WebAnno looks for a special HTTP header (by default `remote_user`) and if that header exists, 
@@ -46,3 +46,34 @@ NOTE: The roles specified through `auth.preauth.newuser.roles` are saved in the 
       
 NOTE: The roles added through `auth.user.<username>.roles` properties are *not* saved in the
       database and *cannot* be edited through the user interface.
+
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+      
+| auth.mode
+| Authentication mode
+| database
+| preauth
+
+| auth.preauth.header.principal
+| Principal header
+| remote_user
+| _some other header_
+
+| auth.preauth.newuser.roles
+| Default roles for new users (comma separated)
+| _<none>_
+| ROLE_PROJECT_CREATOR
+
+| auth.user._<username>_.roles
+| Extra roles for user (comma separated)
+| _<none>_
+| ROLE_ADMIN
+|===
+
+      

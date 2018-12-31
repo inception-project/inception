@@ -17,7 +17,7 @@
 ////
 
 [[sect_annotation]]
-== Annotation
+= Annotation
 
 NOTE: This functionality is only available to *annotators* and *managers*. Annotators and managers 
       only see projects in which they hold the respective roles. 

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_remote_api_webhooks]]
-== Webhooks
+= Webhooks
 
 Webhooks allow {product-name} to notify external services about certain events. For example, an 
 external service can be triggered when an annotator marks a document as finished or when all 

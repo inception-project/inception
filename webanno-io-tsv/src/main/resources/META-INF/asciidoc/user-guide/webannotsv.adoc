@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_webannotsv]]
-== WebAnno TSV 3.2 File format
+= WebAnno TSV 3.2 File format
 
 In this section, we will discuss the WebAnno TSV (Tab Separated Value) file format version 3.2. 
 The format is similar to the CoNNL file formats with specialized additions to the header and column
@@ -27,7 +27,7 @@ running WebAnno project. Otherwise, the importing of the file will not be possib
 The *body* section of the TSV file presents the document and all the associated annotations
 including sentence and token annotations.
 
-=== Encoding and Offsets
+== Encoding and Offsets
 
 TSV files are always encoded in UTF-8. However, the offsets used in the TSV file are based on
 UTF-16. This is important when using TSV files with texts containing e.g. Emojis or some modern
@@ -55,7 +55,7 @@ NOTE: Since the character offsets are based on UTF-16 and the TSV file itself is
       first the text contained in the file needs to be transcoded from UTF-8 into UTF-16 before the offsets
       can be applied. The offsets cannot be used for random access to characters directly in the TSV file.
 
-=== File Header
+== File Header
 
 WebAnno TSV 3.2 file starts with the following header marker
 
@@ -106,11 +106,11 @@ Relation layers will come at last in the list and the very last entry in the fea
 
 Here, the relation type `de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency` has a feature `DependencyType` and the relation is between a base type of `de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS`.
 
-=== File Body / Annotations
+== File Body / Annotations
 
 In this section we discuss the different representations of texts and annotation in WebAnno TSV3format
 
-==== Reserved Characters
+=== Reserved Characters
 
 Reserved characters have a special meaning in the TSV format and must be are escaped with the *backslash* (`\`) character if they appear in text or feature values. Reserved characters are the following:
 
@@ -124,7 +124,7 @@ NOTE: The way that TSV is presently defined/implemented, it kind of considers `-
       "character"... and it is also escaped as a single unit, i.e. `->` becomes `\->`. It is something to
       be addressed in a future iteration of the format.
 
-==== Sentence Representation
+=== Sentence Representation
 
 Sentence annotations are presented following the text marker `#Text=`, before the token
 annotations. All text given here is inside the sentence boundaries.
@@ -151,7 +151,7 @@ as escaped characters (`\r`).
 #Text=electronic , computer and building products .
 ----
 
-==== Token and Sub-token Annotations
+=== Token and Sub-token Annotations
 
 Tokens represent a span of text within a sentence. Tokens cannot overlap, although then can be
 directly adjacent (i.e. without any whitespace between them). The start offset of the first
@@ -193,7 +193,7 @@ While tokens may not overlap, sub-tokens may overlap.
 1-3.2 11-14 ays
 ----
 
-==== Span Annotations
+=== Span Annotations
 
 For every features of a span Annotation, annotation value will be presented in the same row as the token/sub-token annotation, separated by a TAB character. If there is no annotation for the given span layer, a `_` character is placed in the column. If the feature has no/null annotation or if the span layer do not have a feature at all, a `*` character represents the annotation.
 
@@ -213,7 +213,7 @@ For every features of a span Annotation, annotation value will be presented in t
 Here, the first annotation at column 4, `JJ` is avalue for a feature *PosValue* of the layer *de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS*. For the two features of the layer *webanno.custom.Sentiment* (*Category* and *Opinion*), the values `abstract` and `negative` are
 presented at column 5 and 6 resp.
 
-==== Disambiguation IDs
+=== Disambiguation IDs
 
 Within a single line, an annotation can be uniquely identified by its type and stacking index.
 However, across lines, annotation cannot be uniquely identified easily. Also, if the exact type
@@ -245,7 +245,7 @@ Here, `PER[1]` indicates that token `1-1` and `1-2` have the same annotation (mu
 
 NOTE: On chain layers, the number in brackets is *not* a disambiguation ID but rather a chain ID!
 
-==== Slot features
+=== Slot features
 
 Slot features and the target annotations are separated by TAB character (first the feature column then the target column follows). In the target column, the `sentence-token` id is recorded where the feature is drawn.
 
@@ -272,7 +272,7 @@ Unlike other span layer features (which are separated by `|` character), multipl
 
 Here, for example, at token `2-2`, we have three slot annotations for feature `Roles` that are `seller`, `goods`, and `buyer`. The targets are on token `2-1 `, `2-3[4]`, and `2-6` respectively which are on annotations of the layer `webanno.custom.Lu` which are `bob`, `clock` and `john`. 
 
-==== Chain Annotations
+=== Chain Annotations
 
 In the Chain annotation, two columns (TAB separated) are used to represent the `referenceType` and the `referenceRelation`. A chain ID is attached to the `referenceType` to distinguish to which of the chains the annotation belongs. The `referenceRelation` of the chain is represented by the relation value followed by `->` and followed by the `CH-LINK` number where `CH` is the chain number and `LINK` is the link number (the order the chain).
 
@@ -296,7 +296,7 @@ In the Chain annotation, two columns (TAB separated) are used to represent the `
 
 In this example, token `1-3` is marked as `pr[1]` which indicates that the *referenceType* is `pr` and it is part of the chain with the ID `1`. The relation label is `coref` and with the `CH-LINK` number `1-2` which means that it belongs to chain `1` and this is the second link in the chain.
 
-==== Relation Annotations
+=== Relation Annotations
 
 Relation annotations comes to the last columns of the TSV file format. Just like the span annotations, every feature of the relation layers are represented in a separate TAB. Besides, one extra column (after all feature values) is used to write the token id from which token/sub-token this arc of a relation annotation is drawn.
 

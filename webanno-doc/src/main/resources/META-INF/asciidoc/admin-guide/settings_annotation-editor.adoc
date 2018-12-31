@@ -14,8 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_systemproperties]]
-== System Properties
+= Annotation editor
 
 [cols="4*", options="header"]
 |===
@@ -24,13 +23,34 @@
 | Default
 | Example
 
-| webanno.home
-| WebAnno home folder
-| ~/.webanno
-| /srv/webanno
-
-| javamelody.disabled
-| Disable JavaMelody
+| ui.brat.autoScroll
+| Whether to scroll the annotation being edited into the center of the page
 | true
+| 
+
+| ui.brat.pageSize
+| The number of sentences to display per page
+| 5
+| 
+
+| ui.brat.singleClickSelection
+| Whether to select annotations with a single click
 | false
+| 
+
+| ui.brat.rememberLayer
+| Whether "remember layer" is activated by default
+| false
+| 
+
+| annotation.feature-support.string.autoCompleteThreshold
+| If the tagset is larger than the threshold, an auto-complete field is used instead of a standard combobox.
+| 75
+| 100
+
+| annotation.feature-support.string.autoCompleteMaxResults
+| When an auto-complete field is used, this determines the maximum number of items shown in the dropdown menu.
+| 100
+| 1000
 |===
+

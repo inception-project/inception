@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Spans
+= Spans
 
 To create an annotation over a span of text, click with the mouse on the text and drag the mouse to create a selection. When you release the mouse, the selected span is activated and highlighted in orange. The annotation detail editor is updated to display the text you have currently selected and to offer a choice on which layer the annotation is to be created. As soon as a layer has been selected, it is automatically assigned to the selected span. To delete an annotation, select a span and click on *Delete*. To deactivate a selected span, click on *Clear*.
 

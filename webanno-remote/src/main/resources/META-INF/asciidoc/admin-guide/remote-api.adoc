@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_remote_api]]
-== Remote API
+= Remote API
 
 In order to programmatically manage annotation project, a REST-like remote API is offered. This API
 is disabled by default. In order to enable it, add the setting `remote-api.enabled=true` to the

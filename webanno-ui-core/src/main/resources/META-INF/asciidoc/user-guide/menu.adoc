@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_menu]]
-== Main Menu
+= Main Menu
 
 After login, you will be presented with the overview screen. This screen can be reached at 
 any time from within the GUI by clicking on the *Home* link in the left upper corner. 

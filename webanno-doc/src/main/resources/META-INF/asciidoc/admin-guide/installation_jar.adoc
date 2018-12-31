@@ -1,0 +1,134 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running via embedded Tomcat (JAR)
+
+The WebAnno standalone JAR with an embedded Tomcat server and can be easily set up as a 
+UNIX service. This is the recommended way of running WebAnno on a server.
+
+== Installing WebAnno as a service
+
+To set it up as a service, you can do the following steps. For the following
+example, I assume that you install WebAnno in `/srv/webanno`:
+
+* Copy the standalone JAR file +webanno-standalone-{revnumber}.jar+ to `/srv/webanno/webanno.jar`.
+   Note the change of the filename to `webanno.jar`.
+* Create the file `/srv/webanno/webanno.conf` with the following content
++
+[source,text]
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dwebanno.home=/srv/webanno"
+----
++
+* In the previous step, you have already created the `/srv/webanno/settings.properties` file. 
+  You *may optionally* configure the Tomcat port using the following line
++
+[source,text]
+----
+server.port=18080
+----
++
+If you need to do additional configurations of the embedded Tomcat, best refer to the 
+documentation of Spring Boot itself.
++
+* Make sure that the file `/srv/webanno/webanno.conf` is owned by the root user. If this is
+  not the case, WebAnno will ignore it and any settings made there will not have any effect. If
+  you start WebAnno and intead of using the MySQL database, it is using an embedded database,
+  then you should double-check that `/srv/webanno/webanno.conf` is owned by the root user.
++
+[source,bash]
+----
+$ chown root:root /srv/webanno/webanno.conf
+----
++
+* Change the owner/group of `/srv/webanno/webanno.jar` to `www-data`. When the service is started,
+  it will run with the privileges of the user that owns the JAR file, i.e. in this case WebAnno
+  will run as under the `www-data` user. **Do NOT run WebAnno as root.**
++
+[source,bash]
+----
+$ chown www-data:www-data /srv/webanno/webanno.jar
+----
++
+* Create a symlink from `/etc/init.d` to the `/srv/webanno/webanno.jar`:
++
+[source,bash]
+----
+$ ln -s /srv/webanno/webanno.jar /etc/init.d/webanno
+----
++
+* Enable the WebAnno service using
++
+[source,bash]
+----
+$ systemctl enable webanno
+----
++
+* Start WebAnno using
++
+[source,bash]
+----
+$ service webanno start
+----
++
+* Stop WebAnno using
++
+[source,bash]
+----
+$ service webanno stop
+----
+
+== Running the standalone behind HTTPD
+
+These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead
+of accessing it directly. This assumes that you already have the following packages installed:
+
+* Apache Web Server
+* mod_proxy
+* mod_proxy_ajp
+
+* Add the following lines to `/srv/webanno/settings.properties`:
++
+[source,text]
+----
+tomcat.ajp.port=18009
+server.contextPath=/webanno
+server.use-forward-headers=true
+----
++
+* Edit `/etc/apache2/conf.d/webanno.local.conf`
++
+[source,xml]
+----
+ProxyPreserveHost On
+
+<Proxy ajp://localhost/webanno >
+  Order Deny,Allow
+  Deny from none
+  Allow from all
+</Proxy>
+
+<Location /webanno >
+  ProxyPass ajp://localhost:18009/webanno timeout=1200
+  ProxyPassReverse http://localhost/webanno
+</Location>
+----
+* Restart Apache web server
++
+[source,bash]
+----
+$ service apache2 restart
+----

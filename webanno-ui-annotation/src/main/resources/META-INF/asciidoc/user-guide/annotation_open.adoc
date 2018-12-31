@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Opening a Document
+= Opening a Document
 
 When navigating to the *Annotation* page, a dialogue opens that allows you to select a project, and 
 a document within the project. If you want to open a different project or document later, click on 

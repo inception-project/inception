@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Settings
+= Settings
 
 Once the document is opened, a default of 5 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.

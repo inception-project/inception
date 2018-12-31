@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_systemproperties]]
-== System Properties
+= System Properties
 
 [cols="4*", options="header"]
 |===

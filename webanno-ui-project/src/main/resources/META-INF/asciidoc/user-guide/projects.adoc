@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_projects]]
-== Projects
+= Projects
 
 NOTE: This functionality is only available to *managers* of existing projects, 
       *project creators* (users with the ability to create new projects), and *administrators*.

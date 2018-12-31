@@ -294,6 +294,7 @@
             </goals>
             <configuration>
               <backend>html5</backend>
+              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
@@ -311,6 +312,7 @@
             </goals>
             <configuration>
               <backend>html5</backend>
+              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
@@ -328,6 +330,7 @@
             </goals>
             <configuration>
               <backend>html5</backend>
+              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
@@ -626,6 +629,7 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
+                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
@@ -643,6 +647,7 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
+                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
@@ -660,6 +665,7 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
+                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>

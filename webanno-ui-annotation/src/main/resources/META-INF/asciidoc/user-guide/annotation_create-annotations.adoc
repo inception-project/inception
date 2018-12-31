@@ -16,7 +16,7 @@
 // limitations under the License.
 ////
 
-== Creating annotations
+= Creating annotations
 
 The *Layer* box in the right sidebar shows the presently active layer span layer. To create a span
 annotation, select a span of text or double click on a word.
