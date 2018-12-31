@@ -18,6 +18,10 @@
 
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,27 +74,53 @@ public class RecommendationServiceImplIntegrationTest
     {
     }
     
-//    @Test
-//    public void getLoggedEvents_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
-//    {
-//        rec = buildRecommender(project, layer);
-//
-//        sut.createOrUpdateRecommender(rec);
-//
-//        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
-//
-//        assertThat(enabledRecommenders).as("Check that only the previously created recommender is found")
-//                .hasSize(1).contains(rec);
-//    }
+    @Test
+    public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
+    {
+        rec = buildRecommender(project, layer);
+        rec.setEnabled(true);
 
+        sut.createOrUpdateRecommender(rec);
+
+        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
+
+        assertThat(enabledRecommenders).as("Check that only the previously created recommender is found")
+                .hasSize(1).contains(rec);
+    }
+
+    @Test
+    public void getRecommenders_WithDisabledRecommender_ShouldReturnEmptyList()
+    {
+        rec = buildRecommender(project, layer);
+        rec.setEnabled(false);
+
+        sut.createOrUpdateRecommender(rec);
+
+        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
+
+        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
+    }
+
+    @Test
+    public void getRecommenders_WithOtherRecommenderId_ShouldReturnEmptyList()
+    {
+        rec = buildRecommender(project, layer);
+        rec.setEnabled(false);
+
+        sut.createOrUpdateRecommender(rec);
+
+        Long otherId = 9999L;
+        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(otherId );
+
+        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
+    }
 
     private Recommender buildRecommender(Project aProject, AnnotationLayer aLayer)
     {
         Recommender recommender = new Recommender();
         recommender.setLayer(aLayer);
-        recommender.setLayer(aLayer);
+        recommender.setProject(aProject);
         recommender.setAlwaysSelected(true);
-        recommender.setEnabled(true);
         recommender.setSkipEvaluation(false);
         recommender.setMaxRecommendations(3);
         
