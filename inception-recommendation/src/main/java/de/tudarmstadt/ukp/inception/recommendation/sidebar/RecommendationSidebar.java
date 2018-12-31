@@ -56,8 +56,10 @@ public class RecommendationSidebar
 
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
-        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class).setMinimum(1)
-                .setMaximum(10).setStep(1));
+        form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
+                .setMinimum(1)
+                .setMaximum(10)
+                .setStep(1));
 
         form.add(new CheckBox("showAllPredictions"));
 
