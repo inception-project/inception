@@ -1,0 +1,40 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_log]]
+= Event Log
+
+The event logging module allows catching Spring events and logging them them to the
+database. It consists of the following classes and interfaces:
+
+* The `EventRepository` interface and its default implementation `EventRepositoryImpl` which
+  serve as the data access layer for logged events.
+* The `EventLoggingListener` which hooks into Spring, captures events, and then uses the
+  `EventRepository` to log them.
+*  The `EventLoggingAdapter` interface. Spring components implementing this interface are 
+   used to extract information from Spring events and to convert them into a format
+   suitable to be logged.
+ * The `LoggedEvent` entity class which maps the logged events to the database.
+ * The `LoggedEventExporter` and `ExportedLoggedEvent` which are used to export/import the
+   event log as part of a project export/import.
+
+The log module comes with a number of adapters for common events such as annotation 
+manipulation, changes to the project configuration, etc. Any event for which no specific
+adapter exists is handled using the `GenericEventAdapter` which logs only general 
+information (e.g. the timestamp, current user, type of event) but no event-specific 
+details (e.g. current project, current document, or even more specific details). Note that
+even the `GenericEventAdapter` skips logging certain Spring events related to session 
+management, authorization, and the Spring context life-cycle.
