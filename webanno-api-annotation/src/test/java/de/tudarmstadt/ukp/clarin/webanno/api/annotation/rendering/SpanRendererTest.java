@@ -30,6 +30,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanStackingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -80,7 +82,8 @@ public class SpanRendererTest
         NamedEntity ne = new NamedEntity(jcas, 5, 15);
         ne.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList());
+        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+                asList(new SpanCrossSentenceBehavior()));
         
         SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry);
         
@@ -106,7 +109,8 @@ public class SpanRendererTest
         NamedEntity ne2 = new NamedEntity(jcas, 3, 8);
         ne2.addToIndexes();
         
-        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList());
+        SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+                asList(new SpanStackingBehavior()));
         
         SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry);
         

@@ -22,14 +22,23 @@ import java.util.Map;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
-public interface SpanLayerBehavior
+public abstract class SpanLayerBehavior
+    implements LayerBehavior
 {
-    CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter, CreateSpanAnnotationRequest aRequest)
+    @Override
+    public boolean accepts(LayerSupport<?> aLayerType)
+    {
+        return aLayerType instanceof SpanLayerBehavior;
+    }
+
+    public abstract CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
+            CreateSpanAnnotationRequest aRequest)
         throws AnnotationException;
 
-    void onRender(TypeAdapter aAdapter, VDocument aResponse,
+    public abstract void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx);
 }

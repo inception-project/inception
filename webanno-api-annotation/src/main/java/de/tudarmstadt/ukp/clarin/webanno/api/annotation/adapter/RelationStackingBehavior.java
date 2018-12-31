@@ -28,12 +28,14 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
+@Component
 public class RelationStackingBehavior
-    implements RelationLayerBehavior
+    extends RelationLayerBehavior
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -55,22 +57,8 @@ public class RelationStackingBehavior
         // Locate the governor and dependent annotations - looking at the annotations that are
         // presently visible on screen is sufficient - we don't have to scan the whole CAS.
         for (AnnotationFS fs : selectCovered(jcas.getCas(), type, windowBegin, windowEnd)) {
-            AnnotationFS existingTargetFS;
-            AnnotationFS existingOriginFS;
-            
-            if (layer.getAttachFeature() != null) {
-                final Type spanType = getType(jcas.getCas(), layer.getAttachType().getName());
-                Feature arcSpanFeature = spanType
-                        .getFeatureByBaseName(layer.getAttachFeature().getName());
-                existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature)
-                        .getFeatureValue(arcSpanFeature);
-                existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature)
-                        .getFeatureValue(arcSpanFeature);
-            }
-            else {
-                existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature);
-                existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature);
-            }
+            AnnotationFS existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+            AnnotationFS existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature);
         
             if (existingTargetFS == null || existingOriginFS == null) {
                 log.warn("Relation [" + layer.getName() + "] with id [" + getAddr(fs)

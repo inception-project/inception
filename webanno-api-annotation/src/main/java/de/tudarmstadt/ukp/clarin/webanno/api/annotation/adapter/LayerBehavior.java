@@ -17,20 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 
-public abstract class RelationLayerBehavior
-    implements LayerBehavior
+public interface LayerBehavior
 {
-    @Override
-    public boolean accepts(LayerSupport<?> aLayerType)
-    {
-        return aLayerType instanceof RelationLayerSupport;
-    }
-
-    public abstract CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
-            CreateRelationAnnotationRequest aRequest)
-        throws AnnotationException;
+    /**
+     * Checks whether the given layer behavior is supported for the given layer type.
+     * 
+     * @param aLayerType
+     *            a layer support.
+     * @return whether the given layer is provided by the current layer support.
+     */
+    boolean accepts(LayerSupport<?> aLayerType);
 }

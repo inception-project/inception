@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -37,8 +38,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 
+@Component
 public class SpanStackingBehavior
-    implements SpanLayerBehavior
+    extends SpanLayerBehavior
 {
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,

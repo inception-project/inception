@@ -116,9 +116,9 @@ public class BratRendererTest
         featureSupportRegistry.init();
         
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService)));
+                new SpanLayerSupport(featureSupportRegistry, null, schemaService, null),
+                new RelationLayerSupport(featureSupportRegistry, null, schemaService, null),
+                new ChainLayerSupport(featureSupportRegistry, null, schemaService, null)));
         layerRegistry.init();
         
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));

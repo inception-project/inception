@@ -24,17 +24,27 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
+@Component
 public class SpanCrossSentenceBehavior
-    implements SpanLayerBehavior
+    extends SpanLayerBehavior
 {
+    @Override
+    public boolean accepts(LayerSupport<?> aLayerType)
+    {
+        return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
+    }
+    
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)

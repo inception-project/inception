@@ -23,9 +23,13 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
 
+@Order(10)
+@Component
 public class RelationAttachmentBehavior
-    implements RelationLayerBehavior
+    extends RelationLayerBehavior
 {
     @Override
     public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,

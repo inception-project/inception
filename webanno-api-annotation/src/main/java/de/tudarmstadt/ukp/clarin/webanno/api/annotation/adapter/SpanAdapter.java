@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Collections.emptyList;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -28,6 +31,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
@@ -44,11 +48,22 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public class SpanAdapter
     extends TypeAdapter_ImplBase
 {
+    private final List<SpanLayerBehavior> behaviors;
+    
     public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
 
     /**
@@ -79,11 +94,9 @@ public class SpanAdapter
     {
         CreateSpanAnnotationRequest request = aRequest;
 
-        request = new SpanCrossSentenceBehavior().onCreate(this, request);
-
-        request = new SpanAnchoringModeBehavior().onCreate(this, request);
-
-        request = new SpanStackingBehavior().onCreate(this, request);
+        for (SpanLayerBehavior behavior : behaviors) {
+            request = behavior.onCreate(this, request);
+        }
 
         AnnotationFS newAnnotation = createSpanAnnotation(request.getJcas().getCas(),
                 request.getBegin(), request.getEnd());

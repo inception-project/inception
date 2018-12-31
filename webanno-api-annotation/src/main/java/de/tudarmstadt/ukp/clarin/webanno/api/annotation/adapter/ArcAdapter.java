@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -29,6 +32,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -55,6 +59,8 @@ public class ArcAdapter
      */
     private final String targetFeatureName;
 
+    private final List<RelationLayerBehavior> behaviors;
+    
     /**
      * @deprecated
      * @param aAttacheFeatureName argument is ignored and value obtained from layer instead.
@@ -70,15 +76,24 @@ public class ArcAdapter
             Collection<AnnotationFeature> aFeatures)
     {
         this(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                aTargetFeatureName, aSourceFeatureName, aFeatures);
+                aTargetFeatureName, aSourceFeatureName, aFeatures, emptyList());
     }
     
     public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             String aTargetFeatureName, String aSourceFeatureName,
-            Collection<AnnotationFeature> aFeatures)
+            Collection<AnnotationFeature> aFeatures, List<RelationLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<RelationLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
         
         sourceFeatureName = aSourceFeatureName;
         targetFeatureName = aTargetFeatureName;
@@ -118,11 +133,9 @@ public class ArcAdapter
     {
         CreateRelationAnnotationRequest request = aRequest;
         
-        request = new RelationCrossSentenceBehavior().onCreate(this, request);
-        
-        request = new RelationStackingBehavior().onCreate(this, request);
-        
-        request = new RelationAttachmentBehavior().onCreate(this, request);
+        for (RelationLayerBehavior behavior : behaviors) {
+            request = behavior.onCreate(this, request);
+        }
         
         return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
                 request.getTargetFs());

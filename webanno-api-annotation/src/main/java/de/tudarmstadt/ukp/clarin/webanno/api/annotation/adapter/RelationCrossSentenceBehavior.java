@@ -19,11 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 
+import org.springframework.stereotype.Component;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 
+@Component
 public class RelationCrossSentenceBehavior
-    implements RelationLayerBehavior
+    extends RelationLayerBehavior
 {
     @Override
     public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -55,6 +57,8 @@ public class ChainAdapter
     public static final String FEAT_FIRST = "first";
     public static final String FEAT_NEXT = "next";
 
+    private final List<SpanLayerBehavior> behaviors;
+    
     /**
      * The UIMA type name.
      */
@@ -62,9 +66,18 @@ public class ChainAdapter
 
     public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, String aTypeName,
-            Collection<AnnotationFeature> aFeatures)
+            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
+
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
 
         annotationTypeName = aTypeName;
     }
@@ -81,11 +94,9 @@ public class ChainAdapter
     {
         CreateSpanAnnotationRequest request = aRequest;
         
-        request = new SpanCrossSentenceBehavior().onCreate(this, request);
-        
-        request = new SpanAnchoringModeBehavior().onCreate(this, request);
-        
-        request = new ChainStackingBehavior().onCreate(this, request);
+        for (SpanLayerBehavior behavior : behaviors) {
+            request = behavior.onCreate(this, request);
+        }
         
         return createChainElementAnnotation(request);
     }

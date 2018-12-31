@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
@@ -46,17 +47,20 @@ public class ChainLayerSupport
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
+    private final LayerBehaviorsRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
     private List<LayerType> types;
 
     @Autowired
     public ChainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService)
+            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
+            LayerBehaviorsRegistry aLayerBehaviorsRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
+        layerBehaviorsRegistry = aLayerBehaviorsRegistry;
     }
 
     @Override
@@ -93,7 +97,8 @@ public class ChainLayerSupport
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
         ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                aLayer.getName() + ChainAdapter.CHAIN, schemaService.listAnnotationFeature(aLayer));
+                aLayer.getName() + ChainAdapter.CHAIN, schemaService.listAnnotationFeature(aLayer),
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;
     }
