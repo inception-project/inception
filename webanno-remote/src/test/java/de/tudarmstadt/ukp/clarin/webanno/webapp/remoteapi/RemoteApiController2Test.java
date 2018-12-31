@@ -362,9 +362,11 @@ public class RemoteApiController2Test
         public LayerSupportRegistry layerSupportRegistry()
         {
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService()),
-                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService()),
-                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService())));
+                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService(), null),
+                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService(),
+                            null),
+                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService(),
+                            null)));
         }
     }
 }

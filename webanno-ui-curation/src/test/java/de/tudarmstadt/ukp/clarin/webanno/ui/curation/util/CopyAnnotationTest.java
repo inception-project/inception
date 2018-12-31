@@ -184,9 +184,11 @@ public class CopyAnnotationTest
         featureSupportRegistry.init();
         
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService),
-                new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService),
-                new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService)));
+                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService, null),
+                new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        null),
+                new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        null)));
         layerSupportRegistry.init();
     }
     
