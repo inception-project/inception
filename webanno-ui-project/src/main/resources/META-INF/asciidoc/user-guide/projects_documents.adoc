@@ -1,4 +1,4 @@
-== Documents
+= Documents
 
 To add or delete documents, you have to click on the tab *Documents* in the project pane. Two frames will be displayed. In the first frame you can import new documents.
 

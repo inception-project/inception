@@ -1,0 +1,62 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Upgrading with separate Tomcat
+
+* While Tomcat is running, delete the old WAR from your `webapps` folder
+* Wait until Tomcat has automatically deleted the WebAnno folder 
+* Stop Tomcat
+* Place the new WAR file into your `webapps` folder
+* Start Tomcat
+
+== Upgrading Tomcat 7 to Tomcat 8
+
+If you have been using our installation instructions to install WebAnno on Linux, you are probably
+running an instance of Tomcat 6. WebAnno 3.3.0 is no longer compatible with Tomcat 6 and requires
+at least Tomcat 8. 
+
+To upgrade your existing instance, you can try the following procedure (adapt the procedure as
+necessary if you have deviated from our installation instructions):
+
+    * Stop the current WebAnno Tomcat 7 instance
+----
+$ service webanno stop
+----
+    * Move your old Tomcat instance out of the way
+----
+$ mv /opt/webanno /opt/webanno-tomcat7
+----
+    * Install `tomcat8-user` package (this will automatically uninstall Tomcat 7)
+----
+$ apt-get install tomcat8-user
+----
+   * Create new instance
+----
+$ cd /opt
+$ tomcat8-instance-create -p 18080 -c 18005 webanno
+$ chown -R www-data /opt/webanno
+----
+  * Copy the WAR file over to the new instance
+----
+$ mv /opt/webanno-tomcat7/webapps/webanno.war /opt/webanno/webapps/webanno.war
+----
+    * Stop the new WebAnno Tomcat 8 instance
+----
+$ service webanno start
+----
+  
+NOTE: If you have made additional changes to the Tomcat 7 configuration files, e.g. changed
+      `conf/server.xml`, please make sure to redo them in the new Tomcat 8 instance.

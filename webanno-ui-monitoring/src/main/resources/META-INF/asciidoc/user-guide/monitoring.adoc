@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_monitoring]]
-== Monitoring
+= Monitoring
 
 NOTE: This functionality is only available to *curators* and * managers*.
 

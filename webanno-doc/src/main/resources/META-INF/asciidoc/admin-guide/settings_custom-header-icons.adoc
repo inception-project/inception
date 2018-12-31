@@ -1,0 +1,47 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Custom header icons
+
+WebAnno allows adding custom icons to the page header. You can declare such custom icons in the WebAnno settings file as shown in the example below. Each declaration begins with the prefix `style.header.icon.` followed by an identifier (here `myOrganization` and `mySupport`). The suffixes `.linkUrl` and `.imageUrl` indicate the URL of the target page and of the icon image respectively. Images are automatically resized via CSS. However, to keep loading times low, you should point to a reasonably small image.
+
+The order of the icons is controlled by the ID, not by the order in the configuration file!
+
+.Example: Custom header icon
+----
+style.header.icon.myOrganization.linkUrl=http://my.org
+style.header.icon.myOrganization.imageUrl=http://my.org/logo.png
+style.header.icon.mySupport.linkUrl=http://my.org/support
+style.header.icon.mySupport.imageUrl=http://my.org/help.png
+----
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| style.logo
+| Logo image displayed in the upper-right corner
+| _unset_
+| _path to an image file_
+
+| style.header.icon...
+| Icons/links to display in the page header. For details, see below.
+| _unset_
+| 
+|===

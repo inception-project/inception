@@ -1,4 +1,4 @@
-== Tagsets
+= Tagsets
 
 To manager the tagsets, click on the tab *Tagsets* in the project pane. 
 

@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_database]]
-== Database
+= Database
 
 {product-name} uses an SQL database to store project and user data. 
 
@@ -36,51 +36,3 @@ We try to keep the data model simple, so there should be no significant requirem
 being used. Theoretically, it should be possible to use any JDBC-compatible database after adding a
 corresponding driver to the classpath and configuring {product-name} to use the driver in the
 `settings.properties` file.
-
-=== Using MySQL in production
-
-This section explains some settings that can be added to the `database.url` in the 
-`settings.properties` file when using MySQL. Settings are separated from the host name and database
-name with a `?` character and multiple settings are separated using the `&` character, e.g.:
-
-----
-database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
-----
-
-To suppress the warning about non-SSL database connections with recent MySQL databases, append the
-following setting to the `database.url`:
-
-----
-useSSL=false
-----
-
-Recent MySQL drivers may refuse to work unless a database server timezone has been specified. The
-easiest way to do this is to add the following setting to the `database.url`: 
-
-----
-serverTimezone=UTC
-----
-
-If you plan to use UTF-8 encoding for project name and tagset/tag name, make sure either of the following settings for MySQL database
-
-* in the `settings.properties` file, make sure that `database.url` includes 
-+
-----
-useUnicode=true&characterEncoding=UTF-8
-----
-
-* change the `my.conf` MySQL databse configuration file to include the following line
-+
-----
-character-set-server = utf8
-----
-
-=== Using HSQLDB in production
-
-{product-name} displays a warning in the user interface when an embedded database is being used. In case
-that you really want to run {product-name} with an embedded database in production, you probably want to
-disable this warning. To do so, please add the following entry to the `settings.properties` file:
-
-----
-warnings.embeddedDatabase=false
-----

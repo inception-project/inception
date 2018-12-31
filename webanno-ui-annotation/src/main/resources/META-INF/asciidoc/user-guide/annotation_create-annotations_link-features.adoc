@@ -17,7 +17,7 @@
 ////
 
 [[sect_annotation_link_features]]
-== Link Features
+= Link Features
 
 Link features can be used to link one annotation to others. Before a link can be made, a slot with 
 a role must be added. Enter the role label in the text field and press the *add* button to create
@@ -25,6 +25,6 @@ the slot. Next, click on field in the newly created slot to *arm* it. The field'
 to indicate that it is armed. Now you can fill the slot by double-clicking on a span 
 annotation. To remove a slot, arm it and then press the *del* button.
 
-=== Changing role names
+== Changing role names
 
 To change a previously selected role name, no prior deletion is needed. Just double-click on the instance you want to change, it will be highlighted in orange, and chose another role name.

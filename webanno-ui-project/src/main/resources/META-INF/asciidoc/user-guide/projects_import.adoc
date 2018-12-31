@@ -1,4 +1,4 @@
-== Import
+= Import
 
 Here, you can import project archives such as the example projects provided on our website or
 projects exported from the <<sect_projects_export>> tab.

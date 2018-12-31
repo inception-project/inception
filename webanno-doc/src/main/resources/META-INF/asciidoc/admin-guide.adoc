@@ -17,30 +17,74 @@
 = {product-name} Administrator Guide
 The {product-name} Team
 
-include::common/systemrequirements.adoc[]
+This guide covers handling {product-name} from an administrator's perspective.
+
+
+
+= Installation
+
+include::{include-dir}installation.adoc[leveloffset=+1]
+
+include::common/systemrequirements.adoc[leveloffset=+2]
+
+include::{include-dir}installation_java.adoc[leveloffset=+2]
+
+include::{include-dir}installation_home.adoc[leveloffset=+2]
+
+include::{include-dir}installation_database.adoc[leveloffset=+2]
+
+include::{include-dir}installation_database_mysql.adoc[leveloffset=+3]
+
+include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+3]
+
+include::{include-dir}installation_jar.adoc[leveloffset=+2]
+
+include::{include-dir}installation_tomcat.adoc[leveloffset=+2]
+
+include::{include-dir}installation_docker.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}installation.adoc[]
+= Upgrading
+
+include::{include-dir}upgrade.adoc[leveloffset=+1]
+
+include::{include-dir}upgrade_backup.adoc[leveloffset=+2]
+
+include::{include-dir}upgrade_jar.adoc[leveloffset=+2]
+
+include::{include-dir}upgrade_tomcat.adoc[leveloffset=+2]
+
+include::{include-dir}upgrade_imexport.adoc[leveloffset=+2]
+
+include::common/migration.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}database.adoc[]
+
+
+= Remote API
+
+include::{include-dir}remote-api.adoc[leveloffset=+1]
+
+include::{include-dir}remote-api-webhooks.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}upgrade.adoc[]
 
-<<<
 
-include::{include-dir}systemproperties.adoc[]
+= Settings
 
-<<<
+include::{include-dir}settings.adoc[[leveloffset=+1]
 
-include::{include-dir}remote-api.adoc[]
-include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
+include::{include-dir}settings_general.adoc[leveloffset=+2]
 
-<<<
+include::{include-dir}settings_database.adoc[leveloffset=+2]
 
-include::{include-dir}settings.adoc[]
-include::{include-dir}security-preauth.adoc[leveloffset=+1]
+include::{include-dir}settings_internal-backup.adoc[leveloffset=+2]
+
+include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+2]
+
+include::{include-dir}settings_annotation-editor.adoc[leveloffset=+2]
+
+include::{include-dir}security-preauth.adoc[leveloffset=+2]
