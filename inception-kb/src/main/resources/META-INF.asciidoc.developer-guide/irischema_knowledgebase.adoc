@@ -79,7 +79,7 @@ However each class has a different use case. The relevant classes are show in <<
 | KnowledgeBaseProfile.java & KnowledgeBaseMapping.java
 | Read pre-configured knowledgebase profiles from a yaml file.
   The actual IRI Schema is modeled in KnowledgeBaseMapping.java.
-  The yaml file is located at: _/inception-kb/src/main/resources/de/tudarmstadt/ukp/inception/kb/knowledgebase-profiles.yaml_
+  The yaml file is located at: _.../inception-kb/src/main/resources/de/tudarmstadt/ukp/inception/kb/knowledgebase-profiles.yaml_
 
 | SchemaProfile.java
 | Defines some specific IRI Schemas (e.g RDF, WIKIDATA, SKOS).
