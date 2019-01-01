@@ -40,4 +40,8 @@ include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}irischema_knowledgebase.adoc[]
+
+<<<
+
 include::{include-dir}systemproperties.adoc[]

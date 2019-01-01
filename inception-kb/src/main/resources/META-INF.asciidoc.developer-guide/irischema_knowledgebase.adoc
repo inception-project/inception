@@ -1,0 +1,80 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_irischema_knowledge-base]]
+=== Knowledge Base -  IRI Schema
+
+An IRI Schema defines the following attributes that are used for making queries in a knowledge base.
+
+[cols="3*", options="header"]
+|===
+| Attribute
+| Description
+| Example Value
+
+| Class IRI
+| Class of resources that are classes.
+| rdfs:Class
+
+| Subclass IRI
+| Property that defines a *subclass of* relation between classes.
+| rdfs:subClassOf
+
+| Type IRI
+| Property that defines which class a resource belongs to
+| rdf:type
+
+| Label IRI
+| Property that defines a human readable label for a class or instance
+| rdfs:label
+
+| Description IRI
+| Property that defines a description for a class or instance
+| rdfs:comment
+
+| Property IRI
+| Class of resources that are properties
+| rdf:Property
+
+| Subproperty IRI
+| Property that defines a *subproperty of* relation between properties.
+| rdfs:subPropertyOf
+
+| PropertyLabel IRI
+| Property that defines a human readable label for a property
+| rdfs:label
+
+| PropertyDescription IRI
+| Property that defines a description for a property
+| rdfs:comment
+
+|===
+There are multiple classes in the knowledge base module that model the IRI Schema of a knowledge base. These classes are similar but have different use cases.
+Note that if the structure of the general IRI Schema is changed (e.g. a new attribute is added) all of the classes need to be adjusted.
+
+.KnowledgeBase.java
+This class is used as a general model for a knowledge base in frontend and backend components. It has a sinlge class-attribute  for each IRI in the IRI schema.
+
+.KnowledgeBaseProfile.java / KnowledgeBaseMapping.java
+These classes are used to read pre-configured knowledgebase profiles from a yaml file.
+The actual IRI Schema is modeled in KnowledgeBaseMapping.java.
+The yaml file is located at:
+
+.IriSchema.java
+This class defines some specific IRI Schemas. (e.g RDF, WIKIDATA, SKOS).
+
+.ExportedKnowledgeBase.java
+This class is used to export a knowledgebase configuration when a project is exported.
