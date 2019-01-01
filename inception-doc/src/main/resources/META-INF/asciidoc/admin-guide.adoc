@@ -1,5 +1,5 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,33 +17,63 @@
 = {product-name} Administrator Guide
 The {product-name} Team
 
-include::common/systemrequirements.adoc[]
+This guide covers handling {product-name} from an administrator's perspective.
 
-<<<
+
 
 include::{include-dir}installation.adoc[]
 
+include::common/systemrequirements.adoc[leveloffset=+1]
+
+include::{include-dir}installation_java.adoc[leveloffset=+1]
+
+include::{include-dir}installation_home.adoc[leveloffset=+1]
+
+include::{include-dir}installation_database.adoc[leveloffset=+1]
+
+include::{include-dir}installation_database_mysql.adoc[leveloffset=+2]
+
+include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
+
+include::{include-dir}installation_jar.adoc[leveloffset=+1]
+
 <<<
 
-include::{include-dir}database.adoc[]
 
-<<<
 
 include::{include-dir}upgrade.adoc[]
 
+include::{include-dir}upgrade_backup.adoc[leveloffset=+1]
+
+include::{include-dir}upgrade_jar.adoc[leveloffset=+1]
+
 <<<
 
+
+
 include::{include-dir}remote-api.adoc[]
+
 include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}systemproperties.adoc[]
 
-<<<
 
 include::{include-dir}settings.adoc[]
-include::{include-dir}settings_concept-linking.adoc[]
-include::{include-dir}settings_knowledgebase.adoc[]
+
+include::{include-dir}settings_general.adoc[leveloffset=+1]
+
+include::{include-dir}settings_database.adoc[leveloffset=+1]
+
+include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
+
+include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
+
+include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
+
 include::{include-dir}security-preauth.adoc[leveloffset=+1]
+
+include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
+
+include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 
