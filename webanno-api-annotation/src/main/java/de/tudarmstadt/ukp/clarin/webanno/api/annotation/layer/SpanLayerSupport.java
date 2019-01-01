@@ -45,14 +45,14 @@ public class SpanLayerSupport
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
-    private final LayerBehaviorsRegistry layerBehaviorsRegistry;
+    private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
     private List<LayerType> types;
 
     public SpanLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
-            LayerBehaviorsRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         eventPublisher = aEventPublisher;

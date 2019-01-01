@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * A class that is used to create Brat chain to CAS and vice-versa
@@ -59,13 +60,8 @@ public class ChainAdapter
 
     private final List<SpanLayerBehavior> behaviors;
     
-    /**
-     * The UIMA type name.
-     */
-    private final String annotationTypeName;
-
     public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, String aTypeName,
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
@@ -78,8 +74,6 @@ public class ChainAdapter
             AnnotationAwareOrderComparator.sort(temp);
             behaviors = temp;
         }
-
-        annotationTypeName = aTypeName;
     }
 
     public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
@@ -235,7 +229,7 @@ public class ChainAdapter
 
     private void deleteSpan(JCas aJCas, int aAddress)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
 
         AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
@@ -312,7 +306,12 @@ public class ChainAdapter
     @Override
     public String getAnnotationTypeName()
     {
-        return annotationTypeName;
+        return getLayer().getName() + LINK;
+    }
+
+    public String getChainTypeName()
+    {
+        return getLayer().getName() + CHAIN;
     }
 
     /**
@@ -324,7 +323,7 @@ public class ChainAdapter
      */
     private FeatureStructure getChainForLink(JCas aJCas, AnnotationFS aLink)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
 
         for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
@@ -363,7 +362,7 @@ public class ChainAdapter
      */
     private FeatureStructure newChain(JCas aJCas, AnnotationFS aFirstLink)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
         FeatureStructure newChain = aJCas.getCas().createFS(chainType);
         newChain.setFeatureValue(chainType.getFeatureByBaseName(getChainFirstFeatureName()),
                 aFirstLink);
@@ -376,8 +375,7 @@ public class ChainAdapter
      */
     private AnnotationFS newLink(JCas aJCas, int aBegin, int aEnd)
     {
-        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
-        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
+        Type linkType = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, aBegin, aEnd);
         aJCas.getCas().addFsToIndexes(newLink);
         return newLink;
@@ -481,5 +479,15 @@ public class ChainAdapter
         typeFeature.setProject(getLayer().getProject());
 
         aSchemaService.createFeature(typeFeature);
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    {
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        for (SpanLayerBehavior behavior : behaviors) {
+            messages.addAll(behavior.onValidate(this, aJCas));
+        }
+        return messages;
     }
 }

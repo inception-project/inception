@@ -19,11 +19,20 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+import static java.util.Collections.emptyList;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -34,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * Ensure that annotations do not cross sentence boundaries. For chain layers, this check applies
@@ -83,5 +93,27 @@ public class SpanCrossSentenceBehavior
                         "Crossing sentence bounardies is not permitted."));
             }
         }
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    {
+        if (aAdapter.getLayer().isCrossSentence()) {
+            return emptyList();
+        }
+        
+        CAS cas = aJCas.getCas();
+        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        
+        for (AnnotationFS fs : select(cas, type)) {
+            if (!isSameSentence(aJCas, fs.getBegin(), fs.getEnd())) {
+                messages.add(Pair.of(
+                        LogMessage.error(this, "Crossing sentence bounardies is not permitted."),
+                        fs));
+            }
+        }
+
+        return messages;
     }
 }

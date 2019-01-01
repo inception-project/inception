@@ -21,10 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AN
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
@@ -38,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -83,7 +86,7 @@ public class SpanAdapterTest
     }
     
     @Test
-    public void thatIllegalCrossSentenceSpansGenerateError()
+    public void thatSpanCrossSentenceBehaviorOnCreateThrowsException()
     {
         neLayer.setCrossSentence(false);
         
@@ -100,8 +103,32 @@ public class SpanAdapterTest
     }
 
     @Test
-    public void thatIllegalStackedSpansGenerateError() throws AnnotationException
+    public void thatSpanCrossSentenceBehaviorOnValidateReturnsErrorMessage()
+        throws AnnotationException
     {
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
+
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+                behaviors);
+
+        // Add two annotations
+        neLayer.setCrossSentence(true);
+        sut.add(document, username, jcas, 0, jcas.getDocumentText().length());
+        
+        //Validation fails
+        neLayer.setCrossSentence(false);
+        assertThat(sut.validate(jcas))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source", "message")
+                .containsExactly(LogMessage.error(null, ""));
+    }
+    
+    @Test
+    public void thatSpanStackingBehaviorOnCreateThrowsException() throws AnnotationException
+    {
+        neLayer.setAllowStacking(false);
+        
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
@@ -116,9 +143,31 @@ public class SpanAdapterTest
                 .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
                 .withMessageContaining("stacking is not enabled");
     }
-    
+
     @Test
-    public void thatAchoringAndStackingCheckWorks() throws AnnotationException
+    public void thatSpanStackingBehaviorOnValidateReturnsErrorMessage() throws AnnotationException
+    {
+        TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "This is a test .");
+
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+                behaviors);
+
+        // Add two annotations
+        neLayer.setAllowStacking(true);
+        sut.add(document, username, jcas, 0, 1);
+        sut.add(document, username, jcas, 0, 1);
+        
+        //Validation fails
+        neLayer.setAllowStacking(false);
+        assertThat(sut.validate(jcas))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source", "message")
+                .containsExactly(LogMessage.error(null, ""));
+    }
+
+    @Test
+    public void thatSpanAnchoringAndStackingBehaviorsWorkInConcert() throws AnnotationException
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");

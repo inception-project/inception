@@ -18,30 +18,44 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 @Component
 public class SpanStackingBehavior
     extends SpanLayerBehavior
 {
+    @Override
+    public boolean accepts(LayerSupport<?> aLayerType)
+    {
+        return super.accepts(aLayerType) || aLayerType instanceof ChainLayerSupport;
+    }
+    
     @Override
     public CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
             CreateSpanAnnotationRequest aRequest)
@@ -107,5 +121,32 @@ public class SpanStackingBehavior
 
             prevFS = fs;
         }
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    {
+        if (aAdapter.getLayer().isAllowStacking()) {
+            return emptyList();
+        }
+
+        CAS cas = aJCas.getCas();
+        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        AnnotationFS prevFS = null;
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        
+        // Since the annotations are sorted, we can easily find stacked annotation by scanning
+        // through the entire list and checking if two adjacent annotations have the same offsets
+        for (AnnotationFS fs : select(cas, type)) {
+            if (prevFS != null && prevFS.getBegin() == fs.getBegin()
+                    && prevFS.getEnd() == fs.getEnd()) {
+                messages.add(Pair.of(LogMessage.error(this, "Stacked annotation at [%d-%d]",
+                        fs.getBegin(), fs.getEnd()), fs));
+            }
+            
+            prevFS = fs;
+        }
+
+        return messages;
     }
 }

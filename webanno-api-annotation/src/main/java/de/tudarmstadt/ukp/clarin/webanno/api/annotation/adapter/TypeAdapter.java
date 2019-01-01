@@ -18,10 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Collection;
+import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 
@@ -31,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -177,4 +181,11 @@ public interface TypeAdapter
      * all necessary information should be included in the imported data.
      */
     void initialize(AnnotationSchemaService aSchemaService);
+    
+    /**
+     * Check if all annotations of this layer conform with the layer configuration. This is usually
+     * called when a document is marked as finished to prevent invalid annotations ending up in the
+     * finished document.
+     */
+    List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas);
 }

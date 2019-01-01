@@ -32,6 +32,7 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -91,7 +92,8 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = typeAdapter.getAnnotationType(aJcas.getCas());
+        Type chainType = CasUtil.getType(aJcas.getCas(),
+                typeAdapter.getLayer().getName() + ChainAdapter.CHAIN);
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans

@@ -20,8 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
-import java.util.Map;
-
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
@@ -29,9 +27,6 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 @Order(10)
 @Component
@@ -54,7 +49,7 @@ public class RelationAttachmentBehavior
         originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
     }
-    
+        
     public static FeatureStructure[] resolve(ArcAdapter aAdapter, AnnotationFS aRelation)
     {
         Type type = aRelation.getType();
@@ -76,12 +71,5 @@ public class RelationAttachmentBehavior
         }
         
         return new FeatureStructure[] { sourceFs, targetFs };
-    }
-    
-    @Override
-    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VArc> aAnnoToArcIdx)
-    {
-        // TODO Auto-generated method stub
     }
 }

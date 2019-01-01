@@ -21,7 +21,7 @@ import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 
-public interface LayerBehaviorsRegistry
+public interface LayerBehaviorRegistry
 {
     List<LayerBehavior> getLayerBehaviors();
 

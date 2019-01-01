@@ -17,17 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static java.util.Collections.emptyList;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 @Component
 public class ChainStackingBehavior
@@ -50,7 +58,7 @@ public class ChainStackingBehavior
 
         // If stacking is not allowed and there already is an annotation, then return the address
         // of the existing annotation.
-        Type type = CasUtil.getType(aCas, aAdapter.getLayer().getName() + ChainAdapter.LINK);
+        Type type = getType(aCas, aAdapter.getLayer().getName() + ChainAdapter.LINK);
         for (AnnotationFS fs : selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (!aAdapter.getLayer().isAllowStacking()) {
@@ -62,5 +70,32 @@ public class ChainStackingBehavior
         }
 
         return aRequest;
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    {
+        if (aAdapter.getLayer().isAllowStacking()) {
+            return emptyList();
+        }
+
+        CAS cas = aJCas.getCas();
+        Type type = getType(cas, aAdapter.getLayer().getName() + ChainAdapter.LINK);
+        AnnotationFS prevFS = null;
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        
+        // Since the annotations are sorted, we can easily find stacked annotation by scanning
+        // through the entire list and checking if two adjacent annotations have the same offsets
+        for (AnnotationFS fs : select(cas, type)) {
+            if (prevFS != null && prevFS.getBegin() == fs.getBegin()
+                    && prevFS.getEnd() == fs.getEnd()) {
+                messages.add(Pair.of(LogMessage.error(this, "Stacked annotation at [%d-%d]",
+                        fs.getBegin(), fs.getEnd()), fs));
+            }
+            
+            prevFS = fs;
+        }
+
+        return messages;
     }
 }

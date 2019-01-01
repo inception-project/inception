@@ -35,8 +35,8 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.LayerBehavior;
 
 @Component
-public class LayerBehaviorsRegistryImpl
-    implements LayerBehaviorsRegistry
+public class LayerBehaviorRegistryImpl
+    implements LayerBehaviorRegistry
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -44,7 +44,7 @@ public class LayerBehaviorsRegistryImpl
     
     private List<LayerBehavior> layerBehaviors;
     
-    public LayerBehaviorsRegistryImpl(
+    public LayerBehaviorRegistryImpl(
             @Lazy @Autowired(required = false) List<LayerBehavior> aLayerSupports)
     {
         layerBehaviorsProxy = aLayerSupports;

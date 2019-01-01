@@ -47,7 +47,7 @@ public class ChainLayerSupport
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
-    private final LayerBehaviorsRegistry layerBehaviorsRegistry;
+    private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
     private List<LayerType> types;
@@ -55,7 +55,7 @@ public class ChainLayerSupport
     @Autowired
     public ChainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
-            LayerBehaviorsRegistry aLayerBehaviorsRegistry)
+            LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         eventPublisher = aEventPublisher;
@@ -97,7 +97,7 @@ public class ChainLayerSupport
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
         ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                aLayer.getName() + ChainAdapter.CHAIN, schemaService.listAnnotationFeature(aLayer),
+                schemaService.listAnnotationFeature(aLayer),
                 layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;

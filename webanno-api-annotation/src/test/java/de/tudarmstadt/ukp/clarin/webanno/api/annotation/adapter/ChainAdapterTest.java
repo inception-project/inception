@@ -81,7 +81,7 @@ public class ChainAdapterTest
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         
-        behaviors = asList(new ChainStackingBehavior(), new SpanCrossSentenceBehavior(),
+        behaviors = asList(new SpanStackingBehavior(), new SpanCrossSentenceBehavior(),
                 new SpanAnchoringModeBehavior());
     }
     
@@ -93,11 +93,11 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
-        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, corefLayer, asList(),
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
                 behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 
+                .isThrownBy(() -> sut.addSpan(document, username, jcas, 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("covers multiple sentences");
     }
@@ -108,8 +108,8 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer,
-                corefLayer.getName() + ChainAdapter.CHAIN, asList(), behaviors);
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
+                behaviors);
 
         // First time should work
         sut.addSpan(document, username, jcas, 0, 1);
@@ -126,8 +126,8 @@ public class ChainAdapterTest
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
 
-        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer,
-                corefLayer.getName() + ChainAdapter.CHAIN, asList(), behaviors);
+        ChainAdapter sut = new ChainAdapter(featureSupportRegistry, null, corefLayer, asList(),
+                behaviors);
 
         // First time should work - we annotate the whole word "This"
         sut.addSpan(document, username, jcas, 0, 4);

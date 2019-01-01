@@ -17,7 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import java.util.List;
+
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public interface LayerBehavior
 {
@@ -29,4 +36,11 @@ public interface LayerBehavior
      * @return whether the given layer is provided by the current layer support.
      */
     boolean accepts(LayerSupport<?> aLayerType);
+    
+    /**
+     * Check if all annotations of this layer conform with the behavior configuration. This is
+     * usually called when a document is marked as finished to prevent invalid annotations ending up
+     * in the finished document.
+     */
+    List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas);
 }

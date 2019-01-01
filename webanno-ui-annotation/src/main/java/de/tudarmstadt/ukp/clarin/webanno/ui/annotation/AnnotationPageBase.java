@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.JCasUtil;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -324,37 +326,64 @@ public abstract class AnnotationPageBase
      * missing, then the method scrolls to that location and schedules a re-rendering. In such
      * a case, an {@link IllegalStateException} is thrown.
      */
-    protected void ensureRequiredFeatureValuesSet(AjaxRequestTarget aTarget, JCas aJcas)
+    protected void validateRequiredFeatures(AjaxRequestTarget aTarget, JCas aJcas,
+            TypeAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
+        
         CAS editorCas = aJcas.getCas();
+        AnnotationLayer layer = aAdapter.getLayer();
+        List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+        
+        // If no feature is required, then we can skip the whole procedure
+        if (features.stream().allMatch((f) -> !f.isRequired())) {
+            return;
+        }
+
+        // Check each feature structure of this layer
+        for (AnnotationFS fs : select(editorCas, aAdapter.getAnnotationType(editorCas))) {
+            for (AnnotationFeature f : features) {
+                if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
+                    // Find the sentence that contains the annotation with the missing
+                    // required feature value
+                    Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
+                    // Put this sentence into the focus
+                    state.setFirstVisibleUnit(s);
+                    actionRefreshDocument(aTarget);
+                    // Inform the user
+                    throw new IllegalStateException(
+                            "Document cannot be marked as finished. Annotation with ID ["
+                                    + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                                    + layer.getUiName() + "] is missing value for feature ["
+                                    + f.getUiName() + "].");
+                }
+            }
+        }
+    }
+    
+    protected void actionValidateDocument(AjaxRequestTarget aTarget, JCas aJCas)
+    {
+        AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
             TypeAdapter adapter = annotationService.getAdapter(layer);
-            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             
-            // If no feature is required, then we can skip the whole procedure
-            if (features.stream().allMatch((f) -> !f.isRequired())) {
-                continue;
-            }
-
-            // Check each feature structure of this layer
-            for (AnnotationFS fs : select(editorCas, adapter.getAnnotationType(editorCas))) {
-                for (AnnotationFeature f : features) {
-                    if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
-                        // Find the sentence that contains the annotation with the missing
-                        // required feature value
-                        Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
-                        // Put this sentence into the focus
-                        state.setFirstVisibleUnit(s);
-                        actionRefreshDocument(aTarget);
-                        // Inform the user
-                        throw new IllegalStateException(
-                                "Document cannot be marked as finished. Annotation with ID ["
-                                        + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
-                                        + layer.getUiName() + "] is missing value for feature ["
-                                        + f.getUiName() + "].");
-                    }
-                }
+            validateRequiredFeatures(aTarget, aJCas, adapter);
+            
+            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aJCas);
+            if (!messages.isEmpty()) {
+                LogMessage message = messages.get(0).getLeft();
+                AnnotationFS fs = messages.get(0).getRight();
+                // Find the sentence that contains the annotation with the missing
+                // required feature value
+                Sentence s = WebAnnoCasUtil.getSentence(aJCas, fs.getBegin());
+                // Put this sentence into the focus
+                state.setFirstVisibleUnit(s);
+                actionRefreshDocument(aTarget);
+                // Inform the user
+                throw new IllegalStateException(
+                        "Document cannot be marked as finished. Annotation with ID ["
+                                + WebAnnoCasUtil.getAddr(fs) + "] on layer ["
+                                + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
     }

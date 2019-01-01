@@ -680,7 +680,7 @@ public class AutomationPage
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            actionValidateDocument(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(

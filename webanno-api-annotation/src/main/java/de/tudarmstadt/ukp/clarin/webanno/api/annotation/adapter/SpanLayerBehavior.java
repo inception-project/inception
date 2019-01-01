@@ -17,14 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static java.util.Collections.emptyList;
+
+import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 public abstract class SpanLayerBehavior
     implements LayerBehavior
@@ -41,4 +47,10 @@ public abstract class SpanLayerBehavior
 
     public abstract void onRender(TypeAdapter aAdapter, VDocument aResponse,
             Map<AnnotationFS, VSpan> annoToSpanIdx);
+
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    {
+        return emptyList();
+    }
 }

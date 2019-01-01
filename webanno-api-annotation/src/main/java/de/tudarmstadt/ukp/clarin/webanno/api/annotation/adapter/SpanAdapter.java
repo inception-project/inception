@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
  * A class that is used to create Brat Span to CAS and vice-versa.
@@ -160,5 +162,15 @@ public class SpanAdapter
     public String getAnnotationTypeName()
     {
         return getLayer().getName();
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    {
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        for (SpanLayerBehavior behavior : behaviors) {
+            messages.addAll(behavior.onValidate(this, aJCas));
+        }
+        return messages;
     }
 }
