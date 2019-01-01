@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * Manage annotations on a chain layer.
+ * Manage interactions with annotations on a chain layer.
  */
 public class ChainAdapter
     extends TypeAdapter_ImplBase

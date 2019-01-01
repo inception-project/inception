@@ -41,6 +41,10 @@ public class RelationAttachmentBehavior
             return aRequest;
         }
 
+        // FIXME The code below appears to be broken - it basically only works because the only
+        // case were we use the attach-feature is with the Dependency/Token layers and it works
+        // because tokens cannot stack. "selectCovered" below would need to be replaced with
+        // an actual lookup of the annotation pointed to by the attach-feature.
         final CAS cas = aRequest.getJcas().getCas();
         final Type attachType = getType(cas, aAdapter.getLayer().getAttachType().getName());
         AnnotationFS originFS = aRequest.getOriginFs();

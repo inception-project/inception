@@ -20,9 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 
 import java.util.List;
-import java.util.Map;
 
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -30,8 +28,6 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -92,6 +88,12 @@ public class SpanAnchoringModeBehavior
         }
         case TOKENS: {
             List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
+
+            if (tokens.isEmpty()) {
+                throw new AnnotationException(
+                        "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
+            }
+
             // update the begin and ends (no sub token selection)
             int begin = tokens.get(0).getBegin();
             int end = tokens.get(tokens.size() - 1).getEnd();
@@ -101,6 +103,12 @@ public class SpanAnchoringModeBehavior
         case SENTENCES: {
             List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aRange[0],
                     aRange[1]);
+            
+            if (sentences.isEmpty()) {
+                throw new AnnotationException(
+                        "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
+            }
+            
             // update the begin and ends (no sub token selection)
             int begin = sentences.get(0).getBegin();
             int end = sentences.get(sentences.size() - 1).getEnd();
@@ -110,12 +118,5 @@ public class SpanAnchoringModeBehavior
         default:
             throw new IllegalArgumentException("Unsupported anchoring mode: [" + aMode + "]");
         }    
-    }
-    
-    @Override
-    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
-    {
-        // Still needs to be implemented
     }
 }

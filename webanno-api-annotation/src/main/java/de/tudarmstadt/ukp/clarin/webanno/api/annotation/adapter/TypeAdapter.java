@@ -35,7 +35,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
-import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -83,8 +82,8 @@ public interface TypeAdapter
     /**
      * If the underlying layer is attached to another layer, get the name of the feature in the
      * other layer which is used to refer to annotations on the underlying layer. For example, every
-     * annotation on the {@link POS} layer must correspond to an annotation on the {@link Token}
-     * layer and the token feature {@link Token#getPos()} must point the POS annotation. Thus, for
+     * annotation on the {@code POS} layer must correspond to an annotation on the {@link Token}
+     * layer and the token feature {@code Token.getPos()} must point the POS annotation. Thus, for
      * the POS layer, this method would return {@code pos} and the method
      * {@link #getAttachTypeName()} would return
      * {@code de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token}.

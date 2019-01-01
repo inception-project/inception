@@ -86,7 +86,7 @@ public class ChainAdapterTest
     }
     
     @Test
-    public void thatIllegalCrossSentenceSpansGenerateError()
+    public void thatSpanCrossSentenceBehaviorOnCreateThrowsException()
     {
         corefLayer.setCrossSentence(false);
         
@@ -103,7 +103,7 @@ public class ChainAdapterTest
     }
 
     @Test
-    public void thatIllegalStackedSpansGenerateError() throws AnnotationException
+    public void thatSpanStackingBehaviorOnCreateThrowsException() throws AnnotationException
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
@@ -121,7 +121,7 @@ public class ChainAdapterTest
     }
     
     @Test
-    public void thatAchoringAndStackingCheckWorks() throws AnnotationException
+    public void thatSpanAnchoringAndStackingBehaviorsWorkInConcert() throws AnnotationException
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");

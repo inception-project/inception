@@ -145,7 +145,7 @@ public class SpanAdapterTest
     }
 
     @Test
-    public void thatSpanStackingBehaviorOnValidateReturnsErrorMessage() throws AnnotationException
+    public void thatSpanStackingBehaviorOnValidateGeneratesErrors() throws AnnotationException
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");

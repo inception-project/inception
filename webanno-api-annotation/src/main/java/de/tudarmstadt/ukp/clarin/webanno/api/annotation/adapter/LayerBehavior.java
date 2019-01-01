@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static java.util.Collections.emptyList;
+
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -42,5 +44,8 @@ public interface LayerBehavior
      * usually called when a document is marked as finished to prevent invalid annotations ending up
      * in the finished document.
      */
-    List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas);
+    default List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    {
+        return emptyList();
+    }
 }

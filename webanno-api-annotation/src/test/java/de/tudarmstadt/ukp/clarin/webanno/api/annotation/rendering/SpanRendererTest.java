@@ -71,7 +71,7 @@ public class SpanRendererTest
     }
     
     @Test
-    public void thatIllegalCrossSentenceSpansGenerateError()
+    public void thatSpanCrossSentenceBehaviorOnRenderGeneratesErrors()
     {
         neLayer.setCrossSentence(false);
         
@@ -98,7 +98,7 @@ public class SpanRendererTest
     }
 
     @Test
-    public void thatIllegalStackedSpansGenerateError()
+    public void thatSpanStackingBehaviorOnRenderGeneratesErrors()
     {
         neLayer.setAllowStacking(false);
         
