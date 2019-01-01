@@ -294,7 +294,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>user-guide.adoc</sourceDocumentName>
               <imagesDir>./user-guide/images</imagesDir>
@@ -312,7 +311,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
               <imagesDir>./developer-guide/images</imagesDir>
@@ -330,7 +328,6 @@
             </goals>
             <configuration>
               <backend>html5</backend>
-              <doctype>book</doctype>
               <sourceHighlighter>coderay</sourceHighlighter>
               <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
               <attributes>
@@ -393,6 +390,7 @@
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
+              <doctype>book</doctype>
               <toclevels>8</toclevels>
               <sectanchors>true</sectanchors>
               <docinfo1>true</docinfo1>
@@ -629,7 +627,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>user-guide.adoc</sourceDocumentName>
                     <imagesDir>./user-guide/images</imagesDir>
@@ -647,7 +644,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>developer-guide.adoc</sourceDocumentName>
                     <imagesDir>./developer-guide/images</imagesDir>
@@ -665,7 +661,6 @@
                   </goals>
                   <configuration>
                     <backend>pdf</backend>
-                    <doctype>book</doctype>
                     <sourceHighlighter>coderay</sourceHighlighter>
                     <sourceDocumentName>admin-guide.adoc</sourceDocumentName>
                     <attributes>

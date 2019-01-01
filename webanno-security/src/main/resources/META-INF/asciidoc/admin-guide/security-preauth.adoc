@@ -17,9 +17,9 @@
 [[sect_security_preauth]]
 = External pre-authentication
 
-WebAnno can be used in conjunction with header-based external per-authentication. In this mode,
-WebAnno looks for a special HTTP header (by default `remote_user`) and if that header exists, 
-it is taken for granted that this user has been authenticated. WebAnno will check its internal
+{product-name} can be used in conjunction with header-based external per-authentication. In this mode,
+the application looks for a special HTTP header (by default `remote_user`) and if that header exists, 
+it is taken for granted that this user has been authenticated. The application will check its internal
 database if a user by the given name exists, otherwise it will create the user.
 
 Pre-authentication can be enabled by setting the property `auth.mode` to `preauth`. When enabling
