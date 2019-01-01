@@ -16,8 +16,9 @@
 
 = MySQL
 
-For production use of WebAnno, it is highly recommended to use a MySQL database. In this section,
-we briefly describe how to install a MySQL server and how to prepare it for use with WebAnno.
+For production use of {product-name}, it is highly recommended to use a MySQL database. In this 
+section, we briefly describe how to install a MySQL server and how to prepare it for use with 
+the application.
 
 == Prepare database
 

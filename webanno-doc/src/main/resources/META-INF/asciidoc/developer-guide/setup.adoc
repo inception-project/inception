@@ -19,7 +19,7 @@
 
 === GIT
 
-All WebAnno files are stored using UNIX line endings. If you develop on Windows, you have to
+All sources files are stored using UNIX line endings. If you develop on Windows, you have to
 set the `core.autocrlf` configuration setting to `input` to avoid accidentally submitting Windows
 line endings to the repository. Using `input` is a good strategy in most cases, thus you should
 consider setting this as a global (add `--global`) or even as a system (`--system`) setting.
@@ -30,16 +30,15 @@ consider setting this as a global (add `--global`) or even as a system (`--syste
 C:\> git config --global core.autocrlf input
 ----
 
-After changing this setting, best do a fresh clone and check-out of WebAnno.
+After changing this setting, best do a fresh clone and check-out of the project.
 
-=== Installation guide to develop WebAnno in Eclipse
+=== Setting up the for development in Eclipse
 
-This is a guide to setting up a developer environment in Eclipse for WebAnno using Max OS X. The 
+This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
 
-First, you need to follow some steps of the user [InstallationGuide installation guide]. You need to
-configure your MySQL-server for WebAnno. After that, jump right to the chapter WebAnno and follow
-all steps besides the first one until the end of the document.
+First, you need to follow some steps of the user [InstallationGuide installation guide]. 
+It is recommended to configure a MySQL-server.
 
 We recommend you start from a *Eclipse IDE for Java Developers* package.
 
@@ -105,28 +104,18 @@ Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5
 add the Tomcat server to your runtime configuration. Go to preferences and go to
 *Servers -> Runtime environments*:
 
-// http://webanno.googlecode.com/svn/wiki/images/AddApacheTomcat.png
-
 When prompted for an installation path, specify the folder where you extracted (or installed) Apache
 Tomcat v8.5 into. 
 
 Change the runtime configuration for the project. On the left side of the dialog, you should now be
 able to select Apache Tomcat. Change its VM arguments and include the definition 
-`-Dwebanno.home="/srv/webanno"` to specify the home directory for WebAnno. Also add
-`-Dwicket.configuration=development` to enable the development mode for WebAnno. This adds additional
-debugging features to the UI and disables UI caches.
-
-// http://webanno.googlecode.com/svn/wiki/images/ChangeRunConfiguration.png
+`-Dwebanno.home="/srv/webanno"` to specify the home directory for the application. Also add
+`-Dwicket.core.settings.general.configuration-type=development` to enable the development mode. 
+This adds additional debugging features to the UI and disables UI caches.
 
 Head to the servers pane. If you cannot locate it in your eclipse window, add it by going to
 *Window -> Show View -> Other...* and select *Servers*. Right click on *Tomcat v8.5 localhost* and
 click on *Add and remove...*:
-
-// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServer.png
-
-// You should end up with:
-
-// http://webanno.googlecode.com/svn/wiki/images/AddAndRemoveServerFinal.png
 
 {product-name} should now be configured to start with Tomcat.
 
@@ -158,7 +147,7 @@ First, obtain the DKPro code formatting profile from the link:https://dkpro.gith
 
 NOTE: The parameter prefix `a` needs to be configured manually. In Eclipse go to 
        *Preferences -> Java -> Code Style* set the *prefix list* column in the *parameters* row to `a`.
-       
+
 Second, install the Checkstyle plugin for Eclipse as well as the Maven Checkstyle plugin for Eclipse.
 These plugins make Eclipse automatically pick up the checkstyle configuration from the Maven project
 and highlight formatting problems directly in the source code editor.

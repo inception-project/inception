@@ -99,6 +99,8 @@ include::{include-dir}projects_export.adoc[leveloffset=+2]
 
 include::{include-dir}users.adoc[leveloffset=+1]
 
+<<<
+
 
 
 = Advanced functionalities
@@ -122,6 +124,8 @@ include::{include-dir}casdoctor.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}guidelines.adoc[leveloffset=+1]
+
+<<<
 
 
 = Appendices

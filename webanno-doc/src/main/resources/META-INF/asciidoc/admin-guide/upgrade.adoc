@@ -15,7 +15,8 @@
 // limitations under the License.
 
 [[sect_upgrade]]
-= Upgrade
+= Upgrading
+
 
 In general, it is possible to perform an in-place upgrade of the application. However, before doing
 an upgrade, it is recommender to create a backup of the application and data to allow coming back
