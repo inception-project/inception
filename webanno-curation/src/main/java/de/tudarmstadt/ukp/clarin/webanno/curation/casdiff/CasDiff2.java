@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -1839,7 +1839,7 @@ public class CasDiff2
                 break;
             }
             case RELATION_TYPE: {
-                ArcAdapter typeAdpt = (ArcAdapter) annotationService.getAdapter(layer);
+                RelationAdapter typeAdpt = (RelationAdapter) annotationService.getAdapter(layer);
                 adpt = new ArcDiffAdapter(layer.getName(),
                         typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
                         labelFeatures);

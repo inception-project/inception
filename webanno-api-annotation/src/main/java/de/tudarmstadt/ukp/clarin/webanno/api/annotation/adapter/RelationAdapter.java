@@ -44,9 +44,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * A class that is used to create Brat Arc to CAS relations and vice-versa
+ * Manage interactions with annotations on a relation layer.
  */
-public class ArcAdapter
+public class RelationAdapter
     extends TypeAdapter_ImplBase
 {
     /**
@@ -71,7 +71,7 @@ public class ArcAdapter
      * @param aLayer argument is ignored and value obtained from layer instead.
      */
     @Deprecated
-    public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aTypeId,
             String aTypeName, String aTargetFeatureName, String aSourceFeatureName, 
             /* String aArcSpanType, */ String aAttacheFeatureName, String aAttachType, 
@@ -81,7 +81,7 @@ public class ArcAdapter
                 aTargetFeatureName, aSourceFeatureName, aFeatures, emptyList());
     }
     
-    public ArcAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
+    public RelationAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
             String aTargetFeatureName, String aSourceFeatureName,
             Collection<AnnotationFeature> aFeatures, List<RelationLayerBehavior> aBehaviors)
@@ -173,12 +173,6 @@ public class ArcAdapter
     {
         FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
-    }
-
-    @Override
-    public String getAnnotationTypeName()
-    {
-        return getLayer().getName();
     }
 
     public String getSourceFeatureName()

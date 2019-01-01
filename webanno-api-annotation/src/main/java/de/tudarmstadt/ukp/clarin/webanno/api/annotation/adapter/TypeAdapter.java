@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  * created for one concrete layer (e.g. POS, NamedEntity). It allows interacting with annotations on
  * the layer, e.g. creating annotations, deleting annotations, setting and getting feature values.
  * Most actions are defined by implementations of this interface such as {@link SpanAdapter},
- * {@link ArcAdapter} or {@link ChainAdapter}.
+ * {@link RelationAdapter} or {@link ChainAdapter}.
  */
 public interface TypeAdapter
 {
@@ -75,7 +75,10 @@ public interface TypeAdapter
      *
      * @return the type.
      */
-    String getAnnotationTypeName();
+    default public String getAnnotationTypeName()
+    {
+        return getLayer().getName();
+    }
 
     /**
      * If the underlying layer is attached to another layer, get the name of the feature in the

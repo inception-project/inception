@@ -46,7 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -60,14 +60,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
  * A class that is used to create Brat Arc to CAS relations and vice-versa
  */
 public class RelationRenderer
-    extends Renderer_ImplBase<ArcAdapter>
+    extends Renderer_ImplBase<RelationAdapter>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final List<RelationLayerBehavior> behaviors;
 
-    public RelationRenderer(ArcAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
-            List<RelationLayerBehavior> aBehaviors)
+    public RelationRenderer(RelationAdapter aTypeAdapter,
+            FeatureSupportRegistry aFeatureSupportRegistry, List<RelationLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
 
@@ -88,7 +88,7 @@ public class RelationRenderer
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         
-        ArcAdapter typeAdapter = getTypeAdapter();
+        RelationAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
@@ -209,7 +209,7 @@ public class RelationRenderer
             int aWindowEnd, Type type, Feature dependentFeature, Feature governorFeature,
             Feature arcSpanFeature)
     {
-        ArcAdapter typeAdapter = getTypeAdapter();
+        RelationAdapter typeAdapter = getTypeAdapter();
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
         Map<Integer, Set<Integer>> relations = new ConcurrentHashMap<>();

@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * A class that is used to create Brat Span to CAS and vice-versa.
+ * Manage interactions with annotations on a span layer.
  */
 public class SpanAdapter
     extends TypeAdapter_ImplBase
@@ -153,15 +153,6 @@ public class SpanAdapter
         }
         
         publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
-    }
-
-    /**
-     * The UIMA type name.
-     */
-    @Override
-    public String getAnnotationTypeName()
-    {
-        return getLayer().getName();
     }
     
     @Override

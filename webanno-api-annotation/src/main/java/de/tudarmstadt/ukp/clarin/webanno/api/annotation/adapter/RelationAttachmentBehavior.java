@@ -34,7 +34,7 @@ public class RelationAttachmentBehavior
     extends RelationLayerBehavior
 {
     @Override
-    public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
+    public CreateRelationAnnotationRequest onCreate(RelationAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
     {
         if (aAdapter.getLayer().getAttachFeature() == null) {
@@ -50,7 +50,7 @@ public class RelationAttachmentBehavior
         return aRequest.changeRelation(originFS, targetFS);
     }
         
-    public static FeatureStructure[] resolve(ArcAdapter aAdapter, AnnotationFS aRelation)
+    public static FeatureStructure[] resolve(RelationAdapter aAdapter, AnnotationFS aRelation)
     {
         Type type = aRelation.getType();
         Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());

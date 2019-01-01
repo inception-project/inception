@@ -42,7 +42,7 @@ public abstract class RelationLayerBehavior
         return aLayerType instanceof RelationLayerSupport;
     }
 
-    public abstract CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
+    public abstract CreateRelationAnnotationRequest onCreate(RelationAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
         throws AnnotationException;
 

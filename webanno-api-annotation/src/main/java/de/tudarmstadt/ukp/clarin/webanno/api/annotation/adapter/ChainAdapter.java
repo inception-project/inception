@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * A class that is used to create Brat chain to CAS and vice-versa
+ * Manage annotations on a chain layer.
  */
 public class ChainAdapter
     extends TypeAdapter_ImplBase

@@ -44,7 +44,7 @@ public class RelationStackingBehavior
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     @Override
-    public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
+    public CreateRelationAnnotationRequest onCreate(RelationAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
         throws AnnotationException
     {

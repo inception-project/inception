@@ -64,8 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -167,8 +167,8 @@ public abstract class AnnotationDetailEditorPanel
                     + "] does not support arc annotation.");
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            else if (aAdapter instanceof ArcAdapter) {
-                createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas);
+            else if (aAdapter instanceof RelationAdapter) {
+                createNewRelationAnnotation((RelationAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
                 createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas);
@@ -192,7 +192,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewRelationAnnotation(ArcAdapter aAdapter,
+    private void createNewRelationAnnotation(RelationAdapter aAdapter,
             JCas aJCas)
         throws AnnotationException
     {
@@ -838,7 +838,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
         // relation.
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // Do nothing ;)
         }
 
@@ -866,9 +866,9 @@ public abstract class AnnotationDetailEditorPanel
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
-            AnnotationFS arc = ((ArcAdapter) adapter).add(state.getDocument(),
+            AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
                     state.getUser().getUsername(), targetFs, originFs, jCas,
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
@@ -1409,7 +1409,8 @@ public abstract class AnnotationDetailEditorPanel
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
         for (AnnotationLayer relationLayer : annotationService
             .listAttachedRelationLayers(aLayer)) {
-            ArcAdapter relationAdapter = (ArcAdapter) annotationService.getAdapter(relationLayer);
+            RelationAdapter relationAdapter = (RelationAdapter) annotationService
+                    .getAdapter(relationLayer);
             Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
                 .getSourceFeatureName());

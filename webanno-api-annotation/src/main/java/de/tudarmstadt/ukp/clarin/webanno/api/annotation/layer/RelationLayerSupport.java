@@ -33,7 +33,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class RelationLayerSupport
-    implements LayerSupport<ArcAdapter>, InitializingBean
+    implements LayerSupport<RelationAdapter>, InitializingBean
 {
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
@@ -96,10 +96,11 @@ public class RelationLayerSupport
     }
 
     @Override
-    public ArcAdapter createAdapter(AnnotationLayer aLayer)
+    public RelationAdapter createAdapter(AnnotationLayer aLayer)
     {
-        ArcAdapter adapter = new ArcAdapter(featureSupportRegistry, eventPublisher, aLayer,
-                FEAT_REL_TARGET, FEAT_REL_SOURCE, schemaService.listAnnotationFeature(aLayer),
+        RelationAdapter adapter = new RelationAdapter(featureSupportRegistry, eventPublisher,
+                aLayer, FEAT_REL_TARGET, FEAT_REL_SOURCE,
+                schemaService.listAnnotationFeature(aLayer),
                 layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
 
         return adapter;

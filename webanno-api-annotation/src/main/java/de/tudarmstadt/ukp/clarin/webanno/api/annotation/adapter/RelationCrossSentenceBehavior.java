@@ -44,7 +44,7 @@ public class RelationCrossSentenceBehavior
     extends RelationLayerBehavior
 {
     @Override
-    public CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
+    public CreateRelationAnnotationRequest onCreate(RelationAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
         throws AnnotationException
     {
