@@ -121,6 +121,7 @@ public class SpanLayerSupport
     @Override
     public SpanRenderer getRenderer(AnnotationLayer aLayer)
     {
-        return new SpanRenderer(createAdapter(aLayer), featureSupportRegistry);
+        return new SpanRenderer(createAdapter(aLayer), featureSupportRegistry,
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
     }
 }

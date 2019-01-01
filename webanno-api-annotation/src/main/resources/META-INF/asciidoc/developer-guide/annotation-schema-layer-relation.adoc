@@ -1,4 +1,4 @@
-== Relation layer
+= Relation layer
 
 A relation layer allows to draw arcs between span annotations. The `attachType` is mandatory for 
 relation types and specifies which type of annotations arcs can be drawn between. 

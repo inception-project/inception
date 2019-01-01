@@ -85,7 +85,8 @@ public class SpanRendererTest
         SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
                 asList(new SpanCrossSentenceBehavior()));
         
-        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry);
+        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,
+                asList(new SpanCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
         sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
@@ -112,7 +113,8 @@ public class SpanRendererTest
         SpanAdapter adapter = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
                 asList(new SpanStackingBehavior()));
         
-        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry);
+        SpanRenderer sut = new SpanRenderer(adapter, featureSupportRegistry,
+                asList(new SpanStackingBehavior()));
         
         VDocument vdoc = new VDocument();
         sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());

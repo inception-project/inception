@@ -20,11 +20,18 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.util.Map;
+
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 @Order(10)
 @Component
@@ -46,5 +53,35 @@ public class RelationAttachmentBehavior
         targetFS = selectCovered(cas, attachType, targetFS.getBegin(), targetFS.getEnd()).get(0);
         originFS = selectCovered(cas, attachType, originFS.getBegin(), originFS.getEnd()).get(0);
         return aRequest.changeRelation(originFS, targetFS);
+    }
+    
+    public static FeatureStructure[] resolve(ArcAdapter aAdapter, AnnotationFS aRelation)
+    {
+        Type type = aRelation.getType();
+        Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
+        Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
+        
+        FeatureStructure targetFs;
+        FeatureStructure sourceFs;
+        
+        if (aAdapter.getAttachFeatureName() != null) {
+            Type spanType = getType(aRelation.getCAS(), aAdapter.getAttachTypeName());
+            Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
+            targetFs = aRelation.getFeatureValue(targetFeature).getFeatureValue(arcSpanFeature);
+            sourceFs = aRelation.getFeatureValue(sourceFeature).getFeatureValue(arcSpanFeature);
+        }
+        else {
+            targetFs = aRelation.getFeatureValue(targetFeature);
+            sourceFs = aRelation.getFeatureValue(sourceFeature);
+        }
+        
+        return new FeatureStructure[] { sourceFs, targetFs };
+    }
+    
+    @Override
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VArc> aAnnoToArcIdx)
+    {
+        // TODO Auto-generated method stub
     }
 }

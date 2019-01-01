@@ -129,6 +129,7 @@ public class RelationLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new RelationRenderer(createAdapter(aLayer), featureSupportRegistry);
+        return new RelationRenderer(createAdapter(aLayer), featureSupportRegistry,
+                layerBehaviorsRegistry.getLayerBehaviors(this, RelationLayerBehavior.class));
     }
 }

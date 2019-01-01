@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -33,10 +34,10 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanStackingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -56,9 +57,21 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
-    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    private final List<SpanLayerBehavior> behaviors;
+    
+    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
+            List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
     
     @Override
@@ -76,7 +89,7 @@ public class SpanRenderer
         List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, aWindowBegin,
                 aWindowEnd);
         
-        // Sorted index mapping annotations to the corresponding rendered spans
+        // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
         
         // Iterate over the span annotations of the current type and render each of them
@@ -117,9 +130,9 @@ public class SpanRenderer
             }
         }
         
-        new SpanStackingBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
-
-        new SpanCrossSentenceBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
+        for (SpanLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
+        }
     }
     
     private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,

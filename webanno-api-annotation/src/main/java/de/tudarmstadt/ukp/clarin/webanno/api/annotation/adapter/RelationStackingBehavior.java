@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
+import java.util.Map;
+
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -31,6 +33,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
@@ -77,6 +81,13 @@ public class RelationStackingBehavior
         }
         
         return aRequest;
+    }
+    
+    @Override
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VArc> aAnnoToArcIdx)
+    {
+        // TODO Auto-generated method stub
     }
 
     private boolean isDuplicate(AnnotationFS aAnnotationFSOldOrigin,

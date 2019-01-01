@@ -35,6 +35,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
+/**
+ * Ensure that annotations do not cross sentence boundaries. For chain layers, this check applies
+ * only to the chain elements. Chain links can still cross sentence boundaries.
+ */
 @Component
 public class SpanCrossSentenceBehavior
     extends SpanLayerBehavior
@@ -70,6 +74,9 @@ public class SpanCrossSentenceBehavior
             return;
         }
         
+        // Since we split spans into multiple ranges at sentence boundaries, we can simply check
+        // if there are multiple ranges for a given span. This is cheaper than checking for
+        // every annotation whether the begin/end offset is in the same sentence.
         for (Entry<AnnotationFS, VSpan> e : annoToSpanIdx.entrySet()) {
             if (e.getValue().getRanges().size() > 1) {
                 aResponse.add(new VComment(new VID(e.getKey()), ERROR,

@@ -19,11 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -42,8 +44,10 @@ import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -60,23 +64,32 @@ public class RelationRenderer
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    public RelationRenderer(ArcAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    private final List<RelationLayerBehavior> behaviors;
+
+    public RelationRenderer(ArcAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
+            List<RelationLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
+
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<RelationLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
     
     @Override
     public void render(final JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, int windowBeginOffset, int windowEndOffset)
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
                 .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         
         ArcAdapter typeAdapter = getTypeAdapter();
         Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
-        
-        int windowBegin = windowBeginOffset;
-        int windowEnd = windowEndOffset;
         
         Feature dependentFeature = type.getFeatureByBaseName(typeAdapter.getTargetFeatureName());
         Feature governorFeature = type.getFeatureByBaseName(typeAdapter.getSourceFeatureName());
@@ -87,13 +100,16 @@ public class RelationRenderer
         FeatureStructure dependentFs;
         FeatureStructure governorFs;
 
-        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, windowBegin, windowEnd,
+        Map<Integer, Set<Integer>> relationLinks = getRelationLinks(aJcas, aWindowBegin, aWindowEnd,
                 type, dependentFeature, governorFeature, arcSpanFeature);
 
         // if this is a governor for more than one dependent, avoid duplicate yield
         List<Integer> yieldDeps = new ArrayList<>();
 
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
+        // Index mapping annotations to the corresponding rendered arcs
+        Map<AnnotationFS, VArc> annoToArcIdx = new HashMap<>();
+        
+        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, aWindowBegin, aWindowEnd)) {
             if (typeAdapter.getAttachFeatureName() != null) {
                 dependentFs = fs.getFeatureValue(dependentFeature).getFeatureValue(arcSpanFeature);
                 governorFs = fs.getFeatureValue(governorFeature).getFeatureValue(arcSpanFeature);
@@ -107,11 +123,6 @@ public class RelationRenderer
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             
             if (dependentFs == null || governorFs == null) {
-                RequestCycle requestCycle = RequestCycle.get();
-                IPageRequestHandler handler = PageRequestHandlerTracker
-                        .getLastHandler(requestCycle);
-                Page page = (Page) handler.getPage();
-
                 StringBuilder message = new StringBuilder();
                 
                 message.append("Relation [" + typeAdapter.getLayer().getName() + "] with id ["
@@ -123,13 +134,21 @@ public class RelationRenderer
                 message.append("\nDependent: " + dependentFs);
                 message.append("\nGovernor: " + governorFs);
                 
+                RequestCycle requestCycle = RequestCycle.get();
+                IPageRequestHandler handler = PageRequestHandlerTracker
+                        .getLastHandler(requestCycle);
+                Page page = (Page) handler.getPage();
                 page.warn(message.toString());
                 
                 continue;
             }
 
-            aResponse.add(new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs,
-                    dependentFs, features));
+            VArc arc = new VArc(typeAdapter.getLayer(), fs, bratTypeName, governorFs,
+                    dependentFs, features);
+
+            annoToArcIdx.put(fs, arc);
+
+            aResponse.add(arc);
 
             // Render errors if required features are missing
             renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
@@ -145,6 +164,11 @@ public class RelationRenderer
                 String cm = getYieldMessage(aJcas, sortedDepFs);
                 aResponse.add(new VComment(governorFs, VCommentType.YIELD, cm));
             }
+        }
+
+        
+        for (RelationLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToArcIdx);
         }
     }
     

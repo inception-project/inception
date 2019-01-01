@@ -134,6 +134,7 @@ public class ChainLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry);
+        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry,
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
     }
 }

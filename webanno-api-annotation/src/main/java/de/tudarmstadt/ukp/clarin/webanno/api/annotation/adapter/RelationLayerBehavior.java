@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import java.util.Map;
+
+import org.apache.uima.cas.text.AnnotationFS;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
 public abstract class RelationLayerBehavior
     implements LayerBehavior
@@ -33,4 +39,7 @@ public abstract class RelationLayerBehavior
     public abstract CreateRelationAnnotationRequest onCreate(ArcAdapter aAdapter,
             CreateRelationAnnotationRequest aRequest)
         throws AnnotationException;
+
+    public abstract void onRender(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VArc> aAnnoToArcIdx);
 }

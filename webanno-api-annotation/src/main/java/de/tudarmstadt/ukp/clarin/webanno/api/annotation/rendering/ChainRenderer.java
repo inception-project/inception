@@ -22,6 +22,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,11 +33,11 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainStackingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanCrossSentenceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -49,9 +50,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public class ChainRenderer
     extends Renderer_ImplBase<ChainAdapter>
 {
-    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    private final List<SpanLayerBehavior> behaviors;
+    
+    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
+            List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
 
     @Override
@@ -164,8 +177,8 @@ public class ChainRenderer
             colorIndex++;
         }
         
-        new ChainStackingBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
-
-        new SpanCrossSentenceBehavior().onRender(typeAdapter, aResponse, annoToSpanIdx);
+        for (SpanLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
+        }
     }
 }

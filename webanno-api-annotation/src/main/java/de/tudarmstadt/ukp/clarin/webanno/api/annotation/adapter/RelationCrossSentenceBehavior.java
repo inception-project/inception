@@ -17,13 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
+import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
+/**
+ * Ensure that annotations do not cross sentence boundaries.
+ */
 @Component
 public class RelationCrossSentenceBehavior
     extends RelationLayerBehavior
@@ -40,5 +55,31 @@ public class RelationCrossSentenceBehavior
         }
 
         return aRequest;
+    }
+    
+    @Override
+    public void onRender(TypeAdapter aAdapter, VDocument aResponse,
+            Map<AnnotationFS, VArc> aAnnoToArcIdx)
+    {
+        if (aAdapter.getLayer().isCrossSentence()) {
+            return;
+        }
+        
+        try {
+            for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
+                JCas jcas = e.getKey().getCAS().getJCas();
+                
+                if (!isSameSentence(jcas, 
+                        selectByAddr(jcas, e.getValue().getSource().getId()).getBegin(),
+                        selectByAddr(jcas, e.getValue().getTarget().getId()).getBegin()))
+                {
+                    aResponse.add(new VComment(new VID(e.getKey()), ERROR,
+                            "Crossing sentence bounardies is not permitted."));
+                }
+            }
+        }
+        catch (CASException e) {
+            throw new IllegalStateException("Unable to obtain JCas");
+        }
     }
 }
