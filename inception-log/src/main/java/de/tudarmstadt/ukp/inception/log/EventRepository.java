@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.function.Consumer;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public interface EventRepository
@@ -24,4 +27,6 @@ public interface EventRepository
     static final String SERVICE_NAME = "eventRepository";
 
     void create(LoggedEvent aE);
+    
+    void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
 }
