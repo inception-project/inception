@@ -27,7 +27,7 @@
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 8 or higher
+| version 9 or higher
 |===
 
 .Requirements run the server version
