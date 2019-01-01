@@ -64,7 +64,7 @@ An IRI Schema defines the following attributes that are used for making queries 
 
 |===
 There are multiple classes in the knowledge base module that model the IRI Schema of a knowledge base. All the classes share that they have a single class-attribute for each IRI in the IRI Schema.
-However each class has a different use case. The relevant classes are show in <<KBClasses, Table 2>>. +
+However each class has a different use case. The relevant classes are shown in <<KBClasses, Table 2>>. +
 *Note that if the structure of the general IRI Schema is changed (e.g. a new attribute is added) all the classes need to be adjusted.*
 
 .Knowledge Base & IRI Schema Classes
