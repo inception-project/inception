@@ -85,16 +85,16 @@ public class SpanStackingBehavior
     
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx)
+            Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
     {
-        if (aAdapter.getLayer().isAllowStacking()) {
+        if (aAdapter.getLayer().isAllowStacking() || aAnnoToSpanIdx.isEmpty()) {
             return;
         }
         
         // The following code requires annotations with the same offsets to be adjacent during 
         // iteration, so we sort the entries here
         AnnotationComparator cmp = new AnnotationComparator();
-        List<Entry<AnnotationFS, VSpan>> sortedEntries = annoToSpanIdx.entrySet().stream()
+        List<Entry<AnnotationFS, VSpan>> sortedEntries = aAnnoToSpanIdx.entrySet().stream()
                 .sorted((e1, e2) -> cmp.compare(e1.getKey(), e2.getKey()))
                 .collect(Collectors.toList());
 
