@@ -15,22 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log;
+package de.tudarmstadt.ukp.inception.recommendation.service;
 
-import java.util.List;
-import java.util.function.Consumer;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-
-public interface EventRepository
+@SpringBootConfiguration
+@EntityScan(
+        basePackages = {
+            "de.tudarmstadt.ukp.inception.recommendation.api.model",
+            "de.tudarmstadt.ukp.clarin.webanno.security.model",
+            "de.tudarmstadt.ukp.clarin.webanno.model"
+})
+@EnableAutoConfiguration
+public class SpringConfig
 {
-    static final String SERVICE_NAME = "eventRepository";
-
-    void create(LoggedEvent aE);
-
-    List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
-            int aSize, long recommenderId);
-
-    void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
+    // No content
 }
+
+
