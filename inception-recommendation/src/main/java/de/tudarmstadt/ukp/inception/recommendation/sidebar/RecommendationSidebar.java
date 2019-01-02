@@ -63,8 +63,8 @@ public class RecommendationSidebar
 
         form.add(new CheckBox("showAllPredictions"));
 
-        form.add(new LambdaAjaxButton<>("save",
-            (_target, _form) -> aAnnotationPage.actionRefreshDocument(_target)));
+        form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
+                aAnnotationPage.actionRefreshDocument(_target)));
 
         add(form);
 
