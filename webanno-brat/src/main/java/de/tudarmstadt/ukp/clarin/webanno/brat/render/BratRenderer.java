@@ -378,7 +378,7 @@ public class BratRenderer
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
         if (aLayer.getType().equals(CHAIN_TYPE)) {
-            attachingLayerBratTypeName += ChainAdapter.CHAIN;
+            attachingLayerBratTypeName += ChainAdapter.LINK;
         }
 
         // Handle arrow-head styles depending on linkedListBehavior
@@ -414,7 +414,7 @@ public class BratRenderer
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
         if (aLayer.getType().equals(CHAIN_TYPE)) {
-            bratTypeName += ChainAdapter.CHAIN;
+            bratTypeName += ChainAdapter.LINK;
         }
         return bratTypeName;
     }

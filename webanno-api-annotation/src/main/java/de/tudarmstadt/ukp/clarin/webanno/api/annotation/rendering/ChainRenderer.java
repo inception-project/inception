@@ -92,8 +92,7 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aJcas.getCas(),
-                typeAdapter.getLayer().getName() + ChainAdapter.CHAIN);
+        Type chainType = CasUtil.getType(aJcas.getCas(), typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
