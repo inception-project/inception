@@ -333,7 +333,7 @@ public class AccessSpecificSettingsPanel
                 link.add(AttributeModifier.append("title",
                     new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                         .setParameters(
-                            kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
+                            kbService.checkSchemaProfile(item.getModelObject()).getUiLabel(),
                             getAccessTypeLabel(item.getModelObject()))));
 
                 item.add(link);

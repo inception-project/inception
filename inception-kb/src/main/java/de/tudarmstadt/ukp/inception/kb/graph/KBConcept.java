@@ -189,17 +189,19 @@ public class KBConcept
 
         if (isNotBlank(name)) {
             Literal nameLiteral;
-            if (language == null) {
-                nameLiteral = vf.createLiteral(name);
+            if (language != null) {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            else if (kb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {
-                nameLiteral = vf.createLiteral(name, language);
+                nameLiteral = vf.createLiteral(name);
             }
             Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
             aConn.add(nameStmt);
         }
-
         if (isNotBlank(description)) {
             Literal descriptionLiteral;
             if (language == null) {
@@ -231,17 +233,17 @@ public class KBConcept
         KBConcept kbConcept = new KBConcept();
         kbConcept.setIdentifier(aSubject.stringValue());
         kbConcept.setKB(kb);
-
         readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage())
-            .ifPresent((stmt) -> {
-                kbConcept.setName(stmt.getObject().stringValue());
-                kbConcept.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbConcept::setLanguage);
-                }
-            });
+                .ifPresent((stmt) -> {
+                    kbConcept.setName(stmt.getObject().stringValue());
+                    kbConcept.originalStatements.add(stmt);
+                    if (stmt.getObject() instanceof Literal) {
+                        Literal literal = (Literal) stmt.getObject();
+                        Optional<String> language = literal.getLanguage();
+                        language.ifPresent(kbConcept::setLanguage);
+                    }
+                });
+
 
         readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage())
             .ifPresent((stmt) -> {

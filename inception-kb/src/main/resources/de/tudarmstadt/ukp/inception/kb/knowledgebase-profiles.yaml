@@ -13,6 +13,7 @@ british_museum:
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
 wikidata:
   name: Wikidata
@@ -30,6 +31,7 @@ wikidata:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.wikidata.org/prop/direct/P1647
       full-text-search: FTS:NONE
 virtuoso:
   name: UKP Wikidata
@@ -44,6 +46,7 @@ virtuoso:
       property-type: http://www.wikidata.org/entity/Q18616576
       description: http://schema.org/description
       property-label: http://www.w3.org/2000/01/rdf-schema#label
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       property-description: http://schema.org/description
       full-text-search: bif:contains
 db_pedia:
@@ -62,6 +65,7 @@ db_pedia:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
 babel_net:
   name: BabelNet
@@ -77,6 +81,7 @@ babel_net:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
 yago:
   name: YAGO
@@ -92,6 +97,7 @@ yago:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
 wine_ontology:
   name: Wine Ontology
@@ -107,6 +113,7 @@ wine_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 wildlife_ontology:
   name: Wildlife Ontology
@@ -122,6 +129,7 @@ wildlife_ontology:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 zbw-stw-economics:
   name: STW Thesaurus for Economics
@@ -137,6 +145,7 @@ zbw-stw-economics:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
 zbw-gnd:
   name: Integrated Authority File (GND)
@@ -144,12 +153,13 @@ zbw-gnd:
   access:
       access-url: http://zbw.eu/beta/sparql/gnd/query
   mapping:
-      class: http://www.w3.org/2004/02/skos/core#Concept
-      subclass-of: http://www.w3.org/2004/02/skos/core#broader
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
       instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-      label: http://www.w3.org/2004/02/skos/core#prefLabel
+      label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
-      property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
