@@ -43,6 +43,7 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -90,6 +91,18 @@ public class RecommendationServiceImpl
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
+    @Value("${show.learning.curve.diagram:false}")
+    public Boolean showLearningCurveDiagram;
+    
+    public RecommendationServiceImpl()
+    {
+    }
+    
+    public RecommendationServiceImpl(EntityManager entityManager)
+    {
+        this.entityManager = entityManager;
+    }
+
     private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
@@ -231,6 +244,35 @@ public class RecommendationServiceImpl
                 .findFirst();
     }
     
+    @Override
+    @Transactional
+    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "id = :id AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("id", aRecommenderId)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+
     @Override
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
@@ -527,5 +569,10 @@ public class RecommendationServiceImpl
             
             setActiveRecommenders(newActiveRecommenders);
         }
+    }
+    
+    @Override
+    public Boolean showLearningCurveDiagram() {
+        return showLearningCurveDiagram;
     }
 }
