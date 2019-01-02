@@ -18,9 +18,12 @@
 package de.tudarmstadt.ukp.inception.log;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.TypedQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,5 +79,22 @@ public class EventRepositoryImpl
                 .setParameter("details", "%\"recommenderId\":" + recommenderId + "%")
                 .setMaxResults(aSize)
                 .getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer)
+    {
+        // Set up data source
+        String query = String.join("\n",
+                "FROM LoggedEvent WHERE ",
+                "project = :project ",
+                "ORDER BY id");
+        TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
+                .setParameter("project", aProject.getId());
+
+        try (Stream<LoggedEvent> eventStream = typedQuery.getResultStream()) {
+            eventStream.forEach(aConsumer);
+        }
     }
 }

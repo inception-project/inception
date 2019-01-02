@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -54,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -399,16 +401,16 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, aBegin, aEnd);
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation
-            address = WebAnnoCasUtil.getAddr(annoFS);
+            address = getAddr(annoFS);
         }
         else {
             // ... if not, then we create a new annotation - this also takes care of attaching to 
             // an annotation if necessary
-            address = adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd);
+            address = getAddr(adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd));
         }
 
         // Update the feature value
