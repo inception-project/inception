@@ -1,5 +1,5 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_systemproperties]]
-== System Properties
+[[sect_settings_recommender]]
+=== Recommender Settings
 
+This section describes the global settings related to the recommender module.
+
+.Recommender settings overview
 [cols="4*", options="header"]
 |===
 | Setting
@@ -24,13 +27,8 @@
 | Default
 | Example
 
-| inception.home
-| INCEpTION home folder
-| ~/.inception
-| /srv/inception
-
-| javamelody.disabled
-| Disable JavaMelody
-| true
+| show.learning.curve.diagram
+| Show learning curve diagram on the recommendation sidebar.
 | false
+| true
 |===
