@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
@@ -182,13 +183,17 @@ public class CopyAnnotationTest
                 asList(new PrimitiveUimaFeatureSupport(),
                         new SlotFeatureSupport(annotationSchemaService)));
         featureSupportRegistry.init();
-        
+
+        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        layerBehaviorRegistry.init();
+
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService, null),
+                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        layerBehaviorRegistry),
                 new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService,
-                        null),
+                        layerBehaviorRegistry),
                 new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService,
-                        null)));
+                        layerBehaviorRegistry)));
         layerSupportRegistry.init();
     }
     
