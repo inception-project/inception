@@ -19,16 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
@@ -36,105 +34,80 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * A class that is used to create Brat chain to CAS and vice-versa
+ * Manage interactions with annotations on a chain layer.
  */
 public class ChainAdapter
     extends TypeAdapter_ImplBase
 {
-//    private final Logger log = LoggerFactory.getLogger(getClass());
-
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
+    public static final String FEAT_FIRST = "first";
+    public static final String FEAT_NEXT = "next";
 
-    private final long layerId;
-
-    /**
-     * The UIMA type name.
-     */
-    private String annotationTypeName;
-
-    /**
-     * The feature of an UIMA annotation for the first span in the chain
-     */
-    private final String chainFirstFeatureName;
-
-    /**
-     * The feature of an UIMA annotation for the next span in the chain
-     */
-    private final String linkNextFeatureName;
-
-    // private boolean singleTokenBehavior = false;
-
-    private boolean linkedListBehavior;
-
+    private final List<SpanLayerBehavior> behaviors;
+    
     public ChainAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer, long aLayerId,
-            String aTypeName, String aLabelFeatureName, String aFirstFeatureName,
-            String aNextFeatureName, Collection<AnnotationFeature> aFeatures)
+            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
+            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-        
-        layerId = aLayerId;
-        annotationTypeName = aTypeName;
-        chainFirstFeatureName = aFirstFeatureName;
-        linkNextFeatureName = aNextFeatureName;
+
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
 
-    public int addSpan(JCas aJCas, int aBegin, int aEnd)
-        throws MultipleSentenceCoveredException
+    public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+            int aEnd)
+        throws AnnotationException
     {
-        List<Token> tokens = WebAnnoCasUtil.selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-
-        if (!WebAnnoCasUtil.isSameSentence(aJCas, aBegin, aEnd)) {
-            throw new MultipleSentenceCoveredException(
-                    "Annotation coveres multiple sentences, "
-                            + "limit your annotation to single sentence!");
-        }
-
-        // update the begin and ends (no sub token selection)
-        int begin = tokens.get(0).getBegin();
-        int end = tokens.get(tokens.size() - 1).getEnd();
-
-        // Add the link annotation on the span
-        AnnotationFS newLink = newLink(aJCas, begin, end);
-
-        // The added link is a new chain on its own - add the chain head FS
-        newChain(aJCas, newLink);
-
-        return WebAnnoCasUtil.getAddr(newLink);
+        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
     }
 
-    // get feature Value of existing span annotation
-    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            String aLabelValue)
+    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest)
+        throws AnnotationException
     {
-        List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-        int begin = tokens.get(0).getBegin();
-        int end = tokens.get(tokens.size() - 1).getEnd();
-        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
-        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
+        CreateSpanAnnotationRequest request = aRequest;
         
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), linkType, begin, end)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                return getFeatureValue(aFeature, fs);
-            }
+        for (SpanLayerBehavior behavior : behaviors) {
+            request = behavior.onCreate(this, request);
         }
-        return null;
+        
+        return createChainElementAnnotation(request);
     }
     
-    public int addArc(JCas aJCas, AnnotationFS aOriginFs, AnnotationFS aTargetFs)
+    private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
+    {
+        // Add the link annotation on the span
+        AnnotationFS newLink = newLink(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd());
+
+        // The added link is a new chain on its own - add the chain head FS
+        newChain(aRequest.getJcas(), newLink);
+
+        return newLink;
+    }
+    
+    public int addArc(SourceDocument aDocument, String aUsername, JCas aJCas,
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         // Determine if the links are adjacent. If so, just update the arc label
         AnnotationFS originNext = getNextLink(aOriginFs);
@@ -145,9 +118,8 @@ public class ChainAdapter
         }
         // adjacent - target links to origin
         else if (WebAnnoCasUtil.isSame(targetNext, aOriginFs)) {
-            if (linkedListBehavior) {
+            if (isLinkedListBehavior()) {
                 throw new IllegalStateException("Cannot change direction of a link within a chain");
-//              BratAjaxCasUtil.setFeature(aTargetFs, aFeature, aValue);
             }
             else {
                 // in set mode there are no arc labels anyway
@@ -161,9 +133,9 @@ public class ChainAdapter
             AnnotationFS targetPrev = getPrevLink(targetChain, aTargetFs);
 
             if (!WebAnnoCasUtil.isSame(originChain, targetChain)) {
-                if (linkedListBehavior) {
+                if (isLinkedListBehavior()) {
                     // if the two links are in different chains then split the chains up at the
-                    // origin point and target point and create a new link betweek origin and target
+                    // origin point and target point and create a new link between origin and target
                     // the tail of the origin chain becomes a new chain
 
                     // if originFs has a next, then split of the origin chain up
@@ -220,7 +192,7 @@ public class ChainAdapter
             }
             else {
                 // if the two links are in the same chain, we just ignore the action
-                if (linkedListBehavior) {
+                if (isLinkedListBehavior()) {
                     throw new IllegalStateException(
                             "Cannot connect two spans that are already part of the same chain");
                 }
@@ -257,7 +229,7 @@ public class ChainAdapter
 
     private void deleteSpan(JCas aJCas, int aAddress)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
 
         AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
@@ -332,34 +304,14 @@ public class ChainAdapter
     }
 
     @Override
-    public long getTypeId()
-    {
-        return layerId;
-    }
-
-    @Override
-    public Type getAnnotationType(CAS cas)
-    {
-        return CasUtil.getType(cas, annotationTypeName);
-    }
-
-    @Override
     public String getAnnotationTypeName()
     {
-        return annotationTypeName;
+        return getLayer().getName() + LINK;
     }
 
-    @Override
-    public String getAttachFeatureName()
+    public String getChainTypeName()
     {
-        return null;
-    }
-
-    @Override
-    public String getAttachTypeName()
-    {
-        // TODO Auto-generated method stub
-        return null;
+        return getLayer().getName() + CHAIN;
     }
 
     /**
@@ -371,7 +323,7 @@ public class ChainAdapter
      */
     private FeatureStructure getChainForLink(JCas aJCas, AnnotationFS aLink)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
 
         for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
@@ -385,7 +337,7 @@ public class ChainAdapter
             }
         }
 
-        // This should never happen unless the data in the CAS has been created erratically
+        // This should never happen unless the data in the CAS has been created wrongly
         throw new IllegalArgumentException("Link not part of any chain");
     }
 
@@ -395,7 +347,7 @@ public class ChainAdapter
 
         // Now we seek the link within the current chain
         AnnotationFS linkFs = (AnnotationFS) aChain.getFeatureValue(aChain.getType()
-                .getFeatureByBaseName(chainFirstFeatureName));
+                .getFeatureByBaseName(getChainFirstFeatureName()));
         while (linkFs != null) {
             links.add(linkFs);
 
@@ -406,32 +358,14 @@ public class ChainAdapter
     }
 
     /**
-     * Sort ascending by begin and descending by end.
-     */
-    private static class AnnotationComparator
-        implements Comparator<AnnotationFS>
-    {
-        @Override
-        public int compare(AnnotationFS arg0, AnnotationFS arg1)
-        {
-            int beginDiff = arg0.getBegin() - arg1.getBegin();
-            if (beginDiff == 0) {
-                return arg1.getEnd() - arg0.getEnd();
-            }
-            else {
-                return beginDiff;
-            }
-        }
-    }
-
-    /**
      * Create a new chain head feature structure. Already adds the chain to the CAS.
      */
     private FeatureStructure newChain(JCas aJCas, AnnotationFS aFirstLink)
     {
-        Type chainType = getAnnotationType(aJCas.getCas());
+        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
         FeatureStructure newChain = aJCas.getCas().createFS(chainType);
-        newChain.setFeatureValue(chainType.getFeatureByBaseName(chainFirstFeatureName), aFirstLink);
+        newChain.setFeatureValue(chainType.getFeatureByBaseName(getChainFirstFeatureName()),
+                aFirstLink);
         aJCas.addFsToIndexes(newChain);
         return newChain;
     }
@@ -441,8 +375,7 @@ public class ChainAdapter
      */
     private AnnotationFS newLink(JCas aJCas, int aBegin, int aEnd)
     {
-        String baseName = StringUtils.substringBeforeLast(getAnnotationTypeName(), CHAIN) + LINK;
-        Type linkType = CasUtil.getType(aJCas.getCas(), baseName);
+        Type linkType = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
         AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, aBegin, aEnd);
         aJCas.getCas().addFsToIndexes(newLink);
         return newLink;
@@ -453,7 +386,8 @@ public class ChainAdapter
      */
     private void setFirstLink(FeatureStructure aChain, AnnotationFS aLink)
     {
-        aChain.setFeatureValue(aChain.getType().getFeatureByBaseName(chainFirstFeatureName), aLink);
+        aChain.setFeatureValue(aChain.getType().getFeatureByBaseName(getChainFirstFeatureName()),
+                aLink);
     }
 
     /**
@@ -462,7 +396,7 @@ public class ChainAdapter
     private AnnotationFS getFirstLink(FeatureStructure aChain)
     {
         return (AnnotationFS) aChain.getFeatureValue(aChain.getType().getFeatureByBaseName(
-                chainFirstFeatureName));
+                getChainFirstFeatureName()));
     }
 
     /**
@@ -496,7 +430,7 @@ public class ChainAdapter
     private void setNextLink(AnnotationFS aLink, AnnotationFS aNext)
     {
         aLink.setFeatureValue(
-                aLink.getType().getFeatureByBaseName(linkNextFeatureName), aNext);
+                aLink.getType().getFeatureByBaseName(getLinkNextFeatureName()), aNext);
     }
 
     /**
@@ -505,35 +439,22 @@ public class ChainAdapter
     private AnnotationFS getNextLink(AnnotationFS aLink)
     {
         return (AnnotationFS) aLink.getFeatureValue(aLink.getType().getFeatureByBaseName(
-                linkNextFeatureName));
-    }
-
-    /**
-     * Controls whether the chain behaves like a linked list or like a set. When operating as a
-     * set, chains are automatically threaded and no arrows and labels are displayed on arcs.
-     * When operating as a linked list, chains are not threaded and arrows and labels are displayed
-     * on arcs.
-     *
-     * @param aBehaveLikeSet whether to behave like a set.
-     */
-    public void setLinkedListBehavior(boolean aBehaveLikeSet)
-    {
-        linkedListBehavior = aBehaveLikeSet;
+                getLinkNextFeatureName()));
     }
 
     public boolean isLinkedListBehavior()
     {
-        return linkedListBehavior;
+        return getLayer().isLinkedListBehavior();
     }
 
     public String getLinkNextFeatureName()
     {
-        return linkNextFeatureName;
+        return FEAT_NEXT;
     }
     
     public String getChainFirstFeatureName()
     {
-        return chainFirstFeatureName;
+        return FEAT_FIRST;
     }
     
     @Override
@@ -558,5 +479,15 @@ public class ChainAdapter
         typeFeature.setProject(getLayer().getProject());
 
         aSchemaService.createFeature(typeFeature);
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    {
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        for (SpanLayerBehavior behavior : behaviors) {
+            messages.addAll(behavior.onValidate(this, aJCas));
+        }
+        return messages;
     }
 }

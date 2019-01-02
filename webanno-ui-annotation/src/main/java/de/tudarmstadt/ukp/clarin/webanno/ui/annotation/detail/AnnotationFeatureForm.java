@@ -29,6 +29,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.text.AnnotationFS;
@@ -749,7 +750,7 @@ public class AnnotationFeatureForm
                     
                     // If "remember layer" is not set, then changing the layer means that we
                     // want to change the type of the currently selected annotation
-                    else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
+                    else if (!Objects.equals(state.getSelectedAnnotationLayer(), getModelObject())
                         && state.getSelection().getAnnotation().isSet()) {
                         try {
                             if (state.getSelection().isArc()) {
@@ -768,7 +769,9 @@ public class AnnotationFeatureForm
                     // the new type
                     else {
                         state.setSelectedAnnotationLayer(getModelObject());
-                        selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
+                        selectedAnnotationLayer
+                                .setDefaultModelObject(Optional.ofNullable(getModelObject())
+                                        .map(AnnotationLayer::getUiName).orElse(null));
                         aTarget.add(selectedAnnotationLayer);
                         editorPanel.clearFeatureEditorModels(aTarget);
                     }

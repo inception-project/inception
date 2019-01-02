@@ -42,14 +42,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
-    private FeatureSupportRegistry featureSupportRegistry;
-    private ApplicationEventPublisher applicationEventPublisher;
+    private final FeatureSupportRegistry featureSupportRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
     
-    private AnnotationLayer layer;
+    private final AnnotationLayer layer;
 
-    private Map<String, AnnotationFeature> features;
-
-    private boolean deletable;
+    private final Map<String, AnnotationFeature> features;
 
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -79,24 +77,13 @@ public abstract class TypeAdapter_ImplBase
         return features.values();
     }
     
-    public void setDeletable(boolean deletable)
-    {
-        this.deletable = deletable;
-    }
-
-    @Override
-    public boolean isDeletable()
-    {
-        return deletable;
-    }
-    
     @Override
     public void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, aAddress);
 
-        Object oldValue =  getValue(fs, aFeature);
+        Object oldValue = getValue(fs, aFeature);
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
@@ -145,5 +132,22 @@ public abstract class TypeAdapter_ImplBase
     public void initialize(AnnotationSchemaService aSchemaService)
     {
         // Nothing to do
+    }
+    
+    @Override
+    public String getAttachFeatureName()
+    {
+        return getLayer().getAttachFeature() == null ? null
+                : getLayer().getAttachFeature().getName();
+    }
+
+    /**
+     * A field that takes the name of the annotation to attach to, e.g.
+     * "de.tudarmstadt...type.Token" (Token.class.getName())
+     */
+    @Override
+    public String getAttachTypeName()
+    {
+        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
 }

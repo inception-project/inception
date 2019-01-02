@@ -1,4 +1,4 @@
-== Span layer
+= Span layer
 
 A span layer allows to create annotations over spans of text.
 

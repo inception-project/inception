@@ -32,6 +32,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.ChainRenderer;
@@ -46,17 +47,20 @@ public class ChainLayerSupport
     private final FeatureSupportRegistry featureSupportRegistry;
     private final ApplicationEventPublisher eventPublisher;
     private final AnnotationSchemaService schemaService;
+    private final LayerBehaviorRegistry layerBehaviorsRegistry;
 
     private String layerSupportId;
     private List<LayerType> types;
 
     @Autowired
     public ChainLayerSupport(FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService)
+            ApplicationEventPublisher aEventPublisher, AnnotationSchemaService aSchemaService,
+            LayerBehaviorRegistry aLayerBehaviorsRegistry)
     {
         featureSupportRegistry = aFeatureSupportRegistry;
         eventPublisher = aEventPublisher;
         schemaService = aSchemaService;
+        layerBehaviorsRegistry = aLayerBehaviorsRegistry;
     }
 
     @Override
@@ -92,11 +96,9 @@ public class ChainLayerSupport
     @Override
     public ChainAdapter createAdapter(AnnotationLayer aLayer)
     {
-        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher,
-                aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
-                "first", "next", schemaService.listAnnotationFeature(aLayer));
-
-        adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+        ChainAdapter adapter = new ChainAdapter(featureSupportRegistry, eventPublisher, aLayer,
+                schemaService.listAnnotationFeature(aLayer),
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
 
         return adapter;
     }
@@ -132,6 +134,7 @@ public class ChainLayerSupport
     @Override
     public Renderer getRenderer(AnnotationLayer aLayer)
     {
-        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry);
+        return new ChainRenderer(createAdapter(aLayer), featureSupportRegistry,
+                layerBehaviorsRegistry.getLayerBehaviors(this, SpanLayerBehavior.class));
     }
 }

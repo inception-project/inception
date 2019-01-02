@@ -242,8 +242,6 @@ public class LayerDetailForm
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for chains
-                    !CHAIN_TYPE.equals(layer.getType()) && 
                     // Not configurable for layers that attach to tokens (currently
                     // that is the only layer on which we use the attach feature)
                     layer.getAttachFeature() == null);
@@ -258,8 +256,6 @@ public class LayerDetailForm
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for chains
-                    !CHAIN_TYPE.equals(layer.getType()) &&
                     // Not configurable for layers that attach to tokens (currently that is
                     // the only layer on which we use the attach feature)
                     layer.getAttachFeature() == null);
@@ -274,11 +270,9 @@ public class LayerDetailForm
                     // Surface form must be locked to token boundaries for CONLL-U writer
                     // to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
-                    // Not configurable for chains
-                    !CHAIN_TYPE.equals(layer.getType())
                     // Not configurable for layers that attach to tokens (currently that
                     // is the only layer on which we use the attach feature)
-                                    && layer.getAttachFeature() == null);
+                    layer.getAttachFeature() == null);
         }));
 
         add(showTextInHover = new CheckBox("showTextInHover"));

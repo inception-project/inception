@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.uima.cas.FeatureStructure;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -59,5 +60,15 @@ public class VComment
     public String getComment()
     {
         return comment;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this)
+                .append("vid", vid)
+                .append("commentType", commentType)
+                .append("comment", comment)
+                .toString();
     }
 }

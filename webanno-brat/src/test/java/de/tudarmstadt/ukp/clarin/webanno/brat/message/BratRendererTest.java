@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRe
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
@@ -115,10 +116,16 @@ public class BratRendererTest
                         new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
         
+        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        layerBehaviorRegistry.init();
+        
         LayerSupportRegistryImpl layerRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, schemaService),
-                new RelationLayerSupport(featureSupportRegistry, null, schemaService),
-                new ChainLayerSupport(featureSupportRegistry, null, schemaService)));
+                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
+                        layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
+                        layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
+                        layerBehaviorRegistry)));
         layerRegistry.init();
         
         when(schemaService.listAnnotationLayer(any())).thenReturn(asList(posLayer));

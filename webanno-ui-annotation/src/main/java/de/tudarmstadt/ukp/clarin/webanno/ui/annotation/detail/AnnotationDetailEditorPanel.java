@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -63,9 +64,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAnchoringModeBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -165,8 +167,8 @@ public abstract class AnnotationDetailEditorPanel
                     + "] does not support arc annotation.");
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            else if (aAdapter instanceof ArcAdapter) {
-                createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas);
+            else if (aAdapter instanceof RelationAdapter) {
+                createNewRelationAnnotation((RelationAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
                 createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas);
@@ -181,7 +183,7 @@ public abstract class AnnotationDetailEditorPanel
                 createNewSpanAnnotation(aTarget, (SpanAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainElement((ChainAdapter) aAdapter, aJCas);
+                createNewChainElement(aTarget, (ChainAdapter) aAdapter, aJCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -190,7 +192,7 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewRelationAnnotation(ArcAdapter aAdapter,
+    private void createNewRelationAnnotation(RelationAdapter aAdapter,
             JCas aJCas)
         throws AnnotationException
     {
@@ -213,75 +215,25 @@ public abstract class AnnotationDetailEditorPanel
         JCas aJCas)
         throws IOException, AnnotationException
     {
-        LOG.trace("createNewSpanAnnotation()");
-
+        handleForwardAnnotation(aTarget, aAdapter, aJCas);
+        
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
-        List<FeatureState> featureStates = state.getFeatureStates();
-
-        if ((aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed())
-                && selection.getBegin() == selection.getEnd()) {
-            throw new AnnotationException(
-                    "Cannot create zero-width annotation on layers that lock to token boundaries.");
-        }
         
-        for (FeatureState featureState : featureStates) {
-            Serializable spanValue = aAdapter.getSpan(aJCas, selection.getBegin(),
-                selection.getEnd(), featureState.feature, null);
-            if (spanValue != null) {
-                // allow modification for forward annotation
-                if (state.isForwardAnnotation()) {
-                    featureState.value = spanValue;
-                    featureStates.get(0).value = spanValue;
-                    String selectedTag = annotationFeatureForm.getBindTags()
-                        .entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-                        .map(Map.Entry::getKey).findFirst().orElse(null);
-                    annotationFeatureForm.setSelectedTag(selectedTag);
-                }
-                else {
-                    actionClear(aTarget);
-                    throw new AnnotationException("Cannot create another annotation of layer ["
-                        + state.getSelectedAnnotationLayer().getUiName() + "] at this"
-                        + " location - stacking is not enabled for this layer.");
-                }
-            }
-        }
-        int annoId = aAdapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
-                selection.getBegin(), selection.getEnd());
-        AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
-        selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
+        AnnotationFS annoFs = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
+                aJCas, selection.getBegin(), selection.getEnd());
+        selection.selectSpan(new VID(annoFs), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
-
-    private void createNewChainElement(ChainAdapter aAdapter,
-            JCas aJCas)
+    
+    private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter, JCas aJCas)
         throws AnnotationException
     {
-        LOG.trace("createNewChainElement()");
-
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
-        List<FeatureState> featureStates = state.getFeatureStates();
 
-        for (FeatureState featureState : featureStates) {
-            Serializable spanValue = aAdapter.getSpan(aJCas,
-                selection.getBegin(), selection.getEnd(), featureState.feature, null);
-            if (spanValue != null) {
-                // allow modification for forward annotation
-                if (state.isForwardAnnotation()) {
-                    featureState.value = spanValue;
-                    featureStates.get(0).value = spanValue;
-                    String selectedTag = annotationFeatureForm.getBindTags()
-                        .entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-                        .map(Map.Entry::getKey).findFirst().orElse(null);
-                    annotationFeatureForm.setSelectedTag(selectedTag);
-                }
-            }
-        }
-        
-        selection.setAnnotation(new VID(
-            aAdapter.addSpan(aJCas, selection.getBegin(), selection.getEnd())));
-        selection.setText(
-            aJCas.getDocumentText().substring(selection.getBegin(), selection.getEnd()));
+        AnnotationFS annoFs = aAdapter.addSpan(state.getDocument(), state.getUser().getUsername(),
+                aJCas, selection.getBegin(), selection.getEnd());
+        selection.selectSpan(new VID(annoFs), aJCas, annoFs.getBegin(), annoFs.getEnd());
     }
 
     private void createNewChainLinkAnnotation(ChainAdapter aAdapter,
@@ -295,8 +247,63 @@ public abstract class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
 
         // Creating a new chain link
-        int addr = aAdapter.addArc(aJCas, originFs, targetFs);
+        int addr = aAdapter.addArc(state.getDocument(), state.getUser().getUsername(), aJCas,
+                originFs, targetFs);
         selection.selectArc(new VID(addr), originFs, targetFs);
+    }
+
+    private void handleForwardAnnotation(AjaxRequestTarget aTarget, SpanAdapter aAdapter,
+            JCas aJCas)
+        throws AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+        List<FeatureState> featureStates = state.getFeatureStates();
+        AnnotationLayer layer = aAdapter.getLayer();
+        
+        for (FeatureState featureState : featureStates) {
+            Serializable spanValue = null;
+            
+            // If stacking is not allowed, try fetching the feature value of a potentially existing
+            // annotation
+            if (!layer.isAllowStacking()) {
+                int[] adjustedRange = SpanAnchoringModeBehavior.adjust(aJCas,
+                        layer.getAnchoringMode(), new int[] { selection.getBegin(),
+                                selection.getEnd() });
+                
+                Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
+                for (AnnotationFS fs : selectCovered(aJCas.getCas(), type, adjustedRange[0],
+                        adjustedRange[1])) {
+                    if (fs.getBegin() == selection.getBegin()
+                            && fs.getEnd() == selection.getEnd()) {
+                        spanValue = aAdapter.getFeatureValue(featureState.feature, fs);
+                    }
+                }
+            }
+            
+            if (spanValue != null) {
+                // Reassign variable so it can be used in the lambda filter below
+                Serializable _spanValue = spanValue;
+                
+                // allow modification for forward annotation
+                if (state.isForwardAnnotation()) {
+                    featureState.value = spanValue;
+                    featureStates.get(0).value = spanValue;
+                    String selectedTag = annotationFeatureForm.getBindTags().entrySet().stream()
+                            .filter(e -> e.getValue().equals(_spanValue))
+                            .map(Map.Entry::getKey)
+                            .findFirst()
+                            .orElse(null);
+                    annotationFeatureForm.setSelectedTag(selectedTag);
+                }
+                else {
+                    actionClear(aTarget);
+                    throw new AnnotationException("Cannot create another annotation of layer ["
+                        + state.getSelectedAnnotationLayer().getUiName() + "] at this"
+                        + " location - stacking is not enabled for this layer.");
+                }
+            }
+        }
     }
 
     @Override
@@ -325,8 +332,8 @@ public abstract class AnnotationDetailEditorPanel
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                         .getLayer(state.getArmedFeature().getType(), state.getProject()));
 
-                id = adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas, aBegin,
-                        aEnd);
+                id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
+                        aBegin, aEnd));
             }
             else {
                 throw new AnnotationException(
@@ -831,7 +838,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
         // relation.
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // Do nothing ;)
         }
 
@@ -859,9 +866,9 @@ public abstract class AnnotationDetailEditorPanel
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
-            AnnotationFS arc = ((ArcAdapter) adapter).add(state.getDocument(),
+            AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
                     state.getUser().getUsername(), targetFs, originFs, jCas,
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
@@ -1402,7 +1409,8 @@ public abstract class AnnotationDetailEditorPanel
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
         for (AnnotationLayer relationLayer : annotationService
             .listAttachedRelationLayers(aLayer)) {
-            ArcAdapter relationAdapter = (ArcAdapter) annotationService.getAdapter(relationLayer);
+            RelationAdapter relationAdapter = (RelationAdapter) annotationService
+                    .getAdapter(relationLayer);
             Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
                 .getSourceFeatureName());

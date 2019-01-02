@@ -64,7 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -119,9 +119,9 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        int addr = adapter.add(aState.getDocument(), aState.getUser().getUsername(),
-                                jCas, sentence.getBegin() + i,
-                                sentence.getBegin() + i + selectedText.length() - 1);
+                        int addr = getAddr(adapter.add(aState.getDocument(),
+                                aState.getUser().getUsername(), jCas, sentence.getBegin() + i,
+                                sentence.getBegin() + i + selectedText.length() - 1));
                         adapter.setFeatureValue(aState.getDocument(),
                                 aState.getUser().getUsername(), jCas, addr, aFeature, aValue);
                     }
@@ -142,7 +142,8 @@ public class AutomationUtil
                     aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
+            RelationAdapter adapter = (RelationAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -188,7 +189,7 @@ public class AutomationUtil
     }
 
     private static void repeatRelation(AnnotatorState aState, int aStart, int aEnd,
-            AnnotationFeature aFeature, String aValue, JCas jCas, ArcAdapter adapter,
+            AnnotationFeature aFeature, String aValue, JCas jCas, RelationAdapter adapter,
             AnnotationFS aDepFS, AnnotationFS aGovFS, List<AnnotationFS> aSpanAnnos)
         throws AnnotationException
     {
@@ -360,7 +361,8 @@ public class AutomationUtil
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
-            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
+            RelationAdapter adapter = (RelationAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -399,7 +401,7 @@ public class AutomationUtil
         }
     }
 
-    private static void deleteRelationAnnotation(ArcAdapter aAdapter, SourceDocument aDocument,
+    private static void deleteRelationAnnotation(RelationAdapter aAdapter, SourceDocument aDocument,
             String aUsername, JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
             String aDepCoveredText, String aGovCoveredText, Object aValue)
     {

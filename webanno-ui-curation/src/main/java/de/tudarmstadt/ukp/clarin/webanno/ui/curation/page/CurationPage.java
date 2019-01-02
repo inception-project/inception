@@ -564,7 +564,7 @@ public class CurationPage
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            actionValidateDocument(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();

@@ -464,6 +464,14 @@ public class AnnotationLayer
         return linkedListBehavior;
     }
 
+    /**
+     * Controls whether the chain behaves like a linked list or like a set. When operating as a
+     * set, chains are automatically threaded and no arrows and labels are displayed on arcs.
+     * When operating as a linked list, chains are not threaded and arrows and labels are displayed
+     * on arcs.
+     *
+     * @param aLinkedListBehavior whether to behave like a set.
+     */
     public void setLinkedListBehavior(boolean aLinkedListBehavior)
     {
         linkedListBehavior = aLinkedListBehavior;
