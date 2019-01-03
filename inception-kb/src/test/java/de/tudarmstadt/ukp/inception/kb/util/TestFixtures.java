@@ -73,6 +73,7 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
@@ -82,6 +83,7 @@ public class TestFixtures
         kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);
+        kb.setDefaultLanguage("en");
         return kb;
     }
 

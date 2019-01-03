@@ -223,6 +223,7 @@ public class KnowledgeBaseExporterTest
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setPropertyLabelIri(RDFS.LABEL);
         kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setMaxResults(1000);
         ValueFactory vf = SimpleValueFactory.getInstance();
         kb.setRootConcepts(Arrays
