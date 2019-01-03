@@ -94,7 +94,8 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
         return new ImportantStatementComparator(sgb -> {
             KnowledgeBase kb = kbModel.getObject();
             String identifier = sgb.getProperty().getIdentifier();
-            return kbService.isBaseProperty(identifier, kb);
+            return kbService.isBaseProperty(identifier, kb)
+                || kbService.isSubpropertyLabel(kb, identifier);
         });
     }
 }

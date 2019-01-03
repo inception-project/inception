@@ -89,12 +89,13 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         return StatementDetailPreference.ALL;
     }
 
-    @Override
-    protected Comparator<StatementGroupBean> getStatementGroupComparator() {
+    @Override protected Comparator<StatementGroupBean> getStatementGroupComparator()
+    {
         return new ImportantStatementComparator(sgb -> {
             KnowledgeBase kb = kbModel.getObject();
             String identifier = sgb.getProperty().getIdentifier();
-            return kbService.isBaseProperty(identifier, kb);
+            return kbService.isBaseProperty(identifier, kb)
+                || kbService.isSubpropertyLabel(kb, identifier);
         });
     }
 }

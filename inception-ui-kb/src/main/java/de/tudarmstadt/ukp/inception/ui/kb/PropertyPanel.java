@@ -96,8 +96,12 @@ public class PropertyPanel extends Panel {
 
         @Override
         protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-            return new ImportantStatementComparator(
-                sgb -> IMPORTANT_PROPERTY_URIS.contains(sgb.getProperty().getIdentifier()));
+            return new ImportantStatementComparator(sgb -> {
+                String identifier = sgb.getProperty().getIdentifier();
+                return IMPORTANT_PROPERTY_URIS.contains(identifier)
+                    || kbService.isBaseProperty(identifier, kbModel.getObject())
+                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier);
+            });
         }
         
         @Override
