@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -20,18 +20,25 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class ColorMap
 {
 
+    @JsonProperty("default")
     private String defaultColor;
+
+    @JsonProperty("span")
     private Map<String, String> span;
+
+    @JsonProperty("relation")
     private Map<String, String> relation;
 
-    public ColorMap(String defaultColor)
+    public ColorMap(String aDefaultColor)
     {
-        this.span = new HashMap<>();
-        this.relation = new HashMap<>();
-        this.defaultColor = defaultColor;
+        span = new HashMap<>();
+        relation = new HashMap<>();
+        defaultColor = aDefaultColor;
     }
 
     public String getDefaultColor()
@@ -57,26 +64,5 @@ public class ColorMap
     public void addRelation(String name, String color)
     {
         relation.put(name, color);
-    }
-
-    private String mapToString(Map<String, String> map)
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        map.forEach((k,v) -> sb.append("'").append(k).append("':'").append(v).append("',"));
-        sb.append("}");
-        return sb.toString();
-    }
-
-    @Override
-    public String toString()
-    {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append("'default':'").append(defaultColor).append("',");
-        sb.append("'span':").append(mapToString(span)).append(",");
-        sb.append("'relation':").append(mapToString(relation)).append(",");
-        sb.append("}");
-        return sb.toString();
     }
 }

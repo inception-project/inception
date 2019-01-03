@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -20,7 +20,13 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AnnoFile
+/**
+ * Contains PDFAnno specific information.
+ * Includes information about annotations (spans and relations),
+ * the PDFAnno version and the PDFExtract version.
+ * It also includes a color map for PDFAnno.
+ */
+public class PdfAnnoModel
 {
 
     private String pdfannoVersion;
@@ -33,13 +39,13 @@ public class AnnoFile
 
     private ColorMap colorMap;
 
-    public AnnoFile(String pdfannoVersion, String pdfextractVersion)
+    public PdfAnnoModel(String aPdfannoVersion, String aPdfextractVersion)
     {
-        this.pdfannoVersion = pdfannoVersion;
-        this.pdfextractVersion = pdfextractVersion;
-        this.spans = new ArrayList<>();
-        this.relations = new ArrayList<>();
-        this.colorMap = new ColorMap("#808080");
+        pdfannoVersion = aPdfannoVersion;
+        pdfextractVersion = aPdfextractVersion;
+        spans = new ArrayList<>();
+        relations = new ArrayList<>();
+        colorMap = new ColorMap("#808080");
     }
 
     public String getPdfannoVersion()
@@ -95,15 +101,14 @@ public class AnnoFile
         return colorMap;
     }
 
-    @Override
-    public String toString()
+    public String getAnnoFileContent()
     {
         StringBuilder sb = new StringBuilder();
         sb.append("pdfanno = \"").append(pdfannoVersion).append("\"\n");
         sb.append("pdfextract = \"").append(pdfextractVersion).append("\"\n");
         sb.append("\n");
-        spans.forEach(span -> sb.append(span.toString()).append("\n"));
-        relations.forEach(relation -> sb.append(relation.toString()).append("\n"));
+        spans.forEach(span -> sb.append(span.toAnnoFileString()).append("\n"));
+        relations.forEach(relation -> sb.append(relation.toAnnoFileString()).append("\n"));
         return sb.toString();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.AnnoFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
 public class PdfAnnotationEditor
@@ -85,22 +85,31 @@ public class PdfAnnotationEditor
     }
 
     /**
-     * Renders the annotation file for PdfAnno
+     * Renders the PdfAnnoModel.
+     * This includes the anno file and the color map.
      * @param pdftxt Output string of PDFExtract
-     * @return Annotation file
      */
-    public AnnoFile renderAnnoFile(String pdftxt) throws IOException
+    public PdfAnnoModel renderPdfAnnoModel(String pdftxt)
     {
-        JCas jCas = getJCasProvider().get();
         if (getModelObject().getProject() != null)
         {
+            JCas jCas;
+            try
+            {
+                jCas = getJCasProvider().get();
+            }
+            catch (IOException e)
+            {
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                return null;
+            }
             PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
-            VDocument vdoc = render(jCas, 0, Integer.MAX_VALUE);
-            AnnoFile annoFile = PdfAnnoRenderer.render(getModelObject(),
+            VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
+            PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
                 vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
-            return annoFile;
+            return pdfAnnoModel;
         }
-
-        throw new IOException("");
+        return null;
     }
 }

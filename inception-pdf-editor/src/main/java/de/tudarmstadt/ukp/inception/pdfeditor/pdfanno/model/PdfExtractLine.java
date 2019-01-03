@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -37,12 +37,12 @@ public class PdfExtractLine
     {
     }
 
-    public PdfExtractLine(int page, int position, String value, String displayPositions)
+    public PdfExtractLine(int aPage, int aPosition, String aValue, String aDisplayPositions)
     {
-        this.page = page;
-        this.position = position;
-        this.value = value;
-        this.displayPositions = displayPositions;
+        page = aPage;
+        position = aPosition;
+        value = aValue;
+        displayPositions = aDisplayPositions;
     }
 
     public int getPage()
@@ -50,9 +50,9 @@ public class PdfExtractLine
         return page;
     }
 
-    public void setPage(int page)
+    public void setPage(int aPage)
     {
-        this.page = page;
+        page = aPage;
     }
 
     public int getPosition()
@@ -60,9 +60,9 @@ public class PdfExtractLine
         return position;
     }
 
-    public void setPosition(int position)
+    public void setPosition(int aPosition)
     {
-        this.position = position;
+        position = aPosition;
     }
 
     public String getValue()
@@ -70,9 +70,9 @@ public class PdfExtractLine
         return value;
     }
 
-    public void setValue(String value)
+    public void setValue(String aValue)
     {
-        this.value = value;
+        value = aValue;
     }
 
     public String getDisplayPositions()
@@ -80,9 +80,9 @@ public class PdfExtractLine
         return displayPositions;
     }
 
-    public void setDisplayPositions(String displayPositions)
+    public void setDisplayPositions(String aDisplayPositions)
     {
-        this.displayPositions = displayPositions;
+        displayPositions = aDisplayPositions;
     }
 
     @Override

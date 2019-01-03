@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Relation
-    implements Annotation
-{
+public class Relation {
 
     private int head;
 
@@ -27,11 +25,11 @@ public class Relation
 
     private String label;
 
-    public Relation(int head, int tail, String label)
+    public Relation(int aHead, int aTail, String aLabel)
     {
-        this.head = head;
-        this.tail = tail;
-        this.label = label;
+        head = aHead;
+        tail = aTail;
+        label = aLabel;
     }
 
     public int getHead()
@@ -49,8 +47,7 @@ public class Relation
         return label;
     }
 
-    @Override
-    public String toString()
+    public String toAnnoFileString()
     {
         return "[[relations]]\n" +
             "head = \"" + head +  "\"\n" +

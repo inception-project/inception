@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
@@ -23,6 +23,7 @@ import java.io.IOException;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -39,8 +40,9 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.AnnoFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnoPanel
@@ -65,7 +67,7 @@ public class PdfAnnoPanel
 
         add(pdfProvider = new AbstractAjaxBehavior()
         {
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 7715393703216199195L;
 
             @Override
             public void onRequest()
@@ -82,7 +84,7 @@ public class PdfAnnoPanel
 
         add(pdftxtProvider = new AbstractAjaxBehavior()
         {
-            private static final long serialVersionUID = 2L;
+            private static final long serialVersionUID = -8676150164372852265L;
 
             @Override
             public void onRequest()
@@ -109,7 +111,7 @@ public class PdfAnnoPanel
 
         add(annoProvider = new AbstractDefaultAjaxBehavior() {
 
-            private static final long serialVersionUID = 3L;
+            private static final long serialVersionUID = 8501859992311111560L;
 
             @Override
             protected void respond(AjaxRequestTarget aTarget)
@@ -121,14 +123,14 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    AnnoFile annoFile = pdfAnnotationEditor.renderAnnoFile(pdftext);
+                    PdfAnnoModel pdfAnnoModel = pdfAnnotationEditor.renderPdfAnnoModel(pdftext);
                     String script = "setTimeout(function() { " +
                         "var annoFile = `\n" +
-                        annoFile +
+                        pdfAnnoModel.getAnnoFileContent() +
                         "`;\n" +
                         "pdfanno.contentWindow.annoPage.importAnnotation({" +
                         "'primary': true," +
-                        "'colorMap': " + annoFile.getColorMap().toString() + "," +
+                        "'colorMap': " + JSONUtil.toJsonString(pdfAnnoModel.getColorMap()) + "," +
                         "'annotations':[annoFile]}, true);" +
                         "}, 10);";
 
@@ -138,6 +140,9 @@ public class PdfAnnoPanel
                 {
                     log.error("Unable to get PDF text for " + pdfFile.getName()
                         + "with PDFExtractor.", e);
+                    error("Unable to get PDF text for " + pdfFile.getName()
+                        + "with PDFExtractor.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
                 }
             }
         });

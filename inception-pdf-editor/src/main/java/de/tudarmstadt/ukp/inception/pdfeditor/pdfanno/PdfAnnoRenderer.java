@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.AnnoFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
@@ -45,11 +45,11 @@ public class PdfAnnoRenderer
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnoRenderer.class);
 
 
-    public static AnnoFile render(AnnotatorState aState, VDocument aVDoc, String documentText,
-                                  AnnotationSchemaService aAnnotationService,
-                                  PdfExtractFile pdfExtractFile)
+    public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String documentText,
+                                      AnnotationSchemaService aAnnotationService,
+                                      PdfExtractFile pdfExtractFile)
     {
-        AnnoFile annoFile = new AnnoFile("0.5.0", "0.3.2");
+        PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
 
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
@@ -76,15 +76,15 @@ public class PdfAnnoRenderer
                     color = vspan.getColorHint();
                 }
 
-                annoFile.addSpan(
-                    convertToPdfAnnotation(vspan, color, documentText, pdfExtractFile));
+                pdfAnnoModel.addSpan(
+                    convertToPdfAnnoSpan(vspan, color, documentText, pdfExtractFile));
             }
         }
-        return annoFile;
+        return pdfAnnoModel;
     }
 
-    private static Span convertToPdfAnnotation(VSpan vspan, String color, String documentText,
-                                                     PdfExtractFile pdfExtractFile)
+    private static Span convertToPdfAnnoSpan(VSpan vspan, String color, String documentText,
+                                             PdfExtractFile pdfExtractFile)
     {
         VRange range = vspan.getRanges().get(0); // TODO: handle multiple ranges
         // use offset pre and post string to increase uniqueness of annotation text

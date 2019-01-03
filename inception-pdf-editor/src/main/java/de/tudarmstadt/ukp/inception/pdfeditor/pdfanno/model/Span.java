@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
-public class Span
-    implements Annotation
-{
+public class Span {
 
     private int id;
 
@@ -33,25 +31,25 @@ public class Span
 
     private int endPos;
 
-    public Span(int id, int page, String text,
-                int startPos, int endPos)
+    public Span(int aId, int aPage, String aText,
+                int aStartPos, int aEndPos)
     {
-        this.id = id;
-        this.page = page;
-        this.text = text;
-        this.startPos = startPos;
-        this.endPos = endPos;
+        id = aId;
+        page = aPage;
+        text = aText;
+        startPos = aStartPos;
+        endPos = aEndPos;
     }
 
-    public Span(int id, int page, String label, String text,
-                int startPos, int endPos)
+    public Span(int aId, int aPage, String aLabel, String aText,
+                int aStartPos, int aEndPos)
     {
-        this.id = id;
-        this.page = page;
-        this.label = label;
-        this.text = text;
-        this.startPos = startPos;
-        this.endPos = endPos;
+        id = aId;
+        page = aPage;
+        label = aLabel;
+        text = aText;
+        startPos = aStartPos;
+        endPos = aEndPos;
     }
 
     public int getId()
@@ -84,8 +82,7 @@ public class Span
         return endPos;
     }
 
-    @Override
-    public String toString()
+    public String toAnnoFileString()
     {
         return "[[spans]]\n" +
             "id = \"" + id +  "\"\n" +

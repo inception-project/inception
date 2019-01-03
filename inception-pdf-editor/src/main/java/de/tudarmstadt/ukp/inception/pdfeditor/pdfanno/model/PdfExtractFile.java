@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2018
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -22,6 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Represents a PDFExtract file.
+ * This file contains information about the content of a PDF document.
+ * This includes characters and their order and position but also about
+ * draw operations and their positions.
+ */
 public class PdfExtractFile
 {
 
@@ -35,6 +41,9 @@ public class PdfExtractFile
      */
     private Map<Integer, Integer> stringPositionMap;
 
+    /**
+     * Map of line numbers and lines contained in a PDFExtract file.
+     */
     private Map<Integer, PdfExtractLine> extractLines;
 
     public PdfExtractFile(String pdftxt)
@@ -42,11 +51,11 @@ public class PdfExtractFile
         setPdftxt(pdftxt);
     }
 
-    public void setPdftxt(String pdftxt)
+    public void setPdftxt(String aPdftxt)
     {
-        this.stringPositionMap = new HashMap<>();
-        this.extractLines = new HashMap<>();
-        this.pdftxt = pdftxt;
+        stringPositionMap = new HashMap<>();
+        extractLines = new HashMap<>();
+        pdftxt = aPdftxt;
 
         StringBuilder sb = new StringBuilder();
         String[] lines = pdftxt.split("\n");
@@ -89,9 +98,6 @@ public class PdfExtractFile
 
     /**
      * Gets PdfExtractLines between the given range in the string-only content
-     * @param start
-     * @param end
-     * @return
      */
     public List<PdfExtractLine> getStringPdfExtractLines(int start, int end)
     {
