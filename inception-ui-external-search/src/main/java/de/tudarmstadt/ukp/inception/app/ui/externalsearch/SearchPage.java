@@ -324,27 +324,26 @@ public class SearchPage extends ApplicationPageBase
             String title = defaultIfBlank(result.getDocumentTitle(),
                             defaultIfBlank(result.getDocumentId(), 
                             defaultIfBlank(result.getUri(), "<no title>")));
+            boolean existsSourceDocument =  documentService.existsSourceDocument(project, documentTitle);
             
             link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            add(new Label("importStatus", () -> 
-                    documentService.existsSourceDocument(project, documentTitle) ? "imported"
-                            : "not imported"));
+            add(new Label("importStatus", () ->
+                    existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
-                    .add(visibleWhen(() -> 
-                        !documentService.existsSourceDocument(project, documentTitle))));
+                    .add(visibleWhen(() -> !existsSourceDocument)));
             add(new LambdaAjaxLink("openLink", _target -> {
                 PageParameters pageParameters = new PageParameters()
                     .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
                     .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
                         documentService.getSourceDocument(project, documentTitle).getId())
-                    .add(WebAnnoConst.PAGE_PARAM_FOCUS, 1);
+                    .add(WebAnnoConst.PAGE_PARAM_FOCUS, 1); // set focus to line 1
                 setResponsePage(AnnotationPage.class, pageParameters);
             }).add(
-                visibleWhen(() -> documentService.existsSourceDocument(project, documentTitle))));
+                visibleWhen(() -> existsSourceDocument)));
         }
     }
 }
