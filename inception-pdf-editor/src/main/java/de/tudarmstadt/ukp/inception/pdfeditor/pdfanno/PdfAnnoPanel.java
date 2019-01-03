@@ -61,7 +61,7 @@ public class PdfAnnoPanel
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
-                        PdfAnnotationEditor pdfAnnotationEditor)
+                        PdfAnnotationEditor aPdfAnnotationEditor)
     {
         super(aId, aModel);
 
@@ -123,7 +123,7 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    PdfAnnoModel pdfAnnoModel = pdfAnnotationEditor.renderPdfAnnoModel(pdftext);
+                    PdfAnnoModel pdfAnnoModel = aPdfAnnotationEditor.renderPdfAnnoModel(pdftext);
                     String script = "setTimeout(function() { " +
                         "var annoFile = `\n" +
                         pdfAnnoModel.getAnnoFileContent() +
@@ -152,9 +152,9 @@ public class PdfAnnoPanel
             private static final long serialVersionUID = 1421253898149294234L;
 
             @Override
-            protected final void onComponentTag(final ComponentTag tag)
+            protected final void onComponentTag(final ComponentTag aTag)
             {
-                checkComponentTag(tag, "iframe");
+                checkComponentTag(aTag, "iframe");
 
                 String viewerUrl = RequestCycle.get().getUrlRenderer()
                         .renderFullUrl(Url.parse("resources/pdfanno/index.html"));
@@ -170,9 +170,9 @@ public class PdfAnnoPanel
 
                 viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl;
 
-                tag.put("src", viewerUrl);
+                aTag.put("src", viewerUrl);
 
-                super.onComponentTag(tag);
+                super.onComponentTag(aTag);
             }
         });
     }

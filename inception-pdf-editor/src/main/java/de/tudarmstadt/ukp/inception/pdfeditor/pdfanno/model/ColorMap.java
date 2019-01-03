@@ -51,9 +51,9 @@ public class ColorMap
         return span;
     }
 
-    public void addSpan(String name, String color)
+    public void addSpan(String aName, String aColor)
     {
-        span.put(name, color);
+        span.put(aName, aColor);
     }
 
     public Map<String, String> getRelation()
@@ -61,8 +61,8 @@ public class ColorMap
         return relation;
     }
 
-    public void addRelation(String name, String color)
+    public void addRelation(String aName, String aColor)
     {
-        relation.put(name, color);
+        relation.put(aName, aColor);
     }
 }

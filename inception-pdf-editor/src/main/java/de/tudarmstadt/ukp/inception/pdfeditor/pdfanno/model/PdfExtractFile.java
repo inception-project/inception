@@ -46,9 +46,9 @@ public class PdfExtractFile
      */
     private Map<Integer, PdfExtractLine> extractLines;
 
-    public PdfExtractFile(String pdftxt)
+    public PdfExtractFile(String aPdftxt)
     {
-        setPdftxt(pdftxt);
+        setPdftxt(aPdftxt);
     }
 
     public void setPdftxt(String aPdftxt)
@@ -99,18 +99,18 @@ public class PdfExtractFile
     /**
      * Gets PdfExtractLines between the given range in the string-only content
      */
-    public List<PdfExtractLine> getStringPdfExtractLines(int start, int end)
+    public List<PdfExtractLine> getStringPdfExtractLines(int aStart, int aEnd)
     {
         List<PdfExtractLine> lines = new ArrayList<>();
-        for (int i = start; i <= end; i++)
+        for (int i = aStart; i <= aEnd; i++)
         {
             lines.add(getStringPdfExtractLine(i));
         }
         return lines;
     }
 
-    public PdfExtractLine getStringPdfExtractLine(int position)
+    public PdfExtractLine getStringPdfExtractLine(int aPosition)
     {
-        return extractLines.get(stringPositionMap.get(position));
+        return extractLines.get(stringPositionMap.get(aPosition));
     }
 }

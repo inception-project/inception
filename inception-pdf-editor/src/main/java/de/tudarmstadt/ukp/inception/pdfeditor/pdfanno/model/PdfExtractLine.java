@@ -86,10 +86,10 @@ public class PdfExtractLine
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PdfExtractLine that = (PdfExtractLine) o;
+    public boolean equals(Object aObject) {
+        if (this == aObject) return true;
+        if (aObject == null || getClass() != aObject.getClass()) return false;
+        PdfExtractLine that = (PdfExtractLine) aObject;
         return page == that.page &&
             position == that.position &&
             Objects.equals(value, that.value) &&

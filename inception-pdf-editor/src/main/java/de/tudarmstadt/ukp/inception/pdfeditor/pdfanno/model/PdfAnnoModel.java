@@ -63,16 +63,16 @@ public class PdfAnnoModel
         return spans;
     }
 
-    public boolean addSpan(Span span)
+    public boolean addSpan(Span aSpan)
     {
-        if (span ==  null) {
+        if (aSpan ==  null) {
             return false;
         } else {
-            spans.add(span);
+            spans.add(aSpan);
             // Span label contains color value as the real label won't be used in PDFAnno
             // the real label is seen in the right panel this is a workaround if two equal
             // labels have different colors also it reduces mapsize.
-            colorMap.addSpan(span.getLabel(), span.getLabel());
+            colorMap.addSpan(aSpan.getLabel(), aSpan.getLabel());
             return true;
         }
     }
@@ -82,16 +82,16 @@ public class PdfAnnoModel
         return relations;
     }
 
-    public boolean addRelation(Relation relation)
+    public boolean addRelation(Relation aRelation)
     {
-        if (relation == null) {
+        if (aRelation == null) {
             return false;
         } else {
-            relations.add(relation);
+            relations.add(aRelation);
             // Relation label contains color value as the real label won't be used in PDFAnno
             // the real label is seen in the right panel this is a workaround if two equal
             // labels have different colors, also it reduces mapsize.
-            colorMap.addRelation(relation.getLabel(), relation.getLabel());
+            colorMap.addRelation(aRelation.getLabel(), aRelation.getLabel());
             return true;
         }
     }

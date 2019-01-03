@@ -45,9 +45,9 @@ public class PdfAnnoRenderer
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnoRenderer.class);
 
 
-    public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String documentText,
+    public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
-                                      PdfExtractFile pdfExtractFile)
+                                      PdfExtractFile aPdfExtractFile)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
 
@@ -77,41 +77,41 @@ public class PdfAnnoRenderer
                 }
 
                 pdfAnnoModel.addSpan(
-                    convertToPdfAnnoSpan(vspan, color, documentText, pdfExtractFile));
+                    convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile));
             }
         }
         return pdfAnnoModel;
     }
 
-    private static Span convertToPdfAnnoSpan(VSpan vspan, String color, String documentText,
-                                             PdfExtractFile pdfExtractFile)
+    private static Span convertToPdfAnnoSpan(VSpan aVspan, String aColor, String aDocumentText,
+                                             PdfExtractFile aPdfExtractFile)
     {
-        VRange range = vspan.getRanges().get(0); // TODO: handle multiple ranges
+        VRange range = aVspan.getRanges().get(0); // TODO: handle multiple ranges
         // use offset pre and post string to increase uniqueness of annotation text
         int offset = 20;
         int start = range.getBegin() <= offset ? 0 : range.getBegin() - offset;
-        int end = range.getEnd() < documentText.length() - offset
-            ? range.getEnd() + offset : documentText.length() - 1;
+        int end = range.getEnd() < aDocumentText.length() - offset
+            ? range.getEnd() + offset : aDocumentText.length() - 1;
 
-        String annotatedText = documentText.substring(start, end);
+        String annotatedText = aDocumentText.substring(start, end);
         String preText = annotatedText.substring(0,
             (range.getBegin() <= offset ? range.getBegin() - start : offset));
         String postText = annotatedText.substring(annotatedText.length() -
-            (range.getEnd() < documentText.length() - offset
-                ? offset : documentText.length() - range.getEnd()), annotatedText.length()) ;
+            (range.getEnd() < aDocumentText.length() - offset
+                ? offset : aDocumentText.length() - range.getEnd()), annotatedText.length()) ;
         // remove whitespaces as they are not present in PDFExtract text
         String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
 
-        int index = pdfExtractFile.getStringContent().indexOf(cleanAnnotatedText);
+        int index = aPdfExtractFile.getStringContent().indexOf(cleanAnnotatedText);
         if (index < 0) {
-            LOG.error("Could not map exisiting annotation with id " + vspan.getVid().toString());
+            LOG.error("Could not map exisiting annotation with id " + aVspan.getVid().toString());
             return null;
         } else {
             start = index + preText.replaceAll("\\s", "").length() + 1;
             end = index + cleanAnnotatedText.length() - postText.replaceAll("\\s", "").length();
-            PdfExtractLine first = pdfExtractFile.getStringPdfExtractLine(start);
-            PdfExtractLine last = pdfExtractFile.getStringPdfExtractLine(end);
-            return new Span(vspan.getVid().getId(), first.getPage(), color,
+            PdfExtractLine first = aPdfExtractFile.getStringPdfExtractLine(start);
+            PdfExtractLine last = aPdfExtractFile.getStringPdfExtractLine(end);
+            return new Span(aVspan.getVid().getId(), first.getPage(), aColor,
                 cleanAnnotatedText.substring(start - index, end - index).replaceAll("\\s", ""),
                 first.getPosition(), last.getPosition());
         }

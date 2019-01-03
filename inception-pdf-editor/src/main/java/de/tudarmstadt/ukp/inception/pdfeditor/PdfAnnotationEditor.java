@@ -87,9 +87,9 @@ public class PdfAnnotationEditor
     /**
      * Renders the PdfAnnoModel.
      * This includes the anno file and the color map.
-     * @param pdftxt Output string of PDFExtract
+     * @param aPdftxt Output string of PDFExtract
      */
-    public PdfAnnoModel renderPdfAnnoModel(String pdftxt)
+    public PdfAnnoModel renderPdfAnnoModel(String aPdftxt)
     {
         if (getModelObject().getProject() != null)
         {
@@ -104,7 +104,7 @@ public class PdfAnnotationEditor
                 error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 return null;
             }
-            PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
             VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
             PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
                 vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
