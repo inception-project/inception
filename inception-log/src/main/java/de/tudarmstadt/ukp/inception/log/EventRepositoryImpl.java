@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -41,12 +42,43 @@ public class EventRepositoryImpl
     @PersistenceContext
     private EntityManager entityManager;
 
+    public EventRepositoryImpl()
+    {
+    }
+
+    public EventRepositoryImpl(EntityManager aEntityManager)
+    {
+        entityManager = aEntityManager;
+    }
+
     @Override
     @Transactional
     public void create(LoggedEvent aEvent)
     {
         log.info("{}", aEvent);
         entityManager.persist(aEvent);
+    }
+
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
+            int aSize, long recommenderId)
+    {
+        String query = String.join("\n",
+                "FROM LoggedEvent WHERE ",
+                "user=:user AND ",
+                "project = :project AND ",
+                "event = :event AND ",
+                "details LIKE :details ",
+                "ORDER BY created DESC");
+
+        return entityManager.createQuery(query, LoggedEvent.class)
+                .setParameter("user", aUsername)
+                .setParameter("project", aProject.getId())
+                .setParameter("event", aEventType)
+                .setParameter("details", "%\"recommenderId\":" + recommenderId + "%")
+                .setMaxResults(aSize)
+                .getResultList();
     }
     
     @Override

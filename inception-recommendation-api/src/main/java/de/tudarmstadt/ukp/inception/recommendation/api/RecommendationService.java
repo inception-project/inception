@@ -60,6 +60,10 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
+    List<Recommender> getEnabledRecommenders(Long aRecommenderId);
+    
+    List<Recommender> listEnabledRecommenders(Project aProject);
+
     /**
      * Returns all annotation layers in the given project which have any enabled recommenders.
      */
@@ -106,4 +110,6 @@ public interface RecommendationService
             String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
+    
+    Boolean showLearningCurveDiagram();
 }

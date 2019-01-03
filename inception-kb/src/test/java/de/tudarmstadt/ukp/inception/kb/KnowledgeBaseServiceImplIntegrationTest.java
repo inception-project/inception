@@ -330,7 +330,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
                 kb.getTypeIri().stringValue() };
         
-        assertEquals(listProperties.size(), 4);
+        assertEquals(listProperties.size(), 5);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
@@ -1244,8 +1244,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
-            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
+            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
+            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1527,6 +1527,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String classIri = "http://www.w3.org/2002/07/owl#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
@@ -1535,8 +1536,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
         KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
-            fullTextSearchIri);
+            subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri, fullTextSearchIri);
         KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
         testProfile.setName(name);
         testProfile.setMapping(testMapping);
@@ -1550,6 +1551,25 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .isEqualTo(SchemaProfile.OWLSCHEMA);
     }
 
+    @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
+    {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+
+        String conceptId = sut.createConcept(kb, buildConcept()).getIdentifier();
+        String instanceId = sut.createInstance(kb, buildInstance()).getIdentifier();
+        String propertyId = sut.createProperty(kb, buildProperty()).getIdentifier();
+
+        assertThat(sut.readKBIdentifier(kb, conceptId).get())
+            .as("Check that reading a concept id returns an instance of KBConcept")
+            .isInstanceOf(KBConcept.class);
+        assertThat(sut.readKBIdentifier(kb, instanceId).get())
+            .as("Check that reading an instance id returns an instance of KBInstance")
+            .isInstanceOf(KBInstance.class);
+        assertThat(sut.readKBIdentifier(kb, propertyId).get())
+            .as("Check that reading a property id returns an instance of KBProperty")
+            .isInstanceOf(KBProperty.class);
+    }
+    
     // Helper
     private Project createProject(String name) {
         return testFixtures.createProject(name);

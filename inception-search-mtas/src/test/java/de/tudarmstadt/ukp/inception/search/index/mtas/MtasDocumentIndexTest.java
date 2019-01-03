@@ -594,11 +594,12 @@ public class MtasDocumentIndexTest
                 @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
         {
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService()),
+                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService(),
+                            null),
                     new RelationLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService()),
+                            annotationSchemaService(), null),
                     new ChainLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService())));
+                            annotationSchemaService(), null)));
         }
     }
 }
