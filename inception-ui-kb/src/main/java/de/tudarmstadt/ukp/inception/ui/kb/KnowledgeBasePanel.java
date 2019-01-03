@@ -18,10 +18,14 @@
 package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -37,17 +41,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -79,6 +91,7 @@ public class KnowledgeBasePanel
     private IModel<KnowledgeBase> kbModel;
     private Model<KBHandle> selectedConceptHandle = Model.of();
     private Model<KBHandle> selectedPropertyHandle = Model.of();
+    private Model<KBHandle> searchHandleModel = Model.of();
 
     private WebMarkupContainer detailContainer;
     private ConceptTreePanel conceptTreePanel;
@@ -100,17 +113,7 @@ public class KnowledgeBasePanel
         
         // add the selector for the knowledge bases
         DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
-        {
-
-            private static final long serialVersionUID = -2635546743813402116L;
-
-            @Override
-            public boolean isVisible() {
-                // only visible if there is a choice between two or more KBs
-                return getChoices().size() >= 2;
-            }
-        };
+            LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             details = details.replaceWith(new EmptyPanel(DETAILS_MARKUP_ID));
             t.add(KnowledgeBasePanel.this);
@@ -119,6 +122,8 @@ public class KnowledgeBasePanel
         ddc.setModel(aKbModel);
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
+
+        add(createSearchAutoCompleteTextField("searchBar", searchHandleModel, aProjectModel));
 
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
@@ -130,6 +135,72 @@ public class KnowledgeBasePanel
         
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
+    }
+
+    private AutoCompleteTextField<KBHandle> createSearchAutoCompleteTextField(String aId,
+        IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
+    {
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<>(aId, aHandleModel,
+            new TextRenderer<>("uiLabel"))
+        {
+            private static final long serialVersionUID = -1955006051950156603L;
+
+            @Override
+            protected List<KBHandle> getChoices(String input)
+            {
+                List<KBHandle> choices = kbService
+                    .getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
+                        ConceptFeatureValueType.ANY_OBJECT, aProjectModel.getObject());
+
+                // Sort and filter results
+                String inputLowerCase = input != null ? input.toLowerCase() : "";
+                choices = choices.stream()
+                    .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(inputLowerCase))
+                    .sorted(Comparator.comparing(KBObject::getUiLabel))
+                    .collect(Collectors.toList());
+
+                return KBHandle.distinctByIri(choices);
+
+            }
+
+            @Override
+            protected void onSelected(AjaxRequestTarget target)
+            {
+                KBHandle selectedResource = this.getModelObject();
+                Optional<KBObject> optKbObject = kbService
+                    .readKBIdentifier(kbModel.getObject(), selectedResource.getIdentifier());
+
+                if (optKbObject.isPresent()) {
+                    KBObject kbObject = optKbObject.get();
+                    if (kbObject instanceof KBConcept) {
+                        send(getPage(), Broadcast.BREADTH,
+                            new AjaxConceptSelectionEvent(target, selectedResource, true));
+                    }
+                    else if (kbObject instanceof KBInstance) {
+                        KBHandle conceptForInstance = kbService
+                            .getConceptForInstance(kbModel.getObject(),
+                                this.getModelObject().getIdentifier(), true).get(0);
+
+                        send(getPage(), Broadcast.BREADTH,
+                            new AjaxConceptSelectionEvent(target, conceptForInstance, true));
+
+                        send(getPage(), Broadcast.BREADTH,
+                            new AjaxInstanceSelectionEvent(target, this.getModelObject()));
+                    }
+                }
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+
+                behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
+            }
+        };
+
+        return field;
     }
     
     /**

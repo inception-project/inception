@@ -22,11 +22,16 @@
   <wicket:panel>
     <div class="flex-v-container flex-sidebar">
       <!-- knowledge base selector -->
-      <div wicket:enclosure="knowledgebases" class="flex-v-container">
+        <div class="form-group row">
+      <div wicket:enclosure="knowledgebases" class="flex-v-container col-sm-4">
         <div class="form-group">
           <select wicket:id="knowledgebases" class="form-control input-lg"></select>
         </div>
       </div>
+            <div class="col-sm-8">
+                <input style="width: 100%;" wicket:id="searchBar" type="text"/>
+            </div>
+        </div>
       <div class="flex-content flex-v-container flex-65" wicket:id="concepts"></div>
       <div class="flex-content flex-v-container flex-no-gutter" wicket:id="properties"></div>
     </div>
