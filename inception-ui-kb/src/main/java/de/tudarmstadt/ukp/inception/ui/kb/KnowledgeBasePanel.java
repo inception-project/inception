@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -34,6 +35,7 @@ import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
@@ -123,7 +125,9 @@ public class KnowledgeBasePanel
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
 
-        add(createSearchAutoCompleteTextField("searchBar", searchHandleModel, aProjectModel));
+        add(createSearchAutoCompleteTextField("searchBar", searchHandleModel, aProjectModel)
+            .add(AttributeModifier.append("placeholder",
+                new ResourceModel("page.search.placeholder"))));
 
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
