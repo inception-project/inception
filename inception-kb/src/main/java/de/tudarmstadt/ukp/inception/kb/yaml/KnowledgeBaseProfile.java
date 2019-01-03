@@ -17,16 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class KnowledgeBaseProfile implements Serializable
 {
+    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
     private static final long serialVersionUID = -2684575269500649910L;
 
     @JsonProperty("name")
@@ -92,6 +102,18 @@ public class KnowledgeBaseProfile implements Serializable
     public void setRootConcepts(List<String> rootConcepts)
     {
         this.rootConcepts = rootConcepts;
+    }
+
+    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
+        throws IOException
+    {
+        try (Reader r = new InputStreamReader(
+            KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
+            StandardCharsets.UTF_8)) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            return mapper.readValue(r,
+                new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+        }
     }
 
     @Override public boolean equals(Object o)

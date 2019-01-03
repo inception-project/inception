@@ -168,7 +168,7 @@ public class ConceptInstancePanel
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
         boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
             vf.createIRI(changedStatement.getInstance().getIdentifier()),
-            kbModel.getObject().getLabelIri(), null).isPresent();
+            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
         return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
             kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
                 && !hasMainLabel);
