@@ -39,7 +39,7 @@ import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
@@ -268,10 +268,10 @@ public class MtasUimaParserTest
         when(annotationSchemaService.listAnnotationFeature(depLayer))
                 .thenReturn(asList(dependencyLayerGovernor, dependencyLayerDependent));
 
-        when(annotationSchemaService.getAdapter(posLayer)).thenReturn(
-                new SpanAdapter(featureSupportRegistry, null, posLayer, asList(posLayerValue)));
+        when(annotationSchemaService.getAdapter(posLayer)).thenReturn(new SpanAdapter(
+                featureSupportRegistry, null, posLayer, asList(posLayerValue), null));
 
-        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new ArcAdapter(
+        when(annotationSchemaService.getAdapter(depLayer)).thenReturn(new RelationAdapter(
                 featureSupportRegistry, null, depLayer, depLayer.getId(), depLayer.getName(),
                 WebAnnoConst.FEAT_REL_TARGET, WebAnnoConst.FEAT_REL_SOURCE,
                 depLayer.getAttachFeature().getName(), depLayer.getAttachType().getName(),

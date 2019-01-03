@@ -1,4 +1,4 @@
-// Copyright 2015
+// Copyright 2018
 // Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
@@ -14,4 +14,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// No migration instructions so far.
+[[sect_settings_recommender]]
+=== Recommender Settings
+
+This section describes the global settings related to the recommender module.
+
+.Recommender settings overview
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| show.learning.curve.diagram
+| Show learning curve diagram on the recommendation sidebar.
+| false
+| true
+|===

@@ -1,0 +1,42 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_log_adapter]]
+= Event Logging Adapters
+
+New logging adapters should be created in the module which provides the event they are logging.
+Logging adapters for events generated outside {product-name} (i.e. in upstream code) are usually
+added to the log module itself.
+
+To add support for a logging a new event, create a Spring component class which implements the
+`EventLoggingAdapter` interface. Implement the following methods depending on the context in which
+the event is triggered:
+
+* `getProject(Event)` if the event is triggered in the context of a specific project (applies to most
+  events);
+* `getDocument(Event)` if the event is related to a specific source document (e.g. applies to
+  events triggered during annotation).
+* `getDocument(Event)` if the event is related to a specific annotator (e.g. applies to
+  events triggered during annotation).
+
+The methods `getEvent`, `getUser` and `getCreated` normally do not need to be implemented.
+
+Most event adapters implement the `getDetails` method. This method must return a JSON string which
+contains any relevant information about the event not covered by the methods above. E.g. for an
+annotation manipulation event, it would contain information helping to identify the annotation and
+the state before and after the manipulation. In order to generate this JSON string, the adapter
+typically contains an inner class called `Details` to which the detail information from the event
+is copied and which is then serialized to JSON using `JSONUtil.toJsonString(...)`.

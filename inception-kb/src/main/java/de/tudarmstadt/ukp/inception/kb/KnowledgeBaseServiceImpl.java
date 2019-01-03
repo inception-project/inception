@@ -977,7 +977,9 @@ public class KnowledgeBaseServiceImpl
 
         if (!aKB.getRootConcepts().isEmpty()) {
             for (IRI conceptIRI : aKB.getRootConcepts()) {
-                KBConcept concept = readConcept(aKB, conceptIRI.stringValue(),aAll).get();
+                KBConcept concept = readConcept(aKB, conceptIRI.stringValue(), aAll)
+                        .orElseThrow(() -> new QueryEvaluationException("Concept not found: " + 
+                                conceptIRI));
                 KBHandle conceptHandle = new KBHandle(concept.getIdentifier(), concept.getName(),
                         concept.getDescription());
                 resultList.add(conceptHandle);
