@@ -14,12 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-[[sect_irischema_knowledge-base]]
-=== Knowledge Base -  IRI Schema
+[[sect_knowledgebase_irischema]]
+= Schema mapping
 
 An IRI Schema defines the following attributes that are used for making queries in a knowledge base.
 
-.IRI Schema Attributes
+.Schema Mapping Attributes
 [cols="3*", options="header"]
 |===
 | Attribute
@@ -63,28 +63,31 @@ An IRI Schema defines the following attributes that are used for making queries 
 | rdfs:comment
 
 |===
-There are multiple classes in the knowledge base module that model the IRI Schema of a knowledge base. All the classes share that they have a single class-attribute for each IRI in the IRI Schema.
-However each class has a different use case. The relevant classes are shown in <<KBClasses, Table 2>>. +
-*Note that if the structure of the general IRI Schema is changed (e.g. a new attribute is added) all the classes need to be adjusted.*
 
-.Knowledge Base & IRI Schema Classes
+There are multiple classes in the knowledge base module that model the IRI Schema of a knowledge 
+base. All the classes share that they have a single class-attribute for each IRI in the IRI Schema.
+However each class has a different use case. The relevant classes are shown <<KBClasses, here>>.
+
+NOTE: If the structure of the general IRI Schema is changed (e.g. a new attribute is added) all 
+      the classes need to be adjusted.*
+
+.Knowledge base & schema mapping classes
 [#KBClasses, cols="2*", options="header"]
 |===
 | Class
 | Usage
 
-| KnowledgeBase.java
+| `KnowledgeBase`
 | General model for a knowledge base in frontend and backend components.
 
-| KnowledgeBaseProfile.java & KnowledgeBaseMapping.java
-| Read pre-configured knowledgebase profiles from a yaml file.
+| `KnowledgeBaseProfile` and  `KnowledgeBaseMapping`
+| Read pre-configured knowledge base profiles from a yaml file.
   The actual IRI Schema is modeled in KnowledgeBaseMapping.java.
-  The yaml file is located at: _.../inception-kb/src/main/resources/de/tudarmstadt/ukp/inception/kb/knowledgebase-profiles.yaml_
+  The yaml file is located at: `.../inception-kb/src/main/resources/de/tudarmstadt/ukp/inception/kb/knowledgebase-profiles.yaml`
 
-| SchemaProfile.java
+| `SchemaProfile`
 | Defines some specific IRI Schemas (e.g RDF, WIKIDATA, SKOS).
 
-| ExportedKnowledgeBase.java
-| Export a knowledgebase configuration when a project is exported.
-
+| `ExportedKnowledgeBase`
+| Export a knowledge base configuration when a project is exported.
 |===
