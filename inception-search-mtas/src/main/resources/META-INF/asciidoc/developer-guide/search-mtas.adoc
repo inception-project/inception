@@ -1,6 +1,5 @@
-[[sect_search-mtas]]
-
-== Mtas Index
+[[sect_search_mtas]]
+= Mtas Index
 
 The Mtas index is implemented in the *MtasDocumentIndex* and *MtasDocumentIndexFactory* classes. Furthermore, the *MtasUimaParser* class provides a parser to be used by Lucene when adding a new document to the index.
 
