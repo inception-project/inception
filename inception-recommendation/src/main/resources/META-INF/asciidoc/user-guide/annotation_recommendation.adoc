@@ -20,3 +20,8 @@ all recommendations are shown, even if an annotation at the given position alrea
 to save the new values, press *Apply*.
 
 image::recommendation3.png[align="center"]
+
+=== Learning Curve Diagram
+
+On the bottom of the recommendation sidebar, learning curve diagram is shown. It plots a line for every recommender associated with the project. The learning curve line depicts the scores from a number of recent evaluations of a recommender. The yaxis of the chart represents the scores and the xaxis represents the time indices. For instance, if recent 50 evaluations are plotted, xaxis would be 0-50 with 50 being the latest point in time relative to the other points. Also, if the number of evaluations calculated so far are less than 50 then lesser points are shown on the xaxis. The lines are only plotted for the enabled recommenders.
+

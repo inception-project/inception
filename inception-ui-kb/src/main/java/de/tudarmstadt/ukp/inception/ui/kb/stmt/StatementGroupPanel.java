@@ -105,23 +105,18 @@ public class StatementGroupPanel extends Panel {
         }
         add(content);
     }
-    
-    private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
-        groupModel.getObject().setProperty(form.getModelObject());
-        
-        // replace content to show existing statement group with a new, empty statement
-        ExistingStatementGroupFragment fragment = new ExistingStatementGroupFragment(
-                CONTENT_MARKUP_ID);
-        fragment.actionAddValue(target);
-        content = content.replaceWith(fragment);
-        
-        target.add(this);
+
+    /**
+     * Add a new prototype statement using this group's instance and its current property
+     * @param aStmtGroupBean a {@link StatementGroupBean}
+     */
+    private void addStatementProto(StatementGroupBean aStmtGroupBean) {
+        KBStatement statementProto = new KBStatement(
+            aStmtGroupBean.getInstance(),
+            aStmtGroupBean.getProperty());
+
+        aStmtGroupBean.getStatements().add(statementProto);
     }
-    
-    private void actionCancelNewProperty(AjaxRequestTarget target) {
-        StatementGroupBean bean = groupModel.getObject();
-        send(getPage(), Broadcast.BREADTH, new AjaxStatementGroupChangedEvent(target, bean, true));
-    }    
     
     private class NewStatementGroupFragment extends Fragment implements Focusable {
 
@@ -144,9 +139,8 @@ public class StatementGroupPanel extends Panel {
             form.add(type);
             focusComponent = type;
             
-            form.add(new LambdaAjaxButton<>("create", StatementGroupPanel.this::actionNewProperty));
-            form.add(new LambdaAjaxLink("cancel",
-                    StatementGroupPanel.this::actionCancelNewProperty));
+            form.add(new LambdaAjaxButton<>("create", this::actionNewProperty));
+            form.add(new LambdaAjaxLink("cancel", this::actionCancelNewProperty));
             add(form);
         }
         
@@ -200,6 +194,25 @@ public class StatementGroupPanel extends Panel {
             
             properties.removeAll(existingPropertyHandles);
             return properties;
+        }
+
+        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
+            groupModel.getObject().setProperty(form.getModelObject());
+
+            // replace content to show existing statement group with a new, empty statement
+            ExistingStatementGroupFragment fragment = new ExistingStatementGroupFragment(
+                CONTENT_MARKUP_ID);
+            addStatementProto(groupModel.getObject());
+            content = content.replaceWith(fragment);
+
+            target.add(StatementGroupPanel.this);
+        }
+
+        private void actionCancelNewProperty(AjaxRequestTarget target)
+        {
+            StatementGroupBean bean = groupModel.getObject();
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxStatementGroupChangedEvent(target, bean, true));
         }
         
         @Override
@@ -346,13 +359,7 @@ public class StatementGroupPanel extends Panel {
         }
 
         private void actionAddValue(AjaxRequestTarget target) {
-            // add a new prototype statement using this group's instance and its current property
-            KBStatement statementProto = new KBStatement(
-                groupModel.getObject().getInstance(),
-                groupModel.getObject().getProperty());
-
-            groupModel.getObject().getStatements().add(statementProto);
-
+            addStatementProto(groupModel.getObject());
             target.add(statementListWrapper);
         }
     }

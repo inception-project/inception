@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +43,7 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -53,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -88,6 +91,18 @@ public class RecommendationServiceImpl
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
     private @Autowired RecommendationScheduler scheduler;
     
+    @Value("${show.learning.curve.diagram:false}")
+    public Boolean showLearningCurveDiagram;
+    
+    public RecommendationServiceImpl()
+    {
+    }
+    
+    public RecommendationServiceImpl(EntityManager entityManager)
+    {
+        this.entityManager = entityManager;
+    }
+
     private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
@@ -231,6 +246,35 @@ public class RecommendationServiceImpl
     
     @Override
     @Transactional
+    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "id = :id AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("id", aRecommenderId)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
         List<Recommender> settings = entityManager
@@ -357,16 +401,16 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, aBegin, aEnd);
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation
-            address = WebAnnoCasUtil.getAddr(annoFS);
+            address = getAddr(annoFS);
         }
         else {
             // ... if not, then we create a new annotation - this also takes care of attaching to 
             // an annotation if necessary
-            address = adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd);
+            address = getAddr(adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd));
         }
 
         // Update the feature value
@@ -525,5 +569,10 @@ public class RecommendationServiceImpl
             
             setActiveRecommenders(newActiveRecommenders);
         }
+    }
+    
+    @Override
+    public Boolean showLearningCurveDiagram() {
+        return showLearningCurveDiagram;
     }
 }
