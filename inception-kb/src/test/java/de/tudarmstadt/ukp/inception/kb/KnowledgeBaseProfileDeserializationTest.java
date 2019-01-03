@@ -29,9 +29,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -44,7 +42,7 @@ public class KnowledgeBaseProfileDeserializationTest
     private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
 
     @Test
-    public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
+    public void checkThatDeserializationWorks() throws IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
         List<String> rootConcepts =  new ArrayList<>();

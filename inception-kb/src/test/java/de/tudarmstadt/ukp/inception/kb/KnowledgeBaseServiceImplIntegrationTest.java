@@ -75,7 +75,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
@@ -1512,43 +1511,13 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles() throws IOException {
-        Map<String, KnowledgeBaseProfile> profiles = sut.readKnowledgeBaseProfiles();
+        Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
                 assertThat(key).isNotNull();
             });
 
-    }
-
-    @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
-    {
-        String name = "Test KB";
-        String classIri = "http://www.w3.org/2002/07/owl#Class";
-        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-        String label = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
-
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, fullTextSearchIri);
-        KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
-        testProfile.setName(name);
-        testProfile.setMapping(testMapping);
-
-        KnowledgeBase testKb = new KnowledgeBase();
-        testKb.applyMapping(testMapping);
-
-        assertThat(sut.checkSchemaProfile(testProfile))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
-        assertThat(sut.checkSchemaProfile(testKb))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
     }
 
     @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
@@ -1569,7 +1538,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
     }
-    
+
     // Helper
     private Project createProject(String name) {
         return testFixtures.createProject(name);

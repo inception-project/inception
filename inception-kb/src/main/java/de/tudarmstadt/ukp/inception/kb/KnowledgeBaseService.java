@@ -535,23 +535,6 @@ public interface KnowledgeBaseService
     boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
 
     /**
-     * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
-     * @param aProfile the profile that is to be checked
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones)
-     */
-    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
-
-    /**
-     * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
-     * the schema profiles defined in {@link SchemaProfile}
-     * @param aKb
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
-     */
-    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
-
-    /**
      * Checks whether a property is a base property
      * @param propertyIdentifier the property that is to be checked
      * @param aKB the KB
