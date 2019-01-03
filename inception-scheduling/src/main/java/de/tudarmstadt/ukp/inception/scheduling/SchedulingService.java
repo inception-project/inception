@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,37 +35,85 @@ public class SchedulingService
         implements DisposableBean
 {
     private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
-    private static final int NUMBER_OF_THREADS = 10;
+
+    private static final int NUMBER_OF_THREADS = 4;
+    private static final int QUEUE_SIZE = 100;
 
     private final ApplicationContext applicationContext;
-    private final ExecutorService executor;
+    private final ThreadPoolExecutor executor;
+
+    private final List<Task> runningTasks;
 
     @Autowired
     public SchedulingService(ApplicationContext aApplicationContext)
     {
         applicationContext = aApplicationContext;
-
-        executor = Executors.newFixedThreadPool(NUMBER_OF_THREADS);
+        executor = new IntrospectiveThreadPoolExecutor(NUMBER_OF_THREADS, QUEUE_SIZE,
+                this::beforeExecute, this::afterExecute);
+        runningTasks = Collections.synchronizedList(new ArrayList<>());
     }
 
-    public void enqueue(Runnable aRunnable)
+    private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
+        runningTasks.add((Task) aRunnable);
+    }
+
+    private void afterExecute(Runnable aRunnable, Throwable aThrowable)
+    {
+        runningTasks.remove(aRunnable);
+    }
+
+    public List<Task> getScheduledTasks()
+    {
+        ArrayList<Task> result = new ArrayList<>();
+        executor.getQueue().forEach(r -> result.add((Task) r));
+        return result;
+    }
+
+    public List<Task> getRunningTasks()
+    {
+        // We return copy here, as else the list the receiver sees might be updated
+        // when new tasks are running or existing ones stopped.
+        return new ArrayList<>(runningTasks);
+    }
+
+    public List<Task> getScheduledAndRunningTasks()
+    {
+        ArrayList<Task> result = new ArrayList<>();
+        result.addAll(getScheduledTasks());
+        result.addAll(getRunningTasks());
+        return result;
+    }
+
+    public void enqueue(Task aTask)
+    {
+        // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
-        factory.autowireBean(aRunnable);
-        factory.initializeBean(aRunnable, "transientTask");
+        factory.autowireBean(aTask);
+        factory.initializeBean(aTask, "transientTask");
 
-        executor.execute(aRunnable);
+        executor.execute(aTask);
     }
 
-    public void stopAllTasksForUser(String aUserName)
+    /**
+     * Removes all task for the user with name {@code aUsername} from the scheduler's queue.
+     * @param aUserName The name of the user whose tasks will be removed.
+     */
+    public synchronized void stopAllTasksForUser(String aUserName)
     {
-        // TODO: Implement me
+        // TODO: Stop the running tasks also
+        executor.getQueue().removeIf(e -> {
+            Task task = (Task) e;
+            return task.getUser().getUsername().equals(aUserName);
+        });
     }
 
     @Override
-    public void destroy() throws Exception
+    public void destroy()
     {
         log.info("Shutting down scheduling service!");
         executor.shutdownNow();
     }
+
+
 }

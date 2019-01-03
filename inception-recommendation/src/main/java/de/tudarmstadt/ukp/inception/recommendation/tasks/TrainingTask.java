@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
+package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -64,7 +65,7 @@ public class TrainingTask
 
     public TrainingTask(User aUser, Project aProject)
     {
-        super(aProject, aUser);
+        super(aUser, aProject);
     }
     
     @Override

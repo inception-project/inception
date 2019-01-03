@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
+package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
@@ -63,9 +64,9 @@ public class SelectionTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
 
-    public SelectionTask(User aUser, Project aProject)
+    public SelectionTask(Project aProject, User aUser)
     {
-        super(aProject, aUser);
+        super(aUser, aProject);
     }
 
     @Override

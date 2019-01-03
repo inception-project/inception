@@ -76,10 +76,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.SelectionTask;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.Task;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * The implementation of the RecommendationService.
@@ -331,7 +331,7 @@ public class RecommendationServiceImpl
         // The selection task then will start the training once its finished,
         // i.e. we do not start it here.
         if (count % TRAININGS_PER_SELECTION == 0) {
-            Task task = new SelectionTask(user, aProject);
+            Task task = new SelectionTask(aProject, user);
             schedulingService.enqueue(task);
         } else {
             Task task = new TrainingTask(user, aProject);

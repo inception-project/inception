@@ -1,0 +1,139 @@
+package de.tudarmstadt.ukp.inception.scheduling;
+
+import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
+
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.context.ApplicationContext;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+
+public class SchedulingServiceTest {
+
+    @Mock
+    private ApplicationContext mockContext;
+
+    private List<Task> executedTasks;
+
+    private SchedulingService sut;
+
+    @Before
+    public void setUp()
+    {
+        initMocks(this);
+        when(mockContext.getAutowireCapableBeanFactory())
+                .thenReturn(mock(AutowireCapableBeanFactory.class));
+
+        sut = new SchedulingService(mockContext);
+    }
+
+    @After
+    public void tearDown() throws Exception
+    {
+        sut.destroy();
+    }
+
+    @Test
+    public void thatRunningTasksCanBeRetrieved()
+    {
+        List<Task> tasks = asList(
+            buildDummyTask("user1", "project1"),
+            buildDummyTask("user1", "project2"),
+            buildDummyTask("user2", "project1")
+        );
+
+        for (Task task : tasks) {
+            sut.enqueue(task);
+        }
+
+        // Wait until the threads have actually been started
+        await().atMost(1, SECONDS).until(() -> Thread.activeCount() >= 3);
+
+        assertThat(sut.getRunningTasks()).as("All enqueued tasks should be running")
+                .isEqualTo(tasks);
+    }
+
+    @Test
+    public void thatTasksForUserCanBeStopped()
+    {
+        List<Task> tasks = asList(
+                buildDummyTask("testUser", "project1"),
+                buildDummyTask("unimportantUser1", "project1"),
+                buildDummyTask("unimportantUser2", "project2"),
+                buildDummyTask("unimportantUser3", "project3"),
+                buildDummyTask("testUser", "project2"),
+                buildDummyTask("unimportantUser4", "project4"),
+                buildDummyTask("testUser", "project3"),
+                buildDummyTask("unimportantUser1", "project2"),
+                buildDummyTask("testUser", "project4"),
+                buildDummyTask("unimportantUser2", "project3"),
+                buildDummyTask("unimportantUser3", "project4"),
+                buildDummyTask("testUser", "project2"),
+                buildDummyTask("testUser", "project2")
+        );
+        Task[] tasksToRemove = tasks.stream()
+                .filter(t -> t.getUser().getUsername().equals("testUser"))
+                .toArray(Task[]::new);
+
+        for (Task task : tasks) {
+            sut.enqueue(task);
+        }
+
+        sut.stopAllTasksForUser("testUser");
+
+        assertThat(sut.getScheduledTasks()).as("Tasks for 'testUser' should have been removed'")
+                .doesNotContain(tasksToRemove);
+    }
+
+    private User buildUser(String aUsername)
+    {
+        return new User(aUsername);
+    }
+
+    private Project buildProject(String aProjectName)
+    {
+        Project project = new Project();
+        project.setName(aProjectName);
+        return project;
+    }
+
+    private Task buildDummyTask(String aUsername, String aProjectName)
+    {
+        return new DummyTask(buildUser(aUsername), buildProject(aProjectName));
+    }
+
+    /**
+     * DummyTask is a task that does nothing and just sleeps until interrupted. if interrupted,
+     * it just finishes running and returns.
+     */
+    private static class DummyTask extends Task
+    {
+        DummyTask(User aUser, Project aProject)
+        {
+            super(aUser, aProject);
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    break;
+                }
+            }
+        }
+    }
+}
