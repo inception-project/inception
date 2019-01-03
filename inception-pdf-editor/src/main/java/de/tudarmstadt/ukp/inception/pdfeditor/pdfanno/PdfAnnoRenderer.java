@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
@@ -37,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
 
 public class PdfAnnoRenderer
@@ -78,6 +80,26 @@ public class PdfAnnoRenderer
 
                 pdfAnnoModel.addSpan(
                     convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile));
+            }
+
+            for (VArc varc : aVDoc.arcs(layer.getId())) {
+                String labelText;
+                if (varc.getLabelHint() == null) {
+                    labelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
+                }
+                else {
+                    labelText = varc.getLabelHint();
+                }
+
+                String color;
+                if (varc.getColorHint() == null) {
+                    color = getColor(varc, coloringStrategy, labelText);
+                } else {
+                    color = varc.getColorHint();
+                }
+
+                pdfAnnoModel.addRelation(
+                    new Relation(varc.getSource().getId(), varc.getTarget().getId(), color));
             }
         }
         return pdfAnnoModel;
