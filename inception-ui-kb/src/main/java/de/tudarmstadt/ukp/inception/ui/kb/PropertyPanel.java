@@ -95,13 +95,13 @@ public class PropertyPanel extends Panel {
         }
 
         @Override
-        protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-            return new ImportantStatementComparator(sgb -> {
-                String identifier = sgb.getProperty().getIdentifier();
-                return IMPORTANT_PROPERTY_URIS.contains(identifier)
-                    || kbService.isBaseProperty(identifier, kbModel.getObject())
-                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier);
-            });
+        protected Comparator<StatementGroupBean> getStatementGroupComparator()
+        {
+            return new ImportantStatementComparator<>(
+                sgb -> sgb.getProperty().getIdentifier(),
+                identifier -> IMPORTANT_PROPERTY_URIS.contains(identifier)
+                        || kbService.isBaseProperty(identifier, kbModel.getObject())
+                        || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
         }
         
         @Override
