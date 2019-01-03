@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,8 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -73,7 +76,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
+import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.SelectionTask;
+import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.Task;
+import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 /**
  * The implementation of the RecommendationService.
@@ -84,22 +90,28 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int TRAININGS_PER_SELECTION = 5;
+
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private @Autowired RecommendationScheduler scheduler;
+    private @Autowired SchedulingService schedulingService;
     
     @Value("${show.learning.curve.diagram:false}")
     public Boolean showLearningCurveDiagram;
+
+    private final Map<Pair<User, Project>, Integer> trainingTaskCounter;
     
     public RecommendationServiceImpl()
     {
+        trainingTaskCounter = new HashMap<>();
     }
     
     public RecommendationServiceImpl(EntityManager entityManager)
     {
+        this();
         this.entityManager = entityManager;
     }
 
@@ -310,7 +322,23 @@ public class RecommendationServiceImpl
     private void triggerTrainingAndClassification(String aUser, Project aProject)
     {
         User user = userRepository.get(aUser);
-        scheduler.enqueueTask(user, aProject);
+
+        // Update the task count
+        Pair<User, Project> key = new ImmutablePair<>(user, aProject);
+        int count = trainingTaskCounter.getOrDefault(key, 0);
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        if (count % TRAININGS_PER_SELECTION == 0) {
+            Task task = new SelectionTask(user, aProject);
+            schedulingService.enqueue(task);
+        } else {
+            Task task = new TrainingTask(user, aProject);
+            schedulingService.enqueue(task);
+        }
+
+        trainingTaskCounter.put(key, count + 1);
     }
     
     @EventListener
@@ -322,7 +350,7 @@ public class RecommendationServiceImpl
         if (info != null) {
             String username = (String) info.getPrincipal();
             clearState(username);
-            scheduler.stopAllTasksForUser(username);
+            schedulingService.stopAllTasksForUser(username);
         }
     }
 

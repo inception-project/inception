@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -60,7 +60,7 @@ public class TrainingTask
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
-    private @Autowired RecommendationScheduler recommendationScheduler;
+    private @Autowired SchedulingService schedulingService;
 
     public TrainingTask(User aUser, Project aProject)
     {
@@ -72,6 +72,8 @@ public class TrainingTask
     {
         Project project = getProject();
         User user = getUser();
+
+        log.debug("Running training task for user [{}] in project [{}]",  user, project);
 
         // Read the CASes only when they are accessed the first time. This allows us to skip reading
         // the CASes in case that no layer / recommender is available or if no recommender requires
@@ -146,7 +148,8 @@ public class TrainingTask
                 }
             }
         }
-        recommendationScheduler.enqueue(new PredictionTask(user, getProject()));
+
+        schedulingService.enqueue(new PredictionTask(user, getProject()));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)
