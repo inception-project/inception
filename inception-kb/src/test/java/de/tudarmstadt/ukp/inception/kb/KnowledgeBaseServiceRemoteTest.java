@@ -175,6 +175,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setDescriptionIri(RDFS.COMMENT);
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_wine.setSubPropertyIri(RDFS.SUBPROPERTYOF);
             kb_wine.setDefaultLanguage("en");
             kb_wine.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
@@ -281,7 +282,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setDefaultLanguage("en");
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            rootConcepts.add("http://yago-knowledge.org/resource/wordnet_accident_107301336");
             parentChildConcepts = new HashMap<String, String>();
             parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
                     "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");

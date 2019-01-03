@@ -148,11 +148,14 @@ public class KBInstance
 
         if (isNotBlank(name)) {
             Literal nameLiteral;
-            if (language == null) {
-                nameLiteral = vf.createLiteral(name);
+            if (language != null) {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            else if (kb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {
-                nameLiteral = vf.createLiteral(name, language);
+                nameLiteral = vf.createLiteral(name);
             }
             Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
@@ -183,15 +186,15 @@ public class KBInstance
         kbInst.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage())
-            .ifPresent((stmt) -> {
-                kbInst.setName(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
+                .ifPresent((stmt) -> {
+                    kbInst.setName(stmt.getObject().stringValue());
+                    kbInst.originalStatements.add(stmt);
+                    if (stmt.getObject() instanceof Literal) {
+                        Literal literal = (Literal) stmt.getObject();
+                        Optional<String> language = literal.getLanguage();
+                        language.ifPresent(kbInst::setLanguage);
+                    }
+                });
 
         readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
                 aKb.getDefaultLanguage())

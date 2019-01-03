@@ -38,6 +38,10 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
+    // domain and range for cases in which the KBHandle represents a property
+    private String domain;
+    private String range;
+
 
     public KBHandle()
     {
@@ -59,6 +63,26 @@ public class KBHandle
         identifier = aIdentifier;
         name = aLabel;
         description = aDescription;
+    }
+
+    public String getDomain()
+    {
+        return domain;
+    }
+
+    public void setDomain(String aDomain)
+    {
+        domain = aDomain;
+    }
+
+    public String getRange()
+    {
+        return range;
+    }
+
+    public void setRange(String aRange)
+    {
+        range = aRange;
     }
 
     public String getDescription()
@@ -122,6 +146,46 @@ public class KBHandle
     public static KBHandle of(KBObject aObject)
     {
         return new KBHandle(aObject.getIdentifier(), aObject.getUiLabel());
+    }
+
+    public static <T extends KBObject> T convertTo(Class<T> aClass, KBHandle aHandle)
+    {
+        if (aClass == KBConcept.class) {
+            KBConcept concept = new KBConcept();
+            concept.setIdentifier(aHandle.getIdentifier());
+            concept.setKB(aHandle.getKB());
+            concept.setLanguage(aHandle.getLanguage());
+            concept.setDescription(aHandle.getDescription());
+            concept.setName(aHandle.getName());
+            return (T) concept;
+        }
+        else if (aClass == KBInstance.class) {
+            KBInstance instance = new KBInstance();
+            instance.setIdentifier(aHandle.getIdentifier());
+            instance.setKB(aHandle.getKB());
+            instance.setLanguage(aHandle.getLanguage());
+            instance.setDescription(aHandle.getDescription());
+            instance.setName(aHandle.getName());
+            return (T) instance;
+        }
+        else if (aClass == KBProperty.class) {
+            KBProperty property = new KBProperty();
+            property.setIdentifier(aHandle.getIdentifier());
+            property.setKB(aHandle.getKB());
+            property.setLanguage(aHandle.getLanguage());
+            property.setDescription(aHandle.getDescription());
+            property.setName(aHandle.getName());
+            property.setRange(aHandle.getRange());
+            property.setDomain(aHandle.getDomain());
+            return (T) property;
+        }
+        else if (aClass == KBHandle.class) {
+            return (T) aHandle;
+        }
+        else {
+            throw new IllegalArgumentException(
+                "Can not convert KBHandle to class " + aClass.getName());
+        }
     }
 
     public static List<KBHandle> distinctByIri(List<KBHandle> aHandles) {
