@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
@@ -25,12 +28,17 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -39,13 +47,14 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private @SpringBean DocumentService documentService;
-    
+    private @SpringBean AnnotationSchemaService annotationService;
+
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
     {
         super(aId, aModel, aActionHandler, aJCasProvider);
-        
-        add(new PdfAnnoPanel("vis", aModel));
+
+        add(new PdfAnnoPanel("vis", aModel, this));
     }
 
     @Override
@@ -73,5 +82,34 @@ public class PdfAnnotationEditor
         LOG.error(aMessage, aCause);
         error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
         return;
+    }
+
+    /**
+     * Renders the PdfAnnoModel.
+     * This includes the anno file and the color map.
+     * @param aPdftxt Output string of PDFExtract
+     */
+    public PdfAnnoModel renderPdfAnnoModel(String aPdftxt)
+    {
+        if (getModelObject().getProject() != null)
+        {
+            JCas jCas;
+            try
+            {
+                jCas = getJCasProvider().get();
+            }
+            catch (IOException e)
+            {
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                return null;
+            }
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
+            VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
+            PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
+                vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
+            return pdfAnnoModel;
+        }
+        return null;
     }
 }
