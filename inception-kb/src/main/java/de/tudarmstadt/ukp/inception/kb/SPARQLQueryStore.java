@@ -58,6 +58,20 @@ public final class SPARQLQueryStore
         fragment.append("    " + variable + " ").append(aProperty).append(" ")
                 .append(filterVariable).append(" .\n");
         
+        fragment.append(languageFilter(filterVariable, aLanguage));
+
+        fragment.append(" }\n");
+        return fragment.toString();
+    }
+
+    /**
+     * Returns formatted string that filters the given variable for the given language
+     * @param filterVariable
+     * @return
+     */
+    private static final String languageFilter(String filterVariable, String aLanguage) {
+        StringBuilder fragment = new StringBuilder();
+
         if (aLanguage != null) {
             // If a certain language is specified, we look exactly for that
             String escapedLang = NTriplesUtil.escapeString(aLanguage);
@@ -69,7 +83,7 @@ public final class SPARQLQueryStore
             // labels in all the languages being retrieved if we simply didn't apply any filter.
             fragment.append("    FILTER(LANG(").append(filterVariable).append(") = \"\")\n");
         }
-        fragment.append(" }\n");
+
         return fragment.toString();
     }
   
@@ -365,4 +379,17 @@ public final class SPARQLQueryStore
 
     }
 
+    /**
+     * General query for a statement where the object value is language filtered.
+     */
+    public static final String queryForStatementLanguageFiltered(KnowledgeBase aKB,
+        String aLanguage)
+    {
+        return String.join("\n"
+            , "SELECT * WHERE { "
+            , "  ?s ?p ?o "
+            , languageFilter("?o", aLanguage)
+            , "}"
+            , "LIMIT " + aKB.getMaxResults());
+    }
 }
