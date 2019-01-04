@@ -339,8 +339,7 @@ public class SearchPage extends ApplicationPageBase
                 PageParameters pageParameters = new PageParameters()
                     .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
                     .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
-                        documentService.getSourceDocument(project, documentTitle).getId())
-                    .add(WebAnnoConst.PAGE_PARAM_FOCUS, 1); // set focus to line 1
+                        documentService.getSourceDocument(project, documentTitle).getId());
                 setResponsePage(AnnotationPage.class, pageParameters);
             }).add(
                 visibleWhen(() -> existsSourceDocument)));
