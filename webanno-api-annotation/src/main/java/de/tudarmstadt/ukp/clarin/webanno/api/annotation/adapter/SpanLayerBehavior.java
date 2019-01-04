@@ -23,6 +23,7 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 
@@ -32,7 +33,7 @@ public abstract class SpanLayerBehavior
     @Override
     public boolean accepts(LayerSupport<?> aLayerType)
     {
-        return aLayerType instanceof SpanLayerBehavior;
+        return aLayerType instanceof SpanLayerSupport;
     }
 
     public abstract CreateSpanAnnotationRequest onCreate(TypeAdapter aAdapter,
