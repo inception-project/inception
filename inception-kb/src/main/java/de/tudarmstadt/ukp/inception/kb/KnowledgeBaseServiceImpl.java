@@ -36,7 +36,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -110,7 +109,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 
@@ -1469,61 +1467,6 @@ public class KnowledgeBaseServiceImpl
             }
             return false;
         }
-    }
-
-    @Override
-    public SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        KnowledgeBaseMapping mapping = aProfile.getMapping();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb profile corresponds to a known schema profile
-            if (equalsSchemaProfile(profiles[i], mapping.getClassIri(), mapping.getSubclassIri(),
-                    mapping.getTypeIri(), mapping.getSubPropertyIri(), mapping.getDescriptionIri(),
-                    mapping.getLabelIri(), mapping.getPropertyTypeIri(),
-                    mapping.getPropertyLabelIri(), mapping.getPropertyDescriptionIri())) {
-
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    @Override
-    public SchemaProfile checkSchemaProfile(KnowledgeBase aKb)
-    {
-        SchemaProfile[] profiles = SchemaProfile.values();
-        for (int i = 0; i < profiles.length; i++) {
-            // Check if kb has a known schema profile
-            if (equalsSchemaProfile(profiles[i], aKb.getClassIri(), aKb.getSubclassIri(),
-                    aKb.getTypeIri(), aKb.getSubPropertyIri(), aKb.getDescriptionIri(),
-                    aKb.getLabelIri(), aKb.getPropertyTypeIri(), aKb.getPropertyLabelIri(),
-                    aKb.getPropertyDescriptionIri())) {
-                return profiles[i];
-            }
-        }
-        // If the iris don't represent a known schema profile , return CUSTOM
-        return SchemaProfile.CUSTOMSCHEMA;
-    }
-
-    /**
-     * Compares a schema profile to given IRIs. Returns true if the IRIs are the same as in the
-     * profile
-     */
-    private boolean equalsSchemaProfile(SchemaProfile profile, IRI classIri, IRI subclassIri,
-            IRI typeIri, IRI subPropertyIRI, IRI descriptionIri, IRI labelIri, IRI propertyTypeIri,
-            IRI propertyLabelIri, IRI propertyDescriptionIri)
-    {
-        return Objects.equals(profile.getClassIri(), classIri) && 
-                Objects.equals(profile.getSubclassIri(), subclassIri) && 
-                Objects.equals(profile.getTypeIri(), typeIri) && 
-                Objects.equals(profile.getSubPropertyIri(), subPropertyIRI) &&
-                Objects.equals(profile.getDescriptionIri(), descriptionIri) && 
-                Objects.equals(profile.getLabelIri(), labelIri) &&
-                Objects.equals(profile.getPropertyTypeIri(), propertyTypeIri) &&
-                Objects.equals(profile.getPropertyLabelIri(), propertyLabelIri) &&
-                Objects.equals(profile.getPropertyDescriptionIri(), propertyDescriptionIri);
     }
 
     @Override

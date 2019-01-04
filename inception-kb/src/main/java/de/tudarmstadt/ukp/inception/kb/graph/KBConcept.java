@@ -233,19 +233,19 @@ public class KBConcept
         KBConcept kbConcept = new KBConcept();
         kbConcept.setIdentifier(aSubject.stringValue());
         kbConcept.setKB(kb);
-        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage())
-                .ifPresent((stmt) -> {
-                    kbConcept.setName(stmt.getObject().stringValue());
-                    kbConcept.originalStatements.add(stmt);
-                    if (stmt.getObject() instanceof Literal) {
-                        Literal literal = (Literal) stmt.getObject();
-                        Optional<String> language = literal.getLanguage();
-                        language.ifPresent(kbConcept::setLanguage);
-                    }
-                });
 
+        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage(), kb)
+            .ifPresent((stmt) -> {
+                kbConcept.setName(stmt.getObject().stringValue());
+                kbConcept.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbConcept::setLanguage);
+                }
+            });
 
-        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage())
+        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage(), kb)
             .ifPresent((stmt) -> {
                 kbConcept.setDescription(stmt.getObject().stringValue());
                 kbConcept.originalStatements.add(stmt);

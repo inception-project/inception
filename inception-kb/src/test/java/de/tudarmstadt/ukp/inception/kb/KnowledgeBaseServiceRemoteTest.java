@@ -19,11 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,10 +49,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -155,7 +147,7 @@ public class KnowledgeBaseServiceRemoteTest
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        PROFILES = readKnowledgeBaseProfiles();
+        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -412,17 +404,6 @@ public class KnowledgeBaseServiceRemoteTest
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(sutConfig.getKnowledgeBase(), fileName, is);
-        }
-    }
-
-    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
-    {
-        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
-                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
         }
     }
 
