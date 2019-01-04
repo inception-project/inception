@@ -48,7 +48,7 @@ public class SchedulingService
     public SchedulingService(ApplicationContext aApplicationContext)
     {
         applicationContext = aApplicationContext;
-        executor = new IntrospectiveThreadPoolExecutor(NUMBER_OF_THREADS, QUEUE_SIZE,
+        executor = new InspectableThreadPoolExecutor(NUMBER_OF_THREADS, QUEUE_SIZE,
                 this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
     }

@@ -25,16 +25,16 @@ import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
-public class IntrospectiveThreadPoolExecutor
+public class InspectableThreadPoolExecutor
         extends ThreadPoolExecutor
 {
     private final BiConsumer<Thread, Runnable> beforeExecuteCallback;
     private final BiConsumer<Runnable, Throwable> afterExecuteCallback;
 
-    public IntrospectiveThreadPoolExecutor(int aNumberOfThreads,
-                                           int queueSize,
-                                           BiConsumer<Thread, Runnable> aBeforeExecuteCallback,
-                                           BiConsumer<Runnable, Throwable> aAfterExecuteCallback)
+    public InspectableThreadPoolExecutor(int aNumberOfThreads,
+                                         int queueSize,
+                                         BiConsumer<Thread, Runnable> aBeforeExecuteCallback,
+                                         BiConsumer<Runnable, Throwable> aAfterExecuteCallback)
     {
         super(aNumberOfThreads, aNumberOfThreads, 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>(queueSize), buildThreadFactory());
