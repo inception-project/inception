@@ -21,11 +21,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -102,11 +103,13 @@ public class RecommendationServiceImpl
     @Value("${show.learning.curve.diagram:false}")
     public Boolean showLearningCurveDiagram;
 
-    private final Map<Pair<User, Project>, Integer> trainingTaskCounter;
-    
+    private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
+    private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
+
     public RecommendationServiceImpl()
     {
-        trainingTaskCounter = new HashMap<>();
+        trainingTaskCounter = new ConcurrentHashMap<>();
+        states = new ConcurrentHashMap<>();
     }
     
     public RecommendationServiceImpl(EntityManager entityManager)
@@ -115,7 +118,6 @@ public class RecommendationServiceImpl
         this.entityManager = entityManager;
     }
 
-    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
@@ -325,20 +327,18 @@ public class RecommendationServiceImpl
 
         // Update the task count
         Pair<User, Project> key = new ImmutablePair<>(user, aProject);
-        int count = trainingTaskCounter.getOrDefault(key, 0);
+        AtomicInteger count = trainingTaskCounter.putIfAbsent(key, new AtomicInteger(0));
 
         // If it is time for a selection task, we just start a selection task.
         // The selection task then will start the training once its finished,
         // i.e. we do not start it here.
-        if (count % TRAININGS_PER_SELECTION == 0) {
+        if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
             Task task = new SelectionTask(aProject, user);
             schedulingService.enqueue(task);
         } else {
             Task task = new TrainingTask(user, aProject);
             schedulingService.enqueue(task);
         }
-
-        trainingTaskCounter.put(key, count + 1);
     }
     
     @EventListener

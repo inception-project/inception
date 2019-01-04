@@ -65,7 +65,7 @@ public class SchedulingService
 
     public List<Task> getScheduledTasks()
     {
-        ArrayList<Task> result = new ArrayList<>();
+        List<Task> result = new ArrayList<>();
         executor.getQueue().forEach(r -> result.add((Task) r));
         return result;
     }
@@ -79,7 +79,7 @@ public class SchedulingService
 
     public List<Task> getScheduledAndRunningTasks()
     {
-        ArrayList<Task> result = new ArrayList<>();
+        List<Task> result = new ArrayList<>();
         result.addAll(getScheduledTasks());
         result.addAll(getRunningTasks());
         return result;
