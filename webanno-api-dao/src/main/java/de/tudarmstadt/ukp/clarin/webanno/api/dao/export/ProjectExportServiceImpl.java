@@ -114,7 +114,7 @@ public class ProjectExportServiceImpl
     @Override
     @Transactional
     public File exportProject(final ProjectExportRequest aRequest)
-        throws ProjectExportException
+        throws ProjectExportException, IOException
     {
         boolean success = false;
         File exportTempDir = null;
@@ -149,9 +149,6 @@ public class ProjectExportServiceImpl
     
             return projectZipFile;
         }
-        catch (IOException e) {
-            throw new ProjectExportException("Unable to export project", e);
-        }
         finally {
             if (!success && exportTempDir != null) {
                 try {
@@ -165,7 +162,7 @@ public class ProjectExportServiceImpl
     }
     
     private ExportedProject exportProject(ProjectExportRequest aRequest, File aStage)
-        throws ProjectExportException
+        throws ProjectExportException, IOException
     {
         Deque<ProjectExporter> deque = new LinkedList<>(exporters);
         Set<Class<? extends ProjectExporter>> initsSeen = new HashSet<>();
@@ -197,6 +194,11 @@ public class ProjectExportServiceImpl
                     initsDeferred.add(initializer);
                 }
             }
+        }
+        catch (IOException e) {
+            // IOExceptions like java.nio.channels.ClosedByInterruptException should be thrown up
+            // as-is. This allows us to handle export cancellation in the project export UI panel
+            throw e;
         }
         catch (Exception e) {
             throw new ProjectExportException("Project export failed", e);
