@@ -23,7 +23,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.slf4j.Logger;
@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
@@ -60,11 +61,11 @@ public class IRIValuePresenter
 
         LambdaAjaxLink link = new LambdaAjaxLink("link",
             t -> actionIRILinkClicked(t, getKBObject()));
-        link.add(new Label("label", Model.of(getLabel(getKBObject()))));
+        link.add(new Label("label", LoadableDetachableModel.of(() -> getLabel(getKBObject()))));
         add(link);
     }
 
-    Optional<KBObject> getKBObject() {
+    private Optional<KBObject> getKBObject() {
         Object stmtValue = getModelObject().getValue();
         Optional<KBObject> kbObject = kbService
             .readKBIdentifier(kbModel.getObject(), stmtValue.toString());
@@ -94,9 +95,14 @@ public class IRIValuePresenter
                 send(getPage(), Broadcast.BREADTH,
                     new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(kbObject)));
             }
-            else {
+            else if (kbObject instanceof KBProperty) {
                 send(getPage(), Broadcast.BREADTH,
                     new AjaxPropertySelectionEvent(aTarget, KBHandle.of(kbObject), true));
+            }
+            else {
+                throw new IllegalArgumentException(String.format(
+                    "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
+                    kbObject.getClass().getSimpleName()));
             }
         }
         else {
