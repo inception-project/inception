@@ -125,7 +125,7 @@ public class KnowledgeBasePanel
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
 
-        add(createSearchAutoCompleteTextField("searchBar", searchHandleModel, aProjectModel)
+        add(createSearchField("searchBar", searchHandleModel, aProjectModel)
             .add(AttributeModifier.append("placeholder",
                 new ResourceModel("page.search.placeholder"))));
 
@@ -141,7 +141,7 @@ public class KnowledgeBasePanel
         detailContainer.add(details);
     }
 
-    private AutoCompleteTextField<KBHandle> createSearchAutoCompleteTextField(String aId,
+    private AutoCompleteTextField<KBHandle> createSearchField(String aId,
         IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<>(aId, aHandleModel,
