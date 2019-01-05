@@ -99,14 +99,14 @@ public class NumericLiteralValueSupport
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new NumericLiteralValueEditor(aId, aStatement);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new NumericLiteralValuePresenter(aId, aStatement);
     }

@@ -220,7 +220,7 @@ public class StatementEditor extends Panel
             try {
                 presenter = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
-                    .createPresenter("value", model, property);
+                    .createPresenter("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
