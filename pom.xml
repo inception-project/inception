@@ -65,7 +65,7 @@
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>8.2.0</wicket.version>
+    <wicket.version>8.1.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
     <wicket-bootstrap.version>2.0.6</wicket-bootstrap.version>
