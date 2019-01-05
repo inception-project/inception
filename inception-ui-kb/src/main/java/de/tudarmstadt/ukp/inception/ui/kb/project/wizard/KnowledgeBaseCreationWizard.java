@@ -104,7 +104,7 @@ public class KnowledgeBaseCreationWizard extends BootstrapWizard {
     {
         Map<String, KnowledgeBaseProfile> profiles = new HashMap<>();
         try {
-            profiles = kbService.readKnowledgeBaseProfiles();
+            profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         }
         catch (IOException e) {
             error("Unable to read knowledge base profiles " + e.getMessage());

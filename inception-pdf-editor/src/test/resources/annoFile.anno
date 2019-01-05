@@ -1,0 +1,21 @@
+pdfanno = "0.5.0"
+pdfextract = "0.3.2"
+
+[[spans]]
+id = "1"
+page = 1
+label = "#FF00FF"
+text = "sometext"
+textrange = [0,7]
+
+[[spans]]
+id = "2"
+page = 1
+label = "#00AA00"
+text = "atest"
+textrange = [8,12]
+
+[[relations]]
+head = "1"
+tail = "2"
+label = "#CCCCCC"

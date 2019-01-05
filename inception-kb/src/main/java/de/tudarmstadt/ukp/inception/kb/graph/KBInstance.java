@@ -185,19 +185,19 @@ public class KBInstance
         kbInst.setKB(aKb);
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage())
-                .ifPresent((stmt) -> {
-                    kbInst.setName(stmt.getObject().stringValue());
-                    kbInst.originalStatements.add(stmt);
-                    if (stmt.getObject() instanceof Literal) {
-                        Literal literal = (Literal) stmt.getObject();
-                        Optional<String> language = literal.getLanguage();
-                        language.ifPresent(kbInst::setLanguage);
-                    }
-                });
+        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage(), aKb)
+            .ifPresent((stmt) -> {
+                kbInst.setName(stmt.getObject().stringValue());
+                kbInst.originalStatements.add(stmt);
+                if (stmt.getObject() instanceof Literal) {
+                    Literal literal = (Literal) stmt.getObject();
+                    Optional<String> language = literal.getLanguage();
+                    language.ifPresent(kbInst::setLanguage);
+                }
+            });
 
         readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
-                aKb.getDefaultLanguage())
+                aKb.getDefaultLanguage(), aKb)
             .ifPresent((stmt) -> {
                 kbInst.setDescription(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
