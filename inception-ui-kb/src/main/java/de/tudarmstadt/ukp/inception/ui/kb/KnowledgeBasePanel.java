@@ -168,7 +168,7 @@ public class KnowledgeBasePanel
             }
 
             @Override
-            protected void onSelected(AjaxRequestTarget target)
+            protected void onSelected(AjaxRequestTarget aTarget)
             {
                 KBHandle selectedResource = this.getModelObject();
                 Optional<KBObject> optKbObject = kbService
@@ -176,21 +176,7 @@ public class KnowledgeBasePanel
 
                 if (optKbObject.isPresent()) {
                     KBObject kbObject = optKbObject.get();
-                    if (kbObject instanceof KBConcept) {
-                        send(getPage(), Broadcast.BREADTH,
-                            new AjaxConceptSelectionEvent(target, selectedResource, true));
-                    }
-                    else if (kbObject instanceof KBInstance) {
-                        KBHandle conceptForInstance = kbService
-                            .getConceptForInstance(kbModel.getObject(),
-                                this.getModelObject().getIdentifier(), true).get(0);
-
-                        send(getPage(), Broadcast.BREADTH,
-                            new AjaxConceptSelectionEvent(target, conceptForInstance, true));
-
-                        send(getPage(), Broadcast.BREADTH,
-                            new AjaxInstanceSelectionEvent(target, this.getModelObject()));
-                    }
+                    sendSelectionChangedEvents(aTarget, kbObject);
                 }
             }
 
@@ -205,6 +191,36 @@ public class KnowledgeBasePanel
         };
 
         return field;
+    }
+
+    /**
+     * Send events according to selected {@link KBObject}
+     */
+    private void sendSelectionChangedEvents(AjaxRequestTarget aTarget, KBObject aKbObject) {
+        if (aKbObject instanceof KBConcept) {
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+        }
+        else if (aKbObject instanceof KBInstance) {
+            KBHandle conceptForInstance = kbService
+                .getConceptForInstance(kbModel.getObject(),
+                    aKbObject.getIdentifier(), true).get(0);
+
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(aTarget, conceptForInstance, true));
+
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
+        }
+        else if (aKbObject instanceof KBProperty) {
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxPropertySelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+        }
+        else {
+            throw new IllegalArgumentException(String.format(
+                "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
+                aKbObject.getClass().getSimpleName()));
+        }
     }
     
     /**
