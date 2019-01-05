@@ -42,7 +42,6 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -72,7 +71,6 @@ public class NamedEntityLinker
     
     private KnowledgeBaseService kbService;
     private ConceptLinkingServiceImpl clService;
-    private AnnotationSchemaService annoService;
     private FeatureSupportRegistry fsRegistry;
     private ConceptFeatureTraits featureTraits;
 
@@ -81,14 +79,12 @@ public class NamedEntityLinker
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
             KnowledgeBaseService aKbService, ConceptLinkingServiceImpl aClService,
-            AnnotationSchemaService aAnnoService, FeatureSupportRegistry aFsRegistry,
-            ConceptFeatureTraits aFeatureTraits)
+            FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
         recommender = aRecommender;
         traits = aTraits;
         kbService = aKbService;
         clService = aClService;
-        annoService = aAnnoService;
         fsRegistry = aFsRegistry;
         featureTraits = aFeatureTraits;
     }
@@ -107,7 +103,7 @@ public class NamedEntityLinker
     {
         Type tokenType = org.apache.uima.fit.util.CasUtil
             .getType(aCasList.get(0), recommender.getLayer().getName());
-        Feature feature = tokenType.getFeatureByBaseName(recommender.getFeature());
+        Feature feature = tokenType.getFeatureByBaseName(recommender.getFeature().getName());
 
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples = new HashSet<>();
         for (CAS cas : aCasList) {
@@ -198,8 +194,7 @@ public class NamedEntityLinker
     {
         List<KBHandle> handles = new ArrayList<>();
 
-        AnnotationFeature feat = annoService
-            .getFeature(recommender.getFeature(), recommender.getLayer());
+        AnnotationFeature feat = recommender.getFeature();
         FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feat);
         ConceptFeatureTraits conceptFeatureTraits = fs.readTraits(feat);
 

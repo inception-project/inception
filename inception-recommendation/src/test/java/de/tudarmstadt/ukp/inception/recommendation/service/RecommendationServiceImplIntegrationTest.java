@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.apache.uima.cas.CAS;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,6 +35,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -45,7 +47,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 public class RecommendationServiceImplIntegrationTest
 {
     private static final String PROJECT_NAME = "Test project";
-    private static final String LAYERNAME = "Test layer";
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -53,6 +54,7 @@ public class RecommendationServiceImplIntegrationTest
     private RecommendationServiceImpl sut;
     private Project project;
     private AnnotationLayer layer;
+    private AnnotationFeature feature;
     private Recommender rec;
 
     @Before
@@ -60,7 +62,8 @@ public class RecommendationServiceImplIntegrationTest
     {
         sut = new RecommendationServiceImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
-        layer = createAnnotationLayer(LAYERNAME);
+        layer = createAnnotationLayer();
+        feature = createAnnotationFeature(layer, "strFeat");
     }
 
     @After
@@ -77,7 +80,7 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
-        rec = buildRecommender(project, layer);
+        rec = buildRecommender(project, feature);
         rec.setEnabled(true);
 
         sut.createOrUpdateRecommender(rec);
@@ -91,7 +94,7 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithDisabledRecommender_ShouldReturnEmptyList()
     {
-        rec = buildRecommender(project, layer);
+        rec = buildRecommender(project, feature);
         rec.setEnabled(false);
 
         sut.createOrUpdateRecommender(rec);
@@ -104,7 +107,7 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOtherRecommenderId_ShouldReturnEmptyList()
     {
-        rec = buildRecommender(project, layer);
+        rec = buildRecommender(project, feature);
         rec.setEnabled(false);
 
         sut.createOrUpdateRecommender(rec);
@@ -115,10 +118,11 @@ public class RecommendationServiceImplIntegrationTest
         assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
     }
 
-    private Recommender buildRecommender(Project aProject, AnnotationLayer aLayer)
+    private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)
     {
         Recommender recommender = new Recommender();
-        recommender.setLayer(aLayer);
+        recommender.setLayer(aFeature.getLayer());
+        recommender.setFeature(aFeature);
         recommender.setProject(aProject);
         recommender.setAlwaysSelected(true);
         recommender.setSkipEvaluation(false);
@@ -136,7 +140,7 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(project);
     }
 
-    public AnnotationLayer createAnnotationLayer(String aUsername)
+    public AnnotationLayer createAnnotationLayer()
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setEnabled(true);
@@ -147,5 +151,16 @@ public class RecommendationServiceImplIntegrationTest
         layer.setAnchoringMode(false, false);
        
         return testEntityManager.persist(layer);
+    }
+
+    public AnnotationFeature createAnnotationFeature(AnnotationLayer aLayer, String aName)
+    {
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setLayer(aLayer);
+        feature.setName(aName);
+        feature.setUiName(aName);
+        feature.setType(CAS.TYPE_NAME_STRING);
+               
+        return testEntityManager.persist(feature);
     }
 }
