@@ -327,7 +327,8 @@ public class RecommendationServiceImpl
 
         // Update the task count
         Pair<User, Project> key = new ImmutablePair<>(user, aProject);
-        AtomicInteger count = trainingTaskCounter.putIfAbsent(key, new AtomicInteger(0));
+        AtomicInteger count = trainingTaskCounter.computeIfAbsent(key,
+            _key -> new AtomicInteger(0));
 
         // If it is time for a selection task, we just start a selection task.
         // The selection task then will start the training once its finished,
