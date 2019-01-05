@@ -172,11 +172,15 @@ public class LoggedEventExporter implements ProjectExporter
                 event.setAnnotator(exportedEvent.getAnnotator());
                 event.setDetails(exportedEvent.getDetails());
 
+                // If an event is not associated with a document, then the default ID -1 is used
                 if (exportedEvent.getDocumentName() != null) {
                     event.setDocument(documentService
                             .getSourceDocument(aProject, exportedEvent.getDocumentName()).getId());
                 }
-                
+                else {
+                    event.setDocument(-1);
+                }
+
                 eventRepository.create(event);
                 
                 eventCount++;
