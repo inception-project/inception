@@ -324,7 +324,8 @@ public class SearchPage extends ApplicationPageBase
             String title = defaultIfBlank(result.getDocumentTitle(),
                             defaultIfBlank(result.getDocumentId(), 
                             defaultIfBlank(result.getUri(), "<no title>")));
-            boolean existsSourceDocument =  documentService.existsSourceDocument(project, documentTitle);
+            boolean existsSourceDocument = documentService.existsSourceDocument(project,
+                    documentTitle);
             
             link.add(new Label("title", title));
             add(link);
