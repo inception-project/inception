@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <jackson.version>2.9.4</jackson.version>
+    <jackson.version>2.9.8</jackson.version>
     <uima.version>2.10.2</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
     <spring.version>5.0.4.RELEASE </spring.version>
