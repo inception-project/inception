@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.export;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.zip.ZipFile;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -27,5 +28,5 @@ public interface ProjectExportService
     Project importProject(ProjectImportRequest aRequest, ZipFile aZip)
         throws ProjectExportException;
 
-    File exportProject(ProjectExportRequest aRequest) throws ProjectExportException;
+    File exportProject(ProjectExportRequest aRequest) throws ProjectExportException, IOException;
 }

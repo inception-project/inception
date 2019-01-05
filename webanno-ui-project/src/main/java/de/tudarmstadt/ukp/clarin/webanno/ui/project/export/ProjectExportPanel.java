@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.nio.channels.ClosedByInterruptException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -68,6 +69,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
@@ -105,7 +108,6 @@ public class ProjectExportPanel
     private transient FileGenerator runnable = null;
 
     private boolean enabled = true;
-    private State exportState = State.NOT_STARTED;
 
     public ProjectExportPanel(String id, final IModel<Project> aProjectModel)
     {
@@ -118,6 +120,8 @@ public class ProjectExportPanel
     {
         private static final long serialVersionUID = 9151007311548196811L;
 
+        private LambdaAjaxLink cancelLink;
+        
         public ProjectExportForm(String id, IModel<Project> aProject)
         {
             super(id, new CompoundPropertyModel<>(
@@ -269,6 +273,7 @@ public class ProjectExportPanel
                 protected void onFinished(AjaxRequestTarget target)
                 {
                     target.addChildren(getPage(), IFeedback.class);
+                    target.add(ProjectExportForm.this);
 
                     while (!runnable.getMessages().isEmpty()) {
                         LogMessage msg = runnable.getMessages().poll();
@@ -288,7 +293,7 @@ public class ProjectExportPanel
                         }
                     }
                     
-                    switch (exportState) {
+                    switch (runnable.getState()) {
                     case COMPLETED:
                         if (!fileName.equals(downloadedFile)) {
                             exportProject.initiate(target, fileName);
@@ -309,6 +314,9 @@ public class ProjectExportPanel
                     default:
                         error("Invalid project export state after export: " + exportProject);
                     }
+                    
+                    runnable = null;
+                    thread = null;
                 }
             };
 
@@ -326,7 +334,6 @@ public class ProjectExportPanel
                 @Override
                 public void onClick(final AjaxRequestTarget target) {
                     enabled = false;
-                    exportState = State.FAILED;
                     ProjectExportForm.this.getModelObject().progress = 0;
                     target.add(ProjectExportPanel.this.getPage());
                     fileGenerationProgress.start(target);
@@ -340,77 +347,83 @@ public class ProjectExportPanel
                 }
             });
 
-            add(new AjaxLink<Void>("cancel") {
-                private static final long serialVersionUID = 5856284172060991446L;
-
-                @Override
-                public void onClick(final AjaxRequestTarget target) {
-                    if (thread != null) {
-                        ProjectExportForm.this.getModelObject().progress = 100;
-                        exportState = State.CANCELLED;
-                        thread.interrupt();
-                    }
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    // Enabled only if the export button has been disabled (during export)
-                    return (!enabled) ;
-                }
-            });
+            cancelLink = new LambdaAjaxLink("cancel", this::actionCancel);
+            cancelLink.add(LambdaBehavior.enabledWhen(() -> thread != null));
+            add(cancelLink);
+        }
+        
+        private void actionCancel(AjaxRequestTarget aTarget)
+        {
+            runnable.cancel();
+            thread.interrupt();
+            // Do not set runnable/thread to null here. This happens when the progressbar calls
+            // onFinished()
+            aTarget.add(cancelLink);
         }
     }
     
     enum State {
-        NOT_STARTED, COMPLETED, CANCELLED, FAILED;
+        NOT_STARTED, RUNNING, COMPLETED, CANCELLED, FAILED;
     }
     
     public class FileGenerator
         implements Runnable
     {
-        private String username;
-        private ProjectExportRequest model;
+        private final String username;
+        private final ProjectExportRequest model;
+        private volatile State state;
 
         public FileGenerator(ProjectExportRequest aModel, String aUsername)
         {
             model = aModel;
             username = aUsername;
+            state = State.NOT_STARTED;
         }
 
         @Override
         public void run()
         {
-            // We are in a new thread. Set up thread-specific MDC
-            MDC.put(Logging.KEY_USERNAME, username);
-            MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.getProject().getId()));
-            MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
-            
             File file;
             try {
-                Thread.sleep(100); // Why do we sleep here?
+                // We are in a new thread. Set up thread-specific MDC
+                MDC.put(Logging.KEY_USERNAME, username);
+                MDC.put(Logging.KEY_PROJECT_ID, String.valueOf(model.getProject().getId()));
+                MDC.put(Logging.KEY_REPOSITORY_PATH, documentService.getDir().toString());
+                
+                state = State.RUNNING;
                 file = exportService.exportProject(model);
                 fileName = file.getAbsolutePath();
                 projectName = model.getProject().getName();
-                exportState = State.COMPLETED;
+                state = State.COMPLETED;
+            }
+            catch (ClosedByInterruptException e) {
+                cancel();
             }
             catch (Throwable e) {
                 LOG.error("Unexpected error during project export", e);
                 model.addMessage(LogMessage.error(this, "Unexpected error during project export: %s",
                                 ExceptionUtils.getRootCauseMessage(e)));
-                if (thread != null) {
-                    exportState = State.FAILED;
-                    // This marks the progression as complete and causes ProgressBar#onFinished
-                    // to be called where we display the messages
-                    model.progress = 100; 
-                    thread.interrupt();
-                }
+                state = State.FAILED;
+                // This marks the progression as complete and causes ProgressBar#onFinished
+                // to be called where we display the messages
+                model.progress = 100; 
             }
         }
-
+        
         public Queue<LogMessage> getMessages()
         {
             return model.getMessages();
+        }
+
+        public void cancel()
+        {
+            state = State.CANCELLED;
+            model.progress = 100;
+        }
+        
+        public State getState()
+        {
+            return state;
         }
     }
 }
