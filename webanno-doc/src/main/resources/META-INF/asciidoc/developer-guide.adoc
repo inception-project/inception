@@ -33,15 +33,15 @@ include::{include-dir}documents.adoc[leveloffset=+1]
 
 include::{include-dir}annotation-schema.adoc[leveloffset=+1]
 
-include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+1]
+include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
 
-include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+3]
 
-include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+2]
+include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+3]
 
-include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+1]
+include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
 
-include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+1]
+include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
 
 <<<
 
@@ -50,3 +50,5 @@ include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffse
 = Appendices 
 
 include::{include-dir}systemproperties.adoc[leveloffset=+1]
+
+<<<
