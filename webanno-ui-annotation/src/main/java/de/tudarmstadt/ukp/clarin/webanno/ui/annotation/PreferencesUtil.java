@@ -18,31 +18,17 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import java.io.IOException;
-import java.lang.reflect.ParameterizedType;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.BeansException;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.preferences.UserPreferencesService;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -64,98 +50,28 @@ public class PreferencesUtil
      * @param aUsername
      *            The {@link User} for whom we need to read the preference (preferences are stored
      *            per user)
-     * @param aRepositoryService the repository service.
      * @param aAnnotationService the annotation service.
-     * @param aBModel
+     * @param aState
      *            The {@link AnnotatorState} that will be populated with preferences from the
      *            file
-     * @param aMode the mode.
      * @throws BeansException hum?
      * @throws IOException hum?
      */
-    public static void loadPreferences(String aUsername, BratProperties aDefaultPreferences,
-            ProjectService aRepositoryService, AnnotationSchemaService aAnnotationService,
-            AnnotatorState aBModel, Mode aMode)
+    public static void loadPreferences(String aUsername, AnnotationSchemaService aAnnotationService,
+            UserPreferencesService aPrefService, AnnotatorState aState)
         throws BeansException, IOException
     {
-        AnnotationPreference preference = new AnnotationPreference();
-        
-        BeanWrapper wrapper = new BeanWrapperImpl(preference);
-        
-        // get annotation preference from file system
-        try {
-            Properties props = aRepositoryService.loadUserSettings(aUsername, aBModel.getProject());
-            for (Entry<Object, Object> entry : props.entrySet()) {
-                String property = entry.getKey().toString();
-                int index = property.indexOf(".");
-                String propertyName = property.substring(index + 1);
-                String mode = property.substring(0, index);
-                if (wrapper.isWritableProperty(propertyName) && mode.equals(aMode.getName())) {
-                    if (AnnotationPreference.class.getDeclaredField(propertyName)
-                            .getGenericType() instanceof ParameterizedType) {
-                        if (entry.getValue().toString().startsWith("[")) { // its a list
-                            List<String> value = Arrays.asList(
-                                    StringUtils.replaceChars(entry.getValue().toString(), "[]", "").split(","));
-                            if (!value.get(0).equals("")) {
-                                wrapper.setPropertyValue(propertyName, value);
-                            }
-                        }
-                        else if (entry.getValue().toString().startsWith("{")) { // its a map
-                            String s = StringUtils.replaceChars(entry.getValue().toString(), "{}",
-                                    "");
-                            Map<String, String> value = Arrays.stream(s.split(","))
-                                    .map(x -> x.split("="))
-                                    .collect(Collectors.toMap(x -> x[0], x -> x[1]));
-                            wrapper.setPropertyValue(propertyName, value);
-                        }
-                    }
-                    else {
-                        wrapper.setPropertyValue(propertyName, entry.getValue());
-                    }
-                }
-            }
+        AnnotationPreference preference = aPrefService.loadPreferences(aState.getProject(),
+                aUsername, aState.getMode());
 
-            // set layers according to preferences
-            aBModel.setAnnotationLayers(aAnnotationService
-                    .listAnnotationLayer(aBModel.getProject()).stream()
-                    .filter(l -> l.isEnabled())// only allow enabled layers
-                    .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
-                    .collect(Collectors.toList()));
-            
-            // Get color preferences for each layer, init with legacy if not found
-            Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
-            for (AnnotationLayer layer : aAnnotationService
-                    .listAnnotationLayer(aBModel.getProject())) {
-                if (!colorPerLayer.containsKey(layer.getId())) {
-                    colorPerLayer.put(layer.getId(), ColoringStrategyType.LEGACY);
-                }
-            }
-
-        }
-        // no preference found
-        catch (Exception e) {
-            // If no layer preferences are defined, 
-            // then just assume all enabled layers are preferred
-            aBModel.setAnnotationLayers(aAnnotationService
-                    .listAnnotationLayer(aBModel.getProject()).stream()
-                    .filter(l -> l.isEnabled())// only allow enabled layers
-                    .collect(Collectors.toList()));
-            
-            preference.setWindowSize(aDefaultPreferences.getPageSize());
-            preference.setScrollPage(aDefaultPreferences.isAutoScroll());
-            preference.setRememberLayer(aDefaultPreferences.isRememberLayer());
-            
-            // add default coloring strategy
-            Map<Long, ColoringStrategyType> colorPerLayer = new HashMap<>();
-            for (AnnotationLayer layer : aBModel.getAnnotationLayers()) {
-                colorPerLayer.put(layer.getId(), ColoringStrategy
-                        .getBestInitialStrategy(aAnnotationService, layer, preference));
-            }
-            preference.setColorPerLayer(colorPerLayer);
-
-        }
+        aState.setPreferences(preference);
         
-        aBModel.setPreferences(preference);
+        // set layers according to preferences
+        aState.setAnnotationLayers(aAnnotationService
+                .listAnnotationLayer(aState.getProject()).stream()
+                .filter(l -> l.isEnabled())// only allow enabled layers
+                .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
+                .collect(Collectors.toList()));
     }
 
     public static void savePreference(AnnotatorState aBModel, ProjectService aRepository)

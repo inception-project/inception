@@ -39,6 +39,7 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -52,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -63,6 +65,7 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean UserPreferencesService userPreferenceService;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
@@ -386,5 +389,12 @@ public abstract class AnnotationPageBase
                                 + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
+    }
+    
+    protected void loadPreferences() throws BeansException, IOException
+    {
+        AnnotatorState state = getModelObject();
+        PreferencesUtil.loadPreferences(state.getUser().getUsername(), annotationService,
+                userPreferenceService, state);
     }
 }

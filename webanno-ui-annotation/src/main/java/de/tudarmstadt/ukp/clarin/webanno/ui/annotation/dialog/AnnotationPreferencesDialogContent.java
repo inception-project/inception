@@ -146,7 +146,22 @@ public class AnnotationPreferencesDialogContent
     {
         try {
             AnnotatorState state = stateModel.getObject();
-            commitModel(state);
+            Preferences model = form.getModelObject();
+
+            AnnotationPreference prefs = state.getPreferences();
+            prefs.setScrollPage(model.scrollPage);
+            prefs.setRememberLayer(model.rememberLayer);
+            prefs.setWindowSize(model.windowSize);
+            prefs.setSidebarSize(model.sidebarSize);
+            prefs.setFontZoom(model.fontZoom);
+            prefs.setColorPerLayer(model.colorPerLayer);
+            prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
+            prefs.setEditor(model.editor.getKey());
+
+            state.setAnnotationLayers(model.annotationLayers.stream()
+                    .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
+                    .collect(Collectors.toList()));
+            
             PreferencesUtil.savePreference(state, projectService);
         }
         catch (IOException e) {
@@ -197,25 +212,6 @@ public class AnnotationPreferencesDialogContent
         return model;
     }
     
-    private void commitModel(AnnotatorState state)
-    {
-        Preferences model = form.getModelObject();
-
-        AnnotationPreference prefs = state.getPreferences();
-        prefs.setScrollPage(model.scrollPage);
-        prefs.setRememberLayer(model.rememberLayer);
-        prefs.setWindowSize(model.windowSize);
-        prefs.setSidebarSize(model.sidebarSize);
-        prefs.setFontZoom(model.fontZoom);
-        prefs.setColorPerLayer(model.colorPerLayer);
-        prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
-        prefs.setEditor(model.editor.getKey());
-
-        state.setAnnotationLayers(model.annotationLayers.stream()
-                .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
-                .collect(Collectors.toList()));
-    }
-
     private ListView<AnnotationLayer> createLayerContainer()
     {
         return new ListView<AnnotationLayer>("annotationLayers")
@@ -268,6 +264,7 @@ public class AnnotationPreferencesDialogContent
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
+        
         private Pair<String, String> editor;
         private int windowSize;
         private int sidebarSize;

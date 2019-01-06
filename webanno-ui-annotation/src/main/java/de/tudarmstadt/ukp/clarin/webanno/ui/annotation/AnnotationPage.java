@@ -573,8 +573,7 @@ public class AnnotationPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(state.getUser().getUsername(), defaultPreferences,
-                    projectService, annotationService, state, state.getMode());
+            loadPreferences();
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
