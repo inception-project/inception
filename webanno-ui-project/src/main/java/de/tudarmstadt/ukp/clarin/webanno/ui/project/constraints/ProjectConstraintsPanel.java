@@ -185,8 +185,9 @@ public class ProjectConstraintsPanel
                     }
                 }
             }; 
-            add(new DownloadLink("export", exportFileModel, exportFilenameModel)
-                    .setDeleteAfterDownload(true));
+            // The file that is returned by exportConstraintAsFile is the internal constraints
+            // file - it must NOT be deleted after the export is complete!
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel));
             
             Button deleteButton = new Button("delete") {
 
