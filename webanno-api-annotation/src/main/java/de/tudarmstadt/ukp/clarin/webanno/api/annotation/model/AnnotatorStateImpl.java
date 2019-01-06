@@ -341,6 +341,12 @@ public class AnnotatorStateImpl
     public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
     {
         annotationLayers = aAnnotationLayers;
+        
+        // Make sure the currently selected layer is actually visible/exists
+        if (!annotationLayers.contains(selectedAnnotationLayer)) {
+            selectedAnnotationLayer = !annotationLayers.isEmpty() ? annotationLayers.get(0) : null;
+            defaultAnnotationLayer = selectedAnnotationLayer;
+        }
     }
 
     @Override

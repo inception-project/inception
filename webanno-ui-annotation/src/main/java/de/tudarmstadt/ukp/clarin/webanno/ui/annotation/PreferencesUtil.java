@@ -116,17 +116,11 @@ public class PreferencesUtil
             }
 
             // set layers according to preferences
-            List<AnnotationLayer> enabledLayers = aAnnotationService
+            aBModel.setAnnotationLayers(aAnnotationService
                     .listAnnotationLayer(aBModel.getProject()).stream()
                     .filter(l -> l.isEnabled())// only allow enabled layers
-                    .collect(Collectors.toList());
-          
-            List<Long> hiddenLayerIds = preference.getHiddenAnnotationLayerIds();
-            enabledLayers = enabledLayers.stream()
-                    .filter(l -> !hiddenLayerIds.contains(l.getId()))
-                    .collect(Collectors.toList());
-          
-            aBModel.setAnnotationLayers(enabledLayers);
+                    .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
+                    .collect(Collectors.toList()));
             
             // Get color preferences for each layer, init with legacy if not found
             Map<Long, ColoringStrategyType> colorPerLayer = preference.getColorPerLayer();
@@ -142,11 +136,10 @@ public class PreferencesUtil
         catch (Exception e) {
             // If no layer preferences are defined, 
             // then just assume all enabled layers are preferred
-            List<AnnotationLayer> enabledLayers = aAnnotationService
+            aBModel.setAnnotationLayers(aAnnotationService
                     .listAnnotationLayer(aBModel.getProject()).stream()
                     .filter(l -> l.isEnabled())// only allow enabled layers
-                    .collect(Collectors.toList()); 
-            aBModel.setAnnotationLayers(enabledLayers);
+                    .collect(Collectors.toList()));
             
             preference.setWindowSize(aDefaultPreferences.getPageSize());
             preference.setScrollPage(aDefaultPreferences.isAutoScroll());

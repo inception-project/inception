@@ -18,10 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
@@ -50,7 +51,7 @@ public class AnnotationPreference
     private List<Long> annotationLayers;
     
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
-    private List<Long> hiddenAnnotationLayerIds = new ArrayList<>();
+    private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
 
     private int windowSize;
 
@@ -98,12 +99,12 @@ public class AnnotationPreference
         annotationLayers = aAnnotationLayers;
     }
     
-    public List<Long> getHiddenAnnotationLayerIds()
+    public Set<Long> getHiddenAnnotationLayerIds()
     {
         return hiddenAnnotationLayerIds;
     }
     
-    public void setHiddenAnnotationLayerIds(List<Long> aAnnotationLayerIds)
+    public void setHiddenAnnotationLayerIds(Set<Long> aAnnotationLayerIds)
     {
         hiddenAnnotationLayerIds = aAnnotationLayerIds;
     }
