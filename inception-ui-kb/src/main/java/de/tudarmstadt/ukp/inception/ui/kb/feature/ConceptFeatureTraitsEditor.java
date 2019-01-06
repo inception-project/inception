@@ -65,9 +65,9 @@ public class ConceptFeatureTraitsEditor
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean KnowledgeBaseService kbService;
 
-    private String featureSupportId;
-    private IModel<AnnotationFeature> feature;
-    private IModel<Traits> traits;
+    private final String featureSupportId;
+    private final AnnotationFeature feature;
+    private final IModel<Traits> traits;
     
     public ConceptFeatureTraitsEditor(String aId, ConceptFeatureSupport aFS,
             IModel<AnnotationFeature> aFeatureModel)
@@ -78,7 +78,7 @@ public class ConceptFeatureTraitsEditor
         // is not serializable, but we can retain its ID and look it up again from the registry
         // when required.
         featureSupportId = aFS.getId();
-        feature = aFeatureModel;
+        feature = aFeatureModel.getObject();
         traits = Model.of(readTraits());
 
         Form<Traits> form = new Form<Traits>(MID_FORM, CompoundPropertyModel.of(traits))
@@ -121,9 +121,9 @@ public class ConceptFeatureTraitsEditor
     {
         Traits result = new Traits();
 
-        Project project = feature.getObject().getProject();
+        Project project = feature.getProject();
 
-        ConceptFeatureTraits t = getFeatureSupport().readTraits(feature.getObject());
+        ConceptFeatureTraits t = getFeatureSupport().readTraits(feature);
 
         // Use the concept from a particular knowledge base
         if (t.getRepositoryId() != null) {
@@ -172,12 +172,12 @@ public class ConceptFeatureTraitsEditor
 
         t.setAllowedValueType(traits.getObject().allowedValueType);
 
-        getFeatureSupport().writeTraits(feature.getObject(), t);
+        getFeatureSupport().writeTraits(feature, t);
     }
     
     private List<KnowledgeBase> listKnowledgeBases()
     {
-        return kbService.getKnowledgeBases(feature.getObject().getProject());
+        return kbService.getKnowledgeBases(feature.getProject());
     }
     
     private List<KBHandle> listConcepts()
@@ -189,7 +189,7 @@ public class ConceptFeatureTraitsEditor
         // Otherwise, we offer concepts from all KBs
         else {
             List<KBHandle> allConcepts = new ArrayList<>();
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(feature.getObject().getProject())) {
+            for (KnowledgeBase kb : kbService.getKnowledgeBases(feature.getProject())) {
                 allConcepts.addAll(kbService.listConcepts(kb, false));
             }
 
