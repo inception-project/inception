@@ -108,19 +108,27 @@ public class PdfAnnoRenderer
     private static Span convertToPdfAnnoSpan(VSpan aVspan, String aColor, String aDocumentText,
                                              PdfExtractFile aPdfExtractFile)
     {
-        VRange range = aVspan.getRanges().get(0); // TODO: handle multiple ranges
+        int spanBegin = aDocumentText.length();
+        int spanEnd = -1;
+        // search for begin of the first range and end of the last range and use those
+        for (VRange range : aVspan.getRanges())
+        {
+            if (range.getBegin() < spanBegin) spanBegin = range.getBegin();
+            if (range.getEnd() > spanEnd) spanEnd = range.getEnd();
+        }
+
         // use offset pre and post string to increase uniqueness of annotation text
         int offset = 20;
-        int start = range.getBegin() <= offset ? 0 : range.getBegin() - offset;
-        int end = range.getEnd() < aDocumentText.length() - offset
-            ? range.getEnd() + offset : aDocumentText.length() - 1;
+        int start = spanBegin <= offset ? 0 : spanBegin - offset;
+        int end = spanEnd < aDocumentText.length() - offset
+            ? spanEnd + offset : aDocumentText.length() - 1;
 
         String annotatedText = aDocumentText.substring(start, end);
         String preText = annotatedText.substring(0,
-            (range.getBegin() <= offset ? range.getBegin() - start : offset));
+            (spanBegin <= offset ? spanBegin - start : offset));
         String postText = annotatedText.substring(annotatedText.length() -
-            (range.getEnd() < aDocumentText.length() - offset
-                ? offset : aDocumentText.length() - range.getEnd()), annotatedText.length()) ;
+            (spanEnd < aDocumentText.length() - offset
+                ? offset : aDocumentText.length() - spanEnd), annotatedText.length()) ;
         // remove whitespaces as they are not present in PDFExtract text
         String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
 
