@@ -19,8 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static java.util.Objects.isNull;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -90,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -122,9 +126,9 @@ public class AnnotationFeatureForm
     private @SpringBean AnnotationSchemaService annotationService;
 
     AnnotationFeatureForm(AnnotationDetailEditorPanel aEditorPanel, String id,
-        IModel<AnnotatorState> aBModel)
+        IModel<AnnotatorState> aState)
     {
-        super(id, new CompoundPropertyModel<>(aBModel));
+        super(id, new CompoundPropertyModel<>(aState));
         editorPanel = aEditorPanel;
         add(forwardAnnotationText = createForwardAnnotationTextField());
         add(forwardAnnotation = createForwardAnnotationCheckBox());
@@ -141,23 +145,12 @@ public class AnnotationFeatureForm
 
     private WebMarkupContainer createFeatureEditorPanel()
     {
-        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer")
-        {
-            private static final long serialVersionUID = 8908304272310098353L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(getModelObject().getSelection().getAnnotation().isSet());
-            }
-        };
+        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
+        container.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
 
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
         container.setOutputMarkupPlaceholderTag(true);
-        container.setOutputMarkupId(true);
 
         container.add(createNoFeaturesWarningLabel());
         container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
@@ -169,18 +162,9 @@ public class AnnotationFeatureForm
 
     private Label createNoFeaturesWarningLabel()
     {
-        return new Label("noFeaturesWarning", "No features available!")
-        {
-            private static final long serialVersionUID = 4398704672665066763L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(getModelObject().getFeatureStates().isEmpty());
-            }
-        };
+        Label label = new Label("noFeaturesWarning", "No features available!");
+        label.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        return label;
     }
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
@@ -282,62 +266,41 @@ public class AnnotationFeatureForm
 
     private Label createSelectedAnnotationLayerLabel()
     {
-        return new Label("selectedAnnotationLayer", new Model<String>())
-        {
-            private static final long serialVersionUID = 4059460390544343324L;
-
-            {
-                setOutputMarkupId(true);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(getModelObject().getPreferences().isRememberLayer());
-            }
-        };
+        Label label = new Label("selectedAnnotationLayer", new Model<String>());
+        label.setOutputMarkupPlaceholderTag(true);
+        label.add(visibleWhen(() -> getModelObject().getPreferences().isRememberLayer()));
+        return label;
     }
 
     private Label createRelationHint()
     {
-        return new Label("relationHint", Model.of()) {
-            private static final long serialVersionUID = 1L;
-            
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-                setEscapeModelStrings(false);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                if (layerSelector.getModelObject() != null) {
-                    List<AnnotationLayer> relLayers = annotationService
-                            .listAttachedRelationLayers(layerSelector.getModelObject());
-                    if (relLayers.isEmpty()) {
-                        setVisible(false);
-                    }
-                    else if (relLayers.size() == 1) {
-                        setDefaultModelObject("Create a <b>" + relLayers.get(0).getUiName()
-                                + "</b> relation by drawing an arc between annotations of this layer.");
-                        setVisible(true);
-                    }
-                    else {
-                        setDefaultModelObject(
-                                "Whoops! Found more than one relation layer attaching to this span layer!");
-                        setVisible(true);
-                    }
+        Label label = new Label("relationHint", Model.of());
+        label.setOutputMarkupPlaceholderTag(true);
+        label.setEscapeModelStrings(false);
+        label.add(LambdaBehavior.onConfigure(_this -> {
+            if (layerSelector.getModelObject() != null) {
+                List<AnnotationLayer> relLayers = annotationService
+                        .listAttachedRelationLayers(layerSelector.getModelObject());
+                if (relLayers.isEmpty()) {
+                    _this.setVisible(false);
+                }
+                else if (relLayers.size() == 1) {
+                    _this.setDefaultModelObject("Create a <b>"
+                            + escapeMarkup(relLayers.get(0).getUiName(), false, false)
+                            + "</b> relation by drawing an arc between annotations of this layer.");
+                    _this.setVisible(true);
                 }
                 else {
-                    setVisible(false);
+                    _this.setDefaultModelObject(
+                            "Whoops! Found more than one relation layer attaching to this span layer!");
+                    _this.setVisible(true);
                 }
             }
-        };
+            else {
+                _this.setVisible(false);
+            }
+        }));
+        return label;
     }
     
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
@@ -408,45 +371,47 @@ public class AnnotationFeatureForm
     
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
     {
-        editorPanel.getEditorPage().actionShowSelectedDocument(aTarget,
-                getModelObject().getDocument(), getModelObject().getSelection().getBegin(),
-                getModelObject().getSelection().getEnd());
+        AnnotatorState state = getModelObject();
+        
+        editorPanel.getEditorPage().actionShowSelectedDocument(aTarget, state.getDocument(),
+                state.getSelection().getBegin(), state.getSelection().getEnd());
     }
 
     private LambdaAjaxLink createClearButton()
     {
-        return new LambdaAjaxLink("clear", editorPanel::actionClear).onConfigure((_this) -> {
-            _this.setVisible(AnnotationFeatureForm.this.getModelObject().getSelection()
-                    .getAnnotation().isSet());
-        });
+        LambdaAjaxLink link = new LambdaAjaxLink("clear", editorPanel::actionClear);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        return link;
     }
 
     private Component createReverseButton()
     {
-        return new LambdaAjaxLink("reverse", editorPanel::actionReverse)
-            .onConfigure((_this) -> {
-                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-    
-                _this.setVisible(state.getSelection().getAnnotation().isSet()
-                        && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
-                                .getType().equals(WebAnnoConst.RELATION_TYPE));
-    
-                // Avoid reversing in read-only layers
-                _this.setEnabled(state.getSelectedAnnotationLayer() != null
-                        && !state.getSelectedAnnotationLayer().isReadonly());
-            })
-            .setOutputMarkupPlaceholderTag(true);
+        LambdaAjaxLink link = new LambdaAjaxLink("reverse", editorPanel::actionReverse);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(LambdaBehavior.onConfigure(_this -> {
+            AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+            
+            _this.setVisible(state.getSelection().getAnnotation().isSet()
+                    && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
+                            .getType().equals(WebAnnoConst.RELATION_TYPE));
+
+            // Avoid reversing in read-only layers
+            _this.setEnabled(state.getSelectedAnnotationLayer() != null
+                    && !state.getSelectedAnnotationLayer().isReadonly());
+        }));
+        return link;
     }
 
     private LambdaAjaxLink createDeleteButton()
     {
-        return new LambdaAjaxLink("delete", this::actionDelete).onConfigure((_this) -> {
-            AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-            _this.setVisible(state.getSelection().getAnnotation().isSet());
-            // Avoid deleting in read-only layers
-            _this.setEnabled(state.getSelectedAnnotationLayer() != null
-                    && !state.getSelectedAnnotationLayer().isReadonly());
-        });
+        LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        // Avoid deleting in read-only layers
+        link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
+                && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        return link;
     }
     
     private void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
