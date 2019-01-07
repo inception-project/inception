@@ -21,44 +21,34 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.preferences.UserPreferencesService;
 
 /**
  * This class contains Utility methods that can be used in Project settings
  */
 public class PreferencesUtil
 {
-    public static final String META_INF = "META-INF";
-    public static final String SOURCE = "source";
-    public static final String ANNOTATION_AS_SERIALISED_CAS = "annotation_ser";
-    public static final String CURATION_AS_SERIALISED_CAS = "curation_ser";
-    public static final String GUIDELINE = "guideline";
-    public static final String LOG_DIR = "log";
-    public static final String EXPORTED_PROJECT = "exportedproject";
-
     /**
      * Set annotation preferences of users for a given project such as window size, annotation
      * layers,... reading from the file system.
-     *
-     * @param aUsername
-     *            The {@link User} for whom we need to read the preference (preferences are stored
-     *            per user)
      * @param aAnnotationService the annotation service.
      * @param aState
      *            The {@link AnnotatorState} that will be populated with preferences from the
      *            file
+     * @param aUsername
+     *            The {@link User} for whom we need to read the preference (preferences are stored
+     *            per user)
+     *
      * @throws BeansException hum?
      * @throws IOException hum?
      */
-    public static void loadPreferences(String aUsername, AnnotationSchemaService aAnnotationService,
-            UserPreferencesService aPrefService, AnnotatorState aState)
+    public static void loadPreferences(UserPreferencesService aPrefService,
+            AnnotationSchemaService aAnnotationService, AnnotatorState aState, String aUsername)
         throws BeansException, IOException
     {
         AnnotationPreference preference = aPrefService.loadPreferences(aState.getProject(),
@@ -74,11 +64,11 @@ public class PreferencesUtil
                 .collect(Collectors.toList()));
     }
 
-    public static void savePreference(AnnotatorState aBModel, ProjectService aRepository)
+    public static void savePreference(UserPreferencesService aPrefService, AnnotatorState aState,
+            String aUsername)
         throws IOException
     {
-        AnnotationPreference preference = aBModel.getPreferences();
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        aRepository.saveUserSettings(username, aBModel.getProject(), aBModel.getMode(), preference);
+        aPrefService.savePreferences(aState.getProject(), aUsername, aState.getMode(),
+                aState.getPreferences());
     }
 }

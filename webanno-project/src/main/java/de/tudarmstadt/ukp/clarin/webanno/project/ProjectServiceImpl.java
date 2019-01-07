@@ -26,7 +26,6 @@ import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
-import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -42,9 +41,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Properties;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -60,8 +57,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -80,7 +75,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -104,9 +98,6 @@ public class ProjectServiceImpl
 
     @Value(value = "${repository.path}")
     private File dir;
-
-    // The annotation preference properties File name
-    private static final String annotationPreferencePropertiesFileName = "annotation.properties";
 
     private boolean running = false;
 
@@ -624,17 +615,6 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public Properties loadUserSettings(String aUsername, Project aProject)
-        throws IOException
-    {
-        Properties property = new Properties();
-        property.load(new FileInputStream(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername + "/"
-                + annotationPreferencePropertiesFileName)));
-        return property;
-    }
-
-    @Override
     @Transactional
     public void removeProject(Project aProject)
         throws IOException
@@ -716,48 +696,6 @@ public class ProjectServiceImpl
         finally {
             closeQuietly(os);
             closeQuietly(aIs);
-        }
-    }
-
-    @Override
-    public <T> void saveUserSettings(String aUsername, Project aProject, Mode aSubject,
-            T aConfigurationObject)
-        throws IOException
-    {
-        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
-        Properties props = new Properties();
-        for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
-            if (wrapper.getPropertyValue(value.getName()) == null) {
-                continue;
-            }
-            props.setProperty(aSubject + "." + value.getName(),
-                    wrapper.getPropertyValue(value.getName()).toString());
-        }
-        String propertiesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
-        // append existing preferences for the other mode
-        if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
-            for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
-                String key = entry.getKey().toString();
-                // Maintain other Modes of annotations confs than this one
-                if (!key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
-                    props.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        
-//        for (String name : props.stringPropertyNames()) {
-//            log.info("{} = {}", name, props.getProperty(name));
-//        }
-        
-        FileUtils.forceMkdir(new File(propertiesPath));
-        props.store(new FileOutputStream(new File(propertiesPath,
-                annotationPreferencePropertiesFileName)), null);
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Saved preferences for user [{}] in project [{}]({})", aUsername,
-                    aProject.getName(), aProject.getId());
         }
     }
     

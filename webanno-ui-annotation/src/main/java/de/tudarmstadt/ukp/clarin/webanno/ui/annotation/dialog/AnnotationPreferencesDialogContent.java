@@ -58,7 +58,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrateg
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -79,6 +81,8 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
+    private @SpringBean UserDao userDao;
+    private @SpringBean UserPreferencesService userPreferencesService;
 
     private final ModalWindow modalWindow;
     private final Form<Preferences> form;
@@ -144,6 +148,8 @@ public class AnnotationPreferencesDialogContent
 
     private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
+        String username = userDao.getCurrentUser().getUsername();
+        
         try {
             AnnotatorState state = stateModel.getObject();
             Preferences model = form.getModelObject();
@@ -162,7 +168,7 @@ public class AnnotationPreferencesDialogContent
                     .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
                     .collect(Collectors.toList()));
             
-            PreferencesUtil.savePreference(state, projectService);
+            PreferencesUtil.savePreference(userPreferencesService, state, username);
         }
         catch (IOException e) {
             error("Preference file not found");

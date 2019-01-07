@@ -48,6 +48,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -61,6 +62,8 @@ import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
@@ -85,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -92,6 +96,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 public class AnnotationFeatureForm
     extends Form<AnnotatorState>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationFeatureForm.class);
+    
     public static final String ID_PREFIX = "featureEditorHead";
     
     private static final long serialVersionUID = 3635145598405490893L;
@@ -107,7 +113,7 @@ public class AnnotationFeatureForm
     private ConfirmationDialog deleteAnnotationDialog;
     private ConfirmationDialog replaceAnnotationDialog;
     private Label relationHint;
-    private LayerSelector layerSelector;
+    private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
@@ -334,10 +340,60 @@ public class AnnotationFeatureForm
         };
     }
     
-    private LayerSelector createDefaultAnnotationLayerSelector()
+    private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
-        return new LayerSelector("defaultAnnotationLayer",
-            new PropertyModel<>(this, "annotationLayers"));
+        DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
+        selector.setChoices(new PropertyModel<>(this, "annotationLayers"));
+        selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        selector.setOutputMarkupId(true);
+        selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
+                this::actionSelectLayer));
+        return selector;
+    }
+    
+    private void actionSelectLayer(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = getModelObject();
+
+        aTarget.add(relationHint);
+        aTarget.add(forwardAnnotation);
+        
+        // If forward annotation was enabled, disable it
+        if (state.isForwardAnnotation()) {
+            state.setForwardAnnotation(false);
+        }
+        
+        // If "remember layer" is set, the we really just update the selected layer...
+        // we do not touch the selected annotation not the annotation detail panel
+        if (state.getPreferences().isRememberLayer()) {
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+        }
+        // If "remember layer" is not set, then changing the layer means that we
+        // want to change the type of the currently selected annotation
+        else if (!Objects.equals(state.getSelectedAnnotationLayer(), 
+                state.getDefaultAnnotationLayer())
+            && state.getSelection().getAnnotation().isSet()) {
+            try {
+                if (state.getSelection().isArc()) {
+                    editorPanel.actionClear(aTarget);
+                }
+                else {
+                    actionReplace(aTarget);
+                }
+            }
+            catch (Exception e) {
+                handleException(this, aTarget, e);
+            }
+        }
+        // If no annotation is selected, then prime the annotation detail panel for the new type
+        else {
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+            selectedAnnotationLayer
+                    .setDefaultModelObject(Optional.ofNullable(state.getDefaultAnnotationLayer())
+                            .map(AnnotationLayer::getUiName).orElse(null));
+            aTarget.add(selectedAnnotationLayer);
+            editorPanel.clearFeatureEditorModels(aTarget);
+        }
     }
 
     private LambdaAjaxLink createSelectedTextLabel()
@@ -658,8 +714,6 @@ public class AnnotationFeatureForm
 
     public void updateLayersDropdown()
     {
-        editorPanel.getLog().trace("updateLayersDropdown()");
-
         AnnotatorState state = getModelObject();
         annotationLayers.clear();
         AnnotationLayer l = null;
@@ -696,8 +750,6 @@ public class AnnotationFeatureForm
 
     void updateRememberLayer()
     {
-        editorPanel.getLog().trace("updateRememberLayer()");
-
         AnnotatorState state = getModelObject();
         if (state.getPreferences().isRememberLayer()) {
             if (state.getDefaultAnnotationLayer() == null) {
@@ -712,71 +764,6 @@ public class AnnotationFeatureForm
         if (state.getSelectedAnnotationLayer() != null) {
             selectedAnnotationLayer.setDefaultModelObject(
                 state.getSelectedAnnotationLayer().getUiName());
-        }
-    }
-
-    protected class LayerSelector
-        extends BootstrapSelect<AnnotationLayer>
-    {
-        private static final long serialVersionUID = 2233133653137312264L;
-
-        LayerSelector(String aId, IModel<List<? extends AnnotationLayer>> aChoices)
-        {
-            super(aId, aChoices, new ChoiceRenderer<>("uiName"));
-            setOutputMarkupId(true);
-            add(new AjaxFormComponentUpdatingBehavior("change")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-
-                    aTarget.add(relationHint);
-                    aTarget.add(forwardAnnotation);
-                    
-                    // If forward annotation was enabled, disable it
-                    if (state.isForwardAnnotation()) {
-                        state.setForwardAnnotation(false);
-                    }
-                    
-                    // If "remember layer" is set, the we really just update the selected
-                    // layer...
-                    // we do not touch the selected annotation not the annotation detail panel
-                    if (state.getPreferences().isRememberLayer()) {
-                        state.setSelectedAnnotationLayer(getModelObject());
-                    }
-                    
-                    // If "remember layer" is not set, then changing the layer means that we
-                    // want to change the type of the currently selected annotation
-                    else if (!Objects.equals(state.getSelectedAnnotationLayer(), getModelObject())
-                        && state.getSelection().getAnnotation().isSet()) {
-                        try {
-                            if (state.getSelection().isArc()) {
-                                editorPanel.actionClear(aTarget);
-                            }
-                            else {
-                                actionReplace(aTarget);
-                            }
-                        }
-                        catch (Exception e) {
-                            handleException(AnnotationFeatureForm.LayerSelector.this,
-                                aTarget, e);
-                        }
-                    }
-                    // If no annotation is selected, then prime the annotation detail panel for
-                    // the new type
-                    else {
-                        state.setSelectedAnnotationLayer(getModelObject());
-                        selectedAnnotationLayer
-                                .setDefaultModelObject(Optional.ofNullable(getModelObject())
-                                        .map(AnnotationLayer::getUiName).orElse(null));
-                        aTarget.add(selectedAnnotationLayer);
-                        editorPanel.clearFeatureEditorModels(aTarget);
-                    }
-                }
-            });
         }
     }
 
@@ -839,7 +826,7 @@ public class AnnotationFeatureForm
         @Override
         protected void populateItem(final Item<FeatureState> item)
         {
-            editorPanel.getLog().trace("FeatureEditorPanelContent.populateItem("
+            LOG.trace("FeatureEditorPanelContent.populateItem("
                 + item.getModelObject().feature.getUiName() + ": "
                 + item.getModelObject().value + ")");
 
@@ -1024,7 +1011,7 @@ public class AnnotationFeatureForm
         return featureEditorPanel;
     }
     
-    protected LayerSelector getLayerSelector()
+    protected DropDownChoice<AnnotationLayer> getLayerSelector()
     {
         return layerSelector;
     }

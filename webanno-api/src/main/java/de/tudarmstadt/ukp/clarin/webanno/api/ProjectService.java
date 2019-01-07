@@ -23,12 +23,10 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
@@ -314,45 +312,6 @@ public interface ProjectService
     void savePropertiesFile(Project project, InputStream is, String fileName)
         throws IOException;
     
-    // --------------------------------------------------------------------------------------------
-    // Methods related to per-project user preferences
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Load annotation preferences such as {@code BratAnnotator#windowSize} from a property file
-     *
-     * @param username
-     *            the username.
-     * @param project
-     *            the project where the user is working on.
-     * @return the properties.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    Properties loadUserSettings(String username, Project project)
-        throws IOException;
-
-    /**
-     * Save annotation references, such as {@code BratAnnotator#windowSize}..., in a properties file
-     * so that they are not required to configure every time they open the document.
-     *
-     * @param <T>
-     *            object type to save
-     * @param username
-     *            the user name
-     * @param subject
-     *            differentiate the setting, either it is for {@code AnnotationPage} or
-     *            {@code CurationPage}
-     * @param configurationObject
-     *            The Object to be saved as preference in the properties file.
-     * @param project
-     *            The project where the user is working on.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    <T> void saveUserSettings(String username, Project project, Mode subject, T configurationObject)
-        throws IOException;
-
     // --------------------------------------------------------------------------------------------
     // Methods related to guidelines
     // --------------------------------------------------------------------------------------------
