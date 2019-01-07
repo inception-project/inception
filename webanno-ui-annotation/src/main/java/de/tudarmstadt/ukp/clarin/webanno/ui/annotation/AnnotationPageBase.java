@@ -391,6 +391,11 @@ public abstract class AnnotationPageBase
         }
     }
     
+    /**
+     * Load the user preferences. A side-effect of this method is that the active annotation layer
+     * is refreshed based on the visibility preferences and based on the project to which the 
+     * document being edited belongs.
+     */
     protected void loadPreferences() throws BeansException, IOException
     {
         AnnotatorState state = getModelObject();

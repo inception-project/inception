@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
@@ -26,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -62,6 +65,15 @@ public class PreferencesUtil
                 .filter(l -> l.isEnabled())// only allow enabled layers
                 .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(Collectors.toList()));
+        
+        // set default layer according to preferences
+        Optional<AnnotationLayer> defaultLayer = aState.getAnnotationLayers().stream()
+                .filter(layer -> Objects.equals(layer.getId(), preference.getDefaultLayer()))
+                .findFirst();
+        if (defaultLayer.isPresent()) {
+            aState.setDefaultAnnotationLayer(defaultLayer.get());
+            aState.setSelectedAnnotationLayer(defaultLayer.get());
+        }
     }
 
     public static void savePreference(UserPreferencesService aPrefService, AnnotatorState aState,

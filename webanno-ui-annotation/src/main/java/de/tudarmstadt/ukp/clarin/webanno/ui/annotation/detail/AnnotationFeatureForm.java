@@ -84,11 +84,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -124,6 +126,8 @@ public class AnnotationFeatureForm
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserPreferencesService userPreferencesService;
+    private @SpringBean UserDao userDao;
 
     AnnotationFeatureForm(AnnotationDetailEditorPanel aEditorPanel, String id,
         IModel<AnnotatorState> aState)
@@ -310,11 +314,11 @@ public class AnnotationFeatureForm
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);
         selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
-                this::actionSelectLayer));
+                this::actionChangeDefaultLayer));
         return selector;
     }
     
-    private void actionSelectLayer(AjaxRequestTarget aTarget)
+    private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
 
@@ -356,6 +360,26 @@ public class AnnotationFeatureForm
                             .map(AnnotationLayer::getUiName).orElse(null));
             aTarget.add(selectedAnnotationLayer);
             editorPanel.clearFeatureEditorModels(aTarget);
+        }
+        
+        // Save the currently selected layer as a user preference so it is remains active when a
+        // user leaves the application and later comes back to continue annotating
+        long prevDefaultLayer = state.getPreferences().getDefaultLayer();
+        if (state.getDefaultAnnotationLayer() != null) {
+            state.getPreferences().setDefaultLayer(state.getDefaultAnnotationLayer().getId());
+        }
+        else {
+            state.getPreferences().setDefaultLayer(-1);
+        }
+        if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
+            try {
+                userPreferencesService.savePreferences(state.getProject(),
+                        userDao.getCurrentUser().getUsername(), state.getMode(),
+                        state.getPreferences());
+            }
+            catch (IOException e) {
+                handleException(this, aTarget, e);
+            }
         }
     }
 

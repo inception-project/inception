@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.io.Serializable;
@@ -56,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
 /**
@@ -86,7 +86,7 @@ public class OpenDocumentDialogPanel
 
     private final User user;
 
-    private final AnnotatorState bModel;
+    private final AnnotatorState state;
     
     private IModel<List<DecoratedObject<Project>>> projects;
     
@@ -98,7 +98,7 @@ public class OpenDocumentDialogPanel
         super(aId);
         
         modalWindow = aModalWindow;
-        bModel = aBModel;
+        state = aBModel;
         user = userRepository.getCurrentUser();
         projects = aProjects;
         
@@ -208,25 +208,15 @@ public class OpenDocumentDialogPanel
     {
         private static final long serialVersionUID = -1L;
 
-        ListView<DecoratedObject<SourceDocument>> lv;
+        private ListView<DecoratedObject<SourceDocument>> lv;
         
         public DocumentSelectionForm(String id, final ModalWindow modalWindow)
         {
-
             super(id, new CompoundPropertyModel<>(new SelectionModel()));
 
             documentSelection = new Select<>("documentSelection");
             lv = new ListView<DecoratedObject<SourceDocument>>("documents",
-                    new LoadableDetachableModel<List<DecoratedObject<SourceDocument>>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<DecoratedObject<SourceDocument>> load()
-                        {
-                            return listDocuments();
-                        }
-                    })
+                    LoadableDetachableModel.of(OpenDocumentDialogPanel.this::listDocuments))
             {
                 private static final long serialVersionUID = 8901519963052692214L;
 
@@ -250,40 +240,16 @@ public class OpenDocumentDialogPanel
                             "color:" + aItem.getModelObject().getColor() + ";")));
                 }
             };
-            add(documentSelection.add(lv));
+            documentSelection.add(lv);
             documentSelection.setOutputMarkupId(true);
-            documentSelection.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    selectedDocument = getModelObject().documentSelection;
-                    aTarget.add(buttonsForm);
-                }
-            }).add(new AjaxEventBehavior("dblclick")
-            {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onEvent(final AjaxRequestTarget aTarget)
-                {
-                    // do not use this default layer in that other project
-                    if (bModel.getProject() != null) {
-                        if (!bModel.getProject().equals(selectedProject)) {
-                            bModel.setDefaultAnnotationLayer(null);
-                        }
-                    }
-                    if (selectedProject != null && selectedDocument != null) {
-                        bModel.setProject(selectedProject);
-                        bModel.setDocument(selectedDocument, lv.getModelObject().stream()
-                                .map(t -> t.get()).collect(Collectors.toList()));
-                        modalWindow.close(aTarget);
-                    }
-                }
-            });
+            documentSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
+                selectedDocument = getModelObject().documentSelection;
+                _target.add(buttonsForm);
+            }));
+            documentSelection.add(AjaxEventBehavior.onEvent("dblclick",
+                    OpenDocumentDialogPanel.this::actionOpenDocument));
+            
+            add(documentSelection);
         }
     }
 
@@ -298,7 +264,7 @@ public class OpenDocumentDialogPanel
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
         // finished for curation dialog
-        switch (bModel.getMode()) {
+        switch (state.getMode()) {
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
@@ -344,37 +310,32 @@ public class OpenDocumentDialogPanel
         {
             super(id);
             
-            add(new LambdaAjaxLink("openButton", this::actionOpenDocument)
-                    .add(LambdaBehavior.onConfigure(c -> c.setEnabled(selectedDocument != null))));
+            add(new LambdaAjaxLink("openButton", OpenDocumentDialogPanel.this::actionOpenDocument)
+                    .add(enabledWhen(() -> selectedDocument != null)));
 
-            add(new LambdaAjaxLink("cancelButton", this::actionCancel));
+            add(new LambdaAjaxLink("cancelButton", OpenDocumentDialogPanel.this::actionCancel));
         }
-        
-        private void actionOpenDocument(AjaxRequestTarget aTarget)
-        {
-            if (bModel.getProject() != null) {
-                if (!bModel.getProject().equals(selectedProject)) {
-                    bModel.setDefaultAnnotationLayer(null);
-                }
-            }
-            
-            bModel.setProject(selectedProject);
-            bModel.setDocument(selectedDocument,
-                    documentSelectionForm.lv.getModelObject().stream().map(t -> t.get())
-                            .collect(Collectors.toList()));
+    }
+
+    private void actionOpenDocument(AjaxRequestTarget aTarget)
+    {
+        if (selectedProject != null && selectedDocument != null) {
+            state.setProject(selectedProject);
+            state.setDocument(selectedDocument, documentSelectionForm.lv.getModelObject()
+                    .stream().map(t -> t.get()).collect(Collectors.toList()));
             modalWindow.close(aTarget);
         }
-        
-        private void actionCancel(AjaxRequestTarget aTarget)
-        {
-            projectSelectionForm.detach();
-            documentSelectionForm.detach();
-            if (Mode.CURATION.equals(bModel.getMode())) {
-                bModel.setDocument(null, null); // on cancel, go welcomePage
-            }
-            onCancel(aTarget);
-            modalWindow.close(aTarget);
+    }
+    
+    private void actionCancel(AjaxRequestTarget aTarget)
+    {
+        projectSelectionForm.detach();
+        documentSelectionForm.detach();
+        if (Mode.CURATION.equals(state.getMode())) {
+            state.setDocument(null, null); // on cancel, go welcomePage
         }
+        onCancel(aTarget);
+        modalWindow.close(aTarget);
     }
 
     protected void onCancel(AjaxRequestTarget aTarget)

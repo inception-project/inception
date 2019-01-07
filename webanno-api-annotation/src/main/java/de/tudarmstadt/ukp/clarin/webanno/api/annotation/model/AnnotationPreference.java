@@ -53,6 +53,8 @@ public class AnnotationPreference
     // Id of annotation layers, to be stored in the properties file comma separated: 12, 34,....
     private Set<Long> hiddenAnnotationLayerIds = new HashSet<>();
 
+    private long defaultLayer = -1;
+    
     private int windowSize;
 
     private int curationWindowSize = 10;
@@ -249,5 +251,15 @@ public class AnnotationPreference
     public void setEditor(String aEditor)
     {
         editor = aEditor;
+    }
+
+    public void setDefaultLayer(long aLayerId)
+    {
+        defaultLayer = aLayerId;
+    }
+    
+    public long getDefaultLayer()
+    {
+        return defaultLayer;
     }
 }
