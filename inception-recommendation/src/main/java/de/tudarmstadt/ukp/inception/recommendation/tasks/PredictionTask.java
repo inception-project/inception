@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
+package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_NO_LABEL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
@@ -69,6 +70,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * This consumer predicts new annotations for a given annotation layer, if a classification tool for
@@ -88,7 +90,7 @@ public class PredictionTask
     
     public PredictionTask(User aUser, Project aProject)
     {
-        super(aProject, aUser);
+        super(aUser, aProject);
     }
 
     @Override

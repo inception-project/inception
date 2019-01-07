@@ -15,11 +15,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks;
+package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.concurrent.LazyInitializer;
@@ -44,11 +45,13 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
- * This task is run every 60 seconds, if the document has changed. It evaluates all available
- * classification tools for all annotation layers of the current project. If a classifier exceeds
- * its specific activation f-score limit during the evaluation it is selected for active prediction.
+ * This task evaluates all available classification tools for all annotation layers of the current
+ * project. If a classifier exceeds its specific activation f-score limit during the evaluation it
+ * is selected for active prediction.
  */
 public class SelectionTask
     extends Task
@@ -59,10 +62,11 @@ public class SelectionTask
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired ApplicationEventPublisher appEventPublisher;
-    
-    public SelectionTask(User aUser, Project aProject)
+    private @Autowired SchedulingService schedulingService;
+
+    public SelectionTask(Project aProject, User aUser)
     {
-        super(aProject, aUser);
+        super(aUser, aProject);
     }
 
     @Override
@@ -168,6 +172,8 @@ public class SelectionTask
     
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
+
+        schedulingService.enqueue(new PredictionTask(user, getProject()));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)
@@ -180,10 +186,8 @@ public class SelectionTask
                 casses.add(jCas.getCas());
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
-                continue;
             } catch (UIMAException e) {
                 log.error("Cannot upgrade annotation CAS.", e);
-                continue;
             }
         }
         return casses;
