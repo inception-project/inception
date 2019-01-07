@@ -123,7 +123,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
