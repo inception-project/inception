@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -43,11 +45,14 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -153,7 +158,7 @@ public class KnowledgeBasePanel
             {
                 List<KBHandle> choices = listSearchResults(aProjectModel.getObject(), input);
 
-                return KBHandle.distinctByIri(choices);
+                return choices;
 
             }
 
@@ -178,6 +183,11 @@ public class KnowledgeBasePanel
                 behavior.setOption("autoWidth", true);
                 behavior.setOption("ignoreCase", false);
             }
+
+            @Override
+            protected IJQueryTemplate newTemplate() {
+                return KendoChoiceDescriptionScriptReference.template();
+            }
         };
 
         return field;
@@ -185,30 +195,30 @@ public class KnowledgeBasePanel
 
     /**
      * Search for Entities in the current knowledge base based on a typed string. Use full text
-     * search if it is available.
+     * search if it is available. Returns a sorted/ranked list of KBHandles
      */
-    private List<KBHandle> listSearchResults(Project aProject, String aTypedString) {
+    private List<KBHandle> listSearchResults(Project aProject, String aTypedString)
+    {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
         if (kb.isSupportConceptLinking()) {
             results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
         }
         else {
-            results = kbService
-                .getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
-                    ConceptFeatureValueType.ANY_OBJECT, aProject);
+            results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
+                ConceptFeatureValueType.ANY_OBJECT, aProject);
             // Sort and filter results
             String inputLowerCase = aTypedString != null ? aTypedString.toLowerCase() : "";
             results = results.stream()
                 .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(inputLowerCase))
-                .sorted(Comparator.comparing(KBObject::getUiLabel))
-                .collect(Collectors.toList());
+                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
+            results = KBHandle.distinctByIri(results);
         }
         return results;
     }
 
     /**
-     * Send events according to selected {@link KBObject}
+     * Send selection-changed events according to type of the selected {@link KBObject}
      */
     private void sendSelectionChangedEvents(AjaxRequestTarget aTarget, KBObject aKbObject) {
         if (aKbObject instanceof KBConcept) {
