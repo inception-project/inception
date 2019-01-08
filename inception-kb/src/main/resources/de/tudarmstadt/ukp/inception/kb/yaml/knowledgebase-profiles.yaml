@@ -136,7 +136,7 @@ zbw-stw-economics:
   type: REMOTE
   access:
       access-url: http://zbw.eu/beta/sparql/stw/query
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+      full-text-search: FTS:NONE
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
@@ -152,7 +152,7 @@ zbw-gnd:
   type: REMOTE
   access:
       access-url: http://zbw.eu/beta/sparql/gnd/query
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+      full-text-search: FTS:NONE
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
