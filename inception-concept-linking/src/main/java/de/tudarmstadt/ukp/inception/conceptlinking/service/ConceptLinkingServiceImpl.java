@@ -618,6 +618,22 @@ public class ConceptLinkingServiceImpl
         return handles;
     }
 
+    @Override
+    public List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString)
+    {
+        Set<CandidateEntity> allCandidates = new HashSet<>();
+        if (aTypedString == null) {
+            aTypedString = "";
+        }
+        if (!aTypedString.isEmpty()) {
+            allCandidates = getCandidatesFullText(aKB, aTypedString);
+        }
+        return allCandidates.stream()
+            .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription())).distinct()
+            .limit(properties.getCandidateDisplayLimit())
+            .filter(h -> h.getIdentifier().contains(":")).collect(Collectors.toList());
+    }
+
     /**
      * Remove all cache entries of a specific project
      * @param aEvent

@@ -17,12 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -89,6 +87,7 @@ public class KnowledgeBasePanel
     private static final String DETAILS_MARKUP_ID = "details";
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean ConceptLinkingService conceptLinkingService;
 
     private IModel<KnowledgeBase> kbModel;
     private Model<KBHandle> selectedConceptHandle = Model.of();
@@ -152,16 +151,7 @@ public class KnowledgeBasePanel
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = kbService
-                    .getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
-                        ConceptFeatureValueType.ANY_OBJECT, aProjectModel.getObject());
-
-                // Sort and filter results
-                String inputLowerCase = input != null ? input.toLowerCase() : "";
-                choices = choices.stream()
-                    .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(inputLowerCase))
-                    .sorted(Comparator.comparing(KBObject::getUiLabel))
-                    .collect(Collectors.toList());
+                List<KBHandle> choices = listSearchResults(aProjectModel.getObject(), input);
 
                 return KBHandle.distinctByIri(choices);
 
@@ -191,6 +181,30 @@ public class KnowledgeBasePanel
         };
 
         return field;
+    }
+
+    /**
+     * Search for Entities in the current knowledge base based on a typed string. Use full text
+     * search if it is available.
+     */
+    private List<KBHandle> listSearchResults(Project aProject, String aTypedString) {
+        List<KBHandle> results;
+        KnowledgeBase kb = kbModel.getObject();
+        if (kb.isSupportConceptLinking()) {
+            results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
+        }
+        else {
+            results = kbService
+                .getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
+                    ConceptFeatureValueType.ANY_OBJECT, aProject);
+            // Sort and filter results
+            String inputLowerCase = aTypedString != null ? aTypedString.toLowerCase() : "";
+            results = results.stream()
+                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(inputLowerCase))
+                .sorted(Comparator.comparing(KBObject::getUiLabel))
+                .collect(Collectors.toList());
+        }
+        return results;
     }
 
     /**
