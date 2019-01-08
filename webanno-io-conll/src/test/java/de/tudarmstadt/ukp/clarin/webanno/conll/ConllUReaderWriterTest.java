@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.conll;
 
-import static de.tudarmstadt.ukp.dkpro.core.testing.IOTestRunner.testOneWay;
-import static de.tudarmstadt.ukp.dkpro.core.testing.IOTestRunner.testRoundTrip;
+import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testOneWay;
+import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testRoundTrip;
 
 import org.junit.Ignore;
 import org.junit.Rule;
