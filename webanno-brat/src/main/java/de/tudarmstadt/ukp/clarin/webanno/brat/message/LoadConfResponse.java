@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
 
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 
 /**
  * Response for the {@code loadConf} command.

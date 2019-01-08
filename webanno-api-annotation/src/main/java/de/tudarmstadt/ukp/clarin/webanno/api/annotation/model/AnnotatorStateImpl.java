@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.Serializable;
@@ -340,7 +341,13 @@ public class AnnotatorStateImpl
     @Override
     public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
     {
-        annotationLayers = aAnnotationLayers;
+        annotationLayers = unmodifiableList(new ArrayList<>(aAnnotationLayers));
+        
+        // Make sure the currently selected layer is actually visible/exists
+        if (!annotationLayers.contains(selectedAnnotationLayer)) {
+            selectedAnnotationLayer = !annotationLayers.isEmpty() ? annotationLayers.get(0) : null;
+            defaultAnnotationLayer = selectedAnnotationLayer;
+        }
     }
 
     @Override
