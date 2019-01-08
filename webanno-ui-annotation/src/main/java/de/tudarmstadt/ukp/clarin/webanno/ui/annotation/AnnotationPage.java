@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -573,8 +573,7 @@ public class AnnotationPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(state.getUser().getUsername(), defaultPreferences,
-                    projectService, annotationService, state, state.getMode());
+            loadPreferences();
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {

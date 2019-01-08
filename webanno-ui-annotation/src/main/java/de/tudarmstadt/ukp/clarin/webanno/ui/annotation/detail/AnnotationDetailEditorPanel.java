@@ -1500,10 +1500,6 @@ public abstract class AnnotationDetailEditorPanel
         return msg;
     }
 
-    Logger getLog() {
-        return LOG;
-    }
-
     public AnnotationPageBase getEditorPage()
     {
         return page;

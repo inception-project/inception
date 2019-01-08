@@ -15,20 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.brat.config;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
 @ConfigurationProperties("ui.brat")
-public class BratProperties
+public class BratPropertiesImpl implements BratProperties
 {
     private boolean singleClickSelection = false;
     private int pageSize = 5;
     private boolean autoScroll = true;
     private boolean rememberLayer = false;
 
+    @Override
     public boolean isSingleClickSelection()
     {
         return singleClickSelection;
@@ -39,6 +40,7 @@ public class BratProperties
         singleClickSelection = aSingleClickSelection;
     }
 
+    @Override
     public int getPageSize()
     {
         return pageSize;
@@ -49,6 +51,7 @@ public class BratProperties
         pageSize = aPageSize;
     }
 
+    @Override
     public boolean isAutoScroll()
     {
         return autoScroll;
@@ -59,6 +62,7 @@ public class BratProperties
         autoScroll = aAutoScroll;
     }
 
+    @Override
     public boolean isRememberLayer()
     {
         return rememberLayer;

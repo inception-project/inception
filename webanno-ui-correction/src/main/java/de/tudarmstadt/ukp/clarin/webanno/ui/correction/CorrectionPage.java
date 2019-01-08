@@ -64,9 +64,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -84,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
@@ -122,7 +121,7 @@ public class CorrectionPage
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratProperties defaultPreferences;
+    private @SpringBean BratPropertiesImpl defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -659,8 +658,7 @@ public class CorrectionPage
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, defaultPreferences, projectService,
-                    annotationService, state, state.getMode());
+            loadPreferences();
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));

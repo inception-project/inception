@@ -39,11 +39,13 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -63,6 +65,7 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean UserPreferencesService userPreferenceService;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
@@ -386,5 +389,17 @@ public abstract class AnnotationPageBase
                                 + layer.getUiName() + "] is invalid: " + message.getMessage());
             }
         }
+    }
+    
+    /**
+     * Load the user preferences. A side-effect of this method is that the active annotation layer
+     * is refreshed based on the visibility preferences and based on the project to which the 
+     * document being edited belongs.
+     */
+    protected void loadPreferences() throws BeansException, IOException
+    {
+        AnnotatorState state = getModelObject();
+        PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
+                state, state.getUser().getUsername());
     }
 }
