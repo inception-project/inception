@@ -1,0 +1,16 @@
+# sent_id = 1
+# text = They buy and sell books.
+1	They	they	PRP	PRP	Case=Nom|Number=Plur	2	nsubj	2:nsubj|4:nsubj	_
+2	buy	buy	VBP	VBP	Number=Plur|Person=3|Tense=Pres	0	root	0:root	_
+3	and	and	CC	CC	_	4	cc	4:cc	_
+4	sell	sell	VBP	VBP	Number=Plur|Person=3|Tense=Pres	2	conj	0:root|2:conj	_
+5	books	book	NNS	NNS	Number=Plur	2	obj	2:obj|4:obj	SpaceAfter=No
+6	.	.	.	.	_	2	punct	2:punct	_
+
+# sent_id = 2
+# text = I have no clue.
+1	I	I	PRP	PRP	Case=Nom|Number=Sing|Person=1	2	nsubj	_	_
+2	have	have	VBP	VBP	Number=Sing|Person=1|Tense=Pres	0	root	_	_
+3	no	no	DT	DT	PronType=Neg	4	det	_	_
+4	clue	clue	NN	NN	Number=Sing	2	obj	_	SpaceAfter=No
+5	.	.	.	.	_	2	punct	_	_

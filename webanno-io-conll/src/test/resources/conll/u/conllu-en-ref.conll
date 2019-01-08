@@ -1,3 +1,5 @@
+# sent_id = 1
+# text = They buy and sell books.
 1	They	they	PRN	PRN	Case=Nom|Number=Plur	2	nsubj	4:nsubj	_
 2	buy	buy	VB	VB	Number=Plur|Person=3|Tense=Pres	0	root	_	_
 3	and	and	CC	CC	_	2	cc	_	_
@@ -5,6 +7,8 @@
 5	books	book	NNS	NNS	Number=Plur	2	dobj	4:dobj	SpaceAfter=No
 6	.	.	.	.	_	2	punct	_	_
 
+# sent_id = 2
+# text = I have not a clue.
 1	I	I	PRN	PRN	Case=Nom|Number=Sing|Person=1	2	nsubj	_	_
 2-3	haven't	_	_	_	_	_	_	_	_
 2	have	have	VB	VB	Number=Sing|Person=1|Tense=Pres	0	root	_	_
