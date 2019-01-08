@@ -53,11 +53,11 @@ public class PdfExtractFileTest
     {
         List<PdfExtractLine> pdfExtractLines = new ArrayList<>();
         pdfExtractLines.add(
-            new PdfExtractLine(1, 6, "c", "550.406 789.56177 8.3499165 16.080894"));
+            new PdfExtractLine(1, 7, "c", "550.406 789.56177 8.3499165 16.080894"));
         pdfExtractLines.add(
-            new PdfExtractLine(1, 10, "[", "551.406 790.56177 9.3499165 17.080894"));
+            new PdfExtractLine(1, 11, "[", "551.406 790.56177 9.3499165 17.080894"));
         pdfExtractLines.add(
-            new PdfExtractLine(1, 11, "4", "552.406 791.56177 10.3499165 18.080894"));
+            new PdfExtractLine(1, 12, "4", "552.406 791.56177 10.3499165 18.080894"));
         assertThat(pdfExtractLines).isEqualTo(pdfExtractFile.getStringPdfExtractLines(3, 5));
     }
 }

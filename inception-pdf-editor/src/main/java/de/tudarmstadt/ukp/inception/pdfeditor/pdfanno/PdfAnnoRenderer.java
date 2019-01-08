@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -108,43 +110,62 @@ public class PdfAnnoRenderer
     private static Span convertToPdfAnnoSpan(VSpan aVspan, String aColor, String aDocumentText,
                                              PdfExtractFile aPdfExtractFile)
     {
-        int spanBegin = aDocumentText.length();
-        int spanEnd = -1;
+        int docTextLen = aDocumentText.length();
+        int vSpanBegin = aDocumentText.length();
+        int vSpanEnd = -1;
         // search for begin of the first range and end of the last range and use those
         for (VRange range : aVspan.getRanges())
         {
-            if (range.getBegin() < spanBegin) spanBegin = range.getBegin();
-            if (range.getEnd() > spanEnd) spanEnd = range.getEnd();
+            if (range.getBegin() < vSpanBegin) vSpanBegin = range.getBegin();
+            if (range.getEnd() > vSpanEnd) vSpanEnd = range.getEnd();
         }
 
-        // use offset pre and post string to increase uniqueness of annotation text
-        int offset = 20;
-        int start = spanBegin <= offset ? 0 : spanBegin - offset;
-        int end = spanEnd < aDocumentText.length() - offset
-            ? spanEnd + offset : aDocumentText.length() - 1;
+        // use an offset before and after string to find a unique text snippet for an annotation
+        // begin with 0 and increase by 1 until a unique text is found
+        // offset is limited to length of a quarter of the text
+        for (int offset = 0; offset < docTextLen / 4 + 1; offset++)
+        {
+            // subtract offset from vSpanBegin and add offset to vSpanEnd and stay in bounds
+            int offsetBegin = vSpanBegin <= offset ? 0 : vSpanBegin - offset;
+            int offsetEnd = vSpanEnd < docTextLen - offset ? vSpanEnd + offset : docTextLen - 1;
 
-        String annotatedText = aDocumentText.substring(start, end);
-        String preText = annotatedText.substring(0,
-            (spanBegin <= offset ? spanBegin - start : offset));
-        String postText = annotatedText.substring(annotatedText.length() -
-            (spanEnd < aDocumentText.length() - offset
-                ? offset : aDocumentText.length() - spanEnd), annotatedText.length()) ;
-        // remove whitespaces as they are not present in PDFExtract text
-        String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
+            // get annotated text from aDocumentText with offset before and after it
+            // also remove all whitespaces because they do not exist in PDFExtract text
+            String annotatedText = aDocumentText.substring(offsetBegin, offsetEnd).replaceAll("\\s", "");
+            String offsetBeforeText = aDocumentText.substring(offsetBegin, vSpanBegin).replaceAll("\\s", "");
+            String offsetAfterText = aDocumentText.substring(vSpanEnd, offsetEnd).replaceAll("\\s", "");
 
-        int index = aPdfExtractFile.getStringContent().indexOf(cleanAnnotatedText);
-        if (index < 0) {
-            LOG.error("Could not map exisiting annotation with id " + aVspan.getVid().toString());
-            return null;
-        } else {
-            start = index + preText.replaceAll("\\s", "").length() + 1;
-            end = index + cleanAnnotatedText.length() - postText.replaceAll("\\s", "").length();
-            PdfExtractLine first = aPdfExtractFile.getStringPdfExtractLine(start);
-            PdfExtractLine last = aPdfExtractFile.getStringPdfExtractLine(end);
-            return new Span(aVspan.getVid().getId(), first.getPage(), aColor,
-                cleanAnnotatedText.substring(start - index, end - index).replaceAll("\\s", ""),
-                first.getPosition(), last.getPosition());
+            List<Integer> indices =
+                getAllIndices(aPdfExtractFile.getStringContent(), annotatedText);
+            if (indices.size() == 0) {
+                // if there are no matches end search as adding more characters won't help anymore
+                break;
+            } else if (indices.size() == 1) {
+                int index = indices.get(0);
+                // get begin and end position of the original annotationText within PDFExtract text
+                int annotationBegin = index + offsetBeforeText.length();
+                int annotationEnd = index + annotatedText.length() - offsetAfterText.length() - 1;
+                // get according PDFExtract file lines for begin and end of annotation
+                PdfExtractLine firstLine = aPdfExtractFile.getStringPdfExtractLine(annotationBegin);
+                PdfExtractLine lastLine = aPdfExtractFile.getStringPdfExtractLine(annotationEnd);
+                return new Span(aVspan.getVid().getId(), firstLine.getPage(), aColor,
+                    annotatedText.substring(annotationBegin - index, annotationEnd - index + 1),
+                    firstLine.getPosition(), lastLine.getPosition());
+            }
         }
+        LOG.error("Could not map existing annotation with id " + aVspan.getVid().toString());
+        return null;
+    }
+
+    private static List<Integer> getAllIndices(String searchIn, String searchFor)
+    {
+        List<Integer> indices = new ArrayList<>();
+        int index = searchIn.indexOf(searchFor);
+        while (index >= 0) {
+            indices.add(index);
+            index = searchIn.indexOf(searchFor, index + 1);
+        }
+        return indices;
     }
 
     private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
