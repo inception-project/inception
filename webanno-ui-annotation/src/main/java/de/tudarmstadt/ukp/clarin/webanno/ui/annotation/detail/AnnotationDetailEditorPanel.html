@@ -88,11 +88,11 @@
           <div class="panel-heading">
             <h3 class="panel-title">
               Annotation
-              <div class="pull-right">
+              <span class="pull-right">
                 <input wicket:id="delete" type="button" class="btn btn-xs btn-danger" wicket:message="value:delete"/>
                 <input wicket:id="reverse" type="button" class="btn btn-xs btn-default" wicket:message="value:reverse"/>
                 <input wicket:id="clear" type="button" class="btn btn-xs btn-default" wicket:message="value:clear"/>
-              </div> 
+              </span> 
             </h3>
           </div>
           <div class="scrolling panel-body">
@@ -104,6 +104,12 @@
                   wicket:id=forwardAnno></input>
               </div>
               
+              <div class="form-group" wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em;">
+                <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
+                  <wicket:container wicket:id="selectedAnnotationType"/>
+                </div>
+              </div>
+
               <div wicket:id="featureEditorsContainer" class="form-horizontal">
                 <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
                   <label class="col-sm-3 control-label">Layer</label>
@@ -114,7 +120,7 @@
                 <div class="form-group">
                   <label class="col-sm-3 control-label">Text</label>
                   <div class="col-sm-9" style="position: relative; height: 5em;">
-                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;" readonly>
+                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;" readonly>
                       <a wicket:id="jumpToAnnotation"><wicket:container wicket:id="selectedText"/></a>
                     </div>
                   </div>

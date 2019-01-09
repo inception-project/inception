@@ -369,10 +369,71 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationLayer getLayer(String aName, Project aProject)
     {
-        return entityManager
-                .createQuery("From AnnotationLayer where name = :name AND project =:project",
-                        AnnotationLayer.class).setParameter("name", aName)
-                .setParameter("project", aProject).getSingleResult();
+        // If there is a layer definition for the given name, then return it immediately
+        Optional<AnnotationLayer> layer = getLayerInternal(aName, aProject);
+        if (layer.isPresent()) {
+            return layer.get();
+        }
+        
+        TypeSystemDescription tsd;
+        try {
+            tsd = getFullProjectTypeSystem(aProject);
+        }
+        catch (ResourceInitializationException e) {
+            throw new RuntimeException(e);
+        }
+
+        TypeDescription type = tsd.getType(aName);
+        // If the super-type is not covered by the type system, then it is most likely a
+        // UIMA built-in type. In this case we can stop the search since we do not have
+        // layer definitions for UIMA built-in types.
+        if (type == null) {
+            throw new NoResultException("Type [" + aName + "] not found in the type system");
+        }
+        
+        // If there is no layer definition for the given type name, try using the type system
+        // definition to determine a suitable layer definition for a super type of the given type.
+        while (true) {
+            // If there is no super type, then we cannot find a suitable layer definition
+            if (type.getSupertypeName() == null) {
+                throw new NoResultException(
+                        "No more super-types - no suitable layer definition found for type ["
+                                + aName + "]");
+            }
+
+            // If there is a super-type then see if there is layer definition for it
+            type = tsd.getType(type.getSupertypeName());
+
+            // If the super-type is not covered by the type system, then it is most likely a
+            // UIMA built-in type. In this case we can stop the search since we do not have
+            // layer definitions for UIMA built-in types.
+            if (type == null) {
+                throw new NoResultException(
+                        "Super-type not in type system - no suitable layer definition found for type ["
+                                + aName + "]");
+            }
+
+            layer = getLayerInternal(type.getName(), aProject);
+            
+            // If the a layer definition of the given type was found, return it
+            if (layer.isPresent()) {
+                return layer.get();
+            }
+            
+            // Otherwise attempt going one level higher in the inheritance hierarchy
+        }
+    }
+    
+    private Optional<AnnotationLayer> getLayerInternal(String aName, Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM AnnotationLayer ",
+                "WHERE name = :name AND project = :project");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getResultStream().findFirst();
     }
     
     @Override
