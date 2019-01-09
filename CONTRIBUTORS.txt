@@ -13,6 +13,7 @@
 # Please keep the list sorted.
 
 Beto Boullosa
+Jan-Christoph Klie [rentier]
 Jennifer Chen [shinyichen]
 Michael Bugert
 Peter Jiang
