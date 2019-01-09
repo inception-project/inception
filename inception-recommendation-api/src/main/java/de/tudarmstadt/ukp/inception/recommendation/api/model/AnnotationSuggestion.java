@@ -71,7 +71,6 @@ public class AnnotationSuggestion
     private final String feature;
 
     private final String documentName;
-    private final String documentUri;
 
     private final int begin;
     private final int end;
@@ -84,8 +83,8 @@ public class AnnotationSuggestion
     private int hidingFlags = 0;
 
     public AnnotationSuggestion(int aId, long aRecommenderId, String aRecommenderName,
-            long aLayerId, String aFeature, String aDocumentName, String aDocumentUri, int aBegin,
-            int aEnd, String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
+        long aLayerId, String aFeature, String aDocumentName, int aBegin, int aEnd,
+        String aCoveredText, String aLabel, String aUiLabel, double aConfidence)
     {
         label = aLabel;
         uiLabel = aUiLabel;
@@ -99,7 +98,6 @@ public class AnnotationSuggestion
         end = aEnd;
         coveredText = aCoveredText;
         documentName = aDocumentName;
-        documentUri = aDocumentUri;
     }
 
     /**
@@ -122,7 +120,6 @@ public class AnnotationSuggestion
         end = aObject.end;
         coveredText = aObject.coveredText;
         documentName = aObject.documentName;
-        documentUri = aObject.documentUri;
     }
 
     // Getter and setter
@@ -270,7 +267,7 @@ public class AnnotationSuggestion
         return new ToStringBuilder(this).append("id", id).append("recommenderId", recommenderId)
                 .append("recommenderName", recommenderName).append("layerId", layerId)
                 .append("feature", feature).append("documentName", documentName)
-                .append("documentUri", documentUri).append("begin", begin).append("end", end)
+                .append("begin", begin).append("end", end)
                 .append("coveredText", coveredText).append("label", label)
                 .append("uiLabel", uiLabel).append("confidence", confidence)
                 .append("visible", isVisible())
