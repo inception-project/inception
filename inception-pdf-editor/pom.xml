@@ -115,7 +115,7 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.pdfextract</groupId>
       <artifactId>pdfextract</artifactId>
-      <version>0.3.2.1</version>
+      <version>0.3.2.2</version>
     </dependency>
 
     <!-- Testing -->
