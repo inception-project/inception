@@ -63,6 +63,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.Bootst
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -322,18 +324,26 @@ public class SearchPage extends ApplicationPageBase
             String title = defaultIfBlank(result.getDocumentTitle(),
                             defaultIfBlank(result.getDocumentId(), 
                             defaultIfBlank(result.getUri(), "<no title>")));
+            boolean existsSourceDocument = documentService.existsSourceDocument(project,
+                    documentTitle);
             
             link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            add(new Label("importStatus", () -> 
-                    documentService.existsSourceDocument(project, documentTitle) ? "imported"
-                            : "not imported"));
+            add(new Label("importStatus", () ->
+                    existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
-                    .add(visibleWhen(() -> 
-                        !documentService.existsSourceDocument(project, documentTitle))));
+                    .add(visibleWhen(() -> !existsSourceDocument)));
+            add(new LambdaAjaxLink("openLink", _target -> {
+                PageParameters pageParameters = new PageParameters()
+                    .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
+                    .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
+                        documentService.getSourceDocument(project, documentTitle).getId());
+                setResponsePage(AnnotationPage.class, pageParameters);
+            }).add(
+                visibleWhen(() -> existsSourceDocument)));
         }
     }
 }
