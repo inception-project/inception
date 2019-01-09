@@ -102,15 +102,20 @@ public class LoggedEventExporter implements ProjectExporter
             
             // Stream data
             eventRepository.forEachLoggedEvent(project, event -> {
-                String documentName = documentNameIndex.get(event.getDocument());
-                if (documentName == null) {
-                    // The document has been deleted from the project so we cannot link up
-                    // events back up to this document during import. So since this is not
-                    // possible, we can even save ourselves the effort of exporting the logged
-                    // events on a document that doesn't exist anymore.
-                    missingDocuments.add(event.getDocument());
-                    droppedEvents.incrementAndGet();
-                    return;
+                String documentName = null;
+                // If the document ID is -1, then there is no document linked up to this event.
+                // In this case, we do not need to try resolving the IDs to a name.
+                if (event.getDocument() != -1) {
+                    documentName = documentNameIndex.get(event.getDocument());
+                    if (documentName == null) {
+                        // The document has been deleted from the project so we cannot link up
+                        // events back up to this document during import. So since this is not
+                        // possible, we can even save ourselves the effort of exporting the logged
+                        // events on a document that doesn't exist anymore.
+                        missingDocuments.add(event.getDocument());
+                        droppedEvents.incrementAndGet();
+                        return;
+                    }
                 }
 
                 // Transfer data over to DTO
@@ -164,11 +169,18 @@ public class LoggedEventExporter implements ProjectExporter
                 event.setUser(exportedEvent.getUser());
                 event.setEvent(exportedEvent.getEvent());
                 event.setCreated(exportedEvent.getCreated());
-                event.setDocument(documentService
-                        .getSourceDocument(aProject, exportedEvent.getDocumentName()).getId());
                 event.setAnnotator(exportedEvent.getAnnotator());
                 event.setDetails(exportedEvent.getDetails());
-                
+
+                // If an event is not associated with a document, then the default ID -1 is used
+                if (exportedEvent.getDocumentName() != null) {
+                    event.setDocument(documentService
+                            .getSourceDocument(aProject, exportedEvent.getDocumentName()).getId());
+                }
+                else {
+                    event.setDocument(-1);
+                }
+
                 eventRepository.create(event);
                 
                 eventCount++;
