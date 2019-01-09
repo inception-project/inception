@@ -24,6 +24,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -62,10 +63,12 @@ import org.wicketstuff.event.annotation.OnEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import static de.tudarmstadt.ukp.inception.app.ui.search.sidebar.ExternalSearchUserStateMetaData.CURRENT_ES_USER_STATE;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 public class ExternalSearchAnnotationSidebar
@@ -85,15 +88,13 @@ public class ExternalSearchAnnotationSidebar
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
-    final WebMarkupContainer mainContainer;
+    private CompoundPropertyModel<ExternalSearchUserState> searchStateModel;
 
-    private IModel<String> targetQuery = Model.of("");
+    final WebMarkupContainer mainContainer;
 
     private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
     private IModel<List<DocumentRepository>> repositoriesModel;
-
-    private DocumentRepository currentRepository;
 
     private ExternalSearchResult selectedResult;
 
@@ -101,7 +102,6 @@ public class ExternalSearchAnnotationSidebar
 
     private WebMarkupContainer dataTableContainer;
 
-    private ExternalResultDataProvider dataProvider;
 
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -109,15 +109,28 @@ public class ExternalSearchAnnotationSidebar
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
+        // Attach search state to annotation page
+        searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(
+            () -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
+            searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
+
+        // Set up the search state in the page if it is not already there
+        if (aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE) == null) {
+            ExternalSearchUserState searchState = new ExternalSearchUserState();
+            searchStateModel.setObject(searchState);;
+        }
+
         project = getModel().getObject().getProject();
         List<DocumentRepository> repositories = externalSearchService
             .listDocumentRepositories(project);
 
-        if (repositories.size() > 0) {
-            currentRepository = repositories.get(0);
+        ExternalSearchUserState searchState =
+            searchStateModel.getObject();
+        if (searchState.getCurrentRepository() == null && repositories.size() > 0) {
+            searchState.setCurrentRepository(repositories.get(0));
         }
-        else {
-            currentRepository = null;
+        if (searchState.getTargetQuery() == null) {
+            searchState.setTargetQuery(Model.of(""));
         }
 
         repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
@@ -151,17 +164,32 @@ public class ExternalSearchAnnotationSidebar
             }
         });
 
-        dataProvider = new ExternalResultDataProvider(
-            externalSearchService, userRepository.getCurrentUser(), currentRepository, "merck");
+        if (searchState.getDataProvider() == null)
+        {
+            searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
+                userRepository.getCurrentUser(),
+                searchStateModel.getObject().getCurrentRepository(),
+                "merck"));
+        }
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
         dataTableContainer.setOutputMarkupId(true);
         mainContainer.add(dataTableContainer);
 
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
-            columns, dataProvider, 8);
-
+            columns, searchState.getDataProvider(), 8);
+        resultTable.setCurrentPage(searchState.getCurrentPage());
         dataTableContainer.add(resultTable);
+
+    }
+
+    @Override protected void onDetach()
+    {
+        // TODO is it possible to know page change event and alter the state there?
+        DataTable<ExternalSearchResult, String> resultTable =
+            (DataTable<ExternalSearchResult, String>) dataTableContainer.get("resultsTable");
+        searchStateModel.getObject().setCurrentPage(resultTable.getCurrentPage());
+        super.onDetach();
     }
 
     private void actionImportDocument(ExternalSearchResult aResult)
@@ -169,8 +197,8 @@ public class ExternalSearchAnnotationSidebar
         String documentTitle = aResult.getDocumentTitle();
 
         String text = externalSearchService
-            .getDocumentById(userRepository.getCurrentUser(), currentRepository,
-                documentTitle)
+            .getDocumentById(userRepository.getCurrentUser(),
+                searchStateModel.getObject().getCurrentRepository(), documentTitle)
             .getText();
 
         if (documentService.existsSourceDocument(project, documentTitle)) {
@@ -230,7 +258,7 @@ public class ExternalSearchAnnotationSidebar
                 new BootstrapSelect<DocumentRepository>(
                     "repositoryCombo",
                     new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
-                        "currentRepository"),
+                        "searchStateModel.getObject().getCurrentRepository()"),
                     repositoriesModel)
                 {
                     private static final long serialVersionUID = 1L;
@@ -263,7 +291,8 @@ public class ExternalSearchAnnotationSidebar
         public SearchForm(String id)
         {
             super(id);
-            add(new TextField<>("queryInput", targetQuery, String.class));
+            add(new TextField<>("queryInput", searchStateModel.getObject().getTargetQuery(),
+                String.class));
             LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
                 this::actionSearch);
             add(searchLink);
@@ -272,6 +301,7 @@ public class ExternalSearchAnnotationSidebar
 
         private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
         {
+            IModel<String> targetQuery = searchStateModel.getObject().getTargetQuery();
             selectedResult = null;
             if (targetQuery.getObject() == null) {
                 targetQuery.setObject("*.*");
@@ -279,7 +309,7 @@ public class ExternalSearchAnnotationSidebar
 
             searchDocuments(targetQuery.getObject());
 
-            dataProvider.searchDocuments(targetQuery.getObject());
+            searchStateModel.getObject().getDataProvider().searchDocuments(targetQuery.getObject());
 
             aTarget.add(dataTableContainer);
         }
@@ -289,12 +319,14 @@ public class ExternalSearchAnnotationSidebar
     {
         results.clear();
         applicationEventPublisher.get()
-            .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
+            .publishEvent(new ExternalSearchQueryEvent(this,
+                searchStateModel.getObject().getCurrentRepository().getProject(),
                 userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
-                .query(userRepository.getCurrentUser(), currentRepository, aQuery)) {
+                .query(userRepository.getCurrentUser(),
+                    searchStateModel.getObject().getCurrentRepository(), aQuery)) {
                 results.add(result);
             }
         }
@@ -359,6 +391,69 @@ public class ExternalSearchAnnotationSidebar
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
             add(new Label("importStatus", () ->
                 existsSourceDocument ? "imported" : "not imported"));
+        }
+    }
+
+    public static class ExternalSearchUserState implements Serializable
+    {
+        private AnnotationLayer layer;
+
+        private DocumentRepository currentRepository = null;
+
+        private IModel<String> targetQuery = null;
+
+        private ExternalResultDataProvider dataProvider = null;
+
+        private long currentPage = 1;
+
+        public DocumentRepository getCurrentRepository()
+        {
+            return currentRepository;
+        }
+
+        public void setCurrentRepository(DocumentRepository repository)
+        {
+            this.currentRepository = repository;
+        }
+
+        public AnnotationLayer getLayer()
+        {
+            return layer;
+        }
+
+        public void setLayer(AnnotationLayer selectedLayer)
+        {
+            this.layer = selectedLayer;
+        }
+
+        public IModel<String> getTargetQuery()
+        {
+            return targetQuery;
+        }
+
+        public void setTargetQuery(IModel<String> query)
+        {
+            this.targetQuery = query;
+        }
+
+        public ExternalResultDataProvider getDataProvider()
+        {
+            return dataProvider;
+        }
+
+        public void setDataProvider(ExternalResultDataProvider dataProvider)
+        {
+            this.dataProvider = dataProvider;
+        }
+
+        public long getCurrentPage()
+        {
+            return currentPage;
+        }
+
+        public void setCurrentPage(long currentPage)
+        {
+            this.currentPage = currentPage;
         }
     }
 }
