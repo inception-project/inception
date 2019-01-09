@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.conll;
 
 import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testOneWay;
 import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testRoundTrip;
+import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
+import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -32,7 +34,11 @@ public class ConllUReaderWriterTest
     public void roundTrip()
         throws Exception
     {
-        testRoundTrip(ConllUReader.class, ConllUWriter.class, "conll/u/conllu-en-orig.conll");
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, false),
+                "conll/u/conllu-en-orig.conll");
     }
 
     @Ignore("This unfortunately doesn't work yet.")
@@ -55,7 +61,10 @@ public class ConllUReaderWriterTest
     public void roundTripV2ParagraphAndDocumentBoundaries()
         throws Exception
     {
-        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
                 "conll/u_v2/conllu-paragraph_and_document_boundaries.conll");
     }
 
@@ -63,7 +72,10 @@ public class ConllUReaderWriterTest
     public void roundTripV2SentenceBoundariesAndComments()
         throws Exception
     {
-        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
                 "conll/u_v2/conllu-sentence_bounaries_and_comments.conll");
     }
 
@@ -80,7 +92,10 @@ public class ConllUReaderWriterTest
     public void roundTripV2UntokenizedText()
         throws Exception
     {
-        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
                 "conll/u_v2/conllu-untokenized_text.conll");
     }
 
@@ -88,14 +103,18 @@ public class ConllUReaderWriterTest
     public void roundTripV2WordsAndTokens()
         throws Exception
     {
-        testRoundTrip(ConllUReader.class, ConllUWriter.class, "conll/u_v2/conllu-words_and_tokens.conll");
+        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+                "conll/u_v2/conllu-words_and_tokens.conll");
     }
 
     @Test
     public void withComments()
         throws Exception
     {
-        testOneWay(ConllUReader.class, ConllUWriter.class,
+        testOneWay(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, false),
                 "conll/u/conllu-en-ref.conll",
                 "conll/u/conllu-en-orig2.conll");
     }

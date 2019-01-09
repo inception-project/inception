@@ -37,7 +37,6 @@ import org.apache.uima.collection.CollectionReaderDescription;
 
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
-import de.tudarmstadt.ukp.dkpro.core.testing.DocumentMetaDataStripper;
 import de.tudarmstadt.ukp.dkpro.core.testing.dumper.CasDumpWriter;
 
 public class IOTestRunner
@@ -230,10 +229,7 @@ public class IOTestRunner
             setParameter(aWriter, ComponentParameters.PARAM_TARGET_LOCATION, output);
         }
 
-        AnalysisEngineDescription metadataStripper = createEngineDescription(
-                DocumentMetaDataStripper.class);
-
-        runPipeline(aReader, metadataStripper, aWriter);
+        runPipeline(aReader, aWriter);
 
         if (aOptions == null || aOptions.resultAssertor == null) {
             String expected = FileUtils.readFileToString(reference, "UTF-8");
