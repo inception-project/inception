@@ -154,6 +154,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-xmi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>

@@ -718,6 +718,12 @@
         <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
+      
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+        <version>${dkpro.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
