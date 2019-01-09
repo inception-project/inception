@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -36,6 +38,8 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -73,7 +77,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * The implementation of the RecommendationService.
@@ -84,26 +91,33 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int TRAININGS_PER_SELECTION = 5;
+
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private @Autowired RecommendationScheduler scheduler;
+    private @Autowired SchedulingService schedulingService;
     
     @Value("${show.learning.curve.diagram:false}")
     public Boolean showLearningCurveDiagram;
-    
+
+    private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
+    private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
+
     public RecommendationServiceImpl()
     {
+        trainingTaskCounter = new ConcurrentHashMap<>();
+        states = new ConcurrentHashMap<>();
     }
     
     public RecommendationServiceImpl(EntityManager entityManager)
     {
+        this();
         this.entityManager = entityManager;
     }
 
-    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
@@ -310,7 +324,22 @@ public class RecommendationServiceImpl
     private void triggerTrainingAndClassification(String aUser, Project aProject)
     {
         User user = userRepository.get(aUser);
-        scheduler.enqueueTask(user, aProject);
+
+        // Update the task count
+        Pair<User, Project> key = new ImmutablePair<>(user, aProject);
+        AtomicInteger count = trainingTaskCounter.computeIfAbsent(key,
+            _key -> new AtomicInteger(0));
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+            Task task = new SelectionTask(aProject, user);
+            schedulingService.enqueue(task);
+        } else {
+            Task task = new TrainingTask(user, aProject);
+            schedulingService.enqueue(task);
+        }
     }
     
     @EventListener
@@ -322,7 +351,7 @@ public class RecommendationServiceImpl
         if (info != null) {
             String username = (String) info.getPrincipal();
             clearState(username);
-            scheduler.stopAllTasksForUser(username);
+            schedulingService.stopAllTasksForUser(username);
         }
     }
 
