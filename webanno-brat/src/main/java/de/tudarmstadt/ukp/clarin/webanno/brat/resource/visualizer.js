@@ -3284,15 +3284,23 @@ Util.profileStart('rows');
               // TODO: using rectShadowSize, but this shadow should
               // probably have its own setting for shadow size
               shadowRect = svg.rect(sentNumGroup,
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin
+/*
                   box.x - rectShadowSize, box.y - rectShadowSize,
                   box.width + 2 * rectShadowSize, box.height + 2 * rectShadowSize, {
-
-                  'class': 'shadow_' + sentComment.type,
-                  filter: 'url(#Gaussian_Blur)',
-                  rx: rectShadowRounding,
-                  ry: rectShadowRounding,
-                  'data-sent': row.sentence,
-              });
+*/
+                  rtlmode ? box.x + rowPadding + rectShadowSize : box.x - rectShadowSize, 
+                  box.y - rectShadowSize,
+                  box.width + 2 * rectShadowSize, 
+                  box.height + 2 * rectShadowSize, 
+                  {
+// WEBANNO EXTENSION END - RTL support - Sentence comment in margin
+                      'class': 'shadow_' + sentComment.type,
+                      filter: 'url(#Gaussian_Blur)',
+                      rx: rectShadowRounding,
+                      ry: rectShadowRounding,
+                      'data-sent': row.sentence,
+                  });
 // WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin           
 /*
               var text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
