@@ -22,11 +22,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.*;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -35,13 +32,13 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentImporter;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
@@ -66,11 +63,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,8 +77,6 @@ public class ExternalSearchAnnotationSidebar
     private static final long serialVersionUID = -3358207848681467994L;
 
     private static final Logger LOG = LoggerFactory.getLogger(ExternalSearchAnnotationSidebar.class);
-
-    private static final String PLAIN_TEXT = "text";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -175,7 +167,7 @@ public class ExternalSearchAnnotationSidebar
             searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
                 userRepository.getCurrentUser(),
                 searchStateModel.getObject().getCurrentRepository(),
-                "merck"));
+                ""));
         }
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
@@ -198,57 +190,11 @@ public class ExternalSearchAnnotationSidebar
         super.onDetach();
     }
 
-    private void actionImportDocument(ExternalSearchResult aResult)
-    {
-        String documentTitle = aResult.getDocumentTitle();
-
-        String text = externalSearchService
-            .getDocumentById(userRepository.getCurrentUser(),
-                searchStateModel.getObject().getCurrentRepository(), documentTitle)
-            .getText();
-
-        if (documentService.existsSourceDocument(project, documentTitle)) {
-            error("Document [" + documentTitle + "] already uploaded! Delete "
-                + "the document if you want to upload again");
-        }
-        else {
-            importDocument(documentTitle, text);
-        }
-    }
-
-    private void importDocument(String aFileName, String aText)
-    {
-        InputStream stream = new ByteArrayInputStream(aText.getBytes(StandardCharsets.UTF_8));
-
-        SourceDocument document = new SourceDocument();
-        document.setName(aFileName);
-        document.setProject(project);
-        document.setFormat(PLAIN_TEXT);
-
-        try (InputStream is = stream) {
-            documentService.uploadSourceDocument(is, document);
-        }
-        catch (IOException | UIMAException e) {
-            LOG.error("Unable to retrieve document " + aFileName, e);
-            error("Unable to retrieve document " + aFileName + " - "
-                + ExceptionUtils.getRootCauseMessage(e));
-            e.printStackTrace();
-        }
-
-    }
-
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         if (selectedResult != null) {
-            AnnotatorState state = aEvent.getState();
-            if (state.getWindowBeginOffset() <= selectedResult.getOffsetStart()
-                    && selectedResult.getOffsetEnd() <= state.getWindowEndOffset()) {
-                aEvent.getVDocument()
-                        .add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                selectedResult.getOffsetStart() - state.getWindowBeginOffset(),
-                                selectedResult.getOffsetEnd() - state.getWindowBeginOffset()));
-            }
+            // TODO highlight keyword
         }
     }
 
@@ -292,7 +238,6 @@ public class ExternalSearchAnnotationSidebar
     private class SearchForm
         extends Form<Void>
     {
-        private static final long serialVersionUID = 2186231514180399862L;
 
         public SearchForm(String id)
         {
@@ -345,8 +290,6 @@ public class ExternalSearchAnnotationSidebar
     public class ResultRowView
         extends Panel
     {
-        private static final long serialVersionUID = -6708211343231617251L;
-
         public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
         {
             super(id, model);
@@ -372,9 +315,19 @@ public class ExternalSearchAnnotationSidebar
                 link = new LambdaAjaxLink("titleLink",
                     _target -> {
                         selectedResult = result;
-                        actionImportDocument(result);
-                        getAnnotationPage().actionShowSelectedDocument(_target,
-                            documentService.getSourceDocument(project, documentTitle));
+                        try {
+                            DocumentImporter.importDocumentFromExternalSearch(externalSearchService,
+                                documentService, result.getDocumentTitle(),
+                                userRepository.getCurrentUser(), project,
+                                searchStateModel.getObject().getCurrentRepository());
+
+                            getAnnotationPage().actionShowSelectedDocument(_target,
+                                documentService.getSourceDocument(project, documentTitle));
+                        } catch (IOException e) {
+                            LOG.error(e.getMessage(), e);
+                            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+                            e.printStackTrace();
+                        }
                     });
             } else {
                 // open action

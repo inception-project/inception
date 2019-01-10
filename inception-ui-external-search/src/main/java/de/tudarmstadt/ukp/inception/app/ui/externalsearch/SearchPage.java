@@ -86,8 +86,6 @@ public class SearchPage extends ApplicationPageBase
 
     private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
-    private static final String PLAIN_TEXT = "text";
-
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
@@ -167,42 +165,16 @@ public class SearchPage extends ApplicationPageBase
 
     private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
-        String documentTitle = aResult.getDocumentTitle();
-        
-        String text = externalSearchService
-                .getDocumentById(userRepository.getCurrentUser(), currentRepository,
-                        documentTitle)
-                .getText();
-
-        if (documentService.existsSourceDocument(project, documentTitle)) {
-            error("Document [" + documentTitle + "] already uploaded! Delete "
-                + "the document if you want to upload again");
-        }
-        else {
-            importDocument(documentTitle, text);
+        try {
+            DocumentImporter.importDocumentFromExternalSearch(externalSearchService,
+                documentService, aResult.getDocumentTitle(), userRepository.getCurrentUser(),
+                project, currentRepository);
             aTarget.add(dataTableContainer);
-        }
-    }
-    
-    private void importDocument(String aFileName, String aText)
-    {
-        InputStream stream = new ByteArrayInputStream(aText.getBytes(StandardCharsets.UTF_8));
-
-        SourceDocument document = new SourceDocument();
-        document.setName(aFileName);
-        document.setProject(project);
-        document.setFormat(PLAIN_TEXT);
-
-        try (InputStream is = stream) {
-            documentService.uploadSourceDocument(is, document);
-        }
-        catch (IOException | UIMAException e) {
-            LOG.error("Unable to retrieve document " + aFileName, e);
-            error("Unable to retrieve document " + aFileName + " - "
-                    + ExceptionUtils.getRootCauseMessage(e));
+        } catch (IOException e) {
+            LOG.error(e.getMessage(), e);
+            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
             e.printStackTrace();
         }
-
     }
 
     private class SearchForm
