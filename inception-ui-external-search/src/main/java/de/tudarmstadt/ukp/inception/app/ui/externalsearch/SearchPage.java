@@ -106,6 +106,8 @@ public class SearchPage extends ApplicationPageBase
 
     ExternalResultDataProvider dataProvider;
 
+    private DocumentImporter documentImporter;
+
     public SearchPage(PageParameters aParameters)
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -122,6 +124,9 @@ public class SearchPage extends ApplicationPageBase
         else {
             currentRepository = null;
         }
+
+        documentImporter = new DocumentImporter(externalSearchService, documentService,
+            userRepository.getCurrentUser(), project);
 
         repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
                         .listDocumentRepositories(project));
@@ -166,9 +171,8 @@ public class SearchPage extends ApplicationPageBase
     private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
         try {
-            DocumentImporter.importDocumentFromExternalSearch(externalSearchService,
-                documentService, aResult.getDocumentTitle(), userRepository.getCurrentUser(),
-                project, currentRepository);
+            documentImporter.importDocumentFromDocumentRepository(aResult.getDocumentTitle(),
+                currentRepository);
             aTarget.add(dataTableContainer);
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);

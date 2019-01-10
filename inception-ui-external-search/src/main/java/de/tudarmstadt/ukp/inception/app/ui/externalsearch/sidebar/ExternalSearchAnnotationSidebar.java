@@ -100,6 +100,8 @@ public class ExternalSearchAnnotationSidebar
 
     private WebMarkupContainer dataTableContainer;
 
+    private DocumentImporter documentImporter;
+
 
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -121,6 +123,9 @@ public class ExternalSearchAnnotationSidebar
         project = getModel().getObject().getProject();
         List<DocumentRepository> repositories = externalSearchService
             .listDocumentRepositories(project);
+
+        documentImporter = new DocumentImporter(externalSearchService, documentService,
+            userRepository.getCurrentUser(), project);
 
         ExternalSearchUserState searchState =
             searchStateModel.getObject();
@@ -316,9 +321,8 @@ public class ExternalSearchAnnotationSidebar
                     _target -> {
                         selectedResult = result;
                         try {
-                            DocumentImporter.importDocumentFromExternalSearch(externalSearchService,
-                                documentService, result.getDocumentTitle(),
-                                userRepository.getCurrentUser(), project,
+                            documentImporter.importDocumentFromDocumentRepository(
+                                result.getDocumentTitle(),
                                 searchStateModel.getObject().getCurrentRepository());
 
                             getAnnotationPage().actionShowSelectedDocument(_target,

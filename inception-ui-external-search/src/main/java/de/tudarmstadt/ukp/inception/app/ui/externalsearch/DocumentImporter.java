@@ -22,14 +22,31 @@ public class DocumentImporter
 
     private static final String PLAIN_TEXT = "text";
 
-    public static void importDocumentFromExternalSearch(ExternalSearchService aExternalSearchService,
-        DocumentService aDocumentService, String aDocumentTitle, User aUser, Project aProject,
+    private ExternalSearchService externalSearchService;
+
+    private DocumentService documentService;
+
+    private User user;
+
+    private Project project;
+
+
+    public DocumentImporter(ExternalSearchService aExternalSearchService,
+        DocumentService aDocumentService, User user,Project aProject)
+    {
+        externalSearchService = aExternalSearchService;
+        documentService = aDocumentService;
+
+        project = aProject;
+    }
+
+    public void importDocumentFromDocumentRepository(String aDocumentTitle,
         DocumentRepository aRepository) throws IOException
     {
-        String text = aExternalSearchService.getDocumentById(aUser, aRepository, aDocumentTitle)
+        String text = externalSearchService.getDocumentById(user, aRepository, aDocumentTitle)
             .getText();
 
-        if (aDocumentService.existsSourceDocument(aProject, aDocumentTitle)) {
+        if (documentService.existsSourceDocument(project, aDocumentTitle)) {
             throw new IOException("Document [" + aDocumentTitle + "] already uploaded! "
                 + "Delete the document if you want to upload again");
         }
@@ -38,11 +55,11 @@ public class DocumentImporter
 
             SourceDocument document = new SourceDocument();
             document.setName(aDocumentTitle);
-            document.setProject(aProject);
+            document.setProject(project);
             document.setFormat(PLAIN_TEXT);
 
             try (InputStream is = stream) {
-                aDocumentService.uploadSourceDocument(is, document);
+                documentService.uploadSourceDocument(is, document);
             }
             catch (IOException | UIMAException e) {
                 throw new IOException("Unable to retrieve document " + aDocumentTitle, e);
