@@ -1,0 +1,72 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_recommender_tutorial]]
+= Implementing a custom recommender
+
+This section describes the overall architecture of internal recommenders in INCEpTION and gives a
+tutorial on how to implement them. Internal recommenders are directly added to the INCEpTION platform
+by implementing Java interfaces. These are then picked up during load time by the Spring Framework.
+
+== Architecture
+
+To add a new recommender to INCEpTION, at least two interfaces need to be implemented. These are
+described in the following.
+
+Recommenders in INCEpTION heavily rely on https://uima.apache.org[Apache UIMA] types and features.
+A recommender is configured for a certain layer and a certain feature. A layer can be seen as the
+type of annotation you want to to, e.g. `POS`, `NER`. Layers correspond to UIMA types. A feature is
+one piece of information that should be annotated, e.g. the POS tag. One layer can have many features.
+
+=== RecommendationEngine
+
+Recommenders give suggestions for possible annotations to the user. In order to do that,
+they need to be able be to trained on existing annotations, predict annotations in a document and
+be evaluated for a performance estimate. This is what the `RecommendationEngine` interface is for.
+It defines the methods that are used to train, test and evaluate a machine learning algorithm.
+Instances of this interface  typically wrap external machine learning packages like _OpenNLP_ or
+_Deeplearning4j_.
+
+Annotations are given to a recommender in the form of a
+http://uima.apache.org/d/uimaj-current/apidocs/index.html[UIMA CAS]. One CAS corresponds to one
+document in INCEpTION. Annotations from a CAS can be read and manipulated via the
+https://uima.apache.org/d/uimafit-current/api/org/apache/uima/fit/util/CasUtil.html[CasUtil].
+
+As an example, we will implement a recommender which always predicts the data majority label found
+in the existing annotations. The full code for this example can be found on
+https://github.com/inception-project/inception/inception-imls-data-majority[on Github].
+
+===== Training
+
+Instances of `RecommendationEngine` itself are stateless. If data like trained models need to be
+saved and loaded, it can be saved in the `RecommenderContext` that is given in the interface methods.
+
+===== Testing
+
+===== Evaluating
+
+Please see the JavaDoc of the respective methods for their semantics.
+
+
+=== RecommendationFactory
+
+The `RecommendationFactory` is used to create a new recommender instance.
+
+
+==== RecommenderContext
+
+=== Traits
+
