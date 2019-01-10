@@ -401,9 +401,7 @@
       <where>feature IS NULL</where>
     </delete>
     <addColumn tableName="recommender">
-      <column name="featuremigration" type="BIGINT">
-        <constraints nullable="false" />
-      </column>
+      <column name="featuremigration" type="BIGINT"/>
     </addColumn>
     <sql>
       UPDATE recommender rec
@@ -419,6 +417,9 @@
         newColumnName="feature"
         oldColumnName="featuremigration"
         columnDataType="BIGINT"/>
+    <addNotNullConstraint tableName="recommender"
+        columnDataType="BIGINT"
+        columnName="feature"/>
     <addForeignKeyConstraint
         baseColumnNames="feature"
         baseTableName="recommender" constraintName="FK_annotationFeature_recommender"
