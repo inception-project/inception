@@ -395,4 +395,36 @@
       </column>
     </createTable>
   </changeSet>
+  
+  <changeSet author="INCEpTION Team" id="20190104-1">
+    <delete tableName="recommender">
+      <where>feature IS NULL</where>
+    </delete>
+    <addColumn tableName="recommender">
+      <column name="featuremigration" type="BIGINT"/>
+    </addColumn>
+    <sql>
+      UPDATE recommender rec
+      SET rec.featuremigration = (SELECT feat.id
+        FROM annotation_feature feat
+        WHERE rec.feature = feat.name AND rec.layer = feat.annotation_type)
+    </sql>
+    <renameColumn tableName="recommender"
+        newColumnName="deprecatedfeaturename"
+        oldColumnName="feature"
+        columnDataType="VARCHAR(255)"/>
+    <renameColumn tableName="recommender"
+        newColumnName="feature"
+        oldColumnName="featuremigration"
+        columnDataType="BIGINT"/>
+    <addNotNullConstraint tableName="recommender"
+        columnDataType="BIGINT"
+        columnName="feature"/>
+    <addForeignKeyConstraint
+        baseColumnNames="feature"
+        baseTableName="recommender" constraintName="FK_annotationFeature_recommender"
+        deferrable="false" initiallyDeferred="false" onDelete="CASCADE"
+        onUpdate="CASCADE" referencedColumnNames="id"
+        referencedTableName="annotation_feature" />
+  </changeSet>
 </databaseChangeLog>
