@@ -48,9 +48,10 @@ public class DocumentMetadataSidebar
                 .of(() -> aModel.getObject().getUser().getUsername());
         
         DocumentMetadataAnnotationDetailPanel details = new DocumentMetadataAnnotationDetailPanel(
-                "details", Model.of(VID.NONE_ID), aJCasProvider, project);
+                "details", Model.of(VID.NONE_ID), sourceDocument, username, aJCasProvider, project,
+                aAnnotationPage);
         add(details);
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aJCasProvider, details));
+                username, aJCasProvider, details, aAnnotationPage));
     }
 }

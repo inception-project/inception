@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
@@ -73,6 +74,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     
+    private final AnnotationPage annotationPage;
     private final JCasProvider jcasProvider;
     private final DocumentMetadataAnnotationDetailPanel detailPanel;
     private final IModel<SourceDocument> sourceDocument;
@@ -81,12 +83,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            JCasProvider aJCasProvider, DocumentMetadataAnnotationDetailPanel aDetails)
+            JCasProvider aJCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
+            AnnotationPage aAnnotationPage)
     {
         super(aId, aProject);
 
         setOutputMarkupPlaceholderTag(true);
         
+        annotationPage = aAnnotationPage;
         sourceDocument = aDocument;
         username = aUsername;
         jcasProvider = aJCasProvider;
@@ -114,9 +118,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
                 .getAdapter(selectedLayer.getObject());
-        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(),
-                jcasProvider.get());
+        JCas jcas = jcasProvider.get();
+        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), jcas);
         detailPanel.setModelObject(new VID(fs));
+        
+        annotationPage.writeEditorCas(jcas);
         
         aTarget.add(this);
         aTarget.add(detailPanel);
@@ -153,7 +159,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private List<AnnotationLayer> listMetadataLayers()
     {
         return annotationService.listAnnotationLayer(getModelObject()).stream()
-                .filter(layer -> !DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
+                .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
                 collect(Collectors.toList());
     }
     
@@ -182,6 +188,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                     adapter.getAnnotationType(jcas.getCas()))) {
                 Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                if (labelText.isEmpty()) {
+                    labelText = "(" + layer.getUiName() + ")";
+                }
                 items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText));
             }
         }
