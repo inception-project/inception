@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -525,29 +524,15 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
-     * Check if the given profile equals one of the schema profiles defined in {@link SchemaProfile}
-     * @param aProfile
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
+     * Returns whether the given identifier is a subproperty of the label IRI defined for this
+     * knowledge base
+     *
+     * @param aKB the knowledge base
+     * @param aIdentifier the identifier of the label
+     * @return true if the identifier is a subproperty of the label IRI defined for this
+     * knowledge base, false otherwise
      */
-    SchemaProfile checkSchemaProfile(KnowledgeBaseProfile aProfile);
-
-    /**
-     * Check if the IRIs of the given {@link KnowledgeBase} object are equal to the IRIs of one of
-     * the schema profiles defined in {@link SchemaProfile}
-     * @param aKb
-     * @return the corresponding schema profile (CUSTOM if the given profile does not equal any of
-     * the pre-defined ones
-     */
-    SchemaProfile checkSchemaProfile(KnowledgeBase aKb);
-
-    /**
-     * Reads a knowledge base file from the classpath and returns the file handle
-     * @param aLocation location of the knowledge base resource
-     * @return the file handle of the knowledge base resource
-     * @throws IOException
-     */
-    File readKbFileFromClassPathResource(String aLocation) throws IOException;
+    boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
 
     /**
      * Checks whether a property is a base property
@@ -576,8 +561,8 @@ public interface KnowledgeBaseService
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 
-    /**
-     * List all Instances of a given knowledge base
+   /**
+     *  List all Instances of a given knowledge base
      * @param aKB the knowledge base
      * @param aAll indicates whether to include everything
      * @return list of all the instances {@link KBHandle}
@@ -597,4 +582,13 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
         ConceptFeatureValueType aValueType, Project project);
+
+    /**
+     * Gets a list of sub-property of label 
+     * 
+     * @param aKB
+     *            a knowledge base.
+     * @return set of properties
+     */
+    Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
 }

@@ -174,7 +174,9 @@ public class OpenNlpNerRecommender
         try (NameSampleStream stream = new NameSampleStream(testSet)) {
             TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(nameFinder);
             evaluator.evaluate(stream);
-            return evaluator.getFMeasure().getFMeasure();
+            // getFMeasure returns -1 if the evaluation cannot be performed, but we want any 
+            // recommender to get activated when the threshold is set to 0, so we cap at 0.
+            return Math.max(0, evaluator.getFMeasure().getFMeasure());
         } catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while evaluating OpenNlp NER", e);
@@ -231,13 +233,25 @@ public class OpenNlpNerRecommender
         List<AnnotationFS> annotations = selectCovered(annotationType, aSentence);
         int numberOfAnnotations = annotations.size();
         List<Span> result = new ArrayList<>();
+
+        int highestEndTokenPositionObserved = 0;
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
             int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
             int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
+            
+            // If the begin offset of the current annotation is lower than the highest offset so far
+            // observed, then it is overlapping with some annotation that we have seen before. 
+            // Because OpenNLP NER does not support overlapping annotations, we skip it.
+            if (begin < highestEndTokenPositionObserved) {
+                LOG.debug("Skipping overlapping annotation: [{}-{}, {}]", begin, end + 1, label);
+                continue;
+            }
+            
             if (isNotBlank(label)) {
                 result.add(new Span(begin, end + 1, label));
+                highestEndTokenPositionObserved = end + 1;
             }
         }
         return result.toArray(new Span[result.size()]);

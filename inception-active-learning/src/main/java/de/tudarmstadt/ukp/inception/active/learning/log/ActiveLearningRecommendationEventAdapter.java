@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningRecommendationEvent;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 
 @Component
@@ -62,8 +62,8 @@ public class ActiveLearningRecommendationEventAdapter
         try {
             ActiveLearningRecommendationDetails details = new ActiveLearningRecommendationDetails();
             details.ann = new AnnotationDetails();
-            details.ann.setBegin(aEvent.getCurrentRecommendation().getOffset().getBeginCharacter());
-            details.ann.setEnd(aEvent.getCurrentRecommendation().getOffset().getEndCharacter());
+            details.ann.setBegin(aEvent.getCurrentRecommendation().getBegin());
+            details.ann.setEnd(aEvent.getCurrentRecommendation().getEnd());
             details.ann.setText(aEvent.getCurrentRecommendation().getCoveredText());
             details.ann.setType(aEvent.getLayer().getName());
             details.annotationFeature = aEvent.getAnnotationFeature();
@@ -87,7 +87,7 @@ public class ActiveLearningRecommendationEventAdapter
     {
         public AnnotationDetails ann;
         public String annotationFeature;
-        public LearningRecordUserAction userAction;
+        public LearningRecordType userAction;
         public String currentLabel;
         public double confidence;
         public long recommenderId;

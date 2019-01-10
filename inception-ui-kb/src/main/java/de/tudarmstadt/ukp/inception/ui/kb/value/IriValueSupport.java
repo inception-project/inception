@@ -80,15 +80,15 @@ public class IriValueSupport
     
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
-        return new IRIValueEditor(aId, aStatement,aProperty, kbModel);
+        return new IRIValueEditor(aId, aStatement,aProperty, aKbModel);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
-        return new IRIValuePresenter(aId, aStatement);
+        return new IRIValuePresenter(aId, aStatement, aKbModel);
     }
 }

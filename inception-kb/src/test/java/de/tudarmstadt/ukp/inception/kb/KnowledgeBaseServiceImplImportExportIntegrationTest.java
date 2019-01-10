@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SpringConfig.class)
@@ -223,7 +224,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(sut.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
+        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
             sut.exportData(kb, RDFFormat.TURTLE, os);

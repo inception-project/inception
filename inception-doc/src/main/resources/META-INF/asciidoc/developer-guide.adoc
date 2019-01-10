@@ -1,5 +1,5 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,25 +19,48 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
-include::{include-dir}setup.adoc[]
+= Introduction
+
+include::{include-dir}setup.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}casdoctor.adoc[]
 
-<<<
 
-include::{include-dir}database.adoc[]
+= Modules
 
-<<<
+include::{include-dir}documents.adoc[leveloffset=+1]
 
-include::{include-dir}search-core.adoc[leveloffset=+1]
-include::{include-dir}search-mtas.adoc[leveloffset=+1]
+include::{include-dir}annotation-schema.adoc[leveloffset=+1]
 
-<<<
+include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
+
+include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+3]
+
+include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+3]
+
+include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
+
+include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
+
+include::{include-dir}search.adoc[leveloffset=+1]
+
+include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
 include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
+include::{include-dir}log.adoc[leveloffset=+1]
+
+include::{include-dir}log-adapter.adoc[leveloffset=+2]
+
+include::{include-dir}knowledgebase.adoc[leveloffset=+1]
+
+include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
+
 <<<
 
-include::{include-dir}systemproperties.adoc[]
+
+
+= Appendices 
+
+include::{include-dir}systemproperties.adoc[leveloffset=+1]

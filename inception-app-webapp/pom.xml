@@ -226,6 +226,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-doc</artifactId>
+    </dependency>
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -552,6 +556,7 @@
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
+              <doctype>book</doctype>
               <toclevels>8</toclevels>
               <sectanchors>true</sectanchors>
               <docinfo1>true</docinfo1>
@@ -607,8 +612,9 @@
               <!-- Detected because we include a special access menu item to the project settings
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
-              <!-- INCEpTION Documentation module - needed but no Java dependency -->
+              <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>

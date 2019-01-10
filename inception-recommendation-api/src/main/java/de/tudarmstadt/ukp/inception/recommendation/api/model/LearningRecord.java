@@ -70,7 +70,7 @@ public class LearningRecord
     private String annotation;
     
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserActionType")
-    private LearningRecordUserAction userAction;
+    private LearningRecordType userAction;
     
     private String user;
     
@@ -155,11 +155,11 @@ public class LearningRecord
         this.annotation = annotation;
     }
 
-    public LearningRecordUserAction getUserAction() {
+    public LearningRecordType getUserAction() {
         return userAction;
     }
 
-    public void setUserAction(LearningRecordUserAction userAction) {
+    public void setUserAction(LearningRecordType userAction) {
         this.userAction = userAction;
     }
 

@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -34,10 +33,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.custom.CustomAnalyzer;
 import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
@@ -83,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import mtas.analysis.token.MtasTokenString;
@@ -91,7 +94,6 @@ import mtas.codec.MtasCodec;
 import mtas.codec.util.CodecInfo;
 import mtas.codec.util.CodecUtil;
 import mtas.parser.cql.MtasCQLParser;
-import mtas.parser.cql.ParseException;
 import mtas.search.spans.util.MtasSpanQuery;
 
 /**
@@ -106,8 +108,21 @@ public class MtasDocumentIndex
     private final String MTAS_TOKENIZER = "mtas";
     private String INDEX = "indexMtas";
 
-    /** The Constant FIELD_ID. */
+    /**
+     * Constant for the field which carries the unique identifier for the index document consisting:
+     * {@code [sourceDocumentId]/[annotationDocumentId]}
+     */
     private static final String FIELD_ID = "id";
+
+    /**
+     * Constant for the field which carries the source document id;
+     */
+    private static final String FIELD_SOURCE_DOCUMENT_ID = "sourceDocumentId";
+
+    /**
+     * Constant for the field which carries the source document id;
+     */
+    private static final String FIELD_ANNOTATION_DOCUMENT_ID = "annotationDocumentId";
 
     /** The Constant FIELD_TITLE. */
     private static final String FIELD_TITLE = "title";
@@ -115,7 +130,9 @@ public class MtasDocumentIndex
     /** The Constant FIELD_CONTENT. */
     private static final String FIELD_CONTENT = "content";
 
-    /** The Constant FIELD_USER. */
+    /**
+     * Constant for the field which carries the annotator's username.
+     */
     private static final String FIELD_USER = "user";
 
     /** The Constant FIELD_TIMESTAMP. */
@@ -137,7 +154,7 @@ public class MtasDocumentIndex
     private IndexWriter indexWriter;
 
     // The annotations to be indexed
-    ArrayList<String> annotationShortNames;
+    private List<String> annotationShortNames;
 
     private File resourceDir;
 
@@ -151,18 +168,13 @@ public class MtasDocumentIndex
         project = aProject;
 
         // Create list with the annotation types of the layer (only the enabled ones)
-        List<AnnotationLayer> layers = annotationSchemaService.listAnnotationLayer(project);
-
-        annotationShortNames = new ArrayList<String>();
-
-        for (AnnotationLayer layer : layers) {
-            if (layer.isEnabled()) {
-                annotationShortNames.add(getShortName(layer.getName()));
-            }
-        }
+        annotationShortNames = annotationSchemaService.listAnnotationLayer(project).stream()
+                .filter(AnnotationLayer::isEnabled)
+                .map(layer -> getShortName(layer.getName()))
+                .collect(Collectors.toList());
        
         resourceDir = new File(aDir);
-        log.info("New Mtas/Lucene index instance created...");
+        log.debug("New Mtas/Lucene index instance created...");
     }
 
     @Override
@@ -172,23 +184,28 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public List<SearchResult> executeQuery(User aUser, String aQuery, String aSortOrder,
-            String... aResultField)
-        throws ExecutionException
+    public List<SearchResult> executeQuery(SearchQueryRequest aRequest)
+        throws IOException, ExecutionException
     {
         try {
+            log.trace("Executing query {} on index {}", aRequest, getIndexDir());
+            
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
 
-            // Build the query prefixes list from the annotation types
-            List<String> prefixes = new ArrayList<String>(annotationShortNames);
-            String modifiedQuery = parseQuery(aQuery);
-            MtasSpanQuery mtasSpanQuery = createQuery(FIELD_CONTENT, modifiedQuery);
-            return doQuery(indexReader, aUser, FIELD_CONTENT, mtasSpanQuery, prefixes);
+            String modifiedQuery = parseQuery(aRequest.getQuery());
+            MtasSpanQuery mtasSpanQuery;
+            try (Reader reader = new StringReader(modifiedQuery)) {
+                MtasCQLParser parser = new MtasCQLParser(reader);
+                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+            }
+            
+            return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery,
+                    annotationShortNames);
         }
         catch (mtas.parser.cql.ParseException e) {
-            log.error("Mtas query syntax error", e);
-            throw(new ExecutionException(e.getMessage()));
+            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+            throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
         }
         catch (Exception e) {
             log.error("Query execution error", e);
@@ -231,16 +248,8 @@ public class MtasDocumentIndex
         return result;
     }
 
-    private static MtasSpanQuery createQuery(String aField, String aQuery) throws ParseException
-    {
-        Reader reader = new BufferedReader(new StringReader(aQuery));
-        MtasCQLParser p = new MtasCQLParser(reader);
-        MtasSpanQuery q = p.parse(aField, DEFAULT_PREFIX, null, null, null);
-        return q;
-    }
-
-    private List<SearchResult> doQuery(IndexReader aIndexReader, User aUser, String field,
-            MtasSpanQuery q, List<String> prefixes)
+    private List<SearchResult> doQuery(IndexReader aIndexReader, SearchQueryRequest aRequest,
+            String field, MtasSpanQuery q, List<String> prefixes)
         throws IOException
     {
         List<SearchResult> results = new ArrayList<>();
@@ -270,27 +279,60 @@ public class MtasDocumentIndex
                             String user = document.get(FIELD_USER);
 
                             // Retrieve source and annotation document ids
-                            Long sourceDocumentId = Long
-                                    .valueOf(document.get(FIELD_ID).split("/")[0]);
-                            long annotationDocumentId = Long
-                                    .valueOf(document.get(FIELD_ID).split("/")[1]);
+                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document
+                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
+                                log.trace("Indexed document lacks source/annotation document IDs"
+                                        + " - source: {}, annotation: {}",
+                                        rawSourceDocumentId, rawAnnotationDocumentId);
+                                continue;
 
-                            // Retrieve the source document
+                            }
+                            long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                            long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                            
+                            // If the query is limited to a given document, skip any results
+                            // which are not in the given document
+                            Optional<SourceDocument> limitedToDocument = aRequest
+                                    .getLimitedToDocument();
+                            if (limitedToDocument.isPresent() && !Objects
+                                    .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
+                                log.trace("Query limited to document {}, skipping results for "
+                                        + "document {}",
+                                        limitedToDocument.get().getId(), sourceDocumentId);
+                                continue;
+                            }
+
+                            // FIXME Checking for every document whether an annotation document
+                            // exists will heavily slow down search in larger projects. We have
+                            // TWO DB accesses here, one for the source document and one checking
+                            // whether there is an annotation document. This is quite bad. However,
+                            // if we do not do this here, then the user will not get any results
+                            // from documents which the user has not opened yet or alternatively
+                            // duplicate results. Better find a solution which handles this during
+                            // indexing time.
+                            // See: https://github.com/inception-project/inception/issues/790
                             SourceDocument sourceDocument = documentService
                                     .getSourceDocument(project.getId(), sourceDocumentId);
-
-                            if (documentService.existsAnnotationDocument(sourceDocument, aUser)
-                                    && annotationDocumentId == -1) {
+                            if (documentService.existsAnnotationDocument(sourceDocument,
+                                    aRequest.getUsername()) && annotationDocumentId == -1) {
                                 // Exclude result if the retrieved document is a sourcedocument
-                                // (that is, has annotationDocument = -1) AND it has a 
+                                // (that is, has annotationDocument = -1) AND it has a
                                 // corresponding annotation document for this user
+                                log.trace("Skipping results from indexed source document {} in"
+                                        + "favor of results from the corresponding annotation "
+                                        + "document", sourceDocument.getId());
                                 continue;
                             }
                             else if (annotationDocumentId != -1
-                                    && !aUser.getUsername().equals(user)) {
+                                    && !aRequest.getUsername().equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
-                                // document (that is, annotationDocument != -1 and its username 
-                                // is different fromthe quering user
+                                // document (that is, annotationDocument != -1 and its username
+                                // is different from the quering user
+                                log.trace("Skipping results from annotation document for user {} "
+                                        + "which does not match the requested user {}", user,
+                                        aRequest.getUsername());
                                 continue;
                             }
 
@@ -459,6 +501,10 @@ public class MtasDocumentIndex
                 // Add indexed fields
                 doc.add(new StringField(FIELD_ID, String.valueOf(aSourceDocumentId) + "/"
                         + String.valueOf(aAnnotationDocumentId), Field.Store.YES));
+                doc.add(new StringField(FIELD_SOURCE_DOCUMENT_ID, String.valueOf(aSourceDocumentId),
+                        Field.Store.YES));
+                doc.add(new StringField(FIELD_ANNOTATION_DOCUMENT_ID,
+                        String.valueOf(aAnnotationDocumentId), Field.Store.YES));
                 doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
@@ -670,7 +716,7 @@ public class MtasDocumentIndex
                     indexWriter.close();
                 }
 
-                log.info("Index for project [{}]({}) has been closed", project.getName(),
+                log.debug("Index for project [{}]({}) has been closed", project.getName(),
                         project.getId());
             }
             catch (IOException e) {
@@ -721,20 +767,20 @@ public class MtasDocumentIndex
         if (!isOpen) {
             // Only open if it is not already open
             try {
-                log.info("indexWriter was not open. Opening it for project [{}]({})",
+                log.debug("indexWriter was not open. Opening it for project [{}]({})",
                         project.getName(), project.getId());
 
                 indexWriter = openLuceneIndex(getIndexDir());
                 indexWriter.commit();
 
-                log.info("indexWriter has been opened for project [{}]({})", project.getName(),
+                log.debug("indexWriter has been opened for project [{}]({})", project.getName(),
                         project.getId());
             }
             catch (Exception e) {
                 log.error("Unable to open indexWriter", e);
             }
         } else {
-            log.info("indexWriter is already open for project [{}]({})", project.getName(),
+            log.debug("indexWriter is already open for project [{}]({})", project.getName(),
                     project.getId());
         }
     }
@@ -749,12 +795,12 @@ public class MtasDocumentIndex
 
         try {
             // Create the directory for the new index
-            log.info("Creating index directory for project [{}]({})", project.getName(),
+            log.debug("Creating index directory for project [{}]({})", project.getName(),
                     project.getId());
             FileUtils.forceMkdir(indexDir);
 
             // Open the index
-            log.info("Opening index directory for project [{}]({})", project.getName(),
+            log.debug("Opening index directory for project [{}]({})", project.getName(),
                     project.getId());
             openPhysicalIndex();
             
@@ -891,5 +937,12 @@ public class MtasDocumentIndex
         }
         
         return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("project", project)
+                .append("path", getIndexDir()).toString();
     }
 }

@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,11 +29,10 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -40,6 +41,7 @@ import org.junit.FixMethodOrder;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.junit.rules.TestWatcher;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +49,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -110,13 +111,9 @@ import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistry;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndexRegistryImpl;
 import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
-/**
- * The Class MtasDocumentIndexTest.
- */
-
 @RunWith(SpringRunner.class)
 @EnableAutoConfiguration
-@SpringBootTest(webEnvironment = WebEnvironment.MOCK)
+@SpringBootTest
 @EntityScan({ 
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.inception.search.model",
@@ -134,6 +131,17 @@ public class MtasDocumentIndexTest
     private @Autowired SearchService searchService;
     private @Autowired AnnotationSchemaService annotationSchemaService;
 
+    @Rule
+    public TestWatcher watcher = new TestWatcher()
+    {
+        @Override
+        protected void starting(org.junit.runner.Description aDescription)
+        {
+            String methodName = aDescription.getMethodName();
+            System.out.printf("\n=== " + methodName + " =====================\n");
+        };
+    };
+    
     @Before
     public void setUp()
     {
@@ -148,19 +156,26 @@ public class MtasDocumentIndexTest
         annotationSchemaService.initializeProject(aProject);
     }
 
-    private void uploadDocument(Project aProject, String aFileContent,
-            SourceDocument aSourceDocument)
+    @SafeVarargs
+    private void uploadDocument(Pair<SourceDocument, String>... aDocuments)
         throws Exception
     {
-        InputStream fileStream = new ByteArrayInputStream(
-                aFileContent.getBytes(StandardCharsets.UTF_8));
-
-        documentService.uploadSourceDocument(fileStream, aSourceDocument);
-
+        Project project = null;
+        for (Pair<SourceDocument, String> doc : aDocuments) {
+            project = doc.getLeft().getProject();
+            
+            try (InputStream fileStream = new ByteArrayInputStream(
+                    doc.getRight().getBytes(UTF_8))) {
+                documentService.uploadSourceDocument(fileStream, doc.getLeft());
+            }
+        }
+        
+        // Avoid the compiler complaining about project not being an effectively final variable
+        Project p = project;
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(aProject));
+                .until(() -> searchService.isIndexValid(p) && !searchService.isIndexInProgress(p));
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
@@ -206,7 +221,8 @@ public class MtasDocumentIndexTest
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
                 .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(aProject));
+                .until(() -> searchService.isIndexValid(aProject)
+                        && !searchService.isIndexInProgress(aProject));
     }
 
     @Test
@@ -226,15 +242,14 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(project, fileContent, sourceDocument);
+        uploadDocument(Pair.of(sourceDocument, fileContent));
 
         User user = userRepository.get("admin");
 
         String query = "Galicia";
 
         // Execute query
-        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
-                query);
+        List<SearchResult> results = searchService.query(user, project, query);
 
         // Test results
         SearchResult expectedResult = new SearchResult();
@@ -253,6 +268,70 @@ public class MtasDocumentIndexTest
             assertEquals(1, results.size());
             assertEquals(expectedResult, results.get(0));
         }
+    }
+
+    @Test
+    public void testLimitQueryToDocument() throws Exception
+    {
+        Project project = new Project();
+        project.setName("TestLimitQueryToDocument");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+
+        createProject(project);
+
+        SourceDocument sourceDocument1 = new SourceDocument();
+        sourceDocument1.setName("Raw text document 1");
+        sourceDocument1.setProject(project);
+        sourceDocument1.setFormat("text");
+        String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
+
+        SourceDocument sourceDocument2 = new SourceDocument();
+        sourceDocument2.setName("Raw text document 2");
+        sourceDocument2.setProject(project);
+        sourceDocument2.setFormat("text");
+        String fileContent2 = "The capital of Portugal is Lissabon.";
+        
+        uploadDocument(
+                Pair.of(sourceDocument1, fileContent1),
+                Pair.of(sourceDocument2, fileContent2));
+
+        User user = userRepository.get("admin");
+
+        String query = "capital";
+
+        // Execute query
+        SourceDocument sourceDocument = documentService.getSourceDocument(project,
+                "Raw text document 1");
+        List<SearchResult> resultsNotLimited = searchService.query(user, project, query);
+        List<SearchResult> resultsLimited = searchService.query(user, project, query,
+                sourceDocument);
+
+        // Test results
+        SearchResult expectedResult1 = new SearchResult();
+        expectedResult1.setDocumentId(sourceDocument1.getId());
+        expectedResult1.setDocumentTitle("Raw text document 1");
+        expectedResult1.setText("capital ");
+        expectedResult1.setLeftContext("The ");
+        expectedResult1.setRightContext("of ");
+        expectedResult1.setOffsetStart(4);
+        expectedResult1.setOffsetEnd(11);
+
+        SearchResult expectedResult2 = new SearchResult();
+        expectedResult2.setDocumentId(sourceDocument2.getId());
+        expectedResult2.setDocumentTitle("Raw text document 2");
+        expectedResult2.setText("capital ");
+        expectedResult2.setLeftContext("The ");
+        expectedResult2.setRightContext("of ");
+        expectedResult2.setOffsetStart(4);
+        expectedResult2.setOffsetEnd(11);
+
+        assertThat(resultsLimited)
+                .containsExactly(expectedResult1)
+                .usingElementComparatorIgnoringFields("tokenStart", "tokenEnd");
+        
+        assertThat(resultsNotLimited)
+                .containsExactlyInAnyOrder(expectedResult1, expectedResult2)
+                .usingElementComparatorIgnoringFields("tokenStart", "tokenEnd");
     }
 
     @Test
@@ -272,15 +351,14 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(project, fileContent, sourceDocument);
+        uploadDocument(Pair.of(sourceDocument, fileContent));
 
         User user = userRepository.get("admin");
 
         String query = "\"Galicia\"";
 
         // Execute query
-        List<SearchResult> results = (ArrayList<SearchResult>) searchService.query(user, project,
-                query);
+        List<SearchResult> results = searchService.query(user, project, query);
 
         // Test results
         SearchResult expectedResult = new SearchResult();
@@ -295,11 +373,10 @@ public class MtasDocumentIndexTest
         expectedResult.setTokenLength(1);
 
         assertNotNull(results);
-        if (results != null) {
-            assertEquals(1, results.size());
-            assertEquals(expectedResult, results.get(0));
-        }
+        assertEquals(1, results.size());
+        assertEquals(expectedResult, results.get(0));
     }
+    
     @Test
     public void testAnnotationQuery() throws Exception
     {
@@ -319,25 +396,8 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(project, fileContent, sourceDocument);
-
-        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
-        // because otherwise there would not be time even for the index becoming invalid 
-        // before becoming valid again.
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(project));
-
+        uploadDocument(Pair.of(sourceDocument, fileContent));
         annotateDocument(project, user, sourceDocument);
-
-        // Wait for the asynchronous indexing task to finish. We need a sleep before the while 
-        // because otherwise there would not be time even for the index becoming invalid 
-        // before becoming valid again.
-        await("Waiting for indexing process to complete")
-                .atMost(60, SECONDS)
-                .pollInterval(5, SECONDS)
-                .until(() -> searchService.isIndexValid(project));
 
         String query = "<Named_entity.value=\"LOC\"/>";
 
@@ -534,11 +594,12 @@ public class MtasDocumentIndexTest
                 @Autowired FeatureSupportRegistry aFeatureSupportRegistry)
         {
             return new LayerSupportRegistryImpl(asList(
-                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService()),
+                    new SpanLayerSupport(aFeatureSupportRegistry, null, annotationSchemaService(),
+                            null),
                     new RelationLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService()),
+                            annotationSchemaService(), null),
                     new ChainLayerSupport(aFeatureSupportRegistry, null,
-                            annotationSchemaService())));
+                            annotationSchemaService(), null)));
         }
     }
 }

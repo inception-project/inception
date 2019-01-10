@@ -120,12 +120,13 @@ public class KnowledgeBaseExporter implements ProjectExporter
             exportedKB.setSupportConceptLinking(kb.isSupportConceptLinking());
             exportedKB.setBasePrefix(kb.getBasePrefix());
             exportedKB.setRootConcepts(
-                kb.getExplicitlyDefinedRootConcepts()
+                kb.getRootConcepts()
                     .stream()
                     .map(conceptIRI -> conceptIRI.stringValue())
                     .collect(Collectors.toList()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
             exportedKB.setMaxResults(kb.getMaxResults());
+            exportedKB.setSubPropertyIri(kb.getSubPropertyIri().stringValue());
             exportedKnowledgeBases.add(exportedKB);
 
             if (kb.getType() == RepositoryType.REMOTE) {
@@ -202,6 +203,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setPropertyDescriptionIri(exportedKB.getPropertyDescriptionIri() != null ?
                 vf.createIRI(exportedKB.getPropertyDescriptionIri()) :
                 DEFAULTPROFILE.getPropertyDescriptionIri());
+            kb.setSubPropertyIri(exportedKB.getSubPropertyIri() != null ?
+                    vf.createIRI(exportedKB.getSubPropertyIri()) :
+                    DEFAULTPROFILE.getSubPropertyIri());
             // The imported project may date from a time where we did not yet have the FTS IRI.
             // In that case we use concept linking support as an indicator that we dealt with a
             // remote Virtuoso.
@@ -217,12 +221,12 @@ public class KnowledgeBaseExporter implements ProjectExporter
             kb.setBasePrefix(exportedKB.getBasePrefix());
 
             if (exportedKB.getRootConcepts() != null) {
-                kb.setExplicitlyDefinedRootConcepts(
+                kb.setRootConcepts(
                     exportedKB.getRootConcepts().stream()
                         .map(conceptId -> vf.createIRI(conceptId)).collect(Collectors.toList()));
             }
             else {
-                kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+                kb.setRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
             kb.setMaxResults(exportedKB.getMaxResults());

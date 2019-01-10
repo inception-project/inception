@@ -20,8 +20,11 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -37,6 +40,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataCreatedEvent;
 import de.tudarmstadt.ukp.inception.ui.core.docanno.event.DocumentMetadataDeletedEvent;
 
@@ -106,12 +111,24 @@ public class DocumentMetadataLayerAdapter
     }
     
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
         AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
 
-        publishEvent(new DocumentMetadataDeletedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), fs));
+        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));
+    }
+    
+    @Override
+    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    {
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        // There are no behaviors for document metadata annotations yet
+        /*
+        for (SpanLayerBehavior behavior : behaviors) {
+            messages.addAll(behavior.onValidate(this, aJCas));
+        }
+        */
+        return messages;
     }
 }

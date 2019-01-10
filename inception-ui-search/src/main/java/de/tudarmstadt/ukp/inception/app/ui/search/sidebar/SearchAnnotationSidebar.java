@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,11 +30,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -47,6 +51,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -58,9 +63,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -73,12 +75,12 @@ public class SearchAnnotationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
-    private Project currentProject;
     private User currentUser;
 
     final WebMarkupContainer mainContainer;
 
-    private Model<String> targetQuery = Model.of("");
+    private IModel<String> targetQuery = Model.of("");
+    private IModel<Options> options = CompoundPropertyModel.of(new Options());
     private IModel<List<SearchResult>> searchResults;
     
     private SearchResult selectedResult;
@@ -89,8 +91,6 @@ public class SearchAnnotationSidebar
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
-        currentProject = getModel().getObject().getProject();
-
         currentUser = userRepository.getCurrentUser();
         
         mainContainer = new WebMarkupContainer("mainContainer");
@@ -99,14 +99,26 @@ public class SearchAnnotationSidebar
 
         Form<Void> searchForm = new Form<Void>("searchForm");
         searchForm.add(new TextArea<String>("queryInput", targetQuery));
-        searchForm.add(new LambdaAjaxButton<>("search", this::actionSearch));
+        LambdaAjaxButton<Void> searchButton = new LambdaAjaxButton<>("search", this::actionSearch);
+        searchForm.add(searchButton);
+        searchForm.setDefaultButton(searchButton);
         mainContainer.add(searchForm);
 
-        
+        Form<Options> searchOptionsForm = new Form<>("searchOptionsForm", options);
+        searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
+        searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
+        searchOptionsForm.setOutputMarkupPlaceholderTag(true);
+        searchForm.add(searchOptionsForm);
+
+        searchForm.add(new LambdaAjaxLink("toggleOptionsVisibility", _target -> {
+            searchOptionsForm.getModelObject().toggleVisibility();
+            _target.add(searchOptionsForm);
+        }));
+
         searchResults = LambdaModel.of(this::getSearchResults);
         
-        // Add link for reindexing the project
-        mainContainer.add(new LambdaAjaxLink("reindexProject", t -> {
+        // Add link for re-indexing the project
+        searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
             Project project = ((IModel<AnnotatorState>) t.getPage().getDefaultModel()).getObject()
                     .getProject();
             searchService.reindex(project);
@@ -135,9 +147,10 @@ public class SearchAnnotationSidebar
         searchResultGroups.setModel(LambdaModel.of(() -> 
                 searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
                         .distinct().collect(Collectors.toList())));
+        
         mainContainer.add(searchResultGroups);
     }
-
+    
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
         selectedResult = null;
         searchResults.detach();
@@ -152,10 +165,15 @@ public class SearchAnnotationSidebar
         }
         
         try {
-            currentProject = getModel().getObject().getProject();
-            applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, currentProject,
-                    currentUser.getUsername(), targetQuery.getObject()));
-            return searchService.query(currentUser, currentProject, targetQuery.getObject());
+            AnnotatorState state = getModelObject();
+            Project project = state.getProject();
+            SourceDocument limitToDocument = options.getObject().isLimitedToCurrentDocument()
+                    ? state.getDocument()
+                    : null;
+            applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
+                    currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
+            return searchService.query(currentUser, project, targetQuery.getObject(),
+                    limitToDocument);
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
@@ -195,6 +213,9 @@ public class SearchAnnotationSidebar
                 @Override
                 protected void populateItem(ListItem<SearchResult> aItem)
                 {
+                    Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
+                            .getProject();
+                    
                     LambdaAjaxLink lambdaAjaxLink;
                     if (aItem.getModel().getObject().getOffsetStart() != -1) {
                         // When the offset exists, use it. Mtas indexes.
@@ -202,9 +223,8 @@ public class SearchAnnotationSidebar
                             selectedResult = aItem.getModelObject();
                             actionShowSelectedDocument(t,
                                     documentService.getSourceDocument(currentProject,
-                                            aItem.getModel().getObject().getDocumentTitle()),
-                                    aItem.getModel().getObject().getOffsetStart(),
-                                    aItem.getModel().getObject().getOffsetEnd());
+                                            selectedResult.getDocumentTitle()),
+                                    selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
                         });
                     }
                     else {
@@ -215,17 +235,16 @@ public class SearchAnnotationSidebar
                                     documentService.getSourceDocument(currentProject,
                                             aItem.getModel().getObject().getDocumentTitle()),
                                     aItem.getModel().getObject().getTokenStart());
+                            ;
                         });
 
                     }
-                    lambdaAjaxLink.add(new InputBehavior(
-                            new KeyType[] { KeyType.Shift, KeyType.Page_up }, EventType.click));
                     aItem.add(lambdaAjaxLink);
 
                     String sentence = new String();
 
-                    sentence = sentence + aItem.getModel().getObject().getLeftContext() + "<strong>"
-                            + aItem.getModel().getObject().getText() + "</strong>"
+                    sentence = sentence + aItem.getModel().getObject().getLeftContext() + "<mark>"
+                            + aItem.getModel().getObject().getText() + "</mark>"
                             + aItem.getModel().getObject().getRightContext();
 
                     lambdaAjaxLink
@@ -234,6 +253,39 @@ public class SearchAnnotationSidebar
             };
             statementList.setModel(aModel);
             add(statementList);        
+        }
+    }
+    
+    public static class Options
+        implements Serializable
+    {
+        private static final long serialVersionUID = 3030323391922717647L;
+        
+        private boolean visible = false;
+        
+        private boolean limitedToCurrentDocument = false;
+
+        /**
+         * Whether or not the options form should be displayed
+         */
+        public boolean isVisible()
+        {
+            return visible;
+        }
+
+        public void toggleVisibility()
+        {
+            visible = !visible;
+        }
+
+        public boolean isLimitedToCurrentDocument()
+        {
+            return limitedToCurrentDocument;
+        }
+
+        public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
+        {
+            limitedToCurrentDocument = aLimitedToCurrentDocument;
         }
     }
 }

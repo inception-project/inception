@@ -23,6 +23,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
@@ -63,6 +65,7 @@ public class RecommenderEvaluationResultEventAdapter
         try {
             Details details = new Details();
 
+            details.recommenderId = aEvent.getRecommender().getId();
             details.score = aEvent.getScore();
             details.active = aEvent.isActive();
 
@@ -80,9 +83,11 @@ public class RecommenderEvaluationResultEventAdapter
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Details
     {
         // Recommender configuration
+        public Long recommenderId;
         public String layer;
         public String feature;
         public String tool;

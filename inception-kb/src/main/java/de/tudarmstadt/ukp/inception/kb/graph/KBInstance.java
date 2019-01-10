@@ -148,11 +148,14 @@ public class KBInstance
 
         if (isNotBlank(name)) {
             Literal nameLiteral;
-            if (language == null) {
-                nameLiteral = vf.createLiteral(name);
+            if (language != null) {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            else if (kb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {
-                nameLiteral = vf.createLiteral(name, language);
+                nameLiteral = vf.createLiteral(name);
             }
             Statement nameStmt = vf.createStatement(subject, kb.getLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
@@ -182,7 +185,7 @@ public class KBInstance
         kbInst.setKB(aKb);
         kbInst.originalStatements.add(aStmt);
 
-        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage())
+        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage(), aKb)
             .ifPresent((stmt) -> {
                 kbInst.setName(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
@@ -194,7 +197,7 @@ public class KBInstance
             });
 
         readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
-                aKb.getDefaultLanguage())
+                aKb.getDefaultLanguage(), aKb)
             .ifPresent((stmt) -> {
                 kbInst.setDescription(stmt.getObject().stringValue());
                 kbInst.originalStatements.add(stmt);
