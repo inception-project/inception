@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -80,7 +81,7 @@ public class RecommenderExporter implements ProjectExporter {
         for (Recommender recommender : recommendationService.listRecommenders(project)) {
             ExportedRecommender exportedRecommender = new ExportedRecommender();
             exportedRecommender.setAlwaysSelected(recommender.isAlwaysSelected());
-            exportedRecommender.setFeature(recommender.getFeature());
+            exportedRecommender.setFeature(recommender.getFeature().getName());
             exportedRecommender.setEnabled(recommender.isEnabled());
             exportedRecommender.setLayerName(recommender.getLayer().getName());
             exportedRecommender.setName(recommender.getName());
@@ -108,7 +109,6 @@ public class RecommenderExporter implements ProjectExporter {
         for (ExportedRecommender exportedRecommender : recommenders) {
             Recommender recommender = new Recommender();
             recommender.setAlwaysSelected(exportedRecommender.isAlwaysSelected());
-            recommender.setFeature(exportedRecommender.getFeature());
             recommender.setEnabled(exportedRecommender.isEnabled());
             recommender.setName(exportedRecommender.getName());
             recommender.setThreshold(exportedRecommender.getThreshold());
@@ -134,6 +134,10 @@ public class RecommenderExporter implements ProjectExporter {
             String layerName = exportedRecommender.getLayerName();
             AnnotationLayer layer = annotationService.getLayer(layerName, aProject);
             recommender.setLayer(layer);
+
+            String featureName = exportedRecommender.getFeature();
+            AnnotationFeature feature = annotationService.getFeature(featureName, layer);
+            recommender.setFeature(feature);
 
             recommender.setProject(aProject);
             recommendationService.createOrUpdateRecommender(recommender);
