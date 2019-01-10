@@ -1,6 +1,5 @@
-package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
+package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchServiceImpl;
 import org.apache.wicket.MetaDataKey;
 
 public final class ExternalSearchUserStateMetaData
