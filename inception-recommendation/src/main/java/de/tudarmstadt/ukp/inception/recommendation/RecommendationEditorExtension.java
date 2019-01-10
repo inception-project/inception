@@ -218,7 +218,7 @@ public class RecommendationEditorExtension
         AnnotationSuggestion suggestion = oPrediction.get();
         Recommender recommender = recommendationService.getRecommender(aVID.getId());
         AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
-        AnnotationFeature feature = annotationService.getFeature(recommender.getFeature(), layer);
+        AnnotationFeature feature = recommender.getFeature();
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
         // the entire document or even for the part visible on screen.

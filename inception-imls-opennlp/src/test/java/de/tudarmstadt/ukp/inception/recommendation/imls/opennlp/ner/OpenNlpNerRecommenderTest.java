@@ -36,6 +36,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
@@ -168,9 +169,12 @@ public class OpenNlpNerRecommenderTest
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
+        
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
-        recommender.setFeature("value");
+        recommender.setFeature(feature);
 
         return recommender;
     }
