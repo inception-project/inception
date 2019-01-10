@@ -37,7 +37,6 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
