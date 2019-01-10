@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.tasks.PredictionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 /**
  * Render spans.
