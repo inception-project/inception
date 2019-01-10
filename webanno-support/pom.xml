@@ -118,6 +118,14 @@
       <artifactId>wicketstuff-urlfragment</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>jquery-selectors</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.github.openjson</groupId>
       <artifactId>openjson</artifactId>
     </dependency>
@@ -174,8 +182,12 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
+                  <!-- Apache License without header -->
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/*.java</exclude>
                   <!-- MIT License -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/css/*</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/js/*</exclude>
                 </excludes>
               </configuration>
             </plugin>

@@ -23,8 +23,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec.SequenceItem;
-
 public class SequenceItemTest
 {
     @Test
