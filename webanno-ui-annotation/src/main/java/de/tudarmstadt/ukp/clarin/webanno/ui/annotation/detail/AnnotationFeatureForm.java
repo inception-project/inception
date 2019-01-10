@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static java.util.Objects.isNull;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
@@ -58,6 +59,7 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -84,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -145,6 +148,7 @@ public class AnnotationFeatureForm
         add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
         add(featureEditorPanel = createFeatureEditorPanel());
+        add(createSelectedAnnotationTypeLabel());
     }
 
     private WebMarkupContainer createFeatureEditorPanel()
@@ -273,6 +277,24 @@ public class AnnotationFeatureForm
         Label label = new Label("selectedAnnotationLayer", new Model<String>());
         label.setOutputMarkupPlaceholderTag(true);
         label.add(visibleWhen(() -> getModelObject().getPreferences().isRememberLayer()));
+        return label;
+    }
+
+    private Label createSelectedAnnotationTypeLabel()
+    {
+        Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
+            try {
+                return String.valueOf(WebAnnoCasUtil.selectByAddr(editorPanel.getEditorCas(),
+                        getModelObject().getSelection().getAnnotation().getId())).trim();
+            }
+            catch (IOException e) {
+                return "";
+            }
+        }));
+        label.setOutputMarkupPlaceholderTag(true);
+        // We show the extended info on the selected annotation only when run in development mode
+        label.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && DEVELOPMENT.equals(getApplication().getConfigurationType())));
         return label;
     }
 
