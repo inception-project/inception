@@ -30,9 +30,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec.AdjacentLabelCodec;
-import de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec.SequenceItem;
-
 @RunWith(Parameterized.class)
 public class AdjacentLabelCodecTest
 {
