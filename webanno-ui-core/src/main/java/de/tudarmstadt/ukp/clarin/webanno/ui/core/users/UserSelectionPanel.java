@@ -42,7 +42,6 @@ class UserSelectionPanel
     public UserSelectionPanel(String id, IModel<User> aModel)
     {
         super(id);
-        setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
         overviewList = new OverviewListChoice<>("user");

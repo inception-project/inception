@@ -33,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -81,7 +80,6 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -104,7 +102,6 @@ public abstract class AnnotationDetailEditorPanel
 
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     
@@ -653,7 +650,7 @@ public abstract class AnnotationDetailEditorPanel
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
-        writeEditorCas(aJCas);
+        page.writeEditorCas(aJCas);
 
         // Remember the current feature values independently for spans and relations
         LOG.trace("actionAnnotate() remembering feature editor values");
@@ -738,7 +735,7 @@ public abstract class AnnotationDetailEditorPanel
         deleteAnnotation(jCas, state, fs, layer, adapter);
 
         // Store CAS again
-        writeEditorCas(jCas);
+        page.writeEditorCas(jCas);
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
@@ -884,7 +881,7 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        writeEditorCas(jCas);
+        page.writeEditorCas(jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
@@ -910,33 +907,6 @@ public abstract class AnnotationDetailEditorPanel
         aTarget.addChildren(getPage(), IFeedback.class);
         aTarget.add(annotationFeatureForm);
         onChange(aTarget);
-    }
-
-    private void writeEditorCas(JCas aJCas)
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-            || state.getMode().equals(Mode.CORRECTION)) {
-            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
-            
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
-        }
-        else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
-            
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = curationDocumentService
-                    .getCurationCasTimestamp(state.getDocument());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
-        }
     }
 
     /**

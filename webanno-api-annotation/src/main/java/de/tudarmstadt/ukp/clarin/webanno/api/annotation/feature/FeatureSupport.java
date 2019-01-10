@@ -26,7 +26,6 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -218,7 +217,7 @@ public interface FeatureSupport<T>
      *            the feature structure from which to obtain the label.
      * @return the UI label.
      */
-    default String renderFeatureValue(AnnotationFeature aFeature, AnnotationFS aFs)
+    default String renderFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));

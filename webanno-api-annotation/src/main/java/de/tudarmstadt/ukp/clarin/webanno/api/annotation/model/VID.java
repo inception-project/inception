@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -66,7 +67,7 @@ public class VID
     private final int slot;
     private final String extensionId;
 
-    public VID(AnnotationFS aFS)
+    public VID(FeatureStructure aFS)
     {
         this(null, getAddr(aFS), NONE, NONE, NONE);
     }
