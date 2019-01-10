@@ -62,7 +62,7 @@ public interface Renderer
     
     FeatureSupportRegistry getFeatureSupportRegistry();
 
-    default Map<String, String> getFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
+    default Map<String, String> getFeatures(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -47,8 +48,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
@@ -65,6 +68,7 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     
     private ChallengeResponseDialog resetDocumentDialog;
@@ -307,9 +311,34 @@ public abstract class AnnotationPageBase
     
     protected abstract List<SourceDocument> getListOfDocs();
 
-    protected abstract JCas getEditorCas()
-        throws IOException;
+    protected abstract JCas getEditorCas() throws IOException;
+    
+    public void writeEditorCas(JCas aJCas) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
+                || state.getMode().equals(Mode.CORRECTION)) {
+            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
 
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
+        }
+        else if (state.getMode().equals(Mode.CURATION)) {
+            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
+
+            // Update timestamp in state
+            Optional<Long> diskTimestamp = curationDocumentService
+                    .getCurationCasTimestamp(state.getDocument());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
+        }
+    }
+    
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.

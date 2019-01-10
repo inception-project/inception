@@ -81,7 +81,7 @@ public abstract class TypeAdapter_ImplBase
     public void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aJcas, aAddress);
+        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
 
         Object oldValue = getValue(fs, aFeature);
         
