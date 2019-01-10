@@ -9,5 +9,5 @@ de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBeha
 de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select
   Source: https://github.com/l0rdn1kk0n/wicket-bootstrap/releases/tag/bootstrap-parent-2.0.6
   License: Apache License, Version 2.0
-  Source: https://github.com/snapappointments/bootstrap-select/releases/tag/v1.13.0
+  Source: https://github.com/snapappointments/bootstrap-select/releases/tag/v1.13.5
   License: The MIT License (MIT)
