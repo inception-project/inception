@@ -17,18 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.conll;
 
+import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testOneWay;
+import static de.tudarmstadt.ukp.clarin.webanno.conll.IOTestRunner.testRoundTrip;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
-import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
-import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.io.StringReader;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.collection.CollectionReaderDescription;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -40,27 +34,89 @@ public class ConllUReaderWriterTest
     public void roundTrip()
         throws Exception
     {
-        CollectionReaderDescription reader = createReaderDescription(
-                ConllUReader.class, 
-                ConllUReader.PARAM_SOURCE_LOCATION, "src/test/resources/conll/u",
-                ConllUReader.PARAM_PATTERNS, "conllu-en-orig.conll");
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, false),
+                "conll/u/conllu-en-orig.conll");
+    }
 
-        AnalysisEngineDescription writer = createEngineDescription(
-                ConllUWriter.class,
-                ConllUWriter.PARAM_TARGET_LOCATION, "target/test-output/ConllUReaderWriterTest-roundTrip",
-                ConllUWriter.PARAM_FILENAME_SUFFIX, ".conll",
-                ConllUWriter.PARAM_STRIP_EXTENSION, true);
+    @Ignore("This unfortunately doesn't work yet.")
+    @Test
+    public void roundTripV2EmptyNodes()
+        throws Exception
+    {
+        testRoundTrip(ConllUReader.class, ConllUWriter.class, "conll/u_v2/conllu-empty_nodes.conll");
+    }
 
-        runPipeline(reader, writer);
+    @Test
+    public void roundTripV2MorphologicalAnnotation()
+        throws Exception
+    {
+        testRoundTrip(ConllUReader.class, ConllUWriter.class, "conll/u_v2/conllu-morphological_annotation.conll");
+    }
 
-        String reference = FileUtils.readFileToString(
-                new File("src/test/resources/conll/u/conllu-en-ref.conll"), "UTF-8")
-                .trim();
-        String actual = FileUtils.readFileToString(
-                new File("target/test-output/ConllUReaderWriterTest-roundTrip/conllu-en-orig.conll"),
-                "UTF-8").trim();
-        assertTrue(IOUtils.contentEqualsIgnoreEOL(new StringReader(reference),
-                new StringReader(actual)));
+    @Ignore("This unfortunately doesn't work yet.")
+    @Test
+    public void roundTripV2ParagraphAndDocumentBoundaries()
+        throws Exception
+    {
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
+                "conll/u_v2/conllu-paragraph_and_document_boundaries.conll");
+    }
+
+    @Test
+    public void roundTripV2SentenceBoundariesAndComments()
+        throws Exception
+    {
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
+                "conll/u_v2/conllu-sentence_bounaries_and_comments.conll");
+    }
+
+    @Test
+    public void roundTripV2SyntacticAnnotation()
+        throws Exception
+    {
+        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+                "conll/u_v2/conllu-syntactic_annotation.conll");
+    }
+
+    @Ignore("This unfortunately doesn't work yet.")
+    @Test
+    public void roundTripV2UntokenizedText()
+        throws Exception
+    {
+        testRoundTrip(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, true),
+                "conll/u_v2/conllu-untokenized_text.conll");
+    }
+
+    @Test
+    public void roundTripV2WordsAndTokens()
+        throws Exception
+    {
+        testRoundTrip(ConllUReader.class, ConllUWriter.class,
+                "conll/u_v2/conllu-words_and_tokens.conll");
+    }
+
+    @Test
+    public void withComments()
+        throws Exception
+    {
+        testOneWay(
+                createReaderDescription(ConllUReader.class),
+                createEngineDescription(ConllUWriter.class,
+                        ConllUWriter.PARAM_WRITE_TEXT_COMMENT, false),
+                "conll/u/conllu-en-ref.conll",
+                "conll/u/conllu-en-orig2.conll");
     }
 
     @Rule

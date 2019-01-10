@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
@@ -275,9 +278,20 @@ public class BratRenderer
         aResponse.setText(visibleText);
 
         // Render Sentence
+        int sentIdx = aResponse.getSentenceNumberOffset();
         for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, windowBegin, windowEnd)) {
             aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd()
                     - windowBegin);
+            
+            // If there is a sentence ID, then make it accessible to the user via a sentence-level
+            // comment.
+            String sentId = FSUtil.getFeature(fs, "id", String.class);
+            if (isNotBlank(sentId)) {
+                aResponse.addComment(new SentenceComment(sentIdx, Comment.ANNOTATOR_NOTES, 
+                        String.format("Sentence ID: %s", sentId)));
+            }
+
+            sentIdx++;
         }
     }
     

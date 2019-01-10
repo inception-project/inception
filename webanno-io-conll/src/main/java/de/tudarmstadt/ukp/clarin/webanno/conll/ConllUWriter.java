@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.conll;
 
-import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.uima.fit.util.JCasUtil.indexCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
@@ -88,13 +87,15 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * 
  * @see <a href="http://universaldependencies.github.io/docs/format.html">CoNLL-U Format</a>
  */
-@TypeCapability(inputs = { "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
-        "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures",
-        "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
-        "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
-        "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency" })
+@TypeCapability(
+        inputs = {
+                "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
+                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence",
+                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token",
+                "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures",
+                "de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS",
+                "de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma",
+                "de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency" })
 public class ConllUWriter
     extends JCasFileWriter_ImplBase
 {
@@ -108,22 +109,38 @@ public class ConllUWriter
     @ConfigurationParameter(name = PARAM_TARGET_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String targetEncoding;
 
-    public static final String PARAM_FILENAME_SUFFIX = "filenameSuffix";
-    @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".conll")
+    /**
+     * Use this filename extension.
+     */
+    public static final String PARAM_FILENAME_EXTENSION = 
+            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".conll")
     private String filenameSuffix;
 
+    /**
+     * Write fine-grained part-of-speech information.
+     */
     public static final String PARAM_WRITE_POS = ComponentParameters.PARAM_WRITE_POS;
     @ConfigurationParameter(name = PARAM_WRITE_POS, mandatory = true, defaultValue = "true")
     private boolean writePos;
 
+    /**
+     * Write morphological features.
+     */
     public static final String PARAM_WRITE_MORPH = ComponentParameters.PARAM_WRITE_MORPH;
     @ConfigurationParameter(name = PARAM_WRITE_MORPH, mandatory = true, defaultValue = "true")
     private boolean writeMorph;
 
+    /**
+     * Write lemma information.
+     */
     public static final String PARAM_WRITE_LEMMA = ComponentParameters.PARAM_WRITE_LEMMA;
     @ConfigurationParameter(name = PARAM_WRITE_LEMMA, mandatory = true, defaultValue = "true")
     private boolean writeLemma;
 
+    /**
+     * Write syntactic dependency information.
+     */
     public static final String PARAM_WRITE_DEPENDENCY = ComponentParameters.PARAM_WRITE_DEPENDENCY;
     @ConfigurationParameter(name = PARAM_WRITE_DEPENDENCY, mandatory = true, defaultValue = "true")
     private boolean writeDependency;
@@ -146,21 +163,23 @@ public class ConllUWriter
         dkpro2ud.put(PUNC.class, "PUNCT");
     }
     
+    /**
+     * Include the full sentence text as a comment in front of each sentence.
+     */
+    public static final String PARAM_WRITE_TEXT_COMMENT = "writeTextComment";
+    @ConfigurationParameter(name = PARAM_WRITE_TEXT_COMMENT, mandatory = true, defaultValue = "true")
+    private boolean writeTextHeader;
+
     @Override
     public void process(JCas aJCas)
         throws AnalysisEngineProcessException
     {
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(new OutputStreamWriter(getOutputStream(aJCas, filenameSuffix),
-                    targetEncoding));
+        try (PrintWriter out = new PrintWriter(
+                new OutputStreamWriter(getOutputStream(aJCas, filenameSuffix), targetEncoding));) {
             convert(aJCas, out);
         }
         catch (Exception e) {
             throw new AnalysisEngineProcessException(e);
-        }
-        finally {
-            closeQuietly(out);
         }
     }
 
@@ -174,8 +193,17 @@ public class ConllUWriter
         }
         
         for (Sentence sentence : select(aJCas, Sentence.class)) {
-            HashMap<Token, Row> ctokens = new LinkedHashMap<>();
+            Map<Token, Row> ctokens = new LinkedHashMap<>();
 
+            // Comments
+            if (FSUtil.getFeature(sentence, "id", String.class) != null) {
+                aOut.printf("# %s = %s\n", ConllUReader.META_SEND_ID,
+                        FSUtil.getFeature(sentence, "id", String.class));
+            }
+            if (writeTextHeader) {
+                aOut.printf("# %s = %s\n", ConllUReader.META_TEXT, sentence.getCoveredText());
+            }
+            
             // Tokens
             List<Token> tokens = selectCovered(Token.class, sentence);
             
@@ -201,6 +229,9 @@ public class ConllUWriter
 
             // Write sentence in CONLL-U format
             for (Row row : ctokens.values()) {
+                
+                String form = row.token.getCoveredText();
+                
                 String lemma = UNUSED;
                 if (writeLemma && (row.token.getLemma() != null)) {
                     lemma = row.token.getLemma().getValue();
@@ -276,7 +307,7 @@ public class ConllUWriter
                 }
                 
                 aOut.printf("%d\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n", row.id,
-                        row.token.getCoveredText(), lemma, cpos, pos, feats, head, deprel, deps,
+                        form, lemma, cpos, pos, feats, head, deprel, deps,
                         misc);
             }
 
