@@ -17,38 +17,188 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static java.util.Collections.emptyList;
+import static org.apache.uima.fit.util.CasUtil.selectFS;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.uima.cas.AnnotationBaseFS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.jcas.JCas;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerAdapter;
+import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class DocumentMetadataAnnotationSelectionPanel extends Panel
 {
-    public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<?> aModel)
+    private static final long serialVersionUID = 8318858582025740458L;
+
+    private static final Logger LOG = LoggerFactory
+            .getLogger(DocumentMetadataAnnotationSelectionPanel.class);
+    
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
+    private @SpringBean AnnotationSchemaService annotationService;
+    
+    private final JCasProvider jcasProvider;
+    private final DocumentMetadataAnnotationDetailPanel detailPanel;
+    private final IModel<SourceDocument> sourceDocument;
+    private final IModel<String> username;
+    private final IModel<AnnotationLayer> selectedLayer;
+    
+    public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
+            IModel<SourceDocument> aDocument, IModel<String> aUsername,
+            JCasProvider aJCasProvider, DocumentMetadataAnnotationDetailPanel aDetails)
     {
-        super(aId, aModel);
+        super(aId, aProject);
+
+        setOutputMarkupPlaceholderTag(true);
         
-        add(new DropDownChoice<>("layer"));
+        sourceDocument = aDocument;
+        username = aUsername;
+        jcasProvider = aJCasProvider;
+        detailPanel = aDetails;
+        selectedLayer = Model.of();
+
+        add(createAnnotationList());
+        
+        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>("layer");
+        layer.setModel(selectedLayer);
+        layer.setChoices(this::listMetadataLayers);
+        layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        add(layer);
+        
+        add(new LambdaAjaxLink("create", this::actionCreate));
     }
     
-    private ListView<Project> createProjectList()
+    public Project getModelObject()
     {
-        return new ListView<Project>("annotations")
+        return (Project) getDefaultModelObject();
+    }
+    
+    private void actionCreate(AjaxRequestTarget aTarget) throws AnnotationException, IOException
+    {
+        DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
+                .getAdapter(selectedLayer.getObject());
+        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(),
+                jcasProvider.get());
+        detailPanel.setModelObject(new VID(fs));
+        
+        aTarget.add(this);
+        aTarget.add(detailPanel);
+    }
+    
+    private void actionSelect(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    {
+        detailPanel.setModelObject(new VID(aItem.addr));
+        
+        aTarget.add(this);
+        aTarget.add(detailPanel);
+    }
+    
+    private ListView<AnnotationListItem> createAnnotationList()
+    {
+        return new ListView<AnnotationListItem>("annotations",
+                LoadableDetachableModel.of(this::listAnnotations))
         {
+            private static final long serialVersionUID = -6833373063896777785L;
+
             @Override
-            protected void populateItem(ListItem<Project> aItem)
+            protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
-                LambdaStatelessLink projectLink = new LambdaStatelessLink("annotationLink", () -> {
-                });
-                projectLink.add(new Label("label", Model.of("DUMMY LABEL")));
-                aItem.add(projectLink);
+                aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
+                
+                LambdaAjaxLink link = new LambdaAjaxLink("annotationLink",
+                    _target -> actionSelect(_target, aItem.getModelObject()));
+                link.add(new Label("label"));
+                aItem.add(link);
             }
         };
+    }
+    
+    private List<AnnotationLayer> listMetadataLayers()
+    {
+        return annotationService.listAnnotationLayer(getModelObject()).stream()
+                .filter(layer -> !DocumentMetadataLayerSupport.TYPE.equals(layer.getType())).
+                collect(Collectors.toList());
+    }
+    
+    private List<AnnotationListItem> listAnnotations()
+    {
+        JCas jcas;
+        try {
+            jcas = jcasProvider.get();
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load CAS", e);
+            return emptyList();
+        }
+        
+        List<AnnotationListItem> items = new ArrayList<>();
+        for (AnnotationLayer layer : listMetadataLayers()) {
+            if (!DocumentMetadataLayerSupport.TYPE.equals(layer.getType())) {
+                continue;
+            }
+            
+            List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+            Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+            
+            for (FeatureStructure fs : selectFS(jcas.getCas(),
+                    adapter.getAnnotationType(jcas.getCas()))) {
+                Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
+                String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText));
+            }
+        }
+        
+        return items;
+    }
+    
+    private class AnnotationListItem
+    {
+        final int addr;
+        final String label;
+        
+        public AnnotationListItem(int aAddr, String aLabel)
+        {
+            super();
+            addr = aAddr;
+            label = aLabel;
+        }
     }
 }

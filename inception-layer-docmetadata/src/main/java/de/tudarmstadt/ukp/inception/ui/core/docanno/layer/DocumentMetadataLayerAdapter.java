@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
 import java.util.ArrayList;
@@ -36,7 +35,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -88,13 +86,17 @@ public class DocumentMetadataLayerAdapter
     /**
      * Add new document metadata annotation into the CAS and return the the id of the annotation.
      *
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
      * @param aJCas
      *            the JCas.
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(AnnotatorState aState, JCas aJCas)
+    public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, JCas aJCas)
         throws AnnotationException
     {
         CAS aCas = aJCas.getCas();
@@ -104,10 +106,9 @@ public class DocumentMetadataLayerAdapter
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
         
-        publishEvent(new DocumentMetadataCreatedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), newAnnotation));
+        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, newAnnotation));
         
-        return getAddr(newAnnotation);
+        return newAnnotation;
     }
     
     @Override
