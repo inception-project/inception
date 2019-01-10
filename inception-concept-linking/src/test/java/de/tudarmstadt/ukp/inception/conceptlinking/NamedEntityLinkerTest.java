@@ -43,7 +43,6 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -85,8 +84,7 @@ public class NamedEntityLinkerTest
     {
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
-                mock(AnnotationSchemaService.class), mock(FeatureSupportRegistry.class),
-                new ConceptFeatureTraits());
+                mock(FeatureSupportRegistry.class), new ConceptFeatureTraits());
 
         List<CAS> casList = loadDevelopmentData();
 
@@ -120,18 +118,13 @@ public class NamedEntityLinkerTest
         when(clService.disambiguate(any(), anyString(), any(ConceptFeatureValueType.class),
                 anyString(), anyString(), anyInt(), any())).thenReturn(mockResult);
 
-        AnnotationSchemaService annoSchemaService = mock(AnnotationSchemaService.class);
-        AnnotationFeature mockAnnoFeature = mock(AnnotationFeature.class);
-        when(annoSchemaService.getFeature(recommender.getFeature(), recommender.getLayer()))
-            .thenReturn(mockAnnoFeature);
-
         FeatureSupportRegistry fsRegistry = mock(FeatureSupportRegistry.class);
         FeatureSupport fs = mock(FeatureSupport.class);
-        when(fsRegistry.getFeatureSupport(mockAnnoFeature)).thenReturn(fs);
-        when(fs.readTraits(mockAnnoFeature)).thenReturn(new ConceptFeatureTraits());
+        when(fsRegistry.getFeatureSupport(recommender.getFeature())).thenReturn(fs);
+        when(fs.readTraits(recommender.getFeature())).thenReturn(new ConceptFeatureTraits());
 
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
-                kbService, clService, annoSchemaService, fsRegistry, new ConceptFeatureTraits());
+                kbService, clService, fsRegistry, new ConceptFeatureTraits());
 
         List<CAS> casList = loadDevelopmentData();
         CAS cas = casList.get(0);
@@ -175,9 +168,12 @@ public class NamedEntityLinkerTest
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("identifier");
+        
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
-        recommender.setFeature("identifier");
+        recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
 
         return recommender;
