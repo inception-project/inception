@@ -39,6 +39,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -94,7 +95,7 @@ public class DocumentRepositoryEditorPanel
                     .findFirst().orElse(null);
         }, (v) -> repositoryModel.getObject().setType(v.getKey()));
 
-        typeChoice = new DropDownChoice<Pair<String, String>>("type", typeModel, this::listTypes)
+        typeChoice = new BootstrapSelect<Pair<String, String>>("type", typeModel, this::listTypes)
         {
             private static final long serialVersionUID = -1869081847783375166L;
 

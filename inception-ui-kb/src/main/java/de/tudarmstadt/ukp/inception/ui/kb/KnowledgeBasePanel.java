@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -100,7 +101,7 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
         
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
+        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
                 LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
         {
 
