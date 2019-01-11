@@ -111,7 +111,7 @@ public class RecommenderEditorPanel
     private WebMarkupContainer activationContainer;
     private DropDownChoice<Pair<String, String>> toolChoice;
 
-    private DropDownChoice<String> featureChoice;
+    private DropDownChoice<AnnotationFeature> featureChoice;
     private DropDownChoice<AnnotationLayer> layerChoice;
     private CheckBox autoGenerateNameCheckBox;
 
@@ -166,6 +166,7 @@ public class RecommenderEditorPanel
         form.add(layerChoice);
         
         featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
+        featureChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         featureChoice.setRequired(true);
         featureChoice.setOutputMarkupId(true);
         featureChoice.add(LambdaBehavior.onConfigure(_this -> {
@@ -354,7 +355,7 @@ public class RecommenderEditorPanel
                     .getFactory(aRecommender.getTool());
             return String.format(Locale.US, "[%s@%s] %s",
                     aRecommender.getLayer().getUiName(),
-                    aRecommender.getFeature(), 
+                    aRecommender.getFeature().getUiName(), 
                     factory.getName());
         }
     }
@@ -409,19 +410,14 @@ public class RecommenderEditorPanel
         return layers;
     }
 
-    private List<String> listFeatures()
+    private List<AnnotationFeature> listFeatures()
     {
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null) {
-            List<String> features = new ArrayList<>();
-
-            annotationSchemaService
-                .listAnnotationFeature(recommenderModel.getObject().getLayer())
-                .forEach(annotationFeature -> {
-                    if (annotationFeature.getType() != null) {
-                        features.add(annotationFeature.getName());
-                    }
-                });
-            return features;
+            return annotationSchemaService
+                    .listAnnotationFeature(recommenderModel.getObject().getLayer())
+                    .stream()
+                    .filter(feat -> feat.getType() != null)
+                    .collect(Collectors.toList());
 
         } else {
             return Collections.emptyList();
@@ -433,8 +429,7 @@ public class RecommenderEditorPanel
         if (recommenderModel != null && recommenderModel.getObject().getLayer() != null
                 && recommenderModel.getObject().getFeature() != null) {
             AnnotationLayer layer = recommenderModel.getObject().getLayer();
-            AnnotationFeature feature = annotationSchemaService
-                    .getFeature(recommenderModel.getObject().getFeature(), layer);
+            AnnotationFeature feature = recommenderModel.getObject().getFeature();
             return recommenderRegistry.getFactories(layer, feature)
                 .stream()
                 .filter(f -> !f.isDeprecated())
