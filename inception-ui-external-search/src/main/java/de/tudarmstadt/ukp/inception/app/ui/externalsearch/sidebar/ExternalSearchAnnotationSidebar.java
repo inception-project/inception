@@ -317,7 +317,7 @@ public class ExternalSearchAnnotationSidebar
             // Import and open annotation
             LambdaAjaxLink link;
             if (!existsSourceDocument) {
-                link = new LambdaAjaxLink("titleLink",
+                link = new LambdaAjaxLink("docLink",
                     _target -> {
                         selectedResult = result;
                         try {
@@ -335,7 +335,7 @@ public class ExternalSearchAnnotationSidebar
                     });
             } else {
                 // open action
-                link = new LambdaAjaxLink("titleLink", _target -> {
+                link = new LambdaAjaxLink("docLink", _target -> {
                     selectedResult = result;
                     getAnnotationPage().actionShowSelectedDocument(_target,
                         documentService.getSourceDocument(project, documentTitle));
@@ -346,13 +346,12 @@ public class ExternalSearchAnnotationSidebar
                 defaultIfBlank(result.getDocumentId(),
                     defaultIfBlank(result.getUri(), "<no title>")));
 
-
-            link.add(new Label("title", title));
             add(link);
 
-            add(new Label("score", result.getScore()));
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            add(new Label("importStatus", () ->
+            link.add(new Label("title", title));
+            link.add(new Label("score", result.getScore()));
+            link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            link.add(new Label("importStatus", () ->
                 existsSourceDocument ? "imported" : "not imported"));
         }
     }
