@@ -23,6 +23,7 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.File;
@@ -46,6 +47,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
@@ -138,7 +140,7 @@ public class ExternalRecommenderIntegrationTest
         assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
             .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
             .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
             .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
             .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
 
@@ -164,7 +166,7 @@ public class ExternalRecommenderIntegrationTest
         assertThat(request.getMetadata()).hasNoNullFieldsOrProperties()
             .hasFieldOrPropertyWithValue("projectId", PROJECT_ID)
             .hasFieldOrPropertyWithValue("layer", recommender.getLayer().getName())
-            .hasFieldOrPropertyWithValue("feature", recommender.getFeature())
+            .hasFieldOrPropertyWithValue("feature", recommender.getFeature().getName())
             .hasFieldOrPropertyWithValue("crossSentence", CROSS_SENTENCE)
             .hasFieldOrPropertyWithValue("anchoringMode", ANCHORING_MODE.getId());
         assertThat(request.getDocument())
@@ -235,9 +237,12 @@ public class ExternalRecommenderIntegrationTest
         layer.setCrossSentence(CROSS_SENTENCE);
         layer.setAnchoringMode(ANCHORING_MODE);
 
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
+        
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
-        recommender.setFeature("value");
+        recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
         
         return recommender;

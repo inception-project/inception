@@ -79,8 +79,9 @@ public class LoggedEventExporterTest
         when(documentService.listSourceDocuments(any())).thenReturn(documents());
         doAnswer((Answer<SourceDocument>) invocation -> {
             String name = invocation.getArgument(1);
-            return documents().stream().filter(d -> name.equals(d.getName())).findFirst()
-                    .orElse(null);
+            return documents().stream()
+                    .filter(d -> name.equals(d.getName()))
+                    .findFirst().orElse(null);
         }).
         when(documentService).getSourceDocument(any(), any());
         
@@ -100,7 +101,10 @@ public class LoggedEventExporterTest
         ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents();
 
         // Check that after re-importing the exported projects, they are identical to the original
-        List<LoggedEvent> expectedEvents = events().stream().filter(e -> e.getDocument() != 2l)
+        List<LoggedEvent> expectedEvents = events().stream()
+                // The document with the ID 2 does supposedly not exist, so it is skipped
+                // during export
+                .filter(e -> e.getDocument() != 2l)
                 .collect(toList());
         assertThat(captor.getAllValues())
                 .usingElementComparatorIgnoringFields("id")
@@ -128,7 +132,7 @@ public class LoggedEventExporterTest
         event1.setAnnotator("annotator");
         event1.setDetails("{\"value\":1}");
 
-        LoggedEvent event2 = new LoggedEvent(1l);
+        LoggedEvent event2 = new LoggedEvent(2l);
         event2.setUser("user");
         event2.setCreated(new Date(782341234124l));
         event2.setDocument(2l);
@@ -137,7 +141,7 @@ public class LoggedEventExporterTest
         event2.setAnnotator("annotator");
         event2.setDetails("{\"value\":1}");
 
-        LoggedEvent event3 = new LoggedEvent(1l);
+        LoggedEvent event3 = new LoggedEvent(3l);
         event3.setUser("user");
         event3.setCreated(new Date(782341234125l));
         event3.setDocument(1l);
@@ -146,7 +150,17 @@ public class LoggedEventExporterTest
         event3.setAnnotator("annotator");
         event3.setDetails("{\"value\":2}");
 
-        return asList(event1, event2, event3);
+        LoggedEvent event4 = new LoggedEvent(3l);
+        event4.setUser("user");
+        event4.setCreated(new Date(782341234126l));
+        // This event is not associated with a document thus the document ID is -1
+        event4.setDocument(-1l);
+        event4.setEvent("SomeEvent3");
+        event4.setProject(project.getId());
+        event4.setAnnotator("annotator");
+        event4.setDetails("{\"value\":2}");
+
+        return asList(event1, event2, event3, event4);
     }
 
     private ArgumentCaptor<LoggedEvent> runExportImportAndFetchEvents() throws Exception
