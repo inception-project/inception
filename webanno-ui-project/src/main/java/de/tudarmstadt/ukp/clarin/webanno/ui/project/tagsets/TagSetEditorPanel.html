@@ -62,10 +62,15 @@
         </div>
       </div>
       <div class="panel-footer flex-h-container">
-        <div class="flex-h-container flex-gutter flex-centered flex-only-internal-gutter">
-          <label wicket:for="format" class="control-label"><wicket:label key="format"/></label>
-          <select wicket:id="format" class="input-group-btn form-control" data-container="body"></select>
-          <input wicket:id="export" type="button" class="btn btn-default" wicket:message="value:export"/>
+        <div class="flex-content form-group form-horizontal">
+          <div class="input-group">
+            <select class="form-control" wicket:id="format" data-container="body"></select>
+            <span class="input-group-btn">
+              <button wicket:id="export" type="button" class="btn btn-default">
+                <i class="fa fa-download" aria-hidden="true"></i>
+              </button>
+            </span>
+          </div>
         </div>
         <div class="flex-content text-right">
           <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
