@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
@@ -30,6 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 
 @Component("documentMetadataSidebar")
+@ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
+        matchIfMissing = false)
 public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

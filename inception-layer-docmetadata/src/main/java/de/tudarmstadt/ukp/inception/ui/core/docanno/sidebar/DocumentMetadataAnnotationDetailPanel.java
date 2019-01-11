@@ -64,6 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class DocumentMetadataAnnotationDetailPanel extends Panel
@@ -98,6 +100,10 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         project = aProject;
         
         add(featureList = createFeaturesList());
+        
+        add(new LambdaAjaxLink("delete", this::actionDelete));
+        
+        add(LambdaBehavior.visibleWhen(() -> getModelObject() != null && getModelObject().isSet()));
     }
     
     public void setModelObject(VID aVID)
@@ -266,30 +272,62 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                try {
-                    // When updating an annotation in the sidebar, we must not force a
-                    // re-focus after rendering
-                    getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
-                    
-                    JCas jCas = jcasProvider.get();
-                    // Update the features of the selected annotation from the values presently in
-                    // the feature editors
-                    AnnotationBaseFS fs = selectByAddr(jCas, AnnotationBaseFS.class,
-                            getModelObject().getId());
-                    AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
-                    TypeAdapter adapter = annotationService.getAdapter(layer);
-                    writeFeatureEditorModelsToCas(adapter, jCas);
-                    
-                    // persist changes
-                    annotationPage.writeEditorCas(jCas);
-                }
-                catch (Exception e) {
-                    handleException(DocumentMetadataAnnotationDetailPanel.this,
-                        aTarget, e);
-                }
+                actionAnnotate(aTarget);
             }
         });
     }
+    
+    private void actionAnnotate(AjaxRequestTarget aTarget)
+    {
+        try {
+            // When updating an annotation in the sidebar, we must not force a
+            // re-focus after rendering
+            getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
+            
+            // Load the boiler-plate
+            JCas jCas = jcasProvider.get();
+            AnnotationBaseFS fs = selectByAddr(jCas, AnnotationBaseFS.class,
+                    getModelObject().getId());
+            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+
+            // Update the features of the selected annotation from the values presently in
+            // the feature editors
+            writeFeatureEditorModelsToCas(adapter, jCas);
+            
+            // persist changes
+            annotationPage.writeEditorCas(jCas);
+        }
+        catch (Exception e) {
+            handleException(DocumentMetadataAnnotationDetailPanel.this,
+                aTarget, e);
+        }
+    }
+    
+    private void actionDelete(AjaxRequestTarget aTarget)
+    {
+        try {
+            // Load the boiler-plate
+            JCas jCas = jcasProvider.get();
+            AnnotationBaseFS fs = selectByAddr(jCas, AnnotationBaseFS.class,
+                    getModelObject().getId());
+            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            TypeAdapter adapter = annotationService.getAdapter(layer);
+            
+            // Perform actual actions
+            adapter.delete(sourceDocument.getObject(), username.getObject(), jCas, new VID(fs));
+            
+            // persist changes
+            annotationPage.writeEditorCas(jCas);
+            
+            setModelObject(null);
+            
+            aTarget.add(getParent());
+        }
+        catch (Exception e) {
+            handleException(DocumentMetadataAnnotationDetailPanel.this,
+                aTarget, e);
+        }    }
     
     private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
             throws IOException

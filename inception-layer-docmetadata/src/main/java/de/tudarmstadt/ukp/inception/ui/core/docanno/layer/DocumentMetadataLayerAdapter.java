@@ -30,6 +30,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
@@ -114,7 +115,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
-        AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
+        AnnotationBase fs = selectByAddr(aJCas, AnnotationBase.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));

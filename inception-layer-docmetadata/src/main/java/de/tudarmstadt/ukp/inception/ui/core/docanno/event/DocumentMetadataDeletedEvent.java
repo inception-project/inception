@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.AnnotationBaseFS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -28,10 +28,10 @@ public class DocumentMetadataDeletedEvent extends ApplicationEvent
     
     private final SourceDocument document;
     private final String user;
-    private final AnnotationFS annotation;
+    private final AnnotationBaseFS annotation;
     
     public DocumentMetadataDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFS aAnnotation)
+            AnnotationBaseFS aAnnotation)
     {
         super(aSource);
         document = aDocument;
@@ -49,7 +49,7 @@ public class DocumentMetadataDeletedEvent extends ApplicationEvent
         return user;
     }
     
-    public AnnotationFS getAnnotation()
+    public AnnotationBaseFS getAnnotation()
     {
         return annotation;
     }

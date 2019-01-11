@@ -26,6 +26,7 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
@@ -40,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
+@ConditionalOnProperty(prefix = "documentmetadata", name = "enabled", havingValue = "true", 
+        matchIfMissing = false)
 public class DocumentMetadataLayerSupport
     implements LayerSupport<DocumentMetadataLayerAdapter>, InitializingBean
 {

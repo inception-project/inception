@@ -147,7 +147,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             protected void populateItem(ListItem<AnnotationListItem> aItem)
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
-                
+
+                aItem.add(new Label("type", aItem.getModelObject().layer.getUiName()));
+
                 LambdaAjaxLink link = new LambdaAjaxLink("annotationLink",
                     _target -> actionSelect(_target, aItem.getModelObject()));
                 link.add(new Label("label"));
@@ -191,7 +193,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 if (labelText.isEmpty()) {
                     labelText = "(" + layer.getUiName() + ")";
                 }
-                items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText));
+                items.add(new AnnotationListItem(WebAnnoCasUtil.getAddr(fs), labelText, layer));
             }
         }
         
@@ -202,12 +204,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         final int addr;
         final String label;
+        final AnnotationLayer layer;
         
-        public AnnotationListItem(int aAddr, String aLabel)
+        public AnnotationListItem(int aAddr, String aLabel, AnnotationLayer aLayer)
         {
             super();
             addr = aAddr;
             label = aLabel;
+            layer = aLayer;
         }
     }
 }
