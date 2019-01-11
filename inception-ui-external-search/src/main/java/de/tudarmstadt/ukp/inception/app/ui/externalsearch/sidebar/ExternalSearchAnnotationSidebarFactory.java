@@ -33,7 +33,7 @@ public class ExternalSearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private static final ResourceReference ICON = new PackageResourceReference(
-            ExternalSearchAnnotationSidebarFactory.class, "magnifier.png");
+            ExternalSearchAnnotationSidebarFactory.class, "search-globe.png");
     
     @Override
     public String getDisplayName()

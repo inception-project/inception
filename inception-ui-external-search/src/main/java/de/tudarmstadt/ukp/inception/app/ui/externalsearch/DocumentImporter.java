@@ -15,9 +15,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
 
-public class DocumentImporter
+public class DocumentImporter implements Serializable
 {
 
     private static final String PLAIN_TEXT = "text";
@@ -32,10 +33,11 @@ public class DocumentImporter
 
 
     public DocumentImporter(ExternalSearchService aExternalSearchService,
-        DocumentService aDocumentService, User user,Project aProject)
+        DocumentService aDocumentService, User aUser,Project aProject)
     {
         externalSearchService = aExternalSearchService;
         documentService = aDocumentService;
+        user = aUser;
 
         project = aProject;
     }
