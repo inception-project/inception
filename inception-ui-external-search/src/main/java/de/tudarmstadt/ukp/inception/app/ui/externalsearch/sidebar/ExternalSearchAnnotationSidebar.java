@@ -54,6 +54,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
@@ -208,8 +210,36 @@ public class ExternalSearchAnnotationSidebar
 
     @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        // highlight keywords
         if (selectedResult != null) {
-            // TODO highlight keyword
+
+            String start_tag = "<em>";
+            String end_tag = "</em>";
+            AnnotatorState state = aEvent.getState();
+
+            for (String highlight : selectedResult.getHighlights()) {
+
+                // remove tags
+                String highlight_clean = highlight.replace("<em>", "")
+                    .replace("</em>", "");
+
+                // find matching highlight offset in the text
+                int highlight_start_index = selectedResult.getText().indexOf(highlight_clean);
+
+                // find offset to keywords
+                while (highlight.contains(start_tag)) {
+                    int start = highlight_start_index + highlight.indexOf(start_tag);
+                    highlight = highlight.replaceFirst(start_tag, "");
+                    int end = highlight_start_index + highlight.indexOf(end_tag);
+                    highlight = highlight.replaceFirst(end_tag, "");
+
+                    if (state.getWindowBeginOffset() <= start && end <= state.getWindowEndOffset()) {
+                        aEvent.getVDocument().add(new VTextMarker(VMarker.MATCH_FOCUS,
+                            start - state.getWindowBeginOffset(),
+                            end - state.getWindowBeginOffset()));
+                    }
+                }
+            }
         }
     }
 
