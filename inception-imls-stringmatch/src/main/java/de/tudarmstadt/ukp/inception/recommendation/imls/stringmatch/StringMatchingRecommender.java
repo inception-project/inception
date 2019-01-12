@@ -157,8 +157,8 @@ public class StringMatchingRecommender
 
         // For the DKPro Statistics evaluation study, we need to define a continuum over the data.
         // We do this in terms of character positions which are aggregated over all samples in the
-        // test set. Thus, the continum size is equal to the sum of the length of all samples in the
-        // test set.
+        // test set. Thus, the continuum size is equal to the sum of the length of all samples in
+        // the test set.
         int testSetContinuumSize = 0;
         
         for (Sample sample : data) {
@@ -295,9 +295,11 @@ public class StringMatchingRecommender
                 }
                 
                 Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
-                
-                data.add(new Sample(docNo, sentence.getBegin(), sentence.getEnd(),
-                        sentence.getCoveredText(), tokens, spans));
+
+                if (!spans.isEmpty()) {
+                    data.add(new Sample(docNo, sentence.getBegin(), sentence.getEnd(),
+                            sentence.getCoveredText(), tokens, spans));
+                }
             }
             
             docNo++;
