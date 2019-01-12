@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -120,10 +119,6 @@ public class ConceptFeatureEditor extends FeatureEditor {
         return field;
     }
 
-    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException {
-        return aHandler.getEditorCas();
-    }
-
     private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler,
             String aTypedString) {
         AnnotationFeature feat = getModelObject().feature;
@@ -139,7 +134,7 @@ public class ConceptFeatureEditor extends FeatureEditor {
             handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), aTypedString,
                     aState.getSelection().getText(), aState.getSelection().getBegin(),
-                    getEditorCas(aHandler), project);
+                    aHandler.getEditorCas(), project);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);
