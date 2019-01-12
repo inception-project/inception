@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -48,8 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.log.EventRepository;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
@@ -67,8 +64,6 @@ public class EvaluationSimulationPanel
     private static final Logger log = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
     private final WebComponent chartContainer;
 
-    private @SpringBean EventRepository eventRepo;
-    private @SpringBean RecommendationService recommendationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
 
@@ -116,8 +111,6 @@ public class EvaluationSimulationPanel
                         .listAllDocuments(project, userDao.getCurrentUser());
 
                 listAllDocuments.forEach((source, annotation) -> {
-                    System.out.println("Item : " + source + " Count : " + annotation);
-
                     List<CAS> casList = new ArrayList<>();
                     try {
                         CAS cas = documentService.createOrReadInitialCas(source).getCas();
@@ -172,12 +165,10 @@ public class EvaluationSimulationPanel
                     dataColumns.append("]");
                     dataColumns.append(",");
 
-                    System.out.println(i);
-
                     try {
                         String javascript = createJSScript(dataColumns.toString(),
                                 chartType.toString(), xaxis.toString());
-                        log.info("Rendering Recommender Evaluation Chart: {}", javascript);
+                        log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
 
                         aTarget.prependJavaScript(javascript);
                     }
