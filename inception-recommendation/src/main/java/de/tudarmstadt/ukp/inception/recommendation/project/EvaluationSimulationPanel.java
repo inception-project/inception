@@ -110,8 +110,9 @@ public class EvaluationSimulationPanel
                 Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
                         .listAllDocuments(project, userDao.getCurrentUser());
 
+                List<CAS> casList = new ArrayList<>();
+
                 listAllDocuments.forEach((source, annotation) -> {
-                    List<CAS> casList = new ArrayList<>();
                     try {
                         CAS cas = documentService.createOrReadInitialCas(source).getCas();
                         casList.add(cas);
@@ -122,62 +123,63 @@ public class EvaluationSimulationPanel
                         aTarget.addChildren(getPage(), IFeedback.class);
                         return;
                     }
-
-                    StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
-                    StringMatchingRecommender recommender = new StringMatchingRecommender(
-                            recommenderModel.getObject(), traits);
-                    
-                    IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
-                    
-                    StringBuilder dataColumns = new StringBuilder();
-                    StringBuilder chartType = new StringBuilder();
-                    StringBuilder sb = new StringBuilder();
-                    StringBuilder xaxis = new StringBuilder();
-
-                    int i = 0;
-                    while (splitStrategy.hasNext()) {
-                        splitStrategy.next();
-
-                        double score = recommender.evaluate(casList, splitStrategy);
-
-                        log.debug("Recommender Evaluations score: %f%n", score);
-
-                        xaxis.append(i + ",");
-                        sb.append(score + ",");
-                        i++;
-                    }
-
-                    String data = sb.toString();
-
-                    // append recommender name to the data
-                    dataColumns.append("['");
-                    String recommenderName = recommenderModel.getObject().getName();
-
-                    // define chart type for the recommender
-                    chartType.append("'");
-                    chartType.append(recommenderName);
-                    chartType.append("': 'step', ");
-                    dataColumns.append(recommenderName);
-
-                    // append data columns
-                    dataColumns.append("', ");
-                    dataColumns.append(data);
-                    dataColumns.append("]");
-                    dataColumns.append(",");
-
-                    try {
-                        String javascript = createJSScript(dataColumns.toString(),
-                                chartType.toString(), xaxis.toString());
-                        log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-
-                        aTarget.prependJavaScript(javascript);
-                    }
-                    catch (IOException e) {
-                        log.error("Unable to render chart", e);
-                        error("Unable to render chart: " + e.getMessage());
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                    }
                 });
+
+                StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
+                StringMatchingRecommender recommender = new StringMatchingRecommender(
+                        recommenderModel.getObject(), traits);
+                
+                IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
+                
+                StringBuilder dataColumns = new StringBuilder();
+                StringBuilder chartType = new StringBuilder();
+                StringBuilder sb = new StringBuilder();
+                StringBuilder xaxis = new StringBuilder();
+
+                int i = 0;
+                while (splitStrategy.hasNext()) {
+                    splitStrategy.next();
+
+                    double score = recommender.evaluate(casList, splitStrategy);
+
+                    log.debug("Recommender Evaluations score: %f%n", score);
+
+                    xaxis.append(i + ",");
+                    sb.append(score + ",");
+                    i++;
+                }
+
+                String data = sb.toString();
+
+                // append recommender name to the data
+                dataColumns.append("['");
+                String recommenderName = recommenderModel.getObject().getName();
+
+                // define chart type for the recommender
+                chartType.append("'");
+                chartType.append(recommenderName);
+                chartType.append("': 'step', ");
+                dataColumns.append(recommenderName);
+
+                // append data columns
+                dataColumns.append("', ");
+                dataColumns.append(data);
+                dataColumns.append("]");
+                dataColumns.append(",");
+
+                try {
+                    String javascript = createJSScript(dataColumns.toString(),
+                            chartType.toString(), xaxis.toString());
+                    log.info("Rendering Recommender Evaluation Chart: {}", javascript);
+
+                    aTarget.prependJavaScript(javascript);
+                }
+                catch (IOException e) {
+                    log.error("Unable to render chart", e);
+                    error("Unable to render chart: " + e.getMessage());
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+                   
             }
         });
     }
