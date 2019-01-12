@@ -146,7 +146,7 @@ zbw-stw-economics:
       property-label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+      full-text-search: FTS:NONE
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
@@ -162,4 +162,7 @@ zbw-gnd:
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+      full-text-search: FTS:NONE
+  root-concepts:
+        - http://d-nb.info/standards/elementset/gnd#AuthorityResource
+      
