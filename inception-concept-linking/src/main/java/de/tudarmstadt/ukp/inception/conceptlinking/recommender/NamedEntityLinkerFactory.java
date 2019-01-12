@@ -27,7 +27,6 @@ import org.apache.wicket.model.IModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -52,7 +51,6 @@ public class NamedEntityLinkerFactory
 
     private @Autowired KnowledgeBaseService kbService;
     private @Autowired ConceptLinkingServiceImpl clService;
-    private @Autowired AnnotationSchemaService annoService;
     private @Autowired FeatureSupportRegistry fsRegistry;
 
     @Override
@@ -66,13 +64,12 @@ public class NamedEntityLinkerFactory
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
         
-        AnnotationFeature feature = annoService.getFeature(aRecommender.getFeature(),
-                aRecommender.getLayer());
+        AnnotationFeature feature = aRecommender.getFeature();
         FeatureSupport<ConceptFeatureTraits> fs = fsRegistry.getFeatureSupport(feature);
         ConceptFeatureTraits featureTraits = fs.readTraits(feature);
         
-        return new NamedEntityLinker(aRecommender, traits, kbService, clService, annoService,
-                fsRegistry, featureTraits);
+        return new NamedEntityLinker(aRecommender, traits, kbService, clService, fsRegistry,
+                featureTraits);
     }
 
     @Override
