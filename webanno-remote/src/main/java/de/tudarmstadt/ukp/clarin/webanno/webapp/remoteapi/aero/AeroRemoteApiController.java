@@ -436,8 +436,19 @@ public class AeroRemoteApiController
         // Get project (this also ensures that it exists and that the current user can access it
         Project project = getProject(aProjectId);
         
-        ProjectExportRequest request = new ProjectExportRequest(project, "UIMA binary CAS", true);
-        //File exportedFile = exportService.generateZipFile(per);
+        // Check if the format is supported
+        if (aFormat.isPresent()) {
+            importExportService.getWritableFormatById(aFormat.get())
+                    .orElseThrow(() -> new UnsupportedFormatException(
+                            "Format [%s] cannot be exported. Exportable formats are %s.", 
+                            aFormat.get(), importExportService.getWritableFormats().stream()
+                                    .map(FormatSupport::getId)
+                                    .sorted()
+                                    .collect(Collectors.toList()).toString()));
+        }
+        
+        ProjectExportRequest request = new ProjectExportRequest(project,
+                aFormat.orElse(WebAnnoTsv3FormatSupport.ID), true);
         File exportedFile = exportService.exportProject(request);
         
         // Turn the file into a resource and auto-delete the file when the resource closes the
@@ -497,7 +508,7 @@ public class AeroRemoteApiController
             @PathVariable(PARAM_PROJECT_ID) long aProjectId,
             @RequestParam(PARAM_CONTENT) MultipartFile aFile,
             @RequestParam(PARAM_NAME) String aName,
-            @RequestParam(PARAM_FORMAT) String aFormatId,
+            @RequestParam(PARAM_FORMAT) String aFormat,
             @RequestParam(PARAM_STATE) Optional<String> aState,
             UriComponentsBuilder aUcb)
         throws Exception
@@ -506,9 +517,9 @@ public class AeroRemoteApiController
         Project project = getProject(aProjectId);
 
         // Check if the format is supported
-        if (!importExportService.getReadableFormatById(aFormatId).isPresent()) {
+        if (!importExportService.getReadableFormatById(aFormat).isPresent()) {
             throw new UnsupportedFormatException(
-                    "Format [%s] not supported. Acceptable formats are %s.", aFormatId,
+                    "Format [%s] not supported. Acceptable formats are %s.", aFormat,
                     importExportService.getReadableFormats().stream()
                             .map(FormatSupport::getId).sorted().collect(Collectors.toList()));
         }
@@ -517,7 +528,7 @@ public class AeroRemoteApiController
         SourceDocument document = new SourceDocument();
         document.setProject(project);
         document.setName(aName);
-        document.setFormat(aFormatId);
+        document.setFormat(aFormat);
         
         // Set state if one was provided
         if (aState.isPresent()) {
