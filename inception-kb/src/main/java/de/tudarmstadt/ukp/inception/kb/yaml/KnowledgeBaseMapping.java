@@ -56,9 +56,6 @@ public class KnowledgeBaseMapping implements Serializable
 
     @JsonProperty("property-description")
     private IRI propertyDescriptionIri;
-
-    @JsonProperty("full-text-search")
-    private IRI fullTextSearchIri;
     
    
     @JsonCreator public KnowledgeBaseMapping(@JsonProperty("class") String aClassIri,
@@ -69,8 +66,7 @@ public class KnowledgeBaseMapping implements Serializable
         @JsonProperty("label") String aLabelIri,
         @JsonProperty("property-type") String aPropertyTypeIri,
         @JsonProperty("property-label") String aPropertyLabelIri,
-        @JsonProperty("property-description") String aPropertyDescriptionIri,
-        @JsonProperty("full-text-search") String aFullTextSearchIri)
+        @JsonProperty("property-description") String aPropertyDescriptionIri)
 
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
@@ -83,7 +79,6 @@ public class KnowledgeBaseMapping implements Serializable
         propertyTypeIri = vf.createIRI(aPropertyTypeIri);
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
         propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
-        fullTextSearchIri = vf.createIRI(aFullTextSearchIri);
 
     }
     
@@ -181,13 +176,4 @@ public class KnowledgeBaseMapping implements Serializable
         propertyDescriptionIri = aPropertyDescriptionIri;
     }
 
-    public IRI getFullTextSearchIri()
-    {
-        return fullTextSearchIri;
-    }
-
-    public void setFullTextSearchIri(IRI fullTextSearchIri)
-    {
-        fullTextSearchIri = fullTextSearchIri;
-    }
 }
