@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
@@ -108,6 +109,10 @@ public class PdfAnnotationEditor
             VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
             PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
                 vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
+            // show unmatched spans to user
+            String vIds = pdfAnnoModel.getUnmatchedSpans().stream()
+                .map(vId -> "" + vId).collect(Collectors.joining(", "));
+            error("Could not find a match for following annotation ids: " + vIds);
             return pdfAnnoModel;
         }
         return null;
