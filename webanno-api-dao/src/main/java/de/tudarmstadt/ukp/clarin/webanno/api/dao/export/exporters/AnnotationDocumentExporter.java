@@ -164,7 +164,7 @@ public class AnnotationDocumentExporter
                 format = new WebAnnoTsv3FormatSupport();
             }
             else {
-                format = importExportService.getWritableFormatByName(aRequest.getFormat())
+                format = importExportService.getWritableFormatById(aRequest.getFormat())
                         .orElseGet(() -> {
                             aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
                                     + "format [%s] - exporting as WebAnno TSV instead.",

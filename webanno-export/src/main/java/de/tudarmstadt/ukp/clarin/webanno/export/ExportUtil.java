@@ -68,7 +68,7 @@ public class ExportUtil
             format = new WebAnnoTsv3FormatSupport();
         }
         else {
-            format = importExportService.getWritableFormatByName(aModel.getFormat())
+            format = importExportService.getWritableFormatById(aModel.getFormat())
                     .orElseGet(() -> {
 //                        LOG.info(
 //                                "Format [{}] is not writable - exporting as WebAnno TSV3 instead.",

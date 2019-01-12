@@ -38,6 +38,7 @@ import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
@@ -127,15 +128,29 @@ public class ProjectExportPanel
             super(id, new CompoundPropertyModel<>(
                     new ProjectExportRequest(ProjectExportRequest.FORMAT_AUTO, true)));
             
-            DropDownChoice<String> format = new BootstrapSelect<>("format",
-                    LoadableDetachableModel.of(() -> {
-                        List<String> formats = importExportService.getWritableFormats().stream()
-                                .map(FormatSupport::getName)
-                                .sorted()
-                                .collect(Collectors.toCollection(ArrayList::new));
-                        formats.add(0, ProjectExportRequest.FORMAT_AUTO);
-                        return formats;
-                    }));
+            DropDownChoice<String> format = new BootstrapSelect<>("format");
+            format.setChoiceRenderer(new ChoiceRenderer<String>()
+            {
+                private static final long serialVersionUID = -6139450455463062998L;
+
+                @Override
+                public Object getDisplayValue(String aObject)
+                {
+                    if (ProjectExportRequest.FORMAT_AUTO.equals(aObject)) {
+                        return ProjectExportRequest.FORMAT_AUTO;
+                    }
+                    
+                    return importExportService.getFormatById(aObject).get().getName();
+                }
+            });
+            format.setChoices(LoadableDetachableModel.of(() -> {
+                List<String> formats = importExportService.getWritableFormats().stream()
+                        .map(FormatSupport::getId)
+                        .sorted()
+                        .collect(Collectors.toCollection(ArrayList::new));
+                formats.add(0, ProjectExportRequest.FORMAT_AUTO);
+                return formats;
+            }));
             // Needed to update the model with the selection because the DownloadLink does
             // not trigger a form submit.
             format.add(new FormComponentUpdatingBehavior());

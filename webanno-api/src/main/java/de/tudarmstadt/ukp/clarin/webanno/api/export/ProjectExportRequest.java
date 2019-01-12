@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
@@ -72,11 +73,21 @@ public class ProjectExportRequest
         return project;
     }
     
+    /**
+     * Set the ID of the export format.
+     * 
+     * @see FormatSupport#getId()
+     */
     public void setFormat(String aFormat)
     {
         format = aFormat;
     }
     
+    /**
+     * Get the ID of the export format.
+     * 
+     * @see FormatSupport#getId()
+     */
     public String getFormat()
     {
         return format;
