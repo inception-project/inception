@@ -159,6 +159,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setName("Wine ontology (OWL)");
             kb_wine.setType(RepositoryType.LOCAL);
             kb_wine.setReification(Reification.NONE);
+            kb_wine.setFullTextSearchIri(IriConstants.FTS_LUCENE);
             kb_wine.setClassIri(OWL.CLASS);
             kb_wine.setSubclassIri(RDFS.SUBCLASSOF);
             kb_wine.setTypeIri(RDF.TYPE);
@@ -217,6 +218,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(profile.getType());
             kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.applyRootConcepts(profile);
             kb_wikidata_direct.setDefaultLanguage("en");
@@ -250,6 +252,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(profile.getType());
             kb_dbpedia.setReification(Reification.NONE);
+            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.applyRootConcepts(profile);
             kb_dbpedia.setDefaultLanguage("en");
@@ -269,9 +272,10 @@ public class KnowledgeBaseServiceRemoteTest
             kb_yago.setName(profile.getName());
             kb_yago.setType(profile.getType());
             kb_yago.setReification(Reification.NONE);
+            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
-            kb_yago.setDefaultLanguage("en");
+            kb_yago.setDefaultLanguage("eng");
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
@@ -289,6 +293,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_zbw_stw_economics.setName(profile.getName());
             kb_zbw_stw_economics.setType(profile.getType());
             kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.applyRootConcepts(profile);
             kb_zbw_stw_economics.setDefaultLanguage("en");

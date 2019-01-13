@@ -93,7 +93,7 @@ yago:
   type: REMOTE
   access:
     access-url: https://linkeddata1.calcul.u-psud.fr/sparql
-    full-text-search: FTS:NONE
+    full-text-search: bif:contains
   mapping:
     class: http://www.w3.org/2000/01/rdf-schema#Class
     subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
