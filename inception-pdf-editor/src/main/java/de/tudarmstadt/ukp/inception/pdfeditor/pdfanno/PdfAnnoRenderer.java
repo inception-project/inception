@@ -50,7 +50,6 @@ public class PdfAnnoRenderer
 
     private static final int WINDOW_SIZE_INCREMENT = 5;
 
-
     public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
                                       PdfExtractFile aPdfExtractFile)
@@ -130,7 +129,7 @@ public class PdfAnnoRenderer
             // subtract windowSize from vSpanBegin and add windowSize to vSpanEnd and stay in bounds
             int windowBegin = vSpanBegin <= windowSize ? 0 : vSpanBegin - windowSize;
             int windowEnd = vSpanEnd < docTextLen - windowSize
-                ? vSpanEnd + windowSize : docTextLen - 1;
+                ? vSpanEnd + windowSize : docTextLen;
 
             // get annotated text from aDocumentText and context window before and after it
             // also remove all whitespaces because they do not exist in PDFExtract text
