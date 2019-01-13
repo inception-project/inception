@@ -513,7 +513,7 @@ public interface KnowledgeBaseService
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
-    boolean hasImplicitNamespace(String s);
+    boolean hasImplicitNamespace(KnowledgeBase kb, String s);
 
     /**
      * List all the concepts
