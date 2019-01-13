@@ -185,7 +185,7 @@ public class KnowledgeBaseServiceRemoteTest
 //            ValueFactory vf = SimpleValueFactory.getInstance();
 //            KnowledgeBase kb_hucit = new KnowledgeBase();
 //            kb_hucit.setName("Hucit");
-//            kb_hucit.setType(RepositoryType.REMOTE);
+//            kb_hucit.setType(profile.getType());
 //            kb_hucit.setReification(Reification.NONE);
 //            kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
 //            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
@@ -215,7 +215,7 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setType(profile.getType());
             kb_wikidata_direct.setReification(Reification.NONE);
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.applyRootConcepts(profile);
@@ -234,7 +234,7 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
         // KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         // kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
-        // kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        // kb_wikidata_direct.setType(profile.getType());
         // kb_wikidata_direct.setReification(Reification.NONE);
         // kb_wikidata_direct.applyMapping(profile.getMapping());
         // kb_wikidata_direct.setDefaultLanguage("en");
@@ -248,7 +248,7 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
-            kb_dbpedia.setType(RepositoryType.REMOTE);
+            kb_dbpedia.setType(profile.getType());
             kb_dbpedia.setReification(Reification.NONE);
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.applyRootConcepts(profile);
@@ -267,14 +267,14 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
             kb_yago.setName(profile.getName());
-            kb_yago.setType(RepositoryType.REMOTE);
+            kb_yago.setType(profile.getType());
             kb_yago.setReification(Reification.NONE);
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
             kb_yago.setDefaultLanguage("en");
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://yago-knowledge.org/resource/wordnet_accident_107301336");
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
             parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
                     "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
@@ -287,7 +287,7 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
             kb_zbw_stw_economics.setName(profile.getName());
-            kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
+            kb_zbw_stw_economics.setType(profile.getType());
             kb_zbw_stw_economics.setReification(Reification.NONE);
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.applyRootConcepts(profile);
@@ -308,7 +308,7 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
         // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
         // kb_zbw_gnd.setName(profile.getName());
-        // kb_zbw_gnd.setType(RepositoryType.REMOTE);
+        // kb_zbw_gnd.setType(profile.getType());
         // kb_zbw_gnd.setReification(Reification.NONE);
         // kb_zbw_gnd.applyMapping(profile.getMapping());
         // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
