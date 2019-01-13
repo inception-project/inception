@@ -66,7 +66,7 @@ public class StringMatchingRecommender
             StringMatchingRecommenderTraits aTraits)
     {
         layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature();
+        featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
         traits = aTraits;
     }

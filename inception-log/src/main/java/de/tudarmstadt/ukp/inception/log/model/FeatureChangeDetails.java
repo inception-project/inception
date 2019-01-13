@@ -21,7 +21,6 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -38,7 +37,7 @@ public class FeatureChangeDetails
         // Nothing to do
     }
     
-    public FeatureChangeDetails(AnnotationFS aFS, Object aNew, Object aOld)
+    public FeatureChangeDetails(FeatureStructure aFS, Object aNew, Object aOld)
     {
         ann = new AnnotationDetails(aFS);
         setValue(aNew);
