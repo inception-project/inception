@@ -110,9 +110,11 @@ public class PdfAnnotationEditor
             PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
                 vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
             // show unmatched spans to user
-            String vIds = pdfAnnoModel.getUnmatchedSpans().stream()
-                .map(vId -> "" + vId).collect(Collectors.joining(", "));
-            error("Could not find a match for following annotation ids: " + vIds);
+            if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
+                String vIds = pdfAnnoModel.getUnmatchedSpans().stream()
+                    .map(vId -> "" + vId).collect(Collectors.joining(", "));
+                error("Could not find a match for following annotation ids: " + vIds);
+            }
             return pdfAnnoModel;
         }
         return null;
