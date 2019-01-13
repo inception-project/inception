@@ -60,7 +60,7 @@ public class PdfExtractFile
         StringBuilder sb = new StringBuilder();
         String[] lines = pdftxt.split("\n");
 
-        int extractLineIndex = 0;
+        int extractLineIndex = 1;
         int strContentIndex = 0;
 
         for (String line : lines)
@@ -74,7 +74,8 @@ public class PdfExtractFile
             extractLines.put(extractLineIndex, extractLine);
 
             // if value of PdfExtractLine is in brackets it is a draw operation and is ignored
-            if (!extractLine.getValue().matches("^\\[.*\\]$"))
+            if (!extractLine.getValue().matches("^\\[.*\\]$")
+                && !extractLine.getValue().equals("NO_UNICODE"))
             {
                 sb.append(extractLine.getValue());
                 stringPositionMap.put(strContentIndex, extractLineIndex);

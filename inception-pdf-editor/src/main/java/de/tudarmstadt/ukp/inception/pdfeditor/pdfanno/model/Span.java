@@ -25,6 +25,12 @@ public class Span {
 
     private String label;
 
+    /**
+     * This field is part of the PDFAnno Anno File format for spans.
+     * It is redundant as startPos and endPos already can be used to obtain the text.
+     * It could be left out in toAnnoFileString method as PDFAnno still can render it.
+     * However this results in missing text when export functionality in PDFAnno is used.
+     */
     private String text;
 
     private int startPos;
