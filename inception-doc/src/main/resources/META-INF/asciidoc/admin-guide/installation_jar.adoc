@@ -24,7 +24,7 @@ UNIX service. This is the recommended way of running {product-name} on a server.
 To set it up as a service, you can do the following steps. For the following
 example, I assume that you install {product-name} in `/srv/inception`:
 
-* Copy the standalone JAR file +inception-app-standalone-{revnumber}.jar+ to `/srv/inception/inception.jar`.
+* Copy the standalone JAR file `inception-app-standalone-{revnumber}.jar` to `/srv/inception/inception.jar`.
    Note the change of the filename to `inception.jar`.
 * Create the file `/srv/inception/inception.conf` with the following content
 +
