@@ -72,7 +72,7 @@ public class RecommenderEvaluationResultEventAdapter
             details.duration = aEvent.getDuration();
             details.threshold = aEvent.getRecommender().getThreshold();
             details.layer = aEvent.getRecommender().getLayer().getName();
-            details.feature = aEvent.getRecommender().getFeature();
+            details.feature = aEvent.getRecommender().getFeature().getName();
             details.tool = aEvent.getRecommender().getTool();
 
             return JSONUtil.toJsonString(details);

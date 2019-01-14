@@ -234,7 +234,7 @@ public class PredictionTask
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
                     .orElse(NO_SCORE);
-            String featurename = aRecommender.getFeature();
+            String featurename = aRecommender.getFeature().getName();
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,

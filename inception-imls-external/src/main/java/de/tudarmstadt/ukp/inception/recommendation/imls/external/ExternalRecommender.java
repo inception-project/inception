@@ -229,7 +229,7 @@ public class ExternalRecommender
         AnnotationLayer layer =  recommender.getLayer();
         return new Metadata(
             layer.getName(),
-            recommender.getFeature(),
+            recommender.getFeature().getName(),
             casMetadata.getProjectId(),
             layer.getAnchoringMode().getId(),
             layer.isCrossSentence()
@@ -294,7 +294,7 @@ public class ExternalRecommender
     @Override
     public String getPredictedFeature()
     {
-        return recommender.getFeature();
+        return recommender.getFeature().getName();
     }
     
     @Override
