@@ -16,9 +16,9 @@
 
 = Internal backup
 
-WebAnno stores its annotations internally in files. Whenever a user performs an action on a
-document, the file is updated. It is possible to configure WebAnno to keep internal backups of
-these files, e.g. to safeguard against crashes or bugs. 
+{product-name} stores its annotations internally in files. Whenever a user performs an action on a
+document, the file is updated. It is possible to configure {product-name} to keep internal backups
+of these files, e.g. to safeguard against crashes or bugs. 
 
 The internal backups are controlled through three properties:
 

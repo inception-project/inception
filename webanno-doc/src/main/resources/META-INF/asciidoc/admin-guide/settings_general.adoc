@@ -40,7 +40,7 @@
 | `<span style="color:red; font-size: 200%;">Use are your own risk.</span>`
 
 | user.profile.accessible
-| Whether regular users can access their own profile to change their password and other profile information. This setting has no effect if WebAnno is running in pre-authentication mode.
+| Whether regular users can access their own profile to change their password and other profile information. This setting has no effect when running in pre-authentication mode.
 | false
 | true
 |===

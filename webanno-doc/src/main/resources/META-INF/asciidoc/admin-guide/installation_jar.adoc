@@ -16,15 +16,15 @@
 
 = Running via embedded Tomcat (JAR)
 
-The WebAnno standalone JAR with an embedded Tomcat server and can be easily set up as a 
-UNIX service. This is the recommended way of running WebAnno on a server.
+The {product-name} standalone JAR with an embedded Tomcat server and can be easily set up as a 
+UNIX service. This is the recommended way of running {product-name} on a server.
 
-== Installing WebAnno as a service
+== Installing as a service
 
 To set it up as a service, you can do the following steps. For the following
-example, I assume that you install WebAnno in `/srv/webanno`:
+example, I assume that you install {product-name} in `/srv/webanno`:
 
-* Copy the standalone JAR file +webanno-standalone-{revnumber}.jar+ to `/srv/webanno/webanno.jar`.
+* Copy the standalone JAR file `webanno-standalone-{revnumber}.jar` to `/srv/webanno/webanno.jar`.
    Note the change of the filename to `webanno.jar`.
 * Create the file `/srv/webanno/webanno.conf` with the following content
 +
@@ -45,8 +45,8 @@ If you need to do additional configurations of the embedded Tomcat, best refer t
 documentation of Spring Boot itself.
 +
 * Make sure that the file `/srv/webanno/webanno.conf` is owned by the root user. If this is
-  not the case, WebAnno will ignore it and any settings made there will not have any effect. If
-  you start WebAnno and intead of using the MySQL database, it is using an embedded database,
+  not the case, {product-name} will ignore it and any settings made there will not have any effect. If
+  you start {product-name} and intead of using the MySQL database, it is using an embedded database,
   then you should double-check that `/srv/webanno/webanno.conf` is owned by the root user.
 +
 [source,bash]
@@ -55,8 +55,8 @@ $ chown root:root /srv/webanno/webanno.conf
 ----
 +
 * Change the owner/group of `/srv/webanno/webanno.jar` to `www-data`. When the service is started,
-  it will run with the privileges of the user that owns the JAR file, i.e. in this case WebAnno
-  will run as under the `www-data` user. **Do NOT run WebAnno as root.**
+  it will run with the privileges of the user that owns the JAR file, i.e. in this case {product-name}
+  will run as under the `www-data` user. **Do NOT run {product-name} as root.**
 +
 [source,bash]
 ----
@@ -70,21 +70,21 @@ $ chown www-data:www-data /srv/webanno/webanno.jar
 $ ln -s /srv/webanno/webanno.jar /etc/init.d/webanno
 ----
 +
-* Enable the WebAnno service using
+* Enable the {product-name} service using
 +
 [source,bash]
 ----
 $ systemctl enable webanno
 ----
 +
-* Start WebAnno using
+* Start {product-name} using
 +
 [source,bash]
 ----
 $ service webanno start
 ----
 +
-* Stop WebAnno using
+* Stop {product-name} using
 +
 [source,bash]
 ----
@@ -93,7 +93,7 @@ $ service webanno stop
 
 == Running the standalone behind HTTPD
 
-These are *optional* instructions if you want to run WebAnno behind an Apache web-server instead
+These are *optional* instructions if you want to run {product-name} behind an Apache web-server instead
 of accessing it directly. This assumes that you already have the following packages installed:
 
 * Apache Web Server

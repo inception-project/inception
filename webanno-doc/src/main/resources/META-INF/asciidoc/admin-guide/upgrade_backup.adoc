@@ -16,5 +16,5 @@
 
 = Backup your data
 
-* Make a copy of your WebAnno home folder
-* If you are using MySQL, make a backup of your WebAnno database, e.g. using the link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] command.
+* Make a copy of your {product-name} home folder
+* If you are using MySQL, make a backup of your {product-name} database, e.g. using the link:http://dev.mysql.com/doc/refman/5.0/en/mysqldump.html[mysqldump] command.
