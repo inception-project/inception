@@ -220,8 +220,8 @@ public class ExternalSearchAnnotationSidebar
             for (String highlight : selectedResult.getHighlights()) {
 
                 // remove tags
-                String highlight_clean = highlight.replace("<em>", "")
-                    .replace("</em>", "");
+                String highlight_clean = highlight.replace(start_tag, "")
+                    .replace(end_tag, "");
 
                 // find matching highlight offset in the text
                 int highlight_start_index = selectedResult.getText().indexOf(highlight_clean);
@@ -233,10 +233,14 @@ public class ExternalSearchAnnotationSidebar
                     int end = highlight_start_index + highlight.indexOf(end_tag);
                     highlight = highlight.replaceFirst(end_tag, "");
 
-                    if (state.getWindowBeginOffset() <= start && end <= state.getWindowEndOffset()) {
-                        aEvent.getVDocument().add(new VTextMarker(VMarker.MATCH_FOCUS,
-                            start - state.getWindowBeginOffset(),
-                            end - state.getWindowBeginOffset()));
+                    if (state.getWindowBeginOffset() <= start) {
+                        if (end <= state.getWindowEndOffset()) {
+                            aEvent.getVDocument().add(new VTextMarker(VMarker.MATCH_FOCUS,
+                                start - state.getWindowBeginOffset(),
+                                end - state.getWindowBeginOffset()));
+                        } else {
+                            break;
+                        }
                     }
                 }
             }
