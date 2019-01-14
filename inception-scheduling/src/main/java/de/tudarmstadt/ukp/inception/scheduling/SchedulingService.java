@@ -87,6 +87,11 @@ public class SchedulingService
 
     public void enqueue(Task aTask)
     {
+        if (getScheduledTasks().contains(aTask)) {
+            log.debug("Task already in queue: {}", aTask);
+            return;
+        }
+
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
