@@ -26,6 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -36,19 +37,18 @@ public class SchedulingService
 {
     private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
 
-    private static final int NUMBER_OF_THREADS = 4;
-    private static final int QUEUE_SIZE = 100;
-
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
 
     private final List<Task> runningTasks;
 
     @Autowired
-    public SchedulingService(ApplicationContext aApplicationContext)
+    public SchedulingService(ApplicationContext aApplicationContext,
+                             @Value("${scheduler.threads:4}") int numberOfThreads,
+                             @Value("${scheduler.queuesize:100}") int queueSize)
     {
         applicationContext = aApplicationContext;
-        executor = new InspectableThreadPoolExecutor(NUMBER_OF_THREADS, QUEUE_SIZE,
+        executor = new InspectableThreadPoolExecutor(numberOfThreads, queueSize,
                 this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
     }

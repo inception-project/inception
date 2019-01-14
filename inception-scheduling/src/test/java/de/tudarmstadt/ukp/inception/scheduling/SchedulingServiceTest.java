@@ -53,7 +53,7 @@ public class SchedulingServiceTest {
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingService(mockContext);
+        sut = new SchedulingService(mockContext, 4, 100);
     }
 
     @After
