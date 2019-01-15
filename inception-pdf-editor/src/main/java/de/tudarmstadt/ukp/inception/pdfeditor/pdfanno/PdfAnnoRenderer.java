@@ -37,6 +37,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception.MultipleMatchesFoundException;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception.NoMatchFoundException;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
@@ -194,5 +196,53 @@ public class PdfAnnoRenderer
             color = aColoringStrategy.getColor(aVObject.getVid(), aLabelText);
         }
         return color;
+    }
+
+    public static Offset convertToDocumentOffset(String documentText, String pdftxt, Offset offset)
+    {
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+        String pdfStrContent = pdfExtractFile.getStringContent();
+        int pdfStrLen = pdfStrContent.length();
+        DocumentModel documentModel = new DocumentModel(documentText);
+
+        // get indices of actual string content of PdfExtractFile
+        int begin = pdfExtractFile.getStringIndex(offset.getBegin());
+        int end = pdfExtractFile.getStringIndex(offset.getEnd());
+
+        // use an context window to find a unique text snippet for a selection
+        // begin with 0 context window size and increase until a unique text snippet is found
+        // context window is applied before and after the selection
+        for (int windowSize = 0; windowSize < pdfStrLen; windowSize += WINDOW_SIZE_INCREMENT)
+        {
+            // subtract windowSize from begin and add windowSize to end and stay in bounds
+            int windowBegin = begin <= windowSize ? 0 : begin - windowSize;
+            int windowEnd = end < pdfStrLen - windowSize
+                ? end + windowSize : pdfStrLen;
+
+            // get annotated text from pdfStrContent with offset before and after it
+            String annotatedText = pdfStrContent.substring(begin, end + 1);
+            String windowBeforeText = pdfStrContent.substring(windowBegin, begin);
+            String windowAfterText = pdfStrContent.substring(end + 1, windowEnd + 1);
+
+            try {
+                int index = findMatch(documentModel.getWhitespacelessText(),
+                    windowBeforeText + annotatedText + windowAfterText);
+                // get begin and end position of the original annotationText within document text
+                int annotationBegin = index + windowBeforeText.length();
+                int annotationEnd = index + windowBeforeText.length() + annotatedText.length() - 1;
+                // get according document file lines for begin and end of annotation
+                int docOffsetBegin = documentModel.getDocumentIndex(annotationBegin);
+                int docOffsetEnd = documentModel.getDocumentIndex(annotationEnd) + 1;
+                return new Offset(docOffsetBegin, docOffsetEnd);
+            } catch (MultipleMatchesFoundException e) {
+                // continue and increase context window
+                continue;
+            } catch (NoMatchFoundException e) {
+                // if no match is found stop search here. increasing context won't help
+                LOG.error("Could not find a match for new annotation \"" + annotatedText + "\".");
+                break;
+            }
+        }
+        return null;
     }
 }

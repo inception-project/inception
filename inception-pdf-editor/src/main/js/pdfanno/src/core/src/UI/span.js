@@ -276,6 +276,30 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     mouseDown = false
+// BEGIN PDFANNO EXTENSION - #838 - Creation of spans in PDF editor
+    if (startPosition !== null && endPosition !== null) {
+      var data = {
+        "page" : currentPage,
+        "begin": startPosition,
+        "end" : endPosition
+      }
+      console.log(endPosition)
+      parent.Wicket.Ajax.ajax({
+        "m" : "POST",
+        "ep" : data,
+        "u" : window.apiUrl,
+        "sh" : [function() {
+          // wait a second before destroying selection for better user experience
+          setTimeout(function() {
+            spanAnnotation.destroy()
+          }, 1000)
+        }],
+        "fh": [function() {
+          console.log('Something went wrong on creating new annotation for: ' + data)
+        }]
+      });
+    }
+// END PDFANNO EXTENSION
   })
 
   let otherAnnotationTreating = false

@@ -25,6 +25,7 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +35,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
@@ -118,5 +121,37 @@ public class PdfAnnotationEditor
             return pdfAnnoModel;
         }
         return null;
+    }
+
+    public boolean createSpanAnnotation(AjaxRequestTarget aTarget, Request aRequest, String pdftxt)
+    {
+        final Offset offset = new Offset(aRequest.getPostParameters());
+
+        JCas jCas;
+        try
+        {
+            jCas = getJCasProvider().get();
+            Offset docOffset = PdfAnnoRenderer
+                .convertToDocumentOffset(jCas.getDocumentText(), pdftxt, offset);
+            if (docOffset != null) {
+                getModelObject().getSelection()
+                    .selectSpan(jCas, docOffset.getBegin(), docOffset.getEnd());
+                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                return true;
+            } else {
+                error("Unable to create annotation: No match was found");
+            }
+        }
+        catch (IOException e)
+        {
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+        catch (AnnotationException e)
+        {
+            LOG.error("Unable to create annotation", e);
+            error("Unable to create annotation: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+        return false;
     }
 }

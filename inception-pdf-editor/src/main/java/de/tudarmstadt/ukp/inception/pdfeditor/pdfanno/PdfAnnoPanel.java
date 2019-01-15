@@ -58,6 +58,8 @@ public class PdfAnnoPanel
 
     private AbstractAjaxBehavior annoProvider;
 
+    private AbstractAjaxBehavior apiProvider;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
@@ -134,7 +136,7 @@ public class PdfAnnoPanel
                         "'annotations':[annoFile]}, true);" +
                         "}, 10);";
 
-                    aTarget .appendJavaScript(script);
+                    aTarget.appendJavaScript(script);
                 }
                 catch (IOException e)
                 {
@@ -143,6 +145,42 @@ public class PdfAnnoPanel
                     error("Unable to get PDF text for " + pdfFile.getName()
                         + "with PDFExtractor.");
                     aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
+        });
+
+        add(apiProvider = new AbstractDefaultAjaxBehavior() {
+            private static final long serialVersionUID = 3816087744638629290L;
+
+            @Override
+            protected void respond(AjaxRequestTarget aTarget) {
+                SourceDocument doc = aModel.getObject().getDocument();
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
+                try
+                {
+                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    boolean success =
+                        aPdfAnnotationEditor.createSpanAnnotation(aTarget, getRequest(), pdftext);
+                    if (success) {
+                        String annoUrl = getPage().getRequestCycle().getUrlRenderer()
+                            .renderFullUrl(Url.parse(annoProvider.getCallbackUrl()));
+                        String script = "parent.Wicket.Ajax.ajax({\n" +
+                            "  \"m\" : \"GET\",\n" +
+                            "  \"u\" : \"" + annoUrl + "\",\n" +
+                            "  \"sh\" : [],\n" +
+                            "  \"fh\": [function() {\n" +
+                            "      console.log('Something went wrong on requesting " +
+                            "annotations from inception backend.')\n" +
+                            "  }]\n" +
+                            "});";
+                        aTarget.appendJavaScript(script);
+                    }
+                }
+                catch (IOException e)
+                {
+                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                        + "with PDFExtractor.", e);
                 }
             }
         });
@@ -168,7 +206,11 @@ public class PdfAnnoPanel
                 String annoUrl = getPage().getRequestCycle().getUrlRenderer()
                     .renderFullUrl(Url.parse(annoProvider.getCallbackUrl()));
 
-                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl;
+                String apiUrl = getPage().getRequestCycle().getUrlRenderer()
+                    .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
+
+                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl
+                            + "&api=" + apiUrl;
 
                 aTag.put("src", viewerUrl);
 
