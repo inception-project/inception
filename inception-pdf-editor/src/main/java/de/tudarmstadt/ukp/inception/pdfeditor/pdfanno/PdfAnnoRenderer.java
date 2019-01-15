@@ -157,8 +157,8 @@ public class PdfAnnoRenderer
                 continue;
             } catch (NoMatchFoundException e) {
                 // if no match is found stop search here. increasing context won't help
-                LOG.error("Could not find a match for existing annotation with id "
-                    + aVSpan.getVid().toString() + " and text \"" + annotatedText + "\"");
+                LOG.error("Could not find a match for existing annotation with id [{}] and text [{}].",
+                    aVSpan.getVid(), annotatedText);
                 break;
             }
         }
@@ -241,7 +241,7 @@ public class PdfAnnoRenderer
                 continue;
             } catch (NoMatchFoundException e) {
                 // if no match is found stop search here. increasing context won't help
-                LOG.error("Could not find a match for new annotation \"" + annotatedText + "\".");
+                LOG.error("Could not find a match for new annotation [{}].", annotatedText);
                 break;
             }
         }

@@ -105,7 +105,7 @@ public class PdfAnnoPanel
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
                 }
             }
@@ -131,7 +131,7 @@ public class PdfAnnoPanel
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
                     error("Unable to get PDF text for " + pdfFile.getName()
                         + "with PDFExtractor.");
@@ -161,7 +161,7 @@ public class PdfAnnoPanel
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
