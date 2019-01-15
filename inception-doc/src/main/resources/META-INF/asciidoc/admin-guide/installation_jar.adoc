@@ -1,0 +1,134 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running via embedded Tomcat (JAR)
+
+The {product-name} standalone JAR with an embedded Tomcat server and can be easily set up as a 
+UNIX service. This is the recommended way of running {product-name} on a server.
+
+== Installing as a service
+
+To set it up as a service, you can do the following steps. For the following
+example, I assume that you install {product-name} in `/srv/inception`:
+
+* Copy the standalone JAR file `inception-app-standalone-{revnumber}.jar` to `/srv/inception/inception.jar`.
+   Note the change of the filename to `inception.jar`.
+* Create the file `/srv/inception/inception.conf` with the following content
++
+[source,text]
+----
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
+----
++
+* In the previous step, you have already created the `/srv/inception/settings.properties` file. 
+  You *may optionally* configure the Tomcat port using the following line
++
+[source,text]
+----
+server.port=18080
+----
++
+If you need to do additional configurations of the embedded Tomcat, best refer to the 
+documentation of Spring Boot itself.
++
+* Make sure that the file `/srv/inception/inception.conf` is owned by the root user. If this is
+  not the case, {product-name} will ignore it and any settings made there will not have any effect. If
+  you start {product-name} and intead of using the MySQL database, it is using an embedded database,
+  then you should double-check that `/srv/inception/inception.conf` is owned by the root user.
++
+[source,bash]
+----
+$ chown root:root /srv/inception/inception.conf
+----
++
+* Change the owner/group of `/srv/inception/inception.jar` to `www-data`. When the service is started,
+  it will run with the privileges of the user that owns the JAR file, i.e. in this case {product-name}
+  will run as under the `www-data` user. **Do NOT run {product-name} as root.**
++
+[source,bash]
+----
+$ chown www-data:www-data /srv/inception/inception.jar
+----
++
+* Create a symlink from `/etc/init.d` to the `/srv/inception/inception.jar`:
++
+[source,bash]
+----
+$ ln -s /srv/inception/inception.jar /etc/init.d/inception
+----
++
+* Enable the {product-name} service using
++
+[source,bash]
+----
+$ systemctl enable inception
+----
++
+* Start {product-name} using
++
+[source,bash]
+----
+$ service inception start
+----
++
+* Stop {product-name} using
++
+[source,bash]
+----
+$ service inception stop
+----
+
+== Running the standalone behind HTTPD
+
+These are *optional* instructions if you want to run {product-name} behind an Apache web-server instead
+of accessing it directly. This assumes that you already have the following packages installed:
+
+* Apache Web Server
+* mod_proxy
+* mod_proxy_ajp
+
+* Add the following lines to `/srv/inception/settings.properties`:
++
+[source,text]
+----
+tomcat.ajp.port=18009
+server.contextPath=/inception
+server.use-forward-headers=true
+----
++
+* Edit `/etc/apache2/conf.d/inception.local.conf`
++
+[source,xml]
+----
+ProxyPreserveHost On
+
+<Proxy ajp://localhost/inception >
+  Order Deny,Allow
+  Deny from none
+  Allow from all
+</Proxy>
+
+<Location /inception >
+  ProxyPass ajp://localhost:18009/inception timeout=1200
+  ProxyPassReverse http://localhost/inception
+</Location>
+----
+* Restart Apache web server
++
+[source,bash]
+----
+$ service apache2 restart
+----
