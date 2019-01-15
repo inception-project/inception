@@ -1,0 +1,93 @@
+= Database connection
+
+.Database settings in the `settings.properties` file
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| database.dialect
+| Database dialect
+| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.MySQL5InnoDBDialect
+
+| database.driver
+| Database driver
+| org.hsqldb.jdbc.JDBCDriver
+| com.mysql.jdbc.Driver
+
+| database.url
+| JDBC connection string
+| _location in application home_
+| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+
+| database.username
+| Database username
+| sa
+| user
+
+| database.password
+| Database password
+| _unset_
+| pass
+
+| database.initial-pool-size
+| Initial database connection pool size
+| 4
+|
+
+| database.min-pool-size
+| Minimum database connection pool size
+| 4
+| 
+
+| database.max-pool-size
+| Maximum database connection pool size
+| 10
+| 
+
+| warnings.embeddedDatabase
+| Warn about using an embedded database
+| true
+| false
+|===
+
+The basic database connection details can also be configured via environment variables. When these
+environment variables are present, they are preferred over the `settings.properties` file. 
+The following environment variables can be used:
+
+.Database configuration via environment variables
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `INCEPTION_DB_DIALECT`
+| Database dialect
+| org.hibernate.dialect.HSQLDialect
+| org.hibernate.dialect.MySQL5InnoDBDialect
+
+| `INCEPTION_DB_DRIVER`
+| Database driver
+| org.hsqldb.jdbc.JDBCDriver
+| com.mysql.jdbc.Driver
+
+| `INCEPTION_DB_URL`
+| JDBC connection string
+| _location in application home_
+| jdbc:mysql://localhost:3306/inception?useUnicode=true&characterEncoding=UTF-8
+
+| `INCEPTION_DB_USERNAME`
+| Database username
+| sa
+| user
+
+| `INCEPTION_DB_PASSWORD`
+| Database password
+| _unset_
+| pass
+|===
