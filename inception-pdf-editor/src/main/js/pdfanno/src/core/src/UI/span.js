@@ -291,7 +291,9 @@ window.addEventListener('DOMContentLoaded', () => {
         "sh" : [function() {
           // wait a second before destroying selection for better user experience
           setTimeout(function() {
-            spanAnnotation.destroy()
+            if (spanAnnotation) {
+              spanAnnotation.destroy()
+            }
           }, 1000)
         }],
         "fh": [function() {
