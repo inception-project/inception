@@ -123,7 +123,7 @@ public class PdfAnnotationEditor
         return null;
     }
 
-    public boolean createSpanAnnotation(AjaxRequestTarget aTarget, Request aRequest, String pdftxt)
+    public boolean createSpanAnnotation(AjaxRequestTarget aTarget, Request aRequest, String aPdftxt)
     {
         final Offset offset = new Offset(aRequest.getPostParameters());
 
@@ -131,8 +131,9 @@ public class PdfAnnotationEditor
         try
         {
             jCas = getJCasProvider().get();
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
             Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(jCas.getDocumentText(), pdftxt, offset);
+                .convertToDocumentOffset(jCas.getDocumentText(), pdfExtractFile, offset);
             if (docOffset != null) {
                 getModelObject().getSelection()
                     .selectSpan(jCas, docOffset.getBegin(), docOffset.getEnd());

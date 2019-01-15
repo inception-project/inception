@@ -180,6 +180,7 @@ public class PdfAnnoRendererTest
         String file = "src/test/resources/tcf04-karin-wl.xml";
         String pdftxt = new Scanner(
             new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
@@ -193,16 +194,16 @@ public class PdfAnnoRendererTest
         state.setProject(project);
 
         Offset docOffsetKarin = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdftxt, new Offset(3, 7));
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(3, 7));
         assertThat(docOffsetKarin).isEqualTo(new Offset(0, 5));
         Offset docOffsetFliegt = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdftxt, new Offset(8, 13));
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(8, 13));
         assertThat(docOffsetFliegt).isEqualTo(new Offset(6, 12));
         Offset docOffsetSie = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdftxt, new Offset(28, 30));
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(28, 30));
         assertThat(docOffsetSie).isEqualTo(new Offset(29, 32));
         Offset docOffsetDort = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdftxt, new Offset(35, 38));
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(35, 38));
         assertThat(docOffsetDort).isEqualTo(new Offset(38, 42));
     }
 }

@@ -198,16 +198,16 @@ public class PdfAnnoRenderer
         return color;
     }
 
-    public static Offset convertToDocumentOffset(String documentText, String pdftxt, Offset offset)
+    public static Offset convertToDocumentOffset(
+        String aDocumentText, PdfExtractFile aPdfExtractFile, Offset aOffset)
     {
-        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
-        String pdfStrContent = pdfExtractFile.getStringContent();
+        String pdfStrContent = aPdfExtractFile.getStringContent();
         int pdfStrLen = pdfStrContent.length();
-        DocumentModel documentModel = new DocumentModel(documentText);
+        DocumentModel documentModel = new DocumentModel(aDocumentText);
 
         // get indices of actual string content of PdfExtractFile
-        int begin = pdfExtractFile.getStringIndex(offset.getBegin());
-        int end = pdfExtractFile.getStringIndex(offset.getEnd());
+        int begin = aPdfExtractFile.getStringIndex(aOffset.getBegin());
+        int end = aPdfExtractFile.getStringIndex(aOffset.getEnd());
 
         // use an context window to find a unique text snippet for a selection
         // begin with 0 context window size and increase until a unique text snippet is found
