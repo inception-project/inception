@@ -29,12 +29,9 @@ import org.assertj.core.api.Assertions;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -44,7 +41,7 @@ public class KnowledgeBaseProfileDeserializationTest
     private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
 
     @Test
-    public void checkThatDeserializationWorks() throws JsonParseException, JsonMappingException, IOException {
+    public void checkThatDeserializationWorks() throws IOException {
         String name = "Test KB";
         String url = "http://someurl/sparql";
         List<String> rootConcepts =  new ArrayList<>();
@@ -52,6 +49,7 @@ public class KnowledgeBaseProfileDeserializationTest
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
         String label = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
         String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
@@ -60,12 +58,11 @@ public class KnowledgeBaseProfileDeserializationTest
         String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
-            typeIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, fullTextSearchIri);
+            typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
-        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
-        referenceAccess.setAccessUrl(url);
+        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
 
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
@@ -82,7 +79,6 @@ public class KnowledgeBaseProfileDeserializationTest
             profiles = mapper
                 .readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>() {});
         }
-        
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
     }

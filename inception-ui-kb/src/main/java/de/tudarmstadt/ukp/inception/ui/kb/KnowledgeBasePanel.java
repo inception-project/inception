@@ -31,18 +31,20 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
@@ -99,7 +101,7 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
         
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
+        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
                 LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
         {
 
@@ -146,26 +148,23 @@ public class KnowledgeBasePanel
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
-        boolean isSchemaChangeEvent = RdfUtils
-                .isFromImplicitNamespace(event.getStatement().getProperty());
-        if (!isSchemaChangeEvent) {
-            return;
-        }
-
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
-        boolean isRenameEvent = statement.getProperty().getIdentifier()
-                .equals(RDFS.LABEL.stringValue());
-        if (isRenameEvent) {
+
+        if (isRenamingEvent(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
+
             List<Model<KBHandle>> models = Arrays.asList(selectedConceptHandle,
                     selectedPropertyHandle);
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        if (statement.getValue() != null) {
-                            model.getObject().setName(statement.getValue().toString());
+                        Optional<KBObject> kbObject = kbService
+                            .readKBIdentifier(kbModel.getObject(),
+                                model.getObject().getIdentifier());
+                        if (kbObject.isPresent()) {
+                            model.getObject().setName(kbObject.get().getName());
                         }
                         event.getTarget().add(this);
                     });
@@ -173,6 +172,18 @@ public class KnowledgeBasePanel
         else {
             event.getTarget().add(getPage());
         }
+    }
+
+    private boolean isRenamingEvent(KBStatement aStatement)
+    {
+        String propertyIdentifier = aStatement.getProperty().getIdentifier();
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+            vf.createIRI(aStatement.getInstance().getIdentifier()),
+            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
+        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
+                && !hasMainLabel);
     }
 
     @OnEvent

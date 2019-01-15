@@ -19,11 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,10 +49,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -90,7 +82,7 @@ public class KnowledgeBaseServiceRemoteTest
         protected void starting(org.junit.runner.Description aDescription)
         {
             String methodName = aDescription.getMethodName();
-            System.out.printf("\n=== " + methodName + " =====================");
+            System.out.printf("\n=== " + methodName + " =====================\n");
         };
     };
 
@@ -155,7 +147,7 @@ public class KnowledgeBaseServiceRemoteTest
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        PROFILES = readKnowledgeBaseProfiles();
+        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -167,6 +159,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setName("Wine ontology (OWL)");
             kb_wine.setType(RepositoryType.LOCAL);
             kb_wine.setReification(Reification.NONE);
+            kb_wine.setFullTextSearchIri(IriConstants.FTS_LUCENE);
             kb_wine.setClassIri(OWL.CLASS);
             kb_wine.setSubclassIri(RDFS.SUBCLASSOF);
             kb_wine.setTypeIri(RDF.TYPE);
@@ -175,6 +168,7 @@ public class KnowledgeBaseServiceRemoteTest
             kb_wine.setDescriptionIri(RDFS.COMMENT);
             kb_wine.setPropertyLabelIri(RDFS.LABEL);
             kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
+            kb_wine.setSubPropertyIri(RDFS.SUBPROPERTYOF);
             kb_wine.setDefaultLanguage("en");
             kb_wine.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
@@ -192,7 +186,7 @@ public class KnowledgeBaseServiceRemoteTest
 //            ValueFactory vf = SimpleValueFactory.getInstance();
 //            KnowledgeBase kb_hucit = new KnowledgeBase();
 //            kb_hucit.setName("Hucit");
-//            kb_hucit.setType(RepositoryType.REMOTE);
+//            kb_hucit.setType(profile.getType());
 //            kb_hucit.setReification(Reification.NONE);
 //            kb_hucit.setBasePrefix("http://www.ukp.informatik.tu-darmstadt.de/inception/1.0#");
 //            kb_hucit.setClassIri(vf.createIRI("http://www.w3.org/2002/07/owl#Class"));
@@ -222,8 +216,9 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-            kb_wikidata_direct.setType(RepositoryType.REMOTE);
+            kb_wikidata_direct.setType(profile.getType());
             kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.applyRootConcepts(profile);
             kb_wikidata_direct.setDefaultLanguage("en");
@@ -241,7 +236,7 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBaseProfile profile = PROFILES.get("virtuoso");
         // KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         // kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
-        // kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        // kb_wikidata_direct.setType(profile.getType());
         // kb_wikidata_direct.setReification(Reification.NONE);
         // kb_wikidata_direct.applyMapping(profile.getMapping());
         // kb_wikidata_direct.setDefaultLanguage("en");
@@ -255,8 +250,9 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
-            kb_dbpedia.setType(RepositoryType.REMOTE);
+            kb_dbpedia.setType(profile.getType());
             kb_dbpedia.setReification(Reification.NONE);
+            kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.applyRootConcepts(profile);
             kb_dbpedia.setDefaultLanguage("en");
@@ -274,11 +270,12 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
             kb_yago.setName(profile.getName());
-            kb_yago.setType(RepositoryType.REMOTE);
+            kb_yago.setType(profile.getType());
             kb_yago.setReification(Reification.NONE);
+            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_yago.applyMapping(profile.getMapping());
             kb_yago.applyRootConcepts(profile);
-            kb_yago.setDefaultLanguage("en");
+            kb_yago.setDefaultLanguage("eng");
             kb_yago.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
@@ -294,8 +291,9 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
             kb_zbw_stw_economics.setName(profile.getName());
-            kb_zbw_stw_economics.setType(RepositoryType.REMOTE);
+            kb_zbw_stw_economics.setType(profile.getType());
             kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.applyRootConcepts(profile);
             kb_zbw_stw_economics.setDefaultLanguage("en");
@@ -315,7 +313,7 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBaseProfile profile = PROFILES.get("zbw-gnd");
         // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
         // kb_zbw_gnd.setName(profile.getName());
-        // kb_zbw_gnd.setType(RepositoryType.REMOTE);
+        // kb_zbw_gnd.setType(profile.getType());
         // kb_zbw_gnd.setReification(Reification.NONE);
         // kb_zbw_gnd.applyMapping(profile.getMapping());
         // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
@@ -411,17 +409,6 @@ public class KnowledgeBaseServiceRemoteTest
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
             sut.importData(sutConfig.getKnowledgeBase(), fileName, is);
-        }
-    }
-
-    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
-    {
-        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
-                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
         }
     }
 

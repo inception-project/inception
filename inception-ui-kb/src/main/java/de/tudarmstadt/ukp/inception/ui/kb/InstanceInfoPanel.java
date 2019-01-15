@@ -90,11 +90,11 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     }
 
     @Override
-    protected Comparator<StatementGroupBean> getStatementGroupComparator() {
-        return new ImportantStatementComparator(sgb -> {
-            KnowledgeBase kb = kbModel.getObject();
-            String identifier = sgb.getProperty().getIdentifier();
-            return kbService.isBaseProperty(identifier, kb);
-        });
+    protected Comparator<StatementGroupBean> getStatementGroupComparator()
+    {
+        return new ImportantStatementComparator<>(
+            sgb -> sgb.getProperty().getIdentifier(),
+            identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
+                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
     }
 }

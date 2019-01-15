@@ -53,7 +53,7 @@ import com.github.openjson.JSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -266,7 +266,8 @@ public class MtasUimaParser
             }
             
             if (WebAnnoConst.RELATION_TYPE.equals(layer.getType())) {
-                ArcAdapter adapter = (ArcAdapter) annotationSchemaService.getAdapter(layer);
+                RelationAdapter adapter = (RelationAdapter) annotationSchemaService
+                        .getAdapter(layer);
 
                 AnnotationFS sourceFs = FSUtil.getFeature(aAnnotation,
                         adapter.getSourceFeatureName(), AnnotationFS.class);

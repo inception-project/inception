@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.io;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -25,11 +26,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.wicket.Application;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.util.file.IFileCleaner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 public class FileUploadDownloadHelper
 {
@@ -78,5 +81,25 @@ public class FileUploadDownloadHelper
         fileTracker.track(tmpFile, marker);
         FileUtils.copyURLToFile(new URL(downloadUrl), tmpFile);
         return tmpFile;
+    }
+
+    public File writeClasspathResourceToTemporaryFile(String aLocation, Object marker) throws
+        IOException
+    {
+        String fileName = getNameFromClassPathResource(aLocation);
+        PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+        File tmpFile = File
+            .createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        fileTracker.track(tmpFile, marker);
+        log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
+        try (InputStream is = resolver.getResource(aLocation).getInputStream();
+            FileOutputStream os = new FileOutputStream(tmpFile)) {
+            IOUtils.copy(is, os);
+        }
+        return tmpFile;
+    }
+
+    private String getNameFromClassPathResource(String aResource) {
+        return aResource.substring(aResource.lastIndexOf("/") + 1 );
     }
 }

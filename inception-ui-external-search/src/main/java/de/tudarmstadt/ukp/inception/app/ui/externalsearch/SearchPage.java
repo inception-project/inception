@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -58,19 +59,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
@@ -88,6 +93,7 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -231,6 +237,9 @@ public class SearchPage extends ApplicationPageBase
     private void searchDocuments(String aQuery)
     {
         results.clear();
+        applicationEventPublisher.get()
+                .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
+                        userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
@@ -311,17 +320,30 @@ public class SearchPage extends ApplicationPageBase
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
-            link.add(new Label("title", result.getUri()));
+            
+            String title = defaultIfBlank(result.getDocumentTitle(),
+                            defaultIfBlank(result.getDocumentId(), 
+                            defaultIfBlank(result.getUri(), "<no title>")));
+            boolean existsSourceDocument = documentService.existsSourceDocument(project,
+                    documentTitle);
+            
+            link.add(new Label("title", title));
             add(link);
 
             add(new Label("score", result.getScore()));
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            add(new Label("importStatus", () -> 
-                    documentService.existsSourceDocument(project, documentTitle) ? "imported"
-                            : "not imported"));
+            add(new Label("importStatus", () ->
+                    existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
-                    .add(visibleWhen(() -> 
-                        !documentService.existsSourceDocument(project, documentTitle))));
+                    .add(visibleWhen(() -> !existsSourceDocument)));
+            add(new LambdaAjaxLink("openLink", _target -> {
+                PageParameters pageParameters = new PageParameters()
+                    .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
+                    .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
+                        documentService.getSourceDocument(project, documentTitle).getId());
+                setResponsePage(AnnotationPage.class, pageParameters);
+            }).add(
+                visibleWhen(() -> existsSourceDocument)));
         }
     }
 }

@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -174,6 +175,8 @@ public class AccessSpecificSettingsPanel
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
+                    kbModel.getObject().getKb().setFullTextSearchIri(
+                        item.getModelObject().getAccess().getFullTextSearchIri());
                     t.add(aUrlField);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
@@ -333,7 +336,7 @@ public class AccessSpecificSettingsPanel
                 link.add(AttributeModifier.append("title",
                     new StringResourceModel("kb.wizard.steps.local.schemaOnMouseOver", this)
                         .setParameters(
-                            kbService.checkSchemaProfile(item.getModelObject()).getLabel(),
+                            SchemaProfile.checkSchemaProfile(item.getModelObject()).getUiLabel(),
                             getAccessTypeLabel(item.getModelObject()))));
 
                 item.add(link);
@@ -398,21 +401,27 @@ public class AccessSpecificSettingsPanel
 
                 String accessUrl = selectedKnowledgeBaseProfile.getAccess().getAccessUrl();
 
+                FileUploadDownloadHelper fileUploadDownloadHelper =
+                    new FileUploadDownloadHelper(getApplication());
+
                 if (!accessUrl.startsWith(CLASSPATH_PREFIX)) {
-                    FileUploadDownloadHelper fileUploadDownloadHelper =
-                        new FileUploadDownloadHelper(getApplication());
+
                     File tmpFile = fileUploadDownloadHelper
                         .writeFileDownloadToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), tmpFile);
                 }
                 else {
                     // import from classpath
-                    File kbFile = kbService.readKbFileFromClassPathResource(accessUrl);
+                    File kbFile = fileUploadDownloadHelper
+                        .writeClasspathResourceToTemporaryFile(accessUrl, kbModel);
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
 
+                kbModel.getObject().getKb().applyRootConcepts(selectedKnowledgeBaseProfile);
                 kbModel.getObject().getKb().applyMapping(
                     selectedKnowledgeBaseProfile.getMapping());
+                kbModel.getObject().getKb().setFullTextSearchIri(
+                    selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
                 downloadedProfiles
                     .put(selectedKnowledgeBaseProfile.getName(), selectedKnowledgeBaseProfile);
                 aTarget.add(this);

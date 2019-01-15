@@ -17,11 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -33,6 +38,8 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -40,6 +47,7 @@ import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -53,7 +61,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -70,7 +77,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * The implementation of the RecommendationService.
@@ -81,14 +91,33 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int TRAININGS_PER_SELECTION = 5;
+
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private @Autowired RecommendationScheduler scheduler;
+    private @Autowired SchedulingService schedulingService;
     
-    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
+    @Value("${show.learning.curve.diagram:false}")
+    public Boolean showLearningCurveDiagram;
+
+    private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
+    private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
+
+    public RecommendationServiceImpl()
+    {
+        trainingTaskCounter = new ConcurrentHashMap<>();
+        states = new ConcurrentHashMap<>();
+    }
+    
+    public RecommendationServiceImpl(EntityManager entityManager)
+    {
+        this();
+        this.entityManager = entityManager;
+    }
+
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
@@ -231,6 +260,35 @@ public class RecommendationServiceImpl
     
     @Override
     @Transactional
+    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "id = :id AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("id", aRecommenderId)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+
+    @Override
+    @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
         List<Recommender> settings = entityManager
@@ -266,7 +324,22 @@ public class RecommendationServiceImpl
     private void triggerTrainingAndClassification(String aUser, Project aProject)
     {
         User user = userRepository.get(aUser);
-        scheduler.enqueueTask(user, aProject);
+
+        // Update the task count
+        Pair<User, Project> key = new ImmutablePair<>(user, aProject);
+        AtomicInteger count = trainingTaskCounter.computeIfAbsent(key,
+            _key -> new AtomicInteger(0));
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+            Task task = new SelectionTask(aProject, user);
+            schedulingService.enqueue(task);
+        } else {
+            Task task = new TrainingTask(user, aProject);
+            schedulingService.enqueue(task);
+        }
     }
     
     @EventListener
@@ -278,7 +351,7 @@ public class RecommendationServiceImpl
         if (info != null) {
             String username = (String) info.getPrincipal();
             clearState(username);
-            scheduler.stopAllTasksForUser(username);
+            schedulingService.stopAllTasksForUser(username);
         }
     }
 
@@ -357,16 +430,16 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = WebAnnoCasUtil.selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, aBegin, aEnd);
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation
-            address = WebAnnoCasUtil.getAddr(annoFS);
+            address = getAddr(annoFS);
         }
         else {
             // ... if not, then we create a new annotation - this also takes care of attaching to 
             // an annotation if necessary
-            address = adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd);
+            address = getAddr(adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd));
         }
 
         // Update the feature value
@@ -525,5 +598,10 @@ public class RecommendationServiceImpl
             
             setActiveRecommenders(newActiveRecommenders);
         }
+    }
+    
+    @Override
+    public Boolean showLearningCurveDiagram() {
+        return showLearningCurveDiagram;
     }
 }

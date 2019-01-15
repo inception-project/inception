@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import java.io.IOException;
 
-import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -63,7 +62,7 @@ public class FeatureValueUpdatedEventAdapter
     {
         try {
             // FIXME This may fail for slot features... let's see.
-            FeatureChangeDetails details = new FeatureChangeDetails((AnnotationFS) aEvent.getFS(),
+            FeatureChangeDetails details = new FeatureChangeDetails(aEvent.getFS(),
                     aEvent.getNewValue(), aEvent.getOldValue());
             return JSONUtil.toJsonString(details);
         }

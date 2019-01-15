@@ -41,6 +41,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -66,7 +67,10 @@ public class Recommender
     @JoinColumn(name = "layer", nullable = false)
     private AnnotationLayer layer;
     
-    private String feature;
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne
+    @JoinColumn(name = "feature", nullable = false)
+    private AnnotationFeature feature;
     
     private String name;
     
@@ -148,12 +152,12 @@ public class Recommender
         layer = aLayer;
     }
     
-    public String getFeature()
+    public AnnotationFeature getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String aFeature)
+    public void setFeature(AnnotationFeature aFeature)
     {
         feature = aFeature;
     }

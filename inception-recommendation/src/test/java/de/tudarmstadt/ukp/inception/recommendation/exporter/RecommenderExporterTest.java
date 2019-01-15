@@ -24,6 +24,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationServ
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -73,6 +76,14 @@ public class RecommenderExporterTest
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         
         when(annotationService.getLayer(layer.getName(), project)).thenReturn(layer);
+        when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("1"));
+        when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("2"));
+        when(annotationService.getFeature(eq("Feature 3"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("3"));
+        when(annotationService.getFeature(eq("Feature 4"), any(AnnotationLayer.class)))
+                .thenReturn(buildFeature("4"));
 
         sut = new RecommenderExporter(annotationService, recommendationService);
     }
@@ -191,10 +202,19 @@ public class RecommenderExporterTest
         return asList(recommender1, recommender2, recommender3, recommender4);
     }
 
+    private AnnotationFeature buildFeature(String id)
+    {
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("Feature " + id);
+        return feature;
+    }
+    
     private Recommender buildRecommender(String id)
     {
+        AnnotationFeature feature = buildFeature(id);
+        
         Recommender recommender = new Recommender();
-        recommender.setFeature("Feature " + id);
+        recommender.setFeature(feature);
         recommender.setName("Recommender " + id);
         recommender.setTool("Tool " + id);
         recommender.setTraits("Traits " + id);

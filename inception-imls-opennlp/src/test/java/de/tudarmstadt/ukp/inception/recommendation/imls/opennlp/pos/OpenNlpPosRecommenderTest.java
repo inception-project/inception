@@ -36,6 +36,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
@@ -160,9 +161,12 @@ public class OpenNlpPosRecommenderTest
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(POS.class.getName());
 
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("PosValue");
+        
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
-        recommender.setFeature("PosValue");
+        recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
 
         return recommender;

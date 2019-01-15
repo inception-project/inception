@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -76,7 +75,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 @RunWith(Parameterized.class)
@@ -331,7 +329,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 kb.getLabelIri().stringValue(), kb.getDescriptionIri().stringValue(),
                 kb.getTypeIri().stringValue() };
         
-        assertEquals(listProperties.size(), 4);
+        assertEquals(listProperties.size(), 5);
         assertThat(listIdentifier).as("Check that base properties are created")
                 .contains(expectedProps);
     }
@@ -1245,8 +1243,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .map(KBHandle::getName);
 
         String[] expectedLabels = {
-            "Adaptation", "AnimalIntelligence", "Collection", "ConservationStatus", "Ecozone",
-            "Habitat", "RedListStatus", "TaxonName", "TaxonRank"
+            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
+            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
         };
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
@@ -1513,7 +1511,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     @Test
     public void readKnowledgeBaseProfiles_ShouldReturnValidHashMapWithProfiles() throws IOException {
-        Map<String, KnowledgeBaseProfile> profiles = sut.readKnowledgeBaseProfiles();
+        Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
 
         assertThat(profiles)
             .allSatisfy((key, profile) -> {
@@ -1522,41 +1520,23 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     }
 
-    @Test public void readKBResourceFromClassPath_ShouldReturnFileHandleToKBResource()
-        throws IOException
+    @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
     {
-        String resourceLocation = "classpath:data/more_pets.ttl";
-        File file = sut.readKbFileFromClassPathResource(resourceLocation);
-        assertTrue(file.exists());
-    }
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-    @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
-    {
-        String name = "Test KB";
-        String classIri = "http://www.w3.org/2002/07/owl#Class";
-        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        String label = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+        String conceptId = sut.createConcept(kb, buildConcept()).getIdentifier();
+        String instanceId = sut.createInstance(kb, buildInstance()).getIdentifier();
+        String propertyId = sut.createProperty(kb, buildProperty()).getIdentifier();
 
-        KnowledgeBaseMapping testMapping = new KnowledgeBaseMapping(classIri, subclassIri, typeIri,
-            descriptionIri, label, propertyTypeIri, propertyLabelIri, propertyDescriptionIri,
-            fullTextSearchIri);
-        KnowledgeBaseProfile testProfile = new KnowledgeBaseProfile();
-        testProfile.setName(name);
-        testProfile.setMapping(testMapping);
-
-        KnowledgeBase testKb = new KnowledgeBase();
-        testKb.applyMapping(testMapping);
-
-        assertThat(sut.checkSchemaProfile(testProfile))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
-        assertThat(sut.checkSchemaProfile(testKb))
-            .isEqualTo(SchemaProfile.OWLSCHEMA);
+        assertThat(sut.readKBIdentifier(kb, conceptId).get())
+            .as("Check that reading a concept id returns an instance of KBConcept")
+            .isInstanceOf(KBConcept.class);
+        assertThat(sut.readKBIdentifier(kb, instanceId).get())
+            .as("Check that reading an instance id returns an instance of KBInstance")
+            .isInstanceOf(KBInstance.class);
+        assertThat(sut.readKBIdentifier(kb, propertyId).get())
+            .as("Check that reading a property id returns an instance of KBProperty")
+            .isInstanceOf(KBProperty.class);
     }
 
     // Helper

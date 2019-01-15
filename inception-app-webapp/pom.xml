@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -35,6 +35,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-doc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-docmetadata</artifactId>
     </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
@@ -221,6 +225,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-doc</artifactId>
     </dependency>
 
     <!-- WICKET DEPENDENCIES -->
@@ -548,6 +556,7 @@
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
+              <doctype>book</doctype>
               <toclevels>8</toclevels>
               <sectanchors>true</sectanchors>
               <docinfo1>true</docinfo1>
@@ -568,6 +577,7 @@
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
@@ -602,8 +612,9 @@
               <!-- Detected because we include a special access menu item to the project settings
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
-              <!-- INCEpTION Documentation module - needed but no Java dependency -->
+              <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>

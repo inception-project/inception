@@ -32,7 +32,7 @@
         <wicket:message key="kb.reification"/>
       </label>
       <div class="col-sm-9">
-        <select wicket:id="reification" class=""></select>
+        <select wicket:id="reification" data-size="5"></select>
       </div>
     </div>
     <div wicket:id="comboBoxWrapper">
@@ -41,7 +41,7 @@
           <wicket:message key="kb.iri.iriSchema"/>
         </label>
         <div class="col-sm-9">
-          <select wicket:id="iriSchema" class=""></select>
+          <select wicket:id="iriSchema" data-size="5"></select>
         </div>
       </div>
 
@@ -106,6 +106,15 @@
         </label>
         <div class="col-sm-9">
           <input type="text" wicket:id="propertyTypeIri" class="form-control"/>
+        </div>
+      </div>
+
+      <div class="form-group row">
+        <label class="control-label col-sm-3">
+          <wicket:message key="kb.iri.subPropertyIri"/>
+        </label>
+        <div class="col-sm-9">
+          <input type="text" wicket:id="subPropertyIri" class="form-control"/>
         </div>
       </div>
 
