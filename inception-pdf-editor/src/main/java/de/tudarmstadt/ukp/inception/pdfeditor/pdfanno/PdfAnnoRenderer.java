@@ -85,10 +85,10 @@ public class PdfAnnoRenderer
 
                 // convert to PDFAnno span. if it is null no match was found
                 Span span = convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile);
-                if (span != null) {
+                if (span.getStartPos() != -1) {
                     pdfAnnoModel.addSpan(span);
                 } else {
-                    pdfAnnoModel.addUnmatchedSpan(vspan.getVid().getId());
+                    pdfAnnoModel.addUnmatchedSpan(span);
                 }
             }
 
@@ -122,6 +122,8 @@ public class PdfAnnoRenderer
         // search for begin of the first range and end of the last range
         int vSpanBegin = aVSpan.getRanges().stream().mapToInt(VRange::getBegin).min().getAsInt();
         int vSpanEnd = aVSpan.getRanges().stream().mapToInt(VRange::getEnd).max().getAsInt();
+        // get annotated text and remove whitespaces because they do not exist in PDFExtract text
+        String annotatedText = aDocumentText.substring(vSpanBegin, vSpanEnd).replaceAll("\\s", "");
 
         // use an context window to find a unique text snippet for an annotation
         // begin with 0 context window size and increase until a unique text snippet is found
@@ -133,9 +135,8 @@ public class PdfAnnoRenderer
             int windowEnd = vSpanEnd < docTextLen - windowSize
                 ? vSpanEnd + windowSize : docTextLen;
 
-            // get annotated text from aDocumentText and context window before and after it
+            // get context window before and after annotatedText
             // also remove all whitespaces because they do not exist in PDFExtract text
-            String annotatedText = aDocumentText.substring(vSpanBegin, vSpanEnd).replaceAll("\\s", "");
             String windowBeforeText = aDocumentText.substring(windowBegin, vSpanBegin)
                 .replaceAll("\\s", "");
             String windowAfterText = aDocumentText.substring(vSpanEnd, windowEnd).replaceAll("\\s", "");
@@ -157,11 +158,11 @@ public class PdfAnnoRenderer
             } catch (NoMatchFoundException e) {
                 // if no match is found stop search here. increasing context won't help
                 LOG.error("Could not find a match for existing annotation with id "
-                    + aVSpan.getVid().toString());
+                    + aVSpan.getVid().toString() + " and text \"" + annotatedText + "\"");
                 break;
             }
         }
-        return null;
+        return new Span(aVSpan.getVid().getId(), -1, null, annotatedText, -1, -1);
     }
 
     /**
@@ -208,6 +209,8 @@ public class PdfAnnoRenderer
         // get indices of actual string content of PdfExtractFile
         int begin = aPdfExtractFile.getStringIndex(aOffset.getBegin());
         int end = aPdfExtractFile.getStringIndex(aOffset.getEnd());
+        // get annotated text from pdfStrContent
+        String annotatedText = pdfStrContent.substring(begin, end + 1);
 
         // use an context window to find a unique text snippet for a selection
         // begin with 0 context window size and increase until a unique text snippet is found
@@ -219,8 +222,7 @@ public class PdfAnnoRenderer
             int windowEnd = end < pdfStrLen - windowSize
                 ? end + windowSize : pdfStrLen;
 
-            // get annotated text from pdfStrContent with offset before and after it
-            String annotatedText = pdfStrContent.substring(begin, end + 1);
+            // get context window before and after selected text
             String windowBeforeText = pdfStrContent.substring(windowBegin, begin);
             String windowAfterText = pdfStrContent.substring(end + 1, windowEnd + 1);
 
