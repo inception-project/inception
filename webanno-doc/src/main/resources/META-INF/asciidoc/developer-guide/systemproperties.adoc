@@ -24,7 +24,7 @@
 | Default
 | Example
 
-| wicket.configuration
+| wicket.core.settings.general.configuration-type
 | Enable Wicket debug mode
 | deployment
 | development
