@@ -74,14 +74,19 @@ public class EvaluationSimulationPanel
 
     private static final String CHART_CONTAINER = "chart-container";
     private static final String SIMULATION_START_BUTTON = "simulation-start-button";
+    
+    private static final double TRAIN_PERCENTAGE = 0.8;
+    private static final int INCREMENT = 250;
+    private static final int LOW_SAMPLE_THRESHOLD = 10;
+    
     private static final String FORM = "form";
 
     private static final Logger log = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
-    private final WebComponent chartContainer;
-
+    
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
-
+    
+    private final WebComponent chartContainer;
     private final Project project;
 
     public EvaluationSimulationPanel(String aId, Project aProject,
@@ -110,23 +115,24 @@ public class EvaluationSimulationPanel
             @Override
             protected void onAfterSubmit(AjaxRequestTarget aTarget)
             {
+                //get the selected recommender
                 IModel<Recommender> recommenderModel = aRecommenderEditorPanel
                         .getRecommenderModel();
                 
-                if (recommenderModel.getObject() == null)                {
+                //there must be some recommender selected by the user on the UI
+                if (recommenderModel.getObject() == null
+                        || recommenderModel.getObject().getTool() == null) {
                     log.error("Please select a recommender from the list");
                     error("Please select a recommender from the list");
                     aTarget.addChildren(getPage(), IFeedback.class);
                     return;
                 }
-                
-                log.info("button submitted. RecommenderModel" + recommenderModel);
 
                 Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
                         .listAllDocuments(project, userDao.getCurrentUser());
 
+                //create a list of CAS from the pre-annotated documents of the project
                 List<CAS> casList = new ArrayList<>();
-
                 listAllDocuments.forEach((source, annotation) -> {
                     try {
                         CAS cas = documentService.createOrReadInitialCas(source).getCas();
@@ -139,8 +145,9 @@ public class EvaluationSimulationPanel
                         return;
                     }
                 });
-
-                IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
+                
+                IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
+                        INCREMENT, LOW_SAMPLE_THRESHOLD);
 
                 RecommendationEngine recommender = getRecommendationEngine(recommenderModel);
                 if (recommender == null)
@@ -156,6 +163,8 @@ public class EvaluationSimulationPanel
                 StringBuilder sb = new StringBuilder();
                 StringBuilder xaxis = new StringBuilder();
 
+                // create a list of comma separated string of scores from every iteration of
+                // evaluation.
                 int i = 0;
                 while (splitStrategy.hasNext()) {
                     splitStrategy.next();
@@ -168,8 +177,6 @@ public class EvaluationSimulationPanel
                         log.error(e.toString(),e);
                         continue;
                     }
-
-                    log.debug("Recommender Evaluations score: %f%n", score);
 
                     xaxis.append(i + ",");
                     sb.append(score + ",");
@@ -197,7 +204,7 @@ public class EvaluationSimulationPanel
                 try {
                     String javascript = createJSScript(dataColumns.toString(),
                             chartType.toString(), xaxis.toString());
-                    log.info("Rendering Recommender Evaluation Chart: {}", javascript);
+                    log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
 
                     aTarget.prependJavaScript(javascript);
                 }
@@ -205,8 +212,7 @@ public class EvaluationSimulationPanel
                     log.error("Unable to render chart", e);
                     error("Unable to render chart: " + e.getMessage());
                     aTarget.addChildren(getPage(), IFeedback.class);
-                }
-                   
+                } 
             }
         });
     }
@@ -254,26 +260,22 @@ public class EvaluationSimulationPanel
                 + "}},axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
         return javascript;
     }
-    
 
     /**
-     * returns the recommender Engine for the given recommender
+     * returns the recommender Engine for the given recommender model
      * 
      */
     private RecommendationEngine getRecommendationEngine(IModel<Recommender> recommenderModel)
     {
-        if (recommenderModel.getObject().getTool()
-                .equals(StringMatchingRecommenderFactory.ID)) {
+        if (recommenderModel.getObject().getTool().equals(StringMatchingRecommenderFactory.ID)) {
             return new StringMatchingRecommender(recommenderModel.getObject(),
                     new StringMatchingRecommenderTraits());
         }
-        else if (recommenderModel.getObject().getTool()
-                .equals(OpenNlpPosRecommenderFactory.ID)) {
+        else if (recommenderModel.getObject().getTool().equals(OpenNlpPosRecommenderFactory.ID)) {
             return new OpenNlpPosRecommender(recommenderModel.getObject(),
                     new OpenNlpPosRecommenderTraits());
         }
-        else if (recommenderModel.getObject().getTool()
-                .equals(OpenNlpNerRecommenderFactory.ID)) {
+        else if (recommenderModel.getObject().getTool().equals(OpenNlpNerRecommenderFactory.ID)) {
             return new OpenNlpNerRecommender(recommenderModel.getObject(),
                     new OpenNlpNerRecommenderTraits());
         }
@@ -287,8 +289,7 @@ public class EvaluationSimulationPanel
             return new OpenNlpDoccatRecommender(recommenderModel.getObject(),
                     new OpenNlpDoccatRecommenderTraits());
         }
-        else if (recommenderModel.getObject().getTool()
-                .equals(ExternalRecommenderFactory.ID)) {
+        else if (recommenderModel.getObject().getTool().equals(ExternalRecommenderFactory.ID)) {
             return new ExternalRecommender(recommenderModel.getObject(),
                     new ExternalRecommenderTraits());
         }
