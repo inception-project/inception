@@ -4,6 +4,7 @@ test_profile:
   root-concepts: [ ]
   access:
       access-url: http://someurl/sparql
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -14,5 +15,4 @@ test_profile:
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
       

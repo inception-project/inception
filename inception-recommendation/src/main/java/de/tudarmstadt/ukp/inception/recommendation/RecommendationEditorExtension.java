@@ -228,6 +228,9 @@ public class RecommendationEditorExtension
         learningRecordService.logRecord(document, aState.getUser().getUsername(),
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
+        // Trigger a re-rendering of the document
+        aActionHandler.actionSelect(aTarget, aJCas);
+        
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(
                 new RecommendationRejectedEvent(this, document, aState.getUser().getUsername(),

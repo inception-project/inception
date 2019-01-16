@@ -1,0 +1,51 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_settings_scheduler]]
+=== Scheduler Settings
+
+This section describes the global settings related to the scheduler.
+
+.Number of threads
+This parameter determines the number of threads the scheduler uses. It should be less than hardware
+threads available on the machine that runs INCEpTION. The higher the number, the more tasks can be
+run in parallel.
+
+.Queue size
+This parameter determines the maximum number of tasks that can be waiting in the scheduler queue. If
+the queue is full, then no new tasks can be scheduled until running tasks are completed.
+
+If no value for the parameter is specified, its default value is used. The default value is shown as
+an example of how the parameter can be configured below:
+
+.Scheduler settings overview
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| inception.scheduler.numberOfThreads
+| Number of threads that run tasks
+| 4
+| 8
+
+| inception.scheduler.queueSize
+| Maximum number of tasks waiting for execution
+| 100
+| 200
+|===

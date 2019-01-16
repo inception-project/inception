@@ -35,6 +35,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception.MultipleMatchesFoundException;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception.NoMatchFoundException;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
@@ -46,6 +48,7 @@ public class PdfAnnoRenderer
 
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnoRenderer.class);
 
+    private static final int WINDOW_SIZE_INCREMENT = 5;
 
     public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
@@ -78,8 +81,13 @@ public class PdfAnnoRenderer
                     color = vspan.getColorHint();
                 }
 
-                pdfAnnoModel.addSpan(
-                    convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile));
+                // convert to PDFAnno span. if it is null no match was found
+                Span span = convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile);
+                if (span != null) {
+                    pdfAnnoModel.addSpan(span);
+                } else {
+                    pdfAnnoModel.addUnmatchedSpan(vspan.getVid().getId());
+                }
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -105,38 +113,72 @@ public class PdfAnnoRenderer
         return pdfAnnoModel;
     }
 
-    private static Span convertToPdfAnnoSpan(VSpan aVspan, String aColor, String aDocumentText,
+    private static Span convertToPdfAnnoSpan(VSpan aVSpan, String aColor, String aDocumentText,
                                              PdfExtractFile aPdfExtractFile)
     {
-        VRange range = aVspan.getRanges().get(0); // TODO: handle multiple ranges
-        // use offset pre and post string to increase uniqueness of annotation text
-        int offset = 20;
-        int start = range.getBegin() <= offset ? 0 : range.getBegin() - offset;
-        int end = range.getEnd() < aDocumentText.length() - offset
-            ? range.getEnd() + offset : aDocumentText.length() - 1;
+        int docTextLen = aDocumentText.length();
+        // search for begin of the first range and end of the last range
+        int vSpanBegin = aVSpan.getRanges().stream().mapToInt(VRange::getBegin).min().getAsInt();
+        int vSpanEnd = aVSpan.getRanges().stream().mapToInt(VRange::getEnd).max().getAsInt();
 
-        String annotatedText = aDocumentText.substring(start, end);
-        String preText = annotatedText.substring(0,
-            (range.getBegin() <= offset ? range.getBegin() - start : offset));
-        String postText = annotatedText.substring(annotatedText.length() -
-            (range.getEnd() < aDocumentText.length() - offset
-                ? offset : aDocumentText.length() - range.getEnd()), annotatedText.length()) ;
-        // remove whitespaces as they are not present in PDFExtract text
-        String cleanAnnotatedText = annotatedText.replaceAll("\\s", "");
+        // use an context window to find a unique text snippet for an annotation
+        // begin with 0 context window size and increase until a unique text snippet is found
+        // context window is applied before and after the annotation
+        for (int windowSize = 0; windowSize < docTextLen; windowSize += WINDOW_SIZE_INCREMENT)
+        {
+            // subtract windowSize from vSpanBegin and add windowSize to vSpanEnd and stay in bounds
+            int windowBegin = vSpanBegin <= windowSize ? 0 : vSpanBegin - windowSize;
+            int windowEnd = vSpanEnd < docTextLen - windowSize
+                ? vSpanEnd + windowSize : docTextLen;
 
-        int index = aPdfExtractFile.getStringContent().indexOf(cleanAnnotatedText);
-        if (index < 0) {
-            LOG.error("Could not map exisiting annotation with id " + aVspan.getVid().toString());
-            return null;
-        } else {
-            start = index + preText.replaceAll("\\s", "").length() + 1;
-            end = index + cleanAnnotatedText.length() - postText.replaceAll("\\s", "").length();
-            PdfExtractLine first = aPdfExtractFile.getStringPdfExtractLine(start);
-            PdfExtractLine last = aPdfExtractFile.getStringPdfExtractLine(end);
-            return new Span(aVspan.getVid().getId(), first.getPage(), aColor,
-                cleanAnnotatedText.substring(start - index, end - index).replaceAll("\\s", ""),
-                first.getPosition(), last.getPosition());
+            // get annotated text from aDocumentText and context window before and after it
+            // also remove all whitespaces because they do not exist in PDFExtract text
+            String annotatedText = aDocumentText.substring(vSpanBegin, vSpanEnd).replaceAll("\\s", "");
+            String windowBeforeText = aDocumentText.substring(windowBegin, vSpanBegin)
+                .replaceAll("\\s", "");
+            String windowAfterText = aDocumentText.substring(vSpanEnd, windowEnd).replaceAll("\\s", "");
+
+            try {
+                int index = findMatch(aPdfExtractFile.getStringContent(),
+                    windowBeforeText + annotatedText + windowAfterText);
+                // get begin and end position of the original annotationText within PDFExtract text
+                int annotationBegin = index + windowBeforeText.length();
+                int annotationEnd = index + windowBeforeText.length() + annotatedText.length() - 1;
+                // get according PDFExtract file lines for begin and end of annotation
+                PdfExtractLine firstLine = aPdfExtractFile.getStringPdfExtractLine(annotationBegin);
+                PdfExtractLine lastLine = aPdfExtractFile.getStringPdfExtractLine(annotationEnd);
+                return new Span(aVSpan.getVid().getId(), firstLine.getPage(), aColor, annotatedText,
+                    firstLine.getPosition(), lastLine.getPosition());
+            } catch (MultipleMatchesFoundException e) {
+                // continue and increase context window
+                continue;
+            } catch (NoMatchFoundException e) {
+                // if no match is found stop search here. increasing context won't help
+                LOG.error("Could not find a match for existing annotation with id "
+                    + aVSpan.getVid().toString());
+                break;
+            }
         }
+        return null;
+    }
+
+    /**
+     * Searches for a match of a string within another string.
+     * @param str string in which a match is searched
+     * @param searchFor string that is searched
+     * @return index if one and only one is found
+     * @throws RuntimeException if there are no or multiple matches found
+     */
+    private static int findMatch(String str, String searchFor)
+        throws NoMatchFoundException, MultipleMatchesFoundException
+    {
+        int index = str.indexOf(searchFor);
+        if (index < 0) {
+            throw new NoMatchFoundException("No match found for the searched string");
+        } else if (str.indexOf(searchFor, index + 1) >= 0) {
+            throw new MultipleMatchesFoundException("Multiple matches found for the searched string");
+        }
+        return index;
     }
 
     private static String getColor(VObject aVObject, ColoringStrategy aColoringStrategy,
