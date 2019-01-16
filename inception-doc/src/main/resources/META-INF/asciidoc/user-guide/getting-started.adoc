@@ -1,0 +1,79 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Getting started
+
+In order to run {product-name}, you need to have Java installed on your system in version 8 or 
+higher. If you do not have Java installed yet, please the latest link:https://www.oracle.com/technetwork/java/javase/downloads/index.html[Oracle Java] or link:https://adoptopenjdk.net[OpenJDK].
+
+Download the stand-alone JAR from the link:https://inception-project.github.io/downloads/[{product-name} downloads page]. 
+
+Start the application simply by *double-clicking* on the download JAR file in your file manager.
+After a moment, a splash screen will be displayed while the application is initializing. Once the
+initialization is complete, a dialog will appear which you can use to open the application in your
+default browser or to shut down the application.
+
+Alternatively, you can start it on the command line using
+
+[subs="+attributes"]
+----
+$ java -jar inception-app-standalone-{revnumber}.jar
+----
+
+The splash screen and dialog will not appear in this case and you have to manually point your browser at `http://localhost:8080`.
+
+The first time you start the application, a default user with the name `admin` and the password
+`admin` is created. Use this username and password to log in to the application after opening it
+in your browser.
+
+== Your first annotation
+
+After logging in, you will see the main menu. Click on *Projects* to go to the 
+*project management page* and there click on *create* to start a new project. Enter a name
+for your project, select the type *annotation project* and press *save*.
+
+Next, switch to the *Documents* tab and press *choose files* to select a plain text file from
+your local harddisk (the file should be in UTF-8 encoding). As part of the import process, 
+{product-name} automatically processes the file to identify sentence and token boundaries.
+
+Use the *Home* link at the top of the screen to return to the main menu and select *Annotation*
+to open your text file in the annotation editor.
+
+To create your first annotation, select *Named entity* from the *Layer* dropdown menu on the right
+side of the screen. Then, use the mouse to select a word in the *Annotation* area. When you release
+the mouse button, the annotation is immediately created and you can edit its details in the right
+sidebar.
+
+Congratulations! You have created your first annotation project.
+
+== Where to go from here
+
+To familiarize yourself with the functionalities of {product-name}, try importing some of the link:https://inception-project.github.io//use-case-gallery/[{product-name} downloads page][example projects]. 
+
+Running {product-name} in the way you just did is a great way to get started and try out its
+capabilities, but it is not the best way of working with the application. If you like 
+{product-name},  please be sure to check out the <<admin-guide.adoc,Administrator Guide>> to 
+learn how to set up a production-ready instance.
+
+[NOTE]
+====
+By default, {product-name} creates and uses an embedded database and stores all its data in  folder called `.inception` (_dot inception_) within your home folder. While this allows you to get started very quickly in trying out the application, it is not a recommended configuration for serious use. For production use, please configure {product-name} to use a database server when using it in production. For more information, please refer to the <<admin-guide.adoc#sect_database,Administrator Guide>>.
+====
+
+[NOTE]
+====
+By default the server starts on port 8080 and you can access it via a browser at `http://localhost:8080` after you started it. But if you already have a service running on that port, you can add the parameter `-Dserver.port=9999` at the end of the command line to start the server on port 9999 (or choose any other port).
+====

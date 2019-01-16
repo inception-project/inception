@@ -30,14 +30,13 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
+
 @Component
 public class SchedulingService
         implements DisposableBean
 {
     private static final Logger log = LoggerFactory.getLogger(SchedulingService.class);
-
-    private static final int NUMBER_OF_THREADS = 4;
-    private static final int QUEUE_SIZE = 100;
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
@@ -45,10 +44,11 @@ public class SchedulingService
     private final List<Task> runningTasks;
 
     @Autowired
-    public SchedulingService(ApplicationContext aApplicationContext)
+    public SchedulingService(ApplicationContext aApplicationContext, SchedulingProperties aConfig)
     {
         applicationContext = aApplicationContext;
-        executor = new InspectableThreadPoolExecutor(NUMBER_OF_THREADS, QUEUE_SIZE,
+        executor = new InspectableThreadPoolExecutor(
+                aConfig.getNumberOfThreads(), aConfig.getQueueSize(),
                 this::beforeExecute, this::afterExecute);
         runningTasks = Collections.synchronizedList(new ArrayList<>());
     }
@@ -87,6 +87,11 @@ public class SchedulingService
 
     public void enqueue(Task aTask)
     {
+        if (getScheduledTasks().contains(aTask)) {
+            log.debug("Task already in queue: {}", aTask);
+            return;
+        }
+
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
