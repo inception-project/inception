@@ -125,7 +125,8 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    PdfAnnoModel pdfAnnoModel = aPdfAnnotationEditor.renderPdfAnnoModel(pdftext);
+                    PdfAnnoModel pdfAnnoModel =
+                        aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
                     String script = getAnnotationsJS(pdfAnnoModel);
                     aTarget.appendJavaScript(script);
                 }
@@ -135,8 +136,8 @@ public class PdfAnnoPanel
                         + "with PDFExtractor.", e);
                     error("Unable to get PDF text for " + pdfFile.getName()
                         + "with PDFExtractor.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
                 }
-                aTarget.addChildren(getPage(), IFeedback.class);
             }
         });
 
@@ -154,7 +155,8 @@ public class PdfAnnoPanel
                     boolean success =
                         aPdfAnnotationEditor.createSpanAnnotation(aTarget, getRequest(), pdftext);
                     if (success) {
-                        PdfAnnoModel model = aPdfAnnotationEditor.renderPdfAnnoModel(pdftext);
+                        PdfAnnoModel model =
+                            aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
                         String script = getAnnotationsJS(model);
                         aTarget.appendJavaScript(script);
                     }
@@ -163,8 +165,8 @@ public class PdfAnnoPanel
                 {
                     log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
+                    aTarget.addChildren(getPage(), IFeedback.class);
                 }
-                aTarget.addChildren(getPage(), IFeedback.class);
             }
         });
 

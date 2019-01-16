@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Request;
@@ -81,11 +82,11 @@ public class PdfAnnotationEditor
 //        }
     }
 
-    private void handleError(String aMessage, Throwable aCause)
+    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
         LOG.error(aMessage, aCause);
-        error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
-        return;
+        error(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause));
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     /**
@@ -93,7 +94,7 @@ public class PdfAnnotationEditor
      * This includes the anno file and the color map.
      * @param aPdftxt Output string of PDFExtract
      */
-    public PdfAnnoModel renderPdfAnnoModel(String aPdftxt)
+    public PdfAnnoModel renderPdfAnnoModel(AjaxRequestTarget aTarget, String aPdftxt)
     {
         if (getModelObject().getProject() != null)
         {
@@ -104,8 +105,7 @@ public class PdfAnnotationEditor
             }
             catch (IOException e)
             {
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                handleError("Unable to load data", e, aTarget);
                 return null;
             }
             PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
@@ -118,6 +118,7 @@ public class PdfAnnotationEditor
                     .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
                     .collect(Collectors.joining(", "));
                 error("Could not find a match for the following annotations: " + annotations);
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
             return pdfAnnoModel;
         }
@@ -142,17 +143,16 @@ public class PdfAnnotationEditor
                 return true;
             } else {
                 error("Unable to create annotation: No match was found");
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
         }
         catch (IOException e)
         {
-            LOG.error("Unable to load data", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            handleError("Unable to load data", e, aTarget);
         }
         catch (AnnotationException e)
         {
-            LOG.error("Unable to create annotation", e);
-            error("Unable to create annotation: " + ExceptionUtils.getRootCauseMessage(e));
+            handleError("Unable to create annotation", e, aTarget);
         }
         return false;
     }
