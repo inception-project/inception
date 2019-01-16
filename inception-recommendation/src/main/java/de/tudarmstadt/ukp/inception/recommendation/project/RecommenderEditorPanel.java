@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -150,7 +151,7 @@ public class RecommenderEditorPanel
         
         form.add(new CheckBox(MID_ENABLED));
         
-        layerChoice = new DropDownChoice<>(MID_LAYER,this::listLayers);
+        layerChoice = new BootstrapSelect<>(MID_LAYER,this::listLayers);
         layerChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layerChoice.setRequired(true);
         // The features and tools depend on the layer, so reload them when the layer is changed
@@ -165,7 +166,7 @@ public class RecommenderEditorPanel
         }));
         form.add(layerChoice);
         
-        featureChoice = new DropDownChoice<>(MID_FEATURE, this::listFeatures);
+        featureChoice = new BootstrapSelect<>(MID_FEATURE, this::listFeatures);
         featureChoice.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         featureChoice.setRequired(true);
         featureChoice.setOutputMarkupId(true);
@@ -193,7 +194,7 @@ public class RecommenderEditorPanel
             }, 
             (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
         
-        toolChoice = new DropDownChoice<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
+        toolChoice = new BootstrapSelect<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
 

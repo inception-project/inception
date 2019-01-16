@@ -54,6 +54,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -130,7 +131,7 @@ public class StatementGroupPanel extends Panel {
             IModel<KBHandle> property = Model.of();
             
             Form<KBHandle> form = new Form<>("form", property);
-            DropDownChoice<KBHandle> type = new DropDownChoice<>("property");
+            DropDownChoice<KBHandle> type = new BootstrapSelect<>("property");
             type.setModel(property);
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));            
             type.setChoices(getUnusedProperties());

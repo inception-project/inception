@@ -21,15 +21,15 @@
 <body>
 <wicket:panel>
   <div class="flex-v-container flex-sidebar">
-    <!-- knowledge base selector -->
     <div class="flex-v-container">
       <div class="form-group">
         <input style="width: 100%;" wicket:id="searchBar" type="text"/>
       </div>
     </div>
+    <!-- knowledge base selector -->
     <div wicket:enclosure="knowledgebases" class="flex-v-container">
       <div class="form-group">
-        <select wicket:id="knowledgebases" class="form-control input-lg"></select>
+        <select wicket:id="knowledgebases" class="form-control input-lg" data-container="body"></select>
       </div>
     </div>
 
