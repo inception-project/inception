@@ -72,11 +72,18 @@ http://uima.apache.org/d/uimaj-current/apidocs/index.html[UIMA CAS]. One CAS cor
 document in INCEpTION. Annotations from a CAS can be read and manipulated via the
 https://uima.apache.org/d/uimafit-current/api/org/apache/uima/fit/util/CasUtil.html[CasUtil].
 
-We start by creating a new class `DataMajorityNerRecommender` that implements `RecommendationEngine`.
+We start by creating a new class `de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender` that implements `RecommendationEngine`.
 Please see the JavaDoc of the respective methods for their semantics.
 
+.Class and member definition for the DataMajorityNerRecommender
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=classDefinition]
+}
+----
+
 ....
-public class DataMajorityNerRecommender
+public class de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender
     implements RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
@@ -86,7 +93,7 @@ public class DataMajorityNerRecommender
     private final String layerName;
     private final String featureName;
 
-    public DataMajorityNerRecommender(Recommender aRecommender)
+    public de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender(Recommender aRecommender)
     {
         layerName = aRecommender.getLayer().getName();
         featureName = aRecommender.getFeature().getName();
@@ -319,13 +326,13 @@ token span layers without cross sentence annotations.
 
 ....
 @Component
-public class DataMajorityRecommenderFactory
+public class de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityRecommenderFactory
     extends RecommendationEngineFactoryImplBase<Void>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID =
-        "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
+        "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
 
     @Override
     public String getId()
@@ -336,7 +343,7 @@ public class DataMajorityRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        return new DataMajorityNerRecommender(aRecommender);
+        return new de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender(aRecommender);
     }
 
     @Override
