@@ -178,7 +178,27 @@ public final class SPARQLQueryStore
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());
     }
-    
+
+    /** 
+     * Query to check if a concept has child concepts. It returns the ID of the first child concept
+     * if it exists. 
+     */
+    public static final String hasChildConcepts(KnowledgeBase aKB)
+    {
+        return String.join("\n"
+                , SPARQL_PREFIX
+                , "SELECT ?s WHERE { "
+                , "  {"
+                , "    ?s ?pSUBCLASS ?oPARENT ." 
+                , "  } UNION { "
+                , "    ?s ?pTYPE ?oCLASS ."
+                , "    ?s owl:intersectionOf ?list . "
+                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT }"
+                , "  }"
+                , "}"
+                , "LIMIT 1");
+    }
+
     /** 
      * Query to read concept from a knowledge base.
      */

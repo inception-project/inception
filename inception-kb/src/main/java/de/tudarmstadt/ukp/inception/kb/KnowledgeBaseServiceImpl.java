@@ -1060,7 +1060,18 @@ public class KnowledgeBaseServiceImpl
     @Override
     public boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll)
     {
-        return !listChildConcepts(aKB, aParentIdentifier, aAll, 1).isEmpty();
+        return read(aKB, (conn) -> {
+            String QUERY = SPARQLQueryStore.hasChildConcepts(aKB);
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+            tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
+            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
+            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
+            tupleQuery.setIncludeInferred(false);
+
+            return !evaluateListQuery(aKB, tupleQuery, aAll, "s").isEmpty();
+        });
     }
 
     @Override
