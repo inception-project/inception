@@ -464,6 +464,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -481,6 +482,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -497,6 +499,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
