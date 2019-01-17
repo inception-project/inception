@@ -75,6 +75,8 @@ https://uima.apache.org/d/uimafit-current/api/org/apache/uima/fit/util/CasUtil.h
 We start by creating a new class `de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender` that implements `RecommendationEngine`.
 Please see the JavaDoc of the respective methods for their semantics.
 
+{source-dir}
+
 .Class and member definition for the DataMajorityNerRecommender
 [source,java,indent=0]
 ----
