@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 import static java.util.Arrays.asList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -176,19 +177,33 @@ public class StringMatchingRecommender
             }            
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
-            log.info("Not enough data to evaluate, skipping!");
+        long trainingSetLabeledSamplesCount = trainingSet.stream()
+                .filter(sample -> !sample.getSpans().isEmpty())
+                .count();
+
+        long testSetLabeledSamplesCount = testSet.stream()
+                .filter(sample -> !sample.getSpans().isEmpty())
+                .count();
+
+        if (trainingSetLabeledSamplesCount < 2 || testSetLabeledSamplesCount < 2) {
+            log.info(
+                    "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
+                    trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
+                    testSetLabeledSamplesCount, data.size());
             return 0.0;
         }
 
-        log.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
-                testSet.size(), data.size());        
+        log.info(
+                "Training on [{}] items ([{}] labeled), predicting on [{}] ([{}] labeled) of total [{}]",
+                trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
+                testSetLabeledSamplesCount, data.size());
             
         // Train
         Trie<DictEntry> dict = new Trie<>();
         for (Sample sample : trainingSet) {
             for (Span span : sample.getSpans()) {
-                learn(dict, span.getText(), span.getLabel());            }
+                learn(dict, span.getText(), span.getLabel());
+            }
         }
 
         // Predict
@@ -289,17 +304,18 @@ public class StringMatchingRecommender
                 List<Span> spans = new ArrayList<>();
                 
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
-                    spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
-                            annotation.getCoveredText(),
-                            annotation.getFeatureValueAsString(labelFeature), -1.0));
+                    String label = annotation.getFeatureValueAsString(labelFeature);
+                    if (isNotEmpty(label)) {
+                        spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
+                                annotation.getCoveredText(),
+                                annotation.getFeatureValueAsString(labelFeature), -1.0));
+                    }
                 }
                 
                 Collection<AnnotationFS> tokens = selectCovered(tokenType, sentence);
 
-                if (!spans.isEmpty()) {
-                    data.add(new Sample(docNo, sentence.getBegin(), sentence.getEnd(),
-                            sentence.getCoveredText(), tokens, spans));
-                }
+                data.add(new Sample(docNo, sentence.getBegin(), sentence.getEnd(),
+                        sentence.getCoveredText(), tokens, spans));
             }
             
             docNo++;
