@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
+// tag::classDefinition[]
 @Component
 public class DataMajorityRecommenderFactory
     extends RecommendationEngineFactoryImplBase<Void>
@@ -68,3 +69,4 @@ public class DataMajorityRecommenderFactory
                 && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
     }
 }
+// end::classDefinition[]

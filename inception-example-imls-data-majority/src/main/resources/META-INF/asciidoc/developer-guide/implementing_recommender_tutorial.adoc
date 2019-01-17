@@ -19,21 +19,22 @@
 
 This section describes the overall design of internal recommenders in INCEpTION and gives a
 tutorial on how to implement them. Internal recommenders are directly added to the INCEpTION platform
-by implementing Java interfaces. These are then picked up during load time by the Spring Framework.
+by implementing Java interfaces. These are then picked up during application startup by the Spring Framework.
 
 For this tutorial, we will add a recommender for named entities that uses the data majority label for
 predicting, i.e. it predicts always the label that appears most often in the training data. The full
-code for this example can be found on https://github.com/inception-project/inception/inception-imls-data-majority[on Github].
+code for this example can be found in the **inception-example-imls-data-majority** module.
 
 == Setting up the environment
 
-We assume that you have your own fork of INCEpTION and want to add a new internal recommender to it.
 To get started, check out the most recent source code of INCEpTION from
 https://github.com/inception-project/inception[Github] and import it as a Maven project in the IDE
-of your choice. Add a new project to the workspace of your IDE (do not add a new module to the
-INCEpTION project itself), we will call it `inception-imls-data-majority`.
+of your choice. Add a new module to the INCEpTION project itself, we will call it
+**inception-imls-data-majority**.
 
-In the pom of the INCEpTION project, add your recommender as a dependency.
+In the _pom.xml_ of the INCEpTION project, add your recommender as a dependency. Update the version
+of the entry you just created to the version you find in the _pom.xml_ of the INCEpTION project. It
+should look like this:
 
 ....
 <dependencies>
@@ -41,16 +42,16 @@ In the pom of the INCEpTION project, add your recommender as a dependency.
     <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-data-majority</artifactId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
     </dependency>
 …
 </dependencies>
 ....
 
-Do the same in `inception-app-webapp`, but omit the version number. It then uses automatically the
-version in the parent pom. Also add it to `usedDependencies` there.
+Add the same entry in `inception-app-webapp`, but omit the version number. It then uses automatically the
+version in the parent POM file. Also add it to `usedDependencies` there.
 
-To add a new recommender to INCEpTION, at least two interfaces need to be implemented. These are
+To add a new recommender to INCEpTION, two interfaces need to be implemented. These are
 described in the following.
 
 == Implementing the RecommendationEngine
@@ -59,8 +60,8 @@ Recommenders give suggestions for possible annotations to the user. In order to 
 they need to be able be to trained on existing annotations, predict annotations in a document and
 be evaluated for a performance estimate. This is what the https://github.com/inception-project/inception/blob/master/inception-recommendation-api/src/main/java/de/tudarmstadt/ukp/inception/recommendation/api/recommender/RecommendationEngine.java[RecommendationEngine] interface is for.
 It defines the methods that are used to train, test and evaluate a machine learning algorithm.
-Instances of this interface often wrap external machine learning packages like _OpenNLP_ or
-_Deeplearning4j_.
+Instances of this interface often wrap external machine learning packages like https://opennlp.apache.org/[OpenNLP]
+ or https://deeplearning4j.org/[Deeplearning4j].
 
 Recommenders in INCEpTION heavily rely on https://uima.apache.org[Apache UIMA] types and features.
 A recommender is configured for a certain layer and a certain feature. A layer can be seen as the
@@ -79,55 +80,12 @@ Please see the JavaDoc of the respective methods for their semantics.
 [source,java,indent=0]
 ----
 include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=classDefinition]
+
+include::{source-dir}inception-recommendation-api/src/main/java/de/tudarmstadt/ukp/inception/recommendation/api/recommender/RecommendationEngine.java[tags=methodDefinition]
+
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=utility]
 }
 ----
-
-....
-public class de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender
-    implements RecommendationEngine
-{
-    public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
-
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final String layerName;
-    private final String featureName;
-
-    public de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender(Recommender aRecommender)
-    {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-    }
-
-    void train(RecommenderContext aContext, List<CAS> aCasses) {}
-    void predict(RecommenderContext aContext, CAS aCas) {}
-    double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) { return 0.0; }
-
-    private static class DataMajorityModel {
-        private final String majorityLabel;
-        private final double confidence;
-
-        private DataMajorityModel(String aMajorityLabel, double aConfidence) {
-            majorityLabel = aMajorityLabel;
-            confidence = aConfidence;
-        }
-    }
-
-    private static class Annotation {
-        private final String label;
-        private final int begin;
-        private final int end;
-        private double score;
-
-        private Annotation(String aLabel, int aBegin, int aEnd)
-        {
-            label = aLabel;
-            begin = aBegin;
-            end = aEnd;
-        }
-    }
-}
-....
 
 For the constructor, we take the `Recommender` object which contains the recommender configuration,
 e.g. the layer and the name of the feature to recommend. The next step is to implement the required
@@ -147,68 +105,30 @@ to ensure type safety.
 Training consists of extracting annotations followed by training and saving the model. INCEpTION needs
 to know whether the recommender is ready for prediction, this is done by calling `aContext.markAsReadyForPrediction()`.
 
-....
-@Override
-public void train(RecommenderContext aContext, List<CAS> aCasses)
-    throws RecommendationException
-{
-    List<Annotation> annotations = extractAnnotations(aCasses);
-
-    DataMajorityModel model = trainModel(annotations);
-    aContext.put(KEY_MODEL, model);
-    aContext.markAsReadyForPrediction();
-}
-....
+.Training routine
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=train]
+----
 
 Extracting annotations itself is done by iterating over all documents and selecting all annotations
 for each. Here, we need to use the layer name and feature for which the recommender is configured
 to extract the correct annotations.
 
-....
-private List<Annotation> extractAnnotations(List<CAS> aCasses)
-{
-    List<Annotation> annotations = new ArrayList<>();
-
-    for (CAS cas : aCasses) {
-        Type annotationType = CasUtil.getType(cas, layerName);
-        Feature labelFeature = annotationType.getFeatureByBaseName(featureName);
-
-        for (AnnotationFS ann : CasUtil.select(cas, annotationType)) {
-            String label = ann.getFeatureValueAsString(labelFeature);
-            annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
-        }
-    }
-
-    return annotations;
-}
-....
+.Extracting annotations from the documents
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=extractAnnotations]
+----
 
 The training itself is done by counting the number of occurrences for each label that was seen in the
 documents. The label is then the one which occurred the most in the training documents.
 
-....
-private DataMajorityModel trainModel(List<Annotation> aAnnotations)
-    throws RecommendationException
-{
-    Map<String, Integer> model = new HashMap<>();
-    for (Annotation ann : aAnnotations) {
-        int count = model.getOrDefault(ann.label, 0);
-        model.put(ann.label, count + 1);
-    }
-
-    Map.Entry<String, Integer> entry = model.entrySet().stream()
-            .max(Map.Entry.comparingByValue())
-            .orElseThrow(
-                    () -> new RecommendationException("Could not obtain data majority label")
-            );
-
-    String majorityLabel = entry.getKey();
-    int numberOfAnnotations = model.values().stream().reduce(Integer::sum).get();
-    double confidence = (float) entry.getValue() / numberOfAnnotations;
-
-    return new DataMajorityModel(majorityLabel, confidence);
-}
-....
+.Training the model
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=trainModel]
+----
 
 We also compute a dummy score here which is displayed in the UI and used for e.g. active learning.
 
@@ -218,58 +138,21 @@ The first thing we do when predicting is to load the model we saved during train
 candidate in the document, we assign the majority label, create a new annotation and add it to the `CAS`.
 From there, it will be read by INCEpTION and displayed to the user.
 
-....
-@Override
-public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
-{
-    DataMajorityModel model = aContext.get(KEY_MODEL).orElseThrow(() ->
-            new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
-
-    // Make the predictions
-    Type tokenType = getAnnotationType(aCas, Token.class);
-    Collection<AnnotationFS> candidates = CasUtil.select(aCas, tokenType);
-    List<Annotation> predictions = predict(candidates, model);
-
-    // Add predictions to the CAS
-    Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
-    Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-    Feature labelFeature = predictionType.getFeatureByBaseName("label");
-
-    for (Annotation ann : predictions) {
-        AnnotationFS annotation = aCas.createAnnotation(predictionType, ann.begin, ann.end);
-        annotation.setDoubleValue(confidenceFeature, ann.score);
-        annotation.setStringValue(labelFeature, ann.label);
-        aCas.addFsToIndexes(annotation);
-    }
-}
-....
+.Predicting annotations for a CAS
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=predict1]
+----
 
 For a document, we consider possible candidates for a named entity to be tokens that are upper case.
 In a real recommender, the step of candidate extraction should be more elaborate than that, but for this
 tutorial, it is sufficient.
 
-....
-private List<Annotation> predict(Collection<AnnotationFS> candidates,
-    DataMajorityModel aModel)
-{
-    List<Annotation> result = new ArrayList<>();
-    for (AnnotationFS token : candidates) {
-        String tokenText = token.getCoveredText();
-        if (tokenText.length() > 0 && !Character.isUpperCase(tokenText.codePointAt(0))) {
-            continue;
-        }
-
-        int begin = token.getBegin();
-        int end = token.getEnd();
-
-        Annotation annotation = new Annotation(aModel.majorityLabel, begin, end);
-        annotation.score = aModel.confidence;
-        result.add(annotation);
-    }
-
-    return result;
-}
-....
+.Predicting annotations for a CAS
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=predict2]
+----
 
 === Evaluating
 
@@ -283,40 +166,12 @@ and test set, a `DataSplitter` is given which tells you to which data set an ann
 For the actual evaluation, we check whether the labels in the test set are the same to the ones we
 predict via the majority label.
 
-....
-@Override
-public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
-        throws RecommendationException
-{
-    List<Annotation> trainingData = new ArrayList<>();
-    List<Annotation> testData = new ArrayList<>();
+.Evaluating the recommender
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=evaluate]
+----
 
-    for (Annotation ann : extractAnnotations(aCasses)) {
-        switch (aDataSplitter.getTargetSet(ann)) {
-        case TRAIN:
-            trainingData.add(ann);
-            break;
-        case TEST:
-            testData.add(ann);
-            break;
-        case IGNORE:
-            break;
-        }
-    }
-
-    DataMajorityModel model = trainModel(trainingData);
-
-    // Compute accuracy between annotated data by the user and predictions
-    int correct = 0;
-    for (Annotation gold : testData) {
-        if (gold.label.equals(model.majorityLabel)) {
-            correct += 1;
-        }
-    }
-
-    return (double) correct / (double) testData.size();
-}
-....
 
 == RecommendationFactory
 
@@ -324,46 +179,10 @@ The `RecommendationFactory` is used to create a new recommender instance. It als
 types of layers and features the recommender itself can be used. Here, we decided to only support
 token span layers without cross sentence annotations.
 
-....
-@Component
-public class de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityRecommenderFactory
-    extends RecommendationEngineFactoryImplBase<Void>
-{
-    // This is a string literal so we can rename/refactor the class without it changing its ID
-    // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID =
-        "de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender";
-
-    @Override
-    public String getId()
-    {
-        return ID;
-    }
-
-    @Override
-    public RecommendationEngine build(Recommender aRecommender)
-    {
-        return new de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommender(aRecommender);
-    }
-
-    @Override
-    public String getName()
-    {
-        return "Data Majority Recommender";
-    }
-
-    @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
-    {
-        if (aLayer == null || aFeature == null) {
-            return false;
-        }
-
-        return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
-                && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature();
-    }
-}
-....
+.The RecommendationFactory
+[source,java,indent=0]
+----
+include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityRecommenderFactory.java[tags=classDefinition]
+----
 
 

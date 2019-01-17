@@ -1,3 +1,5 @@
+import static org.apache.commons.io.filefilter.TrueFileFilter.INSTANCE;
+
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,7 +9,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Attributes;
 import org.asciidoctor.AttributesBuilder;
@@ -45,6 +46,7 @@ public class GenerateDocumentation
                 .attribute("product-website-url", "https://inception-project.github.io")
                 .attribute("icons", "font")
                 .attribute("toc", "preamble")
+                .attribute("sourceHighlighter", "coderay")
                 .get();
         OptionsBuilder options = OptionsBuilder.options()
                 .toDir(outputDir.toFile())
@@ -69,10 +71,10 @@ public class GenerateDocumentation
         Files.createDirectory(outputDir);
 
         for (Path module : modules) {
-            List<File> files = (List<File>) FileUtils.listFiles(module.toFile(), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE);
-            for (File f: files) {
+            for (File f: FileUtils.listFiles(module.toFile(), INSTANCE, INSTANCE)) {
                 Path p = f.toPath();
-                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount(), p.toAbsolutePath().getNameCount());
+                Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount()
+                        , p.toAbsolutePath().getNameCount());
                 FileUtils.copyFile(f, outputDir.resolve("asciidoc").resolve(targetPath).toFile());
             }
         }

@@ -25,6 +25,7 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 
 public interface RecommendationEngine {
+// tag::methodDefinition[]
     /**
      * Given training data in {@code aCasses}, train a model. In order to save data between
      * runs, the {@code aContext} can be used.
@@ -53,6 +54,7 @@ public interface RecommendationEngine {
      * @return Score measuring the performance of predicting on the test set
      */
     double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) throws RecommendationException;
+// end::methodDefinition[]
 
     /**
      * Returns the long name of the type this recommender predict, e.g.
