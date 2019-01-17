@@ -703,7 +703,7 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> concepts = getConceptForInstance(aKB, aIdentifier, true);
         for (KBHandle concept : concepts) {
             String id = concept.getIdentifier();
-            if (!hasImplicitNamespace(id) && id.contains(":")) {
+            if (!hasImplicitNamespace(aKB, id) && id.contains(":")) {
                 conceptForInstance = concept;
                 break;
             }
@@ -1225,7 +1225,7 @@ public class KnowledgeBaseServiceImpl
             }
 
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
-            if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
+            if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
                 continue;
             }
             Binding label = bindings.getBinding("l");
@@ -1289,7 +1289,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll, String itemVariable)
         throws QueryEvaluationException
     {
-        TupleQueryResult result = tupleQuery.evaluate();        
+        TupleQueryResult result = tupleQuery.evaluate();
         
         Optional<KBHandle> handleValue =  Optional.of(new KBHandle());
         while (result.hasNext()) {
@@ -1299,7 +1299,7 @@ public class KnowledgeBaseServiceImpl
             }
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
 
-            if (!id.contains(":") || (!aAll && hasImplicitNamespace(id))) {
+            if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
                 continue;
             }
 
@@ -1361,8 +1361,16 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public boolean hasImplicitNamespace(String s)
+    public boolean hasImplicitNamespace(KnowledgeBase kb, String s)
     {
+        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
+        // want to filter it out just because we consider the OWL namespace to be implicit.
+        List<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
+                .collect(Collectors.toList());
+        if (rootConceptsAsStrings.contains(s)) {
+            return false;
+        }
+        
         for (String ns : implicitNamespaces) {
             if (s.startsWith(ns)) {
                 return true;
