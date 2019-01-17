@@ -279,6 +279,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // BEGIN PDFANNO EXTENSION - #838 - Creation of spans in PDF editor
     if (startPosition !== null && endPosition !== null) {
       var data = {
+        "action" : "createSpan",
         "page" : currentPage,
         "begin": startPosition,
         "end" : endPosition

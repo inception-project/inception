@@ -205,6 +205,26 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
+// BEGIN PDFANNO EXTENSION - #879 - Selection of spans in PDF editor
+    if (this.selected) {
+      var data = {
+        "action": "selectSpan",
+        "id": this.uuid,
+        "page": this.page,
+        "begin": this.textRange[0],
+        "end": this.textRange[1]
+      }
+      parent.Wicket.Ajax.ajax({
+        "m": "POST",
+        "ep": data,
+        "u": window.apiUrl,
+        "sh": [],
+        "fh": [function () {
+           console.log('Something went wrong on selecting an annotation for: ' + data)
+        }]
+      });
+    }
+// END PDFANNO EXTENSION
   }
 
   export (id) {
