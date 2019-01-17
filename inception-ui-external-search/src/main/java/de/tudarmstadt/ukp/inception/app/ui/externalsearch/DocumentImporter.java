@@ -1,22 +1,19 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
-import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.UIMAException;
-import org.apache.wicket.spring.injection.annot.SpringBean;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+
+import org.apache.uima.UIMAException;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class DocumentImporter implements Serializable
 {
