@@ -35,6 +35,8 @@ public class PdfAnnoModel
 
     private List<Span> spans;
 
+    private List<Span> unmatchedSpans;
+
     private List<Relation> relations;
 
     private ColorMap colorMap;
@@ -44,6 +46,7 @@ public class PdfAnnoModel
         pdfannoVersion = aPdfannoVersion;
         pdfextractVersion = aPdfextractVersion;
         spans = new ArrayList<>();
+        unmatchedSpans = new ArrayList<>();
         relations = new ArrayList<>();
         colorMap = new ColorMap("#808080");
     }
@@ -80,6 +83,16 @@ public class PdfAnnoModel
     public List<Relation> getRelations()
     {
         return relations;
+    }
+
+    public void addUnmatchedSpan(Span aSpan)
+    {
+        unmatchedSpans.add(aSpan);
+    }
+
+    public List<Span> getUnmatchedSpans()
+    {
+        return unmatchedSpans;
     }
 
     public boolean addRelation(Relation aRelation)

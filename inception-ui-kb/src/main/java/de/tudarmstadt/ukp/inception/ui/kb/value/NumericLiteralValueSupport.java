@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.kb.value;
 
 import static java.util.Arrays.asList;
+import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.DECIMAL;
 import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.DOUBLE;
 import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.FLOAT;
 import static org.eclipse.rdf4j.model.vocabulary.XMLSchema.INT;
@@ -37,7 +38,6 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
@@ -58,7 +58,7 @@ public class NumericLiteralValueSupport
 {
     private static final List<IRI> NUMERIC_TYPES = asList(INTEGER, INT, NON_NEGATIVE_INTEGER,
             NON_POSITIVE_INTEGER, LONG, FLOAT, NEGATIVE_INTEGER, POSITIVE_INTEGER, UNSIGNED_INT,
-            UNSIGNED_LONG, UNSIGNED_SHORT, SHORT, DOUBLE);
+            UNSIGNED_LONG, UNSIGNED_SHORT, SHORT, DOUBLE, DECIMAL);
     
     private String valueTypeSupportId;
     

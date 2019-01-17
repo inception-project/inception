@@ -79,3 +79,7 @@ include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
 
 include::{include-dir}settings_recommendation.adoc[leveloffset=+1]
 
+include::{include-dir}settings_scheduler.adoc[leveloffset=+1]
+
+
+

@@ -24,8 +24,6 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public class PredictionGroupTest

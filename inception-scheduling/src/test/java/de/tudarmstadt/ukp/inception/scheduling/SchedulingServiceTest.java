@@ -36,6 +36,7 @@ import org.springframework.context.ApplicationContext;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
 
 public class SchedulingServiceTest {
 
@@ -53,7 +54,7 @@ public class SchedulingServiceTest {
         when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingService(mockContext);
+        sut = new SchedulingService(mockContext, new SchedulingProperties());
     }
 
     @After
@@ -76,7 +77,7 @@ public class SchedulingServiceTest {
         }
 
         // Wait until the threads have actually been started
-        await().atMost(1, SECONDS).until(() -> Thread.activeCount() >= 3);
+        await().atMost(5, SECONDS).until(() -> Thread.activeCount() >= 3);
 
         assertThat(sut.getRunningTasks()).as("All enqueued tasks should be running")
                 .isEqualTo(tasks);

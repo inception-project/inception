@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -35,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -94,21 +94,21 @@ public class ConceptFeatureTraitsEditor
         };
         
         form.add(
-                new DropDownChoice<>(MID_SCOPE, 
+                new BootstrapSelect<>(MID_SCOPE, 
                         LambdaModel.of(this::listConcepts),
                         new LambdaChoiceRenderer<>(KBHandle::getUiLabel))
                 .setNullValid(true)
                 .setOutputMarkupPlaceholderTag(true));
 
         form.add(
-                new DropDownChoice<>(MID_KNOWLEDGE_BASE, 
+                new BootstrapSelect<>(MID_KNOWLEDGE_BASE, 
                         LambdaModel.of(this::listKnowledgeBases), 
                         new LambdaChoiceRenderer<>(KnowledgeBase::getName))
                 .setNullValid(true)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior("change", target ->
                         target.add(form.get(MID_SCOPE)))));
         form.add(
-            new DropDownChoice<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
+            new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
 
         add(form);
     }

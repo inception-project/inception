@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import java.io.IOException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.Request;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +36,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
@@ -77,11 +82,11 @@ public class PdfAnnotationEditor
 //        }
     }
 
-    private void handleError(String aMessage, Throwable aCause)
+    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
         LOG.error(aMessage, aCause);
-        error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
-        return;
+        error(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause));
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     /**
@@ -89,7 +94,7 @@ public class PdfAnnotationEditor
      * This includes the anno file and the color map.
      * @param aPdftxt Output string of PDFExtract
      */
-    public PdfAnnoModel renderPdfAnnoModel(String aPdftxt)
+    public PdfAnnoModel renderPdfAnnoModel(AjaxRequestTarget aTarget, String aPdftxt)
     {
         if (getModelObject().getProject() != null)
         {
@@ -100,16 +105,55 @@ public class PdfAnnotationEditor
             }
             catch (IOException e)
             {
-                LOG.error("Unable to load data", e);
-                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                handleError("Unable to load data", e, aTarget);
                 return null;
             }
             PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
             VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
             PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
                 vdoc, jCas.getDocumentText(), annotationService, pdfExtractFile);
+            // show unmatched spans to user
+            if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
+                String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
+                    .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
+                    .collect(Collectors.joining(", "));
+                error("Could not find a match for the following annotations: " + annotations);
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
             return pdfAnnoModel;
         }
         return null;
+    }
+
+    public boolean createSpanAnnotation(AjaxRequestTarget aTarget, Request aRequest, String aPdftxt)
+    {
+        final Offset offset = new Offset(aRequest.getPostParameters());
+
+        JCas jCas;
+        try
+        {
+            jCas = getJCasProvider().get();
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
+            Offset docOffset = PdfAnnoRenderer
+                .convertToDocumentOffset(jCas.getDocumentText(), pdfExtractFile, offset);
+            if (docOffset != null) {
+                getModelObject().getSelection()
+                    .selectSpan(jCas, docOffset.getBegin(), docOffset.getEnd());
+                getActionHandler().actionCreateOrUpdate(aTarget, jCas);
+                return true;
+            } else {
+                error("Unable to create annotation: No match was found");
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
+        }
+        catch (IOException e)
+        {
+            handleError("Unable to load data", e, aTarget);
+        }
+        catch (AnnotationException e)
+        {
+            handleError("Unable to create annotation", e, aTarget);
+        }
+        return false;
     }
 }
