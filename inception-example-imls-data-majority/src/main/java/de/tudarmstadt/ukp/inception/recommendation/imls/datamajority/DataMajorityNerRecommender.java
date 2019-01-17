@@ -1,4 +1,4 @@
-package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;/*
+/*
  * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
@@ -15,6 +15,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;/*
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
+
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 
 import java.util.ArrayList;
