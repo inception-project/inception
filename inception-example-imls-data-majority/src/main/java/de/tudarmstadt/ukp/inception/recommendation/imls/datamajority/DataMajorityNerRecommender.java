@@ -57,7 +57,7 @@ public class DataMajorityNerRecommender
         featureName = aRecommender.getFeature().getName();
     }
 // end::classDefinition[]
-
+// tag::train[]
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
             throws RecommendationException
@@ -68,7 +68,8 @@ public class DataMajorityNerRecommender
         aContext.put(KEY_MODEL, model);
         aContext.markAsReadyForPrediction();
     }
-
+// end::train[]
+// tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();
@@ -85,7 +86,8 @@ public class DataMajorityNerRecommender
 
         return annotations;
     }
-
+// end::extractAnnotations[]
+// tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
             throws RecommendationException
     {
@@ -107,7 +109,8 @@ public class DataMajorityNerRecommender
 
         return new DataMajorityModel(majorityLabel, confidence);
     }
-
+// end::trainModel[]
+// tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
@@ -131,7 +134,8 @@ public class DataMajorityNerRecommender
             aCas.addFsToIndexes(annotation);
         }
     }
-
+// end::predict1[]
+// tag::predict2[]
     private List<Annotation> predict(Collection<AnnotationFS> candidates,
                                      DataMajorityModel aModel)
     {
@@ -152,7 +156,8 @@ public class DataMajorityNerRecommender
 
         return result;
     }
-
+// end::predict2[]
+// tag::evaluate[]
     @Override
     public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
@@ -185,7 +190,8 @@ public class DataMajorityNerRecommender
 
         return (double) correct / (double) testData.size();
     }
-
+// end::evaluate[]
+// tag::utility[]
     private static class DataMajorityModel {
         private final String majorityLabel;
         private final double confidence;
@@ -209,4 +215,5 @@ public class DataMajorityNerRecommender
             end = aEnd;
         }
     }
+// end::utility[]
 }
