@@ -54,6 +54,9 @@ public class KnowledgeBaseProfile implements Serializable
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
 
+    @JsonProperty("info")
+    private KnowledgeBaseInfo info;
+
     public String getName()
     {
         return name;
@@ -99,9 +102,19 @@ public class KnowledgeBaseProfile implements Serializable
         return rootConcepts;
     }
 
-    public void setRootConcepts(List<String> rootConcepts)
+    public void setRootConcepts(List<String> aRootConcepts)
     {
-        this.rootConcepts = rootConcepts;
+        rootConcepts = aRootConcepts;
+    }
+
+    public KnowledgeBaseInfo getInfo()
+    {
+        return info;
+    }
+
+    public void setInfo(KnowledgeBaseInfo aInfo)
+    {
+        info = aInfo;
     }
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()

@@ -52,6 +52,24 @@
           </div>
         </div>
       </div>
+        <form wicket:id="infoForm">
+            <div class="form-group row">
+                <label wicket:for="description"><wicket:message key="kb.wizard.steps.remote.suggestions"/></label>
+                <textarea wicket:id="description" type="text" class="form-control"></textarea>
+            </div>
+            <div class="form-group row">
+                <label wicket:for="hostInstitutionName"><wicket:message key="kb.wizard.steps.remote.suggestions"/></label>
+                <input wicket:id="hostInstitutionName" type="text" class="form-control"/>
+            </div>
+            <div class="form-group row">
+                <label wicket:for="authorName"><wicket:message key="kb.wizard.steps.remote.suggestions"/></label>
+                <input wicket:id="authorName" type="text" class="form-control"/>
+            </div>
+            <div class="form-group row">
+                <label><wicket:message key="kb.wizard.steps.remote.suggestions"/></label>
+                <a wicket:id="websiteUrl"></a>
+            </div>
+        </form>
     </wicket:container>
 
 

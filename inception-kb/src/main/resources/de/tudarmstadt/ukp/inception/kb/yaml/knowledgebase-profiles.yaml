@@ -49,6 +49,11 @@ virtuoso:
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       property-description: http://schema.org/description
       full-text-search: bif:contains
+  info:
+    description: This is the Wikidata version of UKP
+    host-institution-name: UKP Lab TU Darmstadt
+    author-name: UKP Lab TU Darmstadt
+    website-url: https://www.informatik.tu-darmstadt.de/ukp/ukp_home/index.en.jsp
 db_pedia:
   name: DBpedia
   type: REMOTE

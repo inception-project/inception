@@ -28,6 +28,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -37,9 +38,11 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -89,6 +92,9 @@ public class AccessSpecificSettingsPanel
     private static final String CLASSPATH_PREFIX = "classpath:";
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final Map<String, File> uploadedFiles;
+
+    //Both
+    private Form<KnowledgeBaseInfo> knowledgeBaseInfoForm;
 
     /**
      * Given the default file extension of an RDF format, returns the corresponding
@@ -155,12 +161,15 @@ public class AccessSpecificSettingsPanel
             Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
 
         wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
+        knowledgeBaseInfoForm = knowledgeBaseInfoForm("infoForm", new KnowledgeBaseInfo());
+        wmc.add(knowledgeBaseInfoForm);
+
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
         List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
     {
-        return new ListView<KnowledgeBaseProfile>("suggestions", aSuggestions)
+        return new ListView<>("suggestions", aSuggestions)
         {
 
             private static final long serialVersionUID = 4179629475064638272L;
@@ -175,12 +184,22 @@ public class AccessSpecificSettingsPanel
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
-                    t.add(aUrlField);
+                    knowledgeBaseInfoForm.setModelObject(item.getModelObject().getInfo());
+                    t.add(aUrlField, knowledgeBaseInfoForm);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
             }
         };
+    }
+
+    private Form<KnowledgeBaseInfo> knowledgeBaseInfoForm(String id, KnowledgeBaseInfo kbInfo) {
+        Form<KnowledgeBaseInfo> infoForm = new Form<>(id, CompoundPropertyModel.of(kbInfo));
+        infoForm.add(new TextArea<>("description"));
+        infoForm.add(new TextField<>("hostInstitutionName"));
+        infoForm.add(new TextField<>("authorName"));
+        infoForm.add(new ExternalLink("websiteUrl", kbInfo.getWebsiteURL()));
+        return infoForm;
     }
 
     private void setUpLocalSpecificSettings(WebMarkupContainer wmc)
