@@ -58,6 +58,8 @@ public class PdfAnnoPanel
 
     private AbstractAjaxBehavior annoProvider;
 
+    private AbstractAjaxBehavior apiProvider;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
@@ -103,7 +105,7 @@ public class PdfAnnoPanel
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
                 }
             }
@@ -123,25 +125,46 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    PdfAnnoModel pdfAnnoModel = aPdfAnnotationEditor.renderPdfAnnoModel(pdftext);
-                    String script = "setTimeout(function() { " +
-                        "var annoFile = `\n" +
-                        pdfAnnoModel.getAnnoFileContent() +
-                        "`;\n" +
-                        "pdfanno.contentWindow.annoPage.importAnnotation({" +
-                        "'primary': true," +
-                        "'colorMap': " + JSONUtil.toJsonString(pdfAnnoModel.getColorMap()) + "," +
-                        "'annotations':[annoFile]}, true);" +
-                        "}, 10);";
-
-                    aTarget .appendJavaScript(script);
+                    PdfAnnoModel pdfAnnoModel =
+                        aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
+                    String script = getAnnotationsJS(pdfAnnoModel);
+                    aTarget.appendJavaScript(script);
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
                     error("Unable to get PDF text for " + pdfFile.getName()
                         + "with PDFExtractor.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
+        });
+
+        add(apiProvider = new AbstractDefaultAjaxBehavior() {
+            private static final long serialVersionUID = 3816087744638629290L;
+
+            @Override
+            protected void respond(AjaxRequestTarget aTarget) {
+                SourceDocument doc = aModel.getObject().getDocument();
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
+                try
+                {
+                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    boolean success =
+                        aPdfAnnotationEditor.createSpanAnnotation(aTarget, getRequest(), pdftext);
+                    if (success) {
+                        PdfAnnoModel model =
+                            aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
+                        String script = getAnnotationsJS(model);
+                        aTarget.appendJavaScript(script);
+                    }
+                }
+                catch (IOException e)
+                {
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
+                        + "with PDFExtractor.", e);
                     aTarget.addChildren(getPage(), IFeedback.class);
                 }
             }
@@ -168,12 +191,33 @@ public class PdfAnnoPanel
                 String annoUrl = getPage().getRequestCycle().getUrlRenderer()
                     .renderFullUrl(Url.parse(annoProvider.getCallbackUrl()));
 
-                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl;
+                String apiUrl = getPage().getRequestCycle().getUrlRenderer()
+                    .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
+
+                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl
+                            + "&api=" + apiUrl;
 
                 aTag.put("src", viewerUrl);
 
                 super.onComponentTag(aTag);
             }
         });
+    }
+
+    /**
+     * Returns JavaScript code that imports annotation data in PDFAnno
+     */
+    private String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel)
+        throws IOException
+    {
+        return "setTimeout(function() { " +
+            "var annoFile = `\n" +
+            aPdfAnnoModel.getAnnoFileContent() +
+            "`;\n" +
+            "pdfanno.contentWindow.annoPage.importAnnotation({" +
+            "'primary': true," +
+            "'colorMap': " + JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()) + "," +
+            "'annotations':[annoFile]}, true);" +
+            "}, 10);";
     }
 }
