@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
+import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import paperai.pdfextract.PDFExtractor;
 
@@ -51,6 +52,8 @@ public class PdfAnnoPanel
     private static final long serialVersionUID = 4202869513273132875L;
 
     private @SpringBean DocumentService documentService;
+
+    private @SpringBean PdfEditorProperties pdfEditorProperties;
 
     private AbstractAjaxBehavior pdfProvider;
 
@@ -179,8 +182,10 @@ public class PdfAnnoPanel
             {
                 checkComponentTag(aTag, "iframe");
 
+                String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html" : "index.html";
+
                 String viewerUrl = RequestCycle.get().getUrlRenderer()
-                        .renderFullUrl(Url.parse("resources/pdfanno/index.html"));
+                        .renderFullUrl(Url.parse("resources/pdfanno/" + indexFile));
 
                 String pdfUrl = getPage().getRequestCycle().getUrlRenderer()
                         .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
