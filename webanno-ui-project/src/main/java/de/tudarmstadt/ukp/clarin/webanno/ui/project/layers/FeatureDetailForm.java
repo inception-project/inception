@@ -184,7 +184,7 @@ public class FeatureDetailForm
             }
         });
 
-        add(new LambdaButton("save", this::actionSave));
+        add(new LambdaButton("save", this::actionSave).triggerAfterSubmit());
         add(new LambdaAjaxButton<>("delete", this::actionDelete).add(
                 visibleWhen(() -> !isNull(getModelObject().getId()))));
         // Set default form processing to false to avoid saving data
