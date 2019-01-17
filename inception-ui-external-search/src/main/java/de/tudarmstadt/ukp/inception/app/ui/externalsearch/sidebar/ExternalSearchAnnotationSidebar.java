@@ -18,7 +18,11 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.api.*;
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
@@ -53,7 +57,11 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.model.*;
+import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -76,7 +84,8 @@ public class ExternalSearchAnnotationSidebar
 {
     private static final long serialVersionUID = -3358207848681467994L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(ExternalSearchAnnotationSidebar.class);
+    private static final Logger LOG = LoggerFactory
+        .getLogger(ExternalSearchAnnotationSidebar.class);
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -102,22 +111,22 @@ public class ExternalSearchAnnotationSidebar
 
     private DocumentImporter documentImporter;
 
-
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
-            AnnotationPage aAnnotationPage)
+        AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+        AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         // Attach search state to annotation page
-        searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(
-            () -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
-            searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
+        searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter
+            .of(() -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
+                searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
 
         // Set up the search state in the page if it is not already there
         if (aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE) == null) {
             ExternalSearchUserState searchState = new ExternalSearchUserState();
-            searchStateModel.setObject(searchState);;
+            searchStateModel.setObject(searchState);
+            ;
         }
 
         project = getModel().getObject().getProject();
@@ -127,8 +136,7 @@ public class ExternalSearchAnnotationSidebar
         documentImporter = new DocumentImporter(externalSearchService, documentService,
             userRepository.getCurrentUser(), project);
 
-        ExternalSearchUserState searchState =
-            searchStateModel.getObject();
+        ExternalSearchUserState searchState = searchStateModel.getObject();
         if (searchState.getCurrentRepository() == null && repositories.size() > 0) {
             searchState.setCurrentRepository(repositories.get(0));
         }
@@ -136,8 +144,8 @@ public class ExternalSearchAnnotationSidebar
             searchState.setTargetQuery(Model.of(""));
         }
 
-        repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
-            .listDocumentRepositories(project));
+        repositoriesModel = LoadableDetachableModel
+            .of(() -> externalSearchService.listDocumentRepositories(project));
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -155,24 +163,20 @@ public class ExternalSearchAnnotationSidebar
 
         columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Results"))
         {
-            @Override
-            public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
+            @Override public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
                 String componentId, IModel<ExternalSearchResult> model)
             {
-                @SuppressWarnings("rawtypes")
-                Item rowItem = cellItem.findParent( Item.class );
+                @SuppressWarnings("rawtypes") Item rowItem = cellItem.findParent(Item.class);
                 int rowIndex = rowItem.getIndex();
                 ResultRowView rowView = new ResultRowView(componentId, rowIndex + 1, model);
                 cellItem.add(rowView);
             }
         });
 
-        if (searchState.getDataProvider() == null)
-        {
+        if (searchState.getDataProvider() == null) {
             searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
                 userRepository.getCurrentUser(),
-                searchStateModel.getObject().getCurrentRepository(),
-                ""));
+                searchStateModel.getObject().getCurrentRepository(), ""));
         }
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
@@ -188,15 +192,13 @@ public class ExternalSearchAnnotationSidebar
 
     @Override protected void onDetach()
     {
-        // TODO is it possible to know page change event and alter the state there?
-        DataTable<ExternalSearchResult, String> resultTable =
-            (DataTable<ExternalSearchResult, String>) dataTableContainer.get("resultsTable");
+        DataTable<ExternalSearchResult, String> resultTable = (DataTable<ExternalSearchResult, String>) dataTableContainer
+            .get("resultsTable");
         searchStateModel.getObject().setCurrentPage(resultTable.getCurrentPage());
         super.onDetach();
     }
 
-    @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         if (selectedResult != null) {
             // TODO highlight keyword
@@ -204,33 +206,29 @@ public class ExternalSearchAnnotationSidebar
     }
 
     private class DocumentRepositorySelectionForm
-        extends
-        Form<DocumentRepository>
+        extends Form<DocumentRepository>
     {
         public DocumentRepositorySelectionForm(String aId)
         {
             super(aId);
 
-            DropDownChoice<DocumentRepository> repositoryCombo =
-                new BootstrapSelect<DocumentRepository>(
-                    "repositoryCombo",
-                    new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
-                        "searchStateModel.getObject().getCurrentRepository()"),
-                    repositoriesModel)
+            DropDownChoice<DocumentRepository> repositoryCombo = new BootstrapSelect<DocumentRepository>(
+                "repositoryCombo",
+                new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
+                    "searchStateModel.getObject().getCurrentRepository()"), repositoriesModel)
+            {
+                private static final long serialVersionUID = 1L;
+
                 {
-                    private static final long serialVersionUID = 1L;
+                    setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
+                    setNullValid(false);
+                }
 
-                    {
-                        setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
-                        setNullValid(false);
-                    }
-
-                    @Override
-                    protected CharSequence getDefaultChoice(String aSelectedValue)
-                    {
-                        return "";
-                    }
-                };
+                @Override protected CharSequence getDefaultChoice(String aSelectedValue)
+                {
+                    return "";
+                }
+            };
             // Just update the selection
             repositoryCombo.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
             add(repositoryCombo);
@@ -274,10 +272,9 @@ public class ExternalSearchAnnotationSidebar
     private void searchDocuments(String aQuery)
     {
         results.clear();
-        applicationEventPublisher.get()
-            .publishEvent(new ExternalSearchQueryEvent(this,
-                searchStateModel.getObject().getCurrentRepository().getProject(),
-                userRepository.getCurrentUser().getUsername(), aQuery));
+        applicationEventPublisher.get().publishEvent(new ExternalSearchQueryEvent(this,
+            searchStateModel.getObject().getCurrentRepository().getProject(),
+            userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
@@ -311,29 +308,30 @@ public class ExternalSearchAnnotationSidebar
             clean.select("em").tagName("mark");
             String highlight = clean.body().html();
 
-            boolean existsSourceDocument = documentService.existsSourceDocument(project,
-                documentTitle);
+            boolean existsSourceDocument = documentService
+                .existsSourceDocument(project, documentTitle);
 
             // Import and open annotation
             LambdaAjaxLink link;
             if (!existsSourceDocument) {
-                link = new LambdaAjaxLink("docLink",
-                    _target -> {
-                        selectedResult = result;
-                        try {
-                            documentImporter.importDocumentFromDocumentRepository(
-                                result.getDocumentTitle(),
+                link = new LambdaAjaxLink("docLink", _target -> {
+                    selectedResult = result;
+                    try {
+                        documentImporter
+                            .importDocumentFromDocumentRepository(result.getDocumentTitle(),
                                 searchStateModel.getObject().getCurrentRepository());
 
-                            getAnnotationPage().actionShowSelectedDocument(_target,
-                                documentService.getSourceDocument(project, documentTitle));
-                        } catch (IOException e) {
-                            LOG.error(e.getMessage(), e);
-                            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
-                            e.printStackTrace();
-                        }
-                    });
-            } else {
+                        getAnnotationPage().actionShowSelectedDocument(_target,
+                            documentService.getSourceDocument(project, documentTitle));
+                    }
+                    catch (IOException e) {
+                        LOG.error(e.getMessage(), e);
+                        error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+                        e.printStackTrace();
+                    }
+                });
+            }
+            else {
                 // open action
                 link = new LambdaAjaxLink("docLink", _target -> {
                     selectedResult = result;
@@ -351,12 +349,13 @@ public class ExternalSearchAnnotationSidebar
             link.add(new Label("title", title));
             link.add(new Label("score", result.getScore()));
             link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
-            link.add(new Label("importStatus", () ->
-                existsSourceDocument ? "imported" : "not imported"));
+            link.add(new Label("importStatus",
+                () -> existsSourceDocument ? "imported" : "not imported"));
         }
     }
 
-    public static class ExternalSearchUserState implements Serializable
+    public static class ExternalSearchUserState
+        implements Serializable
     {
         private AnnotationLayer layer;
 
