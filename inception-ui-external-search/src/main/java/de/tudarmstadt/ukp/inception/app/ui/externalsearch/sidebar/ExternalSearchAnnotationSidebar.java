@@ -122,6 +122,8 @@ public class ExternalSearchAnnotationSidebar
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
 
         // Attach search state to annotation page
+        // This state is to maintain persistence of this sidebar so that when user moves to another
+        // sidebar and comes back here, the state of this sidebar (search results) are preserved.
         searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter
             .of(() -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
                 searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
@@ -196,6 +198,7 @@ public class ExternalSearchAnnotationSidebar
 
     @Override protected void onDetach()
     {
+        // Save the current page number of the search results when the sidebar being switched
         DataTable<ExternalSearchResult, String> resultTable =
             (DataTable<ExternalSearchResult, String>) dataTableContainer.get("resultsTable");
         searchStateModel.getObject().setCurrentPage(resultTable.getCurrentPage());

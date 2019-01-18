@@ -56,15 +56,18 @@ public class DocumentImporter implements Serializable
         project = aProject;
     }
 
-    public void importDocumentFromDocumentRepository(String aDocumentTitle,
+    /**
+     * @return a boolean value. True if import was successful. False if import was aborted because
+     *         the document already exists.
+     */
+    public boolean importDocumentFromDocumentRepository(String aDocumentTitle,
         DocumentRepository aRepository) throws IOException
     {
         String text = externalSearchService.getDocumentById(user, aRepository, aDocumentTitle)
             .getText();
 
         if (documentService.existsSourceDocument(project, aDocumentTitle)) {
-            throw new IOException("Document [" + aDocumentTitle + "] already uploaded! "
-                + "Delete the document if you want to upload again");
+            return false;
         }
         else {
             InputStream stream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
@@ -80,6 +83,7 @@ public class DocumentImporter implements Serializable
             catch (IOException | UIMAException e) {
                 throw new IOException("Unable to retrieve document " + aDocumentTitle, e);
             }
+            return true;
         }
     }
 }
