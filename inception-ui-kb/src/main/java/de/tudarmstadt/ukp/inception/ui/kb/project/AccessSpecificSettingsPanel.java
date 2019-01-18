@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ClassAttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,7 +37,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RequiredTextField;
-import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -62,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -70,6 +69,7 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class AccessSpecificSettingsPanel
@@ -94,7 +94,8 @@ public class AccessSpecificSettingsPanel
     private final Map<String, File> uploadedFiles;
 
     //Both
-    private Form<KnowledgeBaseInfo> knowledgeBaseInfoForm;
+    private CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel;
+
 
     /**
      * Given the default file extension of an RDF format, returns the corresponding
@@ -129,6 +130,7 @@ public class AccessSpecificSettingsPanel
         downloadedProfiles = new HashMap<>();
         uploadedFiles = new HashMap<>();
         kbModel.getObject().clearFiles();
+        kbInfoModel = CompoundPropertyModel.of(null);
 
         boolean isHandlingLocalRepository =
             kbModel.getObject().getKb().getType() == RepositoryType.LOCAL;
@@ -160,16 +162,18 @@ public class AccessSpecificSettingsPanel
         suggestions = suggestions.subList(0,
             Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
 
-        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
-        knowledgeBaseInfoForm = knowledgeBaseInfoForm("infoForm", new KnowledgeBaseInfo());
-        wmc.add(knowledgeBaseInfoForm);
+        WebMarkupContainer kbInfoContainer = createKbInfoContainer("infoContainer");
+        kbInfoContainer.setOutputMarkupId(true);
+        wmc.add(kbInfoContainer);
+        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField, kbInfoContainer));
 
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
-        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
+        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField,
+        WebMarkupContainer aKbInfoContainer)
     {
-        return new ListView<>("suggestions", aSuggestions)
+        return new ListView<>(aId, aSuggestions)
         {
 
             private static final long serialVersionUID = 4179629475064638272L;
@@ -184,8 +188,8 @@ public class AccessSpecificSettingsPanel
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
-                    knowledgeBaseInfoForm.setModelObject(item.getModelObject().getInfo());
-                    t.add(aUrlField, knowledgeBaseInfoForm);
+                    kbInfoModel.setObject(item.getModelObject().getInfo());
+                    t.add(aUrlField, aKbInfoContainer);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
@@ -193,13 +197,19 @@ public class AccessSpecificSettingsPanel
         };
     }
 
-    private Form<KnowledgeBaseInfo> knowledgeBaseInfoForm(String id, KnowledgeBaseInfo kbInfo) {
-        Form<KnowledgeBaseInfo> infoForm = new Form<>(id, CompoundPropertyModel.of(kbInfo));
-        infoForm.add(new TextArea<>("description"));
-        infoForm.add(new TextField<>("hostInstitutionName"));
-        infoForm.add(new TextField<>("authorName"));
-        infoForm.add(new ExternalLink("websiteUrl", kbInfo.getWebsiteURL()));
-        return infoForm;
+    private WebMarkupContainer createKbInfoContainer(String aId)
+    {
+        WebMarkupContainer wmc = new WebMarkupContainer(aId);
+        wmc.add(new Label("description", kbInfoModel.bind("description"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new Label("hostInstitutionName", kbInfoModel.bind("hostInstitutionName"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new Label("authorName", kbInfoModel.bind("authorName"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new ExternalLink("websiteURL", kbInfoModel.bind("websiteURL"),
+            kbInfoModel.bind("websiteURL"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        return wmc;
     }
 
     private void setUpLocalSpecificSettings(WebMarkupContainer wmc)

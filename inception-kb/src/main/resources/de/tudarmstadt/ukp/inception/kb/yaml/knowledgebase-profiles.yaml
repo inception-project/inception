@@ -10,11 +10,15 @@ british_museum:
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
-      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
+  info:
+    description: Collection of the British Museum in Semantic Web format
+    host-institution-name: British Museum
+    author-name: British Museum
+    website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
 wikidata:
   name: Wikidata
   type: REMOTE
@@ -33,6 +37,11 @@ wikidata:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.wikidata.org/prop/direct/P1647
       full-text-search: FTS:NONE
+  info:
+    description: Wikidata is a free and open knowledge base and acts as central storage for the structured data of its Wikimedia sister projects including Wikipedia, Wikivoyage, Wikisource, and others.
+    host-institution-name: Wikidata
+    author-name:
+    website-url: https://www.wikidata.org/wiki/Wikidata:Main_Page
 virtuoso:
   name: UKP Wikidata
   type: REMOTE
@@ -50,7 +59,7 @@ virtuoso:
       property-description: http://schema.org/description
       full-text-search: bif:contains
   info:
-    description: This is the Wikidata version of UKP
+    description: Wikidata
     host-institution-name: UKP Lab TU Darmstadt
     author-name: UKP Lab TU Darmstadt
     website-url: https://www.informatik.tu-darmstadt.de/ukp/ukp_home/index.en.jsp
@@ -72,6 +81,11 @@ db_pedia:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
+  info:
+    description: DBpedia is a crowd-sourced community effort to extract structured content from the information created in various Wikimedia projects.
+    host-institution-name: Leipzig University, University of Mannheim, OpenLink Software
+    author-name: Leipzig University, University of Mannheim, OpenLink Software
+    website-url: https://wiki.dbpedia.org/
 babel_net:
   name: BabelNet
   type: REMOTE
@@ -88,6 +102,11 @@ babel_net:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
+  info:
+    description: BabelNet is a multilingual lexicalized semantic network and ontology. BabelNet was automatically created by linking Wikipedia to WordNet.
+    host-institution-name: Department of Computer Science Linguistic Computing Laboratory, Sapienza University of Rome
+    author-name: Department of Computer Science Linguistic Computing Laboratory, Sapienza University of Rome
+    website-url: https://babelnet.org/
 yago:
   name: YAGO
   type: REMOTE
@@ -104,6 +123,11 @@ yago:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: FTS:NONE
+  info:
+    description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames. YAGO has knowledge of more than 10 million entities (like persons, organizations, cities, etc.) and contains more than 120 million facts about these entities.
+    host-institution-name: Max-Planck-Institute Saarbrücken
+    author-name: Max-Planck-Institute Saarbrücken, DIG group at Télécom ParisTech University.
+    website-url: https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/
 wine_ontology:
   name: Wine Ontology
   type: LOCAL
@@ -120,6 +144,11 @@ wine_ontology:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  info:
+    description: An example OWL ontology. Derived from the DAML Wine ontology at http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml Substantially changed, in particular the Region based relations.
+    host-institution-name:
+    author-name:
+    website-url:
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
@@ -136,6 +165,11 @@ wildlife_ontology:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  info:
+    description: A simple vocabulary for describing biological species and related taxa. The vocabulary defines terms for describing the names and ranking of taxa, as well as providing support for describing their habitats, conservation status, and behavioural characteristics, etc
+    host-institution-name:
+    author-name: http://www.ldodds.com#me, http://tomscott.name/
+    website-url: https://www.bbc.co.uk/ontologies/wo
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
@@ -152,6 +186,11 @@ zbw-stw-economics:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  info:
+    description: Thesaurus that provides vocabulary on any economic subject. Almost 6,000 standardized subject headings and about 20,000 additional entry terms to support individual keywords.
+    host-institution-name: ZBW - Leibniz Information Centre for Economics
+    author-name: ZBW - Leibniz Information Centre for Economics
+    website-url: http://zbw.eu/stw/version/latest/about
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
@@ -168,3 +207,8 @@ zbw-gnd:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+  info:
+    description: Mapping Integrated Authority File (GND).The Integrated Authority File (GND) is a controlled keyword system, that is mainly used for indexing in German libraries.
+    host-institution-name: ZBW - Leibniz Information Centre for Economics
+    author-name: German National Library (DNB) and ZBW - Leibniz Information Centre for Economics
+    website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
