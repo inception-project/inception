@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -73,6 +74,27 @@ public class PdfAnnotationEditor
     @Override
     public void render(AjaxRequestTarget aTarget)
     {
+        try {
+            JCas jCas = getJCasProvider().get();
+            VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
+            List<String> vIDs = PdfAnnoRenderer.getVisibleVIDs(getModelObject(),
+                vdoc, annotationService);
+
+            String script = String.join("\n",
+                "var annotations = pdfanno.contentWindow.annoPage.getAllAnnotations();",
+                "var newVIDs = " + JSONUtil.toJsonString(vIDs),
+                "annotations.forEach(function (anno) {",
+                // if a VID is ont included in the new VID list annotation was deleted, remove it
+                "  if (newVIDs.indexOf(anno.uuid) < 0) {",
+                "    anno.destroy()",
+                "  }",
+                "})");
+            aTarget.appendJavaScript(script);
+        }
+        catch (IOException e)
+        {
+            handleError("Could not load data", e, aTarget);
+        }
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
