@@ -40,7 +40,7 @@ wikidata:
   info:
     description: Wikidata is a free and open knowledge base and acts as central storage for the structured data of its Wikimedia sister projects including Wikipedia, Wikivoyage, Wikisource, and others.
     host-institution-name: Wikidata
-    author-name:
+    author-name: "-"
     website-url: https://www.wikidata.org/wiki/Wikidata:Main_Page
 virtuoso:
   name: UKP Wikidata
@@ -146,9 +146,9 @@ wine_ontology:
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   info:
     description: An example OWL ontology. Derived from the DAML Wine ontology at http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml Substantially changed, in particular the Region based relations.
-    host-institution-name:
-    author-name:
-    website-url:
+    host-institution-name: "-"
+    author-name: "-"
+    website-url: "-"
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
@@ -167,7 +167,7 @@ wildlife_ontology:
       full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   info:
     description: A simple vocabulary for describing biological species and related taxa. The vocabulary defines terms for describing the names and ranking of taxa, as well as providing support for describing their habitats, conservation status, and behavioural characteristics, etc
-    host-institution-name:
+    host-institution-name: "-"
     author-name: http://www.ldodds.com#me, http://tomscott.name/
     website-url: https://www.bbc.co.uk/ontologies/wo
 zbw-stw-economics:

@@ -52,26 +52,46 @@
           </div>
         </div>
       </div>
+        <div class="form-group" wicket:id="infoContainer" style="margin-top: 20px;">
+            <div class="form-group row" wicket:enclosure="description">
+                <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.description"/></label>
+                <label wicket:id="description" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="hostInstitutionName">
+                <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/></label>
+                <label wicket:id="hostInstitutionName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="authorName">
+                <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.authorName"/></label>
+                <label wicket:id="authorName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="websiteURL">
+                <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.homepage"/></label>
+                <a wicket:id="websiteURL" class="col-sm-9"></a>
+            </div>
+        </div>
+
+    </wicket:container>
+
+      <wicket:fragment id="infoContainerFragment">
           <div class="form-group" wicket:id="infoContainer" style="margin-top: 20px;">
               <div class="form-group row" wicket:enclosure="description">
                   <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.description"/></label>
-                  <label wicket:id="description" class="col-sm-9 text-info" style="font-weight: normal;"></label>
+                  <label wicket:id="description" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
               </div>
               <div class="form-group row" wicket:enclosure="hostInstitutionName">
                   <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/></label>
-                  <label wicket:id="hostInstitutionName" class="col-sm-9 text-info" style="font-weight: normal;"></label>
+                  <label wicket:id="hostInstitutionName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
               </div>
               <div class="form-group row" wicket:enclosure="authorName">
                   <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.authorName"/></label>
-                  <label wicket:id="authorName" class="col-sm-9 text-info" style="font-weight: normal;"></label>
+                  <label wicket:id="authorName" class="col-sm-9 text-muted" style="font-weight: normal;"></label>
               </div>
               <div class="form-group row" wicket:enclosure="websiteURL">
                   <label class="control-label col-sm-3"><wicket:message key="kb.wizard.steps.accessSpecific.homepage"/></label>
                   <a wicket:id="websiteURL" class="col-sm-9"></a>
               </div>
-          </div>
-
-    </wicket:container>
+      </wicket:fragment>
 
 
     <wicket:container wicket:id="localSpecificSettings">
@@ -141,6 +161,36 @@
           </button>
         </div>
       </div>
+        <div class="form-group" wicket:id="infoContainer" style="margin-top: 20px;">
+            <div class="form-group row" wicket:enclosure="description">
+                <label class="control-label col-sm-3">
+                    <wicket:message key="kb.wizard.steps.accessSpecific.description"/>
+                </label>
+                <label wicket:id="description" class="col-sm-9 text-muted"
+                       style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="hostInstitutionName">
+                <label class="control-label col-sm-3">
+                    <wicket:message key="kb.wizard.steps.accessSpecific.hostInstitutionName"/>
+                </label>
+                <label wicket:id="hostInstitutionName" class="col-sm-9 text-muted"
+                       style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="authorName">
+                <label class="control-label col-sm-3">
+                    <wicket:message key="kb.wizard.steps.accessSpecific.authorName"/>
+                </label>
+                <label wicket:id="authorName" class="col-sm-9 text-muted"
+                       style="font-weight: normal;"></label>
+            </div>
+            <div class="form-group row" wicket:enclosure="websiteURL">
+                <label class="control-label col-sm-3">
+                    <wicket:message key="kb.wizard.steps.accessSpecific.homepage"/>
+                </label>
+                <a wicket:id="websiteURL" class="col-sm-9"></a>
+            </div>
+        </div>
+
     </wicket:container>
   </div>
 </wicket:panel>

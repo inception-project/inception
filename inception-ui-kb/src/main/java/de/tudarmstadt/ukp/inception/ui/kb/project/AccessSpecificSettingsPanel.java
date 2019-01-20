@@ -84,6 +84,7 @@ public class AccessSpecificSettingsPanel
     // Remote
     private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
+    private WebMarkupContainer infoContainerRemote;
 
     // Local
     private FileUploadField fileUpload;
@@ -92,6 +93,7 @@ public class AccessSpecificSettingsPanel
     private static final String CLASSPATH_PREFIX = "classpath:";
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final Map<String, File> uploadedFiles;
+    private WebMarkupContainer infoContainerLocal;
 
     //Both
     private CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel;
@@ -162,16 +164,15 @@ public class AccessSpecificSettingsPanel
         suggestions = suggestions.subList(0,
             Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
 
-        WebMarkupContainer kbInfoContainer = createKbInfoContainer("infoContainer");
-        kbInfoContainer.setOutputMarkupId(true);
-        wmc.add(kbInfoContainer);
-        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField, kbInfoContainer));
+        infoContainerRemote = createKbInfoContainer("infoContainer");
+        infoContainerRemote.setOutputMarkupId(true);
+        wmc.add(infoContainerRemote);
+        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
 
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
-        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField,
-        WebMarkupContainer aKbInfoContainer)
+        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
     {
         return new ListView<>(aId, aSuggestions)
         {
@@ -189,7 +190,7 @@ public class AccessSpecificSettingsPanel
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
                     kbInfoModel.setObject(item.getModelObject().getInfo());
-                    t.add(aUrlField, aKbInfoContainer);
+                    t.add(aUrlField, infoContainerRemote);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
@@ -236,6 +237,10 @@ public class AccessSpecificSettingsPanel
             this::actionDownloadKbAndSetIRIs);
         addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
         listViewContainer.add(addKbButton);
+
+        infoContainerLocal = createKbInfoContainer("infoContainer");
+        infoContainerLocal.setOutputMarkupId(true);
+        wmc.add(infoContainerLocal);
 
         wmc.add(listViewContainer);
     }
@@ -381,8 +386,9 @@ public class AccessSpecificSettingsPanel
         }
         else {
             selectedKnowledgeBaseProfile = aModel.getObject();
+            kbInfoModel.setObject(aModel.getObject().getInfo());
         }
-        aTarget.add(listViewContainer);
+        aTarget.add(listViewContainer, infoContainerLocal);
     }
 
     private File uploadFile(FileUpload fu) throws Exception
