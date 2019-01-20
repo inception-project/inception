@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
+
 /**
  * Represents a PDFExtract file.
  * This file contains information about the content of a PDF document.
@@ -39,7 +42,7 @@ public class PdfExtractFile
      * Contains position mapping for a character between PDFExtract string
      * including and excluding Draw Operations.
      */
-    private Map<Integer, Integer> stringPositionMap;
+    private BidiMap<Integer, Integer> stringPositionMap;
 
     /**
      * Map of line numbers and lines contained in a PDFExtract file.
@@ -53,14 +56,14 @@ public class PdfExtractFile
 
     public void setPdftxt(String aPdftxt)
     {
-        stringPositionMap = new HashMap<>();
+        stringPositionMap = new DualHashBidiMap<>();
         extractLines = new HashMap<>();
         pdftxt = aPdftxt;
 
         StringBuilder sb = new StringBuilder();
         String[] lines = pdftxt.split("\n");
 
-        int extractLineIndex = 0;
+        int extractLineIndex = 1;
         int strContentIndex = 0;
 
         for (String line : lines)
@@ -74,7 +77,8 @@ public class PdfExtractFile
             extractLines.put(extractLineIndex, extractLine);
 
             // if value of PdfExtractLine is in brackets it is a draw operation and is ignored
-            if (!extractLine.getValue().matches("^\\[.*\\]$"))
+            if (!extractLine.getValue().matches("^\\[.*\\]$")
+                && !extractLine.getValue().equals("NO_UNICODE"))
             {
                 sb.append(extractLine.getValue());
                 stringPositionMap.put(strContentIndex, extractLineIndex);
@@ -112,5 +116,14 @@ public class PdfExtractFile
     public PdfExtractLine getStringPdfExtractLine(int aPosition)
     {
         return extractLines.get(stringPositionMap.get(aPosition));
+    }
+
+    /**
+     * Gets the index in the actual PdfExtract string content for a PdfExtractLine index.
+     * PdfExtract string content does not include draw operations in the index counting.
+     */
+    public int getStringIndex(int pdfExtractLine)
+    {
+        return stringPositionMap.getKey(pdfExtractLine);
     }
 }

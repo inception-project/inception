@@ -28,10 +28,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 
 public class KnowledgeBaseProfile implements Serializable

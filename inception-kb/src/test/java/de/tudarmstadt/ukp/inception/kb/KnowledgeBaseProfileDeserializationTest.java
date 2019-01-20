@@ -32,7 +32,6 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -60,11 +59,10 @@ public class KnowledgeBaseProfileDeserializationTest
 
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
             typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri, fullTextSearchIri);
+            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
-        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess();
-        referenceAccess.setAccessUrl(url);
+        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
 
         referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
@@ -81,7 +79,6 @@ public class KnowledgeBaseProfileDeserializationTest
             profiles = mapper
                 .readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>() {});
         }
-        
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
     }

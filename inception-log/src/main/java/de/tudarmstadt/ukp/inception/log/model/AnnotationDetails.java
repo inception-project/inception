@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.model;
 
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -38,13 +39,21 @@ public class AnnotationDetails
         // Nothing to do
     }
     
-    public AnnotationDetails(AnnotationFS aFS)
+    public AnnotationDetails(FeatureStructure aFS)
     {
         addr = WebAnnoCasUtil.getAddr(aFS);
-        begin = aFS.getBegin();
-        end = aFS.getEnd();
-        text = aFS.getCoveredText();
         type = aFS.getType().getName();
+        if (aFS instanceof AnnotationFS) {
+            AnnotationFS annoFS = (AnnotationFS) aFS;
+            begin = annoFS.getBegin();
+            end = annoFS.getEnd();
+            text = annoFS.getCoveredText();
+        }
+        else {
+            begin = -1;
+            end = -1;
+            text = null;
+        }
     }
     
     public int getAddr()

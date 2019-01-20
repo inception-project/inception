@@ -19,19 +19,25 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 public class Span {
 
-    private int id;
+    private String id;
 
     private int page;
 
     private String label;
 
+    /**
+     * This field is part of the PDFAnno Anno File format for spans.
+     * It is redundant as startPos and endPos already can be used to obtain the text.
+     * It could be left out in toAnnoFileString method as PDFAnno still can render it.
+     * However this results in missing text when export functionality in PDFAnno is used.
+     */
     private String text;
 
     private int startPos;
 
     private int endPos;
 
-    public Span(int aId, int aPage, String aText,
+    public Span(String aId, int aPage, String aText,
                 int aStartPos, int aEndPos)
     {
         id = aId;
@@ -41,7 +47,7 @@ public class Span {
         endPos = aEndPos;
     }
 
-    public Span(int aId, int aPage, String aLabel, String aText,
+    public Span(String aId, int aPage, String aLabel, String aText,
                 int aStartPos, int aEndPos)
     {
         id = aId;
@@ -52,7 +58,7 @@ public class Span {
         endPos = aEndPos;
     }
 
-    public int getId()
+    public String getId()
     {
         return id;
     }

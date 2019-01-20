@@ -173,7 +173,7 @@ public class SelectionTask
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
 
-        schedulingService.enqueue(new PredictionTask(user, getProject()));
+        schedulingService.enqueue(new TrainingTask(user, getProject()));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

@@ -1,4 +1,5 @@
 require('file-loader?name=index.html!./index.html')
+require('file-loader?name=index-debug.html!./index-debug.html')
 require('!style-loader!css-loader!./pdfanno.css')
 
 // /tab=TAB&pdf=PDFURL&anno=ANNOURL&move
@@ -122,6 +123,9 @@ async function displayViewer () {
 // END PDFANNO EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
+// BEGIN PDFANNO EXTENSION - #838 - Creation of spans in PDF editor
+  window.apiUrl = q.api
+// END PDFANNO EXTENSION
 
   // Load a PDF file.
   try {

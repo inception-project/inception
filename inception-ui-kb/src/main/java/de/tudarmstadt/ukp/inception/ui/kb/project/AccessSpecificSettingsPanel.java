@@ -190,6 +190,8 @@ public class AccessSpecificSettingsPanel
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
                     kbInfoModel.setObject(item.getModelObject().getInfo());
+                    kbModel.getObject().getKb().setFullTextSearchIri(
+                        item.getModelObject().getAccess().getFullTextSearchIri());
                     t.add(aUrlField, infoContainerRemote);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
@@ -450,8 +452,11 @@ public class AccessSpecificSettingsPanel
                     kbModel.getObject().putFile(selectedKnowledgeBaseProfile.getName(), kbFile);
                 }
 
+                kbModel.getObject().getKb().applyRootConcepts(selectedKnowledgeBaseProfile);
                 kbModel.getObject().getKb().applyMapping(
                     selectedKnowledgeBaseProfile.getMapping());
+                kbModel.getObject().getKb().setFullTextSearchIri(
+                    selectedKnowledgeBaseProfile.getAccess().getFullTextSearchIri());
                 downloadedProfiles
                     .put(selectedKnowledgeBaseProfile.getName(), selectedKnowledgeBaseProfile);
                 aTarget.add(this);

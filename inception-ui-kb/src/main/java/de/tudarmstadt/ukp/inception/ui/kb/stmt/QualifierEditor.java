@@ -36,6 +36,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
@@ -114,7 +115,7 @@ public class QualifierEditor
             IModel<KBQualifier> compoundModel = CompoundPropertyModel.of(aQualifier);
 
             Form<KBQualifier> form = new Form<>("form", compoundModel);
-            DropDownChoice<KBHandle> type = new DropDownChoice<>("kbProperty");
+            DropDownChoice<KBHandle> type = new BootstrapSelect<>("kbProperty");
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(kbService.listProperties(kbModel.getObject(), false));
             type.setRequired(true);
