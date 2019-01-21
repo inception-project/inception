@@ -27,6 +27,8 @@ public class PdfEditorProperties
 {
     private boolean enabled = false;
 
+    private boolean debug = false;
+
     public boolean isEnabled()
     {
         return enabled;
@@ -35,5 +37,15 @@ public class PdfEditorProperties
     public void setEnabled(boolean aEnabled)
     {
         enabled = aEnabled;
+    }
+
+    public boolean isDebug()
+    {
+        return debug;
+    }
+
+    public void setDebug(boolean aDebug)
+    {
+        this.debug = aDebug;
     }
 }
