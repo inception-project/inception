@@ -118,6 +118,19 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
+    public void thatEvaluationSkippingWorks() throws Exception
+    {
+        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+
+        double score = sut.evaluate(asList(), splitStrategy);
+
+        System.out.printf("Score: %f%n", score);
+        
+        assertThat(score).isEqualTo(0.0);
+    }
+
+    @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
