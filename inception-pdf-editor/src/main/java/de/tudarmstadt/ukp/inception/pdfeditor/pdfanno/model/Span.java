@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 public class Span {
 
-    private int id;
+    private String id;
 
     private int page;
 
@@ -37,7 +37,7 @@ public class Span {
 
     private int endPos;
 
-    public Span(int aId, int aPage, String aText,
+    public Span(String aId, int aPage, String aText,
                 int aStartPos, int aEndPos)
     {
         id = aId;
@@ -47,7 +47,7 @@ public class Span {
         endPos = aEndPos;
     }
 
-    public Span(int aId, int aPage, String aLabel, String aText,
+    public Span(String aId, int aPage, String aLabel, String aText,
                 int aStartPos, int aEndPos)
     {
         id = aId;
@@ -58,7 +58,7 @@ public class Span {
         endPos = aEndPos;
     }
 
-    public int getId()
+    public String getId()
     {
         return id;
     }

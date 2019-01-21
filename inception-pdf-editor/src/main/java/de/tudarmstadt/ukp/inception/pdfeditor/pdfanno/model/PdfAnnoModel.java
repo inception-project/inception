@@ -35,7 +35,7 @@ public class PdfAnnoModel
 
     private List<Span> spans;
 
-    private List<Integer> unmatchedSpans;
+    private List<Span> unmatchedSpans;
 
     private List<Relation> relations;
 
@@ -85,12 +85,12 @@ public class PdfAnnoModel
         return relations;
     }
 
-    public void addUnmatchedSpan(int aVSpanVId)
+    public void addUnmatchedSpan(Span aSpan)
     {
-        unmatchedSpans.add(aVSpanVId);
+        unmatchedSpans.add(aSpan);
     }
 
-    public List<Integer> getUnmatchedSpans()
+    public List<Span> getUnmatchedSpans()
     {
         return unmatchedSpans;
     }
