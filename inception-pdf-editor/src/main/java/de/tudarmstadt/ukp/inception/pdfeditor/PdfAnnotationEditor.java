@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -75,21 +76,28 @@ public class PdfAnnotationEditor
     public void render(AjaxRequestTarget aTarget)
     {
         try {
-            JCas jCas = getJCasProvider().get();
-            VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
-            List<String> vIDs = PdfAnnoRenderer.getVisibleVIDs(getModelObject(),
-                vdoc, annotationService);
-
-            String script = String.join("\n",
-                "var annotations = pdfanno.contentWindow.annoPage.getAllAnnotations();",
-                "var newVIDs = " + JSONUtil.toJsonString(vIDs),
-                "annotations.forEach(function (anno) {",
-                // if a VID is ont included in the new VID list annotation was deleted, remove it
-                "  if (newVIDs.indexOf(anno.uuid) < 0) {",
-                "    anno.destroy()",
+            File pdfFile = documentService.getSourceDocumentFile(getModelObject().getDocument());
+            String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+            // save existing selections before destroying them for rerendering
+            String saveSelections = String.join("",
+                "var selectedAnnotations = [];",
+                "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
+                "  if(a.selected) {",
+                "    selectedAnnotations.push(a.uuid);",
                 "  }",
-                "})");
-            aTarget.appendJavaScript(script);
+                "});",
+                "pdfanno.contentWindow.selectedAnnotations = selectedAnnotations;"
+                );
+            aTarget.appendJavaScript(saveSelections);
+            // rerender existing annotations
+            renderPdfAnnoModel(aTarget, pdftext);
+            // restore selections
+            String restoreSelections = String.join("",
+                "pdfanno.contentWindow.selectedAnnotations.forEach(function(uuid) {",
+                "  pdfanno.contentWindow.annoPage.findAnnotationById(uuid).toggleSelect();",
+                "});"
+                );
+            aTarget.appendJavaScript(restoreSelections);
         }
         catch (IOException e)
         {
@@ -161,7 +169,26 @@ public class PdfAnnotationEditor
                 getModelObject().getSelection()
                     .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
                 getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+                // save old annotations ids
+                String saveOldAnnotationIds = String.join("",
+                    "var oldAnnotations = [];",
+                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
+                    "  oldAnnotations.push(a.uuid);",
+                    "});",
+                    "pdfanno.contentWindow.oldAnnotations = oldAnnotations;"
+                );
+                aTarget.appendJavaScript(saveOldAnnotationIds);
+                // rerender annotations
                 renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
+                // check if there are new annotations, if so, select them
+                String selectAnnotation = String.join("",
+                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
+                    "  if (pdfanno.contentWindow.oldAnnotations.indexOf(a.uuid) === -1) {",
+                    "    a.toggleSelect();",
+                    "  }",
+                    "});"
+                );
+                aTarget.appendJavaScript(selectAnnotation);
             } else {
                 handleError("Unable to create annotation: No match was found", aTarget);
             }
@@ -225,15 +252,15 @@ public class PdfAnnotationEditor
     public String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel, AjaxRequestTarget aTarget)
     {
         try {
-            return "setTimeout(function() { " +
-                "var annoFile = `\n" +
-                aPdfAnnoModel.getAnnoFileContent() +
-                "`;\n" +
-                "pdfanno.contentWindow.annoPage.importAnnotation({" +
-                "'primary': true," +
-                "'colorMap': " + JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()) + "," +
-                "'annotations':[annoFile]}, true);" +
-                "}, 10);";
+            return String.join("",
+                "var annoFile = `\n",
+                aPdfAnnoModel.getAnnoFileContent(),
+                "`;",
+                "pdfanno.contentWindow.annoPage.importAnnotation({",
+                "'primary': true,",
+                "'colorMap': ", JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()), ",",
+                "'annotations':[annoFile]}, true);"
+            );
         } catch (IOException e) {
             handleError("Could not map PDFAnno ColorMap to JSON String", e, aTarget);
         }
