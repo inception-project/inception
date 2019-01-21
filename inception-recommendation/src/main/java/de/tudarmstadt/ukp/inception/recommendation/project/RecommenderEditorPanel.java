@@ -511,9 +511,4 @@ public class RecommenderEditorPanel
             }
         }
     }
-    
-    public IModel<Recommender> getRecommenderModel()
-    {
-        return recommenderModel;
-    }
 }

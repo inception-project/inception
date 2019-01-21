@@ -62,7 +62,8 @@ public class ProjectRecommendersPanel
         add(recommenderListPanel);
         
         EvaluationSimulationPanel evaluationSimulationPanel = new EvaluationSimulationPanel(
-                EVALUATION_SIMULATION_CONTAINER, projectModel.getObject(), recommenderEditorPanel);
+                EVALUATION_SIMULATION_CONTAINER, projectModel.getObject(),
+                selectedRecommenderModel);
         add(evaluationSimulationPanel);
     }
 

@@ -26,7 +26,6 @@ import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -47,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -72,149 +72,137 @@ public class EvaluationSimulationPanel
 {
     private static final long serialVersionUID = 4306746527837380863L;
 
-    private static final String CHART_CONTAINER = "chart-container";
-    private static final String SIMULATION_START_BUTTON = "simulation-start-button";
+    private static final String MID_CHART_CONTAINER = "chart-container";
+    private static final String MID_SIMULATION_START_BUTTON = "simulation-start-button";
+    private static final String MID_FORM = "form";
     
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
     
-    private static final String FORM = "form";
-
-    private static final Logger log = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
     
     private final WebComponent chartContainer;
     private final Project project;
+    private final IModel<Recommender> selectedRecommenderPanel;
 
     public EvaluationSimulationPanel(String aId, Project aProject,
-            RecommenderEditorPanel aRecommenderEditorPanel)
+            IModel<Recommender> aSelectedRecommenderPanel)
     {
         super(aId);
         project = aProject;
-
-        Form<Recommender> form = new Form<>(FORM);
+        selectedRecommenderPanel = aSelectedRecommenderPanel;
+                
+        Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
 
-        chartContainer = new Label(CHART_CONTAINER);
+        chartContainer = new Label(MID_CHART_CONTAINER);
         chartContainer.setOutputMarkupId(true);
         form.add(chartContainer);
+        
+        form.add(new LambdaAjaxButton<>(MID_SIMULATION_START_BUTTON, this::actionStartEvaluation));
+    }
+    
+    private void actionStartEvaluation(AjaxRequestTarget aTarget, Form<Void> aForm)
+        throws IOException
+    {
+        //there must be some recommender selected by the user on the UI
+        if (selectedRecommenderPanel.getObject() == null
+                || selectedRecommenderPanel.getObject().getTool() == null) {
+            LOG.error("Please select a recommender from the list");
+            error("Please select a recommender from the list");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
 
-        form.add(new AjaxButton(SIMULATION_START_BUTTON)
-        {
-            private static final long serialVersionUID = -3902555252753037183L;
+        Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
+                .listAllDocuments(project, userDao.getCurrentUser());
 
-            @Override
-            protected void onError(AjaxRequestTarget aTarget)
-            {
-                aTarget.addChildren(getPage(), IFeedback.class);
+        //create a list of CAS from the pre-annotated documents of the project
+        List<CAS> casList = new ArrayList<>();
+        listAllDocuments.forEach((source, annotation) -> {
+            try {
+                CAS cas = documentService.createOrReadInitialCas(source).getCas();
+                casList.add(cas);
             }
-
-            @Override
-            protected void onAfterSubmit(AjaxRequestTarget aTarget)
-            {
-                //get the selected recommender
-                IModel<Recommender> recommenderModel = aRecommenderEditorPanel
-                        .getRecommenderModel();
-                
-                //there must be some recommender selected by the user on the UI
-                if (recommenderModel.getObject() == null
-                        || recommenderModel.getObject().getTool() == null) {
-                    log.error("Please select a recommender from the list");
-                    error("Please select a recommender from the list");
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    return;
-                }
-
-                Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
-                        .listAllDocuments(project, userDao.getCurrentUser());
-
-                //create a list of CAS from the pre-annotated documents of the project
-                List<CAS> casList = new ArrayList<>();
-                listAllDocuments.forEach((source, annotation) -> {
-                    try {
-                        CAS cas = documentService.createOrReadInitialCas(source).getCas();
-                        casList.add(cas);
-                    }
-                    catch (IOException e1) {
-                        log.error("Unable to render chart", e1);
-                        error("Unable to render chart: " + e1.getMessage());
-                        aTarget.addChildren(getPage(), IFeedback.class);
-                        return;
-                    }
-                });
-                
-                IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
-                        INCREMENT, LOW_SAMPLE_THRESHOLD);
-
-                RecommendationEngine recommender = getRecommendationEngine(recommenderModel);
-                if (recommender == null)
-                {
-                    log.warn("Unknown Recommender selected");
-                    warn("Unknown Recommender selected");
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    return;
-                }
-                
-                StringBuilder dataColumns = new StringBuilder();
-                StringBuilder chartType = new StringBuilder();
-                StringBuilder sb = new StringBuilder();
-                StringBuilder xaxis = new StringBuilder();
-
-                // create a list of comma separated string of scores from every iteration of
-                // evaluation.
-                int i = 0;
-                while (splitStrategy.hasNext()) {
-                    splitStrategy.next();
-
-                    double score;
-                    try {
-                        score = recommender.evaluate(casList, splitStrategy);
-                    }
-                    catch (RecommendationException e) {
-                        log.error(e.toString(),e);
-                        continue;
-                    }
-
-                    xaxis.append(i + ",");
-                    sb.append(score + ",");
-                    i++;
-                }
-
-                String data = sb.toString();
-
-                // append recommender name to the data
-                dataColumns.append("['");
-                String recommenderName = recommenderModel.getObject().getName();
-
-                // define chart type for the recommender
-                chartType.append("'");
-                chartType.append(recommenderName);
-                chartType.append("': 'step', ");
-                dataColumns.append(recommenderName);
-
-                // append data columns
-                dataColumns.append("', ");
-                dataColumns.append(data);
-                dataColumns.append("]");
-                dataColumns.append(",");
-
-                try {
-                    String javascript = createJSScript(dataColumns.toString(),
-                            chartType.toString(), xaxis.toString());
-                    log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-
-                    aTarget.prependJavaScript(javascript);
-                }
-                catch (IOException e) {
-                    log.error("Unable to render chart", e);
-                    error("Unable to render chart: " + e.getMessage());
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                } 
+            catch (IOException e1) {
+                LOG.error("Unable to render chart", e1);
+                error("Unable to render chart: " + e1.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
             }
         });
+        
+        IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
+                INCREMENT, LOW_SAMPLE_THRESHOLD);
+
+        RecommendationEngine recommender = getRecommendationEngine(selectedRecommenderPanel);
+        if (recommender == null)
+        {
+            LOG.warn("Unknown Recommender selected");
+            warn("Unknown Recommender selected");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
+        StringBuilder dataColumns = new StringBuilder();
+        StringBuilder chartType = new StringBuilder();
+        StringBuilder sb = new StringBuilder();
+        StringBuilder xaxis = new StringBuilder();
+
+        // create a list of comma separated string of scores from every iteration of
+        // evaluation.
+        int i = 0;
+        while (splitStrategy.hasNext()) {
+            splitStrategy.next();
+
+            double score;
+            try {
+                score = recommender.evaluate(casList, splitStrategy);
+            }
+            catch (RecommendationException e) {
+                LOG.error(e.toString(),e);
+                continue;
+            }
+
+            xaxis.append(i + ",");
+            sb.append(score + ",");
+            i++;
+        }
+
+        String data = sb.toString();
+
+        // append recommender name to the data
+        dataColumns.append("['");
+        String recommenderName = selectedRecommenderPanel.getObject().getName();
+
+        // define chart type for the recommender
+        chartType.append("'");
+        chartType.append(recommenderName);
+        chartType.append("': 'step', ");
+        dataColumns.append(recommenderName);
+
+        // append data columns
+        dataColumns.append("', ");
+        dataColumns.append(data);
+        dataColumns.append("]");
+        dataColumns.append(",");
+
+        try {
+            String javascript = createJSScript(dataColumns.toString(),
+                    chartType.toString(), xaxis.toString());
+            LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
+
+            aTarget.prependJavaScript(javascript);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to render chart", e);
+            error("Unable to render chart: " + e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
+        } 
     }
 
     @Override
