@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.0</version>
+    <version>3.5.1-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-api-dao</artifactId>
   <name>WebAnno - Core - Persistence API</name>
