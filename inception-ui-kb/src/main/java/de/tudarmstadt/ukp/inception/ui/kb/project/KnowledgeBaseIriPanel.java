@@ -94,7 +94,7 @@ public class KnowledgeBaseIriPanel
                 labelField, propertyTypeField, propertyLabelField, propertyDescriptionField);
         
         // RadioGroup to select the IriSchemaType
-        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<>(
+        DropDownChoice<SchemaProfile> iriSchemaChoice = new BootstrapSelect<SchemaProfile>(
                 "iriSchema", selectedSchemaProfile, Arrays.asList(SchemaProfile.values()),
                 new EnumChoiceRenderer<>(this))
         {

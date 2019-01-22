@@ -83,15 +83,18 @@ public class RdfUtils
         tupleQuery.setIncludeInferred(includeInferred);
         TupleQueryResult result = tupleQuery.evaluate();
 
-        ExceptionConvertingIteration eci = getExceptionConvertingIteration(result, "s", "p", "o");
+        ExceptionConvertingIteration<Statement, RepositoryException> eci = 
+                getExceptionConvertingIteration(result, "s", "p", "o");
 
         return new RepositoryResult<Statement>(eci);
     }
 
-    private static ExceptionConvertingIteration getExceptionConvertingIteration(
-        TupleQueryResult aResult, String aSubjBinding, String aPredBinding, String aObjBinding)
+    private static ExceptionConvertingIteration<Statement, RepositoryException> 
+            getExceptionConvertingIteration(TupleQueryResult aResult, String aSubjBinding, 
+                    String aPredBinding, String aObjBinding)
     {
-        Iteration<Statement, QueryEvaluationException> i1 = new ConvertingIteration<>(aResult)
+        Iteration<Statement, QueryEvaluationException> i1 = 
+                new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(aResult)
         {
             @Override protected Statement convert(BindingSet b) throws QueryEvaluationException
             {
@@ -104,7 +107,7 @@ public class RdfUtils
         };
 
         ExceptionConvertingIteration<Statement, RepositoryException> i2 =
-            new ExceptionConvertingIteration<>(i1)
+            new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
         {
             @Override protected RepositoryException convert(Exception aE)
             {
