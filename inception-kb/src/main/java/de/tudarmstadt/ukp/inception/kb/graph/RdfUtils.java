@@ -83,7 +83,8 @@ public class RdfUtils
         tupleQuery.setIncludeInferred(includeInferred);
         TupleQueryResult result = tupleQuery.evaluate();
 
-        ExceptionConvertingIteration eci = getExceptionConvertingIteration(result, "s", "p", "o");
+        ExceptionConvertingIteration<Statement, RepositoryException> eci = 
+                getExceptionConvertingIteration(result, "s", "p", "o");
 
         return new RepositoryResult<Statement>(eci);
     }
@@ -105,7 +106,7 @@ public class RdfUtils
         };
 
         ExceptionConvertingIteration<Statement, RepositoryException> i2 =
-            new ExceptionConvertingIteration<>(i1)
+            new ExceptionConvertingIteration<Statement, RepositoryException>(i1)
         {
             @Override protected RepositoryException convert(Exception aE)
             {
