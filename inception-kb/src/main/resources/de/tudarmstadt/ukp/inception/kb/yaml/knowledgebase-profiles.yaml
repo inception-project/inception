@@ -107,9 +107,9 @@ babel_net:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: BabelNet is a multilingual lexicalized semantic network and ontology. BabelNet was automatically created by linking Wikipedia to WordNet.
-    host-institution-name: Department of Computer Science Linguistic Computing Laboratory, Sapienza University of Rome
-    author-name: Department of Computer Science Linguistic Computing Laboratory, Sapienza University of Rome
+    description: BabelNet is a multilingual lexicalized semantic network and ontology that was automatically created by linking Wikipedia to WordNet.
+    host-institution-name: Linguistic Computing Laboratory at Sapienza University of Rome
+    author-name: Linguistic Computing Laboratory at Sapienza University of Rome
     website-url: https://babelnet.org/
 
 yago:
@@ -129,7 +129,7 @@ yago:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames. YAGO has knowledge of more than 10 million entities (like persons, organizations, cities, etc.) and contains more than 120 million facts about these entities.
+    description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames.
     host-institution-name: Max-Planck-Institute Saarbrücken
     author-name: Max-Planck-Institute Saarbrücken, DIG group at Télécom ParisTech University.
     website-url: https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/
@@ -153,10 +153,10 @@ wine_ontology:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: An example OWL ontology. Derived from the DAML Wine ontology at http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml Substantially changed, in particular the Region based relations.
+    description: An example OWL ontology. Derived from the DAML Wine ontology at http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml
     host-institution-name: "-"
     author-name: "-"
-    website-url: "-"
+    website-url: https://www.w3.org/TR/owl-guide/wine.rdf
 
 wildlife_ontology:
   name: Wildlife Ontology
@@ -175,7 +175,7 @@ wildlife_ontology:
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
   info:
-    description: A simple vocabulary for describing biological species and related taxa. The vocabulary defines terms for describing the names and ranking of taxa, as well as providing support for describing their habitats, conservation status, and behavioural characteristics, etc
+    description: A simple vocabulary for describing biological species and related taxa.
     host-institution-name: "-"
     author-name: http://www.ldodds.com#me, http://tomscott.name/
     website-url: https://www.bbc.co.uk/ontologies/wo
@@ -221,7 +221,7 @@ zbw-gnd:
   info:
     description: Mapping Integrated Authority File (GND).The Integrated Authority File (GND) is a controlled keyword system, that is mainly used for indexing in German libraries.
     host-institution-name: ZBW - Leibniz Information Centre for Economics
-    author-name: German National Library (DNB) and ZBW - Leibniz Information Centre for Economics
+    author-name: German National Library (DNB), ZBW - Leibniz Information Centre for Economics
     website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
   root-concepts:
     - http://d-nb.info/standards/elementset/gnd#AuthorityResource
