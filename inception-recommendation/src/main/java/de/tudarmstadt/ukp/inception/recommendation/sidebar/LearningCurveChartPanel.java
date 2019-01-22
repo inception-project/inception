@@ -18,16 +18,12 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
-import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -54,29 +50,30 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
+import de.tudarmstadt.ukp.inception.recommendation.model.Chart;
 
 public class LearningCurveChartPanel
     extends Panel
 {
     private static final long serialVersionUID = 4306746527837380863L;
 
-    private static final String CHART_CONTAINER = "chart-container";
+    private static final String MID_CHART_CONTAINER = "chart-container";
 
-    private static final Logger log = LoggerFactory.getLogger(LearningCurveChartPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LearningCurveChartPanel.class);
     private final WebComponent chartContainer;
 
     private @SpringBean EventRepository eventRepo;
     private @SpringBean RecommendationService recommendationService;
 
     private final IModel<AnnotatorState> model;
-    private final int maxPointsToPlot = 50;
+    private final static int MAX_POINTS_TO_PLOT = 50;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId);
         model = aModel;
 
-        chartContainer = new Label(CHART_CONTAINER);
+        chartContainer = new Label(MID_CHART_CONTAINER);
         chartContainer.setOutputMarkupId(true);
         add(chartContainer);
     }
@@ -100,12 +97,12 @@ public class LearningCurveChartPanel
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        log.trace("rendered annotation event");
+        LOG.trace("rendered annotation event");
 
         MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores(aEvent);
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
-            log.error("No evaluation data for the learning curve. Project: {}",
+            LOG.error("No evaluation data for the learning curve. Project: {}",
                     model.getObject().getProject());
 
             error("Cannot plot the learning curve. Please make some annotations");
@@ -113,69 +110,19 @@ public class LearningCurveChartPanel
 
             return;
         }
+        
+        Chart chart = new Chart(chartContainer.getMarkupId(), MAX_POINTS_TO_PLOT);
 
         // iterate over recommenderScoreMap to create data arrays to feed to the c3 graph
-        StringBuilder dataColumns = new StringBuilder();
-        StringBuilder chartType = new StringBuilder();
-        
-        for (String key : recommenderScoreMap.keySet()) {
-            String data = recommenderScoreMap.get(key).stream().map(Object::toString).collect(Collectors.joining(", "));
-            
-            // append recommender name to the data
-            dataColumns.append("['");
-            String[] recommenderClass = key.toString().split("\\.");
-            String recommenderName = recommenderClass[recommenderClass.length - 1];
-
-            // define chart type for the recommender
-            chartType.append("'");
-            chartType.append(recommenderName);
-            chartType.append("': 'step', ");
-            dataColumns.append(recommenderName);
-
-            // append data columns
-            dataColumns.append("', ");
-            dataColumns.append(data);
-            dataColumns.append("]");
-            dataColumns.append(",");
+        for (String recommenderName : recommenderScoreMap.keySet()) {
+            // extract the scores from the recommenderScoreMao. The value of data calculates to be
+            // something like 2,4,6,5,3,9,
+            String data = recommenderScoreMap.get(recommenderName).stream().map(Object::toString)
+                    .collect(Collectors.joining(", "));
+            chart.addLearningCurve(data, recommenderName);
         }
- 
-        try {
-            String javascript = createJSScript(dataColumns.toString(), chartType.toString());
-            log.debug("Rendering Recommender Evaluation Chart: {}", javascript);
 
-            aEvent.getRequestHandler().prependJavaScript(javascript);
-        }
-        catch (IOException e) {
-            log.error("Unable to render chart", e);
-            error("Unable to render chart: " + e.getMessage());
-            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
-        }
-    }
-
-    /**
-     * Creates the JS script to render graph with the help of given data points. Also creates an
-     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of
-     * aDataColumns: 
-     * <pre>
-     * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
-     * </pre>
-     * 
-     * Example value of aChartType
-     * <pre>
-     * recommender1: 'step', recommender2 : 'step'
-     * </pre>
-     */
-    private String createJSScript(String aDataColumns, String aChartType) throws IOException
-    {
-        int[] intArray = IntStream.range(0, maxPointsToPlot).map(i -> i).toArray();
-        String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
-        String data = toJsonString(aDataColumns).substring(1, aDataColumns.toString().length());
-
-        // bind data to chart container
-        String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
-                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + aChartType
-                + "}},axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
-        return javascript;
+        chart.renderChart(this, aEvent.getRequestHandler());
     }
 
     /**
@@ -196,7 +143,7 @@ public class LearningCurveChartPanel
                 .listEnabledRecommenders(model.getObject().getProject());
         
         if (listEnabledRecommenders.isEmpty())        {
-            log.warn("The project has no enabled recommender");
+            LOG.warn("The project has no enabled recommender");
 
             error("Cannot plot the learning curve. There is not recommender in the project.");
 
@@ -206,7 +153,7 @@ public class LearningCurveChartPanel
         for (Recommender recommender : listEnabledRecommenders) {
             List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEvents(
                     model.getObject().getProject(), model.getObject().getUser().getUsername(),
-                    eventType, maxPointsToPlot, recommender.getId());
+                    eventType, MAX_POINTS_TO_PLOT, recommender.getId());
             
             // we want to show the latest record on the right side of the graph
             Collections.reverse(tempLoggedEvents);
@@ -243,7 +190,7 @@ public class LearningCurveChartPanel
                 recommenderScoreMap.put(recommenderIfActive.get(0).getName(), detail.score);
             }
             catch (IOException e) {
-                log.error("Invalid logged Event detail. Skipping record with logged event id: "
+                LOG.error("Invalid logged Event detail. Skipping record with logged event id: "
                         + loggedEvent.getId(), e);
 
                 error("Invalid logged Event detail. Skipping record with logged event id: "
@@ -254,4 +201,6 @@ public class LearningCurveChartPanel
         }
         return recommenderScoreMap;
     }
+    
 }
+

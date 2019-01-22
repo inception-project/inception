@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.project;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -66,6 +64,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosRe
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
+import de.tudarmstadt.ukp.inception.recommendation.model.Chart;
 
 public class EvaluationSimulationPanel
     extends Panel
@@ -148,14 +147,11 @@ public class EvaluationSimulationPanel
             return;
         }
         
-        StringBuilder dataColumns = new StringBuilder();
-        StringBuilder chartType = new StringBuilder();
         StringBuilder sb = new StringBuilder();
-        StringBuilder xaxis = new StringBuilder();
 
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
-        int i = 0;
+        int iterationCount = 0;
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
@@ -168,41 +164,16 @@ public class EvaluationSimulationPanel
                 continue;
             }
 
-            xaxis.append(i + ",");
             sb.append(score + ",");
-            i++;
+            iterationCount++;
         }
 
         String data = sb.toString();
-
-        // append recommender name to the data
-        dataColumns.append("['");
         String recommenderName = selectedRecommenderPanel.getObject().getName();
 
-        // define chart type for the recommender
-        chartType.append("'");
-        chartType.append(recommenderName);
-        chartType.append("': 'step', ");
-        dataColumns.append(recommenderName);
-
-        // append data columns
-        dataColumns.append("', ");
-        dataColumns.append(data);
-        dataColumns.append("]");
-        dataColumns.append(",");
-
-        try {
-            String javascript = createJSScript(dataColumns.toString(),
-                    chartType.toString(), xaxis.toString());
-            LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-
-            aTarget.prependJavaScript(javascript);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to render chart", e);
-            error("Unable to render chart: " + e.getMessage());
-            aTarget.addChildren(getPage(), IFeedback.class);
-        } 
+        Chart chart = new Chart(chartContainer.getMarkupId(), iterationCount);
+        chart.addLearningCurve( data, recommenderName);
+        chart.renderChart(this,aTarget);
     }
 
     @Override
@@ -220,33 +191,6 @@ public class EvaluationSimulationPanel
         aResponse.render(
                 CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
 
-    }
-
-    /**
-     * Creates the JS script to render graph with the help of given data points. Also creates an
-     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of aDataColumns:
-     * 
-     * <pre>
-     * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
-     * </pre>
-     * 
-     * Example value of aChartType
-     * 
-     * <pre>
-     * recommender1: 'step', recommender2 : 'step'
-     * </pre>
-     */
-    private String createJSScript(String aDataColumns, String aChartType, String aXaxis)
-        throws IOException
-    {
-        String xaxisValues = "[ 'x' ," + aXaxis + "]";
-        String data = toJsonString(aDataColumns).substring(1, aDataColumns.toString().length());
-
-        // bind data to chart container
-        String javascript = "var chart=c3.generate({bindto:'#" + chartContainer.getMarkupId()
-                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + aChartType
-                + "}},axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
-        return javascript;
     }
 
     /**
