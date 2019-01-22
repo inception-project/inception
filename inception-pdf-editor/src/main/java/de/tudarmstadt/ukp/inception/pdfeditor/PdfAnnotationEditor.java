@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -76,28 +77,34 @@ public class PdfAnnotationEditor
     public void render(AjaxRequestTarget aTarget)
     {
         try {
+            Selection selection = getModelObject().getSelection();
             File pdfFile = documentService.getSourceDocumentFile(getModelObject().getDocument());
             String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-            // save existing selections before destroying them for rerendering
-            String saveSelections = String.join("",
-                "var selectedAnnotations = [];",
-                "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
-                "  if(a.selected) {",
-                "    selectedAnnotations.push(a.uuid);",
-                "  }",
-                "});",
-                "pdfanno.contentWindow.selectedAnnotations = selectedAnnotations;"
+            // if something is selected care for existing selections, else throw them away
+            if (selection.getBegin() != -1 && selection.getEnd() != -1) {
+                // save existing selections before destroying them for rerendering
+                String saveSelections = String.join("",
+                    "var selectedAnnotations = [];",
+                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
+                    "  if(a.selected) {",
+                    "    selectedAnnotations.push(a.uuid);",
+                    "  }",
+                    "});",
+                    "pdfanno.contentWindow.selectedAnnotations = selectedAnnotations;"
                 );
-            aTarget.appendJavaScript(saveSelections);
-            // rerender existing annotations
-            renderPdfAnnoModel(aTarget, pdftext);
-            // restore selections
-            String restoreSelections = String.join("",
-                "pdfanno.contentWindow.selectedAnnotations.forEach(function(uuid) {",
-                "  pdfanno.contentWindow.annoPage.findAnnotationById(uuid).toggleSelect();",
-                "});"
+                aTarget.appendJavaScript(saveSelections);
+                // rerender existing annotations
+                renderPdfAnnoModel(aTarget, pdftext);
+                // restore selections
+                String restoreSelections = String.join("",
+                    "pdfanno.contentWindow.selectedAnnotations.forEach(function(uuid) {",
+                    "  pdfanno.contentWindow.annoPage.findAnnotationById(uuid).toggleSelect();",
+                    "});"
                 );
-            aTarget.appendJavaScript(restoreSelections);
+                aTarget.appendJavaScript(restoreSelections);
+            } else {
+                renderPdfAnnoModel(aTarget, pdftext);
+            }
         }
         catch (IOException e)
         {
