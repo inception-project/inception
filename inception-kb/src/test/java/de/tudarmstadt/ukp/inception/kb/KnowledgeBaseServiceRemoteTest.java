@@ -266,26 +266,27 @@ public class KnowledgeBaseServiceRemoteTest
                     "http://www.wikidata.org/entity/Q20280393", rootConcepts, parentChildConcepts));
         }
 
-        {
-            KnowledgeBaseProfile profile = PROFILES.get("yago");
-            KnowledgeBase kb_yago = new KnowledgeBase();
-            kb_yago.setName(profile.getName());
-            kb_yago.setType(profile.getType());
-            kb_yago.setReification(Reification.NONE);
-            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-            kb_yago.applyMapping(profile.getMapping());
-            kb_yago.applyRootConcepts(profile);
-            kb_yago.setDefaultLanguage("eng");
-            kb_yago.setMaxResults(maxResults);
-            rootConcepts = new HashSet<String>();
-            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-            parentChildConcepts = new HashMap<String, String>();
-            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
-                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
-            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
-                    rootConcepts, parentChildConcepts));
-        }
+        // 2019-01-21: temporarily turning off YAGO because the service is currently not reachable
+//        {
+//            KnowledgeBaseProfile profile = PROFILES.get("yago");
+//            KnowledgeBase kb_yago = new KnowledgeBase();
+//            kb_yago.setName(profile.getName());
+//            kb_yago.setType(profile.getType());
+//            kb_yago.setReification(Reification.NONE);
+//            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+//            kb_yago.applyMapping(profile.getMapping());
+//            kb_yago.applyRootConcepts(profile);
+//            kb_yago.setDefaultLanguage("eng");
+//            kb_yago.setMaxResults(maxResults);
+//            rootConcepts = new HashSet<String>();
+//            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+//            parentChildConcepts = new HashMap<String, String>();
+//            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+//                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
+//            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
+//                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
+//                    rootConcepts, parentChildConcepts));
+//        }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
