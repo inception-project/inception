@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,37 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package de.tudarmstadt.ukp.inception.pdfeditor.config;
+package de.tudarmstadt.ukp.inception.scheduling.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConfigurationProperties("ui.pdf")
-public class PdfEditorProperties
+@ConfigurationProperties("inception.scheduling")
+public class SchedulingProperties
 {
-    private boolean enabled = false;
+    private int numberOfThreads = 4;
+    private int queueSize = 100;
 
-    private boolean debug = false;
-
-    public boolean isEnabled()
+    public int getNumberOfThreads()
     {
-        return enabled;
+        return numberOfThreads;
     }
 
-    public void setEnabled(boolean aEnabled)
+    public void setNumberOfThreads(int aNumberOfThreads)
     {
-        enabled = aEnabled;
+        numberOfThreads = aNumberOfThreads;
     }
 
-    public boolean isDebug()
+    public int getQueueSize()
     {
-        return debug;
+        return queueSize;
     }
 
-    public void setDebug(boolean aDebug)
+    public void setQueueSize(int aQueueSize)
     {
-        this.debug = aDebug;
+        queueSize = queueSize;
     }
 }

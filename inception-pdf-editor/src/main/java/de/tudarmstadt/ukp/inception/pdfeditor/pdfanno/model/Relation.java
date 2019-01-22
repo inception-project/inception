@@ -19,25 +19,25 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 public class Relation {
 
-    private int head;
+    private String head;
 
-    private int tail;
+    private String tail;
 
     private String label;
 
-    public Relation(int aHead, int aTail, String aLabel)
+    public Relation(String aHead, String aTail, String aLabel)
     {
         head = aHead;
         tail = aTail;
         label = aLabel;
     }
 
-    public int getHead()
+    public String getHead()
     {
         return head;
     }
 
-    public int getTail()
+    public String getTail()
     {
         return tail;
     }
