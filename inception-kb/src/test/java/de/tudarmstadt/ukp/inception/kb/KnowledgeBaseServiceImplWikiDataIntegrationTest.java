@@ -215,7 +215,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-        kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
         kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);

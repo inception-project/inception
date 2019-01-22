@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import org.assertj.core.api.Assertions;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
@@ -47,12 +48,16 @@ public class KnowledgeBaseProfileDeserializationTest
         String name = "Test KB";
         List<String> rootConcepts =  new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
+        Reification reification = Reification.WIKIDATA;
+        String defaultLanguage = "en";
 
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         referenceProfile.setName(name);
         referenceProfile.setType(type);
         referenceProfile.setRootConcepts(rootConcepts);
+        referenceProfile.setDefaultLanguage(defaultLanguage);
+        referenceProfile.setReification(reification);
         referenceProfile.setMapping(createReferenceMapping());
         referenceProfile.setAccess(createReferenceAccess());
         referenceProfile.setInfo(createReferenceInfo());

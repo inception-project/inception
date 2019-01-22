@@ -155,21 +155,14 @@ public class KnowledgeBaseServiceRemoteTest
         List<TestConfiguration> kbList = new ArrayList<>();
 
         {
+            KnowledgeBaseProfile profile = PROFILES.get("wine_ontology");
             KnowledgeBase kb_wine = new KnowledgeBase();
             kb_wine.setName("Wine ontology (OWL)");
-            kb_wine.setType(RepositoryType.LOCAL);
-            kb_wine.setReification(Reification.NONE);
-            kb_wine.setFullTextSearchIri(IriConstants.FTS_LUCENE);
-            kb_wine.setClassIri(OWL.CLASS);
-            kb_wine.setSubclassIri(RDFS.SUBCLASSOF);
-            kb_wine.setTypeIri(RDF.TYPE);
-            kb_wine.setLabelIri(RDFS.LABEL);
-            kb_wine.setPropertyTypeIri(RDF.PROPERTY);
-            kb_wine.setDescriptionIri(RDFS.COMMENT);
-            kb_wine.setPropertyLabelIri(RDFS.LABEL);
-            kb_wine.setPropertyDescriptionIri(RDFS.COMMENT);
-            kb_wine.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-            kb_wine.setDefaultLanguage("en");
+            kb_wine.setType(profile.getType());
+            kb_wine.setReification(profile.getReification());
+            kb_wine.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+            kb_wine.applyMapping(profile.getMapping());
+            kb_wine.setDefaultLanguage(profile.getDefaultLanguage());
             kb_wine.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/TR/2003/PR-owl-guide-20031209/food#Grape");
@@ -217,11 +210,11 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(profile.getType());
-            kb_wikidata_direct.setReification(Reification.NONE);
+            kb_wikidata_direct.setReification(profile.getReification());
             kb_wikidata_direct.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_wikidata_direct.applyMapping(profile.getMapping());
             kb_wikidata_direct.applyRootConcepts(profile);
-            kb_wikidata_direct.setDefaultLanguage("en");
+            kb_wikidata_direct.setDefaultLanguage(profile.getDefaultLanguage());
             kb_wikidata_direct.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.wikidata.org/entity/Q35120");
@@ -237,9 +230,9 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         // kb_wikidata_direct.setName("UKP_Wikidata (Virtuoso)");
         // kb_wikidata_direct.setType(profile.getType());
-        // kb_wikidata_direct.setReification(Reification.NONE);
+        // kb_wikidata_direct.setReification(profiles.getReification());
         // kb_wikidata_direct.applyMapping(profile.getMapping());
-        // kb_wikidata_direct.setDefaultLanguage("en");
+        // kb_wikidata_direct.setDefaultLanguage(profiles.getDefaultLanguage);
         // rootConcepts = new HashSet<String>();
         // rootConcepts.add("http://www.wikidata.org/entity/Q2419");
         // kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
@@ -251,11 +244,11 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(profile.getType());
-            kb_dbpedia.setReification(Reification.NONE);
+            kb_dbpedia.setReification(profile.getReification());
             kb_dbpedia.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_dbpedia.applyMapping(profile.getMapping());
             kb_dbpedia.applyRootConcepts(profile);
-            kb_dbpedia.setDefaultLanguage("en");
+            kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
             kb_dbpedia.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
@@ -272,11 +265,11 @@ public class KnowledgeBaseServiceRemoteTest
 //            KnowledgeBase kb_yago = new KnowledgeBase();
 //            kb_yago.setName(profile.getName());
 //            kb_yago.setType(profile.getType());
-//            kb_yago.setReification(Reification.NONE);
+//            kb_yago.setReification(profile.getReification());
 //            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
 //            kb_yago.applyMapping(profile.getMapping());
 //            kb_yago.applyRootConcepts(profile);
-//            kb_yago.setDefaultLanguage("eng");
+//            kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
 //            kb_yago.setMaxResults(maxResults);
 //            rootConcepts = new HashSet<String>();
 //            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
@@ -293,11 +286,11 @@ public class KnowledgeBaseServiceRemoteTest
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
             kb_zbw_stw_economics.setName(profile.getName());
             kb_zbw_stw_economics.setType(profile.getType());
-            kb_zbw_stw_economics.setReification(Reification.NONE);
+            kb_zbw_stw_economics.setReification(profile.getReification());
             kb_zbw_stw_economics.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
             kb_zbw_stw_economics.applyMapping(profile.getMapping());
             kb_zbw_stw_economics.applyRootConcepts(profile);
-            kb_zbw_stw_economics.setDefaultLanguage("en");
+            kb_zbw_stw_economics.setDefaultLanguage(profile.getDefaultLanguage());
             kb_zbw_stw_economics.setMaxResults(maxResults);
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://zbw.eu/stw/thsys/a");
@@ -315,8 +308,9 @@ public class KnowledgeBaseServiceRemoteTest
         // KnowledgeBase kb_zbw_gnd = new KnowledgeBase();
         // kb_zbw_gnd.setName(profile.getName());
         // kb_zbw_gnd.setType(profile.getType());
-        // kb_zbw_gnd.setReification(Reification.NONE);
+        // kb_zbw_gnd.setReification(profile.getReification());
         // kb_zbw_gnd.applyMapping(profile.getMapping());
+        // kb_zbw_gnd.setDefaultLanguage(profile.getDefaultLanguage());
         // kbList.add(new TestConfiguration(profile.getSparqlUrl(), kb_zbw_gnd));
         // }
 
