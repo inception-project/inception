@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -159,8 +160,12 @@ public class KnowledgeBasePanel
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = listSearchResults(aProjectModel.getObject(), input);
-
+                List<KBHandle> choices = new ArrayList<>();
+                if (input != null) {
+                    // Remove wildcards and leading/trailing whitespace from the input string
+                    String cleanInput = input.replaceAll("[*?]", "").trim();
+                    choices = listSearchResults(aProjectModel.getObject(), cleanInput);
+                }
                 return choices;
 
             }
@@ -184,7 +189,6 @@ public class KnowledgeBasePanel
                 super.onConfigure(behavior);
 
                 behavior.setOption("autoWidth", true);
-                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -211,9 +215,8 @@ public class KnowledgeBasePanel
             results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
                 ConceptFeatureValueType.ANY_OBJECT, aProject);
             // Sort and filter results
-            String inputLowerCase = aTypedString != null ? aTypedString.toLowerCase() : "";
-            results = results.stream()
-                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(inputLowerCase))
+            results = results.stream().filter(
+                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
             results = KBHandle.distinctByIri(results);
         }
