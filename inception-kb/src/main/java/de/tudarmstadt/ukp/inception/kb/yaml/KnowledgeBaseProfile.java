@@ -140,7 +140,8 @@ public class KnowledgeBaseProfile implements Serializable
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
         return Objects.equals(name, that.name) && Objects.equals(access, that.access)
                 && Objects.equals(mapping, that.mapping) && Objects.equals(type, that.type)
-                && Objects.equals(rootConcepts, that.rootConcepts);
+                && Objects.equals(rootConcepts, that.rootConcepts)
+                && Objects.equals(info, that.info);
     }
     
     @Override

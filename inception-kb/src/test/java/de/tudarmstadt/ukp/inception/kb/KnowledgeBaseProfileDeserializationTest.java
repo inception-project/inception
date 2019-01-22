@@ -25,7 +25,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import org.assertj.core.api.Assertions;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -43,33 +45,17 @@ public class KnowledgeBaseProfileDeserializationTest
     @Test
     public void checkThatDeserializationWorks() throws IOException {
         String name = "Test KB";
-        String url = "http://someurl/sparql";
         List<String> rootConcepts =  new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
-        String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
-        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
-        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
-        String label = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
-        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
-        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
-        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
 
-        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
-            typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri);
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
-        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
-
-        referenceProfile.setMapping(referenceMapping);
         referenceProfile.setName(name);
-
-        referenceProfile.setAccess(referenceAccess);
         referenceProfile.setType(type);
         referenceProfile.setRootConcepts(rootConcepts);
+        referenceProfile.setMapping(createReferenceMapping());
+        referenceProfile.setAccess(createReferenceAccess());
+        referenceProfile.setInfo(createReferenceInfo());
 
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;
@@ -81,5 +67,41 @@ public class KnowledgeBaseProfileDeserializationTest
         }
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
         Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
+    }
+
+    private KnowledgeBaseInfo createReferenceInfo() {
+        String description = "This is a knowledge base for testing the kb profiles";
+        String host = "a host";
+        String author = "INCEpTION team";
+        String website = "https://inception-project.github.io/";
+        KnowledgeBaseInfo referenceInfo = new KnowledgeBaseInfo();
+        referenceInfo.setDescription(description);
+        referenceInfo.setAuthorName(author);
+        referenceInfo.setHostInstitutionName(host);
+        referenceInfo.setWebsiteURL(website);
+        return referenceInfo;
+    }
+
+    private KnowledgeBaseMapping createReferenceMapping() {
+        String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
+        String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
+        String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+        String subPropertyIri = "http://www.w3.org/2000/01/rdf-schema#subPropertyOf";
+        String label = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyTypeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#Property";
+        String descriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
+        String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
+        KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
+            typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+            propertyDescriptionIri);
+        return referenceMapping;
+    }
+
+    private KnowledgeBaseAccess createReferenceAccess() {
+        String url = "http://someurl/sparql";
+        String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
+        KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
+        return referenceAccess;
     }
 }

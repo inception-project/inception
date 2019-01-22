@@ -15,4 +15,9 @@ test_profile:
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: This is a knowledge base for testing the kb profiles
+    host-institution-name: a host
+    author-name: INCEpTION team
+    website-url: https://inception-project.github.io/
       
