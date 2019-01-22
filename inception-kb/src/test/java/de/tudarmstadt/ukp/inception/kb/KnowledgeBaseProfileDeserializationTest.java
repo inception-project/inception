@@ -25,9 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import org.assertj.core.api.Assertions;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.junit.Test;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -35,8 +33,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+
 
 public class KnowledgeBaseProfileDeserializationTest
 {
