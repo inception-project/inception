@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -89,6 +90,10 @@ public class ExternalSearchAnnotationSidebar
 
     private static final Logger LOG = LoggerFactory
         .getLogger(ExternalSearchAnnotationSidebar.class);
+
+    private static final String highlight_start_tag = "<em>";
+
+    private static final String highlight_end_tag = "</em>";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -212,35 +217,40 @@ public class ExternalSearchAnnotationSidebar
     {
         // highlight keywords
         if (selectedResult != null) {
-
-            String start_tag = "<em>";
-            String end_tag = "</em>";
             AnnotatorState state = aEvent.getState();
+            highlightKeywords(aEvent.getState(), aEvent.getVDocument());
+        }
+    }
 
-            for (String highlight : selectedResult.getHighlights()) {
+    private void highlightKeywords (AnnotatorState aAnnotatorState, VDocument aVDocument)
+    {
 
-                // remove tags
-                String highlight_clean = highlight.replace(start_tag, "")
-                    .replace(end_tag, "");
+        for (String highlight : selectedResult.getHighlights()) {
 
-                // find matching highlight offset in the text
-                int highlight_start_index = selectedResult.getText().indexOf(highlight_clean);
+            // remove markers from the highlight
+            String highlight_clean = highlight.replace(highlight_start_tag, "")
+                .replace(highlight_end_tag, "");
 
-                // find offset to keywords
-                while (highlight.contains(start_tag)) {
-                    int start = highlight_start_index + highlight.indexOf(start_tag);
-                    highlight = highlight.replaceFirst(start_tag, "");
-                    int end = highlight_start_index + highlight.indexOf(end_tag);
-                    highlight = highlight.replaceFirst(end_tag, "");
+            // find the matching highlight offset in the original text
+            int highlight_start_index = selectedResult.getText().indexOf(highlight_clean);
 
-                    if (state.getWindowBeginOffset() <= start) {
-                        if (end <= state.getWindowEndOffset()) {
-                            aEvent.getVDocument().add(new VTextMarker(VMarker.MATCH_FOCUS,
-                                start - state.getWindowBeginOffset(),
-                                end - state.getWindowBeginOffset()));
-                        } else {
-                            break;
-                        }
+            // find offset to keywords in the highlight
+            // they are enclosed in <em> </em> tags in the highlight
+            while (highlight.contains(highlight_start_tag)) {
+                int start = highlight_start_index + highlight.indexOf(highlight_start_tag);
+                highlight = highlight.replaceFirst(highlight_start_tag, "");
+                int end = highlight_start_index + highlight.indexOf(highlight_end_tag);
+                highlight = highlight.replaceFirst(highlight_end_tag, "");
+
+                // Highlight the keywords in the annotator indicated by the offsets
+                // if they are within the current window.
+                if (aAnnotatorState.getWindowBeginOffset() <= start) {
+                    if (end <= aAnnotatorState.getWindowEndOffset()) {
+                        aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
+                            start - aAnnotatorState.getWindowBeginOffset(),
+                            end - aAnnotatorState.getWindowBeginOffset()));
+                    } else {
+                        break;
                     }
                 }
             }
