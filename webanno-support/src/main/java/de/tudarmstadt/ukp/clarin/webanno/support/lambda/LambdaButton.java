@@ -29,6 +29,7 @@ public class LambdaButton
 
     private SerializableRunnable action;
     private SerializableConsumer<Exception> exceptionHandler;
+    private boolean triggerAfterSubmit;
 
     public LambdaButton(String aId, SerializableRunnable aAction)
     {
@@ -42,9 +43,30 @@ public class LambdaButton
         action = aAction;
         exceptionHandler = aExceptionHandler;
     }
+    
+    public LambdaButton triggerAfterSubmit()
+    {
+        triggerAfterSubmit = true;
+        return this;
+    }
 
     @Override
     public void onSubmit()
+    {
+        if (!triggerAfterSubmit) {
+            action();
+        }
+    }
+    
+    @Override
+    public void onAfterSubmit()
+    {
+        if (triggerAfterSubmit) {
+            action();
+        }
+    }
+    
+    private void action()
     {
         try {
             action.run();
