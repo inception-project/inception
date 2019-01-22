@@ -119,10 +119,10 @@ yago:
     access-url: https://linkeddata1.calcul.u-psud.fr/sparql
     full-text-search: bif:contains
   mapping:
-      class: http://www.w3.org/2002/07/owl#Class
+      class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
       instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-      label: http://www.w3.org/2000/01/rdf-schema#label
+      label: http://www.w3.org/2004/02/skos/core#prefLabel
       property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
