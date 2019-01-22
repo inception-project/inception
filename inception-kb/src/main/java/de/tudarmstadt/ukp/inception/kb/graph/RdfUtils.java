@@ -89,8 +89,9 @@ public class RdfUtils
         return new RepositoryResult<Statement>(eci);
     }
 
-    private static ExceptionConvertingIteration<Statement, RepositoryException> getExceptionConvertingIteration(
-            TupleQueryResult aResult, String aSubjBinding, String aPredBinding, String aObjBinding)
+    private static ExceptionConvertingIteration<Statement, RepositoryException> 
+            getExceptionConvertingIteration(TupleQueryResult aResult, String aSubjBinding, 
+                    String aPredBinding, String aObjBinding)
     {
         Iteration<Statement, QueryEvaluationException> i1 = 
                 new ConvertingIteration<BindingSet, Statement, QueryEvaluationException>(aResult)
