@@ -40,6 +40,7 @@ import org.apache.wicket.markup.html.form.RequiredTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -59,6 +60,7 @@ import org.slf4j.LoggerFactory;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
+import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class AccessSpecificSettingsPanel
@@ -81,6 +84,7 @@ public class AccessSpecificSettingsPanel
     // Remote
     private final Map<String, KnowledgeBaseProfile> knowledgeBaseProfiles;
     private static final int MAXIMUM_REMOTE_REPO_SUGGESTIONS = 10;
+    private WebMarkupContainer infoContainerRemote;
 
     // Local
     private FileUploadField fileUpload;
@@ -89,6 +93,11 @@ public class AccessSpecificSettingsPanel
     private static final String CLASSPATH_PREFIX = "classpath:";
     private final Map<String, KnowledgeBaseProfile> downloadedProfiles;
     private final Map<String, File> uploadedFiles;
+    private WebMarkupContainer infoContainerLocal;
+
+    //Both
+    private CompoundPropertyModel<KnowledgeBaseInfo> kbInfoModel;
+
 
     /**
      * Given the default file extension of an RDF format, returns the corresponding
@@ -123,6 +132,7 @@ public class AccessSpecificSettingsPanel
         downloadedProfiles = new HashMap<>();
         uploadedFiles = new HashMap<>();
         kbModel.getObject().clearFiles();
+        kbInfoModel = CompoundPropertyModel.of(null);
 
         boolean isHandlingLocalRepository =
             kbModel.getObject().getKb().getType() == RepositoryType.LOCAL;
@@ -154,13 +164,17 @@ public class AccessSpecificSettingsPanel
         suggestions = suggestions.subList(0,
             Math.min(suggestions.size(), MAXIMUM_REMOTE_REPO_SUGGESTIONS));
 
+        infoContainerRemote = createKbInfoContainer("infoContainer");
+        infoContainerRemote.setOutputMarkupId(true);
+        wmc.add(infoContainerRemote);
         wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
+
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
         List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
     {
-        return new ListView<KnowledgeBaseProfile>("suggestions", aSuggestions)
+        return new ListView<>(aId, aSuggestions)
         {
 
             private static final long serialVersionUID = 4179629475064638272L;
@@ -175,14 +189,30 @@ public class AccessSpecificSettingsPanel
                     // values to IRI and populate the list
                     kbModel.getObject().getKb().applyRootConcepts(item.getModelObject());
                     kbModel.getObject().getKb().applyMapping(item.getModelObject().getMapping());
+                    kbInfoModel.setObject(item.getModelObject().getInfo());
                     kbModel.getObject().getKb().setFullTextSearchIri(
                         item.getModelObject().getAccess().getFullTextSearchIri());
-                    t.add(aUrlField);
+                    t.add(aUrlField, infoContainerRemote);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);
             }
         };
+    }
+
+    private WebMarkupContainer createKbInfoContainer(String aId)
+    {
+        WebMarkupContainer wmc = new WebMarkupContainer(aId);
+        wmc.add(new Label("description", kbInfoModel.bind("description"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new Label("hostInstitutionName", kbInfoModel.bind("hostInstitutionName"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new Label("authorName", kbInfoModel.bind("authorName"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        wmc.add(new ExternalLink("websiteURL", kbInfoModel.bind("websiteURL"),
+            kbInfoModel.bind("websiteURL"))
+            .add(LambdaBehavior.visibleWhen(() -> kbInfoModel.getObject() != null)));
+        return wmc;
     }
 
     private void setUpLocalSpecificSettings(WebMarkupContainer wmc)
@@ -209,6 +239,10 @@ public class AccessSpecificSettingsPanel
             this::actionDownloadKbAndSetIRIs);
         addKbButton.add(new Label("addKbLabel", new ResourceModel("kb.wizard.steps.local.addKb")));
         listViewContainer.add(addKbButton);
+
+        infoContainerLocal = createKbInfoContainer("infoContainer");
+        infoContainerLocal.setOutputMarkupId(true);
+        wmc.add(infoContainerLocal);
 
         wmc.add(listViewContainer);
     }
@@ -354,8 +388,9 @@ public class AccessSpecificSettingsPanel
         }
         else {
             selectedKnowledgeBaseProfile = aModel.getObject();
+            kbInfoModel.setObject(aModel.getObject().getInfo());
         }
-        aTarget.add(listViewContainer);
+        aTarget.add(listViewContainer, infoContainerLocal);
     }
 
     private File uploadFile(FileUpload fu) throws Exception

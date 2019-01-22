@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 
@@ -162,7 +163,7 @@ public class PdfAnnoRendererTest
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, Integer.MAX_VALUE,
+        preRenderer.render(vdoc, 0, cas.getDocumentText().length(),
             jCas, schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
@@ -171,5 +172,38 @@ public class PdfAnnoRendererTest
 
         assertThat(linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"),
             "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+    }
+
+    @Test
+    public void tetsConvertToDocumentOffset() throws Exception
+    {
+        String file = "src/test/resources/tcf04-karin-wl.xml";
+        String pdftxt = new Scanner(
+            new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+
+        CAS cas = JCasFactory.createJCas().getCas();
+        CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
+            TcfReader.PARAM_SOURCE_LOCATION, file);
+        reader.getNext(cas);
+        JCas jCas = cas.getJCas();
+
+        AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.getPreferences().setWindowSize(10);
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setProject(project);
+
+        Offset docOffsetKarin = PdfAnnoRenderer
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(3, 7));
+        assertThat(docOffsetKarin).isEqualTo(new Offset(0, 5));
+        Offset docOffsetFliegt = PdfAnnoRenderer
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(8, 13));
+        assertThat(docOffsetFliegt).isEqualTo(new Offset(6, 12));
+        Offset docOffsetSie = PdfAnnoRenderer
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(28, 30));
+        assertThat(docOffsetSie).isEqualTo(new Offset(29, 32));
+        Offset docOffsetDort = PdfAnnoRenderer
+            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(35, 38));
+        assertThat(docOffsetDort).isEqualTo(new Offset(38, 42));
     }
 }
