@@ -33,6 +33,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColu
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -172,7 +173,6 @@ public class SearchPage extends ApplicationPageBase
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
             error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
-            e.printStackTrace();
         }
     }
 
@@ -202,6 +202,7 @@ public class SearchPage extends ApplicationPageBase
             dataProvider.searchDocuments(targetQuery.getObject());
             
             aTarget.add(dataTableContainer);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 

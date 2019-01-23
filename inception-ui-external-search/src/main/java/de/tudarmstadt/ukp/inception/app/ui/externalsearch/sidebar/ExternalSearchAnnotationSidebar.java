@@ -32,6 +32,7 @@ import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColu
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -273,6 +274,7 @@ public class ExternalSearchAnnotationSidebar
             searchStateModel.getObject().getDataProvider().searchDocuments(targetQuery.getObject());
 
             aTarget.add(dataTableContainer);
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
@@ -291,7 +293,7 @@ public class ExternalSearchAnnotationSidebar
             }
         }
         catch (Exception e) {
-            LOG.error("Unable to perform query", e);
+            LOG.error("Unable to perform query [" + aQuery + "]", e);
             error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
         }
     }
@@ -379,9 +381,9 @@ public class ExternalSearchAnnotationSidebar
             return currentRepository;
         }
 
-        public void setCurrentRepository(DocumentRepository repository)
+        public void setCurrentRepository(DocumentRepository aRepository)
         {
-            this.currentRepository = repository;
+            currentRepository = aRepository;
         }
 
         public AnnotationLayer getLayer()
@@ -389,9 +391,9 @@ public class ExternalSearchAnnotationSidebar
             return layer;
         }
 
-        public void setLayer(AnnotationLayer selectedLayer)
+        public void setLayer(AnnotationLayer aAnnotationLayer)
         {
-            this.layer = selectedLayer;
+            layer = aAnnotationLayer;
         }
 
         public IModel<String> getTargetQuery()
@@ -399,9 +401,9 @@ public class ExternalSearchAnnotationSidebar
             return targetQuery;
         }
 
-        public void setTargetQuery(IModel<String> query)
+        public void setTargetQuery(IModel<String> aQuery)
         {
-            this.targetQuery = query;
+            targetQuery = aQuery;
         }
 
         public ExternalResultDataProvider getDataProvider()
@@ -409,9 +411,9 @@ public class ExternalSearchAnnotationSidebar
             return dataProvider;
         }
 
-        public void setDataProvider(ExternalResultDataProvider dataProvider)
+        public void setDataProvider(ExternalResultDataProvider aDataProvider)
         {
-            this.dataProvider = dataProvider;
+            dataProvider = aDataProvider;
         }
 
         public long getCurrentPage()
@@ -419,9 +421,9 @@ public class ExternalSearchAnnotationSidebar
             return currentPage;
         }
 
-        public void setCurrentPage(long currentPage)
+        public void setCurrentPage(long aCurrentPage)
         {
-            this.currentPage = currentPage;
+            currentPage = aCurrentPage;
         }
     }
 }

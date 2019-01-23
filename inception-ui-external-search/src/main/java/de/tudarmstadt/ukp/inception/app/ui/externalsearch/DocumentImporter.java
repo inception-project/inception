@@ -69,21 +69,19 @@ public class DocumentImporter implements Serializable
         if (documentService.existsSourceDocument(project, aDocumentTitle)) {
             return false;
         }
-        else {
-            InputStream stream = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
 
-            SourceDocument document = new SourceDocument();
-            document.setName(aDocumentTitle);
-            document.setProject(project);
-            document.setFormat(PLAIN_TEXT);
+        SourceDocument document = new SourceDocument();
+        document.setName(aDocumentTitle);
+        document.setProject(project);
+        document.setFormat(PLAIN_TEXT);
 
-            try (InputStream is = stream) {
-                documentService.uploadSourceDocument(is, document);
-            }
-            catch (IOException | UIMAException e) {
-                throw new IOException("Unable to retrieve document " + aDocumentTitle, e);
-            }
-            return true;
+        try (InputStream is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))) {
+            documentService.uploadSourceDocument(is, document);
         }
+        catch (IOException | UIMAException e) {
+            throw new IOException("Unable to retrieve document [" + aDocumentTitle + "]", e);
+        }
+        return true;
+
     }
 }
