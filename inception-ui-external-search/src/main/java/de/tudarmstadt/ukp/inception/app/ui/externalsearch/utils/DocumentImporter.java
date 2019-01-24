@@ -1,4 +1,4 @@
-package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
+package de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils;
 
 import java.io.IOException;
 

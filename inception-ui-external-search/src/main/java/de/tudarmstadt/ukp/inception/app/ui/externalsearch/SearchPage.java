@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
@@ -48,10 +50,6 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -274,14 +272,8 @@ public class SearchPage extends ApplicationPageBase
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
             
             String documentTitle = result.getDocumentTitle();
-            
-            Whitelist wl = new Whitelist();
-            wl.addTags("em");
-            Document dirty = Jsoup.parseBodyFragment(result.getHighlights().get(0), "");
-            Cleaner cleaner = new Cleaner(wl);
-            Document clean = cleaner.clean(dirty);
-            clean.select("em").tagName("mark");
-            String highlight = clean.body().html();
+
+            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0));
             
             LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()

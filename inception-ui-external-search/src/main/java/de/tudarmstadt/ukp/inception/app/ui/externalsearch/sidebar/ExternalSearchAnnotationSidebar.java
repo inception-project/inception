@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
@@ -47,11 +48,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.safety.Cleaner;
-import org.jsoup.safety.Whitelist;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,7 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentImporterImpl;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporterImpl;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -329,13 +325,7 @@ public class ExternalSearchAnnotationSidebar
 
             String documentTitle = result.getDocumentTitle();
 
-            Whitelist wl = new Whitelist();
-            wl.addTags("em");
-            Document dirty = Jsoup.parseBodyFragment(result.getHighlights().get(0), "");
-            Cleaner cleaner = new Cleaner(wl);
-            Document clean = cleaner.clean(dirty);
-            clean.select("em").tagName("mark");
-            String highlight = clean.body().html();
+            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0));
 
             boolean existsSourceDocument = documentService
                 .existsSourceDocument(project, documentTitle);
