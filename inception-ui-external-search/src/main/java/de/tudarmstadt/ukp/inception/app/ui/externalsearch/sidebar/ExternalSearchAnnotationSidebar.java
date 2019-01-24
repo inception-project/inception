@@ -102,7 +102,7 @@ public class ExternalSearchAnnotationSidebar
 
     private CompoundPropertyModel<ExternalSearchUserState> searchStateModel;
 
-    final WebMarkupContainer mainContainer;
+    private final WebMarkupContainer mainContainer;
 
     private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -131,9 +131,7 @@ public class ExternalSearchAnnotationSidebar
 
         // Set up the search state in the page if it is not already there
         if (aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE) == null) {
-            ExternalSearchUserState searchState = new ExternalSearchUserState();
-            searchStateModel.setObject(searchState);
-            ;
+            searchStateModel.setObject(new ExternalSearchUserState());
         }
 
         project = getModel().getObject().getProject();
@@ -170,6 +168,8 @@ public class ExternalSearchAnnotationSidebar
 
         columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Results"))
         {
+            private static final long serialVersionUID = -5658664083675871242L;
+
             @Override public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
                 String componentId, IModel<ExternalSearchResult> model)
             {
@@ -216,6 +216,8 @@ public class ExternalSearchAnnotationSidebar
     private class DocumentRepositorySelectionForm
         extends Form<DocumentRepository>
     {
+        private static final long serialVersionUID = 660903434919120494L;
+
         public DocumentRepositorySelectionForm(String aId)
         {
             super(aId);
@@ -223,32 +225,23 @@ public class ExternalSearchAnnotationSidebar
             DropDownChoice<DocumentRepository> repositoryCombo =
                 new BootstrapSelect<DocumentRepository>("repositoryCombo",
                 new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
-                    "searchStateModel.getObject().getCurrentRepository()"), repositoriesModel)
-            {
-                private static final long serialVersionUID = 1L;
+                    "searchStateModel.getObject().getCurrentRepository()"), repositoriesModel);
 
-                {
-                    setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
-                    setNullValid(false);
-                }
+            repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
+            repositoryCombo.setNullValid(false);
 
-                @Override protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            };
             // Just update the selection
             repositoryCombo.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
             add(repositoryCombo);
 
         }
-
-        private static final long serialVersionUID = -1L;
     }
 
     private class SearchForm
         extends Form<Void>
     {
+
+        private static final long serialVersionUID = -2787363313878650063L;
 
         public SearchForm(String id)
         {
@@ -280,6 +273,11 @@ public class ExternalSearchAnnotationSidebar
 
     private void searchDocuments(String aQuery)
     {
+        if (searchStateModel.getObject().getCurrentRepository() == null) {
+            error("Error: No repository selected");
+            return;
+        }
+
         results.clear();
         applicationEventPublisher.get().publishEvent(new ExternalSearchQueryEvent(this,
             searchStateModel.getObject().getCurrentRepository().getProject(),
@@ -301,6 +299,8 @@ public class ExternalSearchAnnotationSidebar
     public class ResultRowView
         extends Panel
     {
+        private static final long serialVersionUID = 6212628948731147733L;
+
         public ResultRowView(String id, long rowNumber, IModel<ExternalSearchResult> model)
         {
             super(id, model);
@@ -366,6 +366,8 @@ public class ExternalSearchAnnotationSidebar
     public static class ExternalSearchUserState
         implements Serializable
     {
+        private static final long serialVersionUID = 366937089563292016L;
+
         private AnnotationLayer layer;
 
         private DocumentRepository currentRepository = null;

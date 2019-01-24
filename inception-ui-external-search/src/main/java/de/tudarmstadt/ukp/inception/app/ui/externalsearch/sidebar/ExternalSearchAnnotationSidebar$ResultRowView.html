@@ -22,20 +22,14 @@
     <a href="#" wicket:id="docLink" style="text-decoration:none">
       <div class="flex-v-container">
         <div class="flex-h-container">
-          <div class="label label-info">
-            <wicket:container wicket:id="importStatus"/>
-          </div>
-          <div class="text-right" style="flex-grow: 9">
-            <wicket:container wicket:id="score"/>
-          </div>
+          <div class="label label-info" wicket:id="importStatus"/>
+          <div class="text-right" style="flex-grow: 9" wicket:id="score"/>
         </div>
         <div class="flex-content">
           <h4>
-            <wicket:container wicket:id="title"/>
+            <div wicket:id="title"/>
           </h4>
-          <div>
-            <wicket:container wicket:id="highlight"/>
-          </div>
+          <div wicket:id="highlight"/>
         </div>
       </div>
     </a>

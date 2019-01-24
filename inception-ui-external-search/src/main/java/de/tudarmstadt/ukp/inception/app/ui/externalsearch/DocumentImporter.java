@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class DocumentImporter implements Serializable
 {
+    private static final long serialVersionUID = -6471512587186474479L;
 
     private static final String PLAIN_TEXT = "text";
 

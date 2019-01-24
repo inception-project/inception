@@ -41,7 +41,7 @@ public class ExternalSearchAnnotationSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "externalSearchSidebar";
+        return "External Search Sidebar";
     }
 
     @Override
