@@ -145,8 +145,8 @@ public class ExternalSearchAnnotationSidebar
         if (searchState.getCurrentRepository() == null && repositories.size() > 0) {
             searchState.setCurrentRepository(repositories.get(0));
         }
-        if (searchState.getTargetQuery() == null) {
-            searchState.setTargetQuery(Model.of(""));
+        if (searchState.getQuery() == null) {
+            searchState.setQuery(Model.of(""));
         }
 
         repositoriesModel = LoadableDetachableModel
@@ -270,7 +270,7 @@ public class ExternalSearchAnnotationSidebar
         public SearchForm(String id)
         {
             super(id);
-            add(new TextField<>("queryInput", searchStateModel.getObject().getTargetQuery(),
+            add(new TextField<>("queryInput", searchStateModel.getObject().getQuery(),
                 String.class));
             LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
                 this::actionSearch);
@@ -280,15 +280,15 @@ public class ExternalSearchAnnotationSidebar
 
         private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
         {
-            IModel<String> targetQuery = searchStateModel.getObject().getTargetQuery();
+            IModel<String> query = searchStateModel.getObject().getQuery();
             selectedResult = null;
-            if (targetQuery.getObject() == null) {
-                targetQuery.setObject("*.*");
+            if (query.getObject() == null) {
+                query.setObject("*.*");
             }
 
-            searchDocuments(targetQuery.getObject());
+            searchDocuments(query.getObject());
 
-            searchStateModel.getObject().getDataProvider().searchDocuments(targetQuery.getObject());
+            searchStateModel.getObject().getDataProvider().searchDocuments(query.getObject());
 
             aTarget.add(dataTableContainer);
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -377,7 +377,7 @@ public class ExternalSearchAnnotationSidebar
 
         private DocumentRepository currentRepository = null;
 
-        private IModel<String> targetQuery = null;
+        private IModel<String> query = null;
 
         private ExternalResultDataProvider dataProvider = null;
 
@@ -403,14 +403,14 @@ public class ExternalSearchAnnotationSidebar
             layer = aAnnotationLayer;
         }
 
-        public IModel<String> getTargetQuery()
+        public IModel<String> getQuery()
         {
-            return targetQuery;
+            return query;
         }
 
-        public void setTargetQuery(IModel<String> aQuery)
+        public void setQuery(IModel<String> aQuery)
         {
-            targetQuery = aQuery;
+            query = aQuery;
         }
 
         public ExternalResultDataProvider getDataProvider()
