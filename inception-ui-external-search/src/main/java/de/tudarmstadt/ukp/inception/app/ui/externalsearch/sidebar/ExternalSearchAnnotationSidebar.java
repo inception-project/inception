@@ -97,7 +97,7 @@ public class ExternalSearchAnnotationSidebar
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean DocumentImporterImpl documentImporter;
 
-    private CompoundPropertyModel<ExternalSearchUserState> searchStateModel;
+    private ExternalSearchUserState externalSearchUserState;
 
     private final WebMarkupContainer mainContainer;
 
@@ -108,6 +108,8 @@ public class ExternalSearchAnnotationSidebar
     private ExternalSearchResult selectedResult;
 
     private Project project;
+
+    private DocumentRepository currentRepository;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -120,7 +122,8 @@ public class ExternalSearchAnnotationSidebar
         // Attach search state to annotation page
         // This state is to maintain persistence of this sidebar so that when user moves to another
         // sidebar and comes back here, the state of this sidebar (search results) are preserved.
-        searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter
+        CompoundPropertyModel<ExternalSearchUserState> searchStateModel =
+            new CompoundPropertyModel<>(LambdaModelAdapter
             .of(() -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
                 searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
 
@@ -133,12 +136,13 @@ public class ExternalSearchAnnotationSidebar
         List<DocumentRepository> repositories = externalSearchService
             .listDocumentRepositories(project);
 
-        ExternalSearchUserState searchState = searchStateModel.getObject();
-        if (searchState.getCurrentRepository() == null && repositories.size() > 0) {
-            searchState.setCurrentRepository(repositories.get(0));
+        externalSearchUserState = searchStateModel.getObject();
+        currentRepository = externalSearchUserState.getCurrentRepository();
+        if (currentRepository == null && repositories.size() > 0) {
+            currentRepository = repositories.get(0);
         }
-        if (searchState.getQuery() == null) {
-            searchState.setQuery(Model.of(""));
+        if (externalSearchUserState.getQuery() == null) {
+            externalSearchUserState.setQuery(Model.of(""));
         }
 
         repositoriesModel = LoadableDetachableModel
@@ -172,10 +176,10 @@ public class ExternalSearchAnnotationSidebar
             }
         });
 
-        if (searchState.getDataProvider() == null) {
-            searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
-                userRepository.getCurrentUser(),
-                searchStateModel.getObject().getCurrentRepository(), ""));
+        if (externalSearchUserState.getDataProvider() == null) {
+            externalSearchUserState.setDataProvider(
+                new ExternalResultDataProvider(externalSearchService,
+                    userRepository.getCurrentUser(), currentRepository, ""));
         }
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
@@ -183,8 +187,8 @@ public class ExternalSearchAnnotationSidebar
         mainContainer.add(dataTableContainer);
 
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
-            columns, searchState.getDataProvider(), 8);
-        resultTable.setCurrentPage(searchState.getCurrentPage());
+            columns, externalSearchUserState.getDataProvider(), 8);
+        resultTable.setCurrentPage(externalSearchUserState.getCurrentPage());
         dataTableContainer.add(resultTable);
 
     }
@@ -194,7 +198,11 @@ public class ExternalSearchAnnotationSidebar
         // Save the current page number of the search results when the sidebar being switched
         DataTable<ExternalSearchResult, String> resultTable =
             (DataTable<ExternalSearchResult, String>) dataTableContainer.get("resultsTable");
-        searchStateModel.getObject().setCurrentPage(resultTable.getCurrentPage());
+        externalSearchUserState.setCurrentPage(resultTable.getCurrentPage());
+
+        // save current repository
+        externalSearchUserState.setCurrentRepository(currentRepository);
+
         super.onDetach();
     }
 
@@ -211,7 +219,7 @@ public class ExternalSearchAnnotationSidebar
         try {
             documentImporter
                 .importDocumentFromDocumentRepository(userRepository.getCurrentUser(), project,
-                    aDocumentTitle, searchStateModel.getObject().getCurrentRepository());
+                    aDocumentTitle, currentRepository);
 
             getAnnotationPage().actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(project, aDocumentTitle));
@@ -241,7 +249,7 @@ public class ExternalSearchAnnotationSidebar
             DropDownChoice<DocumentRepository> repositoryCombo =
                 new BootstrapSelect<DocumentRepository>("repositoryCombo",
                 new PropertyModel<DocumentRepository>(ExternalSearchAnnotationSidebar.this,
-                    "searchStateModel.getObject().getCurrentRepository()"), repositoriesModel);
+                    "currentRepository"), repositoriesModel);
 
             repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
             repositoryCombo.setNullValid(false);
@@ -262,7 +270,7 @@ public class ExternalSearchAnnotationSidebar
         public SearchForm(String id)
         {
             super(id);
-            add(new TextField<>("queryInput", searchStateModel.getObject().getQuery(),
+            add(new TextField<>("queryInput", externalSearchUserState.getQuery(),
                 String.class));
             LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
                 this::actionSearch);
@@ -272,7 +280,7 @@ public class ExternalSearchAnnotationSidebar
 
         private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
         {
-            IModel<String> query = searchStateModel.getObject().getQuery();
+            IModel<String> query = externalSearchUserState.getQuery();
             selectedResult = null;
             if (query.getObject() == null) {
                 query.setObject("*.*");
@@ -280,7 +288,7 @@ public class ExternalSearchAnnotationSidebar
 
             searchDocuments(query.getObject());
 
-            searchStateModel.getObject().getDataProvider().searchDocuments(query.getObject());
+            externalSearchUserState.getDataProvider().searchDocuments(query.getObject());
 
             aTarget.add(dataTableContainer);
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -289,20 +297,18 @@ public class ExternalSearchAnnotationSidebar
 
     private void searchDocuments(String aQuery)
     {
-        if (searchStateModel.getObject().getCurrentRepository() == null) {
+        if (currentRepository == null) {
             error("Error: No repository selected");
             return;
         }
 
         results.clear();
         applicationEventPublisher.get().publishEvent(new ExternalSearchQueryEvent(this,
-            searchStateModel.getObject().getCurrentRepository().getProject(),
-            userRepository.getCurrentUser().getUsername(), aQuery));
+            currentRepository.getProject(), userRepository.getCurrentUser().getUsername(), aQuery));
 
         try {
             for (ExternalSearchResult result : externalSearchService
-                .query(userRepository.getCurrentUser(),
-                    searchStateModel.getObject().getCurrentRepository(), aQuery)) {
+                .query(userRepository.getCurrentUser(), currentRepository, aQuery)) {
                 results.add(result);
             }
         }
