@@ -37,4 +37,10 @@ public class VRange
     {
         return end;
     }
+
+    @Override
+    public String toString()
+    {
+        return "[" + begin + "-" + end + "]";
+    }
 }

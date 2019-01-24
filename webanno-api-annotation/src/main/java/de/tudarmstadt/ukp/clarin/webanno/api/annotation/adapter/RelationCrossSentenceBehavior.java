@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginInSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -62,7 +63,7 @@ public class RelationCrossSentenceBehavior
             return aRequest;
         }
         
-        if (!isSameSentence(aRequest.getJcas(), aRequest.getOriginFs().getBegin(),
+        if (!isBeginEndInSameSentence(aRequest.getJcas(), aRequest.getOriginFs().getBegin(),
                 aRequest.getTargetFs().getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
                     + "limit your annotation to single sentence!");
@@ -83,7 +84,7 @@ public class RelationCrossSentenceBehavior
             for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
                 JCas jcas = e.getKey().getCAS().getJCas();
                 
-                if (!isSameSentence(jcas, 
+                if (!isBeginInSameSentence(jcas, 
                         selectByAddr(jcas, e.getValue().getSource().getId()).getBegin(),
                         selectByAddr(jcas, e.getValue().getTarget().getId()).getBegin()))
                 {
@@ -117,7 +118,7 @@ public class RelationCrossSentenceBehavior
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
 
-            if (!isSameSentence(aJCas, targetFs.getBegin(), sourceFs.getBegin())) {
+            if (!isBeginInSameSentence(aJCas, targetFs.getBegin(), sourceFs.getBegin())) {
                 messages.add(Pair.of(
                         LogMessage.error(this, "Crossing sentence bounardies is not permitted."),
                         fs));
