@@ -142,7 +142,7 @@ public class EvaluationSimulationPanel
 
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
-        int iterationCount = 0;
+        int iterations = 0;
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
@@ -156,14 +156,14 @@ public class EvaluationSimulationPanel
             }
 
             sb.append(score + ",");
-            iterationCount++;
+            iterations++;
         }
 
         String data = sb.toString();
         String recommenderName = selectedRecommenderPanel.getObject().getName();
 
-        Chart chart = new Chart(chartContainer.getMarkupId(), iterationCount);
-        chart.addLearningCurve( data, recommenderName);
+        Chart chart = new Chart(chartContainer.getMarkupId(), iterations);
+        chart.addLearningCurve(data, recommenderName);
         chart.renderChart(this,aTarget);
     }
 

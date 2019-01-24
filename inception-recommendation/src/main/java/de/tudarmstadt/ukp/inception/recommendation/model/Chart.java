@@ -53,8 +53,8 @@ public class Chart
      * given recommender by appending data string. The type of the chart is set to be step. Calling
      * this method iteratively will generate multiple learning curves
      * 
-     * @param data a string that looks something like 2,5,3,7,8,4,
-     * @param name name of the learning curve
+     * @param aData a string that looks something like 2,5,3,7,8,4,
+     * @param aName name of the learning curve
      */
     public void addLearningCurve(String aData, String aName)
     {
@@ -108,8 +108,6 @@ public class Chart
     /**
      * Renders the chart using the given request handler 
      * 
-     * @param aPanel
-     * @param aRequestHandler
      */
     public void renderChart(Panel aPanel, IPartialPageRequestHandler aRequestHandler)
     {
