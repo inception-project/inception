@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -68,7 +68,7 @@ public class SpanCrossSentenceBehavior
             return aRequest;
         }
         
-        if (!isSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
+        if (!isBeginEndInSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
@@ -107,7 +107,7 @@ public class SpanCrossSentenceBehavior
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         
         for (AnnotationFS fs : select(cas, type)) {
-            if (!isSameSentence(aJCas, fs.getBegin(), fs.getEnd())) {
+            if (!isBeginEndInSameSentence(aJCas, fs.getBegin(), fs.getEnd())) {
                 messages.add(Pair.of(
                         LogMessage.error(this, "Crossing sentence bounardies is not permitted."),
                         fs));

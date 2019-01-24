@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.selectCovering;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -87,42 +87,49 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Check if the two given offsets are within the same sentence.
+     * Check if the two given begin offsets are within the same sentence. If the second offset
+     * is at the end of the sentence, it is no longer considered to be part of the sentence.
+     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
+     * is no sentence covering the offsets, the method returns <code>false</code>.
      *
      * @param aJcas
      *            the JCAs.
-     * @param aReferenceOffset
+     * @param aBegin1
      *            the reference offset.
-     * @param aCompareOffset
+     * @param aBegin2
      *            the comparison offset.
      * @return if the two offsets are within the same sentence.
      */
-    public static boolean isSameSentence(JCas aJcas, int aReferenceOffset, int aCompareOffset)
+    public static boolean isBeginInSameSentence(JCas aJcas, int aBegin1, int aBegin2)
     {
-        // Trivial case
-        if (aReferenceOffset == aCompareOffset) {
-            return true;
-        }
-
-        int offset1 = Math.min(aReferenceOffset, aCompareOffset);
-        int offset2 = Math.max(aReferenceOffset, aCompareOffset);
-
-        // Scanning through sentences
-        Iterator<Sentence> si = JCasUtil.iterator(aJcas, Sentence.class);
-        while (si.hasNext()) {
-            Sentence s = si.next();
-            if (s.getBegin() <= offset1 && offset1 <= s.getEnd()) {
-                return s.getBegin() <= offset2 && offset2 <= s.getEnd();
-            }
-
-            // Sentences are sorted. When we hit the first sentence that is beyond the reference
-            // offset, we will never again find a sentence that contains it.
-            if (offset1 < s.getBegin()) {
-                return false;
-            }
-        }
-
-        return false;
+        return selectCovering(aJcas, Sentence.class, aBegin1, aBegin1).stream()
+            .filter(s -> s.getBegin() <= aBegin1 && aBegin1 < s.getEnd())
+            .filter(s -> s.getBegin() <= aBegin2 && aBegin2 < s.getEnd())
+            .findFirst()
+            .isPresent();
+    }
+    
+    /**
+     * Check if the begin/end offsets are within the same sentence. If the end offset
+     * is at the end of the sentence, it is considered to be part of the sentence.
+     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
+     * is no sentence covering the offsets, the method returns <code>false</code>.
+     *
+     * @param aJcas
+     *            the JCAs.
+     * @param aBegin
+     *            the reference offset.
+     * @param aEnd
+     *            the comparison offset.
+     * @return if the two offsets are within the same sentence.
+     */
+    public static boolean isBeginEndInSameSentence(JCas aJcas, int aBegin, int aEnd)
+    {
+        return selectCovering(aJcas, Sentence.class, aBegin, aBegin).stream()
+                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
+                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
+                .findFirst()
+                .isPresent();
     }
 
     public static int getAddr(FeatureStructure aFS)
