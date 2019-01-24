@@ -128,7 +128,9 @@ public class ElasticSearchProvider
             if (hit.getHighlight() != null) {
                 // There are highlights, set them in the result
                 List<String> highlights = new ArrayList<>();
-                highlights.add(hit.getHighlight().getDoctext().get(0));
+                for (String highlight : hit.getHighlight().getDoctext()) {
+                    highlights.add(highlight);
+                }
                 result.setHighlights(highlights);
             }
             results.add(result);
