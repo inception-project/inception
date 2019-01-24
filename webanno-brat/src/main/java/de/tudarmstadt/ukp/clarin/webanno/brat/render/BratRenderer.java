@@ -90,6 +90,8 @@ public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
     
+    private static final boolean DEBUG = false;
+    
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
             VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
     {
@@ -146,9 +148,13 @@ public class BratRenderer
                 } else {
                     color = vspan.getColorHint();
                 }
-                aResponse.addEntity(
-                        new Entity(vspan.getVid(), vspan.getType(), offsets,
-                                bratLabelText, color, bratHoverText));
+                
+                if (DEBUG) {
+                    bratHoverText = vspan.getOffsets() + "\n" + bratHoverText;
+                }
+                
+                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
+                        bratLabelText, color, bratHoverText));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -268,6 +274,13 @@ public class BratRenderer
                 continue;
             }
             aResponse.addToken(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin);
+            
+            if (DEBUG) {
+                aResponse.addEntity(new Entity(new VID(fs), "Token",
+                        new Offsets(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin),
+                        fs.getCoveredText(), "#d9d9d9",
+                        "[" + fs.getBegin() + "-" + fs.getEnd() + "]"));
+            }
         }
         
         // Replace newline characters before sending to the client to avoid rendering glitches

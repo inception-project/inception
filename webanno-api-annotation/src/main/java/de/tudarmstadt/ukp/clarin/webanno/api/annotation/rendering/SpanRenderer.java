@@ -146,8 +146,11 @@ public class SpanRenderer
         for (Sentence sent : aVisibleSentences) {
             if (beginSent == null) {
                 // Here we catch the first sentence in document order which covers the begin
-                // offset of the current annotation.
-                if (sent.getBegin() <= aFS.getBegin() && aFS.getBegin() <= sent.getEnd()) {
+                // offset of the current annotation. Note that in UIMA annotations are
+                // half-open intervals [begin,end) so that a begin offset must always be
+                // smaller than the end of a covering annotation to be considered properly
+                // covered.
+                if (sent.getBegin() <= aFS.getBegin() && aFS.getBegin() < sent.getEnd()) {
                     beginSent = sent;
                 }
                 // Make sure that zero-width annotations always start and end in the same

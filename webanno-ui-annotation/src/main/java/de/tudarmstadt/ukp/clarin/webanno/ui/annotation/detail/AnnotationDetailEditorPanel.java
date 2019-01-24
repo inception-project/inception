@@ -254,6 +254,11 @@ public abstract class AnnotationDetailEditorPanel
         throws AnnotationException
     {
         AnnotatorState state = getModelObject();
+        
+        if (!state.isForwardAnnotation()) {
+            return;
+        }
+        
         Selection selection = state.getSelection();
         List<FeatureState> featureStates = state.getFeatureStates();
         AnnotationLayer layer = aAdapter.getLayer();
@@ -278,27 +283,16 @@ public abstract class AnnotationDetailEditorPanel
                 }
             }
             
+            // allow modification for forward annotation
             if (spanValue != null) {
-                // Reassign variable so it can be used in the lambda filter below
-                Serializable _spanValue = spanValue;
-                
-                // allow modification for forward annotation
-                if (state.isForwardAnnotation()) {
-                    featureState.value = spanValue;
-                    featureStates.get(0).value = spanValue;
-                    String selectedTag = annotationFeatureForm.getBindTags().entrySet().stream()
-                            .filter(e -> e.getValue().equals(_spanValue))
-                            .map(Map.Entry::getKey)
-                            .findFirst()
-                            .orElse(null);
-                    annotationFeatureForm.setSelectedTag(selectedTag);
-                }
-                else {
-                    actionClear(aTarget);
-                    throw new AnnotationException("Cannot create another annotation of layer ["
-                        + state.getSelectedAnnotationLayer().getUiName() + "] at this"
-                        + " location - stacking is not enabled for this layer.");
-                }
+                featureState.value = spanValue;
+                featureStates.get(0).value = spanValue;
+                String selectedTag = annotationFeatureForm.getBindTags().entrySet().stream()
+                        .filter(e -> e.getValue().equals(featureState.value))
+                        .map(Map.Entry::getKey)
+                        .findFirst()
+                        .orElse(null);
+                annotationFeatureForm.setSelectedTag(selectedTag);
             }
         }
     }
