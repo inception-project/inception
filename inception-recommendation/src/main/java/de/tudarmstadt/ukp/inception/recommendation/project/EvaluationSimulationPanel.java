@@ -45,25 +45,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.external.ExternalRecommenderTraits;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat.OpenNlpDoccatRecommenderTraits;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner.OpenNlpNerRecommenderTraits;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos.OpenNlpPosRecommenderTraits;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderFactory;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.model.Chart;
 
 public class EvaluationSimulationPanel
@@ -83,7 +70,8 @@ public class EvaluationSimulationPanel
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
-    
+    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
+
     private final WebComponent chartContainer;
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
@@ -138,7 +126,10 @@ public class EvaluationSimulationPanel
         IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
                 INCREMENT, LOW_SAMPLE_THRESHOLD);
 
-        RecommendationEngine recommender = getRecommendationEngine(selectedRecommenderPanel);
+        RecommendationEngineFactory factory = recommenderRegistry
+                .getFactory(selectedRecommenderPanel.getObject().getTool());
+        RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
+        
         if (recommender == null)
         {
             LOG.warn("Unknown Recommender selected");
@@ -191,42 +182,5 @@ public class EvaluationSimulationPanel
         aResponse.render(
                 CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
 
-    }
-
-    /**
-     * returns the recommender Engine for the given recommender model
-     * 
-     */
-    private RecommendationEngine getRecommendationEngine(IModel<Recommender> recommenderModel)
-    {
-        if (recommenderModel.getObject().getTool().equals(StringMatchingRecommenderFactory.ID)) {
-            return new StringMatchingRecommender(recommenderModel.getObject(),
-                    new StringMatchingRecommenderTraits());
-        }
-        else if (recommenderModel.getObject().getTool().equals(OpenNlpPosRecommenderFactory.ID)) {
-            return new OpenNlpPosRecommender(recommenderModel.getObject(),
-                    new OpenNlpPosRecommenderTraits());
-        }
-        else if (recommenderModel.getObject().getTool().equals(OpenNlpNerRecommenderFactory.ID)) {
-            return new OpenNlpNerRecommender(recommenderModel.getObject(),
-                    new OpenNlpNerRecommenderTraits());
-        }
-        else if (recommenderModel.getObject().getTool()
-                .equals(OpenNlpDoccatRecommenderFactory.ID)) {
-            return new OpenNlpDoccatRecommender(recommenderModel.getObject(),
-                    new OpenNlpDoccatRecommenderTraits());
-        }
-        else if (recommenderModel.getObject().getTool()
-                .equals(OpenNlpDoccatRecommenderFactory.ID)) {
-            return new OpenNlpDoccatRecommender(recommenderModel.getObject(),
-                    new OpenNlpDoccatRecommenderTraits());
-        }
-        else if (recommenderModel.getObject().getTool().equals(ExternalRecommenderFactory.ID)) {
-            return new ExternalRecommender(recommenderModel.getObject(),
-                    new ExternalRecommenderTraits());
-        }
-        else {
-            return null;
-        }
     }
 }
