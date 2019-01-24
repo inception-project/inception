@@ -213,6 +213,30 @@ public class ExternalSearchAnnotationSidebar
         }
     }
 
+    private void actionImport(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
+        String aDocumentTitle) {
+        selectedResult = aResult;
+        try {
+            documentImporter
+                .importDocumentFromDocumentRepository(aResult.getDocumentTitle(),
+                    searchStateModel.getObject().getCurrentRepository());
+
+            getAnnotationPage().actionShowSelectedDocument(aTarget,
+                documentService.getSourceDocument(project, aDocumentTitle));
+        }
+        catch (IOException e) {
+            LOG.error("{}", e.getMessage(), e);
+            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+        }
+    }
+
+    private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
+        String aDocumentTitle) {
+        selectedResult = aResult;
+        getAnnotationPage().actionShowSelectedDocument(aTarget,
+            documentService.getSourceDocument(project, aDocumentTitle));
+    }
+
     private class DocumentRepositorySelectionForm
         extends Form<DocumentRepository>
     {
@@ -323,30 +347,11 @@ public class ExternalSearchAnnotationSidebar
             // Import and open annotation
             LambdaAjaxLink link;
             if (!existsSourceDocument) {
-                link = new LambdaAjaxLink("docLink", _target -> {
-                    selectedResult = result;
-                    try {
-                        documentImporter
-                            .importDocumentFromDocumentRepository(result.getDocumentTitle(),
-                                searchStateModel.getObject().getCurrentRepository());
-
-                        getAnnotationPage().actionShowSelectedDocument(_target,
-                            documentService.getSourceDocument(project, documentTitle));
-                    }
-                    catch (IOException e) {
-                        LOG.error(e.getMessage(), e);
-                        error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
-                        e.printStackTrace();
-                    }
-                });
+                link = new LambdaAjaxLink("docLink", t -> actionImport(t, result, documentTitle));
             }
             else {
                 // open action
-                link = new LambdaAjaxLink("docLink", _target -> {
-                    selectedResult = result;
-                    getAnnotationPage().actionShowSelectedDocument(_target,
-                        documentService.getSourceDocument(project, documentTitle));
-                });
+                link = new LambdaAjaxLink("docLink", t -> actionOpen(t, result, documentTitle));
             }
 
             String title = defaultIfBlank(result.getDocumentTitle(),
