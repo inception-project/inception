@@ -157,7 +157,7 @@ public class MtasDocumentIndexTest
     }
 
     @SafeVarargs
-    private void uploadDocument(Pair<SourceDocument, String>... aDocuments)
+    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
         throws Exception
     {
         Project project = null;
