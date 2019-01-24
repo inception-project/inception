@@ -77,7 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentImporter;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.DocumentImporterImpl;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -99,6 +99,7 @@ public class ExternalSearchAnnotationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean DocumentImporterImpl documentImporter;
 
     private CompoundPropertyModel<ExternalSearchUserState> searchStateModel;
 
@@ -113,8 +114,6 @@ public class ExternalSearchAnnotationSidebar
     private Project project;
 
     private WebMarkupContainer dataTableContainer;
-
-    private DocumentImporter documentImporter;
 
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
         AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -137,9 +136,6 @@ public class ExternalSearchAnnotationSidebar
         project = getModel().getObject().getProject();
         List<DocumentRepository> repositories = externalSearchService
             .listDocumentRepositories(project);
-
-        documentImporter = new DocumentImporter(externalSearchService, documentService,
-            userRepository.getCurrentUser(), project);
 
         ExternalSearchUserState searchState = searchStateModel.getObject();
         if (searchState.getCurrentRepository() == null && repositories.size() > 0) {
@@ -218,8 +214,8 @@ public class ExternalSearchAnnotationSidebar
         selectedResult = aResult;
         try {
             documentImporter
-                .importDocumentFromDocumentRepository(aResult.getDocumentTitle(),
-                    searchStateModel.getObject().getCurrentRepository());
+                .importDocumentFromDocumentRepository(userRepository.getCurrentUser(), project,
+                    aDocumentTitle, searchStateModel.getObject().getCurrentRepository());
 
             getAnnotationPage().actionShowSelectedDocument(aTarget,
                 documentService.getSourceDocument(project, aDocumentTitle));

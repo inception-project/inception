@@ -88,6 +88,7 @@ public class SearchPage extends ApplicationPageBase
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean DocumentImporter documentImporter;
 
     private WebMarkupContainer dataTableContainer;
 
@@ -98,11 +99,10 @@ public class SearchPage extends ApplicationPageBase
     private IModel<List<DocumentRepository>> repositoriesModel;
 
     private DocumentRepository currentRepository;
+
     private Project project;
 
     ExternalResultDataProvider dataProvider;
-
-    private DocumentImporter documentImporter;
 
     public SearchPage(PageParameters aParameters)
     {
@@ -120,9 +120,6 @@ public class SearchPage extends ApplicationPageBase
         else {
             currentRepository = null;
         }
-
-        documentImporter = new DocumentImporter(externalSearchService, documentService,
-            userRepository.getCurrentUser(), project);
 
         repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
                         .listDocumentRepositories(project));
@@ -167,8 +164,8 @@ public class SearchPage extends ApplicationPageBase
     private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
         try {
-            documentImporter.importDocumentFromDocumentRepository(aResult.getDocumentTitle(),
-                currentRepository);
+            documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
+                project, aResult.getDocumentTitle(), currentRepository);
             aTarget.add(dataTableContainer);
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
