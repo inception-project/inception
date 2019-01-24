@@ -24,8 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
@@ -67,6 +65,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
