@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -36,11 +37,16 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
+    private static final String highlight_start_tag = "<em>";
+
+    private static final String highlight_end_tag = "</em>";
+
     private String remoteUrl = "http://xxxx";
 
     private String indexName = "common-crawl-en";
     
     private String searchPath = "_search";
+
     private String objectType = "texts";
     
     // Number of results retrieved from the server
@@ -126,10 +132,41 @@ public class ElasticSearchProvider
                 }
             }
             if (hit.getHighlight() != null) {
+
+                // Highlights from elastic search are small sections of the document text
+                // with the keywords surrounded by the <em> tags. There are no offset information
+                // for the highlights or the keywords in the document text. There is a feature
+                // request for it (https://github.com/elastic/elasticsearch/issues/5736).
+                // Until this feature is implemented, we currently try to find the keywords offsets
+                // by finding the matching highlight in the document text, then the keywords offset
+                // within highlight using <em> tags.
+                String originalText = hit.get_source().getDoc().getText();
+
                 // There are highlights, set them in the result
-                List<String> highlights = new ArrayList<>();
+                List<ExternalSearchHighlight> highlights = new ArrayList<>();
                 for (String highlight : hit.getHighlight().getDoctext()) {
-                    highlights.add(highlight);
+
+                    ExternalSearchHighlight externalSearchHighlight = new ExternalSearchHighlight(
+                        highlight);
+
+                    // remove markers from the highlight
+                    String highlight_clean = highlight.replace(highlight_start_tag, "")
+                        .replace(highlight_end_tag, "");
+
+                    // find the matching highlight offset in the original text
+                    int highlight_start_index = originalText.indexOf(highlight_clean);
+
+                    // find offset to all keywords in the highlight
+                    // they are enclosed in <em> </em> tags in the highlight
+                    while (highlight.contains(highlight_start_tag)) {
+                        int start = highlight_start_index + highlight.indexOf(highlight_start_tag);
+                        highlight = highlight.replaceFirst(highlight_start_tag, "");
+                        int end = highlight_start_index + highlight.indexOf(highlight_end_tag);
+                        highlight = highlight.replaceFirst(highlight_end_tag, "");
+                        externalSearchHighlight.addOffset(start, end);
+                    }
+
+                    highlights.add(externalSearchHighlight);
                 }
                 result.setHighlights(highlights);
             }

@@ -273,7 +273,8 @@ public class SearchPage extends ApplicationPageBase
             
             String documentTitle = result.getDocumentTitle();
 
-            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0));
+            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0)
+                .getHighlight());
             
             LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()

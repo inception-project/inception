@@ -78,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporterImpl;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
@@ -90,10 +91,6 @@ public class ExternalSearchAnnotationSidebar
 
     private static final Logger LOG = LoggerFactory
         .getLogger(ExternalSearchAnnotationSidebar.class);
-
-    private static final String highlight_start_tag = "<em>";
-
-    private static final String highlight_end_tag = "</em>";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -224,32 +221,18 @@ public class ExternalSearchAnnotationSidebar
 
     private void highlightKeywords (AnnotatorState aAnnotatorState, VDocument aVDocument)
     {
+        for (ExternalSearchHighlight highlight : selectedResult.getHighlights()) {
 
-        for (String highlight : selectedResult.getHighlights()) {
-
-            // remove markers from the highlight
-            String highlight_clean = highlight.replace(highlight_start_tag, "")
-                .replace(highlight_end_tag, "");
-
-            // find the matching highlight offset in the original text
-            int highlight_start_index = selectedResult.getText().indexOf(highlight_clean);
-
-            // find offset to keywords in the highlight
-            // they are enclosed in <em> </em> tags in the highlight
-            while (highlight.contains(highlight_start_tag)) {
-                int start = highlight_start_index + highlight.indexOf(highlight_start_tag);
-                highlight = highlight.replaceFirst(highlight_start_tag, "");
-                int end = highlight_start_index + highlight.indexOf(highlight_end_tag);
-                highlight = highlight.replaceFirst(highlight_end_tag, "");
-
-                // Highlight the keywords in the annotator indicated by the offsets
-                // if they are within the current window.
-                if (aAnnotatorState.getWindowBeginOffset() <= start) {
-                    if (end <= aAnnotatorState.getWindowEndOffset()) {
+            // Highlight the keywords in the annotator indicated by the offsets
+            // if they are within the current window.
+            for (ExternalSearchHighlight.KeywordOffset offset : highlight.getOffsets()) {
+                if (aAnnotatorState.getWindowBeginOffset() <= offset.getStartOffset()) {
+                    if (offset.getEndOffset() <= aAnnotatorState.getWindowEndOffset()) {
                         aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                            start - aAnnotatorState.getWindowBeginOffset(),
-                            end - aAnnotatorState.getWindowBeginOffset()));
-                    } else {
+                            offset.getStartOffset() - aAnnotatorState.getWindowBeginOffset(),
+                            offset.getEndOffset() - aAnnotatorState.getWindowBeginOffset()));
+                    }
+                    else {
                         break;
                     }
                 }
@@ -375,7 +358,8 @@ public class ExternalSearchAnnotationSidebar
 
             String documentTitle = result.getDocumentTitle();
 
-            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0));
+            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0)
+                .getHighlight());
 
             boolean existsSourceDocument = documentService
                 .existsSourceDocument(project, documentTitle);
