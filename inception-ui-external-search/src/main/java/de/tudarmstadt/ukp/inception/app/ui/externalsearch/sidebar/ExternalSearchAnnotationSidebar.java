@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 public class ExternalSearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -225,12 +226,13 @@ public class ExternalSearchAnnotationSidebar
 
             // Highlight the keywords in the annotator indicated by the offsets
             // if they are within the current window.
-            for (ExternalSearchHighlight.KeywordOffset offset : highlight.getOffsets()) {
+            for (OffsetSpan offset : highlight.getOffsets()) {
                 if (aAnnotatorState.getWindowBeginOffset() <= offset.getStartOffset()) {
-                    if (offset.getEndOffset() <= aAnnotatorState.getWindowEndOffset()) {
+                    if (offset.getEndOffsetExclusive() <= aAnnotatorState.getWindowEndOffset()) {
                         aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
                             offset.getStartOffset() - aAnnotatorState.getWindowBeginOffset(),
-                            offset.getEndOffset() - aAnnotatorState.getWindowBeginOffset()));
+                            offset.getEndOffsetExclusive() -
+                                aAnnotatorState.getWindowBeginOffset()));
                     }
                     else {
                         break;

@@ -17,67 +17,50 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ExternalSearchHighlight
+import com.google.common.base.Optional;
+import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
+
+/**
+ * This class represents a highlight from external search result.
+ * A highlight is a section of text containing occurrence(s) of keywords.
+ * The offsets tells where those keywords are within the original text document.
+ */
+public class ExternalSearchHighlight implements Serializable
 {
 
-    private String highlight; // with <em> tags
+    private static final long serialVersionUID = 4044755133816131842L;
 
-    private List<KeywordOffset> offsets = new ArrayList<>();
+    private Optional<String> highlight;
 
-    public ExternalSearchHighlight(String aHighlight) {
-        highlight = aHighlight;
+    private List<OffsetSpan> offsets;
+
+    public ExternalSearchHighlight(List<OffsetSpan> aOffsets) throws IOException
+    {
+        if (aOffsets.size() < 0) {
+            throw new IOException("Offsets must not be empty");
+        }
+        offsets = new ArrayList<>(aOffsets);
+
+    }
+
+    public ExternalSearchHighlight(String aHighlight, List<OffsetSpan> aOffsets) throws IOException
+    {
+        this(aOffsets);
+        highlight = Optional.fromNullable(aHighlight);
     }
 
     public String getHighlight()
     {
-        return highlight;
+        return highlight.orNull();
     }
 
-    public void setHighlight(String highlight)
-    {
-        this.highlight = highlight;
-    }
-
-    public List<KeywordOffset> getOffsets() {
+    public List<OffsetSpan> getOffsets() {
         return offsets;
-    }
-
-    public void addOffset(int start, int end) {
-        offsets.add(new KeywordOffset(start, end));
-    }
-
-    public class KeywordOffset {
-
-        private int start;
-
-        private int end;
-
-        public KeywordOffset(int aStart, int aEnd) {
-            start = aStart;
-            end = aEnd;
-        }
-
-        public int getStartOffset()
-        {
-            return start;
-        }
-
-        public void setStartOffset(int start)
-        {
-            this.start = start;
-        }
-
-        public int getEndOffset()
-        {
-            return end;
-        }
-
-        public void setEndOffset(int end)
-        {
-            this.end = end;
-        }
     }
 }

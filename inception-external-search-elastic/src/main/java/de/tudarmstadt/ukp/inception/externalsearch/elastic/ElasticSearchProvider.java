@@ -17,21 +17,25 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
+import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 public class ElasticSearchProvider
     implements ExternalSearchProvider
@@ -40,6 +44,8 @@ public class ElasticSearchProvider
     private static final String highlight_start_tag = "<em>";
 
     private static final String highlight_end_tag = "</em>";
+
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchProvider.class);
 
     private String remoteUrl = "http://xxxx";
 
@@ -146,9 +152,6 @@ public class ElasticSearchProvider
                 List<ExternalSearchHighlight> highlights = new ArrayList<>();
                 for (String highlight : hit.getHighlight().getDoctext()) {
 
-                    ExternalSearchHighlight externalSearchHighlight = new ExternalSearchHighlight(
-                        highlight);
-
                     // remove markers from the highlight
                     String highlight_clean = highlight.replace(highlight_start_tag, "")
                         .replace(highlight_end_tag, "");
@@ -158,15 +161,24 @@ public class ElasticSearchProvider
 
                     // find offset to all keywords in the highlight
                     // they are enclosed in <em> </em> tags in the highlight
-                    while (highlight.contains(highlight_start_tag)) {
-                        int start = highlight_start_index + highlight.indexOf(highlight_start_tag);
-                        highlight = highlight.replaceFirst(highlight_start_tag, "");
-                        int end = highlight_start_index + highlight.indexOf(highlight_end_tag);
-                        highlight = highlight.replaceFirst(highlight_end_tag, "");
-                        externalSearchHighlight.addOffset(start, end);
+                    String highlightTemp = highlight;
+                    ArrayList<OffsetSpan> offsets = new ArrayList<>();
+                    while (highlightTemp.contains(highlight_start_tag)) {
+                        int start = highlight_start_index +
+                            highlightTemp.indexOf(highlight_start_tag);
+                        highlightTemp = highlightTemp.replaceFirst(highlight_start_tag, "");
+                        int end = highlight_start_index +
+                            highlightTemp.indexOf(highlight_end_tag);
+                        highlightTemp = highlightTemp.replaceFirst(highlight_end_tag, "");
+                        offsets.add(new OffsetSpan(start, end));
                     }
 
-                    highlights.add(externalSearchHighlight);
+                    try {
+                        highlights.add(new ExternalSearchHighlight(highlight, offsets));
+                    }
+                    catch (IOException e) {
+                        LOG.error("Error creating ExternalSearchHighlight: " + e.getMessage());
+                    }
                 }
                 result.setHighlights(highlights);
             }

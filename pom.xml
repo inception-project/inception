@@ -772,6 +772,13 @@
 		<artifactId>d3js</artifactId>
 		<version>5.5.0</version>
 	  </dependency>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>19.0</version>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
   
