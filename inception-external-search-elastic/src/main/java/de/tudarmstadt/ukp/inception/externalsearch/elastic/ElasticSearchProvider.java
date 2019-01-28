@@ -174,9 +174,10 @@ public class ElasticSearchProvider
                     }
 
                     try {
-                        highlights.add(new ExternalSearchHighlight(highlight, offsets));
+                        if (!offsets.isEmpty())
+                            highlights.add(new ExternalSearchHighlight(highlight, offsets));
                     }
-                    catch (IOException e) {
+                    catch (IllegalArgumentException e) {
                         LOG.error("Error creating ExternalSearchHighlight: " + e.getMessage());
                     }
                 }

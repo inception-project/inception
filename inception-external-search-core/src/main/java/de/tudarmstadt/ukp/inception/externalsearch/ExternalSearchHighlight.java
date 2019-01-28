@@ -23,7 +23,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.google.common.base.Optional;
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 /**
@@ -36,28 +35,29 @@ public class ExternalSearchHighlight implements Serializable
 
     private static final long serialVersionUID = 4044755133816131842L;
 
-    private Optional<String> highlight;
+    private String highlight = null;
 
     private List<OffsetSpan> offsets;
 
-    public ExternalSearchHighlight(List<OffsetSpan> aOffsets) throws IOException
+    public ExternalSearchHighlight(List<OffsetSpan> aOffsets) throws IllegalArgumentException
     {
-        if (aOffsets.size() < 0) {
-            throw new IOException("Offsets must not be empty");
+        if (aOffsets == null || aOffsets.isEmpty()) {
+            throw new IllegalArgumentException("Offsets must not be empty");
         }
         offsets = new ArrayList<>(aOffsets);
 
     }
 
-    public ExternalSearchHighlight(String aHighlight, List<OffsetSpan> aOffsets) throws IOException
+    public ExternalSearchHighlight(String aHighlight, List<OffsetSpan> aOffsets)
+        throws IllegalArgumentException
     {
         this(aOffsets);
-        highlight = Optional.fromNullable(aHighlight);
+        highlight = aHighlight;
     }
 
     public String getHighlight()
     {
-        return highlight.orNull();
+        return highlight;
     }
 
     public List<OffsetSpan> getOffsets() {
