@@ -265,6 +265,42 @@ public class WebAnnoCasUtil
 
         return annotations;
     }
+    
+    /**
+     * Get overlapping annotations where selection overlaps with annotations.<br>
+     * Example: if annotation is (5, 13) and selection covered was from (7, 12); the annotation (5,
+     * 13) is returned as overlapped selection <br>
+     * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
+     * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
+     *
+     * @param aCas
+     *            a CAS containing the annotation.
+     * @param aType
+     *            a UIMA type.
+     * @param aBegin
+     *            begin offset.
+     * @param aEnd
+     *            end offset.
+     * @return a return value.
+     */
+    public static List<AnnotationFS> selectOverlapping(CAS aCas,
+            Type aType, int aBegin, int aEnd)
+    {
+
+        List<AnnotationFS> annotations = new ArrayList<>();
+        for (AnnotationFS t : CasUtil.select(aCas, aType)) {
+            if (t.getBegin() >= aEnd) {
+                break;
+            }
+            // not yet there
+            if (t.getEnd() <= aBegin) {
+                continue;
+            }
+            annotations.add(t);
+        }
+
+        return annotations;
+    }
 
     /**
      * Get the internal address of the first sentence annotation from JCAS. This will be used as a

@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AN
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAttachmentBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationCrossSentenceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationStackingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -90,17 +92,17 @@ public class RelationRendererTest
         
         // Set up annotation schema with POS and Dependency
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
         AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
                 POS.class.getName());
 
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);
@@ -111,7 +113,7 @@ public class RelationRendererTest
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         
-        behaviors = asList(new RelationAttachmentBehavior(), new RelationStackingBehavior(),
+        behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
                 new RelationCrossSentenceBehavior());
     }    
 
@@ -182,7 +184,7 @@ public class RelationRendererTest
         
         depLayer.setAllowStacking(false);
         RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
-                asList(new RelationStackingBehavior()));
+                asList(new RelationOverlapBehavior()));
         
         VDocument vdoc = new VDocument();
         sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());

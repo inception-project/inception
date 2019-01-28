@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -97,7 +99,7 @@ public class CopyAnnotationTest
         project = new Project();
         
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -109,7 +111,7 @@ public class CopyAnnotationTest
         tokenPosFeature.setVisible(true);
         
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         
@@ -123,7 +125,7 @@ public class CopyAnnotationTest
         posFeature.setVisible(true);
         
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
-                project, true, TOKENS);
+                project, true, TOKENS, OVERLAP_ONLY);
         
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
@@ -135,7 +137,7 @@ public class CopyAnnotationTest
         neFeature.setVisible(true);
         
         slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE, SPAN_TYPE,
-                project, false, SINGLE_TOKEN);
+                project, false, SINGLE_TOKEN, NO_OVERLAP);
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
         slotFeature.setEnabled(true);

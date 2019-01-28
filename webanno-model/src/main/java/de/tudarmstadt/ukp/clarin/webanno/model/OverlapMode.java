@@ -1,0 +1,216 @@
+/*
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package de.tudarmstadt.ukp.clarin.webanno.model;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
+
+/**
+ * Annotation overlap mode.
+ * <p>
+ * For span layers, overlap is defined in terms of the span offsets. If any character offset that is
+ * part of span A is also part of span B, then they are considered to be <b>overlapping</b>. If two
+ * spans have exactly the same offsets, then they are considered to be <b>stacking</b>. Note that in
+ * UIMA spans are half-open intervals [begin,end), such that a begin offset which is equal to the
+ * end offset of another span does not entail that the two spans are overlapping - they are
+ * adjacent.
+ * </p>
+ * <p>
+ * For relation layers, overlap is defined in terms of the end points of the relation. If two
+ * relations share an end point, they are considered to be <b>overlapping</b>. If two relations have
+ * exactly the same end points, they are considered to be <b>stacking</b>.
+ * </p>
+ */
+public enum OverlapMode
+    implements
+    PersistentEnum
+{
+    /**
+     * No overlap.
+     * <p>
+     * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
+     * </p>
+     * <code><pre>
+     * OK:  AAAA
+     *          BBBB
+     *      
+     * BAD: AAAA
+     *      BBBB
+     *      
+     * BAD:   AAAA
+     *      BBBB
+     *      
+     * BAD: AAAA
+     *        BBBB
+     * 
+     * BAD: AAAA
+     *       BB
+     * </pre></code>
+     * <p>
+     * For relation layers (the examples below do <b>not</b> include all possible overlapping
+     * cases):
+     * </p>
+     * <code><pre>
+     * OK:   
+     *        ┏━━ A ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     *                        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX XXXX [XXX] XXXX
+     *
+     * BAD:   
+     *        ┏━━ A ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     *
+     * BAD:   
+     *        ┏ A ┓
+     *       XXXX XXXX [XXX]
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     * </pre></code>
+     */
+    NO_OVERLAP("none"),
+
+    /**
+     * Stacking only - overlapping annotations must be at the exactly the same position.
+     * <p>
+     * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
+     * </p>
+     * <code><pre>
+     * OK:  AAAA
+     *      BBBB
+     *      
+     * OK:  AAAA
+     *          BBBB
+     *      
+     * BAD:   AAAA
+     *      BBBB
+     *      
+     * BAD: AAAA
+     *        BBBB
+     * 
+     * BAD: AAAA
+     *       BB
+     * </pre></code>
+     * 
+     * <p>
+     * For relation layers (the examples below do <b>not</b> include all possible overlapping
+     * cases):
+     * </p>
+     * <code><pre>
+     * OK:   
+     *        ┏━━ A ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     *
+     * BAD:   
+     *        ┏ A ┓
+     *       XXXX XXXX [XXX]
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     * </pre></code>
+     */
+    STACKING_ONLY("stackingOnly"),
+
+    /**
+     * Overlap only - overlapping annotations must <b>not</b> be at the same position. For
+     * {@link AnchoringMode#SINGLE_TOKEN}, this is equivalent to {@link #NONE} since non-stacking
+     * overlaps are not possible.
+     * <p>
+     * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
+     * </p>
+     * <code><pre>
+     * OK:  AAAA
+     *          BBBB
+     *      
+     * OK:    AAAA
+     *      BBBB
+     *      
+     * OK:  AAAA
+     *        BBBB
+     * 
+     * OK:  AAAA
+     *       BB
+     *       
+     * BAD: AAAA
+     *      BBBB
+     * </pre></code>
+     * 
+     * <p>
+     * For relation layers (the examples below do <b>not</b> include all possible overlapping
+     * cases):
+     * </p>
+     * <code><pre>
+     * OK:    ┏ A ┓
+     *       XXXX XXXX [XXX]
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     * OK:          ┏ A ┓
+     *       [XXX] XXXX XXXX 
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     * BAD:   ┏━━ A ━━┓
+     *       XXXX [XXX] XXXX
+     *       
+     *        ┏━━ B ━━┓
+     *       XXXX [XXX] XXXX
+     * </pre></code>
+     */
+    OVERLAP_ONLY("overlapOnly"),
+
+    /**
+     * Any overlap - any kind of overlapping annotations is permitted. For
+     * {@link AnchoringMode#SINGLE_TOKEN}, this is equivalent to {@link #STACKING_ONLY} since
+     * non-stacking overlaps are not possible.
+     */
+    ANY_OVERLAP("any");
+
+    private final String id;
+
+    OverlapMode(String aId)
+    {
+        id = aId;
+    }
+
+    @Override
+    public String getId()
+    {
+        return id;
+    }
+
+    public String getName()
+    {
+        return getId();
+    }
+
+    @Override
+    public String toString()
+    {
+        return getId();
+    }
+}

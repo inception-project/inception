@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -156,6 +159,13 @@ public class ImportUtil
         else {
             aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
         }
+        if (aExLayer.getOverlapMode() == null) {
+            // This allows importing old projects which did not have the overlap mode yet
+            aLayer.setOverlapMode(aExLayer.isAllowStacking() ? ANY_OVERLAP : OVERLAP_ONLY);
+        }
+        else {
+            aLayer.setOverlapMode(aExLayer.getOverlapMode());
+        }
         aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
         aLayer.setUiName(aExLayer.getUiName());
         aLayer.setName(aExLayer.getName());
@@ -213,6 +223,7 @@ public class ImportUtil
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
         exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
+        exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());

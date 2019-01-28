@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
+import static java.util.Arrays.asList;
+
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -96,9 +98,6 @@ public class AnnotationLayer
     @JoinColumn(name = "project")
     private Project project;
 
-    // There was a type in the code which unfortunately made it into databases...
-    @Column(name = "allowSTacking")
-    private boolean allowStacking;
 
     @Column(name = "crossSentence")
     private boolean crossSentence;
@@ -112,7 +111,11 @@ public class AnnotationLayer
     @Column(name = "anchoring_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnchoringModeType")
     private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
-    
+
+    @Column(name = "overlap_mode")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.OverlapModeType")
+    private OverlapMode overlapMode = OverlapMode.NO_OVERLAP;
+
     // This column is no longer used and should be removed with the next major version.
     // At that time, a corresponding Liquibase changeset needs to be introduced as well.
     @Deprecated
@@ -125,13 +128,19 @@ public class AnnotationLayer
     @Column(name = "lockToTokenOffset")
     private boolean lockToTokenOffset = true;
     
+    // This column is no longer used and should be removed with the next major version
+    // At that time, a corresponding Liquibase changeset needs to be introduced as well.
+    @Deprecated
+    @Column(name = "allowSTacking")
+    private boolean allowStacking;
+    
     public AnnotationLayer()
     {
         // Required
     }
     
     public AnnotationLayer(String aName, String aUiName, String aType, Project aProject,
-            boolean aBuiltIn, AnchoringMode aAnchoringMode)
+            boolean aBuiltIn, AnchoringMode aAnchoringMode, OverlapMode aOverlapMode)
     {
         setName(aName);
         setUiName(aUiName);
@@ -139,6 +148,7 @@ public class AnnotationLayer
         setBuiltIn(aBuiltIn);
         setType(aType);
         setAnchoringMode(aAnchoringMode);
+        setOverlapMode(aOverlapMode);
     }
     
     /**
@@ -429,14 +439,26 @@ public class AnnotationLayer
         }
     }
 
+    @Deprecated
     public boolean isAllowStacking()
     {
-        return allowStacking;
+        return asList(OverlapMode.ANY_OVERLAP, OverlapMode.STACKING_ONLY).contains(overlapMode);
     }
 
+    @Deprecated
     public void setAllowStacking(boolean allowStacking)
     {
         this.allowStacking = allowStacking;
+    }
+    
+    public OverlapMode getOverlapMode()
+    {
+        return overlapMode;
+    }
+
+    public void setOverlapMode(OverlapMode aOverlapMode)
+    {
+        overlapMode = aOverlapMode;
     }
 
     public boolean isCrossSentence()
