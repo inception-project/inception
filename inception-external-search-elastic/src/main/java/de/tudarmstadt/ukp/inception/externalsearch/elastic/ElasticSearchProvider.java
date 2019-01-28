@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 

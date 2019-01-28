@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
-import java.io.IOException;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
