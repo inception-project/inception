@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -360,9 +361,6 @@ public class ExternalSearchAnnotationSidebar
 
             String documentTitle = result.getDocumentTitle();
 
-            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0)
-                .getHighlight());
-
             boolean existsSourceDocument = documentService
                 .existsSourceDocument(project, documentTitle);
 
@@ -384,9 +382,14 @@ public class ExternalSearchAnnotationSidebar
 
             link.add(new Label("title", title));
             link.add(new Label("score", result.getScore()));
-            link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
             link.add(new Label("importStatus",
                 () -> existsSourceDocument ? "imported" : "not imported"));
+
+            Optional<String> highlightOptional = result.getHighlights().get(0).getHighlight();
+            if (highlightOptional.isPresent()) {
+                String highlight = Utilities.cleanHighlight(highlightOptional.get());
+                link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            }
         }
     }
 

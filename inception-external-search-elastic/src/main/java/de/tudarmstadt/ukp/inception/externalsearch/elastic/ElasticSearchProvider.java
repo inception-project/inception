@@ -172,12 +172,12 @@ public class ElasticSearchProvider
                         offsets.add(new OffsetSpan(start, end));
                     }
 
-                    try {
-                        if (!offsets.isEmpty())
-                            highlights.add(new ExternalSearchHighlight(highlight, offsets));
-                    }
-                    catch (IllegalArgumentException e) {
-                        LOG.error("Error creating ExternalSearchHighlight: " + e.getMessage());
+                    if (!offsets.isEmpty()) {
+                        highlights.add(new ExternalSearchHighlight(highlight, offsets));
+                    } else {
+                        LOG.warn("Refusing to create ExternalSearchHighlight for {} because it "
+                            + "contains no keyword markers or it is not found in the document "
+                            + "text", highlight);
                     }
                 }
                 result.setHighlights(highlights);

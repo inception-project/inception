@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.externalsearch;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
@@ -53,9 +54,9 @@ public class ExternalSearchHighlight implements Serializable
         highlight = aHighlight;
     }
 
-    public String getHighlight()
+    public Optional<String> getHighlight()
     {
-        return highlight;
+        return Optional.ofNullable(highlight);
     }
 
     public List<OffsetSpan> getOffsets() {
