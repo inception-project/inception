@@ -36,9 +36,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Triple;
+import org.apache.commons.text.similarity.CosineDistance;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.Feature;
@@ -107,13 +110,62 @@ public class ProcessTest
             Type tUnit = doc.getTypeSystem().getType(TYPE_NAME_UNIT);
             Feature fScore = tUnit.getFeatureByBaseName(FEATURE_NAME_SCORE);
             for (AnnotationFS unit : CasUtil.select(doc.getCas(), tUnit)) {
-                relevantSentences.add(Triple.of(unit.getCoveredText(), unit.getDoubleValue(fScore), p.toString()));
+                relevantSentences.add(Triple.of(
+                        unit.getCoveredText(),
+                        unit.getDoubleValue(fScore),
+                        p.toString()));
             }
         }
         
         // Assertions checking that proper data has been extracted
         assertThat(relevantSentences).hasSize(5);
         assertThat(relevantSentences).extracting(Triple::getMiddle).allMatch(score -> score > 0.0);
+    
+        cluster(relevantSentences);
+    }
+    
+    // One giant cluster could be generated, because bestDistance can make it grow element-wise.
+    // Should use average!
+    private List<Set<Triple<String, Double, String>>> cluster(
+            List<Triple<String, Double, String>> sentences)
+    {
+        CosineDistance cd = new CosineDistance();
+        double clusterDistanceTolerance = 0.3;
+        List<Set<Triple<String, Double, String>>> sentenceClusters = new ArrayList<>();
+        for (Triple<String, Double, String> sentence: sentences)
+        {
+            if (sentenceClusters.size() == 0)
+            {
+                Set<Triple<String, Double, String>> firstCluster = new HashSet<>();
+                firstCluster.add(sentence);
+                sentenceClusters.add(firstCluster);
+            }
+            else
+            {
+                double bestDistance = Double.MAX_VALUE;
+                Set<Triple<String, Double, String>> bestCluster = new HashSet<>();
+                for (Set<Triple<String, Double, String>> cluster: sentenceClusters) {
+                    List<Double> cmpDistances = new ArrayList<>();
+                    for (Triple<String, Double, String> compareSentence : cluster) {
+                        cmpDistances.add(cd.apply(compareSentence.getLeft(), sentence.getLeft()));
+                    }
+                    bestDistance = Math.min(bestDistance, Collections.min(cmpDistances));
+                    bestCluster = cluster;
+                }
+                
+                if(bestDistance < clusterDistanceTolerance)
+                {
+                    bestCluster.add(sentence);
+                }
+                else
+                {
+                    Set<Triple<String, Double, String>> newCluster = new HashSet<>();
+                    newCluster.add(sentence);
+                    sentenceClusters.add(newCluster);
+                }
+            }
+        }
+        return sentenceClusters;
     }
     
     public static class UnitByQueryWordAnnotator
