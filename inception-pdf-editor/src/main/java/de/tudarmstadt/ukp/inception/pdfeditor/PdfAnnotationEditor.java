@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -58,6 +59,7 @@ public class PdfAnnotationEditor
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
@@ -98,7 +100,10 @@ public class PdfAnnotationEditor
                 // restore selections
                 String restoreSelections = String.join("",
                     "pdfanno.contentWindow.selectedAnnotations.forEach(function(uuid) {",
-                    "  pdfanno.contentWindow.annoPage.findAnnotationById(uuid).toggleSelect();",
+                    "  var annotation = pdfanno.contentWindow.annoPage.findAnnotationById(uuid);",
+                    "  if (annotation !== null) {",
+                    "    annotation.toggleSelect();",
+                    "  }",
                     "});"
                 );
                 aTarget.appendJavaScript(restoreSelections);
@@ -176,21 +181,12 @@ public class PdfAnnotationEditor
                 getModelObject().getSelection()
                     .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
                 getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
-                // save old annotations ids
-                String saveOldAnnotationIds = String.join("",
-                    "var oldAnnotations = [];",
-                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
-                    "  oldAnnotations.push(a.uuid);",
-                    "});",
-                    "pdfanno.contentWindow.oldAnnotations = oldAnnotations;"
-                );
-                aTarget.appendJavaScript(saveOldAnnotationIds);
-                // rerender annotations
                 renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
-                // check if there are new annotations, if so, select them
+                // select the annotation where annotation offset overlaps with selection offset
                 String selectAnnotation = String.join("",
                     "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
-                    "  if (pdfanno.contentWindow.oldAnnotations.indexOf(a.uuid) === -1) {",
+                    "  if (a.textRange && a.textRange[0] <= " + aOffset.getEnd(),
+                    " && " + aOffset.getBegin() + " <= a.textRange[1]) {",
                     "    a.toggleSelect();",
                     "  }",
                     "});"
@@ -215,14 +211,20 @@ public class PdfAnnotationEditor
             Offset docOffset = PdfAnnoRenderer
                 .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, aOffset);
             if (docOffset != null) {
-                getModelObject().getSelection()
-                    .selectSpan(paramId, aJCas, docOffset.getBegin(), docOffset.getEnd());
-                getActionHandler().actionSelect(aTarget, aJCas);
+                if (paramId.isSynthetic()) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                        aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
+                        docOffset.getEnd());
+                } else {
+                    getModelObject().getSelection()
+                        .selectSpan(paramId, aJCas, docOffset.getBegin(), docOffset.getEnd());
+                    getActionHandler().actionSelect(aTarget, aJCas);
+                }
             } else {
                 handleError("Unable to select annotation: No match was found", aTarget);
             }
         }
-        catch (AnnotationException e)
+        catch (AnnotationException | IOException e)
         {
             handleError("Unable to select annotation", e, aTarget);
         }
