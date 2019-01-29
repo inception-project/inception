@@ -397,6 +397,12 @@ public abstract class AnnotationPageBase
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
+            if (!layer.isEnabled()) {
+                // No validation for disabled layers since there is nothing the annotator could do
+                // about fixing annotations on disabled layers.
+                continue;
+            }
+            
             TypeAdapter adapter = annotationService.getAdapter(layer);
             
             validateRequiredFeatures(aTarget, aJCas, adapter);
@@ -405,12 +411,13 @@ public abstract class AnnotationPageBase
             if (!messages.isEmpty()) {
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
+                
                 // Find the sentence that contains the annotation with the missing
-                // required feature value
+                // required feature value and put this sentence into the focus
                 Sentence s = WebAnnoCasUtil.getSentence(aJCas, fs.getBegin());
-                // Put this sentence into the focus
                 state.setFirstVisibleUnit(s);
                 actionRefreshDocument(aTarget);
+                
                 // Inform the user
                 throw new IllegalStateException(
                         "Document cannot be marked as finished. Annotation with ID ["

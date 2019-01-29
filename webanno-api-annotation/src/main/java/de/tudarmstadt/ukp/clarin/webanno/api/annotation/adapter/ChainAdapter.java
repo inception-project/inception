@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_TYPE_FEATURE;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
@@ -33,6 +34,8 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -53,6 +56,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class ChainAdapter
     extends TypeAdapter_ImplBase
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     public static final String CHAIN = "Chain";
     public static final String LINK = "Link";
     public static final String FEAT_FIRST = "first";
@@ -486,7 +491,10 @@ public class ChainAdapter
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (SpanLayerBehavior behavior : behaviors) {
+            long startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aJCas));
+            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+                    getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
     }

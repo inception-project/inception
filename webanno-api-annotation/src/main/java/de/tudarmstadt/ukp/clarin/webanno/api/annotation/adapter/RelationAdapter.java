@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
@@ -32,6 +33,8 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
@@ -49,6 +52,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 public class RelationAdapter
     extends TypeAdapter_ImplBase
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     /**
      * The feature of an UIMA annotation containing the label to be used as a governor for arc
      * annotations
@@ -190,7 +195,10 @@ public class RelationAdapter
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (RelationLayerBehavior behavior : behaviors) {
+            long startTime = currentTimeMillis();
             messages.addAll(behavior.onValidate(this, aJCas));
+            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+                    getLayer().getUiName(), currentTimeMillis() - startTime);
         }
         return messages;
     }
