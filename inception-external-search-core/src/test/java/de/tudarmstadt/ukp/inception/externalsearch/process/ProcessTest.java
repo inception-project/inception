@@ -38,11 +38,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.component.JCasAnnotator_ImplBase;
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 public class ProcessTest
 {
     public static String TYPE_NAME_UNIT = "Unit";
-    public static String TYPE_NAME_AGGREGATE = "Aggregate";
     public static String FEATURE_NAME_SCORE = "score";
     
     @Test
@@ -76,9 +74,6 @@ public class ProcessTest
         TypeDescription tdUnit = customTypes.addType(TYPE_NAME_UNIT, "",
                 TYPE_NAME_ANNOTATION);
         tdUnit.addFeature(FEATURE_NAME_SCORE, "", TYPE_NAME_DOUBLE);
-        TypeDescription tdAggregate = customTypes.addType(TYPE_NAME_AGGREGATE, "",
-                TYPE_NAME_ANNOTATION);
-        tdAggregate.addFeature(FEATURE_NAME_SCORE, "", TYPE_NAME_DOUBLE);
 
         // Set up processing components
         AnalysisEngine splitter = createEngine(BreakIteratorSegmenter.class);
@@ -86,13 +81,12 @@ public class ProcessTest
                 UnitByQueryWordAnnotator.PARAM_QUERY_WORD, queryword);
         AnalysisEngine scorer = createEngine(GoodnessScoreAnnotator.class, 
                 UnitByQueryWordAnnotator.PARAM_QUERY_WORD, queryword);
-        AnalysisEngine aggregator = createEngine(AggregateScoreAnnotator.class);
         
         // Create CAS
         JCas doc = createJCas(mergeTypeSystems(asList(customTypes, createTypeSystemDescription())));
 
         // Process text files
-        List<Pair<Path, Double>> scores = new ArrayList<>();
+        List<Triple<String, Double, String>> relevantSentences = new ArrayList<>();
         DirectoryStream<Path> directoryStream = newDirectoryStream(
                 Paths.get("src/test/resources/texts"));
         for (Path p : directoryStream) {
@@ -108,20 +102,18 @@ public class ProcessTest
             
             // Annotate units with goodness score
             scorer.process(doc);
-            
-            // Aggregate units scores
-            aggregator.process(doc);
-            
-            // Extract score
-            Type tAggregate = doc.getTypeSystem().getType(TYPE_NAME_AGGREGATE);
-            Feature fAggregateScore = tAggregate.getFeatureByBaseName(FEATURE_NAME_SCORE);
-            FeatureStructure aggregate = CasUtil.selectSingle(doc.getCas(), tAggregate);
-            scores.add(Pair.of(p, aggregate.getDoubleValue(fAggregateScore)));
+    
+            // Extract sentences
+            Type tUnit = doc.getTypeSystem().getType(TYPE_NAME_UNIT);
+            Feature fScore = tUnit.getFeatureByBaseName(FEATURE_NAME_SCORE);
+            for (AnnotationFS unit : CasUtil.select(doc.getCas(), tUnit)) {
+                relevantSentences.add(Triple.of(unit.getCoveredText(), unit.getDoubleValue(fScore), p.toString()));
+            }
         }
         
         // Assertions checking that proper data has been extracted
-        assertThat(scores).hasSize(2);
-        assertThat(scores).extracting(Pair::getValue).allMatch(score -> score > 0);
+        assertThat(relevantSentences).hasSize(5);
+        assertThat(relevantSentences).extracting(Triple::getMiddle).allMatch(score -> score > 0.0);
     }
     
     public static class UnitByQueryWordAnnotator
@@ -160,38 +152,35 @@ public class ProcessTest
             for (AnnotationFS unit : CasUtil.select(aJCas.getCas(), tUnit)) {
                 List<String> tokens = JCasUtil.selectCovered(Token.class, unit).stream()
                         .map(AnnotationFS::getCoveredText).collect(toList());
-                unit.setDoubleValue(fScore, getScore(queryWord, tokens));
+                unit.setDoubleValue(fScore, getFrequencyScore(queryWord, tokens));
             }
         }
-
-        private double getScore(String aQueryWord, List<String> aTokens)
-        {
-            return Collections.frequency(aTokens, aQueryWord);
-        }
-    }
     
-    public static class AggregateScoreAnnotator
-        extends JCasAnnotator_ImplBase
-    {
-        @Override
-        public void process(JCas aJCas) throws AnalysisEngineProcessException
+        // should penalize sentences more than 25 and less than 10 words
+        private double getLengthScore(List<String> aTokens)
         {
-            double score = 0.0;
-            int count = 0;
-
-            Type tUnit = aJCas.getTypeSystem().getType(TYPE_NAME_UNIT);
-            Feature fUnitScore = tUnit.getFeatureByBaseName(FEATURE_NAME_SCORE);
-            for (AnnotationFS unit : CasUtil.select(aJCas.getCas(), tUnit)) {
-                score += unit.getDoubleValue(fUnitScore);
-                count++;
+            int sentenceLength = aTokens.size();
+            if (sentenceLength >= 10 && sentenceLength <= 25)
+            {
+                return 1.0;
             }
+            else
+            {
+                return 0.0;
+            }
+        }
 
-            Type tAggregate = aJCas.getTypeSystem().getType(TYPE_NAME_AGGREGATE);
-            Feature fAggregateScore = tAggregate.getFeatureByBaseName(FEATURE_NAME_SCORE);
-            AnnotationFS aggregate = aJCas.getCas().createAnnotation(tAggregate, 0,
-                    aJCas.getDocumentText().length());
-            aggregate.setDoubleValue(fAggregateScore, score / count);
-            aJCas.getCas().addFsToIndexes(aggregate);
+        // should penalize sentences with multiple occurrences of the query
+        private double getFrequencyScore(String aQueryWord, List<String> aTokens)
+        {
+            int queryFrequency = Collections.frequency(aTokens, aQueryWord);
+            if (queryFrequency == 0)
+            {
+                return 0.0;
+            }
+            else {
+                return 1.0 / (Collections.frequency(aTokens, aQueryWord));
+            }
         }
     }
 }
