@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerRef
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -95,6 +96,7 @@ public class LayerDetailForm
     private DropDownChoice<AnnotationLayer> attachTypes;
 
     private DropDownChoice<AnchoringMode> anchoringMode;
+    private DropDownChoice<ValidationMode> validationMode;
 
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
@@ -227,6 +229,11 @@ public class LayerDetailForm
 
         // Behaviors of layers
         add(new CheckBox("readonly"));
+
+        add(validationMode = new BootstrapSelect<ValidationMode>("validationMode"));
+        validationMode.setOutputMarkupPlaceholderTag(true);
+        validationMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        validationMode.setChoices(Arrays.asList(ValidationMode.values()));
 
         add(anchoringMode = new BootstrapSelect<AnchoringMode>("anchoringMode"));
         anchoringMode.setOutputMarkupPlaceholderTag(true);

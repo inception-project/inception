@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -400,6 +401,11 @@ public abstract class AnnotationPageBase
             if (!layer.isEnabled()) {
                 // No validation for disabled layers since there is nothing the annotator could do
                 // about fixing annotations on disabled layers.
+                continue;
+            }
+            
+            if (ValidationMode.NEVER.equals(layer.getValidationMode())) {
+                // If validation is disabled, then skip it
                 continue;
             }
             
