@@ -24,11 +24,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
@@ -45,7 +49,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Ensure that annotations do not cross sentence boundaries.
@@ -101,24 +107,51 @@ public class RelationCrossSentenceBehavior
     @Override
     public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
     {
+        // If crossing sentence boundaries is permitted, then there is nothing to validate here
         if (aAdapter.getLayer().isCrossSentence()) {
-            emptyList();
+            return emptyList();
         }
         
-        RelationAdapter adapter = (RelationAdapter) aAdapter;
-        
         CAS cas = aJCas.getCas();
-        Type type = getType(cas, adapter.getAnnotationTypeName());
+        RelationAdapter adapter = (RelationAdapter) aAdapter;
+        Type type = getType(cas, aAdapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         
-        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
-        
-        for (AnnotationFS fs : select(cas, type)) {
-            AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
-            AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
+        // If there are no annotations on this layer, nothing to do
+        Collection<AnnotationFS> annotations = select(cas, type);
+        if (annotations.isEmpty()) {
+            return emptyList();
+        }
 
-            if (!isBeginInSameSentence(aJCas, targetFs.getBegin(), sourceFs.getBegin())) {
+        // Prepare feedback messsage list
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+
+        // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
+        // The indexes are navigable, we can also find the sentences starting/ending closes to a
+        // particular offset, even if it is not the start/end offset of a sentence.
+        NavigableMap<Integer, Sentence> sentBeginIdx = new TreeMap<>();
+        NavigableMap<Integer, Sentence> sentEndIdx = new TreeMap<>();
+        for (Sentence sent : select(aJCas, Sentence.class)) {
+            sentBeginIdx.put(sent.getBegin(), sent);
+            sentEndIdx.put(sent.getEnd(), sent);
+        }
+        
+        for (AnnotationFS fs : annotations) {
+            AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
+            AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
+
+            Entry<Integer, Sentence> s1 = sentBeginIdx.floorEntry(sourceFs.getBegin());
+            Entry<Integer, Sentence> s2 = sentEndIdx.ceilingEntry(targetFs.getEnd());
+            
+            if (s1 == null || s2 == null) {
+                messages.add(Pair.of(LogMessage.error(this,
+                        "Unable to determine any sentences overlapping with [%d-%d]",
+                        sourceFs.getBegin(), targetFs.getEnd()), fs));
+                continue;
+            }
+            
+            if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
                 messages.add(Pair.of(
                         LogMessage.error(this, "Crossing sentence bounardies is not permitted."),
                         fs));
@@ -126,5 +159,6 @@ public class RelationCrossSentenceBehavior
         }
 
         return messages;
+        
     }
 }
