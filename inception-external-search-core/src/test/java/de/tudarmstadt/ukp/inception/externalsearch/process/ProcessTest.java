@@ -153,7 +153,7 @@ public class ProcessTest
                     bestCluster = cluster;
                 }
                 
-                if(bestDistance < clusterDistanceTolerance)
+                if (bestDistance < clusterDistanceTolerance)
                 {
                     bestCluster.add(sentence);
                 }
