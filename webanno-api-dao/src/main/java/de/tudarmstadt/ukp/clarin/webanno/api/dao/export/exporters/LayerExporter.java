@@ -55,8 +55,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 public class LayerExporter
     implements ProjectExporter
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
     
+    @Autowired
+    public LayerExporter(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
+
     @Override
     public List<Class<? extends ProjectExporter>> getImportDependencies()
     {
