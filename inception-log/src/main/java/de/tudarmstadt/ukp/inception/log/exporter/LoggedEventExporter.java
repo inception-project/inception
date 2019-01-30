@@ -156,6 +156,11 @@ public class LoggedEventExporter implements ProjectExporter
         int eventCount = 0;
         
         ZipEntry entry = aZip.getEntry(EVENT_LOG);
+        
+        if (entry == null) {
+            LOG.info("No event log available for import in project [{}]", aProject.getName());
+            return;
+        }
 
         try (JsonParser jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
