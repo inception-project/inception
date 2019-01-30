@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_annotation_concept-linking]]
-== Concept Linking
+= Concept Linking
 
 Concept Linking is the task of identifying concept mentions in the text and linking them to their
 corresponding concepts in a knowledge base.
@@ -24,7 +24,7 @@ to facilitate understanding of unexplained terminology or abbreviations in scien
 linking biological entities.
 
 
-==== Contextual Disambiguation
+=== Contextual Disambiguation
 
 Like many words, concept names can be ambiguous. There can be potentially many different concepts
 having the same name (consider the large number of famous people called John Smith). Thus, it is
@@ -46,7 +46,7 @@ image::concept-linking2.png[align="center"]
 
 The suggestions are updated every time it receives new input.
 
-=== Automated Concept Suggestions
+== Automated Concept Suggestions
 
 The Named Entity Linker (NEL) displays three highest-ranked candidates as suggestions boxes
 over each mention annotated as Named Entity.

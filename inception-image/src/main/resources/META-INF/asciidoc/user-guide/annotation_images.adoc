@@ -1,0 +1,31 @@
+////
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+[[sect_annotation_images]]
+= Images
+
+Linking text to images can be useful e.g. when dealing with OCRed data or with text describing
+images. To support such cases, {product-name} supports **image features**. Image features can
+be to annotation layers just like and other type of features. When selecting an annotation
+containing an image feature, the a text field is used as the feature editor. Enter an image URL into
+this field in order to link the annotation to an image. It is presently not possible to upload
+images to {product-name} - the image must be accessible via an URL, e.g. from an IIIF server.
+
+Open the **images sidebar** to get an overview over all images linked to any of the annotations
+currently visible on screen.
+
