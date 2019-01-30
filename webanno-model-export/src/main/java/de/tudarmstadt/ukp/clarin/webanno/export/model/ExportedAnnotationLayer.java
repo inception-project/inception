@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
 /**
  * All required contents of a project to be exported.
@@ -71,6 +72,9 @@ public class ExportedAnnotationLayer
     
     @JsonProperty("anchoring_mode")
     private AnchoringMode anchoringMode;
+    
+    @JsonProperty("validation_mode")
+    private ValidationMode validationMode;
     
     @Deprecated
     @JsonProperty("lock_to_token_offset")
@@ -167,6 +171,16 @@ public class ExportedAnnotationLayer
     public void setAttachType(ExportedAnnotationLayerReference attachType)
     {
         this.attachType = attachType;
+    }
+    
+    public ValidationMode getValidationMode()
+    {
+        return validationMode;
+    }
+
+    public void setValidationMode(ValidationMode aValidationMode)
+    {
+        validationMode = aValidationMode;
     }
 
     public void setAnchoringMode(AnchoringMode aAnchoringMode)

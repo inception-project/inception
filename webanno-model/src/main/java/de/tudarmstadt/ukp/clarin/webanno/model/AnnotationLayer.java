@@ -112,7 +112,11 @@ public class AnnotationLayer
     @Column(name = "anchoring_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnchoringModeType")
     private AnchoringMode anchoringMode = AnchoringMode.TOKENS;
-    
+
+    @Column(name = "validation_mode")
+    @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ValidationModeType")
+    private ValidationMode validationMode = ValidationMode.ALWAYS;
+
     // This column is no longer used and should be removed with the next major version.
     // At that time, a corresponding Liquibase changeset needs to be introduced as well.
     @Deprecated
@@ -427,6 +431,16 @@ public class AnnotationLayer
         else if (!aLockToTokenOffset && aMultipleTokens) {
             anchoringMode = AnchoringMode.TOKENS;
         }
+    }
+
+    public ValidationMode getValidationMode()
+    {
+        return validationMode;
+    }
+
+    public void setValidationMode(ValidationMode aValidationMode)
+    {
+        validationMode = aValidationMode;
     }
 
     public boolean isAllowStacking()
