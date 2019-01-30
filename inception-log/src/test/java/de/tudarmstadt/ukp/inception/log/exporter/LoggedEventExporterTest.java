@@ -101,7 +101,7 @@ public class LoggedEventExporterTest
         ZipFile zipFile = mock(ZipFile.class);
         when(zipFile.getEntry(any())).thenReturn(new ZipEntry("event.log"));
         when(zipFile.getInputStream(any()))
-                .thenReturn(new FileInputStream(new File(workFolder, "event.log")));
+                .thenAnswer(_invocation -> new FileInputStream(new File(workFolder, "event.log")));
         
         // Export the project and import it again
         ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
