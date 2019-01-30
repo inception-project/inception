@@ -51,13 +51,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
 @Component
 public class LayerExporter
     implements ProjectExporter
 {
-    private @Autowired AnnotationSchemaService annotationService;
+    private final AnnotationSchemaService annotationService;
     
+    @Autowired
+    public LayerExporter(AnnotationSchemaService aAnnotationService)
+    {
+        annotationService = aAnnotationService;
+    }
+
     @Override
     public List<Class<? extends ProjectExporter>> getImportDependencies()
     {
@@ -113,6 +120,7 @@ public class LayerExporter
         exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
         exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
+        exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
         exLayer.setName(aLayer.getName());
         exLayer.setProjectName(aLayer.getProject().getName());
@@ -269,6 +277,8 @@ public class LayerExporter
         else {
             aLayer.setOverlapMode(aExLayer.getOverlapMode());
         }
+        aLayer.setValidationMode(aExLayer.getValidationMode() != null ? aExLayer.getValidationMode()
+                : ValidationMode.NEVER);
         aLayer.setLinkedListBehavior(aExLayer.isLinkedListBehavior());
         aLayer.setUiName(aExLayer.getUiName());
         aLayer.setName(aExLayer.getName());

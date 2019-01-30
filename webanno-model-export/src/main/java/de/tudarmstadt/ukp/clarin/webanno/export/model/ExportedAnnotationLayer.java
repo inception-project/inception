@@ -24,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
 /**
  * All required contents of a project to be exported.
@@ -76,6 +77,9 @@ public class ExportedAnnotationLayer
     @JsonProperty("overlap_mode")
     private OverlapMode overlapMode;
 
+    @JsonProperty("validation_mode")
+    private ValidationMode validationMode;
+    
     @Deprecated
     @JsonProperty("lock_to_token_offset")
     private boolean lockToTokenOffset = true;
@@ -171,6 +175,16 @@ public class ExportedAnnotationLayer
     public void setAttachType(ExportedAnnotationLayerReference attachType)
     {
         this.attachType = attachType;
+    }
+    
+    public ValidationMode getValidationMode()
+    {
+        return validationMode;
+    }
+
+    public void setValidationMode(ValidationMode aValidationMode)
+    {
+        validationMode = aValidationMode;
     }
 
     public void setAnchoringMode(AnchoringMode aAnchoringMode)

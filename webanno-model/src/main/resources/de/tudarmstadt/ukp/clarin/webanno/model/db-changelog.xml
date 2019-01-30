@@ -1148,6 +1148,7 @@
     </update>
   </changeSet>
   
+<<<<<<< HEAD
   <changeSet author="WebAnno Team" id="20190125-1">
     <preConditions onFail="MARK_RAN">
       <not>
@@ -1171,5 +1172,18 @@
       tableName="annotation_type" 
       columnName="overlap_mode"
       columnDataType="VARCHAR(255)" />
+=======
+  <changeSet author="WebAnno Team" id="20100129-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="validation_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="validation_mode" type="VARCHAR(255)" defaultValue="never">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+>>>>>>> 3.5.x
   </changeSet>  
 </databaseChangeLog>
