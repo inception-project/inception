@@ -1147,4 +1147,17 @@
       <where>name = 'de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures'</where>
     </update>
   </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20100129-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="validation_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="validation_mode" type="VARCHAR(255)" defaultValue="never">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>
