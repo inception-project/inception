@@ -17,9 +17,10 @@
 [[sect_recommender_tutorial]]
 = Implementing a custom recommender
 
-This section describes the overall design of internal recommenders in INCEpTION and gives a
-tutorial on how to implement them. Internal recommenders are directly added to the INCEpTION platform
-by implementing Java interfaces. These are then picked up during application startup by the Spring Framework.
+This section describes the overall design of internal recommenders in {product-name} and gives a
+tutorial on how to implement them. Internal recommenders are created by implementing relevant 
+Java interfaces and are added via Maven dependencies. These are then picked up during application
+startup by the Spring Framework.
 
 For this tutorial, we will add a recommender for named entities that uses the data majority label for
 predicting, i.e. it predicts always the label that appears most often in the training data. The full
@@ -27,26 +28,27 @@ code for this example can be found in the **inception-example-imls-data-majority
 
 == Setting up the environment
 
-To get started, check out the most recent source code of INCEpTION from
+To get started, check out the most recent source code of {product-name} from
 https://github.com/inception-project/inception[Github] and import it as a Maven project in the IDE
 of your choice. Add a new module to the INCEpTION project itself, we will call it
 **inception-imls-data-majority**.
 
-In the _pom.xml_ of the INCEpTION project, add your recommender as a dependency. Update the version
-of the entry you just created to the version you find in the _pom.xml_ of the INCEpTION project. It
-should look like this:
+In the root `pom.xml` of the {product-name} project, add your recommender as a dependency. Update 
+the version of the entry you just created to the version you find in the _pom.xml_ of the
+{product-name} project. It should look like this:
 
-....
+[source,xml,indent=0,subs="+attributes"]
+----
 <dependencies>
 …
     <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-data-majority</artifactId>
-        <version>0.8.0-SNAPSHOT</version>
+        <version>{revnumber}</version>
     </dependency>
 …
 </dependencies>
-....
+----
 
 Add the same entry in `inception-app-webapp`, but omit the version number. It then uses automatically the
 version in the parent POM file. Also add it to `usedDependencies` there.
@@ -58,12 +60,12 @@ described in the following.
 
 Recommenders give suggestions for possible annotations to the user. In order to do that,
 they need to be able be to trained on existing annotations, predict annotations in a document and
-be evaluated for a performance estimate. This is what the **RecommendationEngine** interface is for.
+be evaluated for a performance estimate. This is what the `RecommendationEngine` interface is for.
 It defines the methods that are used to train, test and evaluate a machine learning algorithm.
 Instances of this interface often wrap external machine learning packages like https://opennlp.apache.org/[OpenNLP]
  or https://deeplearning4j.org/[Deeplearning4j].
 
-Recommenders in INCEpTION heavily rely on https://uima.apache.org[Apache UIMA] types and features.
+Recommenders in {product-name} heavily rely on https://uima.apache.org[Apache UIMA] types and features.
 A recommender is configured for a certain layer and a certain feature. A layer can be seen as the
 type of annotation you want to to, e.g. `POS`, `NER`. Layers correspond to UIMA types. A feature is
 one piece of information that should be annotated, e.g. the POS tag. One layer can have many features.
@@ -102,8 +104,9 @@ to ensure type safety.
 
 === Training
 
-Training consists of extracting annotations followed by training and saving the model. INCEpTION needs
-to know whether the recommender is ready for prediction, this is done by calling `aContext.markAsReadyForPrediction()`.
+Training consists of extracting annotations followed by training and saving the model. The 
+platform needs to know whether the recommender is ready for prediction, this is done by 
+calling `aContext.markAsReadyForPrediction()`.
 
 .Training routine
 [source,java,indent=0]
@@ -136,7 +139,7 @@ We also compute a dummy score here which is displayed in the UI and used for e.g
 
 The first thing we do when predicting is to load the model we saved during training. For every
 candidate in the document, we assign the majority label, create a new annotation and add it to the `CAS`.
-From there, it will be read by INCEpTION and displayed to the user.
+From there, it will be read by {product-name} and displayed to the user.
 
 .Predicting annotations for a CAS
 [source,java,indent=0]
@@ -157,8 +160,8 @@ include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudar
 === Evaluating
 
 When configuring a recommender, it can be specified that it needs to achieve a certain score
-before the recommendations are shown to the user. For that, INCEpTION regularly evaluates recommenders
-in the background. In code, it is implemented in the `evaluate` method.
+before the recommendations are shown to the user. For that, the platform regularly evaluates 
+recommenders in the background. In code, it is implemented in the `evaluate` method.
 
 Evaluation is done on a set of documents. In order to properly divide the annotations into training
 and test set, a `DataSplitter` is given which tells you to which data set an annotation belongs.

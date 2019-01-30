@@ -19,12 +19,13 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
+
+
 = Introduction
 
 include::{include-dir}setup.adoc[leveloffset=+1]
 
 <<<
-
 
 
 = Modules
@@ -65,4 +66,5 @@ include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
 
 = Appendices 
 
+[appendix]
 include::{include-dir}systemproperties.adoc[leveloffset=+1]

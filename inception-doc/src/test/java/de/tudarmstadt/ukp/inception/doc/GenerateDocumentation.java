@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import static org.apache.commons.io.filefilter.TrueFileFilter.INSTANCE;
+package de.tudarmstadt.ukp.inception.doc;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.asciidoctor.Asciidoctor;
 import org.asciidoctor.Attributes;
 import org.asciidoctor.AttributesBuilder;
@@ -50,15 +51,18 @@ public class GenerateDocumentation
     private static void buildDoc(String type, Path outputDir)
     {
         Attributes attributes = AttributesBuilder.attributes()
-                .attribute("source-dir", Paths.get(System.getProperty("user.dir")) + "/")
-                .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type).toString() + "/")
-                .attribute("imagesdir", outputDir.resolve("asciidoc").resolve(type).resolve("images").toString() + "/")
+                .attribute("source-dir", Paths.get(System.getProperty("user.dir"))
+                        .getParent() + "/")
+                .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type)
+                        .toString() + "/")
+                .attribute("imagesdir", outputDir.resolve("asciidoc").resolve(type)
+                        .resolve("images").toString() + "/")
                 .attribute("doctype", "book")
                 .attribute("toclevels", "8")
                 .attribute("sectanchors", "true")
                 .attribute("docinfo1", "true")
-                .attribute("project-version", "0.8.0-SNAPSHOT")
-                .attribute("revnumber", "0.8.0-SNAPSHOT")
+                .attribute("project-version", "DEVELOPER BUILD")
+                .attribute("revnumber", "DEVELOPER BUILD")
                 .attribute("product-name", "INCEpTION")
                 .attribute("product-website-url", "https://inception-project.github.io")
                 .attribute("icons", "font")
@@ -76,9 +80,10 @@ public class GenerateDocumentation
 
     public static void main(String... args) throws Exception
     {
-        Path inceptionDir = Paths.get(System.getProperty("user.dir"));
+        Path inceptionDir = Paths.get(System.getProperty("user.dir")).getParent();
         Path webannoDir = inceptionDir.getParent().resolve("webanno");
-        Path outputDir = inceptionDir.resolve("doc-out");
+        Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
+                .resolve("doc-out");
 
         List<Path> modules = new ArrayList<>();
         modules.addAll(getAsciiDocs(webannoDir));
@@ -88,7 +93,10 @@ public class GenerateDocumentation
         Files.createDirectory(outputDir);
 
         for (Path module : modules) {
-            for (File f: FileUtils.listFiles(module.toFile(), INSTANCE, INSTANCE)) {
+            System.out.printf("Including module: %s\n", module);
+            
+            for (File f : FileUtils.listFiles(module.toFile(), TrueFileFilter.INSTANCE,
+                    TrueFileFilter.INSTANCE)) {
                 Path p = f.toPath();
                 Path targetPath = f.toPath().subpath(module.toAbsolutePath().getNameCount()
                         , p.toAbsolutePath().getNameCount());
@@ -99,7 +107,7 @@ public class GenerateDocumentation
         buildDoc("user-guide", outputDir);
         buildDoc("developer-guide", outputDir);
         buildDoc("admin-guide", outputDir);
+        
+        System.out.printf("Documentation written to: %s\n", outputDir);
     }
-
-
 }
