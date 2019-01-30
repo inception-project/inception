@@ -1,9 +1,11 @@
-== Flatastic Icon Set 5
+== FatCow-Farm Fresh Icons
 
-http://www.customicondesign.com/free-icons/flatastic-icon-set/flatastic-part-5/
+https://www.fatcow.com/free-icons
 
-Copyright 2015, CUSTOM ICON DESIGN.
-http://www.customicondesign.com/license-agreement/
+Copyright 2009-2014 FatCow Web Hosting
+
+These icons are licensed under a Creative Commons Attribution 3.0 License.
+http://creativecommons.org/licenses/by/3.0/us/
 
 Files:
-- search-globe.png
+- world_go.png
