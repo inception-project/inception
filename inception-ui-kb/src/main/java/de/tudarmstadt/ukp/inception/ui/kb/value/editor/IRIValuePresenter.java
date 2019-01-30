@@ -17,11 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-import java.util.Optional;
-
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -38,6 +37,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -53,51 +53,59 @@ public class IRIValuePresenter
     @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
+    private CompoundPropertyModel<KBObject> kbObject;
 
     public IRIValuePresenter(String id, IModel<KBStatement> aModel, IModel<KnowledgeBase> aKBModel)
     {
         super(id, aModel);
+        
         kbModel = aKBModel;
+        kbObject = CompoundPropertyModel.of(LoadableDetachableModel.of(this::getKBObject));
 
+        add(new IriInfoBadge("iriInfoBadge", LoadableDetachableModel
+                .of(() -> ((IRI) getModelObject().getValue()).stringValue())));
+        
         LambdaAjaxLink link = new LambdaAjaxLink("link",
-            t -> actionIRILinkClicked(t, getKBObject()));
-        link.add(new Label("label", LoadableDetachableModel.of(() -> getLabel(getKBObject()))));
+            t -> actionIRILinkClicked(t, kbObject.getObject()));
+        link.add(new Label("label",
+                LoadableDetachableModel.of(() -> getLabel(kbObject.getObject()))));
         add(link);
     }
 
-    private Optional<KBObject> getKBObject() {
+    private KBObject getKBObject()
+    {
         Object stmtValue = getModelObject().getValue();
-        Optional<KBObject> kbObject = kbService
-            .readKBIdentifier(kbModel.getObject(), stmtValue.toString());
-        if (kbObject.isPresent()) {
-            return kbObject;
+        if (stmtValue != null) {
+            return kbService.readKBIdentifier(kbModel.getObject(), stmtValue.toString())
+                    .orElse(null);
         }
-        return Optional.empty();
+        else {
+            return null;
+        }
     }
 
-    private String getLabel(Optional<KBObject> aKbObject)
+    private String getLabel(KBObject aKbObject)
     {
-        if (aKbObject.isPresent()) {
-            return aKbObject.get().getUiLabel();
+        if (aKbObject != null) {
+            return aKbObject.getUiLabel();
         }
         return ((IRI) getModelObject().getValue()).getLocalName();
     }
 
-    private void actionIRILinkClicked(AjaxRequestTarget aTarget, Optional<KBObject> aKbObject)
+    private void actionIRILinkClicked(AjaxRequestTarget aTarget, KBObject aKbObject)
     {
-        if (aKbObject.isPresent()) {
-            KBObject kbObject = aKbObject.get();
-            if (kbObject instanceof KBConcept) {
+        if (aKbObject != null) {
+            if (aKbObject instanceof KBConcept) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(kbObject), true));
+                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
             }
-            else if (kbObject instanceof KBInstance) {
+            else if (aKbObject instanceof KBInstance) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(kbObject)));
+                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
             }
-            else if (kbObject instanceof KBProperty) {
+            else if (aKbObject instanceof KBProperty) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(aTarget, KBHandle.of(kbObject), true));
+                    new AjaxPropertySelectionEvent(aTarget, KBHandle.of(aKbObject), true));
             }
             else {
                 throw new IllegalArgumentException(String.format(
