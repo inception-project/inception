@@ -24,7 +24,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KnowledgeBaseInfo implements Serializable
 {
-
     private static final long serialVersionUID = -2667645577002890141L;
 
     @JsonProperty("description")
@@ -54,9 +53,9 @@ public class KnowledgeBaseInfo implements Serializable
         return hostInstitutionName;
     }
 
-    public void setHostInstitutionName(String hostInstitutionName)
+    public void setHostInstitutionName(String aHostInstitutionName)
     {
-        this.hostInstitutionName = hostInstitutionName;
+        hostInstitutionName = aHostInstitutionName;
     }
 
     public String getAuthorName()
@@ -64,9 +63,9 @@ public class KnowledgeBaseInfo implements Serializable
         return authorName;
     }
 
-    public void setAuthorName(String authorName)
+    public void setAuthorName(String aAuthorName)
     {
-        this.authorName = authorName;
+        authorName = aAuthorName;
     }
 
     public String getWebsiteURL()
@@ -74,12 +73,13 @@ public class KnowledgeBaseInfo implements Serializable
         return websiteURL;
     }
 
-    public void setWebsiteURL(String websiteURL)
+    public void setWebsiteURL(String aWebsiteURL)
     {
-        this.websiteURL = websiteURL;
+        websiteURL = aWebsiteURL;
     }
 
-    @Override public boolean equals(Object o)
+    @Override
+    public boolean equals(Object o)
     {
         if (this == o) {
             return true;
@@ -88,12 +88,14 @@ public class KnowledgeBaseInfo implements Serializable
             return false;
         }
         KnowledgeBaseInfo that = (KnowledgeBaseInfo) o;
-        return Objects.equals(description, that.description) && Objects
-            .equals(hostInstitutionName, that.hostInstitutionName) && Objects
-            .equals(authorName, that.authorName) && Objects.equals(websiteURL, that.websiteURL);
+        return Objects.equals(description, that.description)
+                && Objects.equals(hostInstitutionName, that.hostInstitutionName)
+                && Objects.equals(authorName, that.authorName)
+                && Objects.equals(websiteURL, that.websiteURL);
     }
 
-    @Override public int hashCode()
+    @Override
+    public int hashCode()
     {
         return Objects.hash(description, hostInstitutionName, authorName, websiteURL);
     }

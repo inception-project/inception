@@ -43,9 +43,10 @@ public class KnowledgeBaseProfileDeserializationTest
     private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
 
     @Test
-    public void checkThatDeserializationWorks() throws IOException {
+    public void checkThatDeserializationWorks() throws IOException
+    {
         String name = "Test KB";
-        List<String> rootConcepts =  new ArrayList<>();
+        List<String> rootConcepts = new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
         Reification reification = Reification.WIKIDATA;
         String defaultLanguage = "en";
@@ -64,16 +65,20 @@ public class KnowledgeBaseProfileDeserializationTest
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;
         try (Reader r = new InputStreamReader(
-            resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
+                resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            profiles = mapper
-                .readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>() {});
+            profiles = mapper.readValue(r,
+                    new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
+                    {
+                    });
         }
         KnowledgeBaseProfile testProfile = profiles.get("test_profile");
-        Assertions.assertThat(testProfile).isEqualToComparingFieldByFieldRecursively(referenceProfile);
+        Assertions.assertThat(testProfile)
+                .isEqualToComparingFieldByFieldRecursively(referenceProfile);
     }
 
-    private KnowledgeBaseInfo createReferenceInfo() {
+    private KnowledgeBaseInfo createReferenceInfo()
+    {
         String description = "This is a knowledge base for testing the kb profiles";
         String host = "a host";
         String author = "INCEpTION team";
@@ -86,7 +91,8 @@ public class KnowledgeBaseProfileDeserializationTest
         return referenceInfo;
     }
 
-    private KnowledgeBaseMapping createReferenceMapping() {
+    private KnowledgeBaseMapping createReferenceMapping()
+    {
         String classIri = "http://www.w3.org/2000/01/rdf-schema#Class";
         String subclassIri = "http://www.w3.org/2000/01/rdf-schema#subClassOf";
         String typeIri = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
@@ -97,12 +103,13 @@ public class KnowledgeBaseProfileDeserializationTest
         String propertyLabelIri = "http://www.w3.org/2000/01/rdf-schema#label";
         String propertyDescriptionIri = "http://www.w3.org/2000/01/rdf-schema#comment";
         KnowledgeBaseMapping referenceMapping = new KnowledgeBaseMapping(classIri, subclassIri,
-            typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
-            propertyDescriptionIri);
+                typeIri, subPropertyIri, descriptionIri, label, propertyTypeIri, propertyLabelIri,
+                propertyDescriptionIri);
         return referenceMapping;
     }
 
-    private KnowledgeBaseAccess createReferenceAccess() {
+    private KnowledgeBaseAccess createReferenceAccess()
+    {
         String url = "http://someurl/sparql";
         String fullTextSearchIri = "http://www.openrdf.org/contrib/lucenesail#matches";
         KnowledgeBaseAccess referenceAccess = new KnowledgeBaseAccess(url, fullTextSearchIri);
