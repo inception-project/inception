@@ -1,0 +1,33 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_installation]]
+= Installation
+
+You can run {product-name} on any major platform supporting Java, i.e. Linux, macOS or Windows.
+However, we do not provide explicit for setting up a production-ready instance of each of these
+platforms. 
+
+This guide assumes Debian 9.1 (Stretch). It may also work on Ubuntu with some modifications, but we
+do not test this. Instructions for other Linux distributions and other platforms (i.e. macOS and 
+Windows) likely deviate significantly.
+
+It is further assumed that the use *www-data* already exists on the system and that it shall be used to run the application.
+
+All commands assume that you are logged in as the *root* user. 
+
+NOTE: If you cannot log in as root but have to use `sudo` to become root, then the recommended way 
+      to do that is using the command `sudo su -`.

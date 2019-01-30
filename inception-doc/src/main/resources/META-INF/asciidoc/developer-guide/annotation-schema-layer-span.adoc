@@ -1,0 +1,20 @@
+= Span layer
+
+A span layer allows to create annotations over spans of text.
+
+If `attachType` is set, then an annotation can only be created over the same span on which an 
+annotation of the specified type also exists. For span layers, setting `attachFeature` is mandatory
+if a `attachType` is defined. The `attachFeature` indicates the feature on the annotation of the 
+`attachType` layer which is to be set to the newly created annotation. 
+
+For example, the `Lemma` layer has the `attachType` set to `Token` and the `attachFeature` set to 
+`lemma`. This means, that a new lemma annotation can only be created where a token already exists
+and that the `lemma` feature of the token will point to the newly created lemma annotation.
+
+Deleting an annotation that has other annotations attached to it will also cause the attached 
+annotations to be deleted.
+
+NOTE: This case is currently not implemented because it is currently not allowed to 
+      create spans that attach to other spans. The only span type for which this is relevant
+      is the `Token` type which cannot be deleted.
+
