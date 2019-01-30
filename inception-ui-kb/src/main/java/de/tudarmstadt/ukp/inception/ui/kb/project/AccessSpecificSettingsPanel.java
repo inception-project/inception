@@ -104,7 +104,6 @@ public class AccessSpecificSettingsPanel
      * {@link RDFFormat}. This factory method detour is necessary because {@link RDFFormat} should
      * be used as a model, but is not serializable.
      *
-     * @param fileExt
      * @return an {@link RDFFormat}
      */
     private static final RDFFormat getRdfFormatForFileExt(String fileExt)
@@ -132,7 +131,7 @@ public class AccessSpecificSettingsPanel
         downloadedProfiles = new HashMap<>();
         uploadedFiles = new HashMap<>();
         kbModel.getObject().clearFiles();
-        kbInfoModel = CompoundPropertyModel.of(null);
+        kbInfoModel = CompoundPropertyModel.of(Model.of());
 
         boolean isHandlingLocalRepository =
             kbModel.getObject().getKb().getType() == RepositoryType.LOCAL;
@@ -174,9 +173,8 @@ public class AccessSpecificSettingsPanel
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
         List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
     {
-        return new ListView<>(aId, aSuggestions)
+        return new ListView<KnowledgeBaseProfile>(aId, aSuggestions)
         {
-
             private static final long serialVersionUID = 4179629475064638272L;
 
             @Override protected void populateItem(ListItem<KnowledgeBaseProfile> item)
@@ -314,8 +312,7 @@ public class AccessSpecificSettingsPanel
                 Model<String> exportFileNameModel = Model
                     .of(kbModel.getObject().getKb().getName() + "." + fileExtension);
                 AjaxDownloadLink exportLink = new AjaxDownloadLink("link", exportFileNameModel,
-                    LambdaModel
-                        .of(() -> actionExport(fileExtension)));
+                        LambdaModel.of(() -> actionExport(fileExtension)));
                 exportLink
                     .add(new Label("label", new ResourceModel("kb.export." + fileExtension)));
                 item.add(exportLink);
