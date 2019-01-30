@@ -32,6 +32,7 @@ import java.io.FileInputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.junit.Before;
@@ -97,8 +98,13 @@ public class LoggedEventExporterTest
             return null;
         }).when(eventRepository).forEachLoggedEvent(any(), any());
         
+        ZipFile zipFile = mock(ZipFile.class);
+        when(zipFile.getEntry(any())).thenReturn(new ZipEntry("event.log"));
+        when(zipFile.getInputStream(any()))
+                .thenReturn(new FileInputStream(new File(workFolder, "event.log")));
+        
         // Export the project and import it again
-        ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents();
+        ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
 
         // Check that after re-importing the exported projects, they are identical to the original
         List<LoggedEvent> expectedEvents = events().stream()
@@ -109,6 +115,18 @@ public class LoggedEventExporterTest
         assertThat(captor.getAllValues())
                 .usingElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(expectedEvents);
+    }
+
+    @Test
+    public void thatImportingArchiveWithoutEventsWorks() throws Exception
+    {
+        ZipFile zipFile = mock(ZipFile.class);
+        
+        // Export the project and import it again
+        ArgumentCaptor<LoggedEvent> captor = runExportImportAndFetchEvents(zipFile);
+
+        // Check that import was successful but not events have been imported
+        assertThat(captor.getAllValues()).isEmpty();;
     }
     
     private List<SourceDocument> documents()
@@ -163,7 +181,8 @@ public class LoggedEventExporterTest
         return asList(event1, event2, event3, event4);
     }
 
-    private ArgumentCaptor<LoggedEvent> runExportImportAndFetchEvents() throws Exception
+    private ArgumentCaptor<LoggedEvent> runExportImportAndFetchEvents(ZipFile aZipFile)
+        throws Exception
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
@@ -176,13 +195,9 @@ public class LoggedEventExporterTest
         ArgumentCaptor<LoggedEvent> captor = ArgumentCaptor.forClass(LoggedEvent.class);
         doNothing().when(eventRepository).create(captor.capture());
 
-        ZipFile zipFile = mock(ZipFile.class);
-        when(zipFile.getInputStream(any()))
-                .thenReturn(new FileInputStream(new File(workFolder, "event.log")));
-        
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exportedProject, zipFile);
-        
+        sut.importData(importRequest, project, exportedProject, aZipFile);
+
         return captor;
     }
 }
