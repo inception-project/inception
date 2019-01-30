@@ -205,7 +205,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
-// BEGIN PDFANNO EXTENSION - #879 - Selection of spans in PDF editor
+// BEGIN INCEpTION EXTENSION - #879 - Selection of spans in PDF editor
     if (this.selected) {
       var data = {
         "action": "selectSpan",
@@ -224,7 +224,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         }]
       });
     }
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
   }
 
   export (id) {
