@@ -192,7 +192,7 @@ public class StatementGroupPanel extends Panel {
             }
             
             properties.removeAll(existingPropertyHandles);
-            return properties;
+            return KBHandle.distinctByIri(properties);
         }
 
         private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
