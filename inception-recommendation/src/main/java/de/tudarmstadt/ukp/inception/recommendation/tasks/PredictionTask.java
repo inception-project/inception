@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -227,15 +226,6 @@ public class PredictionTask
     {
         int predictionCount = 0;
 
-        // Replace this with CasMetadata
-        String documentUri = aDocument.getName();
-        try {
-            DocumentMetaData dmd = DocumentMetaData.get(aCas);
-            documentUri = dmd.getDocumentUri();
-        } catch (IllegalArgumentException e) {
-            log.warn("No DocumentMetaData in CAS, using document name as document URI!");
-        }
-        
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
@@ -250,7 +240,7 @@ public class PredictionTask
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featurename, aDocument.getName(), documentUri,
+                    aRecommender.getLayer().getId(), featurename, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
                     label, score);
 
@@ -365,7 +355,7 @@ public class PredictionTask
             // Anything that was not hidden so far might still have been rejected or not have a
             // label
             suggestions.values().stream()
-                    .flatMap(group -> group.stream())
+                    .flatMap(SuggestionGroup::stream)
                     .filter(AnnotationSuggestion::isVisible)
                     .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(
                             suggestion, recordedAnnotations));
