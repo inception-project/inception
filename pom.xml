@@ -102,6 +102,7 @@
     <module>inception-log</module>
     <module>inception-support</module>
     <module>inception-layer-docmetadata</module>
+    <module>inception-image</module>
     <module>inception-scheduling</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
@@ -319,6 +320,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-layer-docmetadata</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-image</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
