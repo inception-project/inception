@@ -32,6 +32,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseMapping;
@@ -47,12 +48,16 @@ public class KnowledgeBaseProfileDeserializationTest
         String name = "Test KB";
         List<String> rootConcepts = new ArrayList<>();
         RepositoryType type = RepositoryType.LOCAL;
+        Reification reification = Reification.WIKIDATA;
+        String defaultLanguage = "en";
 
         KnowledgeBaseProfile referenceProfile = new KnowledgeBaseProfile();
 
         referenceProfile.setName(name);
         referenceProfile.setType(type);
         referenceProfile.setRootConcepts(rootConcepts);
+        referenceProfile.setDefaultLanguage(defaultLanguage);
+        referenceProfile.setReification(reification);
         referenceProfile.setMapping(createReferenceMapping());
         referenceProfile.setAccess(createReferenceAccess());
         referenceProfile.setInfo(createReferenceInfo());

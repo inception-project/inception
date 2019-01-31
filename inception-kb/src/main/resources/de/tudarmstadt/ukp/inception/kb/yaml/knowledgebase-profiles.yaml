@@ -1,6 +1,8 @@
 british_museum:
   name: British Museum
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://collection.britishmuseum.org/sparql
     full-text-search: FTS:NONE
@@ -23,6 +25,8 @@ british_museum:
 wikidata:
   name: Wikidata
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: https://query.wikidata.org/sparql
     full-text-search: FTS:NONE
@@ -47,6 +51,8 @@ wikidata:
 virtuoso:
   name: UKP Wikidata
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
     full-text-search: bif:contains
@@ -69,6 +75,8 @@ virtuoso:
 db_pedia:
   name: DBpedia
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://dbpedia.org/sparql
     full-text-search: FTS:NONE
@@ -93,6 +101,8 @@ db_pedia:
 babel_net:
   name: BabelNet
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://babelnet.org/sparql/
     full-text-search: FTS:NONE
@@ -115,6 +125,8 @@ babel_net:
 yago:
   name: YAGO
   type: REMOTE
+  default-language: eng
+  reification: NONE
   access:
     access-url: https://linkeddata1.calcul.u-psud.fr/sparql
     full-text-search: bif:contains
@@ -139,6 +151,8 @@ yago:
 wine_ontology:
   name: Wine Ontology
   type: LOCAL
+  default-language: en
+  reification: NONE
   access:
     access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -161,6 +175,8 @@ wine_ontology:
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
+  default-language: en
+  reification: NONE
   access:
     access-url: https://www.bbc.co.uk/ontologies/wo/1.1.ttl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
@@ -183,6 +199,8 @@ wildlife_ontology:
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/stw/query
     full-text-search: FTS:NONE
@@ -205,6 +223,8 @@ zbw-stw-economics:
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/gnd/query
     full-text-search: FTS:NONE
