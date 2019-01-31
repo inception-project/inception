@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_annotation_concept-linking]]
-== Concept Linking
+= Concept Linking
 
 Concept Linking is the task of identifying concept mentions in the text and linking them to their
 corresponding concepts in a knowledge base.
@@ -46,7 +46,7 @@ image::concept-linking2.png[align="center"]
 
 The suggestions are updated every time it receives new input.
 
-=== Automated Concept Suggestions
+== Automated Concept Suggestions
 
 The Named Entity Linker (NEL) displays three highest-ranked candidates as suggestions boxes
 over each mention annotated as Named Entity.
