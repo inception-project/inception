@@ -111,8 +111,6 @@ public class ExternalSearchAnnotationSidebar
 
     private IModel<List<DocumentRepository>> repositoriesModel;
 
-    private ExternalSearchResult selectedResult;
-
     private Project project;
 
     private DocumentRepository currentRepository;
@@ -214,16 +212,22 @@ public class ExternalSearchAnnotationSidebar
 
     @OnEvent public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        // highlight keywords
-        if (selectedResult != null) {
-            AnnotatorState state = aEvent.getState();
+        // highlight keywords if a document is selected from result list
+        // and it is the current document opened
+        if (externalSearchUserState.getSelectedResult() != null &&
+            (externalSearchUserState.getSelectedResult().getDocumentId().equals(
+                getAnnotationPage().getModelObject().getDocument().getName()))) {
             highlightKeywords(aEvent.getState(), aEvent.getVDocument());
+        } else {
+            // a document was opened not by selecting from the result list
+            externalSearchUserState.setSelectedResult(null);
         }
     }
 
     private void highlightKeywords (AnnotatorState aAnnotatorState, VDocument aVDocument)
     {
-        for (ExternalSearchHighlight highlight : selectedResult.getHighlights()) {
+        for (ExternalSearchHighlight highlight :
+            externalSearchUserState.getSelectedResult().getHighlights()) {
 
             // Highlight the keywords in the annotator indicated by the offsets
             // if they are within the current window.
@@ -245,7 +249,7 @@ public class ExternalSearchAnnotationSidebar
 
     private void actionImport(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
         String aDocumentTitle) {
-        selectedResult = aResult;
+        externalSearchUserState.setSelectedResult(aResult);
         try {
             documentImporter
                 .importDocumentFromDocumentRepository(userRepository.getCurrentUser(), project,
@@ -262,7 +266,7 @@ public class ExternalSearchAnnotationSidebar
 
     private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
         String aDocumentTitle) {
-        selectedResult = aResult;
+        externalSearchUserState.setSelectedResult(aResult);
         getAnnotationPage().actionShowSelectedDocument(aTarget,
             documentService.getSourceDocument(project, aDocumentTitle));
     }
@@ -311,7 +315,7 @@ public class ExternalSearchAnnotationSidebar
         private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
         {
             IModel<String> query = externalSearchUserState.getQuery();
-            selectedResult = null;
+            externalSearchUserState.setSelectedResult(null);
             if (query.getObject() == null) {
                 query.setObject("*.*");
             }
@@ -408,6 +412,8 @@ public class ExternalSearchAnnotationSidebar
 
         private long currentPage = 1;
 
+        private ExternalSearchResult selectedResult;
+
         public DocumentRepository getCurrentRepository()
         {
             return currentRepository;
@@ -456,6 +462,16 @@ public class ExternalSearchAnnotationSidebar
         public void setCurrentPage(long aCurrentPage)
         {
             currentPage = aCurrentPage;
+        }
+
+        public ExternalSearchResult getSelectedResult()
+        {
+            return selectedResult;
+        }
+
+        public void setSelectedResult(ExternalSearchResult selectedResult)
+        {
+            this.selectedResult = selectedResult;
         }
     }
 }
