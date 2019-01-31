@@ -1,178 +1,247 @@
 british_museum:
   name: British Museum
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://collection.britishmuseum.org/sparql
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2000/01/rdf-schema#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: Collection of the British Museum in Semantic Web format
+    host-institution-name: British Museum
+    author-name: British Museum
+    website-url: https://www.britishmuseum.org/about_us/news_and_press/press_releases/2011/semantic_web_endpoint.aspx
 
 wikidata:
   name: Wikidata
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: https://query.wikidata.org/sparql
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.wikidata.org/entity/Q35120
-    subclass-of: http://www.wikidata.org/prop/direct/P279
-    instance-of: http://www.wikidata.org/prop/direct/P31
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.wikidata.org/entity/Q18616576
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.wikidata.org/prop/direct/P1647
+      class: http://www.wikidata.org/entity/Q35120
+      subclass-of: http://www.wikidata.org/prop/direct/P279
+      instance-of: http://www.wikidata.org/prop/direct/P31
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.wikidata.org/entity/Q18616576
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.wikidata.org/prop/direct/P1647
+  info:
+    description: Wikidata is a free and open knowledge base and acts as central storage for the structured data of its Wikimedia sister projects including Wikipedia, Wikivoyage, Wikisource, and others.
+    host-institution-name: Wikidata
+    author-name: "-"
+    website-url: https://www.wikidata.org/wiki/Wikidata:Main_Page
   root-concepts:
     - http://www.wikidata.org/entity/Q35120
 
 virtuoso:
   name: UKP Wikidata
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql
     full-text-search: bif:contains
   mapping:
-    class: http://www.w3.org/2002/07/owl#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.wikidata.org/entity/Q18616576
-    description: http://schema.org/description
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
-    property-description: http://schema.org/description
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.wikidata.org/entity/Q18616576
+      description: http://schema.org/description
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      property-description: http://schema.org/description
+  info:
+    description: Wikidata
+    host-institution-name: UKP Lab TU Darmstadt
+    author-name: UKP Lab TU Darmstadt
+    website-url: https://www.informatik.tu-darmstadt.de/ukp/ukp_home/index.en.jsp
 
 db_pedia:
   name: DBpedia
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://dbpedia.org/sparql
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.w3.org/2002/07/owl#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: DBpedia is a crowd-sourced community effort to extract structured content from the information created in various Wikimedia projects.
+    host-institution-name: Leipzig University, University of Mannheim, OpenLink Software
+    author-name: Leipzig University, University of Mannheim, OpenLink Software
+    website-url: https://wiki.dbpedia.org/
   root-concepts:
     - http://www.w3.org/2002/07/owl#Thing
 
 babel_net:
   name: BabelNet
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://babelnet.org/sparql/
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2000/01/rdf-schema#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: BabelNet is a multilingual lexicalized semantic network and ontology that was automatically created by linking Wikipedia to WordNet.
+    host-institution-name: Linguistic Computing Laboratory at Sapienza University of Rome
+    author-name: Linguistic Computing Laboratory at Sapienza University of Rome
+    website-url: https://babelnet.org/
 
 yago:
   name: YAGO
   type: REMOTE
+  default-language: eng
+  reification: NONE
   access:
     access-url: https://linkeddata1.calcul.u-psud.fr/sparql
     full-text-search: bif:contains
   mapping:
-    class: http://www.w3.org/2000/01/rdf-schema#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2004/02/skos/core#prefLabel
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2000/01/rdf-schema#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: YAGO is a semantic knowledge base, derived from Wikipedia WordNet and GeoNames.
+    host-institution-name: Max-Planck-Institute Saarbrücken
+    author-name: Max-Planck-Institute Saarbrücken, DIG group at Télécom ParisTech University.
+    website-url: https://www.mpi-inf.mpg.de/departments/databases-and-information-systems/research/yago-naga/yago/
   root-concepts:
     - http://www.w3.org/2002/07/owl#Thing
 
 wine_ontology:
   name: Wine Ontology
   type: LOCAL
+  default-language: en
+  reification: NONE
   access:
     access-url: classpath:de/tudarmstadt/ukp/inception/kb/pre-defined-knowledge-bases/wine.rdf
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
-    class: http://www.w3.org/2002/07/owl#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: An example OWL ontology. Derived from the DAML Wine ontology at http://ontolingua.stanford.edu/doc/chimaera/ontologies/wines.daml
+    host-institution-name: "-"
+    author-name: "-"
+    website-url: https://www.w3.org/TR/owl-guide/wine.rdf
 
 wildlife_ontology:
   name: Wildlife Ontology
   type: LOCAL
+  default-language: en
+  reification: NONE
   access:
     access-url: https://www.bbc.co.uk/ontologies/wo/1.1.ttl
     full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
-    class: http://www.w3.org/2002/07/owl#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: A simple vocabulary for describing biological species and related taxa.
+    host-institution-name: "-"
+    author-name: http://www.ldodds.com#me, http://tomscott.name/
+    website-url: https://www.bbc.co.uk/ontologies/wo
 
 zbw-stw-economics:
   name: STW Thesaurus for Economics
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/stw/query
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.w3.org/2004/02/skos/core#Concept
-    subclass-of: http://www.w3.org/2004/02/skos/core#broader
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2004/02/skos/core#prefLabel
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2004/02/skos/core#prefLabel
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2004/02/skos/core#Concept
+      subclass-of: http://www.w3.org/2004/02/skos/core#broader
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2004/02/skos/core#prefLabel
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: Thesaurus that provides vocabulary on any economic subject. Almost 6,000 standardized subject headings and about 20,000 additional entry terms to support individual keywords.
+    host-institution-name: ZBW - Leibniz Information Centre for Economics
+    author-name: ZBW - Leibniz Information Centre for Economics
+    website-url: http://zbw.eu/stw/version/latest/about
 
 zbw-gnd:
   name: Integrated Authority File (GND)
   type: REMOTE
+  default-language: en
+  reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/gnd/query
     full-text-search: FTS:NONE
   mapping:
-    class: http://www.w3.org/2002/07/owl#Class
-    subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
-    instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
-    label: http://www.w3.org/2000/01/rdf-schema#label
-    property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
-    description: http://www.w3.org/2000/01/rdf-schema#comment
-    property-label: http://www.w3.org/2000/01/rdf-schema#label
-    property-description: http://www.w3.org/2000/01/rdf-schema#comment
-    subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+      class: http://www.w3.org/2002/07/owl#Class
+      subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
+      instance-of: http://www.w3.org/1999/02/22-rdf-syntax-ns#type
+      label: http://www.w3.org/2000/01/rdf-schema#label
+      property-type: http://www.w3.org/1999/02/22-rdf-syntax-ns#Property
+      description: http://www.w3.org/2000/01/rdf-schema#comment
+      property-label: http://www.w3.org/2000/01/rdf-schema#label
+      property-description: http://www.w3.org/2000/01/rdf-schema#comment
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: Mapping Integrated Authority File (GND).The Integrated Authority File (GND) is a controlled keyword system, that is mainly used for indexing in German libraries.
+    host-institution-name: ZBW - Leibniz Information Centre for Economics
+    author-name: German National Library (DNB), ZBW - Leibniz Information Centre for Economics
+    website-url: http://zbw.eu/stw/version/9.02/mapping/gnd/about.en.html
   root-concepts:
     - http://d-nb.info/standards/elementset/gnd#AuthorityResource
