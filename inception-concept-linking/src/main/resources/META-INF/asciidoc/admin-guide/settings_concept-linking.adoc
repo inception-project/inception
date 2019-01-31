@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_settings_concept-linking]]
-=== Concept Linking
+= Concept Linking
 
 There are several configurable parameters related to the Concept Linking functionality:
 
@@ -86,7 +86,7 @@ examples of how the parameters can be configured below:
 | -
 |===
 
-==== Resources
+== Resources
 
 In order to improve the quality of suggestions, several additional resources can be incorporated.
 These are to be put into the `.inception/resources` folder. These include:
