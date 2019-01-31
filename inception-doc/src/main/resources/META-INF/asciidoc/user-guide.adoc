@@ -153,12 +153,15 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 
 = Appendices
 
+[appendix]
 include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 
+[appendix]
 include::{include-dir}formats.adoc[leveloffset=+1]
 
 <<<
 
+[appendix]
 include::{include-dir}troubleshooting.adoc[leveloffset=+1]

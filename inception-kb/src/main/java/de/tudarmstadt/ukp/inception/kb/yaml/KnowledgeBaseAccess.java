@@ -75,11 +75,12 @@ public class KnowledgeBaseAccess implements Serializable
             return false;
         }
         KnowledgeBaseAccess that = (KnowledgeBaseAccess) o;
-        return Objects.equals(accessUrl, that.accessUrl);
+        return Objects.equals(accessUrl, that.accessUrl)
+                && Objects.equals(fullTextSearchIri, that.fullTextSearchIri);
     }
 
     @Override public int hashCode()
     {
-        return Objects.hash(accessUrl);
+        return Objects.hash(accessUrl, fullTextSearchIri);
     }
 }
