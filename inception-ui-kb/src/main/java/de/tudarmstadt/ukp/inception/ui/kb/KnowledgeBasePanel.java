@@ -152,7 +152,7 @@ public class KnowledgeBasePanel
     private AutoCompleteTextField<KBHandle> createSearchField(String aId,
         IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<>(aId, aHandleModel,
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(aId, aHandleModel,
             new TextRenderer<>("uiLabel"))
         {
             private static final long serialVersionUID = -1955006051950156603L;
