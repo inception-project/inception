@@ -104,6 +104,8 @@
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
     <module>inception-scheduling</module>
+    <!-- Examples -->
+    <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
 
@@ -290,13 +292,6 @@
         <artifactId>inception-imls-dl4j</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
-      <!--  
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-imls-mira</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
@@ -305,6 +300,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-example-imls-data-majority</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>

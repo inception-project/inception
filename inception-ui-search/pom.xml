@@ -59,7 +59,7 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
-    
+
     <!-- WICKET DEPENDENCIES -->
     <dependency>
       <groupId>org.apache.wicket</groupId>

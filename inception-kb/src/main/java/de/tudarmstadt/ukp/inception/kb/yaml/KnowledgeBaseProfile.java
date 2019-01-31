@@ -33,6 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class KnowledgeBaseProfile implements Serializable
 {
@@ -53,6 +54,15 @@ public class KnowledgeBaseProfile implements Serializable
     
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
+
+    @JsonProperty("info")
+    private KnowledgeBaseInfo info;
+
+    @JsonProperty("reification")
+    private Reification reification;
+
+    @JsonProperty("default-language")
+    private String defaultLanguage;
 
     public String getName()
     {
@@ -99,9 +109,39 @@ public class KnowledgeBaseProfile implements Serializable
         return rootConcepts;
     }
 
-    public void setRootConcepts(List<String> rootConcepts)
+    public void setRootConcepts(List<String> aRootConcepts)
     {
-        this.rootConcepts = rootConcepts;
+        rootConcepts = aRootConcepts;
+    }
+
+    public KnowledgeBaseInfo getInfo()
+    {
+        return info;
+    }
+
+    public void setInfo(KnowledgeBaseInfo aInfo)
+    {
+        info = aInfo;
+    }
+
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification aReification)
+    {
+        reification = aReification;
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aDefaultLanguage)
+    {
+        defaultLanguage = aDefaultLanguage;
     }
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
@@ -127,11 +167,15 @@ public class KnowledgeBaseProfile implements Serializable
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
         return Objects.equals(name, that.name) && Objects.equals(access, that.access)
                 && Objects.equals(mapping, that.mapping) && Objects.equals(type, that.type)
-                && Objects.equals(rootConcepts, that.rootConcepts);
+                && Objects.equals(rootConcepts, that.rootConcepts)
+                && Objects.equals(info, that.info)
+                && Objects.equals(reification, that.reification)
+                && Objects.equals(defaultLanguage, that.defaultLanguage);
     }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, type, access, mapping,rootConcepts);
+
+    @Override public int hashCode()
+    {
+        return Objects
+            .hash(name, type, access, mapping, rootConcepts, info, reification, defaultLanguage);
     }
 }

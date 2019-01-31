@@ -26,9 +26,9 @@ linking biological entities.
 
 === Contextual Disambiguation
 
-Like many words, concept names can be ambiguous. There can be potentially many different concepts
+Concept names can be ambiguous. There can be potentially many different concepts
 having the same name (consider the large number of famous people called John Smith). Thus, it is
-helpful to rank the candidates before showing them to the user in the annotaton interface. If the
+helpful to rank the candidates before showing them to the user in the annotation interface. If the
 ranking works well, the user can quickly choose on of the top-ranking candidates instead of having
 to scroll through a long list.
 
