@@ -17,7 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 
@@ -113,6 +115,22 @@ public class PdfAnnoRenderer
             }
         }
         return pdfAnnoModel;
+    }
+
+    public static List<String> getVisibleVIDs(AnnotatorState aState, VDocument aVDoc,
+                                      AnnotationSchemaService aAnnotationService)
+    {
+        List<String> vids = new ArrayList<>();
+        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
+            // If the layer is not included in the rendering, then we skip here
+            if (!aVDoc.getAnnotationLayers().contains(layer)) {
+                continue;
+            }
+
+            aVDoc.spans(layer.getId()).forEach(span -> vids.add(span.getVid().toString()));
+            aVDoc.arcs(layer.getId()).forEach(arc -> vids.add(arc.getVid().toString()));
+        }
+        return vids;
     }
 
     private static Span convertToPdfAnnoSpan(VSpan aVSpan, String aColor, String aDocumentText,
