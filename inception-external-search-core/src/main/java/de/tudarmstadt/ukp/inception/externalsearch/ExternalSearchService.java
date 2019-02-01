@@ -23,14 +23,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-/*
- * External search service interface
+/**
+ * External search service API.
  */
-
 public interface ExternalSearchService
 {
-    static final String SERVICE_NAME = "externalSearchService";
-
     List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
             String aQuery);
 
