@@ -37,6 +37,7 @@ public class Trie<V>
 // implements Map<CharSequence, V>
 {
     private int _size = 0;
+    private KeySanitizerFactory sanitizerFactory;
 
     public class Node
     {
@@ -56,11 +57,20 @@ public class Trie<V>
     private Node _root;
 
     /**
-     * Create an emptry Trie.
+     * Create an empty Trie.
      */
     public Trie()
     {
         clear();
+    }
+
+    /**
+     * Create an empty Trie.
+     */
+    public Trie(KeySanitizerFactory aSanitizer)
+    {
+        this();
+        sanitizerFactory = aSanitizer;
     }
 
     /**
@@ -80,8 +90,14 @@ public class Trie<V>
      * @return the old value.
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
-    public V put(final CharSequence key, final V value)
+    public V put(final CharSequence aKey, final V value)
     {
+        CharSequence key = aKey;
+        
+        if (sanitizerFactory != null) {
+            key = sanitizerFactory.create().sanitize(key);
+        }
+        
         if (key.length() == 0) {
             throw new IllegalArgumentException("Zero-length keys are illegal");
         }
@@ -136,10 +152,22 @@ public class Trie<V>
             return _root;
         }
 
+        KeySanitizer sanitizer = null;
+        if (sanitizerFactory != null) {
+            sanitizer = sanitizerFactory.create();
+        }
         Node last = _root;
         Node match = null;
         for (int i = offset; i < key.length(); i++) {
-            final char k = key.charAt(i);
+            char k = key.charAt(i);
+
+            if (sanitizer != null) {
+                k = sanitizer.map(k);
+                if (k == KeySanitizer.SKIP_CHAR) {
+                    continue;
+                }
+            }
+
             final Node cur = last.children.get(k);
             if (cur == null) {
                 break;
@@ -152,7 +180,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return (match != null) ? match : null;
+        return match;
     }
 
     /**
@@ -193,10 +221,22 @@ public class Trie<V>
             return _root;
         }
 
+        KeySanitizer sanitizer = null;
+        if (sanitizerFactory != null) {
+            sanitizer = sanitizerFactory.create();
+        }
         Node last = _root;
         Node match = null;
         for (int i = offset; i < offset + length; i++) {
-            final char k = key.charAt(i);
+            char k = key.charAt(i);
+
+            if (sanitizer != null) {
+                k = sanitizer.map(k);
+                if (k == KeySanitizer.SKIP_CHAR) {
+                    continue;
+                }
+            }
+            
             final Node cur = last.children.get(k);
             if (cur == null) {
                 break;
@@ -207,7 +247,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return ((match != null) && (match.level == length)) ? match : null;
+        return match;
     }
 
     /**
@@ -379,6 +419,30 @@ public class Trie<V>
         }
     }
 
+    public static interface KeySanitizerFactory
+    {
+        public KeySanitizer create();
+    }
+    
+    public static interface KeySanitizer
+    {
+        public static final char SKIP_CHAR = 0;
+        
+        char map(char aChar);
+        
+        default CharSequence sanitize(CharSequence aKey)
+        {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < aKey.length(); i ++) {
+                char c = map(aKey.charAt(i));
+                if (c != 0) {
+                    sb.append(c);
+                }
+            }
+            return sb;
+        }
+    }
+
     public class KeyIterator
         implements Iterator<String>
     {
@@ -440,7 +504,6 @@ public class Trie<V>
                 }
 
                 final Frame f = stack.peek();
-                final boolean doBreak = false;
 
                 if (f.hasNext()) {
                     f.step(); // Go to the next
