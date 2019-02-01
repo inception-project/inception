@@ -22,16 +22,21 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 
-@Component("externalSearchSidebar")
+/**
+ * Sidebar to access the external search on the annotation page.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchUIAutoConfiguration#externalSearchAnnotationSidebarFactory()}.
+ * </p>
+ */
 public class ExternalSearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
@@ -41,7 +46,7 @@ public class ExternalSearchAnnotationSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "External Search Sidebar";
+        return "External Search";
     }
 
     @Override

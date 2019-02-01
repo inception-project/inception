@@ -23,7 +23,15 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 
+/**
+ * Project settings panel to configure document repositories for the external search.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchUIAutoConfiguration#documentRepositoryProjectSettingsPanelFactory()}.
+ * </p>
+ */
 @Order(400)
 public class DocumentRepositoryProjectSettingsPanelFactory
     implements ProjectSettingsPanelFactory

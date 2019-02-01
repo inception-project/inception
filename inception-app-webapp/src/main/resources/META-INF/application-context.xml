@@ -26,6 +26,7 @@
 
     <!-- Scan components and Java configuration -->
     <context:component-scan base-package="de.tudarmstadt.ukp.clarin.webanno">
+      <context:exclude-filter type="regex" expression=".*AutoConfiguration"/>
       <context:exclude-filter 
         expression="de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService" 
         type="assignable" />

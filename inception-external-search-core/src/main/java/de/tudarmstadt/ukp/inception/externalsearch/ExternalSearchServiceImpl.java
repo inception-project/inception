@@ -28,8 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -37,11 +35,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@Component(ExternalSearchService.SERVICE_NAME)
-@ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+/**
+ * Implementation of the external search service API.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchAutoConfiguration#externalSearchService()}.
+ * </p>
+ */
 public class ExternalSearchServiceImpl
     implements ExternalSearchService
 {
@@ -55,8 +58,7 @@ public class ExternalSearchServiceImpl
     private @Autowired ExternalSearchProviderRegistry externalSearchProviderRegistry;
 
     // Index factory
-    private ExternalSearchProviderFactory externalSearchProviderFactory;
-    private String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
+    private final String externalSearchProviderFactoryName = "elasticSearchProviderFactory";
 
     // FIXME REC: We should not need a static map for these providers. If we need to hold on to 
     // a provider for a longer time (e.g. to support paging), we need to find another way to handle
@@ -72,14 +74,17 @@ public class ExternalSearchServiceImpl
         searchProviders = new HashMap<>();
     }
 
+    private ExternalSearchProviderFactory getExternalSearchProviderFactory()
+    {
+        return externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(externalSearchProviderFactoryName);
+    }
+    
     private ExternalSearchProvider getExternalSearchProviderByProject(Project aProject)
     {
         if (!searchProviders.containsKey(aProject.getId())) {
-            externalSearchProviderFactory = externalSearchProviderRegistry
-                    .getExternalSearchProviderFactory(externalSearchProviderFactoryName);
-
             searchProviders.put(aProject.getId(),
-                    externalSearchProviderFactory.getNewExternalSearchProvider(aProject,
+                    getExternalSearchProviderFactory().getNewExternalSearchProvider(aProject,
                             annotationSchemaService, documentService, projectService, dir));
         }
 
@@ -97,7 +102,7 @@ public class ExternalSearchServiceImpl
 
             log.debug("Running query: {}", aQuery);
 
-            Object properties = externalSearchProviderFactory.readTraits(aDocumentRepository);
+            Object properties = getExternalSearchProviderFactory().readTraits(aDocumentRepository);
 
             List<ExternalSearchResult> results = provider.executeQuery(properties, aUser,
                     aQuery, null, null);
@@ -155,7 +160,7 @@ public class ExternalSearchServiceImpl
 
         if (provider.isConnected()) {
 
-            Object properties = externalSearchProviderFactory.readTraits(aDocumentRepository);
+            Object properties = getExternalSearchProviderFactory().readTraits(aDocumentRepository);
 
             ExternalSearchResult result = provider.getDocumentById(properties, aId);
             
