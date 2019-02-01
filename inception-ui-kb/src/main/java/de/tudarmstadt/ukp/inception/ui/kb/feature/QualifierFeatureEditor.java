@@ -306,6 +306,7 @@ public class QualifierFeatureEditor
                 super.onConfigure(behavior);
                 
                 behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -400,8 +401,8 @@ public class QualifierFeatureEditor
             handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
                 traits.getAllowedValueType(), project);
             // Sort and filter results
-            handles = handles.stream()
-                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+            handles = handles.stream().filter(
+                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString.toLowerCase()))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
         return KBHandle.distinctByIri(handles);

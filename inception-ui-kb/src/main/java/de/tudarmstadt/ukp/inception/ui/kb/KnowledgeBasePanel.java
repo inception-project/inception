@@ -189,6 +189,7 @@ public class KnowledgeBasePanel
                 super.onConfigure(behavior);
 
                 behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -216,7 +217,7 @@ public class KnowledgeBasePanel
                 ConceptFeatureValueType.ANY_OBJECT, aProject);
             // Sort and filter results
             results = results.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString.toLowerCase()))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
             results = KBHandle.distinctByIri(results);
         }
