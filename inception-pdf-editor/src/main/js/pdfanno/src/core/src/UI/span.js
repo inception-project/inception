@@ -276,9 +276,10 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     mouseDown = false
-// BEGIN PDFANNO EXTENSION - #838 - Creation of spans in PDF editor
+// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
     if (startPosition !== null && endPosition !== null) {
       var data = {
+        "action" : "createSpan",
         "page" : currentPage,
         "begin": startPosition,
         "end" : endPosition
@@ -301,7 +302,7 @@ window.addEventListener('DOMContentLoaded', () => {
         }]
       });
     }
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
   })
 
   let otherAnnotationTreating = false

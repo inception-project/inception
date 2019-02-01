@@ -313,7 +313,7 @@ export default class AnnotationContainer {
       const objs = tomlObject[key]
       if (Array.isArray(objs)) {
         objs.forEach(obj => {
-          obj.uuid = uuid()
+          obj.uuid = obj.id || uuid()
           obj.readOnly = readOnly
 
           if (key === 'spans') {
