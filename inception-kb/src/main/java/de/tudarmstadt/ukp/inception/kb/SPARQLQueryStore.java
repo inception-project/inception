@@ -49,7 +49,7 @@ public final class SPARQLQueryStore
      *            The variable for the language (?l) and description (?d)
      * @return String format for OPTIONAL part of SPARQL query
      */
-    private static final String optionalLanguageFilteredValue(String aProperty, String aLanguage,
+    public static final String optionalLanguageFilteredValue(String aProperty, String aLanguage,
             String variable, String filterVariable)
     {
         StringBuilder fragment = new StringBuilder();

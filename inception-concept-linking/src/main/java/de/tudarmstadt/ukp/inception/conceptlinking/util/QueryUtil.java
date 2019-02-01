@@ -28,6 +28,7 @@ import org.eclipse.rdf4j.queryrender.RenderUtils;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -69,19 +70,6 @@ public class QueryUtil
 
     private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
 
-    private static String getExactMatchingQueryPart(String aString)
-    {
-        return String.join("\n",
-            "    SELECT DISTINCT ?e2 ?description WHERE",
-            "    {",
-            "      ?e2 ?labelIri " + aString + " .",
-            "      OPTIONAL",
-            "      {",
-            "        ?e2 ?descriptionIri ?description.",
-            "      }",
-            "    }");
-    }
-
     /**
      * This query retrieves candidates via exact matching of their labels and full-text-search
      * It has been tied to use LCASE in combination with FILTER to allow matching the lower cased
@@ -99,27 +87,22 @@ public class QueryUtil
     public static TupleQuery generateCandidateExactQuery(RepositoryConnection conn,
         String aTypedString, String aMention, KnowledgeBase aKb)
     {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+
         aTypedString = RenderUtils.escape(aTypedString);
+        String typedString = vf.createLiteral(aTypedString).toString();
+        String typedStringLang = vf.createLiteral(aTypedString, aKb.getDefaultLanguage())
+            .toString();
+
         aMention = RenderUtils.escape(aMention);
-
-        // Matching user input exactly
-        String exactMatchingTypedString = getExactMatchingQueryPart("?exactTyped");
-
-        // Match surface form exactly
-        String exactMatchingMention = getExactMatchingQueryPart("?exactMention");
+        String mention = vf.createLiteral(aMention).toString();
+        String mentionLang = vf.createLiteral(aMention, aKb.getDefaultLanguage()).toString();
 
         String query = String.join("\n",
             SPARQL_PREFIX,
             "SELECT DISTINCT ?e2 ?label ?description WHERE",
             "{",
-            "  {",
-            exactMatchingTypedString,
-            "  } ",
-            "  UNION",
-            "  {",
-            exactMatchingMention,
-            "  }",
-            "  FILTER EXISTS { ?e2 ?p ?v }",
+            "  VALUES ?label {" + String.join(" ", typedString, typedStringLang, mention, mentionLang) + "}",
             "  FILTER NOT EXISTS ",
             "  {",
             "    VALUES ?topic {" + String.join(" ", WIKIMEDIA_INTERNAL,
@@ -129,15 +112,11 @@ public class QueryUtil
             "    ?e2 ?typeIri ?topic",
             "  }",
             "  ?e2 ?labelIri ?label.",
+            SPARQLQueryStore.optionalLanguageFilteredValue("?descriptionIri", aKb.getDefaultLanguage(), "?e2", "?description"),
+            SPARQLQueryStore.optionalLanguageFilteredValue("?descriptionIri", null, "?e2", "?description"),
             "}");
 
-        ValueFactory vf = SimpleValueFactory.getInstance();
-
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-        tupleQuery.setBinding("exactTyped", vf.createLiteral(aTypedString));
-        tupleQuery.setBinding("exactMention", vf.createLiteral(aMention));
-        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
-            ? aKb.getDefaultLanguage() : "en"));
 
         tupleQuery.setBinding("labelIri", aKb.getLabelIri());
         tupleQuery.setBinding("typeIri", aKb.getTypeIri());
