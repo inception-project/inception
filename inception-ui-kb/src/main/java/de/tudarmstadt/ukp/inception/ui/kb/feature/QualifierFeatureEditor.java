@@ -290,8 +290,14 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input, linkedAnnotationFeature,
-                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                List<KBHandle> choices = new ArrayList<>();
+                if (input != null) {
+                    input = input.replaceAll("[*?]", "").trim();
+                    choices = listInstances(actionHandler, input, linkedAnnotationFeature,
+                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                }
+                return choices;
+
             }
 
             @Override
