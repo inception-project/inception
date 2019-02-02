@@ -24,25 +24,37 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.uima.UIMAException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-@Component
-public class DocumentImporterImpl implements DocumentImporter
+/**
+ * Imports documents from the external document repository into the project.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchUIAutoConfiguration#documentImporter}.
+ * </p>
+ */
+public class DocumentImporterImpl
+    implements DocumentImporter
 {
-
-    private @Autowired DocumentService documentService;
-
-    private @Autowired ExternalSearchService externalSearchService;
-
     private static final String PLAIN_TEXT = "text";
+    
+    private final DocumentService documentService;
+    private final ExternalSearchService externalSearchService;
 
+    @Autowired
+    public DocumentImporterImpl(DocumentService aDocumentService,
+            ExternalSearchService aExternalSearchService)
+    {
+        documentService = aDocumentService;
+        externalSearchService = aExternalSearchService;
+    }
 
     /**
      * @return a boolean value. True if import was successful. False if import was aborted because
@@ -50,7 +62,8 @@ public class DocumentImporterImpl implements DocumentImporter
      */
     @Override
     public boolean importDocumentFromDocumentRepository(User aUser, Project aProject,
-        String aDocumentTitle, DocumentRepository aRepository) throws IOException
+            String aDocumentTitle, DocumentRepository aRepository)
+        throws IOException
     {
         String text = externalSearchService.getDocumentById(aUser, aRepository, aDocumentTitle)
             .getText();
@@ -70,7 +83,7 @@ public class DocumentImporterImpl implements DocumentImporter
         catch (IOException | UIMAException e) {
             throw new IOException("Unable to retrieve document [" + aDocumentTitle + "]", e);
         }
+        
         return true;
-
     }
 }

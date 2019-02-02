@@ -17,17 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.SearchPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.project.DocumentRepositoryProjectSettingsPanelFactory;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchAnnotationSidebarFactory;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporterImpl;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 
+/**
+ * Provides all UI-level Spring beans for the external search functionality.
+ */
 @Configuration
+@AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
 @ConditionalOnBean(ExternalSearchService.class)
-public class ExternalSeachUIConfiguration
+public class ExternalSearchUIAutoConfiguration
 {
     @Bean
     public SearchPageMenuItem searchPageMenuItem()
@@ -40,5 +51,19 @@ public class ExternalSeachUIConfiguration
             documentRepositoryProjectSettingsPanelFactory()
     {
         return new DocumentRepositoryProjectSettingsPanelFactory();
+    }
+    
+    @Bean
+    public ExternalSearchAnnotationSidebarFactory externalSearchAnnotationSidebarFactory()
+    {
+        return new ExternalSearchAnnotationSidebarFactory();
+    }
+    
+    @Bean
+    @Autowired
+    public DocumentImporter documentImporter(DocumentService aDocumentService,
+            ExternalSearchService aExternalSearchService)
+    {
+        return new DocumentImporterImpl(aDocumentService, aExternalSearchService);
     }
 }
