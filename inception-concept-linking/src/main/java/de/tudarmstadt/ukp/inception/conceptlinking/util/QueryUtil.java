@@ -28,7 +28,6 @@ import org.eclipse.rdf4j.queryrender.RenderUtils;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
-import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -89,14 +88,16 @@ public class QueryUtil
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
 
+        String defaultLanguage = aKb.getDefaultLanguage() == null ? "en" : aKb.getDefaultLanguage();
+
         aTypedString = RenderUtils.escape(aTypedString);
         String typedString = vf.createLiteral(aTypedString).toString();
-        String typedStringLang = vf.createLiteral(aTypedString, aKb.getDefaultLanguage())
+        String typedStringLang = vf.createLiteral(aTypedString, defaultLanguage)
             .toString();
 
         aMention = RenderUtils.escape(aMention);
         String mention = vf.createLiteral(aMention).toString();
-        String mentionLang = vf.createLiteral(aMention, aKb.getDefaultLanguage()).toString();
+        String mentionLang = vf.createLiteral(aMention, defaultLanguage).toString();
 
         String query = String.join("\n",
             SPARQL_PREFIX,
@@ -112,8 +113,10 @@ public class QueryUtil
             "    ?e2 ?typeIri ?topic",
             "  }",
             "  ?e2 ?labelIri ?label.",
-            SPARQLQueryStore.optionalLanguageFilteredValue("?descriptionIri", aKb.getDefaultLanguage(), "?e2", "?description"),
-            SPARQLQueryStore.optionalLanguageFilteredValue("?descriptionIri", null, "?e2", "?description"),
+            "  OPTIONAL",
+            "  {",
+            "    ?e2 ?descriptionIri ?description.",
+            "  }",
             "}");
 
         TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
