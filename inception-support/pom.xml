@@ -45,10 +45,6 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-util</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.googlecode.wicket-jquery-ui</groupId>
-      <artifactId>wicket-jquery-ui</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
