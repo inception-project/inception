@@ -22,7 +22,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
+import java.util.Map;
+
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -30,16 +37,29 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.settings.StringMatchingRecommenderTraitsEditor;
 
 @Component
 public class StringMatchingRecommenderFactory
-    extends RecommendationEngineFactoryImplBase<Void>
+    extends RecommendationEngineFactoryImplBase<StringMatchingRecommenderTraits>
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID =
         "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender";
 
+    private GazeteerService gazeteerService;
+    
+    public StringMatchingRecommenderFactory(
+            @Autowired(required = false) GazeteerService aGazeteerService)
+    {
+        gazeteerService = aGazeteerService;
+    }
+    
     @Override
     public String getId()
     {
@@ -50,7 +70,26 @@ public class StringMatchingRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender)
     {
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
-        return new StringMatchingRecommender(aRecommender, traits);
+        StringMatchingRecommender recommender = new StringMatchingRecommender(aRecommender, traits);
+        
+        // If there is a gazeteer service, then pre-load the gazeteers into the recommender
+        if (gazeteerService != null) {
+            for (Gazeteer gaz : gazeteerService.listGazeteers(aRecommender)) {
+                try {
+                    Map<String, String> gazeteerData = gazeteerService.readGazeteerFile(gaz);
+                    recommender.pretrain(gazeteerData);
+                }
+                catch (IOException e) {
+                    log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
+                            gaz.getName(), gaz.getRecommender().getName(),
+                            gaz.getRecommender().getId(),
+                            gaz.getRecommender().getProject().getName(),
+                            gaz.getRecommender().getProject().getId(), e);
+                }
+            }
+        }
+        
+        return recommender;
     }
 
     @Override
@@ -69,5 +108,17 @@ public class StringMatchingRecommenderFactory
         return (asList(SINGLE_TOKEN, TOKENS).contains(aLayer.getAnchoringMode()))
             && !aLayer.isCrossSentence() && SPAN_TYPE.equals(aLayer.getType())
             && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
+    }
+    
+    @Override
+    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    {
+        return new StringMatchingRecommenderTraitsEditor(aId, aModel);
+    }
+
+    @Override
+    public StringMatchingRecommenderTraits createTraits()
+    {
+        return new StringMatchingRecommenderTraits();
     }
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -28,7 +29,10 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -62,6 +66,8 @@ public class StringMatchingRecommender
     private final String featureName;
     private final int maxRecommendations;
     private final StringMatchingRecommenderTraits traits;
+    
+    private Map<String, String> pretrainData = emptyMap();
 
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
@@ -72,11 +78,27 @@ public class StringMatchingRecommender
         traits = aTraits;
     }
 
+    public void pretrain(Map<String, String> aGazeteerData)
+    {
+        if (aGazeteerData != null) {
+            pretrainData = new HashMap<>(aGazeteerData);
+        }
+        else {
+            pretrainData = emptyMap();
+        }
+    }
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
         Trie<DictEntry> dict = new Trie<>();
         
+        // Load the pre-train data into the trie before learning from the annotated data
+        for (Entry<String, String> preTrainItem : pretrainData.entrySet()) {
+            learn(dict, preTrainItem.getKey(), preTrainItem.getValue());
+        }
+        
+        // Learn from the annotated data
         for (CAS cas : aCasses) {
             Type annotationType = getType(cas, layerName);
             Feature labelFeature = annotationType.getFeatureByBaseName(featureName);

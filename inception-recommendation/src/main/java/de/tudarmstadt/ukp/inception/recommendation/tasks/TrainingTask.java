@@ -125,7 +125,6 @@ public class TrainingTask
                 RecommenderContext context = recommendationService.getContext(user, recommender);
                 RecommendationEngineFactory factory = recommendationService
                     .getRecommenderFactory(recommender);
-                RecommendationEngine recommendationEngine = factory.build(recommender);
 
                 try {
                     List<CAS> cassesForTraining = casses.get()
@@ -139,11 +138,13 @@ public class TrainingTask
                             user.getUsername(), recommender.getName(), cassesForTraining.size(),
                             casses.get().size());
 
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
                     recommendationEngine.train(context, cassesForTraining);
+                    
                     log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime), e);
                 }

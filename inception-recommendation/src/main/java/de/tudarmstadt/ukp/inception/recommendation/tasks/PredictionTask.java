@@ -83,12 +83,12 @@ public class PredictionTask
     private static final double NO_SCORE = 0.0;
 
     private Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private @Autowired AnnotationSchemaService annoService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired DocumentService documentService;
     private @Autowired LearningRecordService learningRecordService;
-    
+
     public PredictionTask(User aUser, Project aProject)
     {
         super(aUser, aProject);
@@ -110,8 +110,8 @@ public class PredictionTask
                     continue nextLayer;
                 }
 
-                List<Recommender> recommenders = recommendationService
-                    .getActiveRecommenders(user, layer);
+                List<Recommender> recommenders = recommendationService.getActiveRecommenders(user,
+                        layer);
 
                 nextRecommender: for (Recommender r : recommenders) {
                     // Make sure we have the latest recommender config from the DB - the one from
@@ -125,14 +125,14 @@ public class PredictionTask
                                 user.getUsername(), r.getName());
                         continue nextRecommender;
                     }
-                    
+
                     if (!recommender.isEnabled()) {
                         log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
                         continue nextRecommender;
                     }
-                    
+
                     RecommenderContext ctx = recommendationService.getContext(user, recommender);
-                    
+
                     if (!ctx.isReadyForPrediction()) {
                         log.info("Context for recommender [{}]({}) for user [{}] on document "
                                 + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
@@ -141,10 +141,9 @@ public class PredictionTask
                                 project.getId());
                         continue nextRecommender;
                     }
-                    
+
                     RecommendationEngineFactory<?> factory = recommendationService
                             .getRecommenderFactory(recommender);
-                    RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.
@@ -155,8 +154,9 @@ public class PredictionTask
                                     user.getUsername()));
                         }
                         catch (IOException e) {
-                            log.error("Cannot read annotation CAS for user [{}] of document "
-                                    + "[{}]({}) in project [{}]({}) - skipping document",
+                            log.error(
+                                    "Cannot read annotation CAS for user [{}] of document "
+                                            + "[{}]({}) in project [{}]({}) - skipping document",
                                     user.getUsername(), document.getName(), document.getId(),
                                     project.getName(), project.getId(), e);
                             continue nextDocument;
@@ -166,53 +166,58 @@ public class PredictionTask
                                     user.getUsername());
                         }
                         catch (UIMAException | IOException e) {
-                            log.error("Cannot upgrade annotation CAS for user [{}] of document "
-                                    + "[{}]({}) in project [{}]({}) - skipping document",
+                            log.error(
+                                    "Cannot upgrade annotation CAS for user [{}] of document "
+                                            + "[{}]({}) in project [{}]({}) - skipping document",
                                     user.getUsername(), document.getName(), document.getId(),
                                     project.getName(), project.getId(), e);
                             continue nextDocument;
                         }
                     }
-                    
+
                     try {
+                        RecommendationEngine recommendationEngine = factory.build(recommender);
+
                         recommendationEngine.predict(ctx, jCas.get().getCas());
+
+                        String predictedTypeName = recommendationEngine.getPredictedType();
+                        String predictedFeatureName = recommendationEngine.getPredictedFeature();
+                        Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
+                        Type predictionType = getAnnotationType(jCas.get().getCas(),
+                                predictedTypeName);
+                        Feature labelFeature = predictionType
+                                .getFeatureByBaseName(predictedFeatureName);
+                        Optional<Feature> scoreFeature = scoreFeatureName
+                                .map(predictionType::getFeatureByBaseName);
+
+                        // Extract the suggestions from the data which the recommender has written
+                        // into the CAS
+                        List<AnnotationSuggestion> predictions = extractSuggestions(user,
+                                jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
+                                document, recommender);
+
+                        // Calculate the visbility of the suggestions
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
+                        calculateVisibility(learningRecordService, annoService, jCas.get(),
+                                getUser().getUsername(), layer, groups, 0,
+                                jCas.get().getDocumentText().length());
+
+                        model.putPredictions(layer.getId(), predictions);
+
+                        // In order to just extract the annotations for a single recommender, each
+                        // recommender undoes the changes applied in `recommendationEngine.predict`
+
+                        removePredictions(jCas.get().getCas(), predictionType);
                     }
                     catch (Throwable e) {
-                        log.error("Error applying recommender [{}]({}) for user [{}] to document "
+                        log.error(
+                                "Error applying recommender [{}]({}) for user [{}] to document "
                                         + "[{}]({}) in project [{}]({}) - skipping recommender",
                                 recommender.getName(), recommender.getId(), user.getUsername(),
                                 document.getName(), document.getId(), project.getName(),
                                 project.getId(), e);
                         continue nextRecommender;
                     }
-
-                    String predictedTypeName = recommendationEngine.getPredictedType();
-                    String predictedFeatureName = recommendationEngine.getPredictedFeature();
-                    Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
-                    Type predictionType = getAnnotationType(jCas.get().getCas(), predictedTypeName);
-                    Feature labelFeature = predictionType
-                            .getFeatureByBaseName(predictedFeatureName);
-                    Optional<Feature> scoreFeature = scoreFeatureName
-                            .map(predictionType::getFeatureByBaseName);
-
-                    // Extract the suggestions from the data which the recommender has written into
-                    // the CAS
-                    List<AnnotationSuggestion> predictions = extractSuggestions(user,
-                            jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
-                            document, recommender);
-                    
-                    // Calculate the visbility of the suggestions
-                    Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
-                    calculateVisibility(learningRecordService, annoService, jCas.get(),
-                            getUser().getUsername(), layer, groups, 0,
-                            jCas.get().getDocumentText().length());
-                    
-                    model.putPredictions(layer.getId(), predictions);
-
-                    // In order to just extract the annotations for a single recommender, each
-                    // recommender undoes the changes applied in `recommendationEngine.predict`
-
-                    removePredictions(jCas.get().getCas(), predictionType);
                 }
             }
         }
@@ -246,17 +251,17 @@ public class PredictionTask
 
             result.add(ao);
             id++;
-            
+
             predictionCount++;
         }
-        
+
         log.debug(
                 "[{}]({}) for user [{}] on document "
                         + "[{}]({}) in project [{}]({}) generated {} predictions.",
                 aRecommender.getName(), aRecommender.getId(), aUser.getUsername(),
                 aDocument.getName(), aDocument.getId(), aRecommender.getProject().getName(),
                 aRecommender.getProject().getId(), predictionCount);
-        
+
         return result;
     }
 
@@ -280,7 +285,7 @@ public class PredictionTask
         List<AnnotationFS> annotationsInWindow = select(aJcas.getCas(), type).stream()
                 .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
                 .collect(toList());
-        
+
         // Collect all suggestions of the given layer within the view window
         List<SuggestionGroup> suggestionsInWindow = aRecommendations.stream()
                 // Only suggestions for the given layer
@@ -289,22 +294,20 @@ public class PredictionTask
                 .filter(group -> {
                     Offset offset = group.getOffset();
                     return aWindowBegin <= offset.getBegin() && offset.getEnd() <= aWindowEnd;
-                })
-                .collect(toList());
-        
+                }).collect(toList());
+
         // Get all the skipped/rejected entries for the current layer
         List<LearningRecord> recordedAnnotations = aLearningRecordService.listRecords(aUser,
                 aLayer);
-        
+
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
-            
+
             // Reduce the annotations to the once which have a non-null feature value. We need to
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
             MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
-            annotationsInWindow.stream()
-                    .filter(fs -> fs.getFeatureValueAsString(feat) != null)
+            annotationsInWindow.stream().filter(fs -> fs.getFeatureValueAsString(feat) != null)
                     .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
             // We need to constructed a sorted list of the keys for the OverlapIterator below
             List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
@@ -323,13 +326,13 @@ public class PredictionTask
             if (suggestions.isEmpty() || annotations.isEmpty()) {
                 continue;
             }
-            
+
             // This iterator gives us pairs of annotations and suggestions. Note that bot lists must
             // be sorted in the same way. The suggestion offsets are sorted because they are the
             // keys in a TreeSet - and the annotation offsets are sorted in the same way manually
             OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
                     sortedAnnotationKeys);
-            
+
             // Bulk-hide any groups that overlap with existing annotations on the current layer
             // and for the current feature
             while (oi.hasNext()) {
@@ -344,26 +347,25 @@ public class PredictionTask
                             }
                         }
                     }
-                    
+
                     // Do not want to process the group again since the relevant annotations are
                     // already hidden
                     oi.ignoraA();
                 }
                 oi.step();
             }
-            
+
             // Anything that was not hidden so far might still have been rejected or not have a
             // label
-            suggestions.values().stream()
-                    .flatMap(SuggestionGroup::stream)
+            suggestions.values().stream().flatMap(SuggestionGroup::stream)
                     .filter(AnnotationSuggestion::isVisible)
-                    .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(
-                            suggestion, recordedAnnotations));
+                    .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(suggestion,
+                            recordedAnnotations));
         }
     }
 
-    private static void hideSuggestionsRejectedOrWithoutLabel(
-            AnnotationSuggestion aSuggestion, List<LearningRecord> aRecordedRecommendations)
+    private static void hideSuggestionsRejectedOrWithoutLabel(AnnotationSuggestion aSuggestion,
+            List<LearningRecord> aRecordedRecommendations)
     {
         // If there is no label, then hide it
         if (aSuggestion.getLabel() == null) {
@@ -375,8 +377,7 @@ public class PredictionTask
         for (LearningRecord record : aRecordedRecommendations) {
             if (record.getOffsetCharacterBegin() == aSuggestion.getBegin()
                     && record.getOffsetCharacterEnd() == aSuggestion.getEnd()
-                    && record.getAnnotation().equals(aSuggestion.getLabel()))
-            {
+                    && record.getAnnotation().equals(aSuggestion.getLabel())) {
                 switch (record.getUserAction()) {
                 case REJECTED:
                     aSuggestion.hide(FLAG_REJECTED);
@@ -385,7 +386,7 @@ public class PredictionTask
                     aSuggestion.hide(FLAG_SKIPPED);
                     break;
                 default:
-                    // Nothing to do for the other cases. ACCEPTED annotation are filtered out 
+                    // Nothing to do for the other cases. ACCEPTED annotation are filtered out
                     // because the overlap with a created annotation and the same for CORRECTED
                 }
                 return;
