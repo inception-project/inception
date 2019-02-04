@@ -47,10 +47,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
@@ -73,7 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublishe
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
-import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporterImpl;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
@@ -95,7 +93,7 @@ public class ExternalSearchAnnotationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
-    private @SpringBean DocumentImporterImpl documentImporter;
+    private @SpringBean DocumentImporter documentImporter;
 
     private ExternalSearchUserState externalSearchUserState;
 
