@@ -1,1 +1,3 @@
 PER	John
+LOC	London
+ORG	ACME

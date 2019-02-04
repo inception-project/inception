@@ -23,10 +23,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.contentOf;
+import static org.assertj.core.api.Assertions.entry;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 
@@ -155,6 +157,11 @@ public class GazeteerServiceImplTest
         assertThat(gazFile.exists()).isTrue();
         assertThat(contentOf(sut.getGazeteerFile(gaz)))
                 .isEqualToNormalizingNewlines(contentOf(input));
+     
+        // Check that imported file matches the expectations
+        Map<String, String> data = sut.readGazeteerFile(gaz);
+        assertThat(data).contains(entry("John", "PER"), entry("London", "LOC"),
+                entry("ACME", "ORG"));
         
         // Check that gazeteer file has been deleted along with the entity
         sut.deleteGazeteers(gaz);
