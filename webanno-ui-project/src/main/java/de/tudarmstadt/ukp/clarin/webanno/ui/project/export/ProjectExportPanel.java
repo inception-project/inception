@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.export;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Objects.nonNull;
 
 import java.io.File;
@@ -34,7 +36,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.cas.CASRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.feedback.IFeedback;
@@ -156,85 +157,12 @@ public class ProjectExportPanel
             format.add(new FormComponentUpdatingBehavior());
             add(format);
             
-            add(new DownloadLink("export", new LoadableDetachableModel<File>() {
-                private static final long serialVersionUID = 840863954694163375L;
-
-                @Override
-                protected File load() {
-                    File exportFile = null;
-                    File exportTempDir = null;
-                    try {
-                        exportTempDir = File.createTempFile("webanno", "export");
-                        exportTempDir.delete();
-                        exportTempDir.mkdirs();
-
-                        boolean curationDocumentExist = documentService.existsCurationDocument(
-                                ProjectExportForm.this.getModelObject().getProject());
-
-                        if (!curationDocumentExist) {
-                            error("No curation document created yet for this document");
-                        } else {
-                            ExportUtil.exportCuratedDocuments(documentService, importExportService,
-                                    ProjectExportForm.this.getModelObject(), exportTempDir, false);
-                            ZipUtils.zipFolder(exportTempDir, new File(
-                                    exportTempDir.getAbsolutePath() + ".zip"));
-                            exportFile = new File(exportTempDir.getAbsolutePath()
-                                    + ".zip");
-
-                        }
-                    }
-                    catch (CASRuntimeException e) {
-                        cancelOperationOnError();
-                        error("Error: " + e.getMessage());
-                    }
-                    catch (Exception e) {
-                        error("Error: " + e.getMessage());
-                        cancelOperationOnError();
-                    }
-                    finally {
-                        try {
-                            FileUtils.forceDelete(exportTempDir);
-                        } catch (IOException e) {
-                            error("Unable to delete temp file");
-                        }
-                    }
-
-                    return exportFile;
-                }
-
-                private void cancelOperationOnError()
-                {
-                    if (thread != null) {
-                        ProjectExportForm.this.getModelObject().progress = 100;
-                        thread.interrupt();
-                    }
-                }
-            }, new LoadableDetachableModel<String>() {
-                private static final long serialVersionUID = 2591915908792854707L;
-//                Provide meaningful name to curated documents zip
-                @Override
-                protected String load()
-                {
-                    SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
-                    return ProjectExportForm.this.getModelObject().getProject().getName() +
-                        "_curated_documents_" + fmt.format(new Date()) + ".zip";
-                }
-            }) {
+            DownloadLink exportCurated = new DownloadLink("exportCurated",
+                    LoadableDetachableModel.of(this::exportCuratedDocumentsOnly),
+                    LoadableDetachableModel.of(this::getExportCuratedDocumentsArchiveName))
+            {
                 private static final long serialVersionUID = 5630612543039605914L;
 
-                @Override
-                public boolean isVisible() {
-                    Project project = ProjectExportPanel.this.getModelObject();
-                    return nonNull(project) ? documentService.existsCurationDocument(project)
-                            : false;
-                }
-
-                @Override
-                public boolean isEnabled() {
-                    return enabled;
-
-                }
-                
                 @Override
                 public void onClick()
                 {
@@ -246,7 +174,15 @@ public class ProjectExportPanel
                         error("Unable to export curated documents because of exception while processing.");
                     }
                 }
-            }.setDeleteAfterDownload(true)).setOutputMarkupId(true);
+            };
+            exportCurated.add(enabledWhen(() -> enabled));
+            exportCurated.add(visibleWhen(() -> {
+                Project project = ProjectExportPanel.this.getModelObject();
+                return nonNull(project) ? documentService.existsCurationDocument(project) : false;
+            }));
+            exportCurated.setDeleteAfterDownload(true);
+            exportCurated.setOutputMarkupId(true);
+            add(exportCurated);
 
             final AJAXDownload exportProject = new AJAXDownload() {
                 private static final long serialVersionUID = 2005074740832698081L;
@@ -365,6 +301,62 @@ public class ProjectExportPanel
             cancelLink = new LambdaAjaxLink("cancel", this::actionCancel);
             cancelLink.add(LambdaBehavior.enabledWhen(() -> thread != null));
             add(cancelLink);
+        }
+
+        /**
+         * Provide meaningful name to curated documents zip
+         */
+        private String getExportCuratedDocumentsArchiveName()
+        {
+            SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd_HHmm");
+            return ProjectExportPanel.this.getModelObject().getName() + "_curated_documents_"
+                    + fmt.format(new Date()) + ".zip";
+        }
+
+        private File exportCuratedDocumentsOnly()
+        {
+            Project project = ProjectExportPanel.this.getModelObject();
+            File exportFile = null;
+            File exportTempDir = null;
+            try {
+                exportTempDir = File.createTempFile("webanno", "export");
+                exportTempDir.delete();
+                exportTempDir.mkdirs();
+
+                boolean curationDocumentExist = documentService.existsCurationDocument(
+                        project);
+
+                if (!curationDocumentExist) {
+                    error("No curation document created yet for this document");
+                } else {
+                    ProjectExportRequest request = ProjectExportForm.this.getModelObject();
+                    request.setProject(project);
+                    ExportUtil.exportCuratedDocuments(documentService, importExportService, request,
+                            exportTempDir, false);
+                    ZipUtils.zipFolder(exportTempDir, new File(
+                            exportTempDir.getAbsolutePath() + ".zip"));
+                    exportFile = new File(exportTempDir.getAbsolutePath()
+                            + ".zip");
+
+                }
+            }
+            catch (Exception e) {
+                error("Error: " + e.getMessage());
+                LOG.error("Error: " + e.getMessage(), e);
+                if (thread != null) {
+                    ProjectExportForm.this.getModelObject().progress = 100;
+                    thread.interrupt();
+                }
+            }
+            finally {
+                try {
+                    FileUtils.forceDelete(exportTempDir);
+                } catch (IOException e) {
+                    error("Unable to delete temp file");
+                }
+            }
+
+            return exportFile;
         }
         
         private void actionCancel(AjaxRequestTarget aTarget)
