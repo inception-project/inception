@@ -40,9 +40,9 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
-    private static final String highlight_start_tag = "<em>";
+    private static final String HIGHLIGHT_START_TAG = "<em>";
 
-    private static final String highlight_end_tag = "</em>";
+    private static final String HIGHLIGHT_END_TAG = "</em>";
 
     private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchProvider.class);
 
@@ -152,8 +152,8 @@ public class ElasticSearchProvider
                 for (String highlight : hit.getHighlight().getDoctext()) {
 
                     // remove markers from the highlight
-                    String highlight_clean = highlight.replace(highlight_start_tag, "")
-                        .replace(highlight_end_tag, "");
+                    String highlight_clean = highlight.replace(HIGHLIGHT_START_TAG, "")
+                        .replace(HIGHLIGHT_END_TAG, "");
 
                     // find the matching highlight offset in the original text
                     int highlight_start_index = originalText.indexOf(highlight_clean);
@@ -161,14 +161,14 @@ public class ElasticSearchProvider
                     // find offset to all keywords in the highlight
                     // they are enclosed in <em> </em> tags in the highlight
                     String highlightTemp = highlight;
-                    ArrayList<OffsetSpan> offsets = new ArrayList<>();
-                    while (highlightTemp.contains(highlight_start_tag)) {
+                    List<OffsetSpan> offsets = new ArrayList<>();
+                    while (highlightTemp.contains(HIGHLIGHT_START_TAG)) {
                         int start = highlight_start_index +
-                            highlightTemp.indexOf(highlight_start_tag);
-                        highlightTemp = highlightTemp.replaceFirst(highlight_start_tag, "");
+                            highlightTemp.indexOf(HIGHLIGHT_START_TAG);
+                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_START_TAG, "");
                         int end = highlight_start_index +
-                            highlightTemp.indexOf(highlight_end_tag);
-                        highlightTemp = highlightTemp.replaceFirst(highlight_end_tag, "");
+                            highlightTemp.indexOf(HIGHLIGHT_END_TAG);
+                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_END_TAG, "");
                         offsets.add(new OffsetSpan(start, end));
                     }
 

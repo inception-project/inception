@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
+
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 /**
@@ -40,9 +42,7 @@ public class ExternalSearchHighlight implements Serializable
 
     public ExternalSearchHighlight(List<OffsetSpan> aOffsets) throws IllegalArgumentException
     {
-        if (aOffsets == null || aOffsets.isEmpty()) {
-            throw new IllegalArgumentException("Offsets must not be empty");
-        }
+        Validate.notEmpty(aOffsets, "Offsets must not be empty");
         offsets = new ArrayList<>(aOffsets);
 
     }

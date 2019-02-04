@@ -24,23 +24,23 @@ public class OffsetSpan implements Serializable
 
     private static final long serialVersionUID = -2532025576874280981L;
 
-    private int start;
+    private final int begin;
 
-    private int endExclusive;
+    private final int end;
 
-    public OffsetSpan(int aStart, int aEndExclusive) {
-        start = aStart;
-        endExclusive = aEndExclusive;
+    public OffsetSpan(int aBegin, int aEnd) {
+        begin = aBegin;
+        end = aEnd;
     }
 
-    public int getStartOffset()
+    public int getBegin()
     {
-        return start;
+        return begin;
     }
 
-    public int getEndOffsetExclusive()
+    public int getEnd()
     {
-        return endExclusive;
+        return end;
     }
 
 }

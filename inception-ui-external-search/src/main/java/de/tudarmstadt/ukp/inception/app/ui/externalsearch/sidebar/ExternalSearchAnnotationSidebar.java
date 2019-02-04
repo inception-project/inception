@@ -230,12 +230,11 @@ public class ExternalSearchAnnotationSidebar
             // Highlight the keywords in the annotator indicated by the offsets
             // if they are within the current window.
             for (OffsetSpan offset : highlight.getOffsets()) {
-                if (aAnnotatorState.getWindowBeginOffset() <= offset.getStartOffset()) {
-                    if (offset.getEndOffsetExclusive() <= aAnnotatorState.getWindowEndOffset()) {
+                if (aAnnotatorState.getWindowBeginOffset() <= offset.getBegin()) {
+                    if (offset.getEnd() <= aAnnotatorState.getWindowEndOffset()) {
                         aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                            offset.getStartOffset() - aAnnotatorState.getWindowBeginOffset(),
-                            offset.getEndOffsetExclusive() -
-                                aAnnotatorState.getWindowBeginOffset()));
+                            offset.getBegin() - aAnnotatorState.getWindowBeginOffset(),
+                            offset.getEnd() - aAnnotatorState.getWindowBeginOffset()));
                     }
                     else {
                         break;
@@ -467,9 +466,9 @@ public class ExternalSearchAnnotationSidebar
             return selectedResult;
         }
 
-        public void setSelectedResult(ExternalSearchResult selectedResult)
+        public void setSelectedResult(ExternalSearchResult aSelectedResult)
         {
-            this.selectedResult = selectedResult;
+            selectedResult = aSelectedResult;
         }
     }
 }
