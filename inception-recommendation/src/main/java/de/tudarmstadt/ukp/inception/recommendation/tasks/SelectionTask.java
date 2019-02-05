@@ -173,7 +173,8 @@ public class SelectionTask
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
 
-        schedulingService.enqueue(new TrainingTask(user, getProject()));
+        schedulingService.enqueue(new TrainingTask(user, getProject()),
+                "Started by SelectionTask after activating recommenders");
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

@@ -150,7 +150,8 @@ public class TrainingTask
             }
         }
 
-        schedulingService.enqueue(new PredictionTask(user, getProject()));
+        schedulingService.enqueue(new PredictionTask(user, getProject()), "" +
+                "Started by TrainingTask after training was finished");
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)

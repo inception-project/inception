@@ -73,7 +73,7 @@ public class SchedulingServiceTest {
         );
 
         for (Task task : tasks) {
-            sut.enqueue(task);
+            sut.enqueue(task, "thatRunningTasksCanBeRetrieved");
         }
 
         // Wait until the threads have actually been started
@@ -106,7 +106,7 @@ public class SchedulingServiceTest {
                 .toArray(Task[]::new);
 
         for (Task task : tasks) {
-            sut.enqueue(task);
+            sut.enqueue(task, "thatTasksForUserCanBeStopped");
         }
 
         sut.stopAllTasksForUser("testUser");
