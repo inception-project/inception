@@ -196,7 +196,35 @@ public class PredictionTask
                     }
                     
                     try {
+                        Type predictionType = getAnnotationType(predictionCas.get(),
+                                recommendationEngine.getPredictedType());
+                        Feature labelFeature = predictionType
+                                .getFeatureByBaseName(recommendationEngine.getPredictedFeature());
+                        Optional<Feature> scoreFeature = recommendationEngine.getScoreFeature()
+                                .map(predictionType::getFeatureByBaseName);
+                        
+                        // Remove any annotations that will be predicted (either manually created
+                        // or from a previous prediction run) from the CAS
+                        removePredictions(predictionCas.get(), predictionType);
+                        
+                        // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas.get());
+
+                        // Extract the suggestions from the data which the recommender has written 
+                        // into the CAS
+                        List<AnnotationSuggestion> predictions = extractSuggestions(user,
+                                predictionCas.get(), predictionType, labelFeature, scoreFeature,
+                                document, recommender);
+                        
+                        // Calculate the visbility of the suggestions. This happens via the original
+                        // CAS which contains only the manually created annotations and *not* the
+                        // suggestions.
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
+                        calculateVisibility(learningRecordService, annoService, originalCas.get(),
+                                getUser().getUsername(), layer, groups, 0,
+                                originalCas.get().getDocumentText().length());
+                        
+                        model.putPredictions(layer.getId(), predictions);
                     }
                     catch (Throwable e) {
                         log.error("Error applying recommender [{}]({}) for user [{}] to document "
@@ -206,36 +234,6 @@ public class PredictionTask
                                 project.getId(), e);
                         continue nextRecommender;
                     }
-
-                    String predictedTypeName = recommendationEngine.getPredictedType();
-                    String predictedFeatureName = recommendationEngine.getPredictedFeature();
-                    Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
-                    Type predictionType = getAnnotationType(predictionCas.get(), predictedTypeName);
-                    Feature labelFeature = predictionType
-                            .getFeatureByBaseName(predictedFeatureName);
-                    Optional<Feature> scoreFeature = scoreFeatureName
-                            .map(predictionType::getFeatureByBaseName);
-
-                    // Extract the suggestions from the data which the recommender has written into
-                    // the CAS
-                    List<AnnotationSuggestion> predictions = extractSuggestions(user,
-                            predictionCas.get(), predictionType, labelFeature, scoreFeature,
-                            document, recommender);
-                    
-                    // Calculate the visbility of the suggestions. This happens via the original
-                    // CAS which contains only the manually created annotations and *not* the
-                    // suggestions.
-                    Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
-                    calculateVisibility(learningRecordService, annoService, originalCas.get(),
-                            getUser().getUsername(), layer, groups, 0,
-                            originalCas.get().getDocumentText().length());
-                    
-                    model.putPredictions(layer.getId(), predictions);
-
-                    // In order to just extract the annotations for a single recommender, each
-                    // recommender undoes the changes applied in `recommendationEngine.predict`
-
-                    removePredictions(predictionCas.get(), predictionType);
                 }
             }
         }
