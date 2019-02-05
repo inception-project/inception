@@ -127,6 +127,17 @@ public class TrainingTask
                     .getRecommenderFactory(recommender);
 
                 try {
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                    
+                    // If the engine does not require/support training, then we mark the context
+                    // as ready for prediction and skip the training step
+                    if (!recommendationEngine.requiresTraining()) {
+                        log.info("[{}][{}]: Engine does not require training",
+                                user.getUsername(), recommender.getName());
+                        context.markAsReadyForPrediction();
+                        continue;
+                    }
+                    
                     List<CAS> cassesForTraining = casses.get()
                             .stream()
                             .filter(e -> !recommender.getStatesIgnoredForTraining()
@@ -140,7 +151,6 @@ public class TrainingTask
                                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                                 casses.get().size());
                         
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
                         recommendationEngine.train(context, cassesForTraining);
                         
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
