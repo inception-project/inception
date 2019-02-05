@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -37,6 +37,7 @@ public class Trie<V>
 // implements Map<CharSequence, V>
 {
     private int _size = 0;
+    private KeySanitizerFactory sanitizerFactory;
 
     public class Node
     {
@@ -56,11 +57,20 @@ public class Trie<V>
     private Node _root;
 
     /**
-     * Create an emptry Trie.
+     * Create an empty Trie.
      */
     public Trie()
     {
         clear();
+    }
+
+    /**
+     * Create an empty Trie.
+     */
+    public Trie(KeySanitizerFactory aSanitizer)
+    {
+        this();
+        sanitizerFactory = aSanitizer;
     }
 
     /**
@@ -73,15 +83,21 @@ public class Trie<V>
     }
 
     /**
-     * @param key
+     * @param aKey
      *            the key.
      * @param value
      *            the value.
      * @return the old value.
      * @see java.util.Map#put(java.lang.Object, java.lang.Object)
      */
-    public V put(final CharSequence key, final V value)
+    public V put(final CharSequence aKey, final V value)
     {
+        CharSequence key = aKey;
+        
+        if (sanitizerFactory != null) {
+            key = sanitizerFactory.create().sanitize(key);
+        }
+        
         if (key.length() == 0) {
             throw new IllegalArgumentException("Zero-length keys are illegal");
         }
@@ -136,10 +152,22 @@ public class Trie<V>
             return _root;
         }
 
+        KeySanitizer sanitizer = null;
+        if (sanitizerFactory != null) {
+            sanitizer = sanitizerFactory.create();
+        }
         Node last = _root;
         Node match = null;
         for (int i = offset; i < key.length(); i++) {
-            final char k = key.charAt(i);
+            char k = key.charAt(i);
+
+            if (sanitizer != null) {
+                k = sanitizer.map(k);
+                if (k == KeySanitizer.SKIP_CHAR) {
+                    continue;
+                }
+            }
+
             final Node cur = last.children.get(k);
             if (cur == null) {
                 break;
@@ -152,7 +180,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return (match != null) ? match : null;
+        return match;
     }
 
     /**
@@ -193,10 +221,22 @@ public class Trie<V>
             return _root;
         }
 
+        KeySanitizer sanitizer = null;
+        if (sanitizerFactory != null) {
+            sanitizer = sanitizerFactory.create();
+        }
         Node last = _root;
         Node match = null;
         for (int i = offset; i < offset + length; i++) {
-            final char k = key.charAt(i);
+            char k = key.charAt(i);
+
+            if (sanitizer != null) {
+                k = sanitizer.map(k);
+                if (k == KeySanitizer.SKIP_CHAR) {
+                    continue;
+                }
+            }
+            
             final Node cur = last.children.get(k);
             if (cur == null) {
                 break;
@@ -207,7 +247,7 @@ public class Trie<V>
             last = cur;
         }
 
-        return ((match != null) && (match.level == length)) ? match : null;
+        return match;
     }
 
     /**
@@ -440,7 +480,6 @@ public class Trie<V>
                 }
 
                 final Frame f = stack.peek();
-                final boolean doBreak = false;
 
                 if (f.hasNext()) {
                     f.step(); // Go to the next
