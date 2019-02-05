@@ -125,7 +125,6 @@ public class TrainingTask
                 RecommenderContext context = recommendationService.getContext(user, recommender);
                 RecommendationEngineFactory factory = recommendationService
                     .getRecommenderFactory(recommender);
-                RecommendationEngine recommendationEngine = factory.build(recommender);
 
                 try {
                     List<CAS> cassesForTraining = casses.get()
@@ -135,13 +134,22 @@ public class TrainingTask
                             .filter(e -> containsTargetAnnotation(recommender, e.cas))
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
-                    log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
-                            user.getUsername(), recommender.getName(), cassesForTraining.size(),
-                            casses.get().size());
 
-                    recommendationEngine.train(context, cassesForTraining);
-                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                            recommender.getName(), (System.currentTimeMillis() - startTime));
+                    if (!cassesForTraining.isEmpty()) {
+                        log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
+                                user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                                casses.get().size());
+                        
+                        RecommendationEngine recommendationEngine = factory.build(recommender);
+                        recommendationEngine.train(context, cassesForTraining);
+                        
+                        log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                                recommender.getName(), (System.currentTimeMillis() - startTime));
+                    }
+                    else {
+                        log.info("[{}][{}]: There are annotations available to train on",
+                                user.getUsername(), recommender.getName());
+                    }
                 }
                 catch (Exception e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
