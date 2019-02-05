@@ -112,29 +112,29 @@ async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
-// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
 /*
   const pdfURL   = q.pdf || getDefaultPDFURL()
 */
   const pdfURL   = q.pdf
-// END PDFANNO EXTENSION
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// END INCEpTION EXTENSION
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
   const pdftxtURL = q.pdftxt
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
-// BEGIN PDFANNO EXTENSION - #838 - Creation of spans in PDF editor
+// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
   window.apiUrl = q.api
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
 
   // Load a PDF file.
   try {
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
 /*
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
 */
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({
@@ -148,7 +148,7 @@ async function displayViewer () {
 
       // Load and display annotations, if annoURL is set.
       if (annoURL) {
-// BEGIN PDFANNO EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
+// BEGIN INCEpTION EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
 /*
         let anno = await window.annoPage.loadAnnoFileFromServer(annoURL)
 
@@ -173,7 +173,7 @@ async function displayViewer () {
               console.log('Something went wrong on requesting annotations from inception backend.')
           }]
         });
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }

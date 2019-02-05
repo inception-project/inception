@@ -36,6 +36,8 @@ import java.util.TreeMap;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -56,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -225,15 +226,6 @@ public class PredictionTask
     {
         int predictionCount = 0;
 
-        // Replace this with CasMetadata
-        String documentUri = aDocument.getName();
-        try {
-            DocumentMetaData dmd = DocumentMetaData.get(aCas);
-            documentUri = dmd.getDocumentUri();
-        } catch (IllegalArgumentException e) {
-            log.warn("No DocumentMetaData in CAS, using document name as document URI!");
-        }
-        
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
@@ -248,7 +240,7 @@ public class PredictionTask
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featurename, aDocument.getName(), documentUri,
+                    aRecommender.getLayer().getId(), featurename, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
                     label, score);
 
@@ -307,14 +299,20 @@ public class PredictionTask
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
             
-            // Reduce the annotations to the once which have a non-null feature value
-            Map<Offset, AnnotationFS> annotations = new TreeMap<>(
-                    comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
+            // Reduce the annotations to the once which have a non-null feature value. We need to
+            // use a multi-valued map here because there may be multiple annotations at a
+            // given position.
+            MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
             annotationsInWindow.stream()
                     .filter(fs -> fs.getFeatureValueAsString(feat) != null)
                     .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
-            
-            // Reduce the suggestions to the ones for the given feature
+            // We need to constructed a sorted list of the keys for the OverlapIterator below
+            List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
+            sortedAnnotationKeys
+                    .sort(comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
+
+            // Reduce the suggestions to the ones for the given feature. We can use the tree here
+            // since we only have a single SuggestionGroup for every position
             Map<Offset, SuggestionGroup> suggestions = new TreeMap<>(
                     comparingInt(Offset::getBegin).thenComparingInt(Offset::getEnd));
             suggestionsInWindow.stream()
@@ -326,19 +324,29 @@ public class PredictionTask
                 continue;
             }
             
-            // This iterator gives us pairs of annotations and suggestions 
-            OverlapIterator oi = new OverlapIterator(
-                    new ArrayList<>(suggestions.keySet()),
-                    new ArrayList<>(annotations.keySet()));
+            // This iterator gives us pairs of annotations and suggestions. Note that bot lists must
+            // be sorted in the same way. The suggestion offsets are sorted because they are the
+            // keys in a TreeSet - and the annotation offsets are sorted in the same way manually
+            OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
+                    sortedAnnotationKeys);
             
             // Bulk-hide any groups that overlap with existing annotations on the current layer
             // and for the current feature
             while (oi.hasNext()) {
                 if (oi.getA().overlaps(oi.getB())) {
-                    // Fetch the current suggestion
+                    // Fetch the current suggestion and annotation
                     SuggestionGroup group = suggestions.get(oi.getA());
-                    group.forEach(suggestion -> suggestion.hide(FLAG_OVERLAP));
-                    // Do not want to process the group again since it is already hidden
+                    for (AnnotationFS annotation : annotations.get(oi.getB())) {
+                        String label = annotation.getFeatureValueAsString(feat);
+                        for (AnnotationSuggestion suggestion : group) {
+                            if (!aLayer.isAllowStacking() || label.equals(suggestion.getLabel())) {
+                                suggestion.hide(FLAG_OVERLAP);
+                            }
+                        }
+                    }
+                    
+                    // Do not want to process the group again since the relevant annotations are
+                    // already hidden
                     oi.ignoraA();
                 }
                 oi.step();
@@ -347,7 +355,7 @@ public class PredictionTask
             // Anything that was not hidden so far might still have been rejected or not have a
             // label
             suggestions.values().stream()
-                    .flatMap(group -> group.stream())
+                    .flatMap(SuggestionGroup::stream)
                     .filter(AnnotationSuggestion::isVisible)
                     .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(
                             suggestion, recordedAnnotations));

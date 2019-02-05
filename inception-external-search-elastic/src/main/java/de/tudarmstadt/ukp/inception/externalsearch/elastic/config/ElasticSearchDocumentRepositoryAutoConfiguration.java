@@ -17,16 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.config;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.ElasticSearchProviderFactory;
 
+/**
+ * Provides support for ElasticSearch-based document repositories.
+ */
 @Configuration
+@AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
 @ConditionalOnBean(ExternalSearchService.class)
-public class ElasticSearchDocumentRepositoryConfiguration
+public class ElasticSearchDocumentRepositoryAutoConfiguration
 {
     @Bean
     public ElasticSearchProviderFactory elasticSearchProviderFactory()

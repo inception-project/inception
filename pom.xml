@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.5.1</webanno.version>
+    <webanno.version>3.5.2</webanno.version>
     <uima.version>2.10.2</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.3.RELEASE</spring.version>
@@ -102,7 +102,10 @@
     <module>inception-log</module>
     <module>inception-support</module>
     <module>inception-layer-docmetadata</module>
+    <module>inception-image</module>
     <module>inception-scheduling</module>
+    <!-- Examples -->
+    <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
 
@@ -289,13 +292,6 @@
         <artifactId>inception-imls-dl4j</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
-      <!--  
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-imls-mira</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
@@ -304,6 +300,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-example-imls-data-majority</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -319,6 +320,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-layer-docmetadata</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-image</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>

@@ -174,12 +174,12 @@ export default class PDFAnnoPage {
   /**
    * Start the viewer.
    */
-// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
 /*
     initializeViewer (initialPDFPath = '../pdfs/P12-1046.pdf', viewerSelector = '#viewer') {
 */
     initializeViewer (viewerSelector = '#viewer') {
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
 
     window.pdf = null
     window.pdfName = null
@@ -615,7 +615,7 @@ export default class PDFAnnoPage {
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
 /*
       if (response.ok) {
         return response.arrayBuffer()
@@ -633,7 +633,7 @@ export default class PDFAnnoPage {
       } else {
         throw new Error(`HTTP ${response.status} - pdftxt`)
       }
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
     })
   }
 
@@ -644,7 +644,7 @@ export default class PDFAnnoPage {
    * @returns Promise<Object>
    * @memberof PDFAnnoPage
    */
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
 /*
   loadPDFFromServer (pdfURL) {
   const pdftxtUrl = url + '.' + PDFEXTRACT_VERSION.replace(/\./g, '-') + '.txt.gz'
@@ -656,7 +656,7 @@ export default class PDFAnnoPage {
     return Promise.all([
       this.loadPdf(pdfURL),
       this.loadPdftxt(pdftxtURL)
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
     ]).then(results => {
       return {
         pdf           : results[0],
