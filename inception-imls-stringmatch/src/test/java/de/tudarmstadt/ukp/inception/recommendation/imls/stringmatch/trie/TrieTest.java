@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +25,8 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.sanitizers.WhitespaceNormalizingSanitizer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
 public class TrieTest
 {

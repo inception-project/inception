@@ -15,10 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.sanitizers;
-
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.Trie.KeySanitizer;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.Trie.KeySanitizerFactory;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie;
 
 public class WhitespaceNormalizingSanitizer
     implements KeySanitizer

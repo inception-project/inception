@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -416,30 +416,6 @@ public class Trie<V>
         for (final Character cc : n.children.keySet()) {
             b.setLength(n.level);
             keys(cc, n.children.get(cc), b, vals);
-        }
-    }
-
-    public static interface KeySanitizerFactory
-    {
-        public KeySanitizer create();
-    }
-    
-    public static interface KeySanitizer
-    {
-        public static final char SKIP_CHAR = 0;
-        
-        char map(char aChar);
-        
-        default CharSequence sanitize(CharSequence aKey)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < aKey.length(); i ++) {
-                char c = map(aKey.charAt(i));
-                if (c != 0) {
-                    sb.append(c);
-                }
-            }
-            return sb;
         }
     }
 

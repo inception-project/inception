@@ -50,7 +50,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.sanitizers.WhitespaceNormalizingSanitizer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
 public class StringMatchingRecommender
     implements RecommendationEngine
