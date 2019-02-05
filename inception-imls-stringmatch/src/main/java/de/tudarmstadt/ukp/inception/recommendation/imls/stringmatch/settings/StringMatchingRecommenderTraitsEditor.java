@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.settings;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 
@@ -68,6 +69,8 @@ public class StringMatchingRecommenderTraitsEditor
         super(aId, aRecommender);
 
         gazeteers = new GazeteerList("gazeteers", LoadableDetachableModel.of(this::listGazeteers));
+        gazeteers.add(visibleWhen(() -> aRecommender.getObject() != null
+                && aRecommender.getObject().getId() != null));
         add(gazeteers);
         
         
@@ -88,7 +91,8 @@ public class StringMatchingRecommenderTraitsEditor
                 actionUploadGazeteer(aTarget);
             }
         };
-        
+        uploadField.add(visibleWhen(() -> aRecommender.getObject() != null
+                && aRecommender.getObject().getId() != null));
         add(uploadField);
     }
 
@@ -142,7 +146,7 @@ public class StringMatchingRecommenderTraitsEditor
     {
         Recommender recommender = getModelObject();
 
-        if (recommender != null) {
+        if (recommender != null && recommender.getId() != null) {
             return gazeteerService.listGazeteers(recommender);
         }
         else {
