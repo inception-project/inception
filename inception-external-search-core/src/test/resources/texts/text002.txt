@@ -1,3 +1,3 @@
 This is another test.
-This test is a good test.
+This test is a good test and will always be.
 This test will be the best.
