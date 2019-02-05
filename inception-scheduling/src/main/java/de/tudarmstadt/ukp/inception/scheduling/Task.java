@@ -29,14 +29,17 @@ public abstract class Task
 {
     private final User user;
     private final Project project;
+    private final String trigger;
 
-    public Task(User aUser, Project aProject)
+    public Task(User aUser, Project aProject, String aTrigger)
     {
         notNull(aUser);
         notNull(aProject);
+        notNull(aTrigger);
         
         user = aUser;
         project = aProject;
+        trigger = aTrigger;
     }
 
     public User getUser()
@@ -47,6 +50,11 @@ public abstract class Task
     public Project getProject()
     {
         return project;
+    }
+
+    public String getTrigger()
+    {
+        return trigger;
     }
 
     public String getName()
@@ -60,7 +68,8 @@ public abstract class Task
         sb.append('{');
         sb.append("user=").append(user.getUsername());
         sb.append(", project=").append(project.getName());
-        sb.append('}');
+        sb.append(", trigger=").append(trigger);
+        sb.append("\"}");
         return sb.toString();
     }
 

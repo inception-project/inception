@@ -336,11 +336,11 @@ public class RecommendationServiceImpl
         // The selection task then will start the training once its finished,
         // i.e. we do not start it here.
         if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
-            Task task = new SelectionTask(aProject, user);
-            schedulingService.enqueue(task, "Triggered by: " + aEventName);
+            Task task = new SelectionTask(aProject, user, aEventName);
+            schedulingService.enqueue(task);
         } else {
-            Task task = new TrainingTask(user, aProject);
-            schedulingService.enqueue(task, "Triggered by: " + aEventName);
+            Task task = new TrainingTask(user, aProject, aEventName);
+            schedulingService.enqueue(task);
         }
     }
     
