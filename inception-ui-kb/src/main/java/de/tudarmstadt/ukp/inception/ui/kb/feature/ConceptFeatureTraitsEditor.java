@@ -29,6 +29,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -51,6 +53,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class ConceptFeatureTraitsEditor
     extends Panel
 {
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureTraitsEditor.class);
+
     private static final String MID_FORM = "form";
 
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
@@ -129,12 +133,17 @@ public class ConceptFeatureTraitsEditor
         if (t.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
                     t.getRepositoryId());
-            if (kb.isPresent()) {
+            if (kb.isPresent() && kb.get().isEnabled()) {
                 result.setKnowledgeBase(kb.get());
                 if (t.getScope() != null) {
                     kbService.readConcept(kb.get(), t.getScope(), true)
                             .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
                 }
+            }
+            else {
+                warn("The selected knowledge base for this Concept Feature has been removed or disabled. "
+                    + "Select a new knowledge base and click on save");
+                LOG.error("The selected knowledge base has been removed or disabled.");
             }
         }
         // Use the concept from any knowledge base (leave KB unselected)
@@ -177,7 +186,7 @@ public class ConceptFeatureTraitsEditor
     
     private List<KnowledgeBase> listKnowledgeBases()
     {
-        return kbService.getKnowledgeBases(feature.getObject().getProject());
+        return kbService.getEnabledKnowledgeBases(feature.getObject().getProject());
     }
     
     private List<KBHandle> listConcepts()
@@ -189,7 +198,8 @@ public class ConceptFeatureTraitsEditor
         // Otherwise, we offer concepts from all KBs
         else {
             List<KBHandle> allConcepts = new ArrayList<>();
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(feature.getObject().getProject())) {
+            for (KnowledgeBase kb : kbService
+                .getEnabledKnowledgeBases(feature.getObject().getProject())) {
                 allConcepts.addAll(kbService.listConcepts(kb, false));
             }
 
