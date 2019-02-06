@@ -73,7 +73,6 @@ public class StringMatchingRecommenderTraitsEditor
                 && aRecommender.getObject().getId() != null));
         add(gazeteers);
         
-        
         FileInputConfig config = new FileInputConfig();
         config.initialCaption("Import gazeteers ...");
         config.allowedFileExtensions(asList("txt"));
@@ -91,16 +90,12 @@ public class StringMatchingRecommenderTraitsEditor
                 actionUploadGazeteer(aTarget);
             }
         };
+        uploadField.setOutputMarkupPlaceholderTag(true);
         uploadField.add(visibleWhen(() -> aRecommender.getObject() != null
                 && aRecommender.getObject().getId() != null));
         add(uploadField);
     }
 
-//    private void actionViewGazeteer(AjaxRequestTarget aTarget, Gazeteer aGazeteer)
-//    {
-//        
-//    }
-    
     private void actionDeleteGazeteer(AjaxRequestTarget aTarget, Gazeteer aGazeteer)
         throws IOException
     {
@@ -110,11 +105,6 @@ public class StringMatchingRecommenderTraitsEditor
         aTarget.add(gazeteers);
     }
     
-//    private void actionRenameGazeteer(AjaxRequestTarget aTarget, Gazeteer aGazeteer)
-//    {
-//        
-//    }
-
     private void actionUploadGazeteer(AjaxRequestTarget aTarget)
     {
         for (FileUpload importedGazeteer : uploadField.getModelObject()) {
@@ -175,12 +165,6 @@ public class StringMatchingRecommenderTraitsEditor
                     Gazeteer gazeteer = aItem.getModelObject();
                     
                     aItem.add(new Label("name", aItem.getModelObject().getName()));
-
-//                    aItem.add(new LambdaAjaxLink("view",
-//                        _target -> actionViewGazeteer(_target, gazeteer)));
-//
-//                    aItem.add(new LambdaAjaxLink("rename",
-//                        _target -> actionRenameGazeteer(_target, gazeteer)));
 
                     aItem.add(new LambdaAjaxLink("delete",
                         _target -> actionDeleteGazeteer(_target, gazeteer)));

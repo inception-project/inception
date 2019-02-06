@@ -19,7 +19,14 @@
 <body>
   <wicket:panel>
     <div class="col-sm-12 form-horizontal">
-      <div class="form-group">
+      <wicket:remove>
+        <!-- 
+          NOTE: The enclosure needs to be defined on the upload field. Defining it on the
+          gazeteers field does not work properly. I.e. when uploading a file or when removing
+          a gazeteer, the upload field/and are not re-rendered.
+         -->
+      </wicket:remove>
+      <div class="form-group" wicket:enclosure="upload">
         <label class="col-sm-3 control-label">
           <wicket:message key="gazeteers"/>
         </label>
