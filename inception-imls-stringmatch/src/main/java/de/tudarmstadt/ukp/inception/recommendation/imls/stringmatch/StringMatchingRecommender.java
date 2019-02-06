@@ -54,6 +54,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
 public class StringMatchingRecommender
     implements RecommendationEngine
@@ -87,11 +89,16 @@ public class StringMatchingRecommender
             pretrainData = emptyMap();
         }
     }
+
+    private <T> Trie<T> createTrie()
+    {
+        return new Trie<>(WhitespaceNormalizingSanitizer.factory());
+    }
     
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
-        Trie<DictEntry> dict = new Trie<>();
+        Trie<DictEntry> dict = createTrie();
         
         // Load the pre-train data into the trie before learning from the annotated data
         for (Entry<String, String> preTrainItem : pretrainData.entrySet()) {
@@ -221,7 +228,7 @@ public class StringMatchingRecommender
                 testSetLabeledSamplesCount, data.size());
             
         // Train
-        Trie<DictEntry> dict = new Trie<>();
+        Trie<DictEntry> dict = createTrie();
         for (Sample sample : trainingSet) {
             for (Span span : sample.getSpans()) {
                 learn(dict, span.getText(), span.getLabel());
