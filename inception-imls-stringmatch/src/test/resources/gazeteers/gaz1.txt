@@ -1,3 +1,5 @@
-PER	John
-LOC	London
-ORG	ACME
+# This is a comment
+John	PER
+London	LOC
+London	GPE
+ACME	ORG

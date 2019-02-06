@@ -32,19 +32,16 @@ internally represented as strings (e.g. concept features).
 === Gazeteers
 
 It is possible to pre-load gazeteers into string matching recommenders. A gazeteer is a simple text
-file where each line consists of a label and a text separated by a tab character. The order of 
-items in the gazeteer does not matter. Suggestions are generated considering the longest match.
+file where each line consists of a text and a label separated by a tab character. The order of 
+items in the gazeteer does not matter. Suggestions are generated considering the longest match. Comment lines start with a `#`. Empty lines are ignored.
 
 .Gazeteer example
 ----
-PER	Obama
-PER	Barack Obama
-LOC	Illinois
-ORG	Illinois State Senate
-LOC	Hawaii
-LOC	Indonesia
+# This is a comment
+Obama	PER
+Barack Obama	PER
+Illinois	LOC
+Illinois State Senate	ORG	
+Hawaii	LOC	
+Indonesia	LOC
 ----
-
-NOTE: It is possible to add comments lines such as `# This file contains named entities` because lines 
-      not containing a tab character are not considered. The `#` at the beginning of the line has no special
-      meaning! This may change in future versions of {product-name}.

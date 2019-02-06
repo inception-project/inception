@@ -20,15 +20,19 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.contentOf;
-import static org.assertj.core.api.Assertions.entry;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 
@@ -53,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 @RunWith(SpringRunner.class) 
 @DataJpaTest
@@ -189,10 +194,12 @@ public class GazeteerServiceImplTest
                 .isEqualToNormalizingNewlines(contentOf(input));
      
         // Check that imported file matches the expectations
-        Map<String, String> data = sut.readGazeteerFile(gaz);
-        assertThat(data)
-                .describedAs("Gazeteer data file content can be read")
-                .contains(entry("John", "PER"), entry("London", "LOC"), entry("ACME", "ORG"));
+        List<GazeteerEntry> gazData = sut.readGazeteerFile(gaz);
+        assertThat(gazData).containsExactlyInAnyOrder(
+                new GazeteerEntry("John", "PER"),
+                new GazeteerEntry("London", "LOC"),
+                new GazeteerEntry("London", "GPE"),
+                new GazeteerEntry("ACME", "ORG"));
         
         // Check that gazeteer file has been deleted along with the entity
         sut.deleteGazeteers(gaz);
@@ -202,6 +209,46 @@ public class GazeteerServiceImplTest
                 .isFalse();
     }
     
+    @Test
+    public void thatGazeteerCommentLineIsIgnored() throws Exception
+    {
+        Gazeteer gaz = new Gazeteer("gaz", rec1);
+        
+        String gazeteer = String.join("\n",
+                "# This is a comment",
+                "John\tPER");
+        
+        List<GazeteerEntry> data = new ArrayList<>();
+        sut.parseGazeteer(gaz, toInputStream(gazeteer, UTF_8), data);
+        
+        assertThat(data).containsExactlyInAnyOrder(
+                new GazeteerEntry("John", "PER"));
+    }
+
+    @Test
+    public void thatInvalidGazeteerGeneratesException() throws Exception
+    {
+        Gazeteer gaz = new Gazeteer("gaz", rec1);
+        
+        List<GazeteerEntry> data = new ArrayList<>();
+
+        String gazeteer1 = String.join("\n",
+                "Bill\tPER",
+                "John PER");
+                
+        assertThatExceptionOfType(IOException.class)
+                .describedAs("Line without tab generated exception")
+                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer1, UTF_8), data))
+                .withMessageContaining("Unable to parse line 2");
+        
+        String gazeteer2 = "Bill\tPER\tDUMMY";
+                
+        assertThatExceptionOfType(IOException.class)
+                .describedAs("Line without too many fields")
+                .isThrownBy(() -> sut.parseGazeteer(gaz, toInputStream(gazeteer2, UTF_8), data))
+                .withMessageContaining("Unable to parse line 1");
+    }
+
     @SpringBootConfiguration
     @EnableAutoConfiguration 
     public static class SpringConfig {

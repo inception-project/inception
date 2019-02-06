@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
@@ -73,8 +72,7 @@ public class StringMatchingRecommenderFactory
         // Pre-load the gazeteers into the recommender
         for (Gazeteer gaz : gazeteerService.listGazeteers(aRecommender)) {
             try {
-                Map<String, String> gazeteerData = gazeteerService.readGazeteerFile(gaz);
-                recommender.pretrain(gazeteerData);
+                recommender.pretrain(gazeteerService.readGazeteerFile(gaz));
             }
             catch (IOException e) {
                 log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",

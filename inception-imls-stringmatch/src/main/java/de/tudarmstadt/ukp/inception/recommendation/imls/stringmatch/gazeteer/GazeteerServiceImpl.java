@@ -26,9 +26,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -47,6 +46,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 @Component
 public class GazeteerServiceImpl
@@ -166,27 +166,47 @@ public class GazeteerServiceImpl
     }
     
     @Override
-    public Map<String, String> readGazeteerFile(Gazeteer aGaz) throws IOException
+    public List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz)
+        throws IOException
     {
         File file = getGazeteerFile(aGaz);
         
-        Map<String, String> data = new HashMap<>();
+        List<GazeteerEntry> data = new ArrayList<>();
         
         try (InputStream is = new FileInputStream(file)) {
-            LineIterator i = IOUtils.lineIterator(is, UTF_8);
-            while (i.hasNext()) {
-                String[] line = i.nextLine().split("\t", 2);
-                if (line.length == 2) {
-                    String label = trimToNull(line[0]);
-                    String text = trimToNull(line[1]);
-                    if (label != null && text != null) {
-                        data.put(text, label);
-                    }
-                }
-            }
+            parseGazeteer(aGaz, is, data);
         }
         
         return data;
+    }
+    
+    public void parseGazeteer(Gazeteer aGaz, InputStream aStream, List<GazeteerEntry> aTarget)
+        throws IOException
+    {
+        int lineNumber = 0;
+        LineIterator i = IOUtils.lineIterator(aStream, UTF_8);
+        while (i.hasNext()) {
+            lineNumber++;
+            String line = i.nextLine().trim();
+            
+            if (line.isEmpty() || line.startsWith("#")) {
+                // Ignore comment lines and empty lines
+                continue;
+            }
+            
+            String[] fields = line.split("\t");
+            if (fields.length == 2) {
+                String text = trimToNull(fields[0]);
+                String label = trimToNull(fields[1]);
+                if (label != null && text != null) {
+                    aTarget.add(new GazeteerEntry(text, label));
+                }
+            }
+            else {
+                throw new IOException("Unable to parse line " + lineNumber + " of ["
+                        + aGaz.getName() + "] - no tab character found: [" + line + "]");
+            }
+        }
     }
     
     @Override

@@ -21,10 +21,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 public interface GazeteerService
 {
@@ -55,9 +55,9 @@ public interface GazeteerService
     void createOrUpdateGazeteer(Gazeteer aGazeteer);
 
     /**
-     * Loads the given gazetter into a map.
+     * Loads the gazeteer.
      */
-    Map<String, String> readGazeteerFile(Gazeteer aGaz) throws IOException;
+    List<GazeteerEntry> readGazeteerFile(Gazeteer aGaz) throws IOException;
 
     boolean existsGazeteer(Recommender aRecommender, String aName);
 }
