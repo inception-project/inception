@@ -298,17 +298,16 @@ public class RecommendationServiceImpl
         return settings;
     }
 
+    /**
+     * This is called whenever a document is opened (because of the implicit CAS upgrade and saving
+     * of the CAS that happens when a document is opened) as well as when any updates to annotations
+     * are made. Therefore, we do not need an extra event listener for {@link DocumentOpenedEvent}
+     */
     @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
                 aEvent.getDocument().getProject());
-    }
-
-    @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent)
-    {
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
     }
 
     @EventListener
