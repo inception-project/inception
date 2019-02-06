@@ -89,9 +89,9 @@ public class PredictionTask
     private @Autowired DocumentService documentService;
     private @Autowired LearningRecordService learningRecordService;
     
-    public PredictionTask(User aUser, Project aProject)
+    public PredictionTask(User aUser, Project aProject, String aTrigger)
     {
-        super(aUser, aProject);
+        super(aUser, aProject, aTrigger);
     }
 
     @Override

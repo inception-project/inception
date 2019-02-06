@@ -63,9 +63,9 @@ public class TrainingTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
 
-    public TrainingTask(User aUser, Project aProject)
+    public TrainingTask(User aUser, Project aProject, String aTrigger)
     {
-        super(aUser, aProject);
+        super(aUser, aProject, aTrigger);
     }
     
     @Override
@@ -150,7 +150,8 @@ public class TrainingTask
             }
         }
 
-        schedulingService.enqueue(new PredictionTask(user, getProject()));
+        schedulingService.enqueue(new PredictionTask(user, getProject(),
+                        "TrainingTask after training was finished"));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)

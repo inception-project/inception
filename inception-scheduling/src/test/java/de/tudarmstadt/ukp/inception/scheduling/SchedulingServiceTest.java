@@ -140,7 +140,7 @@ public class SchedulingServiceTest {
     {
         DummyTask(User aUser, Project aProject)
         {
-            super(aUser, aProject);
+            super(aUser, aProject, "JUnit");
         }
 
         @Override
