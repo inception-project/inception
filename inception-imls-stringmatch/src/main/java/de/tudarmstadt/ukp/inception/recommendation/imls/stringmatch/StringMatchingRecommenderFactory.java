@@ -29,7 +29,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -52,10 +51,9 @@ public class StringMatchingRecommenderFactory
     public static final String ID =
         "de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender";
 
-    private GazeteerService gazeteerService;
+    private final GazeteerService gazeteerService;
     
-    public StringMatchingRecommenderFactory(
-            @Autowired(required = false) GazeteerService aGazeteerService)
+    public StringMatchingRecommenderFactory(GazeteerService aGazeteerService)
     {
         gazeteerService = aGazeteerService;
     }
@@ -72,20 +70,18 @@ public class StringMatchingRecommenderFactory
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         StringMatchingRecommender recommender = new StringMatchingRecommender(aRecommender, traits);
         
-        // If there is a gazeteer service, then pre-load the gazeteers into the recommender
-        if (gazeteerService != null) {
-            for (Gazeteer gaz : gazeteerService.listGazeteers(aRecommender)) {
-                try {
-                    Map<String, String> gazeteerData = gazeteerService.readGazeteerFile(gaz);
-                    recommender.pretrain(gazeteerData);
-                }
-                catch (IOException e) {
-                    log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                            gaz.getName(), gaz.getRecommender().getName(),
-                            gaz.getRecommender().getId(),
-                            gaz.getRecommender().getProject().getName(),
-                            gaz.getRecommender().getProject().getId(), e);
-                }
+        // Pre-load the gazeteers into the recommender
+        for (Gazeteer gaz : gazeteerService.listGazeteers(aRecommender)) {
+            try {
+                Map<String, String> gazeteerData = gazeteerService.readGazeteerFile(gaz);
+                recommender.pretrain(gazeteerData);
+            }
+            catch (IOException e) {
+                log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
+                        gaz.getName(), gaz.getRecommender().getName(),
+                        gaz.getRecommender().getId(),
+                        gaz.getRecommender().getProject().getName(),
+                        gaz.getRecommender().getProject().getId(), e);
             }
         }
         

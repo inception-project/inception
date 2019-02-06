@@ -59,8 +59,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazete
 @Transactional
 @EntityScan(
         basePackages = {
-            "de.tudarmstadt.ukp.inception",
-            "de.tudarmstadt.ukp.clarin.webanno.model"
+                "de.tudarmstadt.ukp.inception",
+                "de.tudarmstadt.ukp.clarin.webanno.model"
 })
 public class GazeteerServiceImplTest
 {
@@ -102,6 +102,12 @@ public class GazeteerServiceImplTest
         rec1.setFeature(spanFeat1);
         em.persist(rec1);
     }
+    
+    @After
+    public void tearDown() throws Exception
+    {
+        testEntityManager.clear();
+    }
 
     @Test
     public void thatCreateListAndDeleteGazeteerWorks() throws Exception
@@ -110,20 +116,30 @@ public class GazeteerServiceImplTest
         Gazeteer gaz1 = new Gazeteer("gaz1", rec1);
         sut.createOrUpdateGazeteer(gaz1);
 
-        assertThat(sut.listGazeteers(rec1)).containsExactly(gaz1);
+        assertThat(sut.listGazeteers(rec1))
+                .describedAs("All gazeteers that have been created are returned by listGazeteers")
+                .containsExactly(gaz1);
 
         // Add second gazeteer
         Gazeteer gaz2 = new Gazeteer("gaz2", rec1);
         sut.createOrUpdateGazeteer(gaz2);
 
-        assertThat(gaz1.getId()).isNotNull();
-        assertThat(gaz2.getId()).isNotNull();
-        assertThat(sut.listGazeteers(rec1)).containsExactly(gaz1, gaz2);
+        assertThat(gaz1.getId())
+                .describedAs("After saving the gazetter to the DB, the ID should be set")
+                .isNotNull();
+        assertThat(gaz2.getId())
+                .describedAs("After saving the gazetter to the DB, the ID should be set")
+                .isNotNull();
+        assertThat(sut.listGazeteers(rec1))
+                .describedAs("All gazeteers that have been created are returned by listGazeteers")
+                .containsExactly(gaz1, gaz2);
         
         // Remove first gazeteer
         sut.deleteGazeteers(gaz1);
         
-        assertThat(sut.listGazeteers(rec1)).containsExactly(gaz2);
+        assertThat(sut.listGazeteers(rec1))
+                .describedAs("A deleted gazeteer no longer returned by listGazeteers")
+                .containsExactly(gaz2);
     }
     
     @Test
@@ -132,12 +148,18 @@ public class GazeteerServiceImplTest
         Gazeteer gaz = new Gazeteer("foo", rec1);
         sut.createOrUpdateGazeteer(gaz);
 
-        assertThat(sut.listGazeteers(rec1)).extracting(Gazeteer::getName).containsExactly("foo");
+        assertThat(sut.listGazeteers(rec1))
+                .describedAs("Name of the gazeteer has the initial value")
+                .extracting(Gazeteer::getName)
+                .containsExactly("foo");
         
         gaz.setName("bar");
         sut.createOrUpdateGazeteer(gaz);
         
-        assertThat(sut.listGazeteers(rec1)).extracting(Gazeteer::getName).containsExactly("bar");
+        assertThat(sut.listGazeteers(rec1))
+                .describedAs("Name of the gazeteer has the updated value")
+                .extracting(Gazeteer::getName)
+                .containsExactly("bar");
     }
     
     @Test
@@ -154,30 +176,29 @@ public class GazeteerServiceImplTest
         }
         
         File gazFile = sut.getGazeteerFile(gaz);
-        assertThat(gazFile.exists()).isTrue();
+        assertThat(gazFile.exists())
+                .describedAs("Gazeteer data has been imported")
+                .isTrue();
         assertThat(contentOf(sut.getGazeteerFile(gaz)))
                 .isEqualToNormalizingNewlines(contentOf(input));
      
         // Check that imported file matches the expectations
         Map<String, String> data = sut.readGazeteerFile(gaz);
-        assertThat(data).contains(entry("John", "PER"), entry("London", "LOC"),
-                entry("ACME", "ORG"));
+        assertThat(data)
+                .describedAs("Gazeteer data file content can be read")
+                .contains(entry("John", "PER"), entry("London", "LOC"), entry("ACME", "ORG"));
         
         // Check that gazeteer file has been deleted along with the entity
         sut.deleteGazeteers(gaz);
         
-        assertThat(gazFile.exists()).isFalse();
-    }
-    
-    @After
-    public void tearDown() throws Exception
-    {
-        testEntityManager.clear();
+        assertThat(gazFile.exists())
+                .describedAs("Gazeteer data has been deleted")
+                .isFalse();
     }
     
     @SpringBootConfiguration
     @EnableAutoConfiguration 
     public static class SpringConfig {
-        
+        // No content
     }
 }
