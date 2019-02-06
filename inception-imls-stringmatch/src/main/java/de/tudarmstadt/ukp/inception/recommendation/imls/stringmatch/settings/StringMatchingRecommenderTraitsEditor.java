@@ -90,7 +90,6 @@ public class StringMatchingRecommenderTraitsEditor
                 actionUploadGazeteer(aTarget);
             }
         };
-        uploadField.setOutputMarkupPlaceholderTag(true);
         uploadField.add(visibleWhen(() -> aRecommender.getObject() != null
                 && aRecommender.getObject().getId() != null));
         add(uploadField);
