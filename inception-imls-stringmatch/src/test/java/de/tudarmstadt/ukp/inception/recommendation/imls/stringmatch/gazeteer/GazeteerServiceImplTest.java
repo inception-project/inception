@@ -116,6 +116,12 @@ public class GazeteerServiceImplTest
         Gazeteer gaz1 = new Gazeteer("gaz1", rec1);
         sut.createOrUpdateGazeteer(gaz1);
 
+        assertThat(gaz1.getId())
+                .describedAs("After saving the gazetter to the DB, the ID should be set")
+                .isNotNull();
+        assertThat(sut.existsGazeteer(gaz1.getRecommender(), gaz1.getName()))
+                .describedAs("Gazeteers can be found using existsGazeteer")
+                .isTrue();
         assertThat(sut.listGazeteers(rec1))
                 .describedAs("All gazeteers that have been created are returned by listGazeteers")
                 .containsExactly(gaz1);
@@ -124,12 +130,12 @@ public class GazeteerServiceImplTest
         Gazeteer gaz2 = new Gazeteer("gaz2", rec1);
         sut.createOrUpdateGazeteer(gaz2);
 
-        assertThat(gaz1.getId())
-                .describedAs("After saving the gazetter to the DB, the ID should be set")
-                .isNotNull();
         assertThat(gaz2.getId())
                 .describedAs("After saving the gazetter to the DB, the ID should be set")
                 .isNotNull();
+        assertThat(sut.existsGazeteer(gaz2.getRecommender(), gaz2.getName()))
+                .describedAs("Gazeteers can be found using existsGazeteer")
+                .isTrue();
         assertThat(sut.listGazeteers(rec1))
                 .describedAs("All gazeteers that have been created are returned by listGazeteers")
                 .containsExactly(gaz1, gaz2);

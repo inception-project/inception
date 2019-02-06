@@ -35,6 +35,7 @@ import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -186,5 +187,25 @@ public class GazeteerServiceImpl
         }
         
         return data;
+    }
+    
+    @Override
+    @Transactional
+    public boolean existsGazeteer(Recommender aRecommender, String aName)
+    {
+        Validate.notNull(aRecommender, "Recommender must be specified");
+        Validate.notNull(aName, "Gazeteer name must be specified");
+        
+        String query = 
+                "SELECT COUNT(*) " +
+                "FROM Gazeteer " + 
+                "WHERE recommender = :recommender AND name = :name";
+        
+        long count = entityManager.createQuery(query, Long.class)
+            .setParameter("recommender", aRecommender)
+            .setParameter("name", aName)
+            .getSingleResult();
+
+        return count > 0;
     }
 }

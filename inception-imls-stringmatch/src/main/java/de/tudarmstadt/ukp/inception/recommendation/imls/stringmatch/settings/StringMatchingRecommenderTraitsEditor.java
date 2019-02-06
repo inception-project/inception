@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -100,30 +101,38 @@ public class StringMatchingRecommenderTraitsEditor
     {
         gazeteerService.deleteGazeteers(aGazeteer);
         
-        gazeteers.getDefaultModel().detach();
         aTarget.add(gazeteers);
     }
     
     private void actionUploadGazeteer(AjaxRequestTarget aTarget)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(gazeteers);
+        
         for (FileUpload importedGazeteer : uploadField.getModelObject()) {
             Gazeteer gazeteer = new Gazeteer();
             gazeteer.setName(importedGazeteer.getClientFileName());
             gazeteer.setRecommender(getModelObject());
             
+            // Make sure the gazetter name is unique
+            int n = 2;
+            while (gazeteerService.existsGazeteer(gazeteer.getRecommender(), gazeteer.getName())) {
+                String baseName = FilenameUtils.getBaseName(importedGazeteer.getClientFileName());
+                String extension = FilenameUtils.getExtension(importedGazeteer.getClientFileName());
+                gazeteer.setName(baseName + ' ' + n + '.' + extension);
+                n++;
+            }
+            
             try (InputStream is = importedGazeteer.getInputStream()) {
                 gazeteerService.createOrUpdateGazeteer(gazeteer);
                 gazeteerService.importGazeteerFile(gazeteer, is);
+                success("Imported gazeteer: [" + gazeteer.getName() + "]");
             }
             catch (Exception e) {
-                aTarget.addChildren(getPage(), IFeedback.class);
                 error("Error importing gazeteer: " + ExceptionUtils.getRootCauseMessage(e));
                 LOG.error("Error importing gazeteer", e);
             }
         }
-        
-        gazeteers.getDefaultModel().detach();
-        aTarget.add(gazeteers);
     }
     
     public Recommender getModelObject()

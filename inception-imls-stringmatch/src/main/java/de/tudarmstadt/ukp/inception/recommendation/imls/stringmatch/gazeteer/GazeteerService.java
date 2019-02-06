@@ -58,4 +58,6 @@ public interface GazeteerService
      * Loads the given gazetter into a map.
      */
     Map<String, String> readGazeteerFile(Gazeteer aGaz) throws IOException;
+
+    boolean existsGazeteer(Recommender aRecommender, String aName);
 }
