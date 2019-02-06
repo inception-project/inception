@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FACT_LAYER;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -111,6 +113,9 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
+                if (featureUsesDisabledKB(traits)) {
+                    return Collections.emptyList();
+                }
                 return factService.getPredicatesFromKB(project, traits);
             }
 

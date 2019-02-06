@@ -20,7 +20,12 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -55,8 +60,8 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.jquery.ui.widget.tooltip.TooltipBehavior;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -448,6 +453,9 @@ public class QualifierFeatureEditor
             @Override protected List<KBHandle> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                if (featureUsesDisabledKB(traits)) {
+                    return Collections.emptyList();
+                }
                 return factService.getPredicatesFromKB(project, traits);
             }
 
