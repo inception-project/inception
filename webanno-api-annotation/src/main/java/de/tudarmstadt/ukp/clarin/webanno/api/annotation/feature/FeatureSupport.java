@@ -106,20 +106,6 @@ public interface FeatureSupport<T>
             AnnotationFeature aFeature);
 
     /**
-     * Checks whether tagsets are supported on the given feature which must be provided by the
-     * current feature support (i.e. {@link #accepts(AnnotationFeature)} must have returned
-     * {@code true} on this feature.
-     * 
-     * @param aFeature
-     *            a feature definition.
-     * @return whether tagsets are supported on the given feature.
-     */
-    default boolean isTagsetSupported(AnnotationFeature aFeature)
-    {
-        return false;
-    }
-    
-    /**
      * Called when the user selects a feature in the feature detail form. It allows the feature
      * support to fill in settings which are not configurable through the UI, e.g. link feature
      * details.
