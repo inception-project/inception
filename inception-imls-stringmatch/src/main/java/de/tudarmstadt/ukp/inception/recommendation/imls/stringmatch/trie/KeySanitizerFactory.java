@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,35 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie;
 
-import java.io.Serializable;
-
-public class ExternalRecommenderTraits
-    implements Serializable
+public interface KeySanitizerFactory
 {
-    private static final long serialVersionUID = -3109239605741337123L;
-
-    private String remoteUrl;
-    private boolean trainable;
-
-    public String getRemoteUrl()
-    {
-        return remoteUrl;
-    }
-
-    public void setRemoteUrl(String aRemoteUrl)
-    {
-        remoteUrl = aRemoteUrl;
-    }
-
-    public boolean isTrainable()
-    {
-        return trainable;
-    }
-
-    public void setTrainable(boolean aTrainable)
-    {
-        trainable = aTrainable;
-    }
+    public KeySanitizer create();
 }

@@ -63,9 +63,9 @@ public class TrainingTask
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
 
-    public TrainingTask(User aUser, Project aProject)
+    public TrainingTask(User aUser, Project aProject, String aTrigger)
     {
-        super(aUser, aProject);
+        super(aUser, aProject, aTrigger);
     }
     
     @Override
@@ -125,9 +125,19 @@ public class TrainingTask
                 RecommenderContext context = recommendationService.getContext(user, recommender);
                 RecommendationEngineFactory factory = recommendationService
                     .getRecommenderFactory(recommender);
-                RecommendationEngine recommendationEngine = factory.build(recommender);
 
                 try {
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                    
+                    // If the engine does not require/support training, then we mark the context
+                    // as ready for prediction and skip the training step
+                    if (!recommendationEngine.requiresTraining()) {
+                        log.info("[{}][{}]: Engine does not require training",
+                                user.getUsername(), recommender.getName());
+                        context.markAsReadyForPrediction();
+                        continue;
+                    }
+                    
                     List<CAS> cassesForTraining = casses.get()
                             .stream()
                             .filter(e -> !recommender.getStatesIgnoredForTraining()
@@ -135,13 +145,21 @@ public class TrainingTask
                             .filter(e -> containsTargetAnnotation(recommender, e.cas))
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
-                    log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
-                            user.getUsername(), recommender.getName(), cassesForTraining.size(),
-                            casses.get().size());
 
-                    recommendationEngine.train(context, cassesForTraining);
-                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                            recommender.getName(), (System.currentTimeMillis() - startTime));
+                    if (!cassesForTraining.isEmpty()) {
+                        log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
+                                user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                                casses.get().size());
+                        
+                        recommendationEngine.train(context, cassesForTraining);
+                        
+                        log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                                recommender.getName(), (System.currentTimeMillis() - startTime));
+                    }
+                    else {
+                        log.info("[{}][{}]: There are annotations available to train on",
+                                user.getUsername(), recommender.getName());
+                    }
                 }
                 catch (Exception e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
@@ -150,7 +168,8 @@ public class TrainingTask
             }
         }
 
-        schedulingService.enqueue(new PredictionTask(user, getProject()));
+        schedulingService.enqueue(new PredictionTask(user, getProject(),
+                        "TrainingTask after training was finished"));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)
