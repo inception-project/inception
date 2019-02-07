@@ -302,13 +302,14 @@ public class RecommendationServiceImpl
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
-                aEvent.getDocument().getProject());
+                aEvent.getDocument().getProject(), "AfterAnnotationUpdateEvent");
     }
 
     @EventListener
     public void onDocumentOpen(DocumentOpenedEvent aEvent)
     {
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
+        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject(),
+                "DocumentOpenedEvent");
     }
 
     @EventListener
@@ -318,10 +319,11 @@ public class RecommendationServiceImpl
         synchronized (state) {
             state.removePredictions(aEvent.getRecommender());
         }
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
+        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject(),
+                "RecommenderDeletedEvent");
     }
     
-    private void triggerTrainingAndClassification(String aUser, Project aProject)
+    private void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
 
@@ -334,10 +336,10 @@ public class RecommendationServiceImpl
         // The selection task then will start the training once its finished,
         // i.e. we do not start it here.
         if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
-            Task task = new SelectionTask(aProject, user);
+            Task task = new SelectionTask(aProject, user, aEventName);
             schedulingService.enqueue(task);
         } else {
-            Task task = new TrainingTask(user, aProject);
+            Task task = new TrainingTask(user, aProject, aEventName);
             schedulingService.enqueue(task);
         }
     }
@@ -361,7 +363,7 @@ public class RecommendationServiceImpl
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
         clearState(userName);
-        triggerTrainingAndClassification(userName, project);
+        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent");
     }
 
     @Override

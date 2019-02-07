@@ -40,13 +40,19 @@ import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.admin.CASMgr;
+import org.apache.uima.cas.impl.CASCompleteSerializer;
+import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,9 +95,9 @@ public class PredictionTask
     private @Autowired DocumentService documentService;
     private @Autowired LearningRecordService learningRecordService;
     
-    public PredictionTask(User aUser, Project aProject)
+    public PredictionTask(User aUser, Project aProject, String aTrigger)
     {
-        super(aUser, aProject);
+        super(aUser, aProject, aTrigger);
     }
 
     @Override
@@ -103,8 +109,11 @@ public class PredictionTask
         Predictions model = new Predictions(project, getUser());
         List<SourceDocument> documents = documentService.listSourceDocuments(project);
 
+        log.info("[{}]: Starting prediction...", user.getUsername());
+        long startTime = System.currentTimeMillis();
         nextDocument: for (SourceDocument document : documents) {
-            Optional<JCas> jCas = Optional.empty();
+            Optional<CAS> originalCas = Optional.empty();
+            Optional<CAS> predictionCas = Optional.empty();
             nextLayer: for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
                 if (!layer.isEnabled()) {
                     continue nextLayer;
@@ -114,6 +123,7 @@ public class PredictionTask
                     .getActiveRecommenders(user, layer);
 
                 nextRecommender: for (Recommender r : recommenders) {
+                    
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
@@ -149,10 +159,10 @@ public class PredictionTask
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.
                     // If the CAS cannot be loaded, then we skip to the next document.
-                    if (!jCas.isPresent()) {
+                    if (!originalCas.isPresent()) {
                         try {
-                            jCas = Optional.of(documentService.readAnnotationCas(document,
-                                    user.getUsername()));
+                            originalCas = Optional.of(documentService.readAnnotationCas(document,
+                                    user.getUsername()).getCas());
                         }
                         catch (IOException e) {
                             log.error("Cannot read annotation CAS for user [{}] of document "
@@ -162,7 +172,7 @@ public class PredictionTask
                             continue nextDocument;
                         }
                         try {
-                            annoService.upgradeCasIfRequired(jCas.get().getCas(), document,
+                            annoService.upgradeCasIfRequired(originalCas.get(), document,
                                     user.getUsername());
                         }
                         catch (UIMAException | IOException e) {
@@ -172,10 +182,48 @@ public class PredictionTask
                                     project.getName(), project.getId(), e);
                             continue nextDocument;
                         }
+                        try {
+                            predictionCas = Optional.of(cloneCAS(originalCas.get()));
+                        }
+                        catch (UIMAException e) {
+                            log.error("Cannot clone annotation CAS for user [{}] of document "
+                                    + "[{}]({}) in project [{}]({}) - skipping document",
+                                    user.getUsername(), document.getName(), document.getId(),
+                                    project.getName(), project.getId(), e);
+                            continue nextDocument;
+                        }
                     }
                     
                     try {
-                        recommendationEngine.predict(ctx, jCas.get().getCas());
+                        Type predictionType = getAnnotationType(predictionCas.get(),
+                                recommendationEngine.getPredictedType());
+                        Feature labelFeature = predictionType
+                                .getFeatureByBaseName(recommendationEngine.getPredictedFeature());
+                        Optional<Feature> scoreFeature = recommendationEngine.getScoreFeature()
+                                .map(predictionType::getFeatureByBaseName);
+                        
+                        // Remove any annotations that will be predicted (either manually created
+                        // or from a previous prediction run) from the CAS
+                        removePredictions(predictionCas.get(), predictionType);
+                        
+                        // Perform the actual prediction
+                        recommendationEngine.predict(ctx, predictionCas.get());
+
+                        // Extract the suggestions from the data which the recommender has written 
+                        // into the CAS
+                        List<AnnotationSuggestion> predictions = extractSuggestions(user,
+                                predictionCas.get(), predictionType, labelFeature, scoreFeature,
+                                document, recommender);
+                        
+                        // Calculate the visbility of the suggestions. This happens via the original
+                        // CAS which contains only the manually created annotations and *not* the
+                        // suggestions.
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
+                        calculateVisibility(learningRecordService, annoService, originalCas.get(),
+                                getUser().getUsername(), layer, groups, 0,
+                                originalCas.get().getDocumentText().length());
+                        
+                        model.putPredictions(layer.getId(), predictions);
                     }
                     catch (Throwable e) {
                         log.error("Error applying recommender [{}]({}) for user [{}] to document "
@@ -185,39 +233,26 @@ public class PredictionTask
                                 project.getId(), e);
                         continue nextRecommender;
                     }
-
-                    String predictedTypeName = recommendationEngine.getPredictedType();
-                    String predictedFeatureName = recommendationEngine.getPredictedFeature();
-                    Optional<String> scoreFeatureName = recommendationEngine.getScoreFeature();
-                    Type predictionType = getAnnotationType(jCas.get().getCas(), predictedTypeName);
-                    Feature labelFeature = predictionType
-                            .getFeatureByBaseName(predictedFeatureName);
-                    Optional<Feature> scoreFeature = scoreFeatureName
-                            .map(predictionType::getFeatureByBaseName);
-
-                    // Extract the suggestions from the data which the recommender has written into
-                    // the CAS
-                    List<AnnotationSuggestion> predictions = extractSuggestions(user,
-                            jCas.get().getCas(), predictionType, labelFeature, scoreFeature,
-                            document, recommender);
-                    
-                    // Calculate the visbility of the suggestions
-                    Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
-                    calculateVisibility(learningRecordService, annoService, jCas.get(),
-                            getUser().getUsername(), layer, groups, 0,
-                            jCas.get().getDocumentText().length());
-                    
-                    model.putPredictions(layer.getId(), predictions);
-
-                    // In order to just extract the annotations for a single recommender, each
-                    // recommender undoes the changes applied in `recommendationEngine.predict`
-
-                    removePredictions(jCas.get().getCas(), predictionType);
                 }
             }
         }
+        log.info("[{}]: Prediction complete ({} ms)", user.getUsername(),
+                (System.currentTimeMillis() - startTime));
 
         recommendationService.putIncomingPredictions(getUser(), project, model);
+    }
+    
+    private CAS cloneCAS(CAS aCAS) throws ResourceInitializationException, CASException
+    {
+        CAS clone = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        
+        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aCAS);
+        Serialization.deserializeCASComplete(ser, (CASMgr) clone);
+        
+        // Make sure JCas is properly initialized too
+        clone.getJCas();
+        
+        return clone;
     }
 
     private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas, Type predictionType,
@@ -271,13 +306,13 @@ public class PredictionTask
      * Goes through all AnnotationObjects and determines the visibility of each one
      */
     public static void calculateVisibility(LearningRecordService aLearningRecordService,
-            AnnotationSchemaService aAnnotationService, JCas aJcas, String aUser,
+            AnnotationSchemaService aAnnotationService, CAS aCas, String aUser,
             AnnotationLayer aLayer, Collection<SuggestionGroup> aRecommendations, int aWindowBegin,
             int aWindowEnd)
     {
         // Collect all annotations of the given layer within the view window
-        Type type = CasUtil.getType(aJcas.getCas(), aLayer.getName());
-        List<AnnotationFS> annotationsInWindow = select(aJcas.getCas(), type).stream()
+        Type type = CasUtil.getType(aCas, aLayer.getName());
+        List<AnnotationFS> annotationsInWindow = select(aCas, type).stream()
                 .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
                 .collect(toList());
         
