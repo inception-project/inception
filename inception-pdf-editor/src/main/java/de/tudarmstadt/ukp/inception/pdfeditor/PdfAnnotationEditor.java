@@ -238,6 +238,9 @@ public class PdfAnnotationEditor
         }
         finally
         {
+            // workaround to enable further creation of relations in PDFAnno
+            // if existing annotations are not rerendered after an attempt to create a relation.
+            // it can happen that mouse will hang when leaving annotation knob while dragging
             renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
         }
     }
