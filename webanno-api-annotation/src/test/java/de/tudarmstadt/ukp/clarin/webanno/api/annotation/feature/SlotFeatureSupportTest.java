@@ -17,8 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.JCasFactory.createJCasFromPath;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
@@ -29,8 +35,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -40,22 +46,46 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
 public class SlotFeatureSupportTest
 {
     private @Mock AnnotationSchemaService schemaService;
+
+    private SlotFeatureSupport sut;
+    
+    private AnnotationFeature slotFeature;
+    
+    private JCas jcas;
+    private Type hostType;
+    private Type targetType;
+    private Type linkType;
     
     @Before
-    public void setUp()
+    public void setUp() throws Exception
     {
         initMocks(this);
+        
+        sut = new SlotFeatureSupport(schemaService);
+        
+        slotFeature = new AnnotationFeature("links", "webanno.custom.SimpleSpan");
+        slotFeature.setLinkTypeName("webanno.custom.LinkType");
+        slotFeature.setLinkMode(LinkMode.WITH_ROLE);
+        slotFeature.setLinkTypeRoleFeatureName("role");
+        slotFeature.setLinkTypeTargetFeatureName("target");
+        slotFeature.setMode(MultiValueMode.ARRAY);
+        
+        jcas = createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml");
+        jcas.setDocumentText("label");
+        hostType = jcas.getCas().getTypeSystem().getType("webanno.custom.SimpleLinkHost");
+        targetType = jcas.getCas().getTypeSystem().getType(slotFeature.getType());
+        linkType = jcas.getCas().getTypeSystem().getType(slotFeature.getLinkTypeName());
     }
     
     @Test
     public void testAccepts()
     {
-        SlotFeatureSupport sut = new SlotFeatureSupport(schemaService);
-        
         AnnotationFeature feat1 = new AnnotationFeature("string", "LinkType");
         feat1.setMode(MultiValueMode.ARRAY);
         feat1.setLinkMode(LinkMode.WITH_ROLE);
@@ -69,41 +99,73 @@ public class SlotFeatureSupportTest
     @Test
     public void testWrapUnwrap() throws Exception
     {
-        CAS cas = JCasFactory.createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml")
-                .getCas();
-        
-        SlotFeatureSupport sut = new SlotFeatureSupport(schemaService);
-        
-        AnnotationFeature feat1 = new AnnotationFeature("slot", "webanno.custom.SimpleSpan");
-        feat1.setLinkTypeName("webanno.custom.LinkType");
-        feat1.setLinkMode(LinkMode.WITH_ROLE);
-        feat1.setLinkTypeRoleFeatureName("role");
-        feat1.setLinkTypeTargetFeatureName("target");
-        feat1.setMode(MultiValueMode.ARRAY);
+        CAS cas = jcas.getCas();
         
         List<LinkWithRoleModel> links = new ArrayList<>();
         links.add(new LinkWithRoleModel("role", "label", 13));
-        
-        cas.setDocumentText("label");
-        Type targetType = cas.getTypeSystem().getType(feat1.getType());
-        Type linkType = cas.getTypeSystem().getType(feat1.getLinkTypeName());
-        
+                
         AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
         
         ArrayFS array = cas.createArrayFS(1);
         FeatureStructure linkFS = cas.createFS(linkType);
-        FSUtil.setFeature(linkFS, feat1.getLinkTypeRoleFeatureName(), "role");
-        FSUtil.setFeature(linkFS, feat1.getLinkTypeTargetFeatureName(), targetFS);
+        FSUtil.setFeature(linkFS, slotFeature.getLinkTypeRoleFeatureName(), "role");
+        FSUtil.setFeature(linkFS, slotFeature.getLinkTypeTargetFeatureName(), targetFS);
         array.set(0, linkFS);
         
-        assertThat(sut.wrapFeatureValue(feat1, cas, array)).isEqualTo(links);
-        assertThat(sut.wrapFeatureValue(feat1, cas, null)).isEmpty();
-        assertThatThrownBy(() -> sut.wrapFeatureValue(feat1, cas, new Object()))
+        assertThat(sut.wrapFeatureValue(slotFeature, cas, array)).isEqualTo(links);
+        assertThat(sut.wrapFeatureValue(slotFeature, cas, null)).isEmpty();
+        assertThatThrownBy(() -> sut.wrapFeatureValue(slotFeature, cas, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
         
-        assertThat(sut.unwrapFeatureValue(feat1, cas, links)).isSameAs(links);
-        assertThat(sut.unwrapFeatureValue(feat1, cas, null)).isNull();
-        assertThatThrownBy(() -> sut.unwrapFeatureValue(feat1, cas, new Object()))
+        assertThat(sut.unwrapFeatureValue(slotFeature, cas, links)).isSameAs(links);
+        assertThat(sut.unwrapFeatureValue(slotFeature, cas, null)).isNull();
+        assertThatThrownBy(() -> sut.unwrapFeatureValue(slotFeature, cas, new Object()))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+    
+    @Test
+    public void thatUsingOutOfTagsetValueInClosedTagsetProducesException() throws Exception
+    {
+        final String role = "TAG-NOT-IN-LIST";
+        
+        CAS cas = jcas.getCas();
+
+        TagSet slotFeatureTagset = new TagSet();
+        slotFeatureTagset.setCreateTag(false);
+        
+        slotFeature.setTagset(slotFeatureTagset);
+        
+        AnnotationFS hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
+        AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
+        
+        when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
+        
+        assertThatExceptionOfType(IllegalArgumentException.class)
+            .isThrownBy(() -> sut.setFeatureValue(jcas, slotFeature, getAddr(hostFS), 
+                    asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS)))))
+            .withMessageContaining("is not in the tag list");
+    }
+    
+    @Test
+    public void thatUsingOutOfTagsetValueInOpenTagsetAddsNewValue() throws Exception
+    {
+        final String role = "TAG-NOT-IN-LIST";
+        
+        CAS cas = jcas.getCas();
+
+        TagSet slotFeatureTagset = new TagSet();
+        slotFeatureTagset.setCreateTag(true);
+        
+        slotFeature.setTagset(slotFeatureTagset);
+        
+        AnnotationFS hostFS = cas.createAnnotation(hostType, 0, cas.getDocumentText().length());
+        AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
+        
+        when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
+        
+        sut.setFeatureValue(jcas, slotFeature, getAddr(hostFS),
+                asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS))));
+        
+        verify(schemaService).createTag(new Tag(slotFeatureTagset, role));
     }
 }
