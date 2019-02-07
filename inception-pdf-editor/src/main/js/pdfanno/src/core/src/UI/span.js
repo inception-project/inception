@@ -282,7 +282,6 @@ window.addEventListener('DOMContentLoaded', () => {
           "begin": startPosition,
           "end": endPosition
         }
-        console.log(endPosition)
         parent.Wicket.Ajax.ajax({
           "m": "POST",
           "ep": data,

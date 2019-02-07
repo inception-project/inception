@@ -42,7 +42,7 @@ export function createRelation ({ type, anno1, anno2, text, color }) {
   return annotation
 }
 
-// BEGIN INCEpTION EXTENSION - #839 - Creation of rleations in PDF editor
+// BEGIN INCEpTION EXTENSION - #839 - Creation of relations in PDF editor
 window.addEventListener('DOMContentLoaded', () => {
 
   const $viewer = $('#viewer')
@@ -58,17 +58,17 @@ window.addEventListener('DOMContentLoaded', () => {
   $viewer.on('mousedown', '.anno-knob', () => {
     mousedownFired = true
     if (hoveredAnnotation) {
-      drawing = true
+      onAnnotation = true
       relationAnnotation = new RelationAnnotation()
       relationAnnotation.rel1Annotation = hoveredAnnotation
       relationAnnotation.direction = 'relation'
       relationAnnotation.readOnly = false
-      relationAnnotation.setDisableHoverEvent()
     }
   })
 
   $viewer.on('mousemove', (e) => {
-    if (mousedownFired && drawing) {
+    if (mousedownFired && onAnnotation) {
+      drawing = true
       let p = scaleDown(getClientXY(e))
       relationAnnotation.x2 = p.x
       relationAnnotation.y2 = p.y
@@ -77,19 +77,26 @@ window.addEventListener('DOMContentLoaded', () => {
   })
 
   $viewer.on('mouseup', () => {
-    if (mousedownFired && drawing) {
-      if (hoveredAnnotation && hoveredAnnotation !== relationAnnotation.rel1Annotation) {
-        console.log('create relation annotation here')
+    if (mousedownFired && onAnnotation && drawing) {
+      var data = {
+        "action": "createRelation",
+        "origin": relationAnnotation.rel1Annotation.uuid,
+        "target": hoveredAnnotation ? hoveredAnnotation.uuid : -1,
       }
-      relationAnnotation.rel1Annotation.deselect()
-      relationAnnotation.destroy()
-      relationAnnotation = null
-      annoPage.getAllAnnotations().forEach(function(annotation) {
-        annotation.render()
-      })
+      parent.Wicket.Ajax.ajax({
+        "m": "POST",
+        "ep": data,
+        "u": window.apiUrl,
+        "sh": [],
+        "fh": [function () {
+          console.log('Something went wrong on creating new relation for: ' + data)
+        }]
+      });
     }
     drawing = false
+    onAnnotation = false
     mousedownFired = false
+    relationAnnotation = null
   })
 })
 
@@ -103,5 +110,6 @@ function getClientXY(e) {
 let relationAnnotation = null
 let hoveredAnnotation = null
 let mousedownFired = false
+let onAnnotation = false
 let drawing = false
 // END INCEpTION EXTENSION
