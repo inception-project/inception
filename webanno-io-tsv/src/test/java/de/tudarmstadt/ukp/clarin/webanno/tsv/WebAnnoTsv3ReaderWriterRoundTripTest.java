@@ -127,6 +127,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
                 merged,
                 WebannoTsv3Writer.PARAM_TARGET_LOCATION, targetFolder,
                 WebannoTsv3Writer.PARAM_STRIP_EXTENSION, true,
+                WebannoTsv3Writer.PARAM_OVERWRITE, true,
                 WebannoTsv3Writer.PARAM_CHAIN_LAYERS, asList(
                         "webanno.custom.Simple"),
                 WebannoTsv3Writer.PARAM_SLOT_FEATS, asList(
@@ -160,7 +161,8 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         AnalysisEngineDescription xmiWriter = createEngineDescription(XmiWriter.class,
                 merged,
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
-                XmiWriter.PARAM_STRIP_EXTENSION, true);
+                XmiWriter.PARAM_STRIP_EXTENSION, true,
+                XmiWriter.PARAM_OVERWRITE, true);
         
         try {
             SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);

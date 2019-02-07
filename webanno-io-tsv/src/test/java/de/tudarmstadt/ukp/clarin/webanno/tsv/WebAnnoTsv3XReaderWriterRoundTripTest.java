@@ -100,12 +100,14 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3XWriter.class,
                 merged,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true);
+                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true,
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true);
 
         AnalysisEngineDescription xmiWriter = createEngineDescription(XmiWriter.class,
                 merged,
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
-                XmiWriter.PARAM_STRIP_EXTENSION, true);
+                XmiWriter.PARAM_STRIP_EXTENSION, true,
+                XmiWriter.PARAM_OVERWRITE, true);
 
         SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         
