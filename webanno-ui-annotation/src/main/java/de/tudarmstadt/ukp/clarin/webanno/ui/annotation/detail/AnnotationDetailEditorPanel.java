@@ -599,28 +599,6 @@ public abstract class AnnotationDetailEditorPanel
         LOG.trace("actionAnnotate() defaultLayer: {}",
                 state.getDefaultAnnotationLayer().getUiName());
 
-        // Verify if input is valid according to tagset
-        LOG.trace("actionAnnotate() verifying feature values in editors");
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            AnnotationFeature feature = featureState.feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureState.value;
-
-                // Check if tag is necessary, set, and correct
-                if (
-                    value != null &&
-                        feature.getTagset() != null &&
-                        !feature.getTagset().isCreateTag() &&
-                        !annotationService.existsTag(value, feature.getTagset())
-                    ) {
-                    error("[" + value
-                        + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
-
         // #186 - After filling a slot, the annotation detail panel is not updated
         aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
 
@@ -635,7 +613,34 @@ public abstract class AnnotationDetailEditorPanel
 
         // Update the features of the selected annotation from the values presently in the
         // feature editors
-        writeFeatureEditorModelsToCas(adapter, aJCas);
+        List<FeatureState> featureStates = state.getFeatureStates();
+        
+        List<AnnotationFeature> features = new ArrayList<>();
+        for (FeatureState featureState : featureStates) {
+            features.add(featureState.feature);
+            
+            LOG.trace("actionAnnotate() writing feature editor models to CAS "
+                    + featureState.feature.getUiName() + " = " + featureState.value);
+            try {
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
+                        state.getSelection().getAnnotation().getId(), featureState.feature,
+                        featureState.value);
+            }
+            catch (IllegalArgumentException e) {
+                // If any of the feature values could not be set, produce an error message and 
+                // abort
+                error(e.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+        }
+        
+        // Generate info message
+        if (state.getSelection().getAnnotation().isSet()) {
+            String bratLabelText = TypeUtil.getUiLabelText(adapter,
+                selectByAddr(aJCas, state.getSelection().getAnnotation().getId()), features);
+            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
+        }
 
         // Update progress information
         LOG.trace("actionAnnotate() updating progress information");
@@ -1103,46 +1108,6 @@ public abstract class AnnotationDetailEditorPanel
                             .listTags(featureState.feature.getTagset());
                 }
             }
-        }
-    }
-
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        List<FeatureState> featureStates = state.getFeatureStates();
-
-        LOG.trace("writeFeatureEditorModelsToCas()");
-        List<AnnotationFeature> features = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
-            features.add(featureState.feature);
-            
-            // For string features with extensible tagsets, extend the tagset
-            if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
-                String value = (String) featureState.value;
-               
-                if (value != null && featureState.feature.getTagset() != null
-                        && featureState.feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, featureState.feature.getTagset())) {
-                    Tag selectedTag = new Tag();
-                    selectedTag.setName(value);
-                    selectedTag.setTagSet(featureState.feature.getTagset());
-                    annotationService.createTag(selectedTag);
-                }
-            }
-            
-            LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
-                    + featureState.value);
-            aAdapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
-                    state.getSelection().getAnnotation().getId(), featureState.feature,
-                    featureState.value);
-        }
-
-        // Generate info message
-        if (state.getSelection().getAnnotation().isSet()) {
-            String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
-                selectByAddr(aJCas, state.getSelection().getAnnotation().getId()), features);
-            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
         }
     }
 
