@@ -177,11 +177,6 @@
       <artifactId>webanno-io-tcf</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-dkprocore</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -191,8 +186,6 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies combine.children="append">
-              <!-- UIMA types required during testing -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
               <!-- Resources -->
               <usedDependency>org.webjars:animate.css</usedDependency>
             </usedDependencies>

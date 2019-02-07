@@ -237,11 +237,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-dkprocore</artifactId>
-        <version>3.6.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-diag</artifactId>
         <version>3.6.0-SNAPSHOT</version>
       </dependency>
@@ -901,7 +896,6 @@
     <module>webanno-model-export</module>
     <module>webanno-support</module>
     <module>webanno-support-standalone</module>
-    <module>webanno-dkprocore</module>
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
