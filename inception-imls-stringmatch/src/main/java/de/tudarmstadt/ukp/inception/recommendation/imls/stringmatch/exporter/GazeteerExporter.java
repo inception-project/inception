@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
@@ -107,15 +108,16 @@ public class GazeteerExporter
         
         for (ExportedGazeteer exportedGazeteer : gazeteers) {
             Recommender recommender = recommendationService
-                    .getRecommender(aProject, exportedGazeteer.getName()).get();
+                    .getRecommender(aProject, exportedGazeteer.getRecommender()).get();
             
             Gazeteer gazeteer = new Gazeteer();
             gazeteer.setName(exportedGazeteer.getName());
             gazeteer.setRecommender(recommender);
             gazeteerService.createOrUpdateGazeteer(gazeteer);
             
-            try (InputStream is = aZip.getInputStream(aZip
-                    .getEntry("/" + GAZETEERS_FOLDER + "/" + exportedGazeteer.getId() + ".txt"))) {
+            ZipEntry entry = aZip
+                    .getEntry(GAZETEERS_FOLDER + "/" + exportedGazeteer.getId() + ".txt");
+            try (InputStream is = aZip.getInputStream(entry)) {
                 gazeteerService.importGazeteerFile(gazeteer, is);
             }
         }
