@@ -213,7 +213,7 @@ public class ExternalSearchAnnotationSidebar
         // highlight keywords if a document is selected from result list
         // and it is the current document opened
         if (externalSearchUserState.getSelectedResult() != null &&
-            (externalSearchUserState.getSelectedResult().getDocumentId().equals(
+            (externalSearchUserState.getSelectedResult().getDocumentTitle().equals(
                 getAnnotationPage().getModelObject().getDocument().getName()))) {
             highlightKeywords(aEvent.getState(), aEvent.getVDocument());
         } else {
