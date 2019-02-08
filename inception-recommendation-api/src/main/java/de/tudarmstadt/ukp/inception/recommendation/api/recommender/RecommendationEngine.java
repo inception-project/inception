@@ -85,4 +85,15 @@ public interface RecommendationEngine {
     {
         return Optional.of("score");
     }
+    
+    /**
+     * Whether or not this engine supports training. If training is not supported, the call to
+     * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
+     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+     * training is skipped - this is meant only for engines that use pre-trained models.
+     */
+    default boolean requiresTraining()
+    {
+        return true;
+    }
 }
