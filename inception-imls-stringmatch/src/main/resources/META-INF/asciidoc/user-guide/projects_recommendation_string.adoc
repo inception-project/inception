@@ -28,3 +28,20 @@ twice as _PER_ and once as _OTH_, than the score for _PER_ is 0.66 and the score
 The recommender can be used for span layers that anchor to single or multiple tokens and where
 cross-sentence annotations are not allowed. It can be used for string features or features which get
 internally represented as strings (e.g. concept features).
+
+=== Gazeteers
+
+It is possible to pre-load gazeteers into string matching recommenders. A gazeteer is a simple text
+file where each line consists of a text and a label separated by a tab character. The order of 
+items in the gazeteer does not matter. Suggestions are generated considering the longest match. Comment lines start with a `#`. Empty lines are ignored.
+
+.Gazeteer example
+----
+# This is a comment
+Obama	PER
+Barack Obama	PER
+Illinois	LOC
+Illinois State Senate	ORG	
+Hawaii	LOC	
+Indonesia	LOC
+----
