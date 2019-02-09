@@ -64,9 +64,9 @@ public class SelectionTask
     private @Autowired ApplicationEventPublisher appEventPublisher;
     private @Autowired SchedulingService schedulingService;
 
-    public SelectionTask(Project aProject, User aUser)
+    public SelectionTask(Project aProject, User aUser, String aTrigger)
     {
-        super(aUser, aProject);
+        super(aUser, aProject, aTrigger);
     }
 
     @Override
@@ -173,7 +173,8 @@ public class SelectionTask
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
 
-        schedulingService.enqueue(new TrainingTask(user, getProject()));
+        schedulingService.enqueue(new TrainingTask(user, getProject(),
+                "SelectionTask after activating recommenders"));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)
