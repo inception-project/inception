@@ -30,6 +30,10 @@
       <artifactId>inception-log</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-support</artifactId>
+    </dependency>
+    <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
@@ -99,5 +103,6 @@
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
     </dependency>
+
   </dependencies>
 </project>
