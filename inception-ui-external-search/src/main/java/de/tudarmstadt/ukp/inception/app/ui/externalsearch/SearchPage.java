@@ -23,6 +23,7 @@ import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RestartResponseException;
@@ -273,7 +274,11 @@ public class SearchPage extends ApplicationPageBase
             
             String documentTitle = result.getDocumentTitle();
 
-            String highlight = Utilities.cleanHighlight(result.getHighlights().get(0));
+            Optional<String> highlightOptional = result.getHighlights().get(0).getHighlight();
+            if (highlightOptional.isPresent()) {
+                String highlight = Utilities.cleanHighlight(highlightOptional.get());
+                add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            }
             
             LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()
@@ -292,7 +297,6 @@ public class SearchPage extends ApplicationPageBase
             add(link);
 
             add(new Label("score", result.getScore()));
-            add(new Label("highlight", highlight).setEscapeModelStrings(false));
             add(new Label("importStatus", () ->
                     existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
