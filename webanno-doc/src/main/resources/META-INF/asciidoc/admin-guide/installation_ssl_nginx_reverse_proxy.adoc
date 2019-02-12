@@ -2,11 +2,11 @@
 
 By now you should have
 
-* WebAnno running on port 18080
+* {product-name} running on port 18080
 * NGINX running with default configurations on port 80
 * your issued SSL certificates
 
-We will now configure NGINX to proxy pass all traffic received at `example.com/webanno` to our WebAnno instance.
+We will now configure NGINX to proxy pass all traffic received at `example.com/webanno` to our {product-name} instance.
 
 Create a new virtual host for your domain. Inside of `/etc/nginx-sites-available/` create a new file for your domain (e.g. `example.com`). Paste the following contents:
 ----
@@ -100,9 +100,15 @@ If the config works restart the webserver to enable the new site
 $ service nginx restart
 ----
 
+<<<<<<< HEAD:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/ssl_webanno_behind_nginx.adoc
 = Tell WebAnno that it is running behind a proxy
 
 Edit the WebAnno `server.xml` file at `/opt/webanno/conf/server.xml` and insert the following `<Valve>` property into the `<Host>` block:
+=======
+= Tell {product-name} that it is running behind a proxy
+
+Edit the {product-name} `server.xml` file at `/opt/webanno/conf/server.xml` and insert the following `<Valve>` property into the `<Host>` block:
+>>>>>>> 0d6e15e44... #1204 - Documentation: Secure WebAnno with SSL:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/installation_ssl_nginx_reverse_proxy.adoc
 
 ----
       <Host>
@@ -123,9 +129,17 @@ Edit the WebAnno `server.xml` file at `/opt/webanno/conf/server.xml` and insert 
 </Server>
 ----
 
+<<<<<<< HEAD:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/ssl_webanno_behind_nginx.adoc
 Restart WebAnno
+=======
+Restart {product-name}
+>>>>>>> 0d6e15e44... #1204 - Documentation: Secure WebAnno with SSL:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/installation_ssl_nginx_reverse_proxy.adoc
 ----
 $ service webanno restart
 ----
 
+<<<<<<< HEAD:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/ssl_webanno_behind_nginx.adoc
 WebAnno now knows how to interpret the proxy header fields from NGINX. With this step, everything is now set up to access WebAnno trough a secure https connection.
+=======
+{product-name} now knows how to interpret the proxy header fields from NGINX. With this step, everything is now set up to access {product-name} trough a secure https connection.
+>>>>>>> 0d6e15e44... #1204 - Documentation: Secure WebAnno with SSL:webanno-doc/src/main/resources/META-INF/asciidoc/admin-guide/installation_ssl_nginx_reverse_proxy.adoc
