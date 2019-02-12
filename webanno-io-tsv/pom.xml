@@ -112,31 +112,12 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-io-xmi</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-dkprocore</artifactId>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <usedDependencies combine.children="append">
-              <!-- Not detected by Maven -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
     <plugins>
       <plugin>
         <!--generate types dynamically -->
