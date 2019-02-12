@@ -55,7 +55,6 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -64,6 +63,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import webanno.custom.Span;
 
@@ -1148,6 +1148,7 @@ public abstract class WebAnnoTsv3WriterTestBase
                 WebannoTsv3Writer.PARAM_LINK_TYPES, asList("webanno.custom.FlexLinkType"),
                 WebannoTsv3Writer.PARAM_SLOT_TARGETS, asList("webanno.custom.SimpleSpan"));
     }
+    
     @Test
     public void testSimpleSlotFeatureWithoutValues() throws Exception
     {
@@ -1680,6 +1681,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         params.addAll(asList(aParams));
         params.add(WebannoTsv3Writer.PARAM_TARGET_LOCATION);
         params.add(targetFolder);
+        params.add(WebannoTsv3Writer.PARAM_OVERWRITE);
+        params.add(true);
         
         AnalysisEngineDescription tsv = makeWriter();
         for (int i = 0; i < params.size(); i += 2) {
@@ -1691,7 +1694,8 @@ public abstract class WebAnnoTsv3WriterTestBase
         }
         
         AnalysisEngineDescription xmi = createEngineDescription(XmiWriter.class,
-                XmiWriter.PARAM_TARGET_LOCATION, targetFolder);
+                XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
+                XmiWriter.PARAM_OVERWRITE, true);
         
         SimplePipeline.runPipeline(aJCas, tsv, xmi);
         
