@@ -161,7 +161,7 @@ public class TrainingTask
                                 user.getUsername(), recommender.getName());
                     }
                 }
-                catch (Exception e) {
+                catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime), e);
                 }

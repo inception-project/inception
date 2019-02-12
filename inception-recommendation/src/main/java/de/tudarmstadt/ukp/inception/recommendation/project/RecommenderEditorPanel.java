@@ -323,8 +323,7 @@ public class RecommenderEditorPanel
 
         form.add(new LambdaAjaxLink(MID_DELETE, this::actionDelete)
                 .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() != null)));
-        form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel)
-                .onConfigure(_this -> _this.setVisible(form.getModelObject().getId() == null)));
+        form.add(new LambdaAjaxLink(MID_CANCEL, this::actionCancel));
 
         form.add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
         traitsContainer.setOutputMarkupPlaceholderTag(true);
@@ -390,6 +389,7 @@ public class RecommenderEditorPanel
         ) {
             autoGenerateNameCheckBox.setModelObject(true);
             autoUpdateName(null, nameField, recommenderModel.getObject());
+            statesForTraining.setObject(getAllPossibleDocumentStates());
         }
         else {
             autoGenerateNameCheckBox.setModelObject(false);
@@ -449,10 +449,10 @@ public class RecommenderEditorPanel
 
         recommendationService.createOrUpdateRecommender(recommender);
 
-        // Reset selection after saving
-        recommenderModel.setObject(null);
-        statesForTraining.setObject(getAllPossibleDocumentStates());
-
+        // Not clearing the selection / editor panel here because saving the recommender may
+        // cause additional UI elements to appear (e.g. options to upload pre-trained models
+        // which cannot be uploaded/saved before the recommender has been persisted).
+        
         // Reload whole page because master panel also needs to be reloaded.
         aTarget.add(getPage());
     }
