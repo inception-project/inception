@@ -31,7 +31,7 @@ public interface ExternalSearchService
     List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
             String aQuery);
 
-    ExternalSearchResult getDocumentById(User aUser, DocumentRepository aDocumentRepository,
+    String getDocumentText(DocumentRepository aDocumentRepository, String aCollectionId,
             String aId);
 
     List<DocumentRepository> listDocumentRepositories(Project aProject);
@@ -39,4 +39,6 @@ public interface ExternalSearchService
     void createOrUpdateDocumentRepository(DocumentRepository aDocumentRepository);
 
     void deleteDocumentRepository(DocumentRepository object);
+    
+    DocumentRepository getRepository(long aId);
 }

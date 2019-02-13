@@ -21,9 +21,9 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.RestartResponseException;
@@ -31,7 +31,6 @@ import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.markup.html.repeater.data.grid.ICellPopulator;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.AbstractColumn;
-import org.apache.wicket.extensions.markup.html.repeater.data.table.DataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.DefaultDataTable;
 import org.apache.wicket.extensions.markup.html.repeater.data.table.IColumn;
 import org.apache.wicket.feedback.IFeedback;
@@ -43,10 +42,10 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -54,13 +53,10 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -82,27 +78,17 @@ public class SearchPage extends ApplicationPageBase
     private static final Logger LOG = LoggerFactory.getLogger(SearchPage.class);
 
     private @SpringBean DocumentService documentService;
-    private @SpringBean ProjectService projectService;
     private @SpringBean ExternalSearchService externalSearchService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean ImportExportService importExportService;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
     private @SpringBean DocumentImporter documentImporter;
 
     private WebMarkupContainer dataTableContainer;
 
-    private List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
-
-    private IModel<String> targetQuery = Model.of("");
-
-    private IModel<List<DocumentRepository>> repositoriesModel;
-
-    private DocumentRepository currentRepository;
-
     private Project project;
 
     ExternalResultDataProvider dataProvider;
-
+    
     public SearchPage(PageParameters aParameters)
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
@@ -113,21 +99,6 @@ public class SearchPage extends ApplicationPageBase
         List<DocumentRepository> repositories = externalSearchService
                 .listDocumentRepositories(project);
 
-        if (repositories.size() > 0) {
-            currentRepository = repositories.get(0);
-        }
-        else {
-            currentRepository = null;
-        }
-
-        repositoriesModel = LoadableDetachableModel.of(() -> externalSearchService
-                        .listDocumentRepositories(project));
-
-
-        DocumentRepositorySelectionForm projectSelectionForm = new DocumentRepositorySelectionForm(
-                "repositorySelectionForm");
-        add(projectSelectionForm);
-
         SearchForm searchForm = new SearchForm("searchForm");
         add(searchForm);
 
@@ -135,6 +106,8 @@ public class SearchPage extends ApplicationPageBase
 
         columns.add(new AbstractColumn<ExternalSearchResult, String>(new Model<>("Results"))
         {
+            private static final long serialVersionUID = 3795885786416467291L;
+
             @Override
             public void populateItem(Item<ICellPopulator<ExternalSearchResult>> cellItem,
                     String componentId, IModel<ExternalSearchResult> model)
@@ -147,24 +120,22 @@ public class SearchPage extends ApplicationPageBase
             }
         });
 
-        dataProvider = new ExternalResultDataProvider(
-                externalSearchService, userRepository.getCurrentUser(), currentRepository, "merck");
+        dataProvider = new ExternalResultDataProvider(externalSearchService,
+                userRepository.getCurrentUser());
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
         dataTableContainer.setOutputMarkupId(true);
         add(dataTableContainer);
 
-        DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
-                columns, dataProvider, 8);
-
-        dataTableContainer.add(resultTable);
+        dataTableContainer.add(new DefaultDataTable<>("resultsTable", columns, dataProvider, 8));
     }
 
     private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
         try {
             documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
-                project, aResult.getDocumentTitle(), currentRepository);
+                    project, aResult.getCollectionId(), aResult.getDocumentId(),
+                    aResult.getRepository());
             aTarget.add(dataTableContainer);
         } catch (IOException e) {
             LOG.error(e.getMessage(), e);
@@ -172,91 +143,66 @@ public class SearchPage extends ApplicationPageBase
         }
     }
 
+    private class SearchFormModel implements Serializable
+    {
+        private static final long serialVersionUID = 4857333535866668775L;
+        
+        public DocumentRepository repository;
+        public String query;
+    }
+    
     private class SearchForm
-        extends Form<Void>
+        extends Form<SearchFormModel>
     {
         private static final long serialVersionUID = 2186231514180399862L;
 
         public SearchForm(String id)
         {
             super(id);
-            add(new TextField<>("queryInput", targetQuery, String.class));
+            
+            setModel(CompoundPropertyModel.of(new SearchFormModel()));
+            
+            DropDownChoice<DocumentRepository> repositoryCombo = 
+                    new BootstrapSelect<DocumentRepository>("repository");
+            repositoryCombo.setChoices(LoadableDetachableModel
+                    .of(() -> externalSearchService.listDocumentRepositories(project)));
+            repositoryCombo.setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
+            repositoryCombo.setNullValid(false);
+            add(repositoryCombo);
+            
+            if (!repositoryCombo.getChoices().isEmpty()) {
+                repositoryCombo.setModelObject(repositoryCombo.getChoices().get(0));
+            }
+            
+            add(new TextField<>("query", String.class));
+            
             LambdaAjaxSubmitLink searchLink = new LambdaAjaxSubmitLink("submitSearch",
                     this::actionSearch);
             add(searchLink);
             setDefaultButton(searchLink);
         }
         
-        private void actionSearch(AjaxRequestTarget aTarget, Form aForm)
+        private void actionSearch(AjaxRequestTarget aTarget, Form<?> aForm)
         {
-            if (targetQuery.getObject() == null) {
-                targetQuery.setObject("*.*");
+            SearchFormModel model = getModelObject();
+
+            try {
+                dataProvider.searchDocuments(model.repository, model.query);
+            }
+            catch (Exception e) {
+                LOG.error("Unable to perform query", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                aTarget.addChildren(getPage(), IFeedback.class);
             }
 
-            searchDocuments(targetQuery.getObject());
+            applicationEventPublisher.get()
+                    .publishEvent(new ExternalSearchQueryEvent(this, model.repository.getProject(),
+                            userRepository.getCurrentUser().getUsername(), model.query));
 
-            dataProvider.searchDocuments(targetQuery.getObject());
-            
             aTarget.add(dataTableContainer);
-            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
 
-    private void searchDocuments(String aQuery)
-    {
-        results.clear();
-        applicationEventPublisher.get()
-                .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
-                        userRepository.getCurrentUser().getUsername(), aQuery));
-
-        try {
-            for (ExternalSearchResult result : externalSearchService
-                    .query(userRepository.getCurrentUser(), currentRepository, aQuery)) {
-                results.add(result);
-            }
-        }
-        catch (Exception e) {
-            LOG.error("Unable to perform query", e);
-            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-        }
-    }
-
-    private class DocumentRepositorySelectionForm
-        extends
-        Form<DocumentRepository>
-    {
-        public DocumentRepositorySelectionForm(String aId)
-        {
-            super(aId);
-
-            DropDownChoice<DocumentRepository> repositoryCombo =
-                    new BootstrapSelect<DocumentRepository>(
-                    "repositoryCombo",
-                    new PropertyModel<DocumentRepository>(SearchPage.this, "currentRepository"),
-                    repositoriesModel)
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setChoiceRenderer(new ChoiceRenderer<DocumentRepository>("name"));
-                    setNullValid(false);
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            };
-            // Just update the selection
-            repositoryCombo.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-            add(repositoryCombo);
-
-        }
-
-        private static final long serialVersionUID = -1L;
-    }
-    
     private void abort() {
         throw new RestartResponseException(getApplication().getHomePage());
     }
@@ -274,22 +220,25 @@ public class SearchPage extends ApplicationPageBase
             
             String documentTitle = result.getDocumentTitle();
 
-            Optional<String> highlightOptional = result.getHighlights().get(0).getHighlight();
-            if (highlightOptional.isPresent()) {
-                String highlight = Utilities.cleanHighlight(highlightOptional.get());
-                add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            // FIXME: Should display all highlights
+            String highlight = "NO MATCH PREVIEW AVAILABLE";
+            if (!result.getHighlights().isEmpty()) {
+                highlight = Utilities.cleanHighlight(result.getHighlights().get(0).getHighlight());
             }
+            add(new Label("highlight", highlight).setEscapeModelStrings(false));
             
             LambdaAjaxLink link = new LambdaAjaxLink("titleLink", _target -> {
                 PageParameters pageParameters = new PageParameters()
-                    .add(DocumentDetailsPage.DOCUMENT_TITLE, documentTitle);
+                    .add(DocumentDetailsPage.REPOSITORY_ID, result.getRepository().getId())
+                    .add(DocumentDetailsPage.COLLECTION_ID, result.getCollectionId())
+                    .add(DocumentDetailsPage.DOCUMENT_ID, result.getDocumentId());
                 setResponsePage(DocumentDetailsPage.class, pageParameters);
 
             });
             
             String title = defaultIfBlank(result.getDocumentTitle(),
                             defaultIfBlank(result.getDocumentId(), 
-                            defaultIfBlank(result.getUri(), "<no title>")));
+                            defaultIfBlank(result.getOriginalUri(), "<no title>")));
             boolean existsSourceDocument = documentService.existsSourceDocument(project,
                     documentTitle);
             

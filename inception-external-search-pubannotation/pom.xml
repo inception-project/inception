@@ -1,5 +1,5 @@
 <!--
-  Copyright 2017
+  Copyright 2019
   Ubiquitous Knowledge Processing (UKP) Lab
   Technische Universität Darmstadt
 
@@ -22,8 +22,8 @@
     <artifactId>inception-app</artifactId>
     <version>0.8.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-external-search-elastic</artifactId>
-  <name>INCEpTION - External Search - Elastic Search</name>
+  <artifactId>inception-external-search-pubannotation</artifactId>
+  <name>INCEpTION - External Search - PubAnnotation</name>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>

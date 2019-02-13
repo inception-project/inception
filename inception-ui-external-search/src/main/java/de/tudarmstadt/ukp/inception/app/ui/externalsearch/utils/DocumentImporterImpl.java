@@ -56,24 +56,21 @@ public class DocumentImporterImpl
         externalSearchService = aExternalSearchService;
     }
 
-    /**
-     * @return a boolean value. True if import was successful. False if import was aborted because
-     *         the document already exists.
-     */
     @Override
     public boolean importDocumentFromDocumentRepository(User aUser, Project aProject,
-            String aDocumentTitle, DocumentRepository aRepository)
+            String aCollectionId, 
+            String aDocumentId, DocumentRepository aRepository)
         throws IOException
     {
-        String text = externalSearchService.getDocumentById(aUser, aRepository, aDocumentTitle)
-            .getText();
+        String text = externalSearchService.getDocumentText(aRepository, aCollectionId,
+                aDocumentId);
 
-        if (documentService.existsSourceDocument(aProject, aDocumentTitle)) {
+        if (documentService.existsSourceDocument(aProject, aDocumentId)) {
             return false;
         }
 
         SourceDocument document = new SourceDocument();
-        document.setName(aDocumentTitle);
+        document.setName(aDocumentId);
         document.setProject(aProject);
         document.setFormat(PLAIN_TEXT);
 
@@ -81,7 +78,7 @@ public class DocumentImporterImpl
             documentService.uploadSourceDocument(is, document);
         }
         catch (IOException | UIMAException e) {
-            throw new IOException("Unable to retrieve document [" + aDocumentTitle + "]", e);
+            throw new IOException("Unable to retrieve document [" + aDocumentId + "]", e);
         }
         
         return true;

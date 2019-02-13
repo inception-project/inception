@@ -1,6 +1,6 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic;
+package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
@@ -31,21 +31,21 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.config.ElasticSearchDocumentRepositoryAutoConfiguration;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraitsEditor;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.config.PubAnnotationDocumentRepositoryAutoConfiguration;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraitsEditor;
 
 /**
- * Support for ElasticSearch-based document repositories.
+ * Support for PubAnnotation.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ElasticSearchDocumentRepositoryAutoConfiguration#elasticSearchProviderFactory}.
+ * {@link PubAnnotationDocumentRepositoryAutoConfiguration#pubAnnotationProviderFactory}.
  * </p>
  */
 @Order(100)
-public class ElasticSearchProviderFactory
-    implements BeanNameAware, ExternalSearchProviderFactory<ElasticSearchProviderTraits>
+public class PubAnnotationProviderFactory
+    implements BeanNameAware, ExternalSearchProviderFactory<PubAnnotationProviderTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -66,27 +66,27 @@ public class ElasticSearchProviderFactory
     @Override
     public String getDisplayName()
     {
-        return "Elastic Search";
+        return "PubAnnotation";
     }
 
     @Override
     public ExternalSearchProvider getNewExternalSearchProvider()
     {
-        return new ElasticSearchProvider(); 
+        return new PubAnnotationProvider(); 
     }
 
     @Override
     public Panel createTraitsEditor(String aId, IModel<DocumentRepository> aDocumentRepository)
     {
-        return new ElasticSearchProviderTraitsEditor(aId, aDocumentRepository);
+        return new PubAnnotationProviderTraitsEditor(aId, aDocumentRepository);
     }
 
     @Override
-    public ElasticSearchProviderTraits readTraits(DocumentRepository aDocumentRepository)
+    public PubAnnotationProviderTraits readTraits(DocumentRepository aDocumentRepository)
     {
-        ElasticSearchProviderTraits traits = null;
+        PubAnnotationProviderTraits traits = null;
         try {
-            traits = fromJsonString(ElasticSearchProviderTraits.class,
+            traits = fromJsonString(PubAnnotationProviderTraits.class,
                     aDocumentRepository.getProperties());
         }
         catch (IOException e) {
@@ -94,7 +94,7 @@ public class ElasticSearchProviderFactory
         }
 
         if (traits == null) {
-            traits = new ElasticSearchProviderTraits();
+            traits = new PubAnnotationProviderTraits();
         }
 
         return traits;
@@ -102,7 +102,7 @@ public class ElasticSearchProviderFactory
 
     @Override
     public void writeTraits(DocumentRepository aDocumentRepository,
-            ElasticSearchProviderTraits aProperties)
+            PubAnnotationProviderTraits aProperties)
     {
         try {
             String json = toJsonString(aProperties);
