@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -104,7 +105,8 @@ public class ExternalResultDataProvider
     {
         results.clear();
         
-        if (aQuery.isEmpty()) {
+        // No query, no results
+        if (StringUtils.isBlank(aQuery)) {
             return;
         }
 
