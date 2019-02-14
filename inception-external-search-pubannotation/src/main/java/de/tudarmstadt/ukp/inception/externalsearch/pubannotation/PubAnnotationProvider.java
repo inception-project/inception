@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -51,8 +52,8 @@ public class PubAnnotationProvider
         
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<List<PubAnnotationDocumentHandle>> response = restTemplate.exchange(
-                aTraits.getUrl() + "/docs.json", HttpMethod.GET, null, new DocumentHandleList(),
-                params);
+                aTraits.getUrl() + "/docs.json?keywords={keywords}", HttpMethod.GET, null,
+                new DocumentHandleList(), params);
         
         List<ExternalSearchResult> results = new ArrayList<>();
         for (PubAnnotationDocumentHandle handle : response.getBody()) {
@@ -71,21 +72,28 @@ public class PubAnnotationProvider
             PubAnnotationProviderTraits aTraits, String aSource, String aId)
     {
         RestTemplate restTemplate = new RestTemplate();
+
+        Map<String, String> variables = new HashMap<>();
+        variables.put("source", aSource);
+        variables.put("documentId", aId);
         
+        // HACK: https://github.com/pubannotation/pubannotation/issues/4
         String text;
         try {
+            // If the document has multiple sections, a list is returned...
             ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(
-                    aTraits.getUrl() + "/docs/sourcedb/" + aSource + "/sourceid/" + aId + ".json",
-                    HttpMethod.GET, null, new DocumentSectionList());
+                    aTraits.getUrl() + "/docs/sourcedb/{source}/sourceid/{documentId}.json",
+                    HttpMethod.GET, null, new DocumentSectionList(), variables);
             
             text = response.getBody().stream()
                     .map(PubAnnotationDocumentSection::getText)
                     .collect(Collectors.joining("\n\n"));
         }
         catch (RestClientException e) {
+            // If the document has as single section, an object is returned...
             PubAnnotationDocumentSection section = restTemplate.getForObject(
-                    aTraits.getUrl() + "/docs/sourcedb/" + aSource + "/sourceid/" + aId + ".json",
-                    PubAnnotationDocumentSection.class);
+                    aTraits.getUrl() + "/docs/sourcedb/{source}/sourceid/{documentId}.json",
+                    PubAnnotationDocumentSection.class, variables);
             
             text = section.getText();
         }
