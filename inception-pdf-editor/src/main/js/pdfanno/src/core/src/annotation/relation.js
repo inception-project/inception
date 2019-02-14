@@ -311,6 +311,25 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
+// BEGIN INCEpTION EXTENSION - #880 - Selection of relations in PDF editor
+    if (this.selected) {
+      var data = {
+        "action": "selectRelation",
+        "id": this.uuid,
+        "origin": this.rel1Annotation.uuid,
+        "target": this.rel2Annotation.uuid
+      }
+      parent.Wicket.Ajax.ajax({
+        "m": "POST",
+        "ep": data,
+        "u": window.apiUrl,
+        "sh": [],
+        "fh": [function () {
+          console.log('Something went wrong on selecting a relation annotation for: ' + data)
+        }]
+      });
+    }
+// END INCEpTION EXTENSION
   }
 
   /**
