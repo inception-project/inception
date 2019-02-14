@@ -44,7 +44,12 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   static newInstance (annotation) {
     let a            = new RelationAnnotation()
+// BEGIN INCEpTION EXTENSION - #593 - add pdfanno sources
+/*
+    a.uuid           = uuid()
+*/
     a.uuid           = annotation.uuid || uuid()
+// END INCEpTION EXTENSION
     // a.direction      = annotation.direction
     a.direction      = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
