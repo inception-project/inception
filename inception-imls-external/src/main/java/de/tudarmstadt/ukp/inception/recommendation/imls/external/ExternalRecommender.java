@@ -302,4 +302,10 @@ public class ExternalRecommender
     {
         return Optional.empty();
     }
+    
+    @Override
+    public boolean requiresTraining()
+    {
+        return traits.isTrainable();
+    }
 }
