@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchUserStateMetaData.CURRENT_ES_USER_STATE;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,7 +209,7 @@ public class ExternalSearchAnnotationSidebar
         // highlight keywords if a document is selected from result list
         // and it is the current document opened
         if (searchState.getSelectedResult() != null &&
-            (searchState.getSelectedResult().getDocumentTitle().equals(
+            (searchState.getSelectedResult().getDocumentId().equals(
                 getAnnotationPage().getModelObject().getDocument().getName()))) {
             highlightKeywords(aEvent.getState(), aEvent.getVDocument());
         } else {
@@ -244,25 +243,43 @@ public class ExternalSearchAnnotationSidebar
 
     private void actionImport(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
         searchStateModel.getObject().setSelectedResult(aResult);
         try {
-            documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
-                    project, aResult.getCollectionId(), aResult.getDocumentId(), currentRepository);
+            boolean imported = documentImporter.importDocumentFromDocumentRepository(
+                    userRepository.getCurrentUser(), project, aResult.getCollectionId(),
+                    aResult.getDocumentId(), currentRepository);
+            
+            if (imported) {
+                success("Imported document: " + aResult.getDocumentId());
+            }
+            else {
+                info("Document already present: " + aResult.getDocumentId());
+            }
 
             getAnnotationPage().actionShowSelectedDocument(aTarget,
-                    documentService.getSourceDocument(project, aResult.getDocumentTitle()));
+                    documentService.getSourceDocument(project, aResult.getDocumentId()));
         }
-        catch (IOException e) {
-            LOG.error("{}", e.getMessage(), e);
-            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+        catch (Exception e) {
+            LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
+            error("Unable to load document " + aResult.getDocumentId() + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
         }
     }
 
     private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
-        searchStateModel.getObject().setSelectedResult(aResult);
-        getAnnotationPage().actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(project, aResult.getDocumentTitle()));
+        try {
+            searchStateModel.getObject().setSelectedResult(aResult);
+            getAnnotationPage().actionShowSelectedDocument(aTarget,
+                    documentService.getSourceDocument(project, aResult.getDocumentId()));
+        }
+        catch (Exception e) {
+            LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
+            error("Unable to load document " + aResult.getDocumentId() + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private class DocumentRepositorySelectionForm
@@ -339,7 +356,7 @@ public class ExternalSearchAnnotationSidebar
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
             boolean existsSourceDocument = documentService.existsSourceDocument(project,
-                    result.getDocumentTitle());
+                    result.getDocumentId());
 
             // Import and open annotation
             LambdaAjaxLink link;

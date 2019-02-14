@@ -89,18 +89,14 @@ public class SearchPage extends ApplicationPageBase
 
     ExternalResultDataProvider dataProvider;
     
-    public SearchPage(PageParameters aParameters)
+    public SearchPage()
     {
         project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
         if (project == null) {
             abort();
         }
 
-        List<DocumentRepository> repositories = externalSearchService
-                .listDocumentRepositories(project);
-
-        SearchForm searchForm = new SearchForm("searchForm");
-        add(searchForm);
+        add(new SearchForm("searchForm"));
 
         List<IColumn<ExternalSearchResult, String>> columns = new ArrayList<>();
 
@@ -218,8 +214,6 @@ public class SearchPage extends ApplicationPageBase
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
             
-            String documentTitle = result.getDocumentTitle();
-
             // FIXME: Should display all highlights
             String highlight = "NO MATCH PREVIEW AVAILABLE";
             if (!result.getHighlights().isEmpty()) {
@@ -240,7 +234,7 @@ public class SearchPage extends ApplicationPageBase
                             defaultIfBlank(result.getDocumentId(), 
                             defaultIfBlank(result.getOriginalUri(), "<no title>")));
             boolean existsSourceDocument = documentService.existsSourceDocument(project,
-                    documentTitle);
+                    result.getDocumentId());
             
             link.add(new Label("title", title));
             add(link);
@@ -254,7 +248,7 @@ public class SearchPage extends ApplicationPageBase
                 PageParameters pageParameters = new PageParameters()
                     .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
                     .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
-                        documentService.getSourceDocument(project, documentTitle).getId());
+                        documentService.getSourceDocument(project, result.getDocumentId()).getId());
                 setResponsePage(AnnotationPage.class, pageParameters);
             }).add(
                 visibleWhen(() -> existsSourceDocument)));
