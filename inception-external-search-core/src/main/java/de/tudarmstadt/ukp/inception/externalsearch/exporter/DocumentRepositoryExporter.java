@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.exporter;
 
-import static java.util.Arrays.asList;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.LayerExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
@@ -51,18 +48,6 @@ public class DocumentRepositoryExporter implements ProjectExporter {
     public DocumentRepositoryExporter(ExternalSearchService aExternalSearchService)
     {
         externalSearchService = aExternalSearchService;
-    }
-    
-    @Override
-    public List<Class<? extends ProjectExporter>> getImportDependencies()
-    {
-        return asList(LayerExporter.class);
-    }
-    
-    @Override
-    public List<Class<? extends ProjectExporter>> getExportDependencies()
-    {
-        return asList(LayerExporter.class);
     }
     
     @Override
