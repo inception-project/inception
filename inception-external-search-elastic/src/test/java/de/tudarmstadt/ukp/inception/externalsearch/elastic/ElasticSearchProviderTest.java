@@ -61,6 +61,6 @@ public class ElasticSearchProviderTest
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        sut.getDocumentById(repo, traits, "common-crawl-en", "TcBhiGABg9im2MD5uAjq");
+        sut.getDocumentText(repo, traits, "common-crawl-en", "TcBhiGABg9im2MD5uAjq");
     }
 }

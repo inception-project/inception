@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
+
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
@@ -32,9 +37,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.format.PubAnnotationSectionsFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentSection;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
@@ -48,17 +55,18 @@ public class PubAnnotationProvider
     public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
             PubAnnotationProviderTraits aTraits, String aQuery)
     {
-        Map<String, String> params = Collections.singletonMap("keywords", aQuery);
+        Map<String, String> variables = new HashMap<>();
+        variables.put("keywords", aQuery);
         
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<List<PubAnnotationDocumentHandle>> response = restTemplate.exchange(
                 aTraits.getUrl() + "/docs.json?keywords={keywords}", HttpMethod.GET, null,
-                new DocumentHandleList(), params);
+                new DocumentHandleList(), variables);
         
         List<ExternalSearchResult> results = new ArrayList<>();
         for (PubAnnotationDocumentHandle handle : response.getBody()) {
             ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
-                    handle.getSourceDb(), handle.getSourceId());
+                    handle.getSourceDb(), handle.getSourceId() + ".json");
             result.setOriginalSource(handle.getSourceDb());
             result.setDocumentTitle(handle.getUrl());
             results.add(result);
@@ -68,43 +76,59 @@ public class PubAnnotationProvider
     }
 
     @Override
-    public String getDocumentById(DocumentRepository aDocumentRepository,
-            PubAnnotationProviderTraits aTraits, String aSource, String aId)
+    public String getDocumentText(DocumentRepository aDocumentRepository,
+            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
+        return getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId).stream()
+                .map(PubAnnotationDocumentSection::getText)
+                .collect(Collectors.joining("\n\n"));
+    }
+
+    @Override
+    public InputStream getDocumentAsStream(DocumentRepository aDocumentRepository,
+            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
+        throws IOException
+    {
+        String json = JSONUtil.toJsonString(
+                getSections(aDocumentRepository, aTraits, aCollectionId, aDocumentId));
+
+        return IOUtils.toInputStream(json, UTF_8);
+    }
+
+    private List<PubAnnotationDocumentSection> getSections(DocumentRepository aDocumentRepository,
+            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
+    {
+        Map<String, String> variables = new HashMap<>();
+        variables.put("collectionId", aCollectionId);
+        variables.put("documentId", aDocumentId);
+ 
         RestTemplate restTemplate = new RestTemplate();
 
-        Map<String, String> variables = new HashMap<>();
-        variables.put("source", aSource);
-        variables.put("documentId", aId);
-        
-        // HACK: https://github.com/pubannotation/pubannotation/issues/4
-        String text;
         try {
             // If the document has multiple sections, a list is returned...
             ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(
-                    aTraits.getUrl() + "/docs/sourcedb/{source}/sourceid/{documentId}.json",
-                    HttpMethod.GET, null, new DocumentSectionList(), variables);
-            
-            text = response.getBody().stream()
-                    .map(PubAnnotationDocumentSection::getText)
-                    .collect(Collectors.joining("\n\n"));
+                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
+                    HttpMethod.GET, null, PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF,
+                    variables);
+           
+            return response.getBody();
         }
         catch (RestClientException e) {
             // If the document has as single section, an object is returned...
             PubAnnotationDocumentSection section = restTemplate.getForObject(
-                    aTraits.getUrl() + "/docs/sourcedb/{source}/sourceid/{documentId}.json",
+                    aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
                     PubAnnotationDocumentSection.class, variables);
             
-            text = section.getText();
+            return asList(section);
         }
-
-        return text;
     }
-
-    private static class DocumentSectionList
-        extends ParameterizedTypeReference<List<PubAnnotationDocumentSection>>
+    
+    @Override
+    public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
+            String aCollectionId, String aDocumentId)
+        throws IOException
     {
-        // Just a type reference
+        return PubAnnotationSectionsFormatSupport.ID;
     }
 
     private static class DocumentHandleList

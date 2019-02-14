@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import java.io.IOException;
+
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -43,7 +45,6 @@ public class DocumentDetailsPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
-
     public DocumentDetailsPage(PageParameters aParameters)
     {
         StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
@@ -69,8 +70,14 @@ public class DocumentDetailsPage
                 return;
             }
             
-            String documentText = externalSearchService.getDocumentText(repo,
-                    collectionIdStringValue.toString(), documentIdStringValue.toString());
+            String documentText;
+            try {
+                documentText = externalSearchService.getDocumentText(repo,
+                        collectionIdStringValue.toString(), documentIdStringValue.toString());
+            }
+            catch (IOException e) {
+                documentText = e.getMessage();
+            }
 
             // FIXME: Instead of showing the document ID, we should fetch the document metadata
             // and show the title.

@@ -17,9 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
-import java.util.ArrayList;
-import java.util.List;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
@@ -27,6 +34,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
@@ -154,7 +162,7 @@ public class ElasticSearchProvider
     }
 
     @Override
-    public String getDocumentById(DocumentRepository aRepository,
+    public String getDocumentText(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
     {
         if (!aCollectionId.equals(aTraits.getIndexName())) {
@@ -162,16 +170,48 @@ public class ElasticSearchProvider
                     "Requested collection name does not match connection collection name");
         }
         
-        String remoteUrl = aTraits.getRemoteUrl();
-        String indexName = aTraits.getIndexName();
-        String objectType = aTraits.getObjectType();
-        RestTemplate restTemplate = new RestTemplate();
-
-        String getUrl = remoteUrl + "/" + indexName + "/" + objectType + "/" + aDocumentId;
-
+        Map<String, String> variables = new HashMap<>();
+        variables.put("index", aTraits.getIndexName());
+        variables.put("object", aTraits.getObjectType());
+        variables.put("documentId", aDocumentId);
+        
         // Send get query
-        ElasticSearchHit document = restTemplate.getForObject(getUrl, ElasticSearchHit.class);
+        RestTemplate restTemplate = new RestTemplate();
+        ElasticSearchHit document = restTemplate.getForObject(
+                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
+                variables);
 
         return document.get_source().getDoc().getText();
+    }
+
+    @Override
+    public InputStream getDocumentAsStream(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+    {
+        if (!aCollectionId.equals(aTraits.getIndexName())) {
+            throw new IllegalArgumentException(
+                    "Requested collection name does not match connection collection name");
+        }
+        
+        Map<String, String> variables = new HashMap<>();
+        variables.put("index", aTraits.getIndexName());
+        variables.put("object", aTraits.getObjectType());
+        variables.put("documentId", aDocumentId);
+        
+        // Send get query
+        RestTemplate restTemplate = new RestTemplate();
+        ElasticSearchHit document = restTemplate.getForObject(
+                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
+                variables);
+
+        return IOUtils.toInputStream(document.get_source().getDoc().getText(), UTF_8);
+    }
+    
+    @Override
+    public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
+            String aCollectionId, String aDocumentId)
+        throws IOException
+    {
+        return TextFormatSupport.ID;
     }
 }

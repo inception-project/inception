@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -26,6 +28,15 @@ public interface ExternalSearchProvider<T extends Object>
     List<ExternalSearchResult> executeQuery(DocumentRepository aRepository, T aTraits,
             String aQuery);
 
-    String getDocumentById(DocumentRepository aRepository, T aTraits, String aSource,
-            String aDocumentId);
+    String getDocumentText(DocumentRepository aRepository, T aTraits, String aSource,
+            String aDocumentId)
+        throws IOException;
+
+    InputStream getDocumentAsStream(DocumentRepository aRepository, T aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
+
+    String getDocumentFormat(DocumentRepository aRepository, Object aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 }

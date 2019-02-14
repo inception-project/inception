@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -128,6 +130,7 @@ public class ExternalSearchServiceImpl
     @Override
     public String getDocumentText(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)
+        throws IOException
     {
         ExternalSearchProviderFactory factory = externalSearchProviderRegistry
                 .getExternalSearchProviderFactory(aRepository.getType());
@@ -136,6 +139,36 @@ public class ExternalSearchServiceImpl
 
         Object traits = factory.readTraits(aRepository);
 
-        return provider.getDocumentById(aRepository, traits, aCollectionId, aDocumentId);
+        return provider.getDocumentText(aRepository, traits, aCollectionId, aDocumentId);
+    }
+
+    @Override
+    public InputStream getDocumentAsStream(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentAsStream(aRepository, traits, aCollectionId, aDocumentId);
+    }
+
+    @Override
+    public String getDocumentFormat(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+                .getExternalSearchProviderFactory(aRepository.getType());
+
+        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+
+        Object traits = factory.readTraits(aRepository);
+
+        return provider.getDocumentFormat(aRepository, traits, aCollectionId, aDocumentId);
     }
 }

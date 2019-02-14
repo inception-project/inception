@@ -17,9 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 
+import org.springframework.core.ParameterizedTypeReference;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+
+@JsonInclude(Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class PubAnnotationDocumentSection
 {
@@ -100,4 +108,15 @@ public class PubAnnotationDocumentSection
     {
         sourceUrl = aSourceUrl;
     }
+
+    public static TypeReference<List<PubAnnotationDocumentSection>> JACKSON_LIST_TYPE_REF = 
+            new TypeReference<List<PubAnnotationDocumentSection>>()
+    {
+    };
+
+    public static ParameterizedTypeReference<List<PubAnnotationDocumentSection>> 
+            SPRING_LIST_TYPE_REF = 
+            new ParameterizedTypeReference<List<PubAnnotationDocumentSection>>()
+    {
+    };
 }

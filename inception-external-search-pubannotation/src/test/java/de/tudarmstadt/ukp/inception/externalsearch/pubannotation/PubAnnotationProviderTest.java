@@ -57,7 +57,7 @@ public class PubAnnotationProviderTest
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        String text = sut.getDocumentById(repo, traits, "PMC", "1064873");
+        String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
         
         System.out.println(text);
         

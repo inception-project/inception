@@ -17,10 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 
 import org.apache.uima.UIMAException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,9 +60,6 @@ public class DocumentImporterImpl
             String aDocumentId, DocumentRepository aRepository)
         throws IOException
     {
-        String text = externalSearchService.getDocumentText(aRepository, aCollectionId,
-                aDocumentId);
-
         if (documentService.existsSourceDocument(aProject, aDocumentId)) {
             return false;
         }
@@ -72,9 +67,11 @@ public class DocumentImporterImpl
         SourceDocument document = new SourceDocument();
         document.setName(aDocumentId);
         document.setProject(aProject);
-        document.setFormat(PLAIN_TEXT);
+        document.setFormat(externalSearchService.getDocumentFormat(aRepository, aCollectionId,
+                aDocumentId));
 
-        try (InputStream is = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8))) {
+        try (InputStream is = externalSearchService.getDocumentAsStream(aRepository, aCollectionId,
+                aDocumentId)) {
             documentService.uploadSourceDocument(is, document);
         }
         catch (IOException | UIMAException e) {
