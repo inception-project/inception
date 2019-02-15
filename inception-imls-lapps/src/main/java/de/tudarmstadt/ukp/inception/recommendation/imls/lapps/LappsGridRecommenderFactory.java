@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -29,14 +29,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
 @Component
-public class LappsRecommenderFactory
-    extends RecommendationEngineFactoryImplBase<LappsRecommenderTraits>
+public class LappsGridRecommenderFactory
+    extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
-    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsRecommender";
+    public static final String ID = "de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommender";
 
     @Override
     public String getId()
@@ -47,14 +49,14 @@ public class LappsRecommenderFactory
     @Override
     public RecommendationEngine build(Recommender aRecommender)
     {
-        LappsRecommenderTraits traits = readTraits(aRecommender);
-        return new LappsRecommender(aRecommender, traits);
+        LappsGridRecommenderTraits traits = readTraits(aRecommender);
+        return new LappsGridRecommender(aRecommender, traits);
     }
 
     @Override
     public String getName()
     {
-        return "Remote classifier";
+        return "LAPPS Grid recommender";
     }
 
     @Override
@@ -71,13 +73,13 @@ public class LappsRecommenderFactory
     @Override
     public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
-        return new LappsRecommenderTraitsEditor(aId, aModel);
+        return new LappsGridRecommenderTraitsEditor(aId, aModel);
     }
 
     @Override
-    public LappsRecommenderTraits createTraits()
+    public LappsGridRecommenderTraits createTraits()
     {
-        return new LappsRecommenderTraits();
+        return new LappsGridRecommenderTraits();
     }
 
     @Override

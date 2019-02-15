@@ -15,35 +15,44 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
+package de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits;
 
 import java.io.Serializable;
 
-public class LappsRecommenderTraits
+public class LappsGridService
     implements Serializable
 {
-    private static final long serialVersionUID = -3109239605741337123L;
+    private String name;
+    private String description;
+    private String url;
 
-    private String remoteUrl;
-    private boolean trainable;
-
-    public String getRemoteUrl()
+    public String getName()
     {
-        return remoteUrl;
+        return name;
     }
 
-    public void setRemoteUrl(String aRemoteUrl)
+    public void setName(String aName)
     {
-        remoteUrl = aRemoteUrl;
+        name = aName;
     }
 
-    public boolean isTrainable()
+    public String getDescription()
     {
-        return trainable;
+        return description;
     }
 
-    public void setTrainable(boolean aTrainable)
+    public void setDescription(String aDescription)
     {
-        trainable = aTrainable;
+        description = aDescription;
+    }
+
+    public String getUrl()
+    {
+        return url;
+    }
+
+    public void setUrl(String aUrl)
+    {
+        url = aUrl;
     }
 }

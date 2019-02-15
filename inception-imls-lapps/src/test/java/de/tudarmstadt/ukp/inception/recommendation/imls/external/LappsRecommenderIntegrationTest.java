@@ -44,19 +44,19 @@ import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommender;
 
 public class LappsRecommenderIntegrationTest
 {
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
-    private LappsRecommender sut;
+    private LappsGridRecommender sut;
 
     @Before
     public void setUp()
     {
-        sut = new LappsRecommender(buildRecommender(), null);
+        sut = new LappsGridRecommender(buildRecommender(), null);
     }
 
     @After
