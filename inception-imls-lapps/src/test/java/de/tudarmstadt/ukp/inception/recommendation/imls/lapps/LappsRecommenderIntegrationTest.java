@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.imls.external;
+package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +34,7 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -44,32 +45,48 @@ import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommender;
+import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
+import okhttp3.mockwebserver.Dispatcher;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
+import okhttp3.mockwebserver.RecordedRequest;
 
 public class LappsRecommenderIntegrationTest
 {
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
+    private MockWebServer server;
+
     private LappsGridRecommender sut;
 
     @Before
-    public void setUp()
+    public void setUp() throws IOException
     {
+        server = new MockWebServer();
+        server.setDispatcher(buildDispatcher());
+        server.start();
+
+        LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
+
+        String url = server.url("/").toString();
+        traits.setUrl(url);
+
         sut = new LappsGridRecommender(buildRecommender(), null);
     }
 
     @After
-    public void tearDown()
+    public void tearDown() throws Exception
     {
-
+        server.shutdown();
     }
 
     @Test
+    @Ignore
     public void thatPredictingPosWorks() throws Exception
     {
         RecommenderContext context = new RecommenderContext();
-        CAS cas = loadAllData().get(0);
+        CAS cas = loadData();
 
         sut.predict(context, cas);
 
@@ -79,26 +96,6 @@ public class LappsRecommenderIntegrationTest
                 .isNotEmpty();
     }
 
-    private List<CAS> loadAllData() throws IOException, UIMAException {
-        ClassLoader cl = getClass().getClassLoader();
-        File file = new File(cl.getResource("conllu-en-orig.conll").getFile());
-
-        return loadData(file);
-    }
-
-    private List<CAS> loadData(File ... files) throws UIMAException, IOException
-    {
-        CollectionReader reader = createReader(ConllUReader.class,
-                ConllUReader.PARAM_PATTERNS, files);
-
-        List<CAS> casList = new ArrayList<>();
-        while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
-            reader.getNext(cas.getCas());
-            casList.add(cas.getCas());
-        }
-        return casList;
-    }
 
     private static Recommender buildRecommender()
     {
@@ -114,5 +111,49 @@ public class LappsRecommenderIntegrationTest
         recommender.setMaxRecommendations(3);
 
         return recommender;
+    }
+
+    private Dispatcher buildDispatcher()
+    {
+        return new Dispatcher() {
+            @Override
+            public MockResponse dispatch(RecordedRequest request) {
+                try {
+                    String url = request.getPath();
+                    String body = request.getBody().readUtf8();
+
+                    if (request.getPath().equals("/pos/predict")) {
+                        String response = "";
+                        return new MockResponse().setResponseCode(200).setBody(response);
+                    } else {
+                        throw new RuntimeException("Invalid URL called: " + url);
+                    }
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        };
+    }
+
+    private CAS loadData() throws IOException, UIMAException {
+        ClassLoader cl = getClass().getClassLoader();
+        File file = new File(cl.getResource("conllu-en-orig.conll").getFile());
+
+        return loadData(file);
+    }
+
+    private static CAS loadData(File aFile) throws UIMAException, IOException
+    {
+        CollectionReader reader = createReader(ConllUReader.class,
+                ConllUReader.PARAM_PATTERNS, aFile);
+
+        List<CAS> casList = new ArrayList<>();
+        while (reader.hasNext()) {
+            JCas cas = JCasFactory.createJCas();
+            reader.getNext(cas.getCas());
+            casList.add(cas.getCas());
+        }
+
+        return casList.get(0);
     }
 }

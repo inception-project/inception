@@ -56,14 +56,14 @@ public class LappsGridRecommenderTraitsEditor
 
     private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
 
+    public static String NER_LAYER = NamedEntity.class.getName();
+    public static String NER_FEATURE = "value";
+    public static String POS_LAYER = POS.class.getName();
+    public static String POS_FEATURE = "PosValue";
+
     private static final String MID_FORM = "form";
     private static final String MID_SERVICES = "service";
     private static final String MID_URL = "url";
-
-    private static String NER_LAYER = NamedEntity.class.getName();
-    private static String NER_FEATURE = "value";
-    private static String POS_LAYER = POS.class.getName();
-    private static String POS_FEATURE = "PosValue";
 
     private @SpringBean LappsGridRecommenderFactory toolFactory;
 

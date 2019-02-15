@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.fit.util.JCasUtil;
 import org.lappsgrid.client.ServiceClient;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.serialization.Data;
@@ -31,7 +30,6 @@ import org.lappsgrid.serialization.lif.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.lif.internal.DKPro2Lif;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -65,10 +63,6 @@ public class LappsGridRecommender
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
         try {
-            for (Token t : JCasUtil.select(aCas.getJCas(), Token.class)) {
-                t.setPos(null);
-            }
-
             Container container = new Container();
             new DKPro2Lif().convert(aCas.getJCas(), container);
 

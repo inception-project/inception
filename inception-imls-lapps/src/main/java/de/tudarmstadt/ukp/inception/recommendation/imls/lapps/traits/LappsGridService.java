@@ -55,4 +55,15 @@ public class LappsGridService
     {
         url = aUrl;
     }
+
+    @Override
+    public String toString()
+    {
+        final StringBuffer sb = new StringBuffer("LappsGridService{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", description='").append(description).append('\'');
+        sb.append(", url='").append(url).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
 }

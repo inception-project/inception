@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
-import static java.util.Arrays.asList;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.NER_FEATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.NER_LAYER;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_FEATURE;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_LAYER;
 
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -62,12 +65,19 @@ public class LappsGridRecommenderFactory
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        if (aLayer == null || aFeature == null) {
+        if (aLayer == null || aFeature == null || !SPAN_TYPE.equals(aLayer.getType())) {
             return false;
         }
 
-        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS).contains(
-                aLayer.getAnchoringMode()) && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+        String layer = aLayer.getName();
+        String feature = aFeature.getName();
+        AnchoringMode anchoring = aLayer.getAnchoringMode();
+
+        boolean isNer = NER_LAYER.equals(layer) && NER_FEATURE.equals(feature);
+        boolean isPos = POS_LAYER.equals(layer) && POS_FEATURE.equals(feature);
+
+        return (isNer && anchoring == AnchoringMode.TOKENS) ||
+               (isPos && anchoring == AnchoringMode.SINGLE_TOKEN);
     }
 
     @Override
