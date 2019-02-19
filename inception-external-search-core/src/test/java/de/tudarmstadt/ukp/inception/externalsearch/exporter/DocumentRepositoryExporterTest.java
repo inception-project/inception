@@ -71,7 +71,7 @@ public class DocumentRepositoryExporterTest {
         
         // Check that after re-importing the exported projects, they are identical to the original
         assertThat(captor.getAllValues())
-                .usingFieldByFieldElementComparator()
+                .usingElementComparatorIgnoringFields("id")
                 .containsExactlyInAnyOrderElementsOf(documentRepositories());
     }
     

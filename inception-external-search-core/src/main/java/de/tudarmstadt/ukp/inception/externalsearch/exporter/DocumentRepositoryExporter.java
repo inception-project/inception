@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.externalsearch.exporter;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 import java.util.zip.ZipFile;
 
 import org.slf4j.Logger;
@@ -81,7 +80,6 @@ public class DocumentRepositoryExporter implements ProjectExporter {
     
         for (ExportedDocumentRepository exportedDocumentRepository : exportedDocumentRepositories) {
             DocumentRepository documentRepository = new DocumentRepository();
-            documentRepository.setId(new Random().nextLong());
             documentRepository.setName(exportedDocumentRepository.getName());
             documentRepository.setProperties(exportedDocumentRepository.getProperties());
             documentRepository.setType(exportedDocumentRepository.getType());
