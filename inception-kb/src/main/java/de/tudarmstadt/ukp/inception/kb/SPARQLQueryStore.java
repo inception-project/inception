@@ -450,22 +450,17 @@ public final class SPARQLQueryStore
      * <li>Items need to actually have a label. I.e. items which do not have a label and for which
      * {@link KBHandle#getUiLabel()} extracts a label from their subject IRI cannot be located.</li>
      * <li>The KB default language needs to match the language of the label.</li>
-     * <li>FIXME: Label sub-properties are currently <b>not</b> considered.</li>
      * </ul>
-     *
-     * @param aTypedString
-     *            typed string from the user
-     * @param aMention
-     *            the marked surface form
      * @param aKb
      *            the Knowledge Base
+     *
      * @return a query to retrieve candidate entities
      */
-    public static List<KBHandle> searchItemsExactLabelMatch(RepositoryConnection aConn,
-        String aTypedString, String aMention, KnowledgeBase aKb)
+    public static List<KBHandle> searchItemsExactLabelMatch(KnowledgeBase aKb,
+        RepositoryConnection aConn, String... aValues)
     {
         SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
-        builder.withLabelMatchingExactlyAnyOf(aMention, aTypedString);
+        builder.withLabelMatchingExactlyAnyOf(aValues);
         builder.retrieveLabel();
         builder.retrieveDescription();
         return builder.asHandles(aConn, true);
@@ -491,102 +486,38 @@ public final class SPARQLQueryStore
 //        tupleQuery.setBinding("pDESCRIPTION", aKb.getDescriptionIri());
     }
 
-//    private static String getFullTextMatchingQueryPartVirtuoso(int aLimit)
-//    {
-//        return  String.join("\n",
-//            "    SELECT DISTINCT ?s ?l ?d WHERE",
-//            "    {",
-//            "      ?s ?labelIri ?l .",
-//            "      ?l ?ftsIri ?query . ",
-//            "      OPTIONAL",
-//            "      {",
-//            "        ?s ?descriptionIri ?d.",
-//            "      }",
-//            "    }",
-//            "    LIMIT " + aLimit);
-//    }
-//
-//    // http://culturecloud.ru/resource/Help:Search#Full_Text_Search
-//    private static String getFullTextMatchingQueryPartLucene(int aLimit)
-//    {
-//        return  String.join("\n",
-//            "    SELECT DISTINCT ?s ?l ?d WHERE",
-//            "    {",
-//            "      ?s search:matches ?match .",
-//            "      ?match search:query ?query ;",
-//            "             search:property ?labelIri ;",
-//            "             search:snippet ?l",
-//            "      OPTIONAL",
-//            "      {",
-//            "        ?s ?descriptionIri ?d.",
-//            "      }",
-//            "    }",
-//            "    LIMIT " + aLimit);
-//    }
-
     /**
-     *
      * This query retrieves candidates via full-text matching of their labels and full-text-search
-     *
-     * @param aString String for which to perform full text search
-     * @param aLimit maximum number of results
      * @param aKb the Knowledge Base
+     * @param aString String for which to perform full text search
+     *
      * @return a query to retrieve candidate entities
      */
-    public static List<KBHandle> searchItemsStartingWith(RepositoryConnection aConn,
-        String aString, int aLimit, KnowledgeBase aKb)
+    public static List<KBHandle> searchItemsStartingWith(KnowledgeBase aKb,
+        RepositoryConnection aConn, String aString)
     {
         SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
         builder.withLabelStartingWith(aString);
         builder.retrieveLabel();
         builder.retrieveDescription();
         return builder.asHandles(aConn, true);
-        
-//        String string = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
-//        ValueFactory vf = SimpleValueFactory.getInstance();
-//        Literal searchLiteral;
-//        String fullTextMatchingString;
-//
-//        if (aKb.getFullTextSearchIri().equals(IriConstants.FTS_LUCENE)) {
-//            fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
-//            // add wildcard '*' to perform wildcard search
-//            searchLiteral = vf.createLiteral(string + "*");
-//        } else {
-//            fullTextMatchingString = getFullTextMatchingQueryPartVirtuoso(aLimit);
-//            
-//            StringBuilder queryString = new StringBuilder();
-//            // Virtuoso requires that strings are quoted if the contain spaces. We just always
-//            // quote them to be on the safe side.
-//            queryString.append("'");
-//            
-//            // Strip single quotes and asterisks because they have special semantics
-//            String query = string.replace("'", " ").replace("*", " ");
-//            queryString.append(query);
-//            
-//            // If the last token in the query has 4 chars or more, then we add an asterisk to
-//            // perform a prefix search. If we try that with less than 4 chars, Virtuoso will
-//            // send us back an error.
-//            String[] queryTokens = query.split(" ");
-//            if (queryTokens[queryTokens.length - 1].length() >= 4) {
-//                queryString.append("*");
-//            }
-//            
-//            queryString.append("'");
-//            
-//            searchLiteral = vf.createLiteral(queryString.toString());
-//        }
-//
-//        String query = String.join("\n", SPARQL_PREFIX, fullTextMatchingString);
-//
-//        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//        tupleQuery.setBinding("query", searchLiteral);
-//        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
-//            ? aKb.getDefaultLanguage() : "en"));
-//        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
-//        tupleQuery.setBinding("typeIri", aKb.getTypeIri());
-//        tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
-//        tupleQuery.setBinding("ftsIri", aKb.getFullTextSearchIri());
-//        return tupleQuery;
+    }
+    
+    /**
+     * This query retrieves candidates via full-text matching of their labels and full-text-search
+     *
+     * @param aKb
+     *            the Knowledge Base
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsContaining(KnowledgeBase aKb,
+            RepositoryConnection aConn, String... aValues)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelContainingAnyOf(aValues);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
     }
 
     /**

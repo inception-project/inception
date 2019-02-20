@@ -25,6 +25,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LCASE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -53,6 +54,7 @@ import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expression;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions;
+import org.eclipse.rdf4j.sparqlbuilder.constraint.Operand;
 import org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction;
 import org.eclipse.rdf4j.sparqlbuilder.core.Prefix;
 import org.eclipse.rdf4j.sparqlbuilder.core.Projectable;
@@ -114,6 +116,12 @@ public class SPARQLQueryBuilder
     
     private final KnowledgeBase kb;
     private final Mode mode;
+    
+    /**
+     * Case-insensitive mode is a best-effort approach. Depending on the underlying FTS, it may
+     * or may not work.
+     */
+    private boolean caseInsensitive = true;
     
     /**
      * This flag controls whether we attempt to drop duplicate labels and descriptions on the
@@ -210,6 +218,24 @@ public class SPARQLQueryBuilder
         else {
             return VAR_DESC_CANDIDATE;
         }
+    }
+
+    public SPARQLQueryBuilder caseSensitive()
+    {
+        caseInsensitive = false;
+        return this;
+    }
+
+    public SPARQLQueryBuilder caseSensitive(boolean aEnabled)
+    {
+        caseInsensitive = !aEnabled;
+        return this;
+    }
+
+    public SPARQLQueryBuilder caseInsensitive()
+    {
+        caseInsensitive = true;
+        return this;
     }
 
     /**
@@ -450,12 +476,14 @@ public class SPARQLQueryBuilder
                 continue;
             }
             
+            String sanitizedValue = value.replace('*', ' ').trim();
+            
             valuePatterns.add(VAR_SUBJECT
                     .has(pLabelFts,
-                            bNode(LUCENE_QUERY, literalOf(value))
+                            bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, sanitizedValue)));
         }
         
         return GraphPatterns.and(
@@ -602,33 +630,49 @@ public class SPARQLQueryBuilder
         
         List<Expression<?>> expressions = new ArrayList<>();
         
+        // If case-insensitive mode is enabled, then lower-case the strings
+        Operand variable = aVariable;
+        String value = aValue;
+        if (caseInsensitive) {
+            variable = function(LCASE, variable);
+            value = value.toLowerCase();
+        }
+        
         // Match with default language
         if (language != null) {
-            expressions.add(Expressions.equals(aVariable, literalOfLanguage(aValue, language)));
+            expressions.add(Expressions.equals(variable, literalOfLanguage(value, language)));
         }
         
         // Match without language
-        expressions.add(Expressions.equals(aVariable, literalOf(aValue)));
+        expressions.add(Expressions.equals(variable, literalOf(value)));
         
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable,
-            String aPrefixQuery)
+            String aValue)
     {
         String language = kb.getDefaultLanguage();
 
         List<Expression<?>> expressions = new ArrayList<>();
 
+        // If case-insensitive mode is enabled, then lower-case the strings
+        Operand variable = aVariable;
+        String value = aValue;
+        if (caseInsensitive) {
+            variable = function(LCASE, variable);
+            value = value.toLowerCase();
+        }
+        
         // Match with default language
         if (language != null) {
-            expressions.add(and(function(aFunction, aVariable, literalOf(aPrefixQuery)),
+            expressions.add(and(function(aFunction, variable, literalOf(value)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
         }
 
         // Match without language
-        expressions.add(function(aFunction, aVariable, literalOf(aPrefixQuery)));
+        expressions.add(function(aFunction, variable, literalOf(value)));
         
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
@@ -648,17 +692,21 @@ public class SPARQLQueryBuilder
         projections.add(getLabelProjection());
         
         String language = kb.getDefaultLanguage();
+        
         Iri labelProperty = mode.getLabelProperty(kb);
+
+        addPattern(PRIO_SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
         
         // Find all labels corresponding to the KB language
-        GraphPattern labelWithLang = optional(VAR_SUBJECT.has(labelProperty, VAR_LABEL_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), 
-                        literalOf(language))));
-        addPattern(PRIO_SECONDARY, labelWithLang);
+        if (language != null) {
+            addPattern(PRIO_SECONDARY,
+                    optional(VAR_SUBJECT.has(labelProperty, VAR_LABEL_CANDIDATE)
+                            .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE),
+                                    literalOf(language)))));
+        }
 
         // Find all descriptions without any language
-        GraphPattern labelNoLang = optional(VAR_SUBJECT.has(labelProperty, VAR_LABEL_CANDIDATE));
-        addPattern(PRIO_SECONDARY, labelNoLang);
+        addPattern(PRIO_SECONDARY, optional(VAR_SUBJECT.has(labelProperty, VAR_LABEL_CANDIDATE)));
         
         return this;
     }

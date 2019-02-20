@@ -416,7 +416,7 @@ public class KnowledgeBaseServiceRemoteTest
         long duration = System.currentTimeMillis();
         List<KBHandle> results;
         try (RepositoryConnection conn = sut.getConnection(kb)) {
-            results = SPARQLQueryStore.searchItemsExactLabelMatch(conn, aQuery, aMention, kb);
+            results = SPARQLQueryStore.searchItemsExactLabelMatch(kb, conn, aQuery, aMention);
         }
         duration = System.currentTimeMillis() - duration;
 

@@ -224,9 +224,8 @@ public class ConceptLinkingServiceImpl
         Set<CandidateEntity> candidates = new HashSet<>();
 
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            for (KBHandle handle : SPARQLQueryStore.searchItemsStartingWith(conn,
-                    aKey.getQuery(), properties.getCandidateQueryLimit(),
-                    aKey.getKnowledgeBase())) {
+            for (KBHandle handle : SPARQLQueryStore.searchItemsContaining(aKey.getKnowledgeBase(),
+                    conn, aKey.getQuery())) {
                 candidates.add(new CandidateEntity(handle.getIdentifier(), handle.getUiLabel(),
                         handle.getDescription(), handle.getLanguage()));
             }
@@ -276,7 +275,7 @@ public class ConceptLinkingServiceImpl
      * @param aTypedString typed string from the user
      * @param aMention the marked surface form, which is pre-processed first.
      */
-    public Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aConceptScope,
+    private Set<CandidateEntity> retrieveCandidatesExact(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aTypedString, String aMention)
     {
         Set<CandidateEntity> candidates = new HashSet<>();
@@ -294,8 +293,8 @@ public class ConceptLinkingServiceImpl
         // BEGIN: THIS CODE SHOULD MAKE USE OF THE FULL TEXT INDEX, BUT DOES CURRENTLY NOT
         // SEEM TO WORK
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            for (KBHandle handle : SPARQLQueryStore.searchItemsExactLabelMatch(conn, aTypedString,
-                    aMention, aKB)) {
+            for (KBHandle handle : SPARQLQueryStore.searchItemsContaining(aKB, conn,
+                    aTypedString, aMention)) {
                 candidates.add(new CandidateEntity(handle.getIdentifier(), handle.getUiLabel(),
                         handle.getDescription(), handle.getLanguage()));
             }

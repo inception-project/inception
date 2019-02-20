@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.parser.sparql.ast.ParseException;
@@ -43,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
+import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -95,9 +97,16 @@ public class SPARQLQueryBuilderTest
     {
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setType(RepositoryType.LOCAL);
+        kb.setClassIri(RDFS.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setPropertyLabelIri(RDFS.LABEL);
+        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
         
@@ -378,7 +387,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.contains("Tower"));
+                .allMatch(label -> label.toLowerCase().contains("tower"));
     }
 
     @Test
@@ -548,6 +557,27 @@ public class SPARQLQueryBuilderTest
                 throw e;
             }
         }
+    }
+    
+    @Test
+    public void testWithLabelContainingAnyOf_RDF4J_pets_ttl() throws Exception
+    {
+        importDataFromFile("src/test/resources/data/pets.ttl");
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
+        builder.withLabelContainingAnyOf("Socke");
+        builder.retrieveDescription();
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.contains("Socke"));
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "description", "language")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://mbugert.de/pets#socke", "Socke",
+                                "http://mbugert.de/pets#socke", null));
     }
     
     private void importDataFromFile(String aFilename) throws IOException
