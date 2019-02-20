@@ -267,11 +267,17 @@ public class SPARQLQueryBuilder
                 @Override
                 public String getQueryString()
                 {
+                    String language =  kb.getDefaultLanguage();
+                    
                     StringBuilder sb = new StringBuilder();
-                    sb.append("VALUES (").append(VAR_LABEL_CANDIDATE.getQueryString()).append(")");
-                    sb.append("{ (").append(literalOf(value).getQueryString()).append(") (");
-                    sb.append(literalOfLanguage(value, kb.getDefaultLanguage()).getQueryString());
-                    sb.append(") }\n");
+                    sb.append("VALUES (").append(VAR_LABEL_CANDIDATE.getQueryString()).append(") ");
+                    sb.append("{ ");
+                    sb.append("(").append(literalOf(value).getQueryString()).append(") ");
+                    if (language != null) {
+                        sb.append("(").append(literalOfLanguage(value, language).getQueryString())
+                                .append(") ");
+                    }
+                    sb.append("} ");
                     sb.append(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                             .getQueryString());
                     return sb.toString();
@@ -593,24 +599,38 @@ public class SPARQLQueryBuilder
             KnowledgeBase aKB)
     {
         String language = aKB.getDefaultLanguage();
-        return or(
-                // Match with default language
-                Expressions.equals(aVariable, literalOfLanguage(aValue, language)),
-                // Match without language
-                Expressions.equals(aVariable, literalOf(aValue)));
+        
+        List<Expression<?>> expressions = new ArrayList<>();
+        
+        // Match with default language
+        if (language != null) {
+            expressions.add(Expressions.equals(aVariable, literalOfLanguage(aValue, language)));
+        }
+        
+        // Match without language
+        expressions.add(Expressions.equals(aVariable, literalOf(aValue)));
+        
+        return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable,
             String aPrefixQuery)
     {
         String language = kb.getDefaultLanguage();
-        return or(
-                // Match with default language
-                and(function(aFunction, aVariable, literalOf(aPrefixQuery)),
-                        function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
-                                .parenthesize(),
-                // Match without language
-                function(aFunction, aVariable, literalOf(aPrefixQuery)));
+
+        List<Expression<?>> expressions = new ArrayList<>();
+
+        // Match with default language
+        if (language != null) {
+            expressions.add(and(function(aFunction, aVariable, literalOf(aPrefixQuery)),
+                    function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
+                            .parenthesize());
+        }
+
+        // Match without language
+        expressions.add(function(aFunction, aVariable, literalOf(aPrefixQuery)));
+        
+        return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
     public SPARQLQueryBuilder retrieveLabel()
@@ -656,14 +676,14 @@ public class SPARQLQueryBuilder
         Iri descProperty = mode.getDescriptionProperty(kb);
         
         // Find all descriptions corresponding to the KB language
-        GraphPattern descWithLang = optional(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
-                .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), 
-                        literalOf(language))));
-        addPattern(PRIO_SECONDARY, descWithLang);
+        if (language != null) {
+            addPattern(PRIO_SECONDARY, optional(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
+                    .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), 
+                            literalOf(language)))));
+        }
 
         // Find all descriptions without any language
-        GraphPattern descNoLang = optional(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
-        addPattern(PRIO_SECONDARY, descNoLang);
+        addPattern(PRIO_SECONDARY, optional(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)));
 
         return this;
     }
@@ -808,7 +828,7 @@ public class SPARQLQueryBuilder
     
     private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
-        Binding description = aSourceBindings.getBinding(SPARQLQueryBuilder.VAR_DESCRIPTION_NAME);
+        Binding description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
         Binding descGeneral = aSourceBindings.getBinding("descGeneral");
         if (description != null ) {
             aTargetHandle.setDescription(
