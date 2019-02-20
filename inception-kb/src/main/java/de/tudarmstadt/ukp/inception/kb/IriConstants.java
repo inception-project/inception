@@ -20,7 +20,11 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static java.util.Arrays.asList;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -30,6 +34,8 @@ import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
+
+import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class IriConstants
 {
@@ -42,8 +48,9 @@ public class IriConstants
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
-    public static final List<String> IMPLICIT_NAMESPACES = asList(RDF.NAMESPACE, RDFS.NAMESPACE,
-            XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE);
+    public static final Set<String> IMPLICIT_NAMESPACES = Collections
+            .unmodifiableSet(new HashSet<>(asList(RDF.NAMESPACE, RDFS.NAMESPACE,
+                    XMLSchema.NAMESPACE, OWL.NAMESPACE, INCEPTION_SCHEMA_NAMESPACE)));
 
     /**
      * http://www.wikidata.org/entity/Q35120
@@ -77,6 +84,7 @@ public class IriConstants
 
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_LUCENE;
+    public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
     public static final List<IRI> SUBCLASS_IRIS;
@@ -100,6 +108,7 @@ public class IriConstants
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
+        FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
         SUBCLASS_IRIS = asList(RDFS.SUBCLASSOF, WIKIDATA_SUBCLASS, SKOS.BROADER);
@@ -111,5 +120,23 @@ public class IriConstants
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
         FTS_IRIS = asList(FTS_VIRTUOSO, FTS_LUCENE);
+    }
+    
+    public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)
+    {
+        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
+        // want to filter it out just because we consider the OWL namespace to be implicit.
+        List<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
+                .collect(Collectors.toList());
+        if (rootConceptsAsStrings.contains(s)) {
+            return false;
+        }
+        
+        for (String ns : IMPLICIT_NAMESPACES) {
+            if (s.startsWith(ns)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

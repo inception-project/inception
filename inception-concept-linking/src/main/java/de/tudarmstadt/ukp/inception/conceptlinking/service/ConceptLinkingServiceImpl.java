@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.VAR_DESCRIPTION_NAME;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.VAR_LABEL_NAME;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.VAR_SUBJECT_NAME;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.indexOfSubList;
 import static java.util.stream.Collectors.toList;
@@ -37,6 +40,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -73,11 +77,11 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
-import de.tudarmstadt.ukp.inception.conceptlinking.util.QueryUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -217,19 +221,21 @@ public class ConceptLinkingServiceImpl
         if (!aKey.getKnowledgeBase().isSupportConceptLinking()) {
             return Collections.emptySet();
         }
-        Set<CandidateEntity> candidatesFullText = new HashSet<>();
+        Set<CandidateEntity> candidates = new HashSet<>();
 
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            TupleQuery fullTextQueryMention = QueryUtil
-                .generateCandidateFullTextQuery(conn, aKey.getQuery(),
-                    properties.getCandidateQueryLimit(), aKey.getKnowledgeBase());
-            candidatesFullText.addAll(processCandidateQuery(fullTextQueryMention));
+            for (KBHandle handle : SPARQLQueryStore.searchItemsStartingWith(conn,
+                    aKey.getQuery(), properties.getCandidateQueryLimit(),
+                    aKey.getKnowledgeBase())) {
+                candidates.add(new CandidateEntity(handle.getIdentifier(), handle.getUiLabel(),
+                        handle.getDescription(), handle.getLanguage()));
+            }
         }
         catch (QueryEvaluationException e) {
             log.error("Query evaluation was unsuccessful: ", e);
         }
 
-        return candidatesFullText;
+        return candidates;
     }
 
     public Set<CandidateEntity> getCandidatesFullText(KnowledgeBase aKB, String aQuery)
@@ -288,9 +294,11 @@ public class ConceptLinkingServiceImpl
         // BEGIN: THIS CODE SHOULD MAKE USE OF THE FULL TEXT INDEX, BUT DOES CURRENTLY NOT
         // SEEM TO WORK
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            TupleQuery exactQuery = QueryUtil
-                .generateCandidateExactQuery(conn, aTypedString, aMention, aKB);
-            candidates.addAll(processCandidateQuery(exactQuery));
+            for (KBHandle handle : SPARQLQueryStore.searchItemsExactLabelMatch(conn, aTypedString,
+                    aMention, aKB)) {
+                candidates.add(new CandidateEntity(handle.getIdentifier(), handle.getUiLabel(),
+                        handle.getDescription(), handle.getLanguage()));
+            }
         }
         catch (QueryEvaluationException e) {
             log.error("Query evaluation was unsuccessful: ", e);
@@ -306,20 +314,22 @@ public class ConceptLinkingServiceImpl
         try (TupleQueryResult entityResult = aTupleQuery.evaluate()) {
             while (entityResult.hasNext()) {
                 BindingSet solution = entityResult.next();
-                Optional<Value> e2 = Optional.ofNullable(solution.getValue("e2"));
-                Optional<Value> label = Optional.ofNullable(solution.getValue("label"));
-                Optional<Value> altLabel = Optional.ofNullable(solution.getValue("altLabel"));
-                Optional<Value> description = Optional.ofNullable(solution.getValue("description"));
-                Optional<String> language = ((SimpleLiteral) solution.getValue("label"))
-                    .getLanguage();
 
-                CandidateEntity newEntity = new CandidateEntity(
-                        e2.map(Value::stringValue).orElse(""),
-                        label.map(Value::stringValue).orElse(""),
-                        // Exact matching does not use altLabel
-                        altLabel.map(Value::stringValue)
-                                .orElse(label.map(Value::stringValue).orElse("")),
-                        description.map(Value::stringValue).orElse("").concat("\n" + e2.map(Value::stringValue).orElse("")), language.orElse(""));
+                String subjectIri = Optional.ofNullable(solution.getValue(VAR_SUBJECT_NAME))
+                        .map(Value::stringValue)
+                        .orElse("");
+                String label = Optional.ofNullable(solution.getValue(VAR_LABEL_NAME))
+                        .map(Value::stringValue)
+                        .orElse("");
+                String description = Optional.ofNullable(solution.getValue(VAR_DESCRIPTION_NAME))
+                        .map(Value::stringValue).orElse("")
+                        .concat("\n" + subjectIri);
+                String language = ((SimpleLiteral) solution.getValue(VAR_LABEL_NAME))
+                        .getLanguage().orElse("");
+                
+                // Exact matching does not use altLabel
+                CandidateEntity newEntity = new CandidateEntity(subjectIri, label, description,
+                        language);
 
                 candidates.add(newEntity);
             }
@@ -436,11 +446,11 @@ public class ConceptLinkingServiceImpl
                 }
             }
 
-            String altLabel = l.getAltLabel();
+            String label = l.getLabel();
             LevenshteinDistance lev = new LevenshteinDistance();
-            l.setLevMatchLabel(lev.apply(mention, altLabel));
-            l.setLevContext(lev.apply(tokensToString(finalMentionContext), altLabel));
-            l.setLevTypedString(lev.apply(aTypedString, altLabel));
+            l.setLevMatchLabel(lev.apply(mention, label));
+            l.setLevContext(lev.apply(tokensToString(finalMentionContext), label));
+            l.setLevTypedString(lev.apply(aTypedString, label));
 
             SemanticSignature sig = getSemanticSignature(aKB, l.getIRI());
             Set<String> relatedEntities = sig.getRelatedEntities();
@@ -550,8 +560,8 @@ public class ConceptLinkingServiceImpl
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            TupleQuery query = QueryUtil.generateSemanticSignatureQuery(conn, aKey.getQuery(),
-                properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
+            TupleQuery query = SPARQLQueryStore.generateSemanticSignatureQuery(conn,
+                    aKey.getQuery(), properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
                     BindingSet sol = result.next();
@@ -575,7 +585,13 @@ public class ConceptLinkingServiceImpl
                 }
             }
             catch (Exception e) {
-                log.error("could not get semantic signature", e);
+                if (StringUtils.contains(e.getMessage(), "UTF-8 sequence")) {
+                    log.warn("Could not get semantic signature: {}", e.getMessage());
+                    log.debug("Could not get semantic signature", e);
+                }
+                else {
+                    log.error("Could not get semantic signature", e);
+                }
             }
         }
 

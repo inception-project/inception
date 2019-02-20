@@ -216,8 +216,9 @@ public class KnowledgeBasePanel
             results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
                 ConceptFeatureValueType.ANY_OBJECT, aProject);
             // Sort and filter results
+            String lowerCaseTypedString = aTypedString.toLowerCase();
             results = results.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString.toLowerCase()))
+                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
             results = KBHandle.distinctByIri(results);
         }

@@ -17,24 +17,69 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import java.util.List;
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 public final class SPARQLQueryStore
 {
-
+    private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryStore.class);
+    
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-            "PREFIX owl: <" + OWL.NAMESPACE + ">");
+            "PREFIX owl: <" + OWL.NAMESPACE + ">",
+            "PREFIX skos:<" + SKOS.NAMESPACE + ">",
+            "PREFIX e:<http://www.wikidata.org/entity/>",
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
+    
+    /*
+     * instance of this page are about some Wikimedia-only content and should not refer to external
+     * World entities
+     */
+    private static final String WIKIMEDIA_INTERNAL = "e:Q17442446";
 
+    /*
+     * page in various non-article namespaces on a Wikimedia project
+     */
+    private static final String WIKIMEDIA_PROJECT_PAGE = "e:Q14204246";
+
+    private static final String WIKIMEDIA_DISAMBIGUATION_PAGE = "e:Q4167410";
+
+    private static final String WIKIMEDIA_CATEGORY = "e:Q4167836";
+
+    /*
+     * page of a Wikimedia project with a list of something
+     */
+    private static final String WIKIMEDIA_LIST_ARTICLE = "e:Q13406463";
+
+    private static final String WIKIMEDIA_TEMPLATE = "e:Q11266439";
+
+    private static final String WIKIMEDIA_NEWS_ARTICLE = "e:Q17633526";
+
+    private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
+
+    private static final String CANDIDATE_BLACKLIST = String.join(" ", WIKIMEDIA_INTERNAL,
+            WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
+            WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
+            WIKIMEDIA_NAVIGATIONAL_TEMPLATE);    
     /**
      * Return formatted String for the OPTIONAL part of SPARQL query for language and description
      * filter
@@ -391,5 +436,186 @@ public final class SPARQLQueryStore
             , languageFilter("?o", aLanguage)
             , "}"
             , "LIMIT " + aKB.getMaxResults());
+    }
+    
+    
+    /**
+     * Finds items based on their label.
+     * 
+     * There are several conditions:
+     * <ul>
+     * <li>The match is case sensitive. It has been tied to use LCASE in combination with FILTER to
+     * allow matching the lower cased arguments with the entities from the KB, but that was too
+     * time-intensive and lead to timeouts.</li>
+     * <li>Items need to actually have a label. I.e. items which do not have a label and for which
+     * {@link KBHandle#getUiLabel()} extracts a label from their subject IRI cannot be located.</li>
+     * <li>The KB default language needs to match the language of the label.</li>
+     * <li>FIXME: Label sub-properties are currently <b>not</b> considered.</li>
+     * </ul>
+     *
+     * @param aTypedString
+     *            typed string from the user
+     * @param aMention
+     *            the marked surface form
+     * @param aKb
+     *            the Knowledge Base
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsExactLabelMatch(RepositoryConnection aConn,
+        String aTypedString, String aMention, KnowledgeBase aKb)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelMatchingExactlyAnyOf(aMention, aTypedString);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
+        
+//        String query = String.join("\n",
+//            SPARQL_PREFIX,
+//            "SELECT DISTINCT ?s ((?label) AS ?l) ((?desc) AS ?d) ((?labelGeneral) AS ?lGen) ?descGeneral WHERE",
+//            "{",
+//            "  VALUES ?label { " + mention + " " + typedString + " } ",
+//            "  ?s ?pLABEL ?label .",
+//            "  FILTER NOT EXISTS { ",
+//            "    VALUES ?topic {" + CANDIDATE_BLACKLIST + "}",
+//            "    ?s ?pTYPE ?topic",
+//            "  }",
+//            optionalLanguageFilteredValue("?pDESCRIPTION", aKb.getDefaultLanguage(), "?s", "?desc"),
+//            optionalLanguageFilteredValue("?pDESCRIPTION", null, "?s", "?descGeneral"),
+//            //queryForOptionalSubPropertyLabel(labelProperties, aKb.getDefaultLanguage(),"?oItem","?spl"),
+//            "}");
+//
+//        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+//        tupleQuery.setBinding("pLABEL", aKb.getLabelIri());
+//        tupleQuery.setBinding("pTYPE", aKb.getTypeIri());
+//        tupleQuery.setBinding("pDESCRIPTION", aKb.getDescriptionIri());
+    }
+
+//    private static String getFullTextMatchingQueryPartVirtuoso(int aLimit)
+//    {
+//        return  String.join("\n",
+//            "    SELECT DISTINCT ?s ?l ?d WHERE",
+//            "    {",
+//            "      ?s ?labelIri ?l .",
+//            "      ?l ?ftsIri ?query . ",
+//            "      OPTIONAL",
+//            "      {",
+//            "        ?s ?descriptionIri ?d.",
+//            "      }",
+//            "    }",
+//            "    LIMIT " + aLimit);
+//    }
+//
+//    // http://culturecloud.ru/resource/Help:Search#Full_Text_Search
+//    private static String getFullTextMatchingQueryPartLucene(int aLimit)
+//    {
+//        return  String.join("\n",
+//            "    SELECT DISTINCT ?s ?l ?d WHERE",
+//            "    {",
+//            "      ?s search:matches ?match .",
+//            "      ?match search:query ?query ;",
+//            "             search:property ?labelIri ;",
+//            "             search:snippet ?l",
+//            "      OPTIONAL",
+//            "      {",
+//            "        ?s ?descriptionIri ?d.",
+//            "      }",
+//            "    }",
+//            "    LIMIT " + aLimit);
+//    }
+
+    /**
+     *
+     * This query retrieves candidates via full-text matching of their labels and full-text-search
+     *
+     * @param aString String for which to perform full text search
+     * @param aLimit maximum number of results
+     * @param aKb the Knowledge Base
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsStartingWith(RepositoryConnection aConn,
+        String aString, int aLimit, KnowledgeBase aKb)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelStartingWith(aString);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
+        
+//        String string = RenderUtils.escape(aString).toLowerCase(Locale.ENGLISH);
+//        ValueFactory vf = SimpleValueFactory.getInstance();
+//        Literal searchLiteral;
+//        String fullTextMatchingString;
+//
+//        if (aKb.getFullTextSearchIri().equals(IriConstants.FTS_LUCENE)) {
+//            fullTextMatchingString = getFullTextMatchingQueryPartLucene(aLimit);
+//            // add wildcard '*' to perform wildcard search
+//            searchLiteral = vf.createLiteral(string + "*");
+//        } else {
+//            fullTextMatchingString = getFullTextMatchingQueryPartVirtuoso(aLimit);
+//            
+//            StringBuilder queryString = new StringBuilder();
+//            // Virtuoso requires that strings are quoted if the contain spaces. We just always
+//            // quote them to be on the safe side.
+//            queryString.append("'");
+//            
+//            // Strip single quotes and asterisks because they have special semantics
+//            String query = string.replace("'", " ").replace("*", " ");
+//            queryString.append(query);
+//            
+//            // If the last token in the query has 4 chars or more, then we add an asterisk to
+//            // perform a prefix search. If we try that with less than 4 chars, Virtuoso will
+//            // send us back an error.
+//            String[] queryTokens = query.split(" ");
+//            if (queryTokens[queryTokens.length - 1].length() >= 4) {
+//                queryString.append("*");
+//            }
+//            
+//            queryString.append("'");
+//            
+//            searchLiteral = vf.createLiteral(queryString.toString());
+//        }
+//
+//        String query = String.join("\n", SPARQL_PREFIX, fullTextMatchingString);
+//
+//        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+//        tupleQuery.setBinding("query", searchLiteral);
+//        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+//            ? aKb.getDefaultLanguage() : "en"));
+//        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+//        tupleQuery.setBinding("typeIri", aKb.getTypeIri());
+//        tupleQuery.setBinding("descriptionIri", aKb.getDescriptionIri());
+//        tupleQuery.setBinding("ftsIri", aKb.getFullTextSearchIri());
+//        return tupleQuery;
+    }
+
+    /**
+     *
+     * @param aIri an IRI, e.g. "http://www.wikidata.org/entity/Q3"
+     * @param aLimit maximum number of results
+     * @param aKb the Knowledge Base
+     * @return a query to retrieve the semantic signature
+     */
+    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String aIri,
+        int aLimit, KnowledgeBase aKb)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        String query = String.join("\n",
+            SPARQL_PREFIX,
+            "SELECT DISTINCT ?label ?p WHERE ",
+            "  {",
+            "    { ?e1  ?rd ?m . ?m ?p ?e2 . }",
+            "    UNION",
+            "    { ?e2 ?p ?m . ?m ?rr ?e1 . }",
+            "    ?e1 ?labelIri ?label. ",
+            "  }",
+            " LIMIT " + aLimit);
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        return tupleQuery;
     }
 }
