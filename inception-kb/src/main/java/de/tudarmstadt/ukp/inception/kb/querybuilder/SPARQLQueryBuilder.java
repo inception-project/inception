@@ -424,7 +424,7 @@ public class SPARQLQueryBuilder
             
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value, kb)));
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
         return GraphPatterns.and(
@@ -449,7 +449,7 @@ public class SPARQLQueryBuilder
                             bNode(LUCENE_QUERY, literalOf(value))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value, kb)));
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
         return GraphPatterns.and(
@@ -470,7 +470,7 @@ public class SPARQLQueryBuilder
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + value + "\"")))
-                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value, kb)));
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
         return GraphPatterns.and(
@@ -487,7 +487,7 @@ public class SPARQLQueryBuilder
         return GraphPatterns.and(
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery, kb)));
+                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
     private GraphPattern withLabelStartingWithVirtuosoFts(String aPrefixQuery)
@@ -543,7 +543,7 @@ public class SPARQLQueryBuilder
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf(queryString.toString())))
-                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery, kb)));
+                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
     private GraphPattern withLabelStartingWithRdf4JFts(String aPrefixQuery)
@@ -576,19 +576,17 @@ public class SPARQLQueryBuilder
                 VAR_SUBJECT.has(pLabelFts,bNode(LUCENE_QUERY, literalOf(queryString))
                         .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                         .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery, kb)));
+                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
-    private Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery,
-            KnowledgeBase aKB)
+    private Expression<?> startsWithPattern(Variable aVariable, String aPrefixQuery)
     {
-        return matchString(STRSTARTS, aVariable, aPrefixQuery, aKB);
+        return matchString(STRSTARTS, aVariable, aPrefixQuery);
     }
 
-    private Expression<?> containsPattern(Variable aVariable, String aSubstring,
-            KnowledgeBase aKB)
+    private Expression<?> containsPattern(Variable aVariable, String aSubstring)
     {
-        return matchString(CONTAINS, aVariable, aSubstring, aKB);
+        return matchString(CONTAINS, aVariable, aSubstring);
     }
 
     private Expression<?> equalsPattern(Variable aVariable, String aValue,
@@ -603,9 +601,9 @@ public class SPARQLQueryBuilder
     }
 
     private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable,
-            String aPrefixQuery, KnowledgeBase aKB)
+            String aPrefixQuery)
     {
-        String language = aKB.getDefaultLanguage();
+        String language = kb.getDefaultLanguage();
         return or(
                 // Match with default language
                 and(function(aFunction, aVariable, literalOf(aPrefixQuery)),
