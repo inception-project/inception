@@ -583,7 +583,14 @@ export default class PDFAnnoPage {
    * @memberof PDFAnnoPage
    */
   loadPdf (url) {
+// BEGIN INCEpTION EXTENSION - #939 - PDF editor loads wrong PDF
+/*
     return fetch(url, {
+*/
+    // add noise to the query parameters so caching is prevented
+    var antiCacheUrl= url + "&time=" + new Date().getTime();
+    return fetch(antiCacheUrl, {
+// END INCEpTION EXTENSION
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
@@ -611,7 +618,14 @@ export default class PDFAnnoPage {
    * @memberof PDFAnnoPage
    */
   loadPdftxt (url) {
+// BEGIN INCEpTION EXTENSION - #939 - PDF editor loads wrong PDF
+/*
     return fetch(url, {
+*/
+    // add noise to the query parameters so caching is prevented
+    var antiCacheUrl= url + "&time=" + new Date().getTime();
+    return fetch(antiCacheUrl, {
+// END INCEpTION EXTENSION
       method : 'GET',
       mode   : 'cors'
     }).then(response => {
