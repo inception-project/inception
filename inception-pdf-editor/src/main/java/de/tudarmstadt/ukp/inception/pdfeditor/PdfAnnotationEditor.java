@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.cas.CASRuntimeException;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -29,6 +33,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,33 +87,11 @@ public class PdfAnnotationEditor
             Selection selection = getModelObject().getSelection();
             File pdfFile = documentService.getSourceDocumentFile(getModelObject().getDocument());
             String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-            // if something is selected care for existing selections, else throw them away
-            if (selection.getBegin() != -1 && selection.getEnd() != -1) {
-                // save existing selections before destroying them for rerendering
-                String saveSelections = String.join("",
-                    "var selectedAnnotations = [];",
-                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
-                    "  if(a.selected) {",
-                    "    selectedAnnotations.push(a.uuid);",
-                    "  }",
-                    "});",
-                    "pdfanno.contentWindow.selectedAnnotations = selectedAnnotations;"
-                );
-                aTarget.appendJavaScript(saveSelections);
-                // rerender existing annotations
-                renderPdfAnnoModel(aTarget, pdftext);
-                // restore selections
-                String restoreSelections = String.join("",
-                    "pdfanno.contentWindow.selectedAnnotations.forEach(function(uuid) {",
-                    "  var annotation = pdfanno.contentWindow.annoPage.findAnnotationById(uuid);",
-                    "  if (annotation !== null) {",
-                    "    annotation.toggleSelect();",
-                    "  }",
-                    "});"
-                );
-                aTarget.appendJavaScript(restoreSelections);
-            } else {
-                renderPdfAnnoModel(aTarget, pdftext);
+            renderPdfAnnoModel(aTarget, pdftext);
+            if (selection.getAnnotation() != null) {
+                aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById("
+                    + selection.getAnnotation().toString() + ");"
+                    + "anno && anno.select();");
             }
         }
         catch (IOException e)
@@ -170,46 +153,38 @@ public class PdfAnnotationEditor
         renderPdfAnnoModel(aTarget, new PdfExtractFile(aPdftxt));
     }
 
-    public void createSpanAnnotation(AjaxRequestTarget aTarget, JCas aJCas,
-                                        PdfExtractFile aPdfExtractFile, Offset aOffset)
+    public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                     JCas aJCas, PdfExtractFile aPdfExtractFile)
     {
         try
         {
+            Offset offset = new Offset(aParams);
             Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, aOffset);
+                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
             if (docOffset != null) {
                 getModelObject().getSelection()
                     .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
                 getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
                 renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
-                // select the annotation where annotation offset overlaps with selection offset
-                String selectAnnotation = String.join("",
-                    "pdfanno.contentWindow.annoPage.getAllAnnotations().forEach(function(a) {",
-                    "  if (a.textRange && a.textRange[0] <= " + aOffset.getEnd(),
-                    " && " + aOffset.getBegin() + " <= a.textRange[1]) {",
-                    "    a.toggleSelect();",
-                    "  }",
-                    "});"
-                );
-                aTarget.appendJavaScript(selectAnnotation);
             } else {
-                handleError("Unable to create annotation: No match was found", aTarget);
+                handleError("Unable to create span annotation: No match was found", aTarget);
             }
         }
         catch (IOException | AnnotationException e)
         {
-            handleError("Unable to create annotation", e, aTarget);
+            handleError("Unable to create span annotation", e, aTarget);
         }
     }
 
     private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                      JCas aJCas, PdfExtractFile aPdfExtractFile, Offset aOffset)
+                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
     {
         try
         {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+            Offset offset = new Offset(aParams);
             Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, aOffset);
+                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
             if (docOffset != null) {
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(),
@@ -221,12 +196,52 @@ public class PdfAnnotationEditor
                     getActionHandler().actionSelect(aTarget, aJCas);
                 }
             } else {
-                handleError("Unable to select annotation: No match was found", aTarget);
+                handleError("Unable to select span annotation: No match was found", aTarget);
             }
         }
         catch (AnnotationException | IOException e)
         {
-            handleError("Unable to select annotation", e, aTarget);
+            handleError("Unable to select span annotation", e, aTarget);
+        }
+    }
+
+    private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                          JCas aJCas, PdfExtractFile aPdfExtractFile)
+        throws IOException
+    {
+        try {
+            AnnotationFS originFs = selectByAddr(aJCas,
+                aParams.getParameterValue("origin").toInt());
+            int target = aParams.getParameterValue("target").toInt();
+            if (target == -1) {
+                // if -1 return, relation drawing was not stopped over a target
+                return;
+            }
+            AnnotationFS targetFs = selectByAddr(aJCas,
+                target);
+
+            AnnotatorState state = getModelObject();
+            Selection selection = state.getSelection();
+            selection.selectArc(VID.NONE_ID, originFs, targetFs);
+
+            if (selection.getAnnotation().isNotSet()) {
+                getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+            }
+        }
+        catch (AnnotationException | CASRuntimeException e)
+        {
+            handleError("Unable to create relation annotation", e, aTarget);
+        }
+        catch (StringValueConversionException e)
+        {
+            handleError("Unable to create relations on recommendations", aTarget);
+        }
+        finally
+        {
+            // workaround to enable further creation of relations in PDFAnno
+            // if existing annotations are not rerendered after an attempt to create a relation.
+            // it can happen that mouse will hang when leaving annotation knob while dragging
+            renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
         }
     }
 
@@ -236,16 +251,19 @@ public class PdfAnnotationEditor
         try
         {
             JCas jCas = getJCasProvider().get();
-            final Offset offset = new Offset(aParams);
             PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
             String action = aParams.getParameterValue("action").toString();
 
             switch (action)
             {
-            case "createSpan": createSpanAnnotation(aTarget, jCas, pdfExtractFile, offset);
-                               break;
-            case "selectSpan": selectSpanAnnotation(aTarget, aParams, jCas, pdfExtractFile, offset);
-                               break;
+            case "createSpan": createSpanAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "selectSpan": selectSpanAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "createRelation": createRelationAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "selectRelation":
+                break;
             default: handleError("Unkown action: " + action, aTarget);
             }
         }
