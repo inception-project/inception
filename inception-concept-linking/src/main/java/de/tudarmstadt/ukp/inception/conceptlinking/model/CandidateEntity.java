@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 /**
  * Stores information about entities retrieved from a knowledge base 
  * Needed to rank candidates
@@ -36,11 +38,6 @@ public class CandidateEntity
      * The main label of this entity
      */
     private String label;
-
-    /**
-     * An alternative label (alias) of this entity
-     */
-    private String alternativeLabel;
 
     /**
      * A description for this entity
@@ -94,12 +91,10 @@ public class CandidateEntity
      */
     private String language;
 
-    public CandidateEntity(String aIRI, String aLabel, String aAlternativeLabel,
-        String aDescription, String aLanguage)
+    public CandidateEntity(String aIRI, String aLabel, String aDescription, String aLanguage)
     {
         IRI = aIRI;
         label = aLabel;
-        alternativeLabel = aAlternativeLabel;
         description = aDescription;
         language = aLanguage;
         levTypedString = Integer.MAX_VALUE;
@@ -120,14 +115,6 @@ public class CandidateEntity
     public String getLabel()
     {
         return label;
-    }
-
-    /**
-     * @return An alternative label (alias) of this entity
-     */
-    public String getAltLabel()
-    {
-        return alternativeLabel;
     }
 
     /**
@@ -291,7 +278,12 @@ public class CandidateEntity
     @Override
     public String toString()
     {
-        return "CandidateEntity{" + "label='" + label + '\'' + ", alternativeLabel='"
-            + alternativeLabel + '\'' + '}';
+        return new ToStringBuilder(this).append("IRI", IRI).append("label", label)
+                .append("levMatchLabel", levMatchLabel).append("levContext", levContext)
+                .append("levTypedString", levTypedString)
+                .append("signatureOverlap", signatureOverlap)
+                .append("numRelatedRelations", numRelatedRelations)
+                .append("signatureOverlapScore", signatureOverlapScore).append("idRank", idRank)
+                .append("frequency", frequency).append("language", language).toString();
     }
 }
