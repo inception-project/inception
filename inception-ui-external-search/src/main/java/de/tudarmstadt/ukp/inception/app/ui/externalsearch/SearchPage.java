@@ -41,6 +41,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.IModel;
@@ -56,7 +57,6 @@ import org.wicketstuff.annotation.mount.MountPath;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
@@ -273,6 +273,7 @@ public class SearchPage extends ApplicationPageBase
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
             
             String documentTitle = result.getDocumentTitle();
+            
 
             Optional<String> highlightOptional = result.getHighlights().get(0).getHighlight();
             if (highlightOptional.isPresent()) {
@@ -301,14 +302,16 @@ public class SearchPage extends ApplicationPageBase
                     existsSourceDocument ? "imported" : "not imported"));
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> !existsSourceDocument)));
-            add(new LambdaAjaxLink("openLink", _target -> {
-                PageParameters pageParameters = new PageParameters()
-                    .add(WebAnnoConst.PAGE_PARAM_PROJECT_ID, project.getId())
-                    .add(WebAnnoConst.PAGE_PARAM_DOCUMENT_ID,
-                        documentService.getSourceDocument(project, documentTitle).getId());
-                setResponsePage(AnnotationPage.class, pageParameters);
-            }).add(
-                visibleWhen(() -> existsSourceDocument)));
+
+            String url = "";
+            if (existsSourceDocument) {
+                long docId = documentService.getSourceDocument(project, documentTitle).getId();
+                url = String.format("%s#!p=%d&d=%d",
+                        getRequestCycle().urlFor(AnnotationPage.class, new PageParameters()),
+                        project.getId(), docId);
+            }
+            add(new ExternalLink("openLink", url).add(
+                    visibleWhen(() -> existsSourceDocument)));
         }
     }
 }
