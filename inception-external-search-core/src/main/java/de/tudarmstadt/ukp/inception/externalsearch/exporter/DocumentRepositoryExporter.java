@@ -25,7 +25,6 @@ import java.util.zip.ZipFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
@@ -33,12 +32,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.log.exporter.LoggedEventExporter;
 
-@Component
-public class DocumentRepositoryExporter implements ProjectExporter {
-    
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchAutoConfiguration#documentRepositoryExporter(ExternalSearchService)}.
+ * </p>
+ */
+public class DocumentRepositoryExporter
+    implements ProjectExporter
+{
     private static final String KEY = "external_search";
     private static final Logger LOG = LoggerFactory.getLogger(LoggedEventExporter.class);
     
@@ -73,7 +79,7 @@ public class DocumentRepositoryExporter implements ProjectExporter {
     
     @Override
     public void importData(ProjectImportRequest aRequest, Project aProject,
-                           ExportedProject aExProject, ZipFile aZip)
+            ExportedProject aExProject, ZipFile aZip)
     {
         ExportedDocumentRepository[] exportedDocumentRepositories = aExProject
                 .getArrayProperty(KEY, ExportedDocumentRepository.class);
