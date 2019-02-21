@@ -239,6 +239,18 @@ public class SPARQLQueryBuilder
     }
 
     /**
+     * Generates a pattern which binds all sub-properties of the label property to the given 
+     * variable. 
+     */
+    private GraphPattern bindLabelProperties(Variable aVariable)
+    {
+        Iri pLabel = mode.getLabelProperty(kb);
+        Iri pSubProperty = Rdf.iri(kb.getSubPropertyIri().stringValue()); 
+        
+        return aVariable.has(() -> pSubProperty.getQueryString() + "*", pLabel);
+    }
+
+    /**
      * Find entries where the label matches exactly one of the given values. The match is
      * case-sensitive and it takes the default language of the KB into consideration.
      * 
@@ -247,19 +259,20 @@ public class SPARQLQueryBuilder
      * 
      * @param aValues
      *            label values.
+     * @return the builder (fluent API)
      */
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOfRdf4JFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOfVirtuosoFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
         }
         else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOfNoFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -274,7 +287,7 @@ public class SPARQLQueryBuilder
         return this;
     }
     
-    private GraphPattern withLabelMatchingExactlyAnyOfNoFts(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOf_No_FTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
@@ -325,19 +338,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
     
-    /**
-     * Generates a pattern which binds all sub-properties of the label property to the given 
-     * variable. 
-     */
-    private GraphPattern bindLabelProperties(Variable aVariable)
-    {
-        Iri pLabel = mode.getLabelProperty(kb);
-        Iri pSubProperty = Rdf.iri(kb.getSubPropertyIri().stringValue()); 
-        
-        return aVariable.has(() -> pSubProperty.getQueryString() + "*", pLabel);
-    }
-    
-    private GraphPattern withLabelMatchingExactlyAnyOfRdf4JFts(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOf_RDF4J_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
@@ -362,7 +363,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
     
-    private GraphPattern withLabelMatchingExactlyAnyOfVirtuosoFts(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
         Iri pLabelFts = iri(IriConstants.FTS_VIRTUOSO.toString());
         
@@ -388,24 +389,22 @@ public class SPARQLQueryBuilder
      * are available, they will be used. Depending on the circumstances, the match may be case
      * sensitive or not.
      * 
-     * <b>Note:</b> This matching does not make use of any fulltext search capabilities which the
-     * triple store might provide.
-     * 
      * @param aPrefixQuery
      *            label prefix.
+     * @return the builder (fluent API)
      */
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelStartingWithRdf4JFts(aPrefixQuery));
+            addPattern(PRIO_PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelStartingWithVirtuosoFts(aPrefixQuery));
+            addPattern(PRIO_PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
         }
         else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIO_PRIMARY, withLabelStartingWithNoFts(aPrefixQuery));
+            addPattern(PRIO_PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
         }
         else {
             throw new IllegalStateException(
@@ -420,18 +419,25 @@ public class SPARQLQueryBuilder
         return this;
     }
     
+    /**
+     * Match any items with a label containing any of the given values.
+     * 
+     * @param aValues
+     *            values to match.
+     * @return the builder (fluent API)
+     */
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelContainingAnyOfRdf4JFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIO_PRIMARY, withLabelContainingAnyOfVirtuosoFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
         }
         else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIO_PRIMARY, withLabelContainingAnyOfNoFts(aValues));
+            addPattern(PRIO_PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -446,7 +452,7 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private GraphPattern withLabelContainingAnyOfNoFts(String... aValues)
+    private GraphPattern withLabelContainingAnyOf_No_FTS(String... aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
@@ -464,7 +470,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
     
-    private GraphPattern withLabelContainingAnyOfRdf4JFts(String[] aValues)
+    private GraphPattern withLabelContainingAnyOf_RDF4J_FTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
@@ -491,7 +497,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelContainingAnyOfVirtuosoFts(String[] aValues)
+    private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
     {
         Iri pLabelFts = iri(IriConstants.FTS_VIRTUOSO.toString());
         
@@ -512,7 +518,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelStartingWithNoFts(String aPrefixQuery)
+    private GraphPattern withLabelStartingWith_No_FTS(String aPrefixQuery)
     {
         if (aPrefixQuery.isEmpty()) {
             returnEmptyResult = true;
@@ -524,7 +530,7 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
-    private GraphPattern withLabelStartingWithVirtuosoFts(String aPrefixQuery)
+    private GraphPattern withLabelStartingWith_Virtuoso_FTS(String aPrefixQuery)
     {
         StringBuilder queryString = new StringBuilder();
         queryString.append("\"");
@@ -580,7 +586,7 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
-    private GraphPattern withLabelStartingWithRdf4JFts(String aPrefixQuery)
+    private GraphPattern withLabelStartingWith_RDF4J_FTS(String aPrefixQuery)
     {
         // REC: Haven't been able to get this to work with server-side reduction, so implicitly
         // turning it off here.
@@ -677,6 +683,11 @@ public class SPARQLQueryBuilder
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
+    /**
+     * Request that a label be retrieved as part of the query.
+     * 
+     * @return the builder (fluent API)
+     */
     public SPARQLQueryBuilder retrieveLabel()
     {
         // If the label is already retrieved, do nothing
@@ -711,6 +722,11 @@ public class SPARQLQueryBuilder
         return this;
     }
 
+    /**
+     * Request that a description be retrieved as part of the query.
+     * 
+     * @return the builder (fluent API)
+     */
     public SPARQLQueryBuilder retrieveDescription()
     {
         if (!hasPrimaryPatterns()) {
@@ -736,6 +752,11 @@ public class SPARQLQueryBuilder
         return this;
     }
     
+    /**
+     * Assemble the current configuration into a SELECT query.
+     * 
+     * @return SELECT query.
+     */
     public SelectQuery selectQuery()
     {
         // Must add it anyway because we group by it
@@ -757,6 +778,15 @@ public class SPARQLQueryBuilder
         return query;
     }
     
+    /**
+     * Execute the query and retrieve the results as {@link KBHandle KBHandles}.
+     * 
+     * @param aConnection
+     *            a connection to a triple store.
+     * @param aAll
+     *            True if entities with implicit namespaces (e.g. defined by RDF)
+     * @return a list of the retrieved handles.
+     */
     public List<KBHandle> asHandles(RepositoryConnection aConnection, boolean aAll)
     {
         String queryString = selectQuery().getQueryString();
