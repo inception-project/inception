@@ -131,8 +131,6 @@ public interface KnowledgeBaseService
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
         throws RepositoryConfigException, RepositoryException;
 
-    void registerImplicitNamespace(String aImplicitNameSpace);
-
     /**
      * Creates a new concept in the given knowledge base. Does nothing 
      * if the knowledge base is read only.
@@ -512,8 +510,6 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
-
-    boolean hasImplicitNamespace(KnowledgeBase kb, String s);
 
     /**
      * List all the concepts

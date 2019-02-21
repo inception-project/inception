@@ -17,24 +17,39 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import java.util.List;
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 public final class SPARQLQueryStore
 {
-
+    private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryStore.class);
+    
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-            "PREFIX owl: <" + OWL.NAMESPACE + ">");
-
+            "PREFIX owl: <" + OWL.NAMESPACE + ">",
+            "PREFIX skos:<" + SKOS.NAMESPACE + ">",
+            "PREFIX e:<http://www.wikidata.org/entity/>",
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
+    
     /**
      * Return formatted String for the OPTIONAL part of SPARQL query for language and description
      * filter
@@ -66,8 +81,10 @@ public final class SPARQLQueryStore
 
     /**
      * Returns formatted string that filters the given variable for the given language
+     * 
      * @param filterVariable
-     * @return
+     *            the variable by which to filer.
+     * @return the query fragment.
      */
     private static final String languageFilter(String filterVariable, String aLanguage) {
         StringBuilder fragment = new StringBuilder();
@@ -88,8 +105,8 @@ public final class SPARQLQueryStore
     }
   
     /**
-     * adds an OPTIONAL block which looks for a value that is declared with a
-     * subproperty of the given property
+     * adds an OPTIONAL block which looks for a value that is declared with a sub-property of the
+     * given property
      */
     private static final String queryForOptionalSubPropertyLabel(Set<KBHandle> labelProperties,
             String aLanguage, String variable, String filterVariable)
@@ -391,5 +408,103 @@ public final class SPARQLQueryStore
             , languageFilter("?o", aLanguage)
             , "}"
             , "LIMIT " + aKB.getMaxResults());
+    }
+    
+    
+    /**
+     * Finds items based on their label.
+     * 
+     * There are several conditions:
+     * <ul>
+     * <li>The match is case sensitive. It has been tied to use LCASE in combination with FILTER to
+     * allow matching the lower cased arguments with the entities from the KB, but that was too
+     * time-intensive and lead to timeouts.</li>
+     * <li>Items need to actually have a label. I.e. items which do not have a label and for which
+     * {@link KBHandle#getUiLabel()} extracts a label from their subject IRI cannot be located.</li>
+     * <li>The KB default language needs to match the language of the label.</li>
+     * </ul>
+     * 
+     * @param aKb
+     *            the Knowledge Base
+     * @param aConn
+     *            connection to the triple store
+     * @param aValues
+     *            values to match against.
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsExactLabelMatch(KnowledgeBase aKb,
+        RepositoryConnection aConn, String... aValues)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelMatchingExactlyAnyOf(aValues);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
+    }
+
+    /**
+     * This query retrieves candidates via full-text matching of their labels and full-text-search
+     * 
+     * @param aKb
+     *            the Knowledge Base
+     * @param aString
+     *            String for which to perform full text search
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsStartingWith(KnowledgeBase aKb,
+        RepositoryConnection aConn, String aString)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelStartingWith(aString);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
+    }
+    
+    /**
+     * This query retrieves candidates via full-text matching of their labels and full-text-search
+     *
+     * @param aKb
+     *            the Knowledge Base
+     * @return a query to retrieve candidate entities
+     */
+    public static List<KBHandle> searchItemsContaining(KnowledgeBase aKb,
+            RepositoryConnection aConn, String... aValues)
+    {
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
+        builder.withLabelContainingAnyOf(aValues);
+        builder.retrieveLabel();
+        builder.retrieveDescription();
+        return builder.asHandles(aConn, true);
+    }
+
+    /**
+     *
+     * @param aIri an IRI, e.g. "http://www.wikidata.org/entity/Q3"
+     * @param aLimit maximum number of results
+     * @param aKb the Knowledge Base
+     * @return a query to retrieve the semantic signature
+     */
+    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String aIri,
+        int aLimit, KnowledgeBase aKb)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        String query = String.join("\n",
+            SPARQL_PREFIX,
+            "SELECT DISTINCT ?label ?p WHERE ",
+            "  {",
+            "    { ?e1  ?rd ?m . ?m ?p ?e2 . }",
+            "    UNION",
+            "    { ?e2 ?p ?m . ?m ?rr ?e1 . }",
+            "    ?e1 ?labelIri ?label. ",
+            "  }",
+            " LIMIT " + aLimit);
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        return tupleQuery;
     }
 }
