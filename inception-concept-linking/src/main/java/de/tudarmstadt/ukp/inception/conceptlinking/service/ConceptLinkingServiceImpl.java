@@ -584,9 +584,12 @@ public class ConceptLinkingServiceImpl
                 }
             }
             catch (Exception e) {
-                if (StringUtils.contains(e.getMessage(), "UTF-8 sequence")) {
+                if (StringUtils.contains(e.getMessage(), "UTF-8 sequence")
+                        && !log.isDebugEnabled()) {
+                    // This is a comparatively common message - no need to always log the entire
+                    // stack trace during production, but might still be reasonable to log a
+                    // warning.
                     log.warn("Could not get semantic signature: {}", e.getMessage());
-                    log.debug("Could not get semantic signature", e);
                 }
                 else {
                     log.error("Could not get semantic signature", e);

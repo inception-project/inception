@@ -50,36 +50,6 @@ public final class SPARQLQueryStore
             "PREFIX base:<http://www.wikidata.org/ontology#>",
             "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
     
-    /*
-     * instance of this page are about some Wikimedia-only content and should not refer to external
-     * World entities
-     */
-    private static final String WIKIMEDIA_INTERNAL = "e:Q17442446";
-
-    /*
-     * page in various non-article namespaces on a Wikimedia project
-     */
-    private static final String WIKIMEDIA_PROJECT_PAGE = "e:Q14204246";
-
-    private static final String WIKIMEDIA_DISAMBIGUATION_PAGE = "e:Q4167410";
-
-    private static final String WIKIMEDIA_CATEGORY = "e:Q4167836";
-
-    /*
-     * page of a Wikimedia project with a list of something
-     */
-    private static final String WIKIMEDIA_LIST_ARTICLE = "e:Q13406463";
-
-    private static final String WIKIMEDIA_TEMPLATE = "e:Q11266439";
-
-    private static final String WIKIMEDIA_NEWS_ARTICLE = "e:Q17633526";
-
-    private static final String WIKIMEDIA_NAVIGATIONAL_TEMPLATE = "e:Q11753321";
-
-    private static final String CANDIDATE_BLACKLIST = String.join(" ", WIKIMEDIA_INTERNAL,
-            WIKIMEDIA_PROJECT_PAGE, WIKIMEDIA_CATEGORY, WIKIMEDIA_DISAMBIGUATION_PAGE,
-            WIKIMEDIA_LIST_ARTICLE, WIKIMEDIA_TEMPLATE, WIKIMEDIA_NEWS_ARTICLE,
-            WIKIMEDIA_NAVIGATIONAL_TEMPLATE);    
     /**
      * Return formatted String for the OPTIONAL part of SPARQL query for language and description
      * filter
@@ -111,8 +81,10 @@ public final class SPARQLQueryStore
 
     /**
      * Returns formatted string that filters the given variable for the given language
+     * 
      * @param filterVariable
-     * @return
+     *            the variable by which to filer.
+     * @return the query fragment.
      */
     private static final String languageFilter(String filterVariable, String aLanguage) {
         StringBuilder fragment = new StringBuilder();
@@ -133,8 +105,8 @@ public final class SPARQLQueryStore
     }
   
     /**
-     * adds an OPTIONAL block which looks for a value that is declared with a
-     * subproperty of the given property
+     * adds an OPTIONAL block which looks for a value that is declared with a sub-property of the
+     * given property
      */
     private static final String queryForOptionalSubPropertyLabel(Set<KBHandle> labelProperties,
             String aLanguage, String variable, String filterVariable)
@@ -451,9 +423,13 @@ public final class SPARQLQueryStore
      * {@link KBHandle#getUiLabel()} extracts a label from their subject IRI cannot be located.</li>
      * <li>The KB default language needs to match the language of the label.</li>
      * </ul>
+     * 
      * @param aKb
      *            the Knowledge Base
-     *
+     * @param aConn
+     *            connection to the triple store
+     * @param aValues
+     *            values to match against.
      * @return a query to retrieve candidate entities
      */
     public static List<KBHandle> searchItemsExactLabelMatch(KnowledgeBase aKb,
@@ -464,33 +440,15 @@ public final class SPARQLQueryStore
         builder.retrieveLabel();
         builder.retrieveDescription();
         return builder.asHandles(aConn, true);
-        
-//        String query = String.join("\n",
-//            SPARQL_PREFIX,
-//            "SELECT DISTINCT ?s ((?label) AS ?l) ((?desc) AS ?d) ((?labelGeneral) AS ?lGen) ?descGeneral WHERE",
-//            "{",
-//            "  VALUES ?label { " + mention + " " + typedString + " } ",
-//            "  ?s ?pLABEL ?label .",
-//            "  FILTER NOT EXISTS { ",
-//            "    VALUES ?topic {" + CANDIDATE_BLACKLIST + "}",
-//            "    ?s ?pTYPE ?topic",
-//            "  }",
-//            optionalLanguageFilteredValue("?pDESCRIPTION", aKb.getDefaultLanguage(), "?s", "?desc"),
-//            optionalLanguageFilteredValue("?pDESCRIPTION", null, "?s", "?descGeneral"),
-//            //queryForOptionalSubPropertyLabel(labelProperties, aKb.getDefaultLanguage(),"?oItem","?spl"),
-//            "}");
-//
-//        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
-//        tupleQuery.setBinding("pLABEL", aKb.getLabelIri());
-//        tupleQuery.setBinding("pTYPE", aKb.getTypeIri());
-//        tupleQuery.setBinding("pDESCRIPTION", aKb.getDescriptionIri());
     }
 
     /**
      * This query retrieves candidates via full-text matching of their labels and full-text-search
-     * @param aKb the Knowledge Base
-     * @param aString String for which to perform full text search
-     *
+     * 
+     * @param aKb
+     *            the Knowledge Base
+     * @param aString
+     *            String for which to perform full text search
      * @return a query to retrieve candidate entities
      */
     public static List<KBHandle> searchItemsStartingWith(KnowledgeBase aKb,

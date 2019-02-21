@@ -126,8 +126,8 @@ public class IriConstants
     {
         // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
         // want to filter it out just because we consider the OWL namespace to be implicit.
-        List<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
-                .collect(Collectors.toList());
+        Set<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
+                .collect(Collectors.toSet());
         if (rootConceptsAsStrings.contains(s)) {
             return false;
         }

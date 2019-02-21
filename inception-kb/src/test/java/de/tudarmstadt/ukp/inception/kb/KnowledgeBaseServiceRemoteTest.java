@@ -400,16 +400,16 @@ public class KnowledgeBaseServiceRemoteTest
     public void thatExactQueryWorks()
     {
         // For Wikidata and DBPedia
-        generateCandidateExactQuery("Barack", "Barack Obama");
+        __thatExactQueryWorks("Barack", "Barack Obama");
         
         // For Wine ontology
-        generateCandidateExactQuery("Sauternes", "Sauternes");
+        __thatExactQueryWorks("Sauternes", "Sauternes");
         
         // For http://zbw.eu/beta/sparql/stw/query
-        generateCandidateExactQuery("Labour", "Labour");
+        __thatExactQueryWorks("Labour", "Labour");
     }
     
-    private void generateCandidateExactQuery(String aMention, String aQuery)
+    private void __thatExactQueryWorks(String aMention, String aQuery)
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
 
