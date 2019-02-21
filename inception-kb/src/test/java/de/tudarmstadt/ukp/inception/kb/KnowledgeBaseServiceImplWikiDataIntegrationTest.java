@@ -20,12 +20,8 @@ package de.tudarmstadt.ukp.inception.kb;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,10 +46,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -219,11 +211,11 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException {
-        PROFILES = readKnowledgeBaseProfiles();
+        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-        kb_wikidata_direct.setType(RepositoryType.REMOTE);
+        kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
         kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
         kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
@@ -231,18 +223,6 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setMaxResults(1000);
        
         return kb_wikidata_direct;
-    }
-
-   
-    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles() throws IOException
-    {
-        try (Reader r = new InputStreamReader(KnowledgeBaseServiceRemoteTest.class
-                .getResourceAsStream("knowledgebase-profiles.yaml"), StandardCharsets.UTF_8)) {
-            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
-            {
-            });
-        }
     }
     
     

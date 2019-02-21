@@ -35,13 +35,18 @@ public interface SearchService
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 
+    List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
+            throws IOException, ExecutionException;
+
     void reindex(Project aproject) throws IOException;
 
-    public Index getIndex(Project aProject);
+    Index getIndex(Project aProject);
 
-    public boolean isIndexValid(Project aProject);
+    boolean isIndexValid(Project aProject);
     
-    public void indexDocument(SourceDocument aSourceDocument, JCas aJCas);
+    void indexDocument(SourceDocument aSourceDocument, JCas aJCas);
 
-    public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas);
+    void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas);
+
+    boolean isIndexInProgress(Project aProject);
 }

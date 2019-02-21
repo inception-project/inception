@@ -111,6 +111,12 @@ public class KnowledgeBase
     private IRI typeIri;
 
     /**
+     *  The IRI for a property describing B being a subproperty of A
+     */
+    @Column(nullable = false)
+    private IRI subPropertyIri;
+
+    /**
      * The IRI for a property describing B being a description of A, e.g. schema:description
      */
     @Column(nullable = false)
@@ -173,7 +179,7 @@ public class KnowledgeBase
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "knowledgebase_root_classes")
     @Column(name = "name")
-    private List<IRI> explicitlyDefinedRootConcepts = new ArrayList<>();
+    private List<IRI> rootConcepts = new ArrayList<>();
 
     /**
      * The default language for labels and descriptions of KB elements
@@ -256,6 +262,21 @@ public class KnowledgeBase
         typeIri = aTypeIri;
     }
 
+    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
+    {
+        propertyDescriptionIri = aPropertyDescriptionIri;
+    }
+
+    public IRI getSubPropertyIri()
+    {
+        return subPropertyIri;
+    }
+
+    public void setSubPropertyIri(IRI aSubPropertyIri)
+    {
+        subPropertyIri = aSubPropertyIri;
+    }
+
     public IRI getDescriptionIri()
     {
         return descriptionIri;
@@ -321,11 +342,6 @@ public class KnowledgeBase
         return propertyDescriptionIri;
     }
 
-    public void setPropertyDescriptionIri(IRI aPropertyDescriptionIri)
-    {
-        propertyDescriptionIri = aPropertyDescriptionIri;
-    }
-
     public boolean isReadOnly()
     {
         return readOnly;
@@ -379,14 +395,14 @@ public class KnowledgeBase
         basePrefix = aBasePrefix;
     }
     
-    public List<IRI> getExplicitlyDefinedRootConcepts()
+    public List<IRI> getRootConcepts()
     {
-        return explicitlyDefinedRootConcepts;
+        return rootConcepts;
     }
 
-    public void setExplicitlyDefinedRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
+    public void setRootConcepts(List<IRI> aExplicitlyDefinedRootConcepts)
     {
-        explicitlyDefinedRootConcepts = aExplicitlyDefinedRootConcepts;
+        rootConcepts = aExplicitlyDefinedRootConcepts;
     }
 
     public int getMaxResults()
@@ -404,6 +420,7 @@ public class KnowledgeBase
         setClassIri(aMapping.getClassIri());
         setSubclassIri(aMapping.getSubclassIri());
         setTypeIri(aMapping.getTypeIri());
+        setSubPropertyIri(aMapping.getSubPropertyIri());
         setDescriptionIri(aMapping.getDescriptionIri());
         setLabelIri(aMapping.getLabelIri());
         setPropertyTypeIri(aMapping.getPropertyTypeIri());
@@ -414,12 +431,12 @@ public class KnowledgeBase
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getRootConcepts() == null) {
-            setExplicitlyDefinedRootConcepts(new ArrayList<>());
+            setRootConcepts(new ArrayList<>());
         }
         else {
             ValueFactory vf = SimpleValueFactory.getInstance();
             for (String rootConcept : aProfile.getRootConcepts()) {
-                explicitlyDefinedRootConcepts.add(vf.createIRI(rootConcept));
+                rootConcepts.add(vf.createIRI(rootConcept));
             }
         }
     }

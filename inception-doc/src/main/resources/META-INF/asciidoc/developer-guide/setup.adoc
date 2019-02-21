@@ -15,9 +15,11 @@
 // limitations under the License.
 
 [[sect_setup]]
-== Setup
+= Setup
 
-=== GIT
+This section covers setting up a development environment.
+
+== GIT
 
 All sources files are stored using UNIX line endings. If you develop on Windows, you have to
 set the `core.autocrlf` configuration setting to `input` to avoid accidentally submitting Windows
@@ -32,7 +34,7 @@ C:\> git config --global core.autocrlf input
 
 After changing this setting, best do a fresh clone and check-out of the project.
 
-=== Setting up the for development in Eclipse
+== Setting up the for development in Eclipse
 
 This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
@@ -42,7 +44,7 @@ It is recommended to configure a MySQL-server.
 
 We recommend you start from a *Eclipse IDE for Java Developers* package.
 
-==== Use a JDK
+=== Use a JDK
 
 On Linux or OS X, the following setting is not necessary. Having a full JDK installed on your
 system is generally sufficient. You can skip on to the next section.
@@ -59,7 +61,7 @@ location of the JDK on your system. Without this, Eclipse will complain that the
 C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
 ----
 
-==== Eclipse Plug-ins
+=== Eclipse Plug-ins
 
 * *Maven Integration:* m2e , already comes pre-installed with the Eclipse IDE for Java Developers.
   If you use another edition of Eclipse which does not have m2e pre-installed, go to *Help->Install
@@ -80,12 +82,12 @@ C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
 ** m2e-wtp - Maven Integration for WTP
 ** WST Server Adapters
 
-=== Eclipse Workspace Settings
+== Eclipse Workspace Settings
 
 * You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
   your Eclipse install.
 
-=== Importing {product-name} into the Workspace
+== Importing {product-name} into the Workspace
 
 Checkout out the {product-name} git repository with your favorite git client. If you use the command-line
 client, use the command
@@ -98,7 +100,7 @@ $ git clone https://github.com/inception-project/inception.git
 In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
 you have cloned {product-name}. Eclipse should automatically detect all modules.
 
-=== Eclipse Tomcat Integration
+== Eclipse Tomcat Integration
 
 Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5). Then, you need to
 add the Tomcat server to your runtime configuration. Go to preferences and go to
@@ -126,7 +128,7 @@ server in order for changes to Java class files to take effect. However, as a be
 HTML, CSS or JavaScript files take effect immediately and you just have to refresh the browser to
 see the changes.
 
-=== Checkstyle and Formatting
+== Checkstyle and Formatting
 
 We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
 

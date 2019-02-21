@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.externalsearch;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.List;
 
 public class ExternalSearchResult
     implements Serializable
@@ -42,7 +42,7 @@ public class ExternalSearchResult
     private String timestamp;
     private String language;
     private Double score;
-    private ArrayList<String> highlights;
+    private List<ExternalSearchHighlight> highlights;
 
     public int getTokenStart()
     {
@@ -184,12 +184,12 @@ public class ExternalSearchResult
         this.score = score;
     }
 
-    public ArrayList<String> getHighlights()
+    public List<ExternalSearchHighlight> getHighlights()
     {
         return highlights;
     }
 
-    public void setHighlights(ArrayList<String> highlights)
+    public void setHighlights(List<ExternalSearchHighlight> highlights)
     {
         this.highlights = highlights;
     }

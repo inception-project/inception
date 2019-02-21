@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search.scheduling;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
+import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
@@ -35,6 +36,7 @@ public class TaskConsumer
 
     private ApplicationContext applicationContext;
     private BlockingQueue<Task> queue;
+    private Task activeTask;
 
     public TaskConsumer(ApplicationContext aApplicationContext, BlockingQueue<Task> aQueue)
     {
@@ -50,22 +52,25 @@ public class TaskConsumer
     {
         try {
             while (!Thread.interrupted()) {
-                log.info("Waiting for new indexing task...");
+                log.debug("Waiting for new indexing task...");
 
-                Runnable task = queue.take();
+                activeTask = queue.take();
 
                 try {
                     AutowireCapableBeanFactory factory = applicationContext
                             .getAutowireCapableBeanFactory();
-                    factory.autowireBean(task);
-                    factory.initializeBean(task, "transientTask");
+                    factory.autowireBean(activeTask);
+                    factory.initializeBean(activeTask, "transientTask");
 
-                    log.debug("Starting new indexing task [{}]...", task);
-                    task.run();
-                    log.info("Indexing task {} completed successfully.", task);
+                    log.debug("Indexing task started: {}", activeTask);
+                    activeTask.run();
+                    log.debug("Indexing task completed: {}", activeTask);
                 }
                 catch (Throwable e) {
-                    log.error("Indexing task {} failed.", task, e);
+                    log.error("Indexing task failed: {}", activeTask, e);
+                }
+                finally {
+                    activeTask = null;
                 }
             }
         }
@@ -74,4 +79,8 @@ public class TaskConsumer
         }
     }
 
+    public Optional<Task> getActiveTask()
+    {
+        return Optional.ofNullable(activeTask);
+    }
 }

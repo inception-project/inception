@@ -172,11 +172,14 @@ public class KBProperty
 
         if (isNotBlank(name)) {
             Literal nameLiteral;
-            if (language == null) {
-                nameLiteral = vf.createLiteral(name);
+            if (language != null) {
+                nameLiteral = vf.createLiteral(name, language);
+            }
+            else if (kb.getDefaultLanguage() != null) {
+                nameLiteral = vf.createLiteral(name, kb.getDefaultLanguage());
             }
             else {
-                nameLiteral = vf.createLiteral(name, language);
+                nameLiteral = vf.createLiteral(name);
             }
             Statement nameStmt = vf.createStatement(subject, kb.getPropertyLabelIri(), nameLiteral);
             originalStatements.add(nameStmt);
@@ -220,7 +223,7 @@ public class KBProperty
         kbProp.originalStatements.add(aStmt);
 
         readFirst(aConn, aStmt.getSubject(), kb.getPropertyLabelIri(), null, 
-                kb.getDefaultLanguage())
+                kb.getDefaultLanguage(), kb)
             .ifPresent((stmt) -> {
                 kbProp.setName(stmt.getObject().stringValue());
                 kbProp.originalStatements.add(stmt);
@@ -232,7 +235,7 @@ public class KBProperty
             });
 
         readFirst(aConn, aStmt.getSubject(), kb.getPropertyDescriptionIri(), null, 
-                kb.getDefaultLanguage())
+                kb.getDefaultLanguage(), kb)
             .ifPresent((stmt) -> {
                 kbProp.setDescription(stmt.getObject().stringValue());
                 kbProp.originalStatements.add(stmt);
@@ -243,12 +246,12 @@ public class KBProperty
                 }
             });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null, kb).ifPresent((stmt) -> {
             kbProp.setRange(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });
 
-        readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null).ifPresent((stmt) -> {
+        readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null, kb).ifPresent((stmt) -> {
             kbProp.setDomain(stmt.getObject().stringValue());
             kbProp.originalStatements.add(stmt);
         });

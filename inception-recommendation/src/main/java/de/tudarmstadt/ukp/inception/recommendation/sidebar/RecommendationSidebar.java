@@ -39,6 +39,8 @@ public class RecommendationSidebar
 {
     private static final long serialVersionUID = 4306746527837380863L;
     
+    private static final String LEARNING_CURVE = "learningCurve";
+    
     private @SpringBean RecommendationService recommendationService;
 
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -46,15 +48,13 @@ public class RecommendationSidebar
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
-
-        IModel<Preferences> model = LambdaModelAdapter.of(
-            () -> recommendationService.getPreferences(aModel.getObject().getUser(), 
+        IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
+            () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
-            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(), 
+            (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject(), v));
 
-        Form<Preferences> form = new Form<>("form",
-                CompoundPropertyModel.of(model));
+        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
                 .setMinimum(1)
@@ -65,7 +65,11 @@ public class RecommendationSidebar
 
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
-        
+
         add(form);
+
+        LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
+        chartContainer.setVisibilityAllowed(recommendationService.showLearningCurveDiagram());
+        add(chartContainer);
     }
 }

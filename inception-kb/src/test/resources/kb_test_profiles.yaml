@@ -2,8 +2,11 @@ test_profile:
   name: Test KB
   type: LOCAL
   root-concepts: [ ]
+  default-language: en
+  reification: WIKIDATA
   access:
       access-url: http://someurl/sparql
+      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
   mapping:
       class: http://www.w3.org/2000/01/rdf-schema#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf
@@ -13,4 +16,10 @@ test_profile:
       description: http://www.w3.org/2000/01/rdf-schema#comment
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
-      full-text-search: http://www.openrdf.org/contrib/lucenesail#matches
+      subproperty-of: http://www.w3.org/2000/01/rdf-schema#subPropertyOf
+  info:
+    description: This is a knowledge base for testing the kb profiles
+    host-institution-name: a host
+    author-name: INCEpTION team
+    website-url: https://inception-project.github.io/
+      

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,6 +37,7 @@ import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
@@ -48,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 public class StringMatchingRecommenderTest
 {
@@ -101,6 +104,40 @@ public class StringMatchingRecommenderTest
         assertThat(predictions).as("Some score is not perfect")
             .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
     }
+    
+    @Test
+    public void thatPredictionWithPretrainigWorks() throws Exception
+    {
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
+        
+        CAS cas = casList.get(0);
+        
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
+        gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
+        gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
+
+        sut.pretrain(gazeteer);
+        
+        sut.train(context, emptyList());
+
+        sut.predict(context, cas);
+
+        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+
+        assertThat(predictions).as("Predictions have been written to CAS")
+            .isNotEmpty();
+        
+        assertThat(predictions)
+            .as("Score is positive")
+            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+
+        assertThat(predictions)
+            .as("Some score is not perfect")
+            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+    }
+
 
     @Test
     public void thatEvaluationWorks() throws Exception
@@ -114,6 +151,19 @@ public class StringMatchingRecommenderTest
         System.out.printf("Score: %f%n", score);
         
         // assertThat(score).isStrictlyBetween(0.0, 1.0);
+    }
+
+    @Test
+    public void thatEvaluationSkippingWorks() throws Exception
+    {
+        DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+
+        double score = sut.evaluate(asList(), splitStrategy);
+
+        System.out.printf("Score: %f%n", score);
+        
+        assertThat(score).isEqualTo(0.0);
     }
 
     @Test
@@ -175,9 +225,12 @@ public class StringMatchingRecommenderTest
         AnnotationLayer layer = new AnnotationLayer();
         layer.setName(NamedEntity.class.getName());
 
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
+
         Recommender recommender = new Recommender();
         recommender.setLayer(layer);
-        recommender.setFeature("value");
+        recommender.setFeature(feature);
         recommender.setMaxRecommendations(3);
 
         return recommender;

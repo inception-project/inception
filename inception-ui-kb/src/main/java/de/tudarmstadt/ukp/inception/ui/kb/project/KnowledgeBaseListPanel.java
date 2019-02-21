@@ -33,8 +33,9 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.project.wizard.KnowledgeBaseCreationDialog;
 
-public class KnowledgeBaseListPanel extends ListPanel_ImplBase {
-
+public class KnowledgeBaseListPanel
+    extends ListPanel_ImplBase
+{
     private static final long serialVersionUID = 8414963964131106164L;
     
     private @SpringBean KnowledgeBaseService kbService;

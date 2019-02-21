@@ -410,23 +410,7 @@ public class ConceptLinkingServiceImpl
         }
 
         // Set frequency
-        if (entityFrequencyMap != null) {
-            for (CandidateEntity l : aCandidatesFullText) {
-                String key = l.getIRI();
-                // For UKP Wikidata
-                if (aKB.getType() == RepositoryType.REMOTE
-                    && aKB.getFullTextSearchIri().equals(IriConstants.FTS_VIRTUOSO)) {
-                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
-                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
-                        .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
-                        key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
-                        if (entityFrequencyMap.get(key) != null) {
-                            l.setFrequency(entityFrequencyMap.get(key));
-                        }
-                    }
-                }
-            }
-        }
+        setFrequenciesForCandidates(aKB, aCandidatesFullText);
 
         // Sort full-text matching candidates by frequency and do cutoff by a threshold
         List<CandidateEntity> result = sortByFrequency(new ArrayList<>(aCandidatesFullText))
@@ -478,6 +462,32 @@ public class ConceptLinkingServiceImpl
         // Do the main ranking
         result = sortCandidates(result);
         return result;
+    }
+
+    /*
+     * Set frequencies for CandidateEntities from full-text-search
+     */
+    private void setFrequenciesForCandidates(KnowledgeBase aKB,
+        Set<CandidateEntity> aCandidatesFullText)
+    {
+        // Set frequency
+        if (entityFrequencyMap != null) {
+            for (CandidateEntity l : aCandidatesFullText) {
+                String key = l.getIRI();
+                // For UKP Wikidata
+                if (aKB.getType() == RepositoryType.REMOTE && aKB.getFullTextSearchIri()
+                    .equals(IriConstants.FTS_VIRTUOSO)) {
+                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(aKB);
+                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
+                        .equals(IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT)) {
+                        key = key.replace(IriConstants.PREFIX_WIKIDATA_ENTITY, "");
+                        if (entityFrequencyMap.get(key) != null) {
+                            l.setFrequency(entityFrequencyMap.get(key));
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /*
@@ -616,6 +626,28 @@ public class ConceptLinkingServiceImpl
         }
 
         return handles;
+    }
+
+    @Override
+    public List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString)
+    {
+        if (aTypedString == null) {
+            aTypedString = "";
+        }
+        if (!aTypedString.isEmpty()) {
+            Set<CandidateEntity> allCandidates = getCandidatesFullText(aKB, aTypedString);
+            setFrequenciesForCandidates(aKB, allCandidates);
+            // Sort full-text matching candidates by frequency and do cutoff by a threshold
+            List<CandidateEntity> result = sortByFrequency(new ArrayList<>(allCandidates))
+                .stream().limit(properties.getCandidateFrequencyThreshold())
+                .collect(Collectors.toList());
+
+            return result.stream()
+                .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription())).distinct()
+                .limit(properties.getCandidateDisplayLimit())
+                .filter(h -> h.getIdentifier().contains(":")).collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
     /**

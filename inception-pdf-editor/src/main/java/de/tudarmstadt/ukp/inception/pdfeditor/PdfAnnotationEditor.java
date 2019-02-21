@@ -17,20 +17,44 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.cas.CASRuntimeException;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -39,39 +63,234 @@ public class PdfAnnotationEditor
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
 
     private @SpringBean DocumentService documentService;
-    
+    private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
     {
         super(aId, aModel, aActionHandler, aJCasProvider);
-        
-        add(new PdfAnnoPanel("vis", aModel));
+
+        add(new PdfAnnoPanel("vis", aModel, this));
     }
 
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-     
-//        if (getModelObject().getDocument() != null) {
-//            requestRender(RequestCycle.get().find(AjaxRequestTarget.class));
-//        }
     }
-    
+
     @Override
     public void render(AjaxRequestTarget aTarget)
     {
-//        renderedContent = aJCas.getDocumentText();
-        
-//        if (aTarget != null) {
-//            aTarget.add(vis);
-//        }
+        try {
+            Selection selection = getModelObject().getSelection();
+            File pdfFile = documentService.getSourceDocumentFile(getModelObject().getDocument());
+            String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+            renderPdfAnnoModel(aTarget, pdftext);
+            if (selection.getAnnotation() != null) {
+                aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById("
+                    + selection.getAnnotation().toString() + ");"
+                    + "anno && anno.select();");
+            }
+        }
+        catch (IOException e)
+        {
+            handleError("Could not load data", e, aTarget);
+        }
     }
 
-    private void handleError(String aMessage, Throwable aCause)
+    private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
     {
         LOG.error(aMessage, aCause);
-        error(aMessage + ExceptionUtils.getRootCauseMessage(aCause));
-        return;
+        handleError(aMessage + ": " + ExceptionUtils.getRootCauseMessage(aCause), aTarget);
+    }
+
+    private void handleError(String aMessage, AjaxRequestTarget aTarget)
+    {
+        error(aMessage);
+        aTarget.addChildren(getPage(), IFeedback.class);
+    }
+
+    /**
+     * Renders the PdfAnnoModel.
+     * This includes the anno file and the color map.
+     */
+    public void renderPdfAnnoModel(AjaxRequestTarget aTarget, PdfExtractFile aPdfExtractFile)
+    {
+        if (getModelObject().getProject() != null)
+        {
+            try
+            {
+                JCas jCas = getJCasProvider().get();
+                VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
+                PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
+                    vdoc, jCas.getDocumentText(), annotationService, aPdfExtractFile);
+                // show unmatched spans to user
+                if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
+                    String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
+                        .map(span -> "(id: " + span.getId() + ", text: \"" + span.getText() + "\")")
+                        .collect(Collectors.joining(", "));
+                    handleError("Could not find a match for the following annotations: "
+                        + annotations, aTarget);
+                }
+                String script = getAnnotationsJS(pdfAnnoModel, aTarget);
+                aTarget.appendJavaScript(script);
+            }
+            catch (IOException e)
+            {
+                handleError("Unable to load data", e, aTarget);
+            }
+        }
+    }
+
+    /**
+     * Renders the PdfAnnoModel.
+     * This includes the anno file and the color map.
+     */
+    public void renderPdfAnnoModel(AjaxRequestTarget aTarget, String aPdftxt)
+    {
+        renderPdfAnnoModel(aTarget, new PdfExtractFile(aPdftxt));
+    }
+
+    public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                     JCas aJCas, PdfExtractFile aPdfExtractFile)
+    {
+        try
+        {
+            Offset offset = new Offset(aParams);
+            Offset docOffset = PdfAnnoRenderer
+                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+            if (docOffset != null) {
+                getModelObject().getSelection()
+                    .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
+                getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+                renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
+            } else {
+                handleError("Unable to create span annotation: No match was found", aTarget);
+            }
+        }
+        catch (IOException | AnnotationException e)
+        {
+            handleError("Unable to create span annotation", e, aTarget);
+        }
+    }
+
+    private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+    {
+        try
+        {
+            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+            Offset offset = new Offset(aParams);
+            Offset docOffset = PdfAnnoRenderer
+                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+            if (docOffset != null) {
+                if (paramId.isSynthetic()) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                        aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
+                        docOffset.getEnd());
+                } else {
+                    getModelObject().getSelection()
+                        .selectSpan(paramId, aJCas, docOffset.getBegin(), docOffset.getEnd());
+                    getActionHandler().actionSelect(aTarget, aJCas);
+                }
+            } else {
+                handleError("Unable to select span annotation: No match was found", aTarget);
+            }
+        }
+        catch (AnnotationException | IOException e)
+        {
+            handleError("Unable to select span annotation", e, aTarget);
+        }
+    }
+
+    private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                          JCas aJCas, PdfExtractFile aPdfExtractFile)
+        throws IOException
+    {
+        try {
+            AnnotationFS originFs = selectByAddr(aJCas,
+                aParams.getParameterValue("origin").toInt());
+            int target = aParams.getParameterValue("target").toInt();
+            if (target == -1) {
+                // if -1 return, relation drawing was not stopped over a target
+                return;
+            }
+            AnnotationFS targetFs = selectByAddr(aJCas,
+                target);
+
+            AnnotatorState state = getModelObject();
+            Selection selection = state.getSelection();
+            selection.selectArc(VID.NONE_ID, originFs, targetFs);
+
+            if (selection.getAnnotation().isNotSet()) {
+                getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+            }
+        }
+        catch (AnnotationException | CASRuntimeException e)
+        {
+            handleError("Unable to create relation annotation", e, aTarget);
+        }
+        catch (StringValueConversionException e)
+        {
+            handleError("Unable to create relations on recommendations", aTarget);
+        }
+        finally
+        {
+            // workaround to enable further creation of relations in PDFAnno
+            // if existing annotations are not rerendered after an attempt to create a relation.
+            // it can happen that mouse will hang when leaving annotation knob while dragging
+            renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
+        }
+    }
+
+    public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                 String aPdftxt)
+    {
+        try
+        {
+            JCas jCas = getJCasProvider().get();
+            PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
+            String action = aParams.getParameterValue("action").toString();
+
+            switch (action)
+            {
+            case "createSpan": createSpanAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "selectSpan": selectSpanAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "createRelation": createRelationAnnotation(aTarget, aParams, jCas, pdfExtractFile);
+                break;
+            case "selectRelation":
+                break;
+            default: handleError("Unkown action: " + action, aTarget);
+            }
+        }
+        catch (IOException e)
+        {
+            handleError("Unable to load data", e, aTarget);
+        }
+    }
+
+    /**
+     * Returns JavaScript code that imports annotation data in PDFAnno
+     */
+    public String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel, AjaxRequestTarget aTarget)
+    {
+        try {
+            return String.join("",
+                "var annoFile = `\n",
+                aPdfAnnoModel.getAnnoFileContent(),
+                "`;",
+                "pdfanno.contentWindow.annoPage.importAnnotation({",
+                "'primary': true,",
+                "'colorMap': ", JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()), ",",
+                "'annotations':[annoFile]}, true);"
+            );
+        } catch (IOException e) {
+            handleError("Could not map PDFAnno ColorMap to JSON String", e, aTarget);
+        }
+        return "";
     }
 }

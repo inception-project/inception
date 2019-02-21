@@ -34,6 +34,6 @@ public class ActiveLearningEventAdapter {
     public void afterDocumentReset(AfterDocumentResetEvent aEvent) {
         SourceDocument currentDocument = aEvent.getDocument().getDocument();
         String currentUser = aEvent.getDocument().getUser();
-        learningRecordService.deleteRecordByDocumentAndUser(currentDocument, currentUser);
+        learningRecordService.deleteRecords(currentDocument, currentUser);
     }
 }

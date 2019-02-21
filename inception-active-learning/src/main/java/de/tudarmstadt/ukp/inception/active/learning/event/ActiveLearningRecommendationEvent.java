@@ -23,26 +23,26 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationObject;
-import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserAction;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
 public class ActiveLearningRecommendationEvent
     extends ApplicationEvent
 {
-
     private static final long serialVersionUID = -2741267700429534514L;
+
     private final SourceDocument document;
-    private final AnnotationObject currentRecommendation;
+    private final AnnotationSuggestion currentRecommendation;
     private final String user;
     private final AnnotationLayer layer;
     private final String annotationFeature;
-    private final LearningRecordUserAction action;
-    private final List<AnnotationObject> allRecommendations;
+    private final LearningRecordType action;
+    private final List<AnnotationSuggestion> allRecommendations;
 
     public ActiveLearningRecommendationEvent(Object aSource, SourceDocument aDocument,
-        AnnotationObject aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
-        String aAnnotationFeature, LearningRecordUserAction aAction,
-        List<AnnotationObject> aAllRecommendations)
+            AnnotationSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            String aAnnotationFeature, LearningRecordType aAction,
+            List<AnnotationSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
@@ -59,7 +59,7 @@ public class ActiveLearningRecommendationEvent
         return document;
     }
 
-    public AnnotationObject getCurrentRecommendation()
+    public AnnotationSuggestion getCurrentRecommendation()
     {
         return currentRecommendation;
     }
@@ -79,12 +79,12 @@ public class ActiveLearningRecommendationEvent
         return annotationFeature;
     }
 
-    public LearningRecordUserAction getAction()
+    public LearningRecordType getAction()
     {
         return action;
     }
 
-    public List<AnnotationObject> getAllRecommendations()
+    public List<AnnotationSuggestion> getAllRecommendations()
     {
         return allRecommendations;
     }

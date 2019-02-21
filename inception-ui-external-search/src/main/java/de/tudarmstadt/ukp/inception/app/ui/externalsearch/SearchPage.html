@@ -16,14 +16,10 @@
  - limitations under the License.
 -->
 <html
-	xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <head>
   <wicket:head>
     <style>
-      .page-content {
-        display: flex;
-      }
-      
       span.inline-edit {
         border: 1px solid green;
         padding: 4px;
@@ -38,36 +34,35 @@
   </wicket:head>
 </head>
 <body>
-	<wicket:extend>
-		<div class="container-fluid">
-			<div class="row">
-				<div class="col-md-12">
-					<div wicket:id="mainContainer">
-						<form class="form-group form-inline"
-							wicket:id="repositorySelectionForm" style="float: right;">
-							<label for="repositoryCombo">Repository: </label><select
-								class="form-control" wicket:id="repositoryCombo"></select>
-						</form>
-						<h4>Search parameters</h4>
-						<form class="form-group form-inline" wicket:id="searchForm">
-							<fieldset style="display: inline-block;">
-								<div>
-									<label for="queryInput">Search query:</label> <input
-										class="form-control" wicket:id="queryInput" type="text"
-										id="queryInput" />
-									<button wicket:id="submitSearch" class="btn btn-primary"
-										type="submit" name="Search" value="Search">Search</button>
-								</div>
-							</fieldset>
-						</form>
-						<table class="dataview" cellspacing="0" wicket:id="resultsTable">[Results
-							table]
-						</table>
-					</div>
-					<div wicket:id="modalDocumentWindow"></div>
-				</div>
-			</div>
-		</div>
-	</wicket:extend>
+  <wicket:extend>
+    <div class="flex-content flex-v-container flex-gutter">
+      <div class="flex-h-container flex-gutter">
+        <form wicket:id="repositorySelectionForm" style="width: 240px;">
+          <span class="input-group">
+            <span class="input-group-addon">
+              <i class="fa fa-database"></i>
+            </span>
+            <select wicket:id="repositoryCombo" class="form-control" data-container="body"></select>
+          </span>
+        </form>
+        <form wicket:id="searchForm" class="flex-content">
+          <div class="input-group">
+            <span class="input-group-addon">
+              <i class="fa fa-search"></i>
+            </span>
+            <input wicket:id="queryInput" class="form-control" type="text" />
+            <div class="input-group-btn">
+              <button wicket:id="submitSearch" class="btn btn-default" type="submit">Search</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div wicket:id="dataTableContainer" class="scrolling flex-content flex-h-container">
+        <table wicket:id="resultsTable" class="table" cellspacing="0" >
+          [Results table]
+        </table>
+      </div>
+    </div>
+  </wicket:extend>
 </body>
 </html>

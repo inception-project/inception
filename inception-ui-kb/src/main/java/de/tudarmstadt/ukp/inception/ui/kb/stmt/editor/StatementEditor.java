@@ -47,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -220,7 +221,7 @@ public class StatementEditor extends Panel
             try {
                 presenter = valueTypeRegistry
                     .getValueSupport(aStatement.getObject(), property.getObject())
-                    .createPresenter("value", model, property);
+                    .createPresenter("value", model, property, kbModel);
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
@@ -352,7 +353,7 @@ public class StatementEditor extends Panel
                         .readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
                 valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
-            valueType = new DropDownChoice<>("valueType", valueTypes);
+            valueType = new BootstrapSelect<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(
                     valueTypeRegistry.getValueType(aStatement.getObject(), property.getObject())));

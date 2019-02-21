@@ -31,5 +31,5 @@ with a feature value exists.
 This recommender uses the OpenNLP Name Finder to learn a sequence tagging model for multi-token
 annotations. The model generates a BIO-encoded representation of the annotations in the sentence.
 
-NOTE: If a layer contains overlapping annotations, the recommender does not fail, but it is also not
-      able to learn properly.
+NOTE: If a layer contains overlapping annotations, it considers only the first overlapping 
+      annotation and then skips all annotation until it reaches one that does not overlap with it.

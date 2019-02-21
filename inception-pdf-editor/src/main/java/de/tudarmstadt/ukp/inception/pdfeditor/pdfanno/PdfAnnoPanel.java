@@ -20,7 +20,10 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -31,13 +34,14 @@ import org.apache.wicket.request.handler.resource.ResourceStreamRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 import org.apache.wicket.util.resource.StringResourceStream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
+import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
 import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnoPanel
@@ -47,19 +51,26 @@ public class PdfAnnoPanel
 
     private @SpringBean DocumentService documentService;
 
+    private @SpringBean PdfEditorProperties pdfEditorProperties;
+
     private AbstractAjaxBehavior pdfProvider;
 
     private AbstractAjaxBehavior pdftxtProvider;
 
+    private AbstractAjaxBehavior annoProvider;
+
+    private AbstractAjaxBehavior apiProvider;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel)
+    public PdfAnnoPanel(String aId, IModel<AnnotatorState> aModel,
+                        PdfAnnotationEditor aPdfAnnotationEditor)
     {
         super(aId, aModel);
 
         add(pdfProvider = new AbstractAjaxBehavior()
         {
-            private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 7715393703216199195L;
 
             @Override
             public void onRequest()
@@ -76,7 +87,7 @@ public class PdfAnnoPanel
 
         add(pdftxtProvider = new AbstractAjaxBehavior()
         {
-            private static final long serialVersionUID = 2L;
+            private static final long serialVersionUID = -8676150164372852265L;
 
             @Override
             public void onRequest()
@@ -95,8 +106,60 @@ public class PdfAnnoPanel
                 }
                 catch (IOException e)
                 {
-                    log.error("Unable to get PDF text for " + pdfFile.getName()
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
                         + "with PDFExtractor.", e);
+                }
+            }
+        });
+
+        add(annoProvider = new AbstractDefaultAjaxBehavior() {
+
+            private static final long serialVersionUID = 8501859992311111560L;
+
+            @Override
+            protected void respond(AjaxRequestTarget aTarget)
+            {
+                SourceDocument doc = aModel.getObject().getDocument();
+
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
+                try
+                {
+                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
+                }
+                catch (IOException e)
+                {
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
+                        + "with PDFExtractor.", e);
+                    error("Unable to get PDF text for " + pdfFile.getName()
+                        + "with PDFExtractor.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
+        });
+
+        add(apiProvider = new AbstractDefaultAjaxBehavior() {
+            private static final long serialVersionUID = 3816087744638629290L;
+
+            @Override
+            protected void respond(AjaxRequestTarget aTarget) {
+                SourceDocument doc = aModel.getObject().getDocument();
+                File pdfFile = documentService.getSourceDocumentFile(doc);
+
+                try
+                {
+                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    aPdfAnnotationEditor.handleAPIRequest(
+                        aTarget, getRequest().getPostParameters(), pdftext);
+                }
+                catch (IOException e)
+                {
+                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
+                        + "with PDFExtractor.", e);
+                    error("Unable to get PDF text for " + pdfFile.getName()
+                        + "with PDFExtractor.");
+                    aTarget.addChildren(getPage(), IFeedback.class);
                 }
             }
         });
@@ -106,12 +169,14 @@ public class PdfAnnoPanel
             private static final long serialVersionUID = 1421253898149294234L;
 
             @Override
-            protected final void onComponentTag(final ComponentTag tag)
+            protected final void onComponentTag(final ComponentTag aTag)
             {
-                checkComponentTag(tag, "iframe");
+                checkComponentTag(aTag, "iframe");
+
+                String indexFile = pdfEditorProperties.isDebug() ? "index-debug.html" : "index.html";
 
                 String viewerUrl = RequestCycle.get().getUrlRenderer()
-                        .renderFullUrl(Url.parse("resources/pdfanno/index.html"));
+                        .renderFullUrl(Url.parse("resources/pdfanno/" + indexFile));
 
                 String pdfUrl = getPage().getRequestCycle().getUrlRenderer()
                         .renderFullUrl(Url.parse(pdfProvider.getCallbackUrl()));
@@ -119,11 +184,18 @@ public class PdfAnnoPanel
                 String pdftxtUrl = getPage().getRequestCycle().getUrlRenderer()
                     .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
 
-                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl;
+                String annoUrl = getPage().getRequestCycle().getUrlRenderer()
+                    .renderFullUrl(Url.parse(annoProvider.getCallbackUrl()));
 
-                tag.put("src", viewerUrl);
+                String apiUrl = getPage().getRequestCycle().getUrlRenderer()
+                    .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
 
-                super.onComponentTag(tag);
+                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl
+                            + "&api=" + apiUrl;
+
+                aTag.put("src", viewerUrl);
+
+                super.onComponentTag(aTag);
             }
         });
     }
