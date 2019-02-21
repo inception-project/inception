@@ -77,7 +77,7 @@ public class SearchAnnotationSidebar
 
     private User currentUser;
 
-    final WebMarkupContainer mainContainer;
+    private final WebMarkupContainer mainContainer;
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<Options> options = CompoundPropertyModel.of(new Options());

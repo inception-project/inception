@@ -42,7 +42,7 @@ public class ExternalSearchResult
     private String timestamp;
     private String language;
     private Double score;
-    private List<String> highlights;
+    private List<ExternalSearchHighlight> highlights;
 
     public int getTokenStart()
     {
@@ -184,12 +184,12 @@ public class ExternalSearchResult
         this.score = score;
     }
 
-    public List<String> getHighlights()
+    public List<ExternalSearchHighlight> getHighlights()
     {
         return highlights;
     }
 
-    public void setHighlights(List<String> highlights)
+    public void setHighlights(List<ExternalSearchHighlight> highlights)
     {
         this.highlights = highlights;
     }

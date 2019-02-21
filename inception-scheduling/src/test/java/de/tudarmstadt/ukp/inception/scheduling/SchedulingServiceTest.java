@@ -80,7 +80,7 @@ public class SchedulingServiceTest {
         await().atMost(5, SECONDS).until(() -> Thread.activeCount() >= 3);
 
         assertThat(sut.getRunningTasks()).as("All enqueued tasks should be running")
-                .isEqualTo(tasks);
+                .containsExactlyInAnyOrderElementsOf(tasks);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class SchedulingServiceTest {
     {
         DummyTask(User aUser, Project aProject)
         {
-            super(aUser, aProject);
+            super(aUser, aProject, "JUnit");
         }
 
         @Override

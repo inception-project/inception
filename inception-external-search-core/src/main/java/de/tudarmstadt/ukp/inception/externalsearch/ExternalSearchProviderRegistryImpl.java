@@ -26,15 +26,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConditionalOnBean(ExternalSearchService.class)
+import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
+
+/**
+ * Implementation of the external search provider registry API.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchAutoConfiguration#externalSearchService()}.
+ * </p>
+ */
 public class ExternalSearchProviderRegistryImpl
     implements ExternalSearchProviderRegistry, BeanPostProcessor
 {

@@ -25,9 +25,17 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
+import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
+/**
+ * Menu item for the external search page.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ExternalSearchUIAutoConfiguration#searchPageMenuItem()}.
+ * </p>
+ */
 @Order(50)
 public class SearchPageMenuItem
     implements MenuItem

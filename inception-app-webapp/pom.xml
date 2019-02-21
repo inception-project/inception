@@ -40,6 +40,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-layer-docmetadata</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-image</artifactId>
+    </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -76,12 +80,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
     </dependency>
-    <!--  
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-mira</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
@@ -89,6 +87,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-example-imls-data-majority</artifactId>
     </dependency>
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
@@ -161,6 +163,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.lif-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -485,6 +491,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -502,6 +509,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -518,6 +526,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -596,6 +605,7 @@
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
@@ -604,6 +614,7 @@
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-example-imls-data-majority</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
@@ -848,6 +859,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -865,6 +877,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -881,6 +894,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./admin-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>

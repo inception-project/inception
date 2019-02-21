@@ -274,7 +274,12 @@ public class SubjectObjectFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input);
+                List<KBHandle> choices = new ArrayList<>();
+                if (input != null) {
+                    input = input.replaceAll("[*?]", "").trim();
+                    choices = listInstances(actionHandler, input);
+                }
+                return choices;
             }
 
             @Override

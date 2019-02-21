@@ -19,12 +19,13 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
+
+
 = Introduction
 
 include::{include-dir}setup.adoc[leveloffset=+1]
 
 <<<
-
 
 
 = Modules
@@ -47,6 +48,8 @@ include::{include-dir}search.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
+include::{include-dir}implementing_recommender_tutorial.adoc[leveloffset=+1]
+
 include::{include-dir}external_recommender.adoc[leveloffset=+1]
 
 include::{include-dir}log.adoc[leveloffset=+1]
@@ -63,4 +66,5 @@ include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
 
 = Appendices 
 
+[appendix]
 include::{include-dir}systemproperties.adoc[leveloffset=+1]
