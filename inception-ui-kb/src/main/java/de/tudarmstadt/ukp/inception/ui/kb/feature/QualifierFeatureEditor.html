@@ -22,6 +22,7 @@
     <div class="panel-heading">
       <h3 class="panel-title">
         <span wicket:id="feature"></span>
+        <i wicket:id="disabledKBWarning"  class="fa fa-warning" style="color: orange;"></i>
       </h3>
     </div>
     <div class="panel-body">
@@ -44,7 +45,6 @@
           <div style="display: table-cell; width: 100%;">
               <input style="width: 100%;" wicket:id="newRole" type="text"
                   wicket:message="placeholder:newRole.null.placeholder"></input>
-              <i wicket:id="disabledKBWarning" class="fa fa-warning"></i>
           </div>
           <div class="text-nowrap" style="display: table-cell; padding-left: 15px;">
             <button wicket:id="add" type = "submit" class="btn btn-xs">Add</button>

@@ -115,6 +115,8 @@ public class SubjectObjectFeatureEditor
         project = this.getModelObject().feature.getProject();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
+        add(createDisabledKbWarningLabel());
+        
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
         add(content);
@@ -131,7 +133,6 @@ public class SubjectObjectFeatureEditor
         content.add(createSubjectObjectLabel());
         content.add(createRemoveLabelIcon());
         content.add(focusComponent = createAutoCompleteTextField());
-        content.add(createDisabledKbWarningLabel());
     }
     
     @Override
@@ -464,9 +465,9 @@ public class SubjectObjectFeatureEditor
         }
     }
 
-    private Label createDisabledKbWarningLabel()
+    private WebMarkupContainer createDisabledKbWarningLabel()
     {
-        Label warningLabel = new Label("disabledKBWarning", Model.of());
+        WebMarkupContainer warningLabel = new WebMarkupContainer("disabledKBWarning");
         if (linkedAnnotationFeature == null) {
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }

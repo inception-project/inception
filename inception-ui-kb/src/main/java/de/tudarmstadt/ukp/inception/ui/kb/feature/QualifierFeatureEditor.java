@@ -117,6 +117,9 @@ public class QualifierFeatureEditor
         project = stateModel.getObject().getProject();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
+        // Add warning that shows up if the knowledge base that is used by the concept feature
+        // is disabled
+        add(createDisabledKbWarningLabel());
 
         // Most of the content is inside this container such that we can refresh it independently
         // from the rest of the form
@@ -265,10 +268,6 @@ public class QualifierFeatureEditor
                 actionDel(aTarget);
             }
         });
-
-        // Add warning that shows up if the knowledge base that is used by the concept feature
-        // is disabled
-        content.add(createDisabledKbWarningLabel());
     }
 
     @Override
@@ -607,9 +606,9 @@ public class QualifierFeatureEditor
         }
     }
 
-    private Label createDisabledKbWarningLabel()
+    private WebMarkupContainer createDisabledKbWarningLabel()
     {
-        Label warningLabel = new Label("disabledKBWarning", Model.of());
+        WebMarkupContainer warningLabel = new WebMarkupContainer("disabledKBWarning");
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
         ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);

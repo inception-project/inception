@@ -23,19 +23,19 @@
     <div class="panel-heading">
       <h3 class="panel-title">
         <span wicket:id="feature"></span>
+        <i wicket:id="disabledKBWarning"  class="fa fa-warning" style="color: orange;"></i>
       </h3>
     </div>
     <div class="panel-body">
       <div class="form-group" wicket:enclosure="value">
         <div class="col-sm-12">
-            <input style="width: 100%;" wicket:id="value" type="text"
-                wicket:message="placeholder:value.null.placeholder"/>
-            <i wicket:id="disabledKBWarning" class="fa fa-warning"></i>
+          <input style="width: 100%;" wicket:id="value" type="text"
+              wicket:message="placeholder:value.null.placeholder"/>
         </div>
-          <div class="col-sm-12">
-              <span wicket:id="statementExists"></span>
-              <span wicket:id="statementDoesNotExist"></span>
-          </div>
+        <div class="col-sm-12">
+          <span wicket:id="statementExists"></span>
+          <span wicket:id="statementDoesNotExist"></span>
+        </div>
       </div>
     </div>
   </div>

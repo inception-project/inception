@@ -28,10 +28,10 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -218,9 +218,9 @@ public class PropertyFeatureEditor
         return kbHandle;
     }
 
-    private Label createDisabledKbWarningLabel()
+    private WebMarkupContainer createDisabledKbWarningLabel()
     {
-        Label warningLabel = new Label("disabledKBWarning", Model.of());
+        WebMarkupContainer warningLabel = new WebMarkupContainer("disabledKBWarning");
         AnnotationFeature feature = getModelObject().feature;
         warningLabel.add(LambdaBehavior
             .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
