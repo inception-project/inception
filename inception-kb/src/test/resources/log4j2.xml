@@ -8,7 +8,9 @@
   </Appenders>
 
   <Loggers>
-    <!-- Logger name="gate.mimir.index" level="DEBUG"/ -->
+    <!-- Logger name="de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder" level="TRACE"/ -->
+    <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
+    <Logger name="org.apache.http.client.protocol.ResponseProcessCookies" level="ERROR"/>
     <Root level="warn">
       <AppenderRef ref="ConsoleAppender" />
     </Root>

@@ -80,7 +80,9 @@ public class WikiDataReification
         vf = SimpleValueFactory.getInstance();
 
         kbService = aKbService;
-        kbService.registerImplicitNamespace(PREDICATE_NAMESPACE);
+        
+        // FIXME Must find another alternative for this
+        // kbService.registerImplicitNamespace(PREDICATE_NAMESPACE);
     }
 
     @Override
