@@ -1585,9 +1585,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return !(id.endsWith("#abstract") || id.endsWith("#closed"));
     }
 
-    private boolean hasImplicitNamespace(KBHandle handle) {
-        return sut.getImplicitNamespaces().stream()
-            .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
+    private boolean hasImplicitNamespace(KBHandle handle)
+    {
+        return IriConstants.IMPLICIT_NAMESPACES.stream()
+                .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {

@@ -69,6 +69,8 @@ include::{include-dir}annotation_create-annotations_primitive-features.adoc[leve
 
 include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+3]
 
+include::{include-dir}annotation_create-annotations_image-features.adoc[leveloffset=+3]
+
 include::{include-dir}annotation_settings.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_export.adoc[leveloffset=+2]
@@ -81,9 +83,11 @@ include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_concept-linking.adoc[leveloffset=+1]
+include::{include-dir}annotation_concept-linking.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+1]
+include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_images.adoc[leveloffset=+2]
 
 <<<
 
@@ -153,12 +157,15 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 
 = Appendices
 
+[appendix]
 include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 
+[appendix]
 include::{include-dir}formats.adoc[leveloffset=+1]
 
 <<<
 
+[appendix]
 include::{include-dir}troubleshooting.adoc[leveloffset=+1]

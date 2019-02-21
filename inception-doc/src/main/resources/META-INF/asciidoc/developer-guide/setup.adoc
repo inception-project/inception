@@ -17,6 +17,8 @@
 [[sect_setup]]
 = Setup
 
+This section covers setting up a development environment.
+
 == GIT
 
 All sources files are stored using UNIX line endings. If you develop on Windows, you have to

@@ -517,7 +517,7 @@ public class MtasDocumentIndex
                 // commit
                 indexWriter.commit();
     
-                log.info(
+                log.debug(
                         "Document indexed in project [{}]({}). sourceId: {}, annotationId: {}, "
                                 + "user: {}, timestamp: {}",
                         project.getName(), project.getId(), aSourceDocumentId,
@@ -575,7 +575,7 @@ public class MtasDocumentIndex
 
             indexWriter.commit();
 
-            log.info(
+            log.debug(
                     "Removed document from index in project [{}]({}). sourceId: {}, "
                             + "annotationId: {}, user: {}",
                     project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
@@ -599,7 +599,7 @@ public class MtasDocumentIndex
      *            The ID of the annotation document to be removed
      * @param aUser
      *            The owner of the document to be removed
-     * @param timestamp
+     * @param aTimestamp
      *            The timestamp of the document to be removed
      */
     private void deindexDocument(long aSourceDocumentId, long aAnnotationDocumentId, String aUser,

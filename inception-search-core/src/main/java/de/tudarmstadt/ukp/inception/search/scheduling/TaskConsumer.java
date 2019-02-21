@@ -52,7 +52,7 @@ public class TaskConsumer
     {
         try {
             while (!Thread.interrupted()) {
-                log.info("Waiting for new indexing task...");
+                log.debug("Waiting for new indexing task...");
 
                 activeTask = queue.take();
 
@@ -64,7 +64,7 @@ public class TaskConsumer
 
                     log.debug("Indexing task started: {}", activeTask);
                     activeTask.run();
-                    log.info("Indexing task completed: {}", activeTask);
+                    log.debug("Indexing task completed: {}", activeTask);
                 }
                 catch (Throwable e) {
                     log.error("Indexing task failed: {}", activeTask, e);

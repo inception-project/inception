@@ -297,8 +297,14 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input, linkedAnnotationFeature,
-                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                List<KBHandle> choices = new ArrayList<>();
+                if (input != null) {
+                    input = input.replaceAll("[*?]", "").trim();
+                    choices = listInstances(actionHandler, input, linkedAnnotationFeature,
+                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
+                }
+                return choices;
+
             }
 
             @Override
@@ -307,6 +313,7 @@ public class QualifierFeatureEditor
                 super.onConfigure(behavior);
                 
                 behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -380,6 +387,7 @@ public class QualifierFeatureEditor
         String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabel, int
         roleAddr)
     {
+
         if (linkedAnnotationFeature == null) {
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
@@ -410,8 +418,9 @@ public class QualifierFeatureEditor
             handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
                 traits.getAllowedValueType(), project);
             // Sort and filter results
-            handles = handles.stream()
-                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+            String lowerCaseTypedString = aTypedString.toLowerCase();
+            handles = handles.stream().filter(
+                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
         return KBHandle.distinctByIri(handles);

@@ -78,4 +78,14 @@ public interface ConceptLinkingService
     List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
             ConceptFeatureValueType aValueType, String aTypedString,
             String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject);
+
+    /**
+     * Finds entities in a knowledge base according to a typed string using full text search.
+     *
+     * @param aKB          The knowledge base that is searched in
+     * @param aTypedString What the user has typed so far in the text field. Might be null.
+     * @return a list of entities
+     */
+    List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString);
+
 }

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -50,6 +51,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
@@ -64,6 +66,8 @@ public class StringMatchingRecommender
     private final String featureName;
     private final int maxRecommendations;
     private final StringMatchingRecommenderTraits traits;
+    
+    private List<GazeteerEntry> pretrainData = emptyList();
 
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
@@ -72,6 +76,16 @@ public class StringMatchingRecommender
         featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
         traits = aTraits;
+    }
+
+    public void pretrain(List<GazeteerEntry> aData)
+    {
+        if (aData != null) {
+            pretrainData = aData;
+        }
+        else {
+            pretrainData = emptyList();
+        }
     }
 
     private <T> Trie<T> createTrie()
@@ -84,6 +98,12 @@ public class StringMatchingRecommender
     {
         Trie<DictEntry> dict = createTrie();
         
+        // Load the pre-train data into the trie before learning from the annotated data
+        for (GazeteerEntry entry : pretrainData) {
+            learn(dict, entry.text, entry.label);
+        }
+        
+        // Learn from the annotated data
         for (CAS cas : aCasses) {
             Type annotationType = getType(cas, layerName);
             Feature labelFeature = annotationType.getFeatureByBaseName(featureName);

@@ -274,6 +274,32 @@ window.addEventListener('DOMContentLoaded', () => {
       if (spanAnnotation) {
         spanAnnotation.deselect()
       }
+// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
+      if (startPosition !== null && endPosition !== null) {
+        var data = {
+          "action": "createSpan",
+          "page": currentPage,
+          "begin": startPosition,
+          "end": endPosition
+        }
+        parent.Wicket.Ajax.ajax({
+          "m": "POST",
+          "ep": data,
+          "u": window.apiUrl,
+          "sh": [function () {
+            // wait a second before destroying selection for better user experience
+            setTimeout(function () {
+              if (spanAnnotation) {
+                spanAnnotation.destroy()
+              }
+            }, 1000)
+          }],
+          "fh": [function () {
+              console.log('Something went wrong on creating new annotation for: ' + data)
+          }]
+        });
+      }
+// END INCEpTION EXTENSION
     }
     mouseDown = false
   })

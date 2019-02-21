@@ -19,20 +19,26 @@
 
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-  <wicket:panel>
-    <div class="flex-v-container flex-sidebar" style="overflow: auto;">
-      <!-- knowledge base selector -->
-      <div wicket:enclosure="knowledgebases" class="flex-v-container">
-        <div class="form-group">
-          <select wicket:id="knowledgebases" class="form-control input-lg" data-container="body"></select>
-        </div>
+<wicket:panel>
+  <div class="flex-v-container flex-sidebar" style="overflow: auto;">
+    <div class="flex-v-container">
+      <div class="form-group">
+        <input style="width: 100%;" wicket:id="searchBar" type="text"/>
       </div>
-      <div class="flex-content flex-v-container flex-65" wicket:id="concepts"></div>
-      <div class="flex-content flex-v-container flex-no-gutter" wicket:id="properties"></div>
     </div>
-    <div wicket:id="detailContainer" class="flex-content flex-h-container">
-      <div wicket:id="details" class="flex-content flex-h-container"></div>
+    <!-- knowledge base selector -->
+    <div wicket:enclosure="knowledgebases" class="flex-v-container">
+      <div class="form-group">
+        <select wicket:id="knowledgebases" class="form-control input-lg" data-container="body"></select>
+      </div>
     </div>
-  </wicket:panel>
+
+    <div class="flex-content flex-v-container flex-65" wicket:id="concepts"></div>
+    <div class="flex-content flex-v-container flex-no-gutter" wicket:id="properties"></div>
+  </div>
+  <div wicket:id="detailContainer" class="flex-content flex-h-container">
+    <div wicket:id="details" class="flex-content flex-h-container"></div>
+  </div>
+</wicket:panel>
 </body>
 </html>

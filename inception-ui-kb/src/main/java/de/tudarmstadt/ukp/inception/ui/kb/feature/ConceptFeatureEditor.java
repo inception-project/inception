@@ -107,7 +107,12 @@ public class ConceptFeatureEditor extends FeatureEditor {
 
             @Override
             protected List<KBHandle> getChoices(String input) {
-                return listInstances(aState, aHandler, input != null ? input.toLowerCase() : null);
+                List<KBHandle> choices = new ArrayList();
+                if (input != null) {
+                    input = input.replaceAll("[*?]", "").trim();
+                    choices = listInstances(aState, aHandler, input);
+                }
+                return choices;
             }
 
             @Override
@@ -161,8 +166,9 @@ public class ConceptFeatureEditor extends FeatureEditor {
             handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
                 traits.getAllowedValueType(), project);
             // Sort and filter results
-            handles = handles.stream()
-                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+            String lowerCaseTypedString = aTypedString.toLowerCase();
+            handles = handles.stream().filter(
+                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
         
