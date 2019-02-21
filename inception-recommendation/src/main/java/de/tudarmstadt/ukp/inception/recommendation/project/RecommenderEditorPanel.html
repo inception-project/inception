@@ -23,21 +23,27 @@
       <div class="panel-heading">
         <h3 class="panel-title"><wicket:message key="details"/></h3>
       </div>
-      <div class="panel-body">
+      <div class="scrolling panel-body">
         <div class="col-sm-12 form-horizontal">
           <div class="form-group" wicket:enclosure="name">
-            <label class="col-sm-3 control-label">
-              <wicket:message key="name"/>
+            <label class="col-sm-3 control-label" wicket:for="name">
+              <wicket:label key="name"/>
             </label>
             <div class="col-sm-9">
-              <wicket:container wicket:id="name" class="form-control"/>
+              <div class="input-group">
+                <input wicket:id="name" class="form-control" type="text"/>
+                <span class="input-group-addon">
+                  <input wicket:id="autoGenerateName" type="checkbox"/>
+                  <wicket:message key="autoGenerateName"/>
+                </span>
+              </div>
             </div>
           </div>
           <div class="form-group" wicket:enclosure="enabled">
             <div class="col-sm-offset-3 col-sm-9">
               <div class="checkbox">
                 <label wicket:for="enabled">
-                  <input wicket:id="enabled" type="checkbox">
+                  <input wicket:id="enabled" type="checkbox"/>
                   <wicket:label key="enabled"/>
                 </label>
               </div>
@@ -48,7 +54,7 @@
               <wicket:label key="layer"/>
             </label>
             <div class="col-sm-9">
-              <select wicket:id="layer" class="form-control"></select>
+              <select wicket:id="layer" class="form-control" data-container="body"></select>
             </div>
           </div>
           <div class="form-group" wicket:enclosure="feature">
@@ -56,7 +62,7 @@
               <wicket:label key="feature"/>
             </label>
             <div class="col-sm-9">
-              <select wicket:id="feature" class="form-control"></select>
+              <select wicket:id="feature" class="form-control" data-container="body"></select>
             </div>
           </div>
           <div class="form-group" wicket:enclosure="tool">
@@ -64,7 +70,7 @@
               <wicket:label key="tool"/>
             </label>
             <div class="col-sm-9">
-              <select wicket:id="tool" class="form-control"></select>
+              <select wicket:id="tool" class="form-control" data-container="body"></select>
             </div>
           </div>
           <div class="form-group" wicket:id="activationContainer">
@@ -99,6 +105,12 @@
             <div class="col-sm-9">
               <input type="number" wicket:id="maxRecommendations" class="form-control"/>
             </div>
+          </div>
+          <div class="form-group" wicket:enclosure="statesForTraining">
+            <label wicket:for="statesForTraining" class="col-sm-3 control-label">
+              <wicket:label key="statesForTraining"/>
+            </label>
+            <div class="col-sm-9" wicket:id="statesForTraining"></div>
           </div>
           <div wicket:id="traitsContainer">
             <div wicket:id="traits"></div>

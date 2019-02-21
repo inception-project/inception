@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -26,14 +26,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ElasticSearchHighlight
 {
     @JsonProperty("doc.text")
-    private ArrayList<String> doctext;
+    private List<String> doctext;
 
-    public ArrayList<String> getDoctext()
+    public List<String> getDoctext()
     {
         return doctext;
     }
 
-    public void setDoctext(ArrayList<String> doctext)
+    public void setDoctext(List<String> doctext)
     {
         this.doctext = doctext;
     }

@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.7.0-SNAPSHOT</version>
+    <version>0.8.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -35,6 +35,14 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-doc</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-docmetadata</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-image</artifactId>
     </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
@@ -72,12 +80,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-external</artifactId>
     </dependency>
-    <!--  
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-imls-mira</artifactId>
-    </dependency>
-    -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-opennlp</artifactId>
@@ -85,6 +87,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-example-imls-data-majority</artifactId>
     </dependency>
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
@@ -154,6 +160,14 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-io-xmi</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.lif-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
@@ -196,6 +210,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-api-formats</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-support</artifactId>
     </dependency>
     <dependency>
@@ -222,6 +240,21 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-doc</artifactId>
+    </dependency>
+
+    <!-- UIMA DEPENDENCIES -->
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+    </dependency>
+
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -458,6 +491,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./user-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -475,6 +509,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./developer-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -491,6 +526,7 @@
               <attributes>
                 <toc>left</toc>
                 <include-dir>./admin-guide/</include-dir>
+                <source-dir>${project.basedir}/../</source-dir>
               </attributes>
             </configuration>
           </execution>
@@ -548,6 +584,7 @@
           <configuration>
             <sourceDirectory>target/${project.artifactId}-${project.version}-documentation/META-INF/asciidoc</sourceDirectory>
             <attributes>
+              <doctype>book</doctype>
               <toclevels>8</toclevels>
               <sectanchors>true</sectanchors>
               <docinfo1>true</docinfo1>
@@ -568,6 +605,8 @@
             </ignoredUsedUndeclaredDependencies>
             <usedDependencies>
               <!-- INCEpTION backend modules - used via Spring -->
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
@@ -575,6 +614,7 @@
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-example-imls-data-majority</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
@@ -591,7 +631,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-xmi</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
+              <!-- usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <!-- Detected because we explicitly exclude their menu items  
@@ -602,8 +642,9 @@
               <!-- Detected because we include a special access menu item to the project settings
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>
               -->
-              <!-- INCEpTION Documentation module - needed but no Java dependency -->
+              <!-- Documentation modules - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
@@ -818,6 +859,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./user-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -835,6 +877,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./developer-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>
@@ -851,6 +894,7 @@
                     <attributes>
                       <toc>preamble</toc>
                       <include-dir>./admin-guide/</include-dir>
+                      <source-dir>${project.basedir}/../</source-dir>
                     </attributes>
                   </configuration>
                 </execution>

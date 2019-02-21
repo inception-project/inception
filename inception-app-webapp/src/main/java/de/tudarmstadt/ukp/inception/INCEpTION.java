@@ -44,6 +44,7 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
+import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUFormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 @SpringBootApplication
 @ComponentScan(excludeFilters = {
+        @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
         @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
         @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
@@ -72,7 +74,9 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,
-                AutomationTrainingDocumentExporter.class
+                AutomationTrainingDocumentExporter.class,
+                // INCEpTION uses the original DKPro Core CoNLL-U components
+                ConllUFormatSupport.class
         })})
 @EntityScan(basePackages = {
         // Include WebAnno entity packages separately so we can skip the automation entities!

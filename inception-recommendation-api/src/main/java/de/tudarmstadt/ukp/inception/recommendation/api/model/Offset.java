@@ -24,88 +24,94 @@ public class Offset
 {
     private static final long serialVersionUID = -3084534351646334021L;
 
-    private int beginCharacter = -1;
-    private int endCharacter = -1;
+    private int begin = -1;
+    private int end = -1;
     
-    @Deprecated
-    private int beginToken = -1;
-    
-    @Deprecated
-    private int endToken = -1;
-
-    @Deprecated
-    public Offset()
+    public Offset(int beginCharacter, int endCharacter)
     {
-    }
-
-    public Offset(int beginCharacter, int endCharacter, int beginToken, int endToken)
-    {
-        this.beginCharacter = beginCharacter;
-        this.endCharacter = endCharacter;
-        this.beginToken = beginToken;
-        this.endToken = endToken;
+        this.begin = beginCharacter;
+        this.end = endCharacter;
     }
 
     @Override
     public String toString()
     {
-        return "Char: (" + beginCharacter + "," + endCharacter + "), Token: (" + beginToken + ","
-                + endToken + ")";
+        return "[" + begin + "," + end + "]";
     }
 
+    @Deprecated
     public int getBeginCharacter()
     {
-        return beginCharacter;
+        return getBegin();
     }
 
+    @Deprecated
     public void setBeginCharacter(int beginCharacter)
     {
-        this.beginCharacter = beginCharacter;
+        setBegin(beginCharacter);
     }
 
     @Deprecated
-    public int getBeginToken()
-    {
-        return beginToken;
-    }
-
-    @Deprecated
-    public void setBeginToken(int beginToken)
-    {
-        this.beginToken = beginToken;
-    }
-
     public int getEndCharacter()
     {
-        return endCharacter;
+        return getEnd();
     }
 
+    @Deprecated
     public void setEndCharacter(int endCharacter)
     {
-        this.endCharacter = endCharacter;
+        setEnd(endCharacter);
     }
-
+    
     @Deprecated
-    public int getEndToken()
+    public int getStart()
     {
-        return endToken;
+        return getBegin();
     }
-
-    @Deprecated
-    public void setEndToken(int endToken)
+    
+    public void setBegin(int aBegin)
     {
-        this.endToken = endToken;
+        begin = aBegin;
     }
+    
+    public int getBegin()
+    {
+        return begin;
+    }
+    
+    public void setEnd(int aEnd)
+    {
+        end = aEnd;
+    }
+    
+    public int getEnd()
+    {
+        return end;
+    }
+    
+    public boolean overlaps(final Offset i)
+    {
+        // Cases:
+        //
+        //         start                     end
+        //           |                        |
+        //  1     #######                     |
+        //  2        |                     #######
+        //  3   ####################################
+        //  4        |        #######         |
+        //           |                        |
 
+        return (((i.getStart() <= getStart()) && (getStart() < i.getEnd())) || // Case 1-3
+                ((i.getStart() < getEnd()) && (getEnd() <= i.getEnd())) || // Case 1-3
+                ((getStart() <= i.getStart()) && (i.getEnd() <= getEnd()))); // Case 4
+    }    
     @Override
     public int hashCode()
     {
         final int prime = 31;
         int result = 1;
-        result = prime * result + beginCharacter;
-        result = prime * result + beginToken;
-        result = prime * result + endCharacter;
-        result = prime * result + endToken;
+        result = prime * result + begin;
+        result = prime * result + end;
         return result;
     }
 
@@ -122,16 +128,10 @@ public class Offset
             return false;
         }
         Offset other = (Offset) obj;
-        if (beginCharacter != other.beginCharacter) {
+        if (begin != other.begin) {
             return false;
         }
-        if (beginToken != other.beginToken) {
-            return false;
-        }
-        if (endCharacter != other.endCharacter) {
-            return false;
-        }
-        if (endToken != other.endToken) {
+        if (end != other.end) {
             return false;
         }
         return true;
@@ -143,23 +143,18 @@ public class Offset
         if (o == null) {
             return 1;
         }
-        if (this.equals(o)) {
+        
+        if (this == o) {
             return 0;
         }
-        if (this.getBeginCharacter() < o.getBeginCharacter()) {
-            return -1;
+        
+        if (begin == o.begin) {
+            // Sort by end decreasing
+            return o.end - end;
         }
-        if (this.getBeginToken() < o.getBeginToken()) {
-            return -1;
+        else {
+            // Sort by begin increasing
+            return begin - o.begin;
         }
-        if (this.getBeginCharacter() == o.getBeginCharacter()
-                && this.getEndCharacter() < o.getEndCharacter()) {
-            return -1;
-        }
-        if (this.getBeginToken() == o.getBeginToken() && this.getEndToken() < this.getEndToken()) {
-            return -1;
-        }
-
-        return 1;
     }
 }

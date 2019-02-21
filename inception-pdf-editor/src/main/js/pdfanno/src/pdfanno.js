@@ -1,4 +1,5 @@
 require('file-loader?name=index.html!./index.html')
+require('file-loader?name=index-debug.html!./index-debug.html')
 require('!style-loader!css-loader!./pdfanno.css')
 
 // /tab=TAB&pdf=PDFURL&anno=ANNOURL&move
@@ -111,26 +112,29 @@ async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
-// BEGIN PDFANNO EXTENSION - #593 - Add PDFAnno sources
+// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
 /*
   const pdfURL   = q.pdf || getDefaultPDFURL()
 */
   const pdfURL   = q.pdf
-// END PDFANNO EXTENSION
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// END INCEpTION EXTENSION
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
   const pdftxtURL = q.pdftxt
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
+// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
+  window.apiUrl = q.api
+// END INCEpTION EXTENSION
 
   // Load a PDF file.
   try {
-// BEGIN PDFANNO EXTENSION - #624 - Integration of PDFExtractor
+// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
 /*
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
 */
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
-// END PDFANNO EXTENSION
+// END INCEpTION EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({
@@ -144,7 +148,8 @@ async function displayViewer () {
 
       // Load and display annotations, if annoURL is set.
       if (annoURL) {
-
+// BEGIN INCEpTION EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
+/*
         let anno = await window.annoPage.loadAnnoFileFromServer(annoURL)
 
         window.annoPage.importAnnotation({
@@ -159,6 +164,16 @@ async function displayViewer () {
             window.annoPage.scrollToAnnotation(moveTo)
           }, 500)
         }
+*/
+        parent.Wicket.Ajax.ajax({
+          "m" : "GET",
+          "u" : annoURL,
+          "sh" : [],
+          "fh": [function() {
+              console.log('Something went wrong on requesting annotations from inception backend.')
+          }]
+        });
+// END INCEpTION EXTENSION
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }

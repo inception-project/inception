@@ -73,15 +73,17 @@ public class TestFixtures
         kb.setLabelIri(RDFS.LABEL);
         kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.
         kb.setPropertyLabelIri(SKOS.PREF_LABEL);
         kb.setPropertyDescriptionIri(SKOS.DEFINITION);
-        kb.setExplicitlyDefinedRootConcepts(new ArrayList<>());
+        kb.setRootConcepts(new ArrayList<>());
         kb.setReification(reification);
         kb.setMaxResults(1000);
+        kb.setDefaultLanguage("en");
         return kb;
     }
 

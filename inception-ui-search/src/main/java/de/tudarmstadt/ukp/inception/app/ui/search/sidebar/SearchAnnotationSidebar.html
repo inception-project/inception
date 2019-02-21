@@ -24,13 +24,51 @@
         <h3 class="panel-title">Search</h3>
       </div>
       <div class="panel-body flex-v-container">
-        <form wicket:id="searchForm" class="form-horizontal">
-          <div class="col-sm-12">
-            <div class="form-group flex-v-container flex-gutter flex-only-internal-gutter" wicket:enclosure="queryInput">
-              <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
-              <input wicket:id="search" type="submit" class="btn btn-primary" value="Search"/>
+        <form wicket:id="searchForm">
+          <div class="col-sm-12" wicket:enclosure="queryInput">
+            <div class="flex-v-container form-horizontal">
+              <div class="form-group">
+                <textarea wicket:id="queryInput" class="form-control" style="resize: vertical; word-break: break-all;" rows="5"></textarea>
+              </div>
+              <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+                <button wicket:id="search" type="submit" class="btn btn-primary flex-content">
+                  <i class="fa fa-search" aria-hidden="true"></i>
+                  Search
+                </button>
+                <button wicket:id="toggleOptionsVisibility" type="button" class="btn btn-default">
+                  <i class="fa fa-cog" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>
+          
+          <form wicket:id="searchOptionsForm" class="panel-small panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <wicket:message key="options"/>
+              </h3>
+            </div>
+            <div class="panel-body form-horizontal">
+              <div class="col-sm-12">
+                <div class="form-group" wicket:enclosure="limitedToCurrentDocument">
+                  <div class="col-sm-12">
+                    <div class="checkbox">
+                      <label wicket:for="limitedToCurrentDocument">
+                        <input wicket:id="limitedToCurrentDocument" type="checkbox"> 
+                        <wicket:label key="limitedToCurrentDocument"/>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel-footer text-right">
+              <button wicket:id="reindexProject" type="button" class="btn btn-sm btn-default">
+                <i class="fa fa-refresh" aria-hidden="true"></i>
+                <wicket:message key="reindex"/>
+              </button>
+            </div>
+          </form>
         </form>
         
         <div class="scrolling flex-content">
@@ -45,10 +83,6 @@
             </wicket:container>
           </table>
         </div>
-      </div>
-      <div class="panel-footer text-right">
-        <input wicket:id="reindexProject" type="button" class="btn btn-default"
-          value="Reindex project" />
       </div>
     </div>
   </div>

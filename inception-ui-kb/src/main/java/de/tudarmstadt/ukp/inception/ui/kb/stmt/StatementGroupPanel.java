@@ -51,9 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
-
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -62,6 +60,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
+import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
@@ -105,23 +104,18 @@ public class StatementGroupPanel extends Panel {
         }
         add(content);
     }
-    
-    private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
-        groupModel.getObject().setProperty(form.getModelObject());
-        
-        // replace content to show existing statement group with a new, empty statement
-        ExistingStatementGroupFragment fragment = new ExistingStatementGroupFragment(
-                CONTENT_MARKUP_ID);
-        fragment.actionAddValue(target);
-        content = content.replaceWith(fragment);
-        
-        target.add(this);
+
+    /**
+     * Add a new prototype statement using this group's instance and its current property
+     * @param aStmtGroupBean a {@link StatementGroupBean}
+     */
+    private void addStatementProto(StatementGroupBean aStmtGroupBean) {
+        KBStatement statementProto = new KBStatement(
+            aStmtGroupBean.getInstance(),
+            aStmtGroupBean.getProperty());
+
+        aStmtGroupBean.getStatements().add(statementProto);
     }
-    
-    private void actionCancelNewProperty(AjaxRequestTarget target) {
-        StatementGroupBean bean = groupModel.getObject();
-        send(getPage(), Broadcast.BREADTH, new AjaxStatementGroupChangedEvent(target, bean, true));
-    }    
     
     private class NewStatementGroupFragment extends Fragment implements Focusable {
 
@@ -135,7 +129,7 @@ public class StatementGroupPanel extends Panel {
             IModel<KBHandle> property = Model.of();
             
             Form<KBHandle> form = new Form<>("form", property);
-            DropDownChoice<KBHandle> type = new DropDownChoice<>("property");
+            DropDownChoice<KBHandle> type = new BootstrapSelect<>("property");
             type.setModel(property);
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));            
             type.setChoices(getUnusedProperties());
@@ -144,9 +138,8 @@ public class StatementGroupPanel extends Panel {
             form.add(type);
             focusComponent = type;
             
-            form.add(new LambdaAjaxButton<>("create", StatementGroupPanel.this::actionNewProperty));
-            form.add(new LambdaAjaxLink("cancel",
-                    StatementGroupPanel.this::actionCancelNewProperty));
+            form.add(new LambdaAjaxButton<>("create", this::actionNewProperty));
+            form.add(new LambdaAjaxLink("cancel", this::actionCancelNewProperty));
             add(form);
         }
         
@@ -199,7 +192,26 @@ public class StatementGroupPanel extends Panel {
             }
             
             properties.removeAll(existingPropertyHandles);
-            return properties;
+            return KBHandle.distinctByIri(properties);
+        }
+
+        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
+            groupModel.getObject().setProperty(form.getModelObject());
+
+            // replace content to show existing statement group with a new, empty statement
+            ExistingStatementGroupFragment fragment = new ExistingStatementGroupFragment(
+                CONTENT_MARKUP_ID);
+            addStatementProto(groupModel.getObject());
+            content = content.replaceWith(fragment);
+
+            target.add(StatementGroupPanel.this);
+        }
+
+        private void actionCancelNewProperty(AjaxRequestTarget target)
+        {
+            StatementGroupBean bean = groupModel.getObject();
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxStatementGroupChangedEvent(target, bean, true));
         }
         
         @Override
@@ -231,14 +243,8 @@ public class StatementGroupPanel extends Panel {
                 statementGroupBean.getProperty().getIdentifier());
             IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
 
-            WebMarkupContainer statementIdentifier = new WebMarkupContainer("statementIdtext"); 
-            TooltipBehavior tip = new TooltipBehavior();
-            tip.setOption("autoHide", false);
-            tip.setOption("content",
-                    Options.asString((groupModel.bind("property.identifier").getObject())));
-            tip.setOption("showOn", Options.asString("click"));
-            statementIdentifier.add(tip);
-            form.add(statementIdentifier);
+            form.add(new IriInfoBadge("statementIdtext", groupModel.bind("property.identifier")));
+                        
             RefreshingView<KBStatement> statementList = new RefreshingView<KBStatement>(
                     "statementList") {
                 private static final long serialVersionUID = 5811425707843441458L;
@@ -346,13 +352,7 @@ public class StatementGroupPanel extends Panel {
         }
 
         private void actionAddValue(AjaxRequestTarget target) {
-            // add a new prototype statement using this group's instance and its current property
-            KBStatement statementProto = new KBStatement(
-                groupModel.getObject().getInstance(),
-                groupModel.getObject().getProperty());
-
-            groupModel.getObject().getStatements().add(statementProto);
-
+            addStatementProto(groupModel.getObject());
             target.add(statementListWrapper);
         }
     }

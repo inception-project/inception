@@ -20,11 +20,11 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>18</version>
+    <version>20</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.7.0-SNAPSHOT</version>
+  <version>0.8.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -54,24 +54,26 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.5.0-SNAPSHOT</webanno.version>
-    <uima.version>2.10.2</uima.version>
+    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
+    <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
-    <spring.version>5.1.1.RELEASE</spring.version>
-    <spring.boot.version>1.5.17.RELEASE</spring.boot.version>
+    <spring.version>5.1.3.RELEASE</spring.version>
+    <spring.boot.version>1.5.18.RELEASE</spring.boot.version>
     <wicket.version>8.1.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
     <dl4j.version>1.0.0-beta3</dl4j.version>
     <rdf4j.version>2.4.0</rdf4j.version>
     <inception-rdf4j.version>${rdf4j.version}</inception-rdf4j.version>
-    <mockito.version>2.23.0</mockito.version>
+    <mockito.version>2.23.4</mockito.version>
     <assertj.version>3.11.1</assertj.version>
     <okhttp.version>3.11.0</okhttp.version>
     <springfox.version>2.7.0</springfox.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
+    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
@@ -102,6 +104,11 @@
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
+    <module>inception-layer-docmetadata</module>
+    <module>inception-image</module>
+    <module>inception-scheduling</module>
+    <!-- Examples -->
+    <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
   </modules>
@@ -210,12 +217,12 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-doc</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-search</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -230,99 +237,112 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-core</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-elastic</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-external-search</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-kb</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-html-editor</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-recommendation-api</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-core</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-ui-kb</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-concept-linking</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-opennlp</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-dl4j</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
-      <!--  
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-        <artifactId>inception-imls-mira</artifactId>
-        <version>0.6.0-SNAPSHOT</version>
-      </dependency>
-      -->
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-stringmatch</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-example-imls-data-majority</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-log</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-layer-docmetadata</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-image</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-scheduling</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
 
       <!-- Testing -->
@@ -346,6 +366,12 @@
         <groupId>com.squareup.okhttp3</groupId>
         <artifactId>mockwebserver</artifactId>
         <version>${okhttp.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.awaitility</groupId>
+        <artifactId>awaitility</artifactId>
+        <version>3.1.3</version>
+        <scope>test</scope>
       </dependency>
 
       <!-- Wicket jQuery -->
@@ -524,6 +550,14 @@
         <groupId>nl.knaw.meertens.mtas</groupId>
         <artifactId>mtas</artifactId>
         <version>${mtas.version}</version>
+        <exclusions>
+          <!-- We do not use MTAS with Solr -->
+          <!-- Solr depends on jdk.tools via Hadoop which is not available on recent JDKs-->
+          <exclusion>
+            <groupId>org.apache.solr</groupId>
+            <artifactId>solr-core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
     
       <dependency>
@@ -637,17 +671,17 @@
       <dependency>
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
-        <version>1.3.160</version>
+        <version>1.4.197</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-core</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mtas</artifactId>
-        <version>0.7.0-SNAPSHOT</version>
+        <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <!--  
       <dependency>
@@ -708,6 +742,12 @@
         <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
+      
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+        <version>${dkpro.version}</version>
+      </dependency>
 
       <dependency>
         <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
@@ -732,6 +772,18 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      
+	  <dependency>
+		<groupId>org.webjars</groupId>
+		<artifactId>c3</artifactId>
+		<version>0.6.6</version>
+	  </dependency>
+	  
+	  <dependency>
+		<groupId>org.webjars</groupId>
+		<artifactId>d3js</artifactId>
+		<version>5.5.0</version>
+	  </dependency>
     </dependencies>
   </dependencyManagement>
   
@@ -821,6 +873,25 @@
           </ignoredUnusedDeclaredDependencies>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce-maven</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <requireJavaVersion>
+                  <version>[1.8.0,)</version>
+                </requireJavaVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -828,6 +899,7 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-release-plugin</artifactId>
           <configuration>
+            <autoVersionSubmodules>true</autoVersionSubmodules>
             <useReleaseProfile>false</useReleaseProfile>
             <arguments>${arguments} -Dmaven.surefire.heap=${maven.surefire.heap} -Pdkpro-release</arguments>
           </configuration>
@@ -933,7 +1005,6 @@
           <plugin>
             <groupId>org.apache.rat</groupId>
             <artifactId>apache-rat-plugin</artifactId>
-            <version>0.12</version>
             <executions>
               <execution>
                 <id>default</id>

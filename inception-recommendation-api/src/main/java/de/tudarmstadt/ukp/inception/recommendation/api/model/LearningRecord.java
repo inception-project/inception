@@ -31,6 +31,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -49,14 +51,17 @@ public class LearningRecord
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     @JoinColumn(name = "document")
     private SourceDocument sourceDocument;
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     @JoinColumn(name = "layer")
     private AnnotationLayer layer;
 
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     @JoinColumn(name = "annotationFeature")
     private AnnotationFeature annotationFeature;
@@ -70,7 +75,7 @@ public class LearningRecord
     private String annotation;
     
     @Type(type = "de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordUserActionType")
-    private LearningRecordUserAction userAction;
+    private LearningRecordType userAction;
     
     private String user;
     
@@ -101,18 +106,22 @@ public class LearningRecord
         this.user = user;
     }
 
+    @Deprecated
     public int getOffsetTokenBegin() {
         return offsetTokenBegin;
     }
 
+    @Deprecated
     public void setOffsetTokenBegin(int offsetTokenBegin) {
         this.offsetTokenBegin = offsetTokenBegin;
     }
 
+    @Deprecated
     public int getOffsetTokenEnd() {
         return offsetTokenEnd;
     }
 
+    @Deprecated
     public void setOffsetTokenEnd(int offsetTokenEnd) {
         this.offsetTokenEnd = offsetTokenEnd;
     }
@@ -151,11 +160,11 @@ public class LearningRecord
         this.annotation = annotation;
     }
 
-    public LearningRecordUserAction getUserAction() {
+    public LearningRecordType getUserAction() {
         return userAction;
     }
 
-    public void setUserAction(LearningRecordUserAction userAction) {
+    public void setUserAction(LearningRecordType userAction) {
         this.userAction = userAction;
     }
 

@@ -17,11 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -29,25 +35,38 @@ import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
+import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
+import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -75,10 +94,12 @@ public class KnowledgeBasePanel
     private static final String DETAILS_MARKUP_ID = "details";
 
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean ConceptLinkingService conceptLinkingService;
 
     private IModel<KnowledgeBase> kbModel;
     private Model<KBHandle> selectedConceptHandle = Model.of();
     private Model<KBHandle> selectedPropertyHandle = Model.of();
+    private Model<KBHandle> searchHandleModel = Model.of();
 
     private WebMarkupContainer detailContainer;
     private ConceptTreePanel conceptTreePanel;
@@ -99,18 +120,10 @@ public class KnowledgeBasePanel
         kbModel = aKbModel;
         
         // add the selector for the knowledge bases
-        DropDownChoice<KnowledgeBase> ddc = new DropDownChoice<KnowledgeBase>("knowledgebases",
-                LambdaModel.of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())))
-        {
-
-            private static final long serialVersionUID = -2635546743813402116L;
-
-            @Override
-            public boolean isVisible() {
-                // only visible if there is a choice between two or more KBs
-                return getChoices().size() >= 2;
-            }
-        };
+        DropDownChoice<KnowledgeBase> ddc = new BootstrapSelect<KnowledgeBase>("knowledgebases",
+                LoadableDetachableModel
+                        .of(() -> kbService.getEnabledKnowledgeBases(aProjectModel.getObject())));
+        
         ddc.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             details = details.replaceWith(new EmptyPanel(DETAILS_MARKUP_ID));
             t.add(KnowledgeBasePanel.this);
@@ -119,6 +132,10 @@ public class KnowledgeBasePanel
         ddc.setModel(aKbModel);
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
+
+        add(createSearchField("searchBar", searchHandleModel, aProjectModel)
+            .add(AttributeModifier.append("placeholder",
+                new ResourceModel("page.search.placeholder"))));
 
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
@@ -130,6 +147,110 @@ public class KnowledgeBasePanel
         
         details = new EmptyPanel(DETAILS_MARKUP_ID);
         detailContainer.add(details);
+    }
+
+    private AutoCompleteTextField<KBHandle> createSearchField(String aId,
+        IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
+    {
+        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(aId,
+            aHandleModel, new TextRenderer<>("uiLabel"))
+        {
+            private static final long serialVersionUID = -1955006051950156603L;
+
+            @Override
+            protected List<KBHandle> getChoices(String input)
+            {
+                List<KBHandle> choices = new ArrayList<>();
+                if (input != null) {
+                    // Remove wildcards and leading/trailing whitespace from the input string
+                    String cleanInput = input.replaceAll("[*?]", "").trim();
+                    choices = listSearchResults(aProjectModel.getObject(), cleanInput);
+                }
+                return choices;
+
+            }
+
+            @Override
+            protected void onSelected(AjaxRequestTarget aTarget)
+            {
+                KBHandle selectedResource = this.getModelObject();
+                Optional<KBObject> optKbObject = kbService
+                    .readKBIdentifier(kbModel.getObject(), selectedResource.getIdentifier());
+
+                if (optKbObject.isPresent()) {
+                    KBObject kbObject = optKbObject.get();
+                    sendSelectionChangedEvents(aTarget, kbObject);
+                }
+            }
+
+            @Override
+            public void onConfigure(JQueryBehavior behavior)
+            {
+                super.onConfigure(behavior);
+
+                behavior.setOption("autoWidth", true);
+            }
+
+            @Override
+            protected IJQueryTemplate newTemplate() {
+                return KendoChoiceDescriptionScriptReference.template();
+            }
+        };
+
+        return field;
+    }
+
+    /**
+     * Search for Entities in the current knowledge base based on a typed string. Use full text
+     * search if it is available. Returns a sorted/ranked list of KBHandles
+     */
+    private List<KBHandle> listSearchResults(Project aProject, String aTypedString)
+    {
+        List<KBHandle> results;
+        KnowledgeBase kb = kbModel.getObject();
+        if (kb.isSupportConceptLinking()) {
+            results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
+        }
+        else {
+            results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
+                ConceptFeatureValueType.ANY_OBJECT, aProject);
+            // Sort and filter results
+            results = results.stream().filter(
+                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
+                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
+            results = KBHandle.distinctByIri(results);
+        }
+        return results;
+    }
+
+    /**
+     * Send selection-changed events according to type of the selected {@link KBObject}
+     */
+    private void sendSelectionChangedEvents(AjaxRequestTarget aTarget, KBObject aKbObject) {
+        if (aKbObject instanceof KBConcept) {
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+        }
+        else if (aKbObject instanceof KBInstance) {
+            KBHandle conceptForInstance = kbService
+                .getConceptForInstance(kbModel.getObject(),
+                    aKbObject.getIdentifier(), true).get(0);
+
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(aTarget, conceptForInstance, true));
+
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
+        }
+        else if (aKbObject instanceof KBProperty) {
+            send(getPage(), Broadcast.BREADTH,
+                new AjaxPropertySelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+        }
+        else {
+            throw new IllegalArgumentException(String.format(
+                "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
+                aKbObject.getClass().getSimpleName()));
+        }
     }
     
     /**
@@ -146,26 +267,23 @@ public class KnowledgeBasePanel
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
-        boolean isSchemaChangeEvent = RdfUtils
-                .isFromImplicitNamespace(event.getStatement().getProperty());
-        if (!isSchemaChangeEvent) {
-            return;
-        }
-
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
-        boolean isRenameEvent = statement.getProperty().getIdentifier()
-                .equals(RDFS.LABEL.stringValue());
-        if (isRenameEvent) {
+
+        if (isRenamingEvent(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
+
             List<Model<KBHandle>> models = Arrays.asList(selectedConceptHandle,
                     selectedPropertyHandle);
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
-                        if (statement.getValue() != null) {
-                            model.getObject().setName(statement.getValue().toString());
+                        Optional<KBObject> kbObject = kbService
+                            .readKBIdentifier(kbModel.getObject(),
+                                model.getObject().getIdentifier());
+                        if (kbObject.isPresent()) {
+                            model.getObject().setName(kbObject.get().getName());
                         }
                         event.getTarget().add(this);
                     });
@@ -173,6 +291,18 @@ public class KnowledgeBasePanel
         else {
             event.getTarget().add(getPage());
         }
+    }
+
+    private boolean isRenamingEvent(KBStatement aStatement)
+    {
+        String propertyIdentifier = aStatement.getProperty().getIdentifier();
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+            vf.createIRI(aStatement.getInstance().getIdentifier()),
+            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
+        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
+                && !hasMainLabel);
     }
 
     @OnEvent

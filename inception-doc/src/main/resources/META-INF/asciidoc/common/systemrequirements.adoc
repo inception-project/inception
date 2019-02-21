@@ -1,5 +1,5 @@
 // Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-== System Requirements
+= System Requirements
 
 .Requirements for users
 [cols="2*"]
@@ -27,14 +27,14 @@
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 8 or higher
+| version 9 or higher
 |===
 
 .Requirements run the server version
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 8 or higher
+| version 9 or higher
 
 | Apache Tomcat
 | version 8.5 or higher (Servlet API 3.1.0)

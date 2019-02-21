@@ -76,7 +76,7 @@ public class OpenNlpPosRecommender
     public OpenNlpPosRecommender(Recommender aRecommender, OpenNlpPosRecommenderTraits aTraits)
     {
         layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature();
+        featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
         
         traits = aTraits;

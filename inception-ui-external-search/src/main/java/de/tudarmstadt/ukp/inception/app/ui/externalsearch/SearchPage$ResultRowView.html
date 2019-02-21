@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<!--
+ - Copyright 2018
+ - Ubiquitous Knowledge Processing (UKP) Lab
+ - Technische Universität Darmstadt
+ -
+ - Licensed under the Apache License, Version 2.0 (the "License");
+ - you may not use this file except in compliance with the License.
+ - You may obtain a copy of the License at
+ -
+ -  http://www.apache.org/licenses/LICENSE-2.0
+ -
+ - Unless required by applicable law or agreed to in writing, software
+ - distributed under the License is distributed on an "AS IS" BASIS,
+ - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ - See the License for the specific language governing permissions and
+ - limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<body>
+  <wicket:panel>
+    <div class="flex-h-container">
+      <div class="flex-content">
+        <h4>
+          <a wicket:id="titleLink"><wicket:container wicket:id="title"/></a>
+        </h4>
+        <div>
+          <wicket:container wicket:id="highlight"/>
+        </div>
+      </div>
+      <div class="flex-v-container">
+        <button wicket:id="importLink" class="btn btn-default"><i class="fa fa-plus" aria-hidden="true"></i> Import</button>
+        <button wicket:id="openLink" class="btn btn-default">Open</button>
+        <div wicket:id="importStatus" class="label label-info"/>
+        <div class="text-center">
+          <wicket:container wicket:id="score"/>
+        </div>
+      </div>
+    </div>
+  </wicket:panel>
+</body>
+</html>

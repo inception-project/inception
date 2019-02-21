@@ -17,10 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -32,10 +38,16 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -45,14 +57,16 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -63,7 +77,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.scheduling.RecommendationScheduler;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
+import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
+import de.tudarmstadt.ukp.inception.scheduling.Task;
 
 /**
  * The implementation of the RecommendationService.
@@ -74,14 +91,33 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private static final int TRAININGS_PER_SELECTION = 5;
+
     private @PersistenceContext EntityManager entityManager;
     
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired UserDao userRepository;
     private @Autowired RecommenderFactoryRegistry recommenderFactoryRegistry;
-    private @Autowired RecommendationScheduler scheduler;
+    private @Autowired SchedulingService schedulingService;
     
-    private Map<RecommendationStateKey, RecommendationState> states = new ConcurrentHashMap<>();
+    @Value("${show.learning.curve.diagram:false}")
+    public Boolean showLearningCurveDiagram;
+
+    private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
+    private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
+
+    public RecommendationServiceImpl()
+    {
+        trainingTaskCounter = new ConcurrentHashMap<>();
+        states = new ConcurrentHashMap<>();
+    }
+    
+    public RecommendationServiceImpl(EntityManager entityManager)
+    {
+        this();
+        this.entityManager = entityManager;
+    }
+
 
     @Override
     public Predictions getPredictions(User aUser, Project aProject)
@@ -185,6 +221,71 @@ public class RecommendationServiceImpl
     {
         return entityManager.find(Recommender.class, aId);
     }
+    
+    @Override
+    @Transactional
+    public boolean existsRecommender(Project aProject, String aName)
+    {
+        String query = String.join("\n",
+                "SELECT COUNT(*)",
+                "FROM Recommender ",
+                "WHERE name = :name ",
+                "AND project = :project");
+
+        long count = entityManager
+                .createQuery(query, Long.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getSingleResult();
+        
+        return count > 0;
+    }
+
+    @Override
+    @Transactional
+    public Optional<Recommender> getRecommender(Project aProject, String aName)
+    {
+        String query = String.join("\n",
+                "FROM Recommender ",
+                "WHERE name = :name ",
+                "AND project = :project");
+
+        return entityManager
+                .createQuery(query, Recommender.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getResultStream()
+                .findFirst();
+    }
+    
+    @Override
+    @Transactional
+    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "id = :id AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("id", aRecommenderId)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
+    public List<Recommender> listEnabledRecommenders(Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND ",
+                "enabled = :enabled" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
 
     @Override
     @Transactional
@@ -197,17 +298,16 @@ public class RecommendationServiceImpl
         return settings;
     }
 
+    /**
+     * This is called whenever a document is opened (because of the implicit CAS upgrade and saving
+     * of the CAS that happens when a document is opened) as well as when any updates to annotations
+     * are made. Therefore, we do not need an extra event listener for {@link DocumentOpenedEvent}
+     */
     @EventListener
     public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
     {
         triggerTrainingAndClassification(aEvent.getDocument().getUser(),
-                aEvent.getDocument().getProject());
-    }
-
-    @EventListener
-    public void onDocumentOpen(DocumentOpenedEvent aEvent)
-    {
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getDocument().getProject());
+                aEvent.getDocument().getProject(), "AfterAnnotationUpdateEvent");
     }
 
     @EventListener
@@ -217,13 +317,29 @@ public class RecommendationServiceImpl
         synchronized (state) {
             state.removePredictions(aEvent.getRecommender());
         }
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject());
+        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject(),
+                "RecommenderDeletedEvent");
     }
     
-    private void triggerTrainingAndClassification(String aUser, Project aProject)
+    private void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
-        scheduler.enqueueTask(user, aProject);
+
+        // Update the task count
+        Pair<User, Project> key = new ImmutablePair<>(user, aProject);
+        AtomicInteger count = trainingTaskCounter.computeIfAbsent(key,
+            _key -> new AtomicInteger(0));
+
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
+        if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+            Task task = new SelectionTask(aProject, user, aEventName);
+            schedulingService.enqueue(task);
+        } else {
+            Task task = new TrainingTask(user, aProject, aEventName);
+            schedulingService.enqueue(task);
+        }
     }
     
     @EventListener
@@ -235,7 +351,7 @@ public class RecommendationServiceImpl
         if (info != null) {
             String username = (String) info.getPrincipal();
             clearState(username);
-            scheduler.stopAllTasksForUser(username);
+            schedulingService.stopAllTasksForUser(username);
         }
     }
 
@@ -245,7 +361,7 @@ public class RecommendationServiceImpl
         String userName = aEvent.getDocument().getUser();
         Project project = aEvent.getDocument().getProject();
         clearState(userName);
-        triggerTrainingAndClassification(userName, project);
+        triggerTrainingAndClassification(userName, project, "AfterDocumentResetEvent");
     }
 
     @Override
@@ -286,19 +402,12 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public void switchPredictions(User aUser, Project aProject)
+    public boolean switchPredictions(User aUser, Project aProject)
     {
         RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
-            state.switchPredictions();
+            return state.switchPredictions();
         }
-    }
-
-    @Override
-    public void setFeatureValue(AnnotationFeature aFeature, Object aPredictedValue,
-        SpanAdapter aAdapter, AnnotatorState aState, JCas aJcas, int aAddress)
-    {
-        aAdapter.setFeatureValue(aState, aJcas, aAddress, aFeature, aPredictedValue);
     }
 
     @Override
@@ -308,6 +417,35 @@ public class RecommendationServiceImpl
         synchronized (state) {
             return state.getContext(aRecommender);
         }
+    }
+    
+    @Override
+    public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
+            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aValue, int aBegin, int aEnd)
+        throws AnnotationException
+    {
+        // The feature of the predicted label
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+        
+        // Check if there is already an annotation of the target type at the given location
+        Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
+        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        int address;
+        if (annoFS != null) {
+            // ... if yes, then we update the feature on the existing annotation
+            address = getAddr(annoFS);
+        }
+        else {
+            // ... if not, then we create a new annotation - this also takes care of attaching to 
+            // an annotation if necessary
+            address = getAddr(adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd));
+        }
+
+        // Update the feature value
+        adapter.setFeatureValue(aDocument, aUsername, aJCas, address, aFeature, aValue);
+        
+        return address;
     }
 
     private static class RecommendationStateKey
@@ -405,11 +543,15 @@ public class RecommendationServiceImpl
             return incomingPredictions;
         }
 
-        public void switchPredictions()
+        public boolean switchPredictions()
         {
             if (incomingPredictions != null) {
                 activePredictions = incomingPredictions;
                 incomingPredictions = null;
+                return true;
+            }
+            else {
+                return false;
             }
         }
         
@@ -456,5 +598,10 @@ public class RecommendationServiceImpl
             
             setActiveRecommenders(newActiveRecommenders);
         }
+    }
+    
+    @Override
+    public Boolean showLearningCurveDiagram() {
+        return showLearningCurveDiagram;
     }
 }

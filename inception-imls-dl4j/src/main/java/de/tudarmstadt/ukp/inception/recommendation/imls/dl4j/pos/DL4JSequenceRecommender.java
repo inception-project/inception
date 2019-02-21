@@ -94,7 +94,7 @@ public class DL4JSequenceRecommender
             File aDatasetCache)
     {
         layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature();
+        featureName = aRecommender.getFeature().getName();
         traits = aTraits;
         datasetCache = aDatasetCache;
     }

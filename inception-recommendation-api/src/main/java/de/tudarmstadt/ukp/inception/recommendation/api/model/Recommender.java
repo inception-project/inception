@@ -19,9 +19,15 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -34,6 +40,8 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
@@ -59,7 +67,10 @@ public class Recommender
     @JoinColumn(name = "layer", nullable = false)
     private AnnotationLayer layer;
     
-    private String feature;
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @ManyToOne
+    @JoinColumn(name = "feature", nullable = false)
+    private AnnotationFeature feature;
     
     private String name;
     
@@ -74,7 +85,17 @@ public class Recommender
     private boolean enabled = true;
     
     private int maxRecommendations;
-    
+
+    /**
+     * Only documents that have an annotation state not contained in this list are
+     * used for training.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "recommender_ignored_document_states")
+    @Column(name = "name", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Set<AnnotationDocumentState> statesIgnoredForTraining;
+
     @Lob
     @Column(length = 64000)
     private String traits;
@@ -131,12 +152,12 @@ public class Recommender
         layer = aLayer;
     }
     
-    public String getFeature()
+    public AnnotationFeature getFeature()
     {
         return feature;
     }
 
-    public void setFeature(String aFeature)
+    public void setFeature(AnnotationFeature aFeature)
     {
         feature = aFeature;
     }
@@ -201,6 +222,16 @@ public class Recommender
         maxRecommendations = aMaxRecommendations;
     }
 
+    public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
+    {
+        return statesIgnoredForTraining;
+    }
+
+    public void setStatesIgnoredForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
+    {
+        statesIgnoredForTraining = aStatesIgnoredForTraining;
+    }
+
     public String getTraits()
     {
         return traits;
@@ -212,7 +243,8 @@ public class Recommender
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -225,12 +257,14 @@ public class Recommender
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(id, name);
     }
 
     @Override
-    public String toString() {
+    public String toString()
+    {
         final StringBuilder sb = new StringBuilder("Recommender{");
         sb.append("id=").append(id);
         sb.append(", project=").append(project);
@@ -240,9 +274,10 @@ public class Recommender
         sb.append(", tool='").append(tool).append('\'');
         sb.append(", threshold=").append(threshold);
         sb.append(", alwaysSelected=").append(alwaysSelected);
+        sb.append(", skipEvaluation=").append(skipEvaluation);
         sb.append(", enabled=").append(enabled);
         sb.append(", maxRecommendations=").append(maxRecommendations);
-        sb.append(", skipEvaluation=").append(skipEvaluation);
+        sb.append(", statesIgnoredForTraining=").append(statesIgnoredForTraining);
         sb.append(", traits='").append(traits).append('\'');
         sb.append('}');
         return sb.toString();

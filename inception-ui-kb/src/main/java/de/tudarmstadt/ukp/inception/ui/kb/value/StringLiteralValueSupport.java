@@ -24,7 +24,6 @@ import java.util.Optional;
 
 import org.apache.wicket.model.IModel;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
-
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 import org.springframework.stereotype.Component;
@@ -93,14 +92,14 @@ public class StringLiteralValueSupport
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new StringLiteralValueEditor(aId, aStatement);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new StringLiteralValuePresenter(aId, aStatement);
     }

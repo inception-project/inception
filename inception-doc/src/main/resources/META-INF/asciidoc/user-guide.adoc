@@ -1,5 +1,5 @@
-// Copyright 2015
-// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,55 +17,27 @@
 = {product-name} User Guide
 The {product-name} Team
 
-== Introduction
-
 This guide summarizes the functionality of {product-name} from the user's perspective.
 
 NOTE: It is assumed that you plan to test the {product-name} standalone version or an already existing server installation of {product-name}. For information on how to set up {product-name} for a group of users on a server, please refer to the <<admin-guide.adoc#,Administrator Guide>>.
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
 
-<<<
 
-include::common/systemrequirements.adoc[]
 
-<<<
-== Workflow
+= Introduction
 
-The following image shows an exemplary workflow of an annotation project with {product-name}.
-
-image::progress_workflow.jpg[align="center"]
-
-First, the projects need to be set up. In more detail, this means that users are to be added, 
-guidelines need to be provided, documents have to be uploaded, tagsets need to be defined and uploaded,
-etc. The process of setting up and administrating a project are explicitly described in <<sect_projects>>.
-
-After the setup of a project, the users who were assigned with the task of annotation annotate the
-documents according to the guidelines. The task of annotation is further explained in <<sect_annotation>>.
-The work of the annotators is managed and controlled by monitoring. Here, the person in charge has
-to assign the workload. For example, in order to prevent redundant annotation, documents which are
-already annotated by several other annotators and need not be annotated by another person, can be
-blocked for others. The person in charge is also able to follow the progress of individual
-annotators. All these tasks are demonstrated in <<sect_monitoring>> in more detail. The person in charge should not only control the quantity, but also the quality of annotation by looking closer into the
-annotations of individual annotators. This can be done by logging in with the credentials of the
-annotators.
-
-After at least two annotators have finished the annotation of the same document by clicking on *Done*, the
-curator can start his work. The curator compares the annotations and corrects them if needed. This
-task is further explained in <<sect_curation>>. 
-
-The document merged by the curator can be exported as soon as the curator clicked on *Done* for the
-document. The extraction of curated documents is also explained in <<sect_projects>>.
+include::{include-dir}getting-started.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}installation.adoc[]
+include::{include-dir}workflow.adoc[leveloffset=+1]
 
-include::{include-dir}upgrade.adoc[leveloffset=+1]
 
-<<<
 
-include::{include-dir}login.adoc[]
+= Core functionalities
+
+include::{include-dir}login.adoc[leveloffset=+1]
 
 <<<
 
@@ -79,51 +51,55 @@ include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}annotation.adoc[]
+include::{include-dir}annotation.adoc[leveloffset=+1]
 
-include::{include-dir}annotation_open.adoc[leveloffset=+1]
+include::{include-dir}annotation_open.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_navigation.adoc[leveloffset=+1]
+include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_create-annotations.adoc[leveloffset=+1]
+include::{include-dir}annotation_create-annotations.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+2]
+include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+2]
+include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+2]
+include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+2]
+include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+2]
+include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_settings.adoc[leveloffset=+1]
+include::{include-dir}annotation_create-annotations_image-features.adoc[leveloffset=+3]
 
-include::{include-dir}annotation_export.adoc[leveloffset=+1]
+include::{include-dir}annotation_settings.adoc[leveloffset=+2]
+
+include::{include-dir}annotation_export.adoc[leveloffset=+2]
 
 include::{include-dir}search-core.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_recommendation.adoc[leveloffset=+1]
+include::{include-dir}annotation_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_activeLearning.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_concept-linking.adoc[leveloffset=+1]
+include::{include-dir}annotation_concept-linking.adoc[leveloffset=+2]
 
-include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+1]
+include::{include-dir}annotation_fact-extraction.adoc[leveloffset=+2]
 
-<<<
-
-include::{include-dir}curation.adoc[]
+include::{include-dir}annotation_images.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}monitoring.adoc[]
+include::{include-dir}curation.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}agreement.adoc[]
+include::{include-dir}monitoring.adoc[leveloffset=+1]
+
+<<<
+
+include::{include-dir}agreement.adoc[leveloffset=+1]
 
 <<<
 
@@ -131,19 +107,19 @@ include::{include-dir}knowledge_base.adoc[]
 
 <<<
 
-include::{include-dir}projects.adoc[]
+include::{include-dir}projects.adoc[leveloffset=+1]
 
-include::{include-dir}projects_import.adoc[leveloffset=+1]
+include::{include-dir}projects_import.adoc[leveloffset=+2]
 
-include::{include-dir}projects_users.adoc[leveloffset=+1]
+include::{include-dir}projects_users.adoc[leveloffset=+2]
 
-include::{include-dir}projects_documents.adoc[leveloffset=+1]
+include::{include-dir}projects_documents.adoc[leveloffset=+2]
 
-include::{include-dir}projects_layers.adoc[leveloffset=+1]
+include::{include-dir}projects_layers.adoc[leveloffset=+2]
 
-include::{include-dir}projects_knowledge-base.adoc[leveloffset=+1]
+include::{include-dir}projects_knowledge-base.adoc[leveloffset=+2]
 
-include::{include-dir}projects_recommendation.adoc[leveloffset=+1]
+include::{include-dir}projects_recommendation.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_string.adoc[leveloffset=+2]
 
@@ -153,34 +129,43 @@ include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
-include::{include-dir}projects_tagsets.adoc[leveloffset=+1]
+include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
 
-include::{include-dir}projects_guidelines.adoc[leveloffset=+1]
-
-include::{include-dir}projects_constraints.adoc[leveloffset=+1]
-
-include::{include-dir}projects_export.adoc[leveloffset=+1]
+include::{include-dir}projects_export.adoc[leveloffset=+2]
 
 <<<
 
-include::{include-dir}constraints.adoc[]
+include::{include-dir}users.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}users.adoc[]
+
+
+= Advanced functionalities
+
+include::{include-dir}constraints.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}formats.adoc[]
+include::{include-dir}casdoctor.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}webannotsv.adoc[]
+include::{include-dir}guidelines.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}troubleshooting.adoc[]
+= Appendices
+
+[appendix]
+include::{include-dir}webannotsv.adoc[leveloffset=+1]
 
 <<<
 
-include::{include-dir}settings.adoc[]
+[appendix]
+include::{include-dir}formats.adoc[leveloffset=+1]
+
+<<<
+
+[appendix]
+include::{include-dir}troubleshooting.adoc[leveloffset=+1]

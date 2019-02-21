@@ -25,13 +25,23 @@ import org.apache.uima.cas.CAS;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 
 public interface RecommendationEngine {
+// tag::methodDefinition[]
     /**
      * Given training data in {@code aCasses}, train a model. In order to save data between
+     * runs, the {@code aContext} can be used.
      * This method must not mutate {@code aCasses} in any way.
      * @param aContext The context of the recommender
      * @param aCasses The training data
      */
     void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException;
+
+    /**
+     * Given text in {@code aCas}, predict target annotations. These should be written into
+     * {@code aCas}. In order to restore data from e.g. previous training, the {@code aContext}
+     * can be used.
+     * @param aContext The context of the recommender
+     * @param aCas The training data
+     */
     void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException;
 
     /**
@@ -44,6 +54,7 @@ public interface RecommendationEngine {
      * @return Score measuring the performance of predicting on the test set
      */
     double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) throws RecommendationException;
+// end::methodDefinition[]
 
     /**
      * Returns the long name of the type this recommender predict, e.g.
@@ -73,5 +84,16 @@ public interface RecommendationEngine {
     default Optional<String> getScoreFeature()
     {
         return Optional.of("score");
+    }
+    
+    /**
+     * Whether or not this engine supports training. If training is not supported, the call to
+     * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
+     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+     * training is skipped - this is meant only for engines that use pre-trained models.
+     */
+    default boolean requiresTraining()
+    {
+        return true;
     }
 }

@@ -120,8 +120,7 @@ public class ConceptFeatureIndexingSupport
         values.put(field + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT,
                 featureObject.getIdentifier());
         // Indexing: <layer>.<feature>=<URI>
-        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(),
-                featureObject.getIdentifier());
+        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(), featureObject.getIdentifier());
 
         // The following fields are used by the mentions panes on the KB page in order to find all
         // mentions of a given resource irrespective of which layer/feature they are linked to.
@@ -131,15 +130,17 @@ public class ConceptFeatureIndexingSupport
         values.put(KB_ENTITY, featureObject.getIdentifier());
         
         // Indexing super concepts with type super.concept 
-        Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObject.get().getKB(),
-                kbObject.get().getIdentifier(), false);
+        KBObject kbObj = kbObject.get();
+        Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
+                kbObj.getIdentifier(), false);
         for (KBHandle parentConcept : listParentConcepts) {
-            if (kbService.hasImplicitNamespace(parentConcept.getIdentifier())) {
+            if (kbService.hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
                 continue;
             }
             values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
                     parentConcept.getUiLabel());
         }
+        
         return values;
     }
     

@@ -17,16 +17,27 @@
  */
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.Serializable;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
+import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class KnowledgeBaseProfile implements Serializable
 {
+    private static final String KNOWLEDGEBASE_PROFILES_YAML = "knowledgebase-profiles.yaml";
     private static final long serialVersionUID = -2684575269500649910L;
 
     @JsonProperty("name")
@@ -43,6 +54,15 @@ public class KnowledgeBaseProfile implements Serializable
     
     @JsonProperty("root-concepts")
     private List<String> rootConcepts;
+
+    @JsonProperty("info")
+    private KnowledgeBaseInfo info;
+
+    @JsonProperty("reification")
+    private Reification reification;
+
+    @JsonProperty("default-language")
+    private String defaultLanguage;
 
     public String getName()
     {
@@ -89,9 +109,51 @@ public class KnowledgeBaseProfile implements Serializable
         return rootConcepts;
     }
 
-    public void setRootConcepts(List<String> rootConcepts)
+    public void setRootConcepts(List<String> aRootConcepts)
     {
-        this.rootConcepts = rootConcepts;
+        rootConcepts = aRootConcepts;
+    }
+
+    public KnowledgeBaseInfo getInfo()
+    {
+        return info;
+    }
+
+    public void setInfo(KnowledgeBaseInfo aInfo)
+    {
+        info = aInfo;
+    }
+
+    public Reification getReification()
+    {
+        return reification;
+    }
+
+    public void setReification(Reification aReification)
+    {
+        reification = aReification;
+    }
+
+    public String getDefaultLanguage()
+    {
+        return defaultLanguage;
+    }
+
+    public void setDefaultLanguage(String aDefaultLanguage)
+    {
+        defaultLanguage = aDefaultLanguage;
+    }
+
+    public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
+        throws IOException
+    {
+        try (Reader r = new InputStreamReader(
+            KnowledgeBaseProfile.class.getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
+            StandardCharsets.UTF_8)) {
+            ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+            return mapper.readValue(r,
+                new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+        }
     }
 
     @Override public boolean equals(Object o)
@@ -105,11 +167,15 @@ public class KnowledgeBaseProfile implements Serializable
         KnowledgeBaseProfile that = (KnowledgeBaseProfile) o;
         return Objects.equals(name, that.name) && Objects.equals(access, that.access)
                 && Objects.equals(mapping, that.mapping) && Objects.equals(type, that.type)
-                && Objects.equals(rootConcepts, that.rootConcepts);
+                && Objects.equals(rootConcepts, that.rootConcepts)
+                && Objects.equals(info, that.info)
+                && Objects.equals(reification, that.reification)
+                && Objects.equals(defaultLanguage, that.defaultLanguage);
     }
-    
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, type, access, mapping,rootConcepts);
+
+    @Override public int hashCode()
+    {
+        return Objects
+            .hash(name, type, access, mapping, rootConcepts, info, reification, defaultLanguage);
     }
 }

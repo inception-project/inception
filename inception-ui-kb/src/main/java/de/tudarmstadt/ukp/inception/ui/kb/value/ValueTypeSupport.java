@@ -77,7 +77,7 @@ public interface ValueTypeSupport
      * @return a {@link ValueEditor} instance
      */
     ValueEditor createEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aDatatype,
-            IModel<KnowledgeBase> kbModel);
+            IModel<KnowledgeBase> aKbModel);
 
     /**
      * Returns a {@link ValuePresenter} instance given a datatype IRI (most likely the range of a
@@ -89,5 +89,5 @@ public interface ValueTypeSupport
      * @return a {@link ValuePresenter} instance
      */
     ValuePresenter createPresenter(String aId, IModel<KBStatement> aModel,
-            IModel<KBProperty> aDatatype);
+            IModel<KBProperty> aDatatype, IModel<KnowledgeBase> aKbModel);
 }

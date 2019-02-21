@@ -88,14 +88,14 @@ public class BooleanLiteralValueSupport
 
     @Override
     public ValueEditor createEditor(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty, IModel<KnowledgeBase> kbModel)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new BooleanLiteralValueEditor(aId, aStatement);
     }
 
     @Override
     public ValuePresenter createPresenter(String aId, IModel<KBStatement> aStatement,
-            IModel<KBProperty> aProperty)
+            IModel<KBProperty> aProperty, IModel<KnowledgeBase> aKbModel)
     {
         return new BooleanLiteralValuePresenter(aId, aStatement);
     }

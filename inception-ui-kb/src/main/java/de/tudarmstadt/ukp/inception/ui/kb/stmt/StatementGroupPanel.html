@@ -25,7 +25,7 @@
   <wicket:fragment wicket:id="newStatementGroup">
     <form wicket:id="form" class="statement-group flex-h-container">
       <div class="flex-25 flex-h-container">
-        <select wicket:id="property" class="form-control flex-content"></select>
+        <select wicket:id="property" class="form-control flex-content" data-container="body"></select>
         <div class="statement-editor-button-row">
           <ul>
             <li><a wicket:id="create" wicket:message="title:statement.save" class="btn-link"><i class="fa fa-check" aria-hidden="true"></i></a>
@@ -44,8 +44,8 @@
     <form wicket:id="form" class="statement-group flex-h-container">
       <div class="flex-25">
         <span class="statement-group-property">
+          <span wicket:id="statementIdtext"/>
           <a wicket:id="propertyLink"><wicket:container wicket:id="property"></wicket:container></a>
-          <span wicket:id="statementIdtext" class="fa fa-info-circle"></span>
         </span>
       </div>
 	  <div class="statement-group-statements-list flex-v-container flex-content">

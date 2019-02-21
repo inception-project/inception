@@ -35,10 +35,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
+import de.tudarmstadt.ukp.inception.externalsearch.elastic.config.ElasticSearchDocumentRepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraitsEditor;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
+/**
+ * Support for ElasticSearch-based document repositories.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link ElasticSearchDocumentRepositoryAutoConfiguration#elasticSearchProviderFactory}.
+ * </p>
+ */
 @Order(100)
 public class ElasticSearchProviderFactory
     implements BeanNameAware, ExternalSearchProviderFactory<ElasticSearchProviderTraits>

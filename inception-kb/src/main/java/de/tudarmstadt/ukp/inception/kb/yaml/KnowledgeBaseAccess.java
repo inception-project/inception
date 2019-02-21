@@ -20,12 +20,31 @@ package de.tudarmstadt.ukp.inception.kb.yaml;
 import java.io.Serializable;
 import java.util.Objects;
 
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class KnowledgeBaseAccess implements Serializable
 {
     @JsonProperty("access-url")
     private String accessUrl;
+
+    @JsonProperty("full-text-search")
+    private IRI fullTextSearchIri;
+
+    @JsonCreator public KnowledgeBaseAccess(@JsonProperty("access-url") String aAccessUrl,
+        @JsonProperty("full-text-search") String aFullTestSearchIri)
+    {
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        accessUrl = aAccessUrl;
+        fullTextSearchIri = vf.createIRI(aFullTestSearchIri);
+    }
+
+    public KnowledgeBaseAccess() {
+
+    }
 
     public String getAccessUrl()
     {
@@ -37,6 +56,16 @@ public class KnowledgeBaseAccess implements Serializable
         this.accessUrl = accessUrl;
     }
 
+    public IRI getFullTextSearchIri()
+    {
+        return fullTextSearchIri;
+    }
+
+    public void setFullTextSearchIri(IRI aFullTextSearchIri)
+    {
+        fullTextSearchIri = aFullTextSearchIri;
+    }
+
     @Override public boolean equals(Object o)
     {
         if (this == o) {
@@ -46,11 +75,12 @@ public class KnowledgeBaseAccess implements Serializable
             return false;
         }
         KnowledgeBaseAccess that = (KnowledgeBaseAccess) o;
-        return Objects.equals(accessUrl, that.accessUrl);
+        return Objects.equals(accessUrl, that.accessUrl)
+                && Objects.equals(fullTextSearchIri, that.fullTextSearchIri);
     }
 
     @Override public int hashCode()
     {
-        return Objects.hash(accessUrl);
+        return Objects.hash(accessUrl, fullTextSearchIri);
     }
 }
