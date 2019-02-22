@@ -41,6 +41,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
+@Ignore("https://archive.ics.uci.edu is presently not reachable")
 public class OpenNlpDoccatRecommenderTest
 {
     private static File cache = DkproTestContext.getCacheFolder();
