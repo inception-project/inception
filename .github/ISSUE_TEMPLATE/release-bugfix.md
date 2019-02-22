@@ -19,6 +19,9 @@ about: Release checklist for feature releases (first or second digit increase)
 - [ ] Update the `releases.yml` file
 - [ ] Add release documentation to GitHub pages
 
+**Docker release**
+- [ ] Release to DockerHub
+
 **CI server**
 - [ ] Create a new build job for the new maintenance branch by copying the build job of the current 
       maintenance branch and updating the branch info.

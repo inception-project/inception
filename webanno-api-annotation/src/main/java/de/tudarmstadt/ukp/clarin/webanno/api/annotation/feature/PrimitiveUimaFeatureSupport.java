@@ -131,6 +131,7 @@ public class PrimitiveUimaFeatureSupport
     public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         if (
+                aValue != null &&
                 schemaService != null && 
                 aFeature.getTagset() != null && 
                 CAS.TYPE_NAME_STRING.equals(aFeature.getType()) && 

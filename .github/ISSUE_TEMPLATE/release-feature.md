@@ -19,5 +19,8 @@ about: Release checklist for bug-fix releases (third-digit increase)
 - [ ] Update the `releases.yml` file
 - [ ] Add release documentation to GitHub pages
 
+**Docker release**
+- [ ] Release to DockerHub
+
 **Mailing list**
 - [ ] Send release announcement to mailing list

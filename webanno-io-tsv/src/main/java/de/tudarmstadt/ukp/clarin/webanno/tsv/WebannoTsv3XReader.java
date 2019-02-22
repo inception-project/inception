@@ -29,9 +29,15 @@ import de.tudarmstadt.ukp.clarin.webanno.tsv.internal.tsv3x.Tsv3XDeserializer;
 import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 
+/**
+ * Reads the WebAnno TSV v3.x format.
+ */
 public class WebannoTsv3XReader
     extends JCasResourceCollectionReader_ImplBase
 {
+    /**
+     * Character encoding of the input data.
+     */
     public static final String PARAM_ENCODING = ComponentParameters.PARAM_SOURCE_ENCODING;
     @ConfigurationParameter(name = PARAM_ENCODING, mandatory = true, defaultValue = "UTF-8")
     private String encoding;
