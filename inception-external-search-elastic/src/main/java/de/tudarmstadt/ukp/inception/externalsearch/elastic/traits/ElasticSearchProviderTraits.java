@@ -33,6 +33,8 @@ public class ElasticSearchProviderTraits
     
     private String objectType = "texts";
 
+    private boolean randomOrder = false;
+
     public String getRemoteUrl()
     {
         return remoteUrl;
@@ -71,5 +73,15 @@ public class ElasticSearchProviderTraits
     public void setObjectType(String objectType)
     {
         this.objectType = objectType;
+    }
+
+    public boolean isRandomOrder()
+    {
+        return randomOrder;
+    }
+
+    public void setRandomOrder(boolean aRandomOrder)
+    {
+        randomOrder = aRandomOrder;
     }
 }

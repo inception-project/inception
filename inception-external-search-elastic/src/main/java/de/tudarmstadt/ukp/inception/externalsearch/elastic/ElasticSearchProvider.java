@@ -53,6 +53,8 @@ public class ElasticSearchProvider
     private String searchPath = "_search";
 
     private String objectType = "texts";
+
+    private boolean randomOrder = false;
     
     // Number of results retrieved from the server
     private int resultSize = 1000;
@@ -92,6 +94,7 @@ public class ElasticSearchProvider
         remoteUrl = properties.getRemoteUrl();
         indexName = properties.getIndexName();
         searchPath = properties.getSearchPath();
+        randomOrder = properties.isRandomOrder();
         
         // Set headers
         HttpHeaders headers = new HttpHeaders();
@@ -99,8 +102,16 @@ public class ElasticSearchProvider
 
         
         // Set query
-        String query = "{\"size\":%d,\"query\":{\"match\":"
+        String query;
+        if (randomOrder) {
+            query = "{\"size\":%d,"
+                + "\"query\":{\"function_score\":{\"query\":{\"match\":{\"doc.text\":\"%s\"}},"
+                + "\"random_score\":{\"seed\":\"5\",\"field\":\"_id\"}}},"
+                + "\"highlight\":{\"fields\":{\"doc.text\":{}}}}";
+        } else {
+            query = "{\"size\":%d,\"query\":{\"match\":"
                 + "{\"doc.text\":\"%s\"}},\"highlight\":{\"fields\":{\"doc.text\":{}}}}";
+        }
 
         // Set body
         String body = String.format(query, resultSize, aQuery);

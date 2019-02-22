@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -77,6 +78,9 @@ public class ElasticSearchProviderTraitsEditor
         TextField<String> objectType = new TextField<>("objectType");
         objectType.setRequired(true);
         form.add(objectType);
+
+        CheckBox randomOrder = new CheckBox("randomOrder");
+        form.add(randomOrder);
 
         add(form);
     }
