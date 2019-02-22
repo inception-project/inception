@@ -91,6 +91,7 @@ public class SPARQLQueryBuilderTest
     private Repository zbwGnd;
     private Repository wikidata;
     private Repository dbpedia;
+    private Repository hucit;
     
     @Before
     public void setup()
@@ -138,6 +139,10 @@ public class SPARQLQueryBuilderTest
         // https://dbpedia.org/sparql
         dbpedia = new SPARQLRepository("https://dbpedia.org/sparql");
         dbpedia.initialize();
+        
+        // http://nlp.dainst.org:8888/sparql
+        hucit = new SPARQLRepository("http://nlp.dainst.org:8888/sparql");
+        hucit.initialize();
     }
 
     @Test
@@ -524,6 +529,21 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> "Labour".equals(label));
     }
     
+    @Test
+    public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
+    {
+        kb.setFullTextSearchIri(null);
+        
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
+        builder.withLabelStartingWith("Achilles");
+        List<KBHandle> results = asHandles(hucit, builder);
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.startsWith("Achilles"));
+    }
+    
     private List<KBHandle> asHandles(Repository aRepo, SPARQLQueryBuilder aBuilder)
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {
@@ -579,7 +599,7 @@ public class SPARQLQueryBuilderTest
                         new KBHandle("http://mbugert.de/pets#socke", "Socke",
                                 "http://mbugert.de/pets#socke", null));
     }
-    
+
     private void importDataFromFile(String aFilename) throws IOException
     {
         // Detect the file format
