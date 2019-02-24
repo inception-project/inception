@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service.feature;
 
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_ID_RANK;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_WIKIDATA_ENTITY;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT;
@@ -48,7 +49,7 @@ public class WikidataIdRankFeatureGenerator
             if (UKP_WIKIDATA_SPARQL_ENDPOINT
                     .equals(((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl())) {
                 String wikidataId = aCandidate.getIRI().replace(PREFIX_WIKIDATA_ENTITY, "");
-                aCandidate.setIdRank(Math.log(Double.parseDouble(wikidataId.substring(1))));
+                aCandidate.put(KEY_ID_RANK, Math.log(Double.parseDouble(wikidataId.substring(1))));
             }
         }
     }

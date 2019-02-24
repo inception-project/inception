@@ -17,53 +17,39 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.PREFIX_WIKIDATA_ENTITY;
-import static de.tudarmstadt.ukp.inception.kb.IriConstants.UKP_WIKIDATA_SPARQL_ENDPOINT;
-import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
-import static de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore.searchItemsContaining;
-import static de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore.searchItemsExactLabelMatch;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static java.lang.System.currentTimeMillis;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.jcas.JCas;
-import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
-import org.eclipse.rdf4j.repository.config.RepositoryImplConfig;
-import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
-
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -75,10 +61,9 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.feature.EntityRanking
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
-import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 @Component
 public class ConceptLinkingServiceImpl
@@ -89,27 +74,13 @@ public class ConceptLinkingServiceImpl
     private final KnowledgeBaseService kbService;
     private final EntityLinkingProperties properties;
 
-    @org.springframework.beans.factory.annotation.Value
-        (value = "${repository.path}/resources/stopwords-en.txt")
+    @Value(value = "${repository.path}/resources/stopwords-en.txt")
     private File stopwordsFile;
     private Set<String> stopwords;
 
-    @org.springframework.beans.factory.annotation.Value
-        (value = "${repository.path}/resources/wikidata_entity_freqs.map")
-    private File entityFrequencyFile;
-    private Map<String, Integer> entityFrequencyMap;
-
-    // A cache for candidates retrieved by fulltext-search
-    private LoadingCache<CandidateCacheKey, Set<CandidateEntity>> candidateFullTextCache;
-
-    private static final Comparator<CandidateEntity> SORT_CANDIDATES_BY_FREQUENCY = (e1,
-            e2) -> Comparator.comparingInt(CandidateEntity::getFrequency).reversed().compare(e1,
-                    e2);
-    
     private final List<EntityRankingFeatureGenerator> featureGeneratorsProxy;
     private List<EntityRankingFeatureGenerator> featureGenerators;
 
-    
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
             EntityLinkingProperties aProperties,
@@ -133,17 +104,6 @@ public class ConceptLinkingServiceImpl
         else {
             stopwords = emptySet();
         }
-        
-        if (entityFrequencyFile != null) {
-            entityFrequencyMap = FileUtils.loadEntityFrequencyMap(entityFrequencyFile);
-        }
-        else {
-            entityFrequencyMap = emptyMap();
-        }
-
-        candidateFullTextCache = Caffeine.newBuilder()
-                .maximumSize(properties.getCacheSize())
-                .build(key -> loadCandidatesFullText(key));
     }
     
     @EventListener
@@ -169,30 +129,88 @@ public class ConceptLinkingServiceImpl
         featureGenerators = unmodifiableList(generators);
     }
 
+    private SPARQLQueryBuilder newQueryBuilder(ConceptFeatureValueType aValueType,
+            KnowledgeBase aKB)
+    {
+        switch (aValueType) {
+        case ANY_OBJECT:
+            return SPARQLQueryBuilder.forItems(aKB);
+        case CONCEPT:
+            return SPARQLQueryBuilder.forClasses(aKB);
+        case INSTANCE:
+            return SPARQLQueryBuilder.forInstances(aKB);
+        default:
+            throw new IllegalArgumentException("Unknown item type: [" + aValueType + "]");
+        }
+    }
+    
     public Set<KBHandle> generateCandidates(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention)
     {
+        // If the query from the user is longer than this threshold, we used
+        final int threshold = 3;
+        
         long startTime = currentTimeMillis();
         Set<KBHandle> result = new HashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
             // Collect exact matches - although exact matches are theoretically contained in the
-            // set of containing matches, due to the ranking performed by the KB/FTS, we might not
-            // actually see the exact matches within the first N results. So we query for the
-            // exact matches separately to ensure we have them.
-            List<KBHandle> exactMatches = searchItemsExactLabelMatch(aKB, conn, aQuery, aMention);
-            log.debug("Found [{}] candidates exactly matching terms [{}], [{}]",
-                    exactMatches.size(), aQuery, aMention);
+            // set of containing matches, due to the ranking performed by the KB/FTS, we might
+            // not actually see the exact matches within the first N results. So we query for
+            // the exact matches separately to ensure we have them.
+            String[] exactLabels = asList(aQuery.length() < threshold ? aQuery : null,
+                    aMention).stream()
+                    .filter(Objects::nonNull)
+                    .toArray(String[]::new);
+            SPARQLQueryBuilder exactQueryBuilder = newQueryBuilder(aValueType, aKB);
+            exactQueryBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
+            exactQueryBuilder.retrieveLabel();
+            exactQueryBuilder.retrieveDescription();
+            List<KBHandle> exactMatches = exactQueryBuilder
+                    .asHandles((RepositoryConnection) conn, true);
+
+            log.debug("Found [{}] candidates exactly matching {}",
+                    exactMatches.size(), asList(exactLabels));
+
             result.addAll(exactMatches);
 
+            
+            if (aQuery.length() > threshold) {
+                // Collect matches starting with the query - this is the main driver for the
+                // auto-complete functionality
+                SPARQLQueryBuilder startingWithQueryBuilder = newQueryBuilder(aValueType, aKB);
+                startingWithQueryBuilder.withLabelStartingWith(aQuery);
+                startingWithQueryBuilder.retrieveLabel();
+                startingWithQueryBuilder.retrieveDescription();
+                List<KBHandle> startingWithMatches = startingWithQueryBuilder
+                        .asHandles((RepositoryConnection) conn, true);
+                
+                log.debug("Found [{}] candidates starting with [{}]]",
+                        startingWithMatches.size(), aQuery);            
+                
+                result.addAll(startingWithMatches);
+            }
+            
+            
             // Collect containing matches
-            List<KBHandle> containingMatches = searchItemsContaining(aKB, conn, aQuery, aMention);
-            log.debug("Found [{}] candidates using containing terms [{}], [{}]",
-                    exactMatches.size(), aQuery, aMention);
+            String[] containingLabels = asList(aQuery.length() > threshold ? aQuery : null,
+                    aMention).stream()
+                    .filter(Objects::nonNull)
+                    .toArray(String[]::new);
+            SPARQLQueryBuilder containingQueryBuilder = newQueryBuilder(aValueType, aKB);
+            containingQueryBuilder.withLabelContainingAnyOf(containingLabels);
+            containingQueryBuilder.retrieveLabel();
+            containingQueryBuilder.retrieveDescription();
+            List<KBHandle> containingMatches = containingQueryBuilder
+                    .asHandles((RepositoryConnection) conn, true);
+            
+            log.debug("Found [{}] candidates using containing {}",
+                    containingMatches.size(), asList(containingLabels));
+            
             result.addAll(containingMatches);
         }
 
-        log.debug("Generated [{}] candidates in [{}] ms", result.size(),
+        log.debug("Generated [{}] candidates in {}ms", result.size(),
                 currentTimeMillis() - startTime);
 
         return result;
@@ -206,31 +224,6 @@ public class ConceptLinkingServiceImpl
         Set<KBHandle> candidates = generateCandidates(aKB, aConceptScope, aValueType, aQuery,
                 aMention);
         return rankCandidates(aQuery, aMention, candidates, aJcas, aMentionBeginOffset);
-    }
-
-    /**
-     * Retrieve a set of candidate entities via full-text search from a Knowledge Base.
-     * May lead to recursive calls if first search does not yield any results.
-     *
-     */
-    private Set<CandidateEntity> loadCandidatesFullText(CandidateCacheKey aKey)
-    {
-        if (!aKey.getKnowledgeBase().isSupportConceptLinking()) {
-            return Collections.emptySet();
-        }
-        Set<CandidateEntity> candidates = new HashSet<>();
-
-        try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            for (KBHandle handle : SPARQLQueryStore.searchItemsContaining(aKey.getKnowledgeBase(),
-                    conn, aKey.getQuery())) {
-                candidates.add(new CandidateEntity(handle));
-            }
-        }
-        catch (QueryEvaluationException e) {
-            log.error("Query evaluation was unsuccessful: ", e);
-        }
-
-        return candidates;
     }
 
     /**
@@ -250,7 +243,8 @@ public class ConceptLinkingServiceImpl
         List<CandidateEntity> candidates = aCandidates.stream()
                 .map(CandidateEntity::new)
                 .map(candidate -> {
-                    candidate.put(CandidateEntity.KEY_MENTION, aMention);
+                    candidate.put(KEY_MENTION, aMention);
+                    candidate.put(KEY_QUERY, aQuery);
                     
                     if (aJCas != null) {
                         Sentence sentence = getMentionSentence(aJCas, aBegin);
@@ -272,7 +266,7 @@ public class ConceptLinkingServiceImpl
                                     .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
                                     .filter(s -> !stopwords.contains(s))
                                     .forEach(mentionContext::add);
-                            candidate.put(CandidateEntity.KEY_MENTION_CONTEXT, mentionContext);
+                            candidate.put(KEY_MENTION_CONTEXT, mentionContext);
                         }
                         else {
                             log.warn("Mention sentence could not be determined. Skipping.");
@@ -283,39 +277,39 @@ public class ConceptLinkingServiceImpl
                 })
                 .collect(Collectors.toCollection(ArrayList::new));
         
-        // Set frequency
-        setFrequenciesForCandidates(candidates);
-
-        // Sort full-text matching candidates by frequency and do cutoff by a threshold
-        List<CandidateEntity> frequencySortedCandidates = candidates.stream()
-                .sorted(SORT_CANDIDATES_BY_FREQUENCY)
-                .limit(properties.getCandidateFrequencyThreshold())
-                .collect(Collectors.toList());
-
-        // Add exact matching candidates
-        frequencySortedCandidates.addAll(candidates);
-
         // Set the feature values
-        frequencySortedCandidates.parallelStream().forEach(candidate -> {
+        candidates.parallelStream().forEach(candidate -> {
             for (EntityRankingFeatureGenerator generator : featureGenerators) {
                 generator.apply(candidate);
             }
         });
-
-        // Do the main ranking
-        List<CandidateEntity> rankedCandidates = sortCandidates(frequencySortedCandidates);
         
-        List<KBHandle> results = rankedCandidates.stream()
+        // Do the main ranking
+        // Sort candidates by multiple keys.
+        candidates.sort((e1, e2) -> new CompareToBuilder()
+                // The edit distance between query and label is given high importance
+                // Comparing simultaneously against the edit distance to the query and to the 
+                // mention causes items similar to either to be ranked up
+                .append(Math.min(e1.getLevQuery(), e1.getLevMention()),
+                        Math.min(e2.getLevQuery(), e2.getLevMention()))
+                // A high signature overlap score is preferred.
+                .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
+                // A low edit distance is preferred.
+                .append(e1.getLevContext(), e2.getLevContext())
+                // A high entity frequency is preferred.
+                .append(e2.getFrequency(), e1.getFrequency())
+                // A high number of related relations is preferred.
+                .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
+                // A low wikidata ID rank is preferred.
+                .append(e1.getIdRank(), e2.getIdRank())
+                .toComparison());
+
+        List<KBHandle> results = candidates.stream()
                 .map(candidate -> {
                     KBHandle handle = candidate.getHandle();
-                    if (log.isDebugEnabled()) {
-                        handle.setDescription(
-                                handle.getDescription() + "\n" + candidate.getFeatures());
-                    }
+                    handle.setDebugInfo(String.valueOf(candidate.getFeatures()));
                     return handle;
                 })
-                // .distinct()
-                // .filter(h -> h.getIdentifier().contains(":"))
                 .limit(properties.getCandidateDisplayLimit())
                 .collect(Collectors.toList());
          
@@ -323,54 +317,6 @@ public class ConceptLinkingServiceImpl
                  results.size(), aMention, aQuery, currentTimeMillis() - startTime);
          
         return results;
-    }
-
-    /**
-     * Set frequencies for CandidateEntities from full-text-search
-     */
-    private void setFrequenciesForCandidates(Collection<CandidateEntity> aCandidatesFullText)
-    {
-        // Set frequency
-        if (entityFrequencyMap != null) {
-            for (CandidateEntity l : aCandidatesFullText) {
-                KnowledgeBase kb = l.getHandle().getKB();
-                // For UKP Wikidata
-                if (kb.getType() == REMOTE && FTS_VIRTUOSO.equals(kb.getFullTextSearchIri())) {
-                    RepositoryImplConfig cfg = kbService.getKnowledgeBaseConfig(kb);
-                    if (((SPARQLRepositoryConfig) cfg).getQueryEndpointUrl()
-                            .equals(UKP_WIKIDATA_SPARQL_ENDPOINT)) {
-                        String key = l.getIRI();
-                        key = key.replace(PREFIX_WIKIDATA_ENTITY, "");
-                        if (entityFrequencyMap.get(key) != null) {
-                            l.setFrequency(entityFrequencyMap.get(key));
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Sort candidates by multiple keys.
-     * The edit distance between query and label is given high importance
-     * to push the exact matching candidates to the top.
-     * A high signature overlap score is preferred.
-     * A low edit distance is preferred.
-     * A high entity frequency is preferred.
-     * A high number of related relations is preferred.
-     * A low wikidata ID rank is preferred.
-     */
-    private List<CandidateEntity> sortCandidates(List<CandidateEntity> candidates)
-    {
-        candidates.sort((e1, e2) -> new CompareToBuilder()
-            .append(e1.getLevQuery(), e2.getLevQuery())
-            .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
-            .append(e1.getLevContext() + e1.getLevMatchLabel(),
-                e2.getLevContext() + e2.getLevMatchLabel())
-            .append(e2.getFrequency(), e1.getFrequency())
-            .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
-            .append(e1.getIdRank(), e2.getIdRank()).toComparison());
-        return candidates;
     }
 
     @Override
@@ -405,77 +351,6 @@ public class ConceptLinkingServiceImpl
     @Override
     public List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aQuery)
     {
-        if (StringUtils.isBlank(aQuery)) {
-            return emptyList();
-        }
-        
-        return generateCandidates(aKB, null, ConceptFeatureValueType.ANY_OBJECT, aQuery, null)
-                .stream()
-                .map(CandidateEntity::new)
-                .sorted(SORT_CANDIDATES_BY_FREQUENCY)
-                .limit(properties.getCandidateFrequencyThreshold())
-                .map(c -> new KBHandle(c.getIRI(), c.getLabel(), c.getDescription()))
-                .distinct()
-                .limit(properties.getCandidateDisplayLimit())
-                .filter(h -> h.getIdentifier().contains(":")).collect(Collectors.toList());
-    }
-
-    /**
-     * Remove all cache entries of a specific project
-     * @param aEvent
-     *            The event containing the project
-     */
-    @EventListener
-    public void onKnowledgeBaseConfigurationChangedEvent(
-        KnowledgeBaseConfigurationChangedEvent aEvent)
-    {
-        // FIXME instead of maintaining one global cache, we might maintain a cascaded cache
-        // where the top level is the project and then for each project we have sub-caches.
-        // Then we could invalidate only a specific project's cache. However, right now,
-        // we don't have that and there is no way to properly iterate over the caches and
-        // invalidate only entries belonging to a specific project. Thus, we need to
-        // invalidate all.
-        candidateFullTextCache.invalidateAll();
-    }
-
-    private static class CandidateCacheKey
-    {
-        private final KnowledgeBase knowledgeBase;
-        private final String query;
-
-        public CandidateCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
-        {
-            super();
-            knowledgeBase = aKnowledgeBase;
-            query = aQuery;
-        }
-
-
-        public KnowledgeBase getKnowledgeBase()
-        {
-            return knowledgeBase;
-        }
-
-        public String getQuery()
-        {
-            return query;
-        }
-
-        @Override
-        public boolean equals(final Object other)
-        {
-            if (!(other instanceof CandidateCacheKey)) {
-                return false;
-            }
-            CandidateCacheKey castOther = (CandidateCacheKey) other;
-            return new EqualsBuilder().append(knowledgeBase, castOther.knowledgeBase)
-                    .append(query, castOther.query).isEquals();
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
-        }
+        return disambiguate(aKB, null, ConceptFeatureValueType.ANY_OBJECT, aQuery, null, 0, null);
     }
 }

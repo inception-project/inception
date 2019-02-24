@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service.feature;
 
-import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION;
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_LEVENSHTEIN_QUERY;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
@@ -49,6 +49,6 @@ public class LevenshteinFeatureGenerator
 
         aCandidate.get(KEY_MENTION_CONTEXT)
                 .map(context -> lev.apply(label, StringUtils.join(context, ' ')))
-                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_CONTEXT, score));
+                .ifPresent(score -> aCandidate.put(KEY_LEVENSHTEIN_MENTION_CONTEXT, score));
     }
 }

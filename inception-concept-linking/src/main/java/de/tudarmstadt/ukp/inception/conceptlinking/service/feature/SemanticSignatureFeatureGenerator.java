@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service.feature;
 
+import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_NUM_RELATIONS;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_SIGNATURE_OVERLAP_SCORE;
@@ -40,7 +41,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -56,7 +56,7 @@ import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-@Component
+//@Component
 public class SemanticSignatureFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
@@ -80,7 +80,8 @@ public class SemanticSignatureFeatureGenerator
         kbService = aKbService;
         properties = aProperties;
 
-        semanticSignatureCache = Caffeine.newBuilder().maximumSize(properties.getCacheSize())
+        semanticSignatureCache = Caffeine.newBuilder()
+                .maximumSize(properties.getCacheSize())
                 .build(key -> loadSemanticSignature(key));
         
         propertyBlacklist = FileUtils.loadPropertyBlacklist(
@@ -92,8 +93,7 @@ public class SemanticSignatureFeatureGenerator
     @Override
     public void apply(CandidateEntity aCandidate)
     {
-        Optional<List<String>> optMentionContext = aCandidate
-                .get(CandidateEntity.KEY_MENTION_CONTEXT);
+        Optional<List<String>> optMentionContext = aCandidate.get(KEY_MENTION_CONTEXT);
         
         if (!optMentionContext.isPresent()) {
             return;

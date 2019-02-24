@@ -33,35 +33,39 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
 /**
- * Stores information about entities retrieved from a knowledge base 
- * Needed to rank candidates
+ * Stores information about entities retrieved from a knowledge base needed to rank candidates.
  */
 public class CandidateEntity
 {
-    private final KBHandle handle;
-    private Locale locale;
-    
-    private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
-
+    /**
+     * The query entered by the user.
+     */
     public static final Key<String> KEY_QUERY = new Key<>("query");
+    
+    /**
+     * The mention in the text which is to be linked.
+     */
     public static final Key<String> KEY_MENTION = new Key<>("mention");
+    
+    /**
+     * The context of the mention.
+     */
     public static final Key<List<String>> KEY_MENTION_CONTEXT = new Key<>("mentionContext");
 
-    
     /**
      * edit distance between mention and candidate entity label
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMatchLabel", 0);
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention", 0);
 
     /**
      * edit distance between mention + context and candidate entity label
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_CONTEXT = new Key<>("levContext", 0);
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext", 0);
 
     /**
      * edit distance between typed string and candidate entity label
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levTypedString",
+    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery",
             Integer.MAX_VALUE);
 
     /**
@@ -82,7 +86,6 @@ public class CandidateEntity
      */
     public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
             "signatureOverlapScore", 0);
-    private int signatureOverlapScore;
 
     /**
      * logarithm of the wikidata ID - based on the assumption that lower IDs are more important
@@ -94,6 +97,10 @@ public class CandidateEntity
      */
     public static final Key<Integer> KEY_FREQUENCY = new Key<>("frequency", 0);
 
+    private final KBHandle handle;
+    private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
+    private Locale locale;
+    
     public CandidateEntity(KBHandle aHandle)
     {
         handle = aHandle;
@@ -188,39 +195,12 @@ public class CandidateEntity
     }
     
     /**
-     * @return set of directly related entities as IRI Strings
-     */
-    @Deprecated
-    public Set<String> getSignatureOverlap()
-    {
-        return get(KEY_SIGNATURE_OVERLAP).get();
-    }
-
-    /**
-     * @param signatureOverlap set of directly related entities as IRI Strings
-     */
-    @Deprecated
-    public void setSignatureOverlap(Set<String> signatureOverlap)
-    {
-        put(KEY_SIGNATURE_OVERLAP, signatureOverlap);
-    }
-
-    /**
      * @return edit distance between mention and candidate entity label
      */
     @Deprecated
-    public int getLevMatchLabel()
+    public int getLevMention()
     {
         return get(KEY_LEVENSHTEIN_MENTION).get();
-    }
-
-    /**
-     * @param aLevMatchLabel edit distance between mention and candidate entity label
-     */
-    @Deprecated
-    public void setLevMatchLabel(int aLevMatchLabel)
-    {
-        put(KEY_LEVENSHTEIN_MENTION, aLevMatchLabel);
     }
 
     /**
@@ -229,16 +209,7 @@ public class CandidateEntity
     @Deprecated
     public int getLevContext()
     {
-        return get(KEY_LEVENSHTEIN_CONTEXT).get();
-    }
-
-    /**
-     * @param aLevContext edit distance between mention + context and candidate entity label
-     */
-    @Deprecated
-    public void setLevContext(int aLevContext)
-    {
-        put(KEY_LEVENSHTEIN_CONTEXT, aLevContext);
+        return get(KEY_LEVENSHTEIN_MENTION_CONTEXT).get();
     }
 
     @Deprecated
@@ -248,41 +219,12 @@ public class CandidateEntity
     }
 
     /**
-     * @param aLevTypedString edit distance between typed string and candidate entity label
-     */
-    @Deprecated
-    public void setLevTypedString(int aLevTypedString)
-    {
-        put(KEY_LEVENSHTEIN_QUERY, aLevTypedString);
-    }
-
-    /**
-     * @param aNumRelatedRelations number of distinct relations to other entities
-     */
-    @Deprecated
-    public void setNumRelatedRelations(int aNumRelatedRelations)
-    {
-        put(KEY_NUM_RELATIONS, aNumRelatedRelations);
-    }
-
-    /**
      * @return number of distinct relations to other entities
      */
     @Deprecated
     public int getNumRelatedRelations()
     {
         return get(KEY_NUM_RELATIONS).get();
-    }
-
-    /**
-     * @param aScore number of related entities whose entity label occurs in <i>content tokens</i>.
-     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
-     * adjectives
-     */
-    @Deprecated
-    public void setSignatureOverlapScore(int aScore)
-    {
-        put(KEY_SIGNATURE_OVERLAP_SCORE, aScore);
     }
 
     /**
@@ -297,17 +239,6 @@ public class CandidateEntity
     }
 
     /**
-     * @param aIdRank
-     *            logarithm of the wikidata ID - based on the assumption that lower IDs are more
-     *            important
-     */
-    @Deprecated
-    public void setIdRank(double aIdRank)
-    {
-        put(KEY_ID_RANK, aIdRank);
-    }
-
-    /**
      * @return logarithm of the wikidata ID - based on the assumption that lower IDs are more
      * important
      */
@@ -315,15 +246,6 @@ public class CandidateEntity
     public double getIdRank()
     {
         return get(KEY_ID_RANK).get();
-    }
-
-    /**
-     * @param aFrequency in-link count of wikipedia article of IRI
-     */
-    @Deprecated
-    public void setFrequency(int aFrequency)
-    {
-        put(KEY_FREQUENCY, aFrequency);
     }
 
     /**

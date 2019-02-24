@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
@@ -324,13 +327,13 @@ public class SPARQLQueryBuilder
     {
         IRI ftsMode = kb.getFullTextSearchIri();
         
-        if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
+        if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
         }
-        else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
+        else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
         }
-        else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
+        else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
             addPattern(PRIO_PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
         }
         else {
@@ -424,17 +427,19 @@ public class SPARQLQueryBuilder
     
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
-        Iri pLabelFts = iri(IriConstants.FTS_VIRTUOSO.toString());
+        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
                         
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + value + "\"")))
+                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + sanitizedValue + "\"")))
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
         
@@ -537,18 +542,18 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
-            
-            String sanitizedValue = value.replace('*', ' ').trim();
-            
+
             valuePatterns.add(VAR_SUBJECT
                     .has(pLabelFts,
                             bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .filter(containsPattern(VAR_LABEL_CANDIDATE, sanitizedValue)));
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
         return GraphPatterns.and(
@@ -558,17 +563,19 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
     {
-        Iri pLabelFts = iri(IriConstants.FTS_VIRTUOSO.toString());
+        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
                         
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + value + "\"")))
+                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + sanitizedValue + "\"")))
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
@@ -591,11 +598,11 @@ public class SPARQLQueryBuilder
 
     private GraphPattern withLabelStartingWith_Virtuoso_FTS(String aPrefixQuery)
     {
-        StringBuilder queryString = new StringBuilder();
-        queryString.append("\"");
+        StringBuilder ftsQueryString = new StringBuilder();
+        ftsQueryString.append("\"");
         
         // Strip single quotes and asterisks because they have special semantics
-        String sanitizedQuery = aPrefixQuery.trim().replace("'", " ").replace("*", " ");
+        String sanitizedQuery = sanitizeQueryStringForFTS(aPrefixQuery);
         
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
@@ -604,7 +611,7 @@ public class SPARQLQueryBuilder
             String[] queryTokens = sanitizedQuery.split(" ");
             for (int i = 0; i < queryTokens.length; i++) {
                 if (i > 0) {
-                    queryString.append(" ");
+                    ftsQueryString.append(" ");
                 }
                 
                 // Virtuoso requires that a token has at least 4 characters before it can be 
@@ -613,35 +620,35 @@ public class SPARQLQueryBuilder
                 // are empty. If the token 4 or more, we add the wildcard.
                 if (i == (queryTokens.length - 1)) {
                     if (queryTokens[i].length() >= 4) {
-                        queryString.append(queryTokens[i]);
-                        queryString.append("*");
+                        ftsQueryString.append(queryTokens[i]);
+                        ftsQueryString.append("*");
                     }
                 }
                 else {
-                    queryString.append(queryTokens[i]);
+                    ftsQueryString.append(queryTokens[i]);
                 }
             }
         }
         else {
-            queryString.append(sanitizedQuery);
+            ftsQueryString.append(sanitizedQuery);
         }
         
-        queryString.append("\"");
+        ftsQueryString.append("\"");
         
         // If the query string was reduced to nothing, then the query should always return an empty
         // result.
-        if (queryString.length() == 2) {
+        if (ftsQueryString.length() == 2) {
             returnEmptyResult = true;
         }
         
-        Iri pLabelFts = iri(IriConstants.FTS_VIRTUOSO.toString());
+        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
         
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(
-                bindLabelProperties(VAR_LABEL_PROPERTY),
+        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                        .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf(queryString.toString())))
+                        .and(VAR_LABEL_CANDIDATE.has(pLabelFts,
+                                literalOf(ftsQueryString.toString())))
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
@@ -913,7 +920,7 @@ public class SPARQLQueryBuilder
             results = evaluateListQuery(tupleQuery, aAll);
             results.sort(Comparator.comparing(KBObject::getUiLabel));
             
-            LOG.debug("[{}] Query returned {} results in {}ms. : {}", queryId, results.size(),
+            LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
                     currentTimeMillis() - startTime);
         }
 
@@ -1025,16 +1032,11 @@ public class SPARQLQueryBuilder
     {
         Binding description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
         Binding descGeneral = aSourceBindings.getBinding("descGeneral");
-        if (description != null ) {
-            aTargetHandle.setDescription(
-                    description.getValue().stringValue() + "\n\n" + aTargetHandle.getIdentifier());
+        if (description != null) {
+            aTargetHandle.setDescription(description.getValue().stringValue());
         }
         else if (descGeneral != null) {
-            aTargetHandle.setDescription(
-                    descGeneral.getValue().stringValue() + "\n\n" + aTargetHandle.getIdentifier());
-        }
-        else {
-            aTargetHandle.setDescription(aTargetHandle.getIdentifier());
+            aTargetHandle.setDescription(descGeneral.getValue().stringValue());
         }
     }
     
@@ -1052,5 +1054,10 @@ public class SPARQLQueryBuilder
         if (range != null) {
             aTargetHandle.setRange(range.getValue().stringValue());
         }
+    }
+    
+    private String sanitizeQueryStringForFTS(String aQuery)
+    {
+        return aQuery.trim().replaceAll("[*\\p{Punct}]", " ").trim();
     }
 }

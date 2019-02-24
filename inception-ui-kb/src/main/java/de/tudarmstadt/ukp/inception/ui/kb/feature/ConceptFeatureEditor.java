@@ -19,8 +19,10 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.Component;
@@ -113,7 +115,46 @@ public class ConceptFeatureEditor
 
             @Override
             protected IJQueryTemplate newTemplate() {
-                return KendoChoiceDescriptionScriptReference.template();
+                return new IJQueryTemplate() {
+                    private static final long serialVersionUID = 8656996525796349138L;
+
+                    @Override
+                    public String getText()
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<div style=\"max-width: 450px\">");
+                        sb.append("  <div class=\"item-title\">");
+                        sb.append("    ${ data.name }");
+                        sb.append("  </div>");
+                        sb.append("  <div class=\"item-identifier\">");
+                        sb.append("    ${ data.identifier }");
+                        sb.append("  </div>");
+                        sb.append("  <div class=\"item-description\">");
+                        sb.append("    ${ data.description }");
+                        sb.append("  </div>");
+                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                            sb.append("  <div class=\"item-description\">");
+                            sb.append("    ${ data.debugInfo }");
+                            sb.append("  </div>");
+                        }
+                        sb.append("</div>");
+                        return sb.toString();
+                    }
+
+                    @Override
+                    public List<String> getTextProperties()
+                    {
+                        List<String> properties = new ArrayList<>();
+                        properties.add("name");
+                        properties.add("identifier");
+                        properties.add("description");
+                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                            properties.add("debugInfo");
+                        }
+                        return properties;
+                    }
+                    
+                };
             }
         };
 
