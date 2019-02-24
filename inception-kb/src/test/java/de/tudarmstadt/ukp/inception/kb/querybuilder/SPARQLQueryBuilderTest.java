@@ -55,7 +55,7 @@ public class SPARQLQueryBuilderTest
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
             "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .");
     
-    private static final String GREEN_GOBLIN_WITH_LANGUAGE = String.join("\n",
+    private static final String DATA_LABELS_WITH_LANGUAGE = String.join("\n",
             "<#green-goblin>",
             "    rdfs:label 'Green Goblin' ;",
             "    rdfs:label 'Green Goblin'@en .",
@@ -67,7 +67,7 @@ public class SPARQLQueryBuilderTest
             "<#red-goblin>",
             "    rdfs:label 'Red Goblin' .");
 
-    private static final String GREEN_GOBLIN_WITHOUT_LANGUAGE = String.join("\n",
+    private static final String DATA_LABELS_WITHOUT_LANGUAGE = String.join("\n",
             "<#green-goblin>",
             "    rdfs:label 'Green Goblin' .",
             "",
@@ -83,6 +83,34 @@ public class SPARQLQueryBuilderTest
             "",
             "<#green-goblin>",
             "    <#sublabel> 'Green Goblin' .");
+
+    /**
+     * This dataset contains a hierarchy of classes and instances with a naming scheme.
+     * There is an implicit and an explicit root class. All classes have "class" in their name.
+     * Subclasses start with "subclass" and then a number. Instances start with the number of the
+     * class to which they belong followed by a number.
+     */
+    private static final String DATA_CLASS_RDFS_HIERARCHY = String.join("\n",
+            "<#explicitRoot>",
+            "    rdf:type rdfs:Class .",
+            "<#subclass1>",
+            "    rdf:type rdfs:Class ;",
+            "    rdfs:subClassOf <#explicitRoot> .",
+            "<#subclass1-1>",
+            "    rdfs:subClassOf <#subclass1> .",
+            "<#subclass2>",
+            "    rdfs:subClassOf <#explicitRoot> .",
+            "<#subclass3>",
+            "    rdfs:subClassOf <#implictRoot> .",
+            "<#0-instance-1>",
+            "    rdf:type <#root> .",
+            "<#1-instance-1>",
+            "    rdf:type <#subclass1> .",
+            "<#2-instance-2>",
+            "    rdf:type <#subclass2> .",
+            "<#3-instance-3>",
+            "    rdf:type <#subclass3> ."
+    );
 
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
@@ -144,6 +172,79 @@ public class SPARQLQueryBuilderTest
         hucit = new SPARQLRepository("http://nlp.dainst.org:8888/sparql");
         hucit.initialize();
     }
+    
+    @Test
+    public void testLimitToClasses() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forClasses(kb);
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getUiLabel)
+                .noneMatch(label -> label.contains("instance"));
+    }
+
+    @Test
+    public void testLimitToClassesInScope() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forClasses(kb);
+        builder.withScope("http://example.org/#subclass1");
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getName)
+                .allMatch(label -> label.startsWith("subclass1-"));
+    }
+
+    @Test
+    public void testLimitToInstances() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forInstances(kb);
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getUiLabel)
+                .noneMatch(label -> label.contains("class"));
+    }
+
+    @Test
+    public void testLimitToInstancesInScope() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forInstances(kb);
+        builder.withScope("http://example.org/#subclass1");
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getName)
+                .allMatch(label -> label.startsWith("1-instance-"));
+    }
+
+    @Test
+    public void testLimitToItemsInScope() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
+        builder.withScope("http://example.org/#subclass1");
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getName)
+                .allMatch(label -> label.startsWith("1-instance-") || label.startsWith("subclass1-"));
+    }
 
     @Test
     public void testWithLabelContainingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
@@ -163,7 +264,7 @@ public class SPARQLQueryBuilderTest
     
     public void __testWithLabelContainingAnyOf_RDF4J_withLanguage() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
         builder.withLabelContainingAnyOf("Goblin");
@@ -200,7 +301,7 @@ public class SPARQLQueryBuilderTest
 
     public void __testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
         builder.withLabelMatchingExactlyAnyOf("Green Goblin");
@@ -276,7 +377,7 @@ public class SPARQLQueryBuilderTest
 
     public void __testWithLabelStartingWith_RDF4J_withoutLanguage() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITHOUT_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
     
         SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(kb);
         builder.withLabelStartingWith("Green");
@@ -296,7 +397,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(null);
         
@@ -318,7 +419,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_1() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -342,7 +443,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_2() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -366,7 +467,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_3() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, GREEN_GOBLIN_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -543,7 +644,38 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.startsWith("Achilles"));
     }
-    
+
+    @Test
+    public void testWithLabelStartingWith_scoped_HUCIT_noFTS() throws Exception
+    {
+        kb.setFullTextSearchIri(null);
+        
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forInstances(kb);
+        builder.withLabelStartingWith("Achilles");
+        builder.withScope("http://erlangen-crm.org/efrbroo/F1_Work");
+        List<KBHandle> results = asHandles(hucit, builder);
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.startsWith("Achilles"));
+    }
+
+    @Test
+    public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forClasses(kb);
+        builder.withLabelContainingAnyOf("work");
+        List<KBHandle> results = asHandles(hucit, builder);
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("work"));
+    }
+
     private List<KBHandle> asHandles(Repository aRepo, SPARQLQueryBuilder aBuilder)
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {

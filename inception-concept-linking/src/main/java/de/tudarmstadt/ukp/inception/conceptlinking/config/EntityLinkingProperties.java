@@ -29,7 +29,7 @@ public class EntityLinkingProperties
 
     private int mentionContextSize = 5;
     private int candidateQueryLimit = 2500;
-    private int candidateDisplayLimit = 20;
+    private int candidateDisplayLimit = 100;
     private int candidateFrequencyThreshold = 25;
     private int signatureQueryLimit = Integer.MAX_VALUE;
 

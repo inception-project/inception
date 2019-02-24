@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+import static java.lang.Integer.toHexString;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
@@ -26,6 +28,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LCASE;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -149,11 +152,15 @@ public class SPARQLQueryBuilder
     private boolean serverSideReduce = true;
     
     public static enum Mode {
-        ITEM, PROPERTY;
+        ITEM, CLASS, INSTANCE, PROPERTY;
         
         public Iri getLabelProperty(KnowledgeBase aKb) {
             switch (this) {
             case ITEM:
+                return iri(aKb.getLabelIri().toString());
+            case CLASS:
+                return iri(aKb.getLabelIri().toString());
+            case INSTANCE:
                 return iri(aKb.getLabelIri().toString());
             case PROPERTY:
                 return iri(aKb.getPropertyLabelIri().toString());
@@ -166,19 +173,71 @@ public class SPARQLQueryBuilder
             switch (this) {
             case ITEM:
                 return iri(aKb.getDescriptionIri().toString());
+            case CLASS:
+                return iri(aKb.getDescriptionIri().toString());
+            case INSTANCE:
+                return iri(aKb.getDescriptionIri().toString());
             case PROPERTY:
                 return iri(aKb.getPropertyDescriptionIri().toString());
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }
         }
+        
+        public GraphPattern scopePattern(KnowledgeBase aKB, Iri aScope)
+        {
+            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+                        
+            switch (this) {
+            case ITEM:
+                return GraphPatterns.union(
+                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString() + "+", aScope),
+                        VAR_SUBJECT.has(() -> typeOfProperty.getQueryString() + "/"
+                                + subClassProperty.getQueryString() + "*", aScope));
+            case CLASS:
+                return VAR_SUBJECT.has(() -> subClassProperty.getQueryString() + "+", aScope);
+            case INSTANCE:
+                return VAR_SUBJECT.has(() -> typeOfProperty.getQueryString() + "/"
+                        + subClassProperty.getQueryString() + "*", aScope);
+            default:
+                throw new IllegalStateException("Unsupported mode: " + this);
+            }            
+            
+        }
     }
     
+    /**
+     * Retrieve classes and instances.
+     */
     public static SPARQLQueryBuilder forItems(KnowledgeBase aKB)
     {
         return new SPARQLQueryBuilder(aKB, Mode.ITEM);
     }
 
+    /**
+     * Retrieve classes.
+     */
+    public static SPARQLQueryBuilder forClasses(KnowledgeBase aKB)
+    {
+        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.CLASS);
+        builder.limitToClasses();
+        return builder;
+    }
+
+    /**
+     * Retrieve instances.
+     */
+    public static SPARQLQueryBuilder forInstances(KnowledgeBase aKB)
+    {
+        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.INSTANCE);
+        builder.limitToInstances();
+        return builder;
+    }
+
+    /**
+     * Retrieve properties.
+     */
     public static SPARQLQueryBuilder forProperties(KnowledgeBase aKB)
     {
         return new SPARQLQueryBuilder(aKB, Mode.PROPERTY);
@@ -640,7 +699,7 @@ public class SPARQLQueryBuilder
         Operand variable = aVariable;
         String value = aValue;
         if (caseInsensitive) {
-            variable = function(LCASE, variable);
+            variable = function(LCASE, function(STR, variable));
             value = value.toLowerCase();
         }
         
@@ -666,7 +725,7 @@ public class SPARQLQueryBuilder
         Operand variable = aVariable;
         String value = aValue;
         if (caseInsensitive) {
-            variable = function(LCASE, variable);
+            variable = function(LCASE, function(STR, variable));
             value = value.toLowerCase();
         }
         
@@ -683,6 +742,53 @@ public class SPARQLQueryBuilder
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
+    /**
+     * Limits results to items under the given branch of the ontology.
+     */
+    public void withScope(String aString)
+    {
+        Iri scopeIri = Rdf.iri(aString);
+        
+        addPattern(PRIO_PRIMARY, mode.scopePattern(kb, scopeIri));
+    }
+
+    private void limitToClasses()
+    {
+        Iri classIri = Rdf.iri(kb.getClassIri().toString());
+        Iri subClassProperty = Rdf.iri(kb.getSubclassIri().toString());
+        Iri typeOfProperty = Rdf.iri(kb.getTypeIri().toString());
+        Variable someSubClass = SparqlBuilder.var("someSubClass");
+        Variable someSuperClass = SparqlBuilder.var("someSuperClass");
+        
+        // An item is a class if ...
+        addPattern(PRIO_SECONDARY, union(new GraphPattern[] {
+                // ... it is explicitly defined as being a class
+                VAR_SUBJECT.has(typeOfProperty, classIri),
+                // ... it has any subclass
+                someSubClass.has(subClassProperty, VAR_SUBJECT),
+                // ... it has any superclass
+                VAR_SUBJECT.has(subClassProperty, someSuperClass)}));
+    }
+    
+    private void limitToInstances()
+    {
+        Iri classIri = Rdf.iri(kb.getClassIri().toString());
+        Iri subClassProperty = Rdf.iri(kb.getSubclassIri().toString());
+        Iri typeOfProperty = Rdf.iri(kb.getTypeIri().toString());
+        Variable someSubClass = SparqlBuilder.var("someSubClass");
+        Variable someSuperClass = SparqlBuilder.var("someSuperClass");
+        Variable someType = SparqlBuilder.var("someType");
+        
+        // An item is a class if ...
+        addPattern(PRIO_SECONDARY, VAR_SUBJECT.has(typeOfProperty, someType)
+                // ... it is explicitly defined as being a class
+                .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
+                // ... it has any subclass
+                .filterNotExists(someSubClass.has(subClassProperty, VAR_SUBJECT))
+                // ... it has any superclass
+                .filterNotExists(VAR_SUBJECT.has(subClassProperty, someSuperClass)));
+    }
+        
     /**
      * Request that a label be retrieved as part of the query.
      * 
@@ -789,18 +895,29 @@ public class SPARQLQueryBuilder
      */
     public List<KBHandle> asHandles(RepositoryConnection aConnection, boolean aAll)
     {
+        long startTime = currentTimeMillis();
+        String queryId = toHexString(hashCode());
+
         String queryString = selectQuery().getQueryString();
-        LOG.trace("Query: {}", queryString);
-        
+        LOG.trace("[{}] Query: {}", queryId, queryString);
+
+        List<KBHandle> results;
         if (returnEmptyResult) {
-            return emptyList();
+            results = emptyList();
+            
+            LOG.debug("[{}] Query was skipped because it would not return any results anyway",
+                    queryId);
         }
         else {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
-            List<KBHandle> results = evaluateListQuery(tupleQuery, aAll);
+            results = evaluateListQuery(tupleQuery, aAll);
             results.sort(Comparator.comparing(KBObject::getUiLabel));
-            return results;
+            
+            LOG.debug("[{}] Query returned {} results in {}ms. : {}", queryId, results.size(),
+                    currentTimeMillis() - startTime);
         }
+
+        return results;
     }
     
     /**
@@ -824,7 +941,7 @@ public class SPARQLQueryBuilder
                 continue;
             }
             
-            LOG.trace("Bindings: {}", bindings);
+            LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
 
             String id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(kb, id))) {

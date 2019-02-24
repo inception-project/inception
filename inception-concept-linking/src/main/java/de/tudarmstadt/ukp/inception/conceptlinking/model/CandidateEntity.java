@@ -15,12 +15,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.conceptlinking.model;
 
+import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableMap;
+
+import java.util.IllformedLocaleException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 
 /**
  * Stores information about entities retrieved from a knowledge base 
@@ -28,77 +38,87 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
  */
 public class CandidateEntity
 {
+    private final KBHandle handle;
+    private Locale locale;
+    
+    private final ConcurrentHashMap<String, Object> features = new ConcurrentHashMap<>();
 
-    /**
-     * The IRI String of this entity
-     */
-    private String IRI;
+    public static final Key<String> KEY_QUERY = new Key<>("query");
+    public static final Key<String> KEY_MENTION = new Key<>("mention");
+    public static final Key<List<String>> KEY_MENTION_CONTEXT = new Key<>("mentionContext");
 
-    /**
-     * The main label of this entity
-     */
-    private String label;
-
-    /**
-     * A description for this entity
-     */
-    private String description;
-
+    
     /**
      * edit distance between mention and candidate entity label
      */
-    private int levMatchLabel;
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMatchLabel", 0);
 
     /**
      * edit distance between mention + context and candidate entity label
      */
-    private int levContext;
+    public static final Key<Integer> KEY_LEVENSHTEIN_CONTEXT = new Key<>("levContext", 0);
 
     /**
      * edit distance between typed string and candidate entity label
      */
-    private int levTypedString;
+    public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levTypedString",
+            Integer.MAX_VALUE);
 
     /**
      * set of directly related entities as IRI Strings
      */
-    private Set<String> signatureOverlap;
+    public static final Key<Set<String>> KEY_SIGNATURE_OVERLAP = new Key<>("signatureOverlap",
+            emptySet());
 
     /**
      * number of distinct relations to other entities
      */
-    private int numRelatedRelations;
+    public static final Key<Integer> KEY_NUM_RELATIONS = new Key<>("numRelatedRelations", 0);
 
     /**
      * number of related entities whose entity label occurs in <i>content tokens</i>
      * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
      * adjectives
      */
+    public static final Key<Integer> KEY_SIGNATURE_OVERLAP_SCORE = new Key<>(
+            "signatureOverlapScore", 0);
     private int signatureOverlapScore;
 
     /**
      * logarithm of the wikidata ID - based on the assumption that lower IDs are more important
      */
-    private double idRank;
+    public static final Key<Double> KEY_ID_RANK = new Key<>("idRank", 0.0d);
 
     /**
      * in-link count of wikipedia article of IRI
      */
-    private int frequency;
+    public static final Key<Integer> KEY_FREQUENCY = new Key<>("frequency", 0);
 
-    /**
-     * language of this candidate entry
-     */
-    private String language;
-
-    public CandidateEntity(String aIRI, String aLabel, String aDescription, String aLanguage)
+    public CandidateEntity(KBHandle aHandle)
     {
-        IRI = aIRI;
-        label = aLabel;
-        description = aDescription;
-        language = aLanguage;
-        levTypedString = Integer.MAX_VALUE;
-        frequency = 0;
+        handle = aHandle;
+        
+        if (aHandle.getKB().getDefaultLanguage() == null) {
+            locale = Locale.ENGLISH;
+        }
+        else {
+            try {
+                locale = Locale.forLanguageTag(aHandle.getKB().getDefaultLanguage());
+            }
+            catch (IllformedLocaleException e) {
+                locale = Locale.ENGLISH;
+            }
+        }
+    }
+    
+    public KBHandle getHandle()
+    {
+        return handle;
+    }
+    
+    public Locale getLocale()
+    {
+        return locale;
     }
 
     /**
@@ -106,7 +126,7 @@ public class CandidateEntity
      */
     public String getIRI()
     {
-        return IRI;
+        return handle.getIdentifier();
     }
 
     /**
@@ -114,7 +134,7 @@ public class CandidateEntity
      */
     public String getLabel()
     {
-        return label;
+        return handle.getUiLabel();
     }
 
     /**
@@ -122,92 +142,136 @@ public class CandidateEntity
      */
     public String getDescription()
     {
-        return description;
+        return handle.getDescription();
     }
 
-    /**
-     * Set a description for this entity
-     */
-    public void setDescription(String aDescription)
+    public String getLanguage()
     {
-        description = aDescription;
+        return handle.getLanguage();
     }
 
+    public <T> Optional<T> get(Key<T> aKey)
+    {
+        return Optional.ofNullable((T) features.getOrDefault(aKey.name, aKey.getDefaultValue()));
+    }
+
+    public <T> void put(Key<T> aKey, T aValue)
+    {
+        features.put(aKey.name, aValue);
+    }
+    
+    public Map<String, Object> getFeatures()
+    {
+        return unmodifiableMap(features);
+    }
+
+    public static class Key<T>
+    {
+        private final String name;
+        private final T defaultValue;
+
+        public Key(String aName)
+        {
+            this(aName, null);
+        }
+        
+        public Key(String aName, T aDefaultValue)
+        {
+            name = aName;
+            defaultValue = aDefaultValue;
+        }
+        
+        public T getDefaultValue()
+        {
+            return defaultValue;
+        }
+    }
+    
     /**
      * @return set of directly related entities as IRI Strings
      */
+    @Deprecated
     public Set<String> getSignatureOverlap()
     {
-        return signatureOverlap;
+        return get(KEY_SIGNATURE_OVERLAP).get();
     }
 
     /**
      * @param signatureOverlap set of directly related entities as IRI Strings
      */
+    @Deprecated
     public void setSignatureOverlap(Set<String> signatureOverlap)
     {
-        this.signatureOverlap = signatureOverlap;
+        put(KEY_SIGNATURE_OVERLAP, signatureOverlap);
     }
 
     /**
      * @return edit distance between mention and candidate entity label
      */
+    @Deprecated
     public int getLevMatchLabel()
     {
-        return levMatchLabel;
+        return get(KEY_LEVENSHTEIN_MENTION).get();
     }
 
     /**
      * @param aLevMatchLabel edit distance between mention and candidate entity label
      */
+    @Deprecated
     public void setLevMatchLabel(int aLevMatchLabel)
     {
-        levMatchLabel = aLevMatchLabel;
+        put(KEY_LEVENSHTEIN_MENTION, aLevMatchLabel);
     }
 
     /**
      * @return edit distance between mention + context and candidate entity label
      */
+    @Deprecated
     public int getLevContext()
     {
-        return levContext;
-    }
-
-    /**
-     * @param aLevTypedString edit distance between typed string and candidate entity label
-     */
-    public void setLevTypedString(int aLevTypedString)
-    {
-        levTypedString = aLevTypedString;
-    }
-
-    public int getLevTypedString()
-    {
-        return levTypedString;
+        return get(KEY_LEVENSHTEIN_CONTEXT).get();
     }
 
     /**
      * @param aLevContext edit distance between mention + context and candidate entity label
      */
+    @Deprecated
     public void setLevContext(int aLevContext)
     {
-        levContext = aLevContext;
+        put(KEY_LEVENSHTEIN_CONTEXT, aLevContext);
+    }
+
+    @Deprecated
+    public int getLevQuery()
+    {
+        return get(KEY_LEVENSHTEIN_QUERY).get();
+    }
+
+    /**
+     * @param aLevTypedString edit distance between typed string and candidate entity label
+     */
+    @Deprecated
+    public void setLevTypedString(int aLevTypedString)
+    {
+        put(KEY_LEVENSHTEIN_QUERY, aLevTypedString);
     }
 
     /**
      * @param aNumRelatedRelations number of distinct relations to other entities
      */
+    @Deprecated
     public void setNumRelatedRelations(int aNumRelatedRelations)
     {
-        numRelatedRelations = aNumRelatedRelations;
+        put(KEY_NUM_RELATIONS, aNumRelatedRelations);
     }
 
     /**
      * @return number of distinct relations to other entities
      */
+    @Deprecated
     public int getNumRelatedRelations()
     {
-        return numRelatedRelations;
+        return get(KEY_NUM_RELATIONS).get();
     }
 
     /**
@@ -215,9 +279,10 @@ public class CandidateEntity
      * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
      * adjectives
      */
+    @Deprecated
     public void setSignatureOverlapScore(int aScore)
     {
-        signatureOverlapScore = aScore;
+        put(KEY_SIGNATURE_OVERLAP_SCORE, aScore);
     }
 
     /**
@@ -225,9 +290,10 @@ public class CandidateEntity
      * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
      * adjectives
      */
+    @Deprecated
     public int getSignatureOverlapScore()
     {
-        return signatureOverlapScore;
+        return get(KEY_SIGNATURE_OVERLAP_SCORE).get();
     }
 
     /**
@@ -235,55 +301,44 @@ public class CandidateEntity
      *            logarithm of the wikidata ID - based on the assumption that lower IDs are more
      *            important
      */
+    @Deprecated
     public void setIdRank(double aIdRank)
     {
-        idRank = aIdRank;
+        put(KEY_ID_RANK, aIdRank);
     }
 
     /**
      * @return logarithm of the wikidata ID - based on the assumption that lower IDs are more
      * important
      */
+    @Deprecated
     public double getIdRank()
     {
-        return idRank;
+        return get(KEY_ID_RANK).get();
     }
 
     /**
      * @param aFrequency in-link count of wikipedia article of IRI
      */
+    @Deprecated
     public void setFrequency(int aFrequency)
     {
-        frequency = aFrequency;
+        put(KEY_FREQUENCY, aFrequency);
     }
 
     /**
      * @return in-link count of wikipedia article of IRI
      */
+    @Deprecated
     public int getFrequency()
     {
-        return frequency;
-    }
-
-    public void setLanguage(String aLanguage)
-    {
-        language = aLanguage;
-    }
-
-    public String getLanguage()
-    {
-        return language;
+        return get(KEY_FREQUENCY).get();
     }
 
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("IRI", IRI).append("label", label)
-                .append("levMatchLabel", levMatchLabel).append("levContext", levContext)
-                .append("levTypedString", levTypedString)
-                .append("signatureOverlap", signatureOverlap)
-                .append("numRelatedRelations", numRelatedRelations)
-                .append("signatureOverlapScore", signatureOverlapScore).append("idRank", idRank)
-                .append("frequency", frequency).append("language", language).toString();
+        return new ToStringBuilder(this).append("handle", handle).append("features", features)
+                .toString();
     }
 }
