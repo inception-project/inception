@@ -32,7 +32,6 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
-import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -396,43 +395,6 @@ public class KnowledgeBaseServiceRemoteTest
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
     
-    @Test
-    public void thatExactQueryWorks()
-    {
-        // For Wikidata and DBPedia
-        __thatExactQueryWorks("Barack", "Barack Obama");
-        
-        // For Wine ontology
-        __thatExactQueryWorks("Sauternes", "Sauternes");
-        
-        // For http://zbw.eu/beta/sparql/stw/query
-        __thatExactQueryWorks("Labour", "Labour");
-    }
-    
-    private void __thatExactQueryWorks(String aMention, String aQuery)
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-
-        long duration = System.currentTimeMillis();
-        List<KBHandle> results;
-        try (RepositoryConnection conn = sut.getConnection(kb)) {
-            results = SPARQLQueryStore.searchItemsExactLabelMatch(kb, conn, aQuery, aMention);
-        }
-        duration = System.currentTimeMillis() - duration;
-
-        System.out.printf("SPARQL endpoint      : %s%n", sutConfig.getDataUrl());
-        System.out.printf("Time required        : %d ms%n", duration);
-        System.out.printf("Result               : %n");
-        for (KBHandle result : results) {
-            System.out.printf("   %s%n", result);
-        }
-        System.out.printf("%n%n");
-
-        assertThat(results)
-                .extracting(handle -> handle.getUiLabel())
-                .allMatch(value -> value.equals(aMention) || value.equals(aQuery));
-    }
-
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception

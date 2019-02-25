@@ -31,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -50,7 +50,7 @@ public class NamedEntityLinkerFactory
     private static final String PREFIX = "kb:";
 
     private @Autowired KnowledgeBaseService kbService;
-    private @Autowired ConceptLinkingServiceImpl clService;
+    private @Autowired ConceptLinkingService clService;
     private @Autowired FeatureSupportRegistry fsRegistry;
 
     @Override

@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.inception.conceptlinking;
+package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
@@ -64,10 +65,9 @@ public class ConceptLinkingServiceImplTest
 
     @Autowired
     private TestEntityManager testEntityManager;
-    @Autowired
+    
     private KnowledgeBaseService kbService;
-
-    private ConceptLinkingServiceImpl clService;
+    private ConceptLinkingServiceImpl sut;
 
     private KnowledgeBase kb;
 
@@ -79,8 +79,10 @@ public class ConceptLinkingServiceImplTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        clService = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties());
-        clService.afterPropertiesSet();
+        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties(),
+                emptyList());
+        sut.afterPropertiesSet();
+        sut.init();
         Project project = testFixtures.createProject(PROJECT_NAME);
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.NONE);
     }
@@ -91,7 +93,7 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        List<KBHandle> handles = clService.disambiguate(kb, null,
+        List<KBHandle> handles = sut.disambiguate(kb, null,
                 ConceptFeatureValueType.ANY_OBJECT, null, "soc", 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
@@ -106,7 +108,7 @@ public class ConceptLinkingServiceImplTest
         importKnowledgeBase("data/pets.ttl");
 
         kbService.createConcept(kb, new KBConcept("manatee"));
-        List<KBHandle> handles = clService.disambiguate(kb, null,
+        List<KBHandle> handles = sut.disambiguate(kb, null,
                 ConceptFeatureValueType.ANY_OBJECT, null, "man", 0, null);
 
         assertThat(handles.stream().map(KBHandle::getName))
