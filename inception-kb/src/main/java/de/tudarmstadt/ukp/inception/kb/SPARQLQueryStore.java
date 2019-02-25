@@ -412,37 +412,6 @@ public final class SPARQLQueryStore
     
     
     /**
-     * Finds items based on their label.
-     * 
-     * There are several conditions:
-     * <ul>
-     * <li>The match is case sensitive. It has been tied to use LCASE in combination with FILTER to
-     * allow matching the lower cased arguments with the entities from the KB, but that was too
-     * time-intensive and lead to timeouts.</li>
-     * <li>Items need to actually have a label. I.e. items which do not have a label and for which
-     * {@link KBHandle#getUiLabel()} extracts a label from their subject IRI cannot be located.</li>
-     * <li>The KB default language needs to match the language of the label.</li>
-     * </ul>
-     * 
-     * @param aKb
-     *            the Knowledge Base
-     * @param aConn
-     *            connection to the triple store
-     * @param aValues
-     *            values to match against.
-     * @return a query to retrieve candidate entities
-     */
-    public static List<KBHandle> searchItemsExactLabelMatch(KnowledgeBase aKb,
-        RepositoryConnection aConn, String... aValues)
-    {
-        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
-        builder.withLabelMatchingExactlyAnyOf(aValues);
-        builder.retrieveLabel();
-        builder.retrieveDescription();
-        return builder.asHandles(aConn, true);
-    }
-
-    /**
      * This query retrieves candidates via full-text matching of their labels and full-text-search
      * 
      * @param aKb
