@@ -174,7 +174,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testLimitToClasses() throws Exception
+    public void thatQueryLimitedToClassesDoesNotReturnInstances() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -188,22 +188,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testLimitToClassesInScope() throws Exception
-    {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
-
-        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forClasses(kb);
-        builder.withScope("http://example.org/#subclass1");
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
-        
-        assertThat(results).isNotEmpty();
-        assertThat(results)
-                .extracting(KBHandle::getName)
-                .allMatch(label -> label.startsWith("subclass1-"));
-    }
-
-    @Test
-    public void testLimitToInstances() throws Exception
+    public void thatQueryLimitedToInstancesDoesNotReturnClasses() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -217,7 +202,22 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testLimitToInstancesInScope() throws Exception
+    public void thatClassQueryLimitedToScopeDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forClasses(kb);
+        builder.withScope("http://example.org/#subclass1");
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, builder);
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getName)
+                .allMatch(label -> label.startsWith("subclass1-"));
+    }
+
+    @Test
+    public void thatInstanceQueryLimitedToScopeDoesNotReturnOutOfScopeResults() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -232,7 +232,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testLimitToItemsInScope() throws Exception
+    public void thatItemQueryLimitedToScopeDoesNotReturnOutOfScopeResults() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
