@@ -21,10 +21,8 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -73,11 +71,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -86,7 +83,7 @@ public class QualifierFeatureEditor
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean ConceptLinkingServiceImpl clService;
+    private @SpringBean ConceptLinkingService clService;
     private @SpringBean FactLinkingService factService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
@@ -371,7 +368,6 @@ public class QualifierFeatureEditor
         String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabel, int
         roleAddr)
     {
-
         if (linkedAnnotationFeature == null) {
             String linkedType = this.getModelObject().feature.getType();
             AnnotationLayer linkedLayer = annotationService
@@ -397,17 +393,7 @@ public class QualifierFeatureEditor
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
 
-        // if concept linking does not return any results or is disabled
-        if (handles.size() == 0) {
-            handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
-                traits.getAllowedValueType(), project);
-            // Sort and filter results
-            String lowerCaseTypedString = aTypedString.toLowerCase();
-            handles = handles.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-        }
-        return KBHandle.distinctByIri(handles);
+        return handles;
     }
 
     private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
