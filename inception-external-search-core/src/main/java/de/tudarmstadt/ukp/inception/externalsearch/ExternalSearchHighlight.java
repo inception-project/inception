@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import static java.util.Collections.emptyList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,10 +41,18 @@ public class ExternalSearchHighlight
 
     private final List<OffsetSpan> offsets;
 
+    public ExternalSearchHighlight(String aHighlight) throws IllegalArgumentException
+    {
+        Validate.notNull(aHighlight, "Highlight text must be present");
+
+        offsets = null;
+        highlight = aHighlight;
+    }
+
     public ExternalSearchHighlight(String aHighlight, List<OffsetSpan> aOffsets)
         throws IllegalArgumentException
     {
-        Validate.notEmpty(aOffsets, "Offsets must not be empty");
+        Validate.notNull(aOffsets, "Offsets must not be null");
         Validate.notNull(aHighlight, "Highlight text must be present");
 
         offsets = new ArrayList<>(aOffsets);
@@ -56,6 +66,6 @@ public class ExternalSearchHighlight
 
     public List<OffsetSpan> getOffsets()
     {
-        return offsets;
+        return offsets != null ? offsets : emptyList();
     }
 }

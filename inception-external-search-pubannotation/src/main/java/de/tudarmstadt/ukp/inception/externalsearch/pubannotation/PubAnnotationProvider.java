@@ -38,6 +38,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
@@ -51,24 +52,35 @@ public class PubAnnotationProvider
 {
     private static final Logger LOG = LoggerFactory.getLogger(PubAnnotationProvider.class);
 
-    @Override
-    public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
-            PubAnnotationProviderTraits aTraits, String aQuery)
+    public List<PubAnnotationDocumentHandle> query(PubAnnotationProviderTraits aTraits,
+            String aQuery)
     {
         Map<String, String> variables = new HashMap<>();
         variables.put("keywords", aQuery);
-        
+
         RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<List<PubAnnotationDocumentHandle>> response = restTemplate.exchange(
                 aTraits.getUrl() + "/docs.json?keywords={keywords}", HttpMethod.GET, null,
                 new DocumentHandleList(), variables);
+
+        return response.getBody();
+    }
+    
+    @Override
+    public List<ExternalSearchResult> executeQuery(DocumentRepository aDocumentRepository,
+            PubAnnotationProviderTraits aTraits, String aQuery)
+    {
+        List<PubAnnotationDocumentHandle> response = query(aTraits, aQuery);
         
         List<ExternalSearchResult> results = new ArrayList<>();
-        for (PubAnnotationDocumentHandle handle : response.getBody()) {
+        for (PubAnnotationDocumentHandle handle : response) {
             ExternalSearchResult result = new ExternalSearchResult(aDocumentRepository,
                     handle.getSourceDb(), handle.getSourceId() + ".json");
             result.setOriginalSource(handle.getSourceDb());
             result.setDocumentTitle(handle.getUrl());
+            result.setHighlights(handle.getHighlights().stream()
+                    .map(ExternalSearchHighlight::new)
+                    .collect(Collectors.toList()));
             results.add(result);
         }
         

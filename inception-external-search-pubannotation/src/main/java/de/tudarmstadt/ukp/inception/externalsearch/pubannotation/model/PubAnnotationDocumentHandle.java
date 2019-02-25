@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model;
 
+import static java.util.Collections.emptyList;
+
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -31,6 +35,9 @@ public class PubAnnotationDocumentHandle
 
     @JsonProperty("url")
     private String url;
+    
+    @JsonProperty("text")
+    private List<String> highlights;
 
     public String getSourceDb()
     {
@@ -60,5 +67,20 @@ public class PubAnnotationDocumentHandle
     public void setUrl(String aUrl)
     {
         url = aUrl;
+    }
+
+    public List<String> getHighlights()
+    {
+        return highlights != null ? highlights : emptyList();
+    }
+
+    public void setHighlights(List<String> aHighlights)
+    {
+        if (aHighlights == null || aHighlights.isEmpty()) {
+            highlights = null;
+        }
+        else {
+            highlights = aHighlights;
+        }
     }
 }

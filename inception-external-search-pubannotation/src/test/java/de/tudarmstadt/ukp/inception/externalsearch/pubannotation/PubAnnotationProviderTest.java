@@ -26,6 +26,7 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.model.PubAnnotationDocumentHandle;
 import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.traits.PubAnnotationProviderTraits;
 
 public class PubAnnotationProviderTest
@@ -43,9 +44,19 @@ public class PubAnnotationProviderTest
         
         traits = new PubAnnotationProviderTraits();
     }
-    
+
     @Test
     public void thatQueryWorks() throws Exception
+    {
+        List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
+        
+        System.out.println(results);
+        
+        assertThat(results).isNotEmpty();
+    }
+
+    @Test
+    public void thatExecuteQueryWorks() throws Exception
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "binding");
         

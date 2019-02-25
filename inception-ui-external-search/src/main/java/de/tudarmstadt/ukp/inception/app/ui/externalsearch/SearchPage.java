@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
@@ -217,7 +218,14 @@ public class SearchPage extends ApplicationPageBase
             // FIXME: Should display all highlights
             String highlight = "NO MATCH PREVIEW AVAILABLE";
             if (!result.getHighlights().isEmpty()) {
-                highlight = Utilities.cleanHighlight(result.getHighlights().get(0).getHighlight());
+                StringBuilder sb = new StringBuilder();
+                sb.append("<ul>");
+                for (ExternalSearchHighlight h : result.getHighlights()) {
+                    sb.append("<li>").append(Utilities.cleanHighlight(h.getHighlight()))
+                            .append("</li>");
+                }
+                sb.append("</ul>");
+                highlight = sb.toString();
             }
             add(new Label("highlight", highlight).setEscapeModelStrings(false));
             

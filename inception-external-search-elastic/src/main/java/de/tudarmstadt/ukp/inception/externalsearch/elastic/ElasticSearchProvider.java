@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -38,11 +39,11 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 public class ElasticSearchProvider
     implements ExternalSearchProvider<ElasticSearchProviderTraits>
@@ -123,35 +124,10 @@ public class ElasticSearchProvider
                 // There are highlights, set them in the result
                 List<ExternalSearchHighlight> highlights = new ArrayList<>();
                 for (String highlight : hit.getHighlight().getDoctext()) {
-
-                    // remove markers from the highlight
-                    String highlight_clean = highlight.replace(HIGHLIGHT_START_TAG, "")
-                        .replace(HIGHLIGHT_END_TAG, "");
-
-                    // find the matching highlight offset in the original text
-                    int highlight_start_index = originalText.indexOf(highlight_clean);
-
-                    // find offset to all keywords in the highlight
-                    // they are enclosed in <em> </em> tags in the highlight
-                    String highlightTemp = highlight;
-                    List<OffsetSpan> offsets = new ArrayList<>();
-                    while (highlightTemp.contains(HIGHLIGHT_START_TAG)) {
-                        int start = highlight_start_index +
-                            highlightTemp.indexOf(HIGHLIGHT_START_TAG);
-                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_START_TAG, "");
-                        int end = highlight_start_index +
-                            highlightTemp.indexOf(HIGHLIGHT_END_TAG);
-                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_END_TAG, "");
-                        offsets.add(new OffsetSpan(start, end));
-                    }
-
-                    if (!offsets.isEmpty()) {
-                        highlights.add(new ExternalSearchHighlight(highlight, offsets));
-                    } else {
-                        LOG.warn("Refusing to create ExternalSearchHighlight for {} because it "
-                            + "contains no keyword markers or it is not found in the document "
-                            + "text", highlight);
-                    }
+                    Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                            .parseHighlight(highlight, originalText);
+                    
+                    exHighlight.ifPresent(highlights::add);
                 }
                 result.setHighlights(highlights);
             }
