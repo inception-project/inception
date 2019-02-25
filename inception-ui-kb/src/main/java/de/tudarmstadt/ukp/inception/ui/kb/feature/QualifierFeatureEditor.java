@@ -57,11 +57,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -85,6 +83,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.DisabledKBWarning;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -117,6 +116,7 @@ public class QualifierFeatureEditor
         project = stateModel.getObject().getProject();
 
         add(new Label("feature", getModelObject().feature.getUiName()));
+
         // Add warning that shows up if the knowledge base that is used by the concept feature
         // is disabled
         add(createDisabledKbWarningLabel());
@@ -296,14 +296,8 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    input = input.replaceAll("[*?]", "").trim();
-                    choices = listInstances(actionHandler, input, linkedAnnotationFeature,
-                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
-                }
-                return choices;
-
+                return listInstances(actionHandler, input, linkedAnnotationFeature,
+                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
             @Override
@@ -312,7 +306,6 @@ public class QualifierFeatureEditor
                 super.onConfigure(behavior);
                 
                 behavior.setOption("autoWidth", true);
-                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -386,7 +379,6 @@ public class QualifierFeatureEditor
         String aTypedString, AnnotationFeature linkedAnnotationFeature, String roleLabel, int
         roleAddr)
     {
-
         if (linkedAnnotationFeature == null) {
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
@@ -417,9 +409,8 @@ public class QualifierFeatureEditor
             handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
                 traits.getAllowedValueType(), project);
             // Sort and filter results
-            String lowerCaseTypedString = aTypedString.toLowerCase();
-            handles = handles.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
+            handles = handles.stream()
+                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
                 .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
         }
         return KBHandle.distinctByIri(handles);
@@ -606,16 +597,11 @@ public class QualifierFeatureEditor
         }
     }
 
-    private WebMarkupContainer createDisabledKbWarningLabel()
+    private DisabledKBWarning createDisabledKbWarningLabel()
     {
-        WebMarkupContainer warningLabel = new WebMarkupContainer("disabledKBWarning");
         AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
         ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
-        warningLabel.add(
-            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
-
-        TooltipBehavior tip = new TooltipBehavior();
 
         Optional<KnowledgeBase> kb = Optional.empty();
         if (traits != null && traits.getRepositoryId() != null) {
@@ -624,12 +610,12 @@ public class QualifierFeatureEditor
         }
         String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
 
-        tip.setOption("content", Options.asString(
-            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName)
-                .getString()));
-        tip.setOption("width", Options.asString("300px"));
-        warningLabel.add(tip);
+        DisabledKBWarning warning = new DisabledKBWarning("disabledKBWarning",
+            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName));
 
-        return warningLabel;
+        warning.add(
+            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
+
+        return warning;
     }
 }

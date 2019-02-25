@@ -28,7 +28,6 @@ import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -38,11 +37,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -61,6 +58,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.DisabledKBWarning;
 
 public class PropertyFeatureEditor
     extends FeatureEditor
@@ -218,14 +216,9 @@ public class PropertyFeatureEditor
         return kbHandle;
     }
 
-    private WebMarkupContainer createDisabledKbWarningLabel()
+    private DisabledKBWarning createDisabledKbWarningLabel()
     {
-        WebMarkupContainer warningLabel = new WebMarkupContainer("disabledKBWarning");
         AnnotationFeature feature = getModelObject().feature;
-        warningLabel.add(LambdaBehavior
-            .onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
-
-        TooltipBehavior tip = new TooltipBehavior();
 
         Optional<KnowledgeBase> kb = Optional.empty();
         if (traits.getRepositoryId() != null) {
@@ -233,13 +226,13 @@ public class PropertyFeatureEditor
         }
         String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
 
-        tip.setOption("content", Options.asString(
-            new StringResourceModel("value.null.disabledKbWarning", this)
-                .setParameters(kbName).getString()));
-        tip.setOption("width", Options.asString("300px"));
-        warningLabel.add(tip);
+        DisabledKBWarning warning = new DisabledKBWarning("disabledKBWarning",
+            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName));
 
-        return warningLabel;
+        warning.add(
+            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
+
+        return warning;
     }
 
     private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)

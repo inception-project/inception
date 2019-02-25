@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,8 +54,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class ConceptFeatureTraitsEditor
     extends Panel
 {
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureTraitsEditor.class);
-
     private static final String MID_FORM = "form";
 
     private static final String MID_KNOWLEDGE_BASE = "knowledgeBase";
@@ -141,9 +140,12 @@ public class ConceptFeatureTraitsEditor
                 }
             }
             else {
-                warn("The selected knowledge base for this Concept Feature has been removed or disabled. "
-                    + "Select a new knowledge base and click on save");
-                LOG.error("The selected knowledge base has been removed or disabled.");
+                String kbName = kb.isPresent() ? kb.get().getName() : "";
+                String featureName = feature.getObject().getUiName();
+                String layerName = feature.getObject().getLayer().getUiName();
+                warn(new StringResourceModel("disabledKBWarning", this)
+                    .setParameters(kbName, featureName, layerName).getString());
+            
             }
         }
         // Use the concept from any knowledge base (leave KB unselected)
