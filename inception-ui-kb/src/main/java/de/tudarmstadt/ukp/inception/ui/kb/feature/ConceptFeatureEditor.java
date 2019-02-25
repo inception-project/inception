@@ -102,7 +102,7 @@ public class ConceptFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String aInput)
             {
-                return getEntities(aState, aHandler, aInput);
+                return getCandidates(aState, aHandler, aInput);
             }
 
             @Override
@@ -164,7 +164,7 @@ public class ConceptFeatureEditor
         return field;
     }
     
-    private List<KBHandle> getEntities(AnnotatorState aState, AnnotationActionHandler aHandler,
+    private List<KBHandle> getCandidates(AnnotatorState aState, AnnotationActionHandler aHandler,
             String aInput)
     {
         if (aInput == null) {

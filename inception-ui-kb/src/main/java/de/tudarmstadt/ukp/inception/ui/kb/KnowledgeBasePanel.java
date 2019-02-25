@@ -206,7 +206,7 @@ public class KnowledgeBasePanel
     {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
-        results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
+        results = conceptLinkingService.searchItems(kb, aTypedString);
         return results;
     }
 

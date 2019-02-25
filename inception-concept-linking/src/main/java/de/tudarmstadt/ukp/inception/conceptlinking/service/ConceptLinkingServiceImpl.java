@@ -234,6 +234,41 @@ public class ConceptLinkingServiceImpl
         return WebAnnoCasUtil.getSentence(aJcas, aBegin);
     }
 
+    private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
+            JCas aJCas, int aBegin)
+    {
+        candidate.put(KEY_MENTION, aMention);
+        candidate.put(KEY_QUERY, aQuery);
+        
+        if (aJCas != null) {
+            Sentence sentence = getMentionSentence(aJCas, aBegin);
+            if (sentence != null) {
+                List<String> mentionContext = new ArrayList<>();
+                List<Token> tokens = selectCovered(Token.class, sentence);
+                // Collect left context
+                tokens.stream()
+                        .filter(t -> t.getEnd() <= aBegin)
+                        .sorted(Comparator.comparingInt(Token::getBegin).reversed())
+                        .limit(properties.getMentionContextSize())
+                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
+                        .filter(s -> !stopwords.contains(s))
+                        .forEach(mentionContext::add);
+                // Collect right context
+                tokens.stream()
+                        .filter(t -> t.getBegin() >= (aBegin + aMention.length()))
+                        .limit(properties.getMentionContextSize())
+                        .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
+                        .filter(s -> !stopwords.contains(s))
+                        .forEach(mentionContext::add);
+                candidate.put(KEY_MENTION_CONTEXT, mentionContext);
+            }
+            else {
+                log.warn("Mention sentence could not be determined. Skipping.");
+            }
+        }
+        return candidate;
+    }
+    
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             JCas aJCas, int aBegin)
@@ -242,39 +277,7 @@ public class ConceptLinkingServiceImpl
         
         List<CandidateEntity> candidates = aCandidates.stream()
                 .map(CandidateEntity::new)
-                .map(candidate -> {
-                    candidate.put(KEY_MENTION, aMention);
-                    candidate.put(KEY_QUERY, aQuery);
-                    
-                    if (aJCas != null) {
-                        Sentence sentence = getMentionSentence(aJCas, aBegin);
-                        if (sentence != null) {
-                            List<String> mentionContext = new ArrayList<>();
-                            List<Token> tokens = selectCovered(Token.class, sentence);
-                            // Collect left context
-                            tokens.stream()
-                                    .filter(t -> t.getEnd() <= aBegin)
-                                    .sorted(Comparator.comparingInt(Token::getBegin).reversed())
-                                    .limit(properties.getMentionContextSize())
-                                    .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                                    .filter(s -> !stopwords.contains(s))
-                                    .forEach(mentionContext::add);
-                            // Collect right context
-                            tokens.stream()
-                                    .filter(t -> t.getBegin() >= (aBegin + aMention.length()))
-                                    .limit(properties.getMentionContextSize())
-                                    .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
-                                    .filter(s -> !stopwords.contains(s))
-                                    .forEach(mentionContext::add);
-                            candidate.put(KEY_MENTION_CONTEXT, mentionContext);
-                        }
-                        else {
-                            log.warn("Mention sentence could not be determined. Skipping.");
-                        }
-                    }
-                    
-                    return candidate;
-                })
+                .map(candidate -> initCandidate(candidate, aQuery, aMention, aJCas, aBegin))
                 .collect(Collectors.toCollection(ArrayList::new));
         
         // Set the feature values
@@ -348,8 +351,11 @@ public class ConceptLinkingServiceImpl
         return rankCandidates(query, aMention, candidates, aJCas, aMentionBeginOffset);
     }
 
+    /**
+     * Find KB items (classes and instances) matching the given query.
+     */
     @Override
-    public List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aQuery)
+    public List<KBHandle> searchItems(KnowledgeBase aKB, String aQuery)
     {
         return disambiguate(aKB, null, ConceptFeatureValueType.ANY_OBJECT, aQuery, null, 0, null);
     }

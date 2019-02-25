@@ -56,6 +56,12 @@ import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
+/*
+ * This feature generator tries to create a "semantic context" from the vicinity of candidates
+ * so we can compare the mention context to the KB context. However, the present implementation
+ * is very slow and doesn't help much. Before reenabling this we need to properly evaluate this, 
+ * test this, and see how performance can be improved.
+ */
 //@Component
 public class SemanticSignatureFeatureGenerator
     implements EntityRankingFeatureGenerator
@@ -191,14 +197,13 @@ public class SemanticSignatureFeatureGenerator
         return new SemanticSignature(relatedEntities, relatedRelations);
     }
 
-    private class SemanticSignatureCacheKey
+    private static class SemanticSignatureCacheKey
     {
         private final KnowledgeBase knowledgeBase;
         private final String query;
 
         public SemanticSignatureCacheKey(KnowledgeBase aKnowledgeBase, String aQuery)
         {
-            super();
             knowledgeBase = aKnowledgeBase;
             query = aQuery;
         }

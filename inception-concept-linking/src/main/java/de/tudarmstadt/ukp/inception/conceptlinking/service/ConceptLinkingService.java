@@ -87,7 +87,7 @@ public interface ConceptLinkingService
      * @param aTypedString What the user has typed so far in the text field. Might be null.
      * @return a list of entities
      */
-    List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString);
+    List<KBHandle> searchItems(KnowledgeBase aKB, String aTypedString);
 
     /**
      * This method does the actual ranking of the candidate entities.
