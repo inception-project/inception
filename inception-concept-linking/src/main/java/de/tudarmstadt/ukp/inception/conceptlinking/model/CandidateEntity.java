@@ -164,7 +164,12 @@ public class CandidateEntity
 
     public <T> void put(Key<T> aKey, T aValue)
     {
-        features.put(aKey.name, aValue);
+        if (aValue != null) {
+            features.put(aKey.name, aValue);
+        }
+        else {
+            features.remove(aKey.name);
+        }
     }
     
     public Map<String, Object> getFeatures()

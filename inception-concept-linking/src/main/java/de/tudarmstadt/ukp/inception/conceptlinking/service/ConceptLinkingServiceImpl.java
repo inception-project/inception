@@ -158,8 +158,9 @@ public class ConceptLinkingServiceImpl
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
             // the exact matches separately to ensure we have them.
-            String[] exactLabels = asList(aQuery.length() < threshold ? aQuery : null,
-                    aMention).stream()
+            String[] exactLabels = asList(
+                    (aQuery != null && aQuery.length() < threshold) ? aQuery : null, aMention)
+                    .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
             SPARQLQueryBuilder exactQueryBuilder = newQueryBuilder(aValueType, aKB);
@@ -175,7 +176,7 @@ public class ConceptLinkingServiceImpl
             result.addAll(exactMatches);
 
             
-            if (aQuery.length() > threshold) {
+            if (aQuery != null && aQuery.length() > threshold) {
                 // Collect matches starting with the query - this is the main driver for the
                 // auto-complete functionality
                 SPARQLQueryBuilder startingWithQueryBuilder = newQueryBuilder(aValueType, aKB);
@@ -193,8 +194,9 @@ public class ConceptLinkingServiceImpl
             
             
             // Collect containing matches
-            String[] containingLabels = asList(aQuery.length() > threshold ? aQuery : null,
-                    aMention).stream()
+            String[] containingLabels = asList(
+                    (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
+                    .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
             SPARQLQueryBuilder containingQueryBuilder = newQueryBuilder(aValueType, aKB);
@@ -269,27 +271,9 @@ public class ConceptLinkingServiceImpl
         return candidate;
     }
     
-    @Override
-    public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
-            JCas aJCas, int aBegin)
+    private Comparator<CandidateEntity> baseLineRankingStrategy()
     {
-        long startTime = currentTimeMillis();
-        
-        List<CandidateEntity> candidates = aCandidates.stream()
-                .map(CandidateEntity::new)
-                .map(candidate -> initCandidate(candidate, aQuery, aMention, aJCas, aBegin))
-                .collect(Collectors.toCollection(ArrayList::new));
-        
-        // Set the feature values
-        candidates.parallelStream().forEach(candidate -> {
-            for (EntityRankingFeatureGenerator generator : featureGenerators) {
-                generator.apply(candidate);
-            }
-        });
-        
-        // Do the main ranking
-        // Sort candidates by multiple keys.
-        candidates.sort((e1, e2) -> new CompareToBuilder()
+        return (e1, e2) -> new CompareToBuilder()
                 // The edit distance between query and label is given high importance
                 // Comparing simultaneously against the edit distance to the query and to the 
                 // mention causes items similar to either to be ranked up
@@ -305,7 +289,30 @@ public class ConceptLinkingServiceImpl
                 .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
                 // A low wikidata ID rank is preferred.
                 .append(e1.getIdRank(), e2.getIdRank())
-                .toComparison());
+                .toComparison();
+    }
+    
+    @Override
+    public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
+            JCas aJCas, int aBegin)
+    {
+        long startTime = currentTimeMillis();
+        
+        // Set the feature values
+        List<CandidateEntity> candidates = aCandidates.parallelStream()
+                .map(CandidateEntity::new)
+                .map(candidate -> initCandidate(candidate, aQuery, aMention, aJCas, aBegin))
+                .map(candidate -> {
+                    for (EntityRankingFeatureGenerator generator : featureGenerators) {
+                        generator.apply(candidate);
+                    }
+                    return candidate;
+                })
+                .collect(Collectors.toCollection(ArrayList::new));
+        
+        // Do the main ranking
+        // Sort candidates by multiple keys.
+        candidates.sort(baseLineRankingStrategy());
 
         List<KBHandle> results = candidates.stream()
                 .map(candidate -> {
