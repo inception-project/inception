@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-import static java.util.Collections.unmodifiableSet;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -106,6 +106,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 import de.tudarmstadt.ukp.inception.kb.reification.NoReification;
 import de.tudarmstadt.ukp.inception.kb.reification.ReificationStrategy;
 import de.tudarmstadt.ukp.inception.kb.reification.WikiDataReification;
@@ -122,7 +123,6 @@ public class KnowledgeBaseServiceImpl
 
     private @PersistenceContext EntityManager entityManager;
     private final RepositoryManager repoManager;
-    private final Set<String> implicitNamespaces;
     private final File kbRepositoriesRoot;
 
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -159,8 +159,6 @@ public class KnowledgeBaseServiceImpl
         
         repoManager = RepositoryProvider.getRepositoryManager(kbRepositoriesRoot);
         log.info("Knowledge base repository path: {}", kbRepositoriesRoot);
-        
-        implicitNamespaces = new LinkedHashSet<>(IriConstants.IMPLICIT_NAMESPACES);
     }
     
     public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
@@ -363,12 +361,6 @@ public class KnowledgeBaseServiceImpl
     {
         assertRegistration(kb);
         return repoManager.getRepositoryConfig(kb.getRepositoryId()).getRepositoryImplConfig();
-    }
-
-    @Override
-    public void registerImplicitNamespace(String aImplicitNameSpace)
-    {
-        implicitNamespaces.add(aImplicitNameSpace);
     }
 
     @Override
@@ -1211,7 +1203,7 @@ public class KnowledgeBaseServiceImpl
      * @return list of all the {@link KBHandle}
      * @throws QueryEvaluationException
      */
-    private List<KBHandle> evaluateListQuery(KnowledgeBase aKB, TupleQuery tupleQuery, boolean aAll,
+    public List<KBHandle> evaluateListQuery(KnowledgeBase aKB, TupleQuery tupleQuery, boolean aAll,
         String itemVariable)
         throws QueryEvaluationException
     {
@@ -1228,8 +1220,8 @@ public class KnowledgeBaseServiceImpl
             if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
                 continue;
             }
-            Binding label = bindings.getBinding("l");
-            Binding description = bindings.getBinding("d");
+            Binding label = bindings.getBinding(SPARQLQueryBuilder.VAR_LABEL_NAME);
+            Binding description = bindings.getBinding(SPARQLQueryBuilder.VAR_DESCRIPTION_NAME);
             Binding labelGeneral = bindings.getBinding("lGen");
             Binding descGeneral = bindings.getBinding("descGeneral");
             Binding subPropertyLabel = bindings.getBinding("spl");
@@ -1359,31 +1351,7 @@ public class KnowledgeBaseServiceImpl
             return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
         });
     }
-
-    @Override
-    public boolean hasImplicitNamespace(KnowledgeBase kb, String s)
-    {
-        // Root concepts are never implicit. E.g. if the root concept is owl:Thing, we do not 
-        // want to filter it out just because we consider the OWL namespace to be implicit.
-        List<String> rootConceptsAsStrings = kb.getRootConcepts().stream().map(IRI::stringValue)
-                .collect(Collectors.toList());
-        if (rootConceptsAsStrings.contains(s)) {
-            return false;
-        }
-        
-        for (String ns : implicitNamespaces) {
-            if (s.startsWith(ns)) {
-                return true;
-            }
-        }
-        return false;
-    }
     
-    public Set<String> getImplicitNamespaces()
-    {
-        return unmodifiableSet(implicitNamespaces);
-    }
-
     @Override
     public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
@@ -1550,68 +1518,4 @@ public class KnowledgeBaseServiceImpl
                     aKB + "] does not support rebuilding its full text index.");
         }
     }
-
-    @Override
-    public List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
-        ConceptFeatureValueType aValueType, Project project)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        if (aRepositoryId != null) {
-            // If a specific KB is selected, get its instances/concepts
-            Optional<KnowledgeBase> kb = getKnowledgeBaseById(project, aRepositoryId);
-            if (kb.isPresent()) {
-                handles = getEntitiesForKnowledgeBase(kb.get(), aConceptScope, aValueType);
-            }
-        }
-        else {
-            // If no specific KB is selected, collect instances/concepts from all KBs
-            for (KnowledgeBase kb : getEnabledKnowledgeBases(project)) {
-                handles.addAll(getEntitiesForKnowledgeBase(kb, aConceptScope, aValueType));
-            }
-        }
-        return handles;
-    }
-
-    private List<KBHandle> getEntitiesForKnowledgeBase(KnowledgeBase aKB, String aConceptScope,
-        ConceptFeatureValueType aValueType)
-    {
-        List<KBHandle> handles = new ArrayList<>();
-        if (aConceptScope != null) {
-            switch (aValueType) {
-            case INSTANCE:
-                handles = listInstancesForChildConcepts(aKB, aConceptScope, false, 50);
-                break;
-            case CONCEPT:
-                handles = listChildConcepts(aKB, aConceptScope, false);
-                break;
-            default:
-                handles.addAll(listInstancesForChildConcepts(aKB, aConceptScope, false, 50));
-                handles.addAll(listChildConcepts(aKB, aConceptScope, false));
-            }
-        }
-        else {
-            switch (aValueType) {
-            case INSTANCE:
-                handles = listAllInstances(aKB, false);
-                break;
-            case CONCEPT:
-                handles = listConcepts(aKB, false);
-                break;
-            default:
-                handles.addAll(listAllInstances(aKB, false));
-                handles.addAll(listConcepts(aKB, false));
-            }
-        }
-        return handles;
-    }
-
-    @Override
-    public List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll) {
-        List<KBHandle> instanceList = new ArrayList<>();
-        for (KBHandle concept : listConcepts(aKB, aAll)) {
-            instanceList.addAll(listInstances(aKB, concept.getIdentifier(), aAll));
-        }
-        return instanceList;
-    }
-
 }

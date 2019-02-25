@@ -75,12 +75,12 @@
 }
 
 .row.anno-ui {
-/*EGIN PDFANNO EXTENSION - #620 - Exclude PDFAnno UI*/
+/*BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI*/
 /*
   padding: 0 15px 10px;
 */
   padding: 0 0 10px;
-/*BEGIN PDFANNO EXTENSION*/
+/*END INCEpTION EXTENSION*/
 }
 
 /*

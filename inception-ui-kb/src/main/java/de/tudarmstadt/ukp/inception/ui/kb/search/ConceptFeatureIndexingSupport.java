@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+
 import java.util.Optional;
 import java.util.Set;
 
@@ -134,7 +136,7 @@ public class ConceptFeatureIndexingSupport
         Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
                 kbObj.getIdentifier(), false);
         for (KBHandle parentConcept : listParentConcepts) {
-            if (kbService.hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
+            if (hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
                 continue;
             }
             values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),

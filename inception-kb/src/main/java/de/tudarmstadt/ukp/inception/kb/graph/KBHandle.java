@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -41,7 +39,7 @@ public class KBHandle
     // domain and range for cases in which the KBHandle represents a property
     private String domain;
     private String range;
-
+    private String debugInfo;
 
     public KBHandle()
     {
@@ -63,6 +61,14 @@ public class KBHandle
         identifier = aIdentifier;
         name = aLabel;
         description = aDescription;
+    }
+
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
     }
 
     public String getDomain()
@@ -90,9 +96,9 @@ public class KBHandle
         return description;
     }
 
-    public void setDescription(String description)
+    public void setDescription(String aDescription)
     {
-        this.description = description;
+        description = aDescription;
     }
 
     @Override
@@ -142,6 +148,16 @@ public class KBHandle
     {
         language = aLanguage;
     }
+    
+    public void setDebugInfo(String aDebugInfo)
+    {
+        debugInfo = aDebugInfo;
+    }
+    
+    public String getDebugInfo()
+    {
+        return debugInfo;
+    }
 
     public static KBHandle of(KBObject aObject)
     {
@@ -188,7 +204,8 @@ public class KBHandle
         }
     }
 
-    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles) {
+    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles)
+    {
         Map<String, KBHandle> hMap = new LinkedHashMap<>();
         for (KBHandle h : aHandles) {
             hMap.put(h.getIdentifier(), h);
@@ -197,7 +214,8 @@ public class KBHandle
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -209,15 +227,15 @@ public class KBHandle
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(identifier);
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
-            .append("identifier", identifier)
-            .append("name", name)
-            .toString();
+    public String toString()
+    {
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("description", description).append("language", language).toString();
     }
 }

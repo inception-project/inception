@@ -394,7 +394,7 @@ public class KnowledgeBaseServiceRemoteTest
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
-
+    
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception

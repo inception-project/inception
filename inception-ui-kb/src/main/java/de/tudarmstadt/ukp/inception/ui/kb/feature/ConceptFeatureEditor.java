@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
@@ -51,59 +51,58 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoi
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
  */
-public class ConceptFeatureEditor extends FeatureEditor {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
+public class ConceptFeatureEditor
+    extends FeatureEditor
+{
+    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
+    
     private static final String MID_FEATURE = "feature";
     private static final String MID_VALUE = "value";
 
     private static final long serialVersionUID = 7763348613632105600L;
-    private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
 
     private Component focusComponent;
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    private @SpringBean ConceptLinkingServiceImpl clService;
+    private @SpringBean ConceptLinkingService clService;
 
     public ConceptFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
-            IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler) {
+            IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
+    {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
     }
 
     @Override
-    public void renderHead(IHeaderResponse aResponse) {
+    public void renderHead(IHeaderResponse aResponse)
+    {
         super.renderHead(aResponse);
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState aState,
-            AnnotationActionHandler aHandler) {
+            AnnotationActionHandler aHandler)
+    {
         AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(MID_VALUE,
-                new TextRenderer<KBHandle>("uiLabel")) {
+                new TextRenderer<KBHandle>("uiLabel"))
+        {
             private static final long serialVersionUID = -1955006051950156603L;
 
             @Override
-            protected List<KBHandle> getChoices(String input) {
-                List<KBHandle> choices = new ArrayList();
-                if (input != null) {
-                    input = input.replaceAll("[*?]", "").trim();
-                    choices = listInstances(aState, aHandler, input);
-                }
-                return choices;
+            protected List<KBHandle> getChoices(String aInput)
+            {
+                return getCandidates(aState, aHandler, aInput);
             }
 
             @Override
@@ -112,62 +111,93 @@ public class ConceptFeatureEditor extends FeatureEditor {
                 super.onConfigure(behavior);
 
                 behavior.setOption("autoWidth", true);
+                behavior.setOption("ignoreCase", false);
+                behavior.setOption("delay", 500);
             }
 
             @Override
-            protected IJQueryTemplate newTemplate() {
-                return KendoChoiceDescriptionScriptReference.template();
+            protected IJQueryTemplate newTemplate()
+            {
+                return new IJQueryTemplate()
+                {
+                    private static final long serialVersionUID = 8656996525796349138L;
+
+                    @Override
+                    public String getText()
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("<div style=\"max-width: 450px\">");
+                        sb.append("  <div class=\"item-title\">");
+                        sb.append("    ${ data.name }");
+                        sb.append("  </div>");
+                        sb.append("  <div class=\"item-identifier\">");
+                        sb.append("    ${ data.identifier }");
+                        sb.append("  </div>");
+                        sb.append("  <div class=\"item-description\">");
+                        sb.append("    ${ data.description }");
+                        sb.append("  </div>");
+                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                            sb.append("  <div class=\"item-description\">");
+                            sb.append("    ${ data.debugInfo }");
+                            sb.append("  </div>");
+                        }
+                        sb.append("</div>");
+                        return sb.toString();
+                    }
+
+                    @Override
+                    public List<String> getTextProperties()
+                    {
+                        List<String> properties = new ArrayList<>();
+                        properties.add("name");
+                        properties.add("identifier");
+                        properties.add("description");
+                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
+                            properties.add("debugInfo");
+                        }
+                        return properties;
+                    }
+                };
             }
         };
 
         return field;
     }
-
-    private List<KBHandle> listInstances(AnnotatorState aState, AnnotationActionHandler aHandler,
-            String aTypedString) {
-        AnnotationFeature feat = getModelObject().feature;
-
-        Project project = feat.getProject();
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(feat);
-        ConceptFeatureTraits traits = fs.readTraits(feat);
-
-        List<KBHandle> handles = new ArrayList<>();
-        // Use concept linking if enabled
-        try {
-            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aTypedString,
-                    aState.getSelection().getText(), aState.getSelection().getBegin(),
-                    aHandler.getEditorCas(), project);
+    
+    private List<KBHandle> getCandidates(AnnotatorState aState, AnnotationActionHandler aHandler,
+            String aInput)
+    {
+        if (aInput == null) {
+            return emptyList();
         }
-        catch (IOException e) {
-            LOG.error("An error occurred while retrieving entity candidates.", e);
+        
+        List<KBHandle> choices;
+        try {
+            AnnotationFeature feat = getModelObject().feature;
+
+            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                    .getFeatureSupport(feat);
+            ConceptFeatureTraits traits = fs.readTraits(feat);
+
+            choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aInput,
+                    aState.getSelection().getText(), aState.getSelection().getBegin(),
+                    aHandler.getEditorCas(), feat.getProject());
+        }
+        catch (Exception e) {
+            choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
             error("An error occurred while retrieving entity candidates: " + e.getMessage());
+            LOG.error("An error occurred while retrieving entity candidates", e);
             RequestCycle.get()
                 .find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
-
-        // if concept linking does not return any results or is disabled
-        if (handles.size() == 0) {
-            handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
-                traits.getAllowedValueType(), project);
-            // Sort and filter results
-            handles = handles.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-        }
-        
-        return KBHandle.distinctByIri(handles);
+        return choices;
     }
 
     @Override
-    protected void onInitialize() {
-        super.onInitialize();
-    }
-
-    @Override
-    public Component getFocusComponent() {
+    public Component getFocusComponent()
+    {
         return focusComponent;
     }
 }
