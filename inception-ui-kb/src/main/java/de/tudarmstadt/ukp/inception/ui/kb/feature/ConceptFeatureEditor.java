@@ -100,7 +100,8 @@ public class ConceptFeatureEditor
             private static final long serialVersionUID = -1955006051950156603L;
 
             @Override
-            protected List<KBHandle> getChoices(String aInput) {
+            protected List<KBHandle> getChoices(String aInput)
+            {
                 return getEntities(aState, aHandler, aInput);
             }
 
@@ -111,11 +112,14 @@ public class ConceptFeatureEditor
 
                 behavior.setOption("autoWidth", true);
                 behavior.setOption("ignoreCase", false);
+                behavior.setOption("delay", 500);
             }
 
             @Override
-            protected IJQueryTemplate newTemplate() {
-                return new IJQueryTemplate() {
+            protected IJQueryTemplate newTemplate()
+            {
+                return new IJQueryTemplate()
+                {
                     private static final long serialVersionUID = 8656996525796349138L;
 
                     @Override
@@ -153,7 +157,6 @@ public class ConceptFeatureEditor
                         }
                         return properties;
                     }
-                    
                 };
             }
         };

@@ -277,10 +277,9 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#red-goblin", "Red Goblin",
-                                "http://example.org/#red-goblin", null),
+                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"),
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", "en"));
+                                null, "en"));
     }
     
     @Test
@@ -315,7 +314,7 @@ public class SPARQLQueryBuilderTest
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", "en"));
+                                null, "en"));
     }
     
     @Test
@@ -355,8 +354,7 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", null));
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }    
         
     @Test
@@ -390,8 +388,7 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", null));
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
 
     @Test
@@ -413,7 +410,7 @@ public class SPARQLQueryBuilderTest
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", "en"));
+                                null, "en"));
     }
 
     @Test
@@ -436,8 +433,8 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", "en"));
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin", null, 
+                                "en"));
     }
     
     @Test
@@ -461,7 +458,7 @@ public class SPARQLQueryBuilderTest
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
-                                "http://example.org/#green-goblin", "en"));
+                                null, "en"));
     }
     
     @Test
@@ -728,8 +725,7 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://mbugert.de/pets#socke", "Socke",
-                                "http://mbugert.de/pets#socke", null));
+                        new KBHandle("http://mbugert.de/pets#socke", "Socke"));
     }
 
     private void importDataFromFile(String aFilename) throws IOException
