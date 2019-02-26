@@ -374,6 +374,7 @@
     </textstructure>
     <orthography>
       <correction operation="replace" tokenIDs="t_0">Karina</correction>
+      <correction tokenIDs="t_1">flog</correction>
     </orthography>
   </TextCorpus>
 </D-Spin>
