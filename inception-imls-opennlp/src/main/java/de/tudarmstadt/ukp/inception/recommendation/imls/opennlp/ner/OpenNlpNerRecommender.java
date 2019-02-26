@@ -237,9 +237,17 @@ public class OpenNlpNerRecommender
         int highestEndTokenPositionObserved = 0;
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
-            int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
-            int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
+            
+            AnnotationFS beginToken = idxTokenOffset.get(annotation.getBegin());
+            AnnotationFS endToken = idxTokenOffset.get(annotation.getEnd());
+            if (beginToken == null || endToken == null) {
+                LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
+                        annotation.getBegin(), annotation.getEnd(), label);
+            }
+            
+            int begin = idxToken.get(beginToken);
+            int end = idxToken.get(endToken);
             
             // If the begin offset of the current annotation is lower than the highest offset so far
             // observed, then it is overlapping with some annotation that we have seen before. 
