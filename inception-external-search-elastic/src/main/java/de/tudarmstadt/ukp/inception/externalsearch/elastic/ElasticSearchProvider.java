@@ -150,94 +150,94 @@ public class ElasticSearchProvider
         String body = null;
         try {
             body = mapper.writeValueAsString(bodyNode);
-
-            // Set http entity
-            HttpEntity<String> entity = new HttpEntity<String>(body, headers);
-
-            // Prepare search URL
-            String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
-
-            // Send post query
-            queryResult = restTemplate.postForObject(searchUrl, entity,
-                    ElasticSearchResult.class);
-
-            for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
-                ExternalSearchResult result = new ExternalSearchResult();
-
-                // The title will be filled with the hit id, since there is no title in the
-                // ElasticSearch hit
-                result.setDocumentTitle(hit.get_id());
-                result.setScore(hit.get_score());
-
-                if (hit.get_source() != null) {
-                    if (hit.get_source().getDoc() != null) {
-                        result.setText(hit.get_source().getDoc().getText());
-                    }
-                    if (hit.get_source().getMetadata() != null) {
-                        // Set the metadata fields
-                        result.setDocumentId(hit.get_source().getMetadata().getId());
-                        result.setLanguage(hit.get_source().getMetadata().getLanguage());
-                        result.setSource(hit.get_source().getMetadata().getSource());
-                        result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
-                        result.setUri(hit.get_source().getMetadata().getUri());
-                    }
-                }
-                if (hit.getHighlight() != null) {
-
-                    // Highlights from elastic search are small sections of the document text
-                    // with the keywords surrounded by the <em> tags.
-                    // There are no offset information for the highlights
-                    // or the keywords in the document text. There is a feature
-                    // request for it (https://github.com/elastic/elasticsearch/issues/5736).
-                    // Until this feature is implemented, we currently try to find
-                    // the keywords offsets by finding the matching highlight in the document text,
-                    // then the keywords offset within highlight using <em> tags.
-                    String originalText = hit.get_source().getDoc().getText();
-
-                    // There are highlights, set them in the result
-                    List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                    for (String highlight : hit.getHighlight().getDoctext()) {
-
-                        // remove markers from the highlight
-                        String highlight_clean = highlight.replace(HIGHLIGHT_START_TAG, "")
-                            .replace(HIGHLIGHT_END_TAG, "");
-
-                        // find the matching highlight offset in the original text
-                        int highlight_start_index = originalText.indexOf(highlight_clean);
-
-                        // find offset to all keywords in the highlight
-                        // they are enclosed in <em> </em> tags in the highlight
-                        String highlightTemp = highlight;
-                        List<OffsetSpan> offsets = new ArrayList<>();
-                        while (highlightTemp.contains(HIGHLIGHT_START_TAG)) {
-                            int start = highlight_start_index +
-                                highlightTemp.indexOf(HIGHLIGHT_START_TAG);
-                            highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_START_TAG, "");
-                            int end = highlight_start_index +
-                                highlightTemp.indexOf(HIGHLIGHT_END_TAG);
-                            highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_END_TAG, "");
-                            offsets.add(new OffsetSpan(start, end));
-                        }
-
-                        if (!offsets.isEmpty()) {
-                            highlights.add(new ExternalSearchHighlight(highlight, offsets));
-                        } else {
-                            LOG.warn("Refusing to create ExternalSearchHighlight for {} because it "
-                                + "contains no keyword markers or it is not found in the document "
-                                + "text", highlight);
-                        }
-                    }
-                    result.setHighlights(highlights);
-                }
-                results.add(result);
-            }
-
-            return results;
         }
         catch (JsonProcessingException e) {
             log.error("Invalid Json while building search query");
             return Collections.emptyList();
         }
+
+        // Set http entity
+        HttpEntity<String> entity = new HttpEntity<String>(body, headers);
+
+        // Prepare search URL
+        String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
+
+        // Send post query
+        queryResult = restTemplate.postForObject(searchUrl, entity,
+                ElasticSearchResult.class);
+
+        for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
+            ExternalSearchResult result = new ExternalSearchResult();
+
+            // The title will be filled with the hit id, since there is no title in the
+            // ElasticSearch hit
+            result.setDocumentTitle(hit.get_id());
+            result.setScore(hit.get_score());
+
+            if (hit.get_source() != null) {
+                if (hit.get_source().getDoc() != null) {
+                    result.setText(hit.get_source().getDoc().getText());
+                }
+                if (hit.get_source().getMetadata() != null) {
+                    // Set the metadata fields
+                    result.setDocumentId(hit.get_source().getMetadata().getId());
+                    result.setLanguage(hit.get_source().getMetadata().getLanguage());
+                    result.setSource(hit.get_source().getMetadata().getSource());
+                    result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
+                    result.setUri(hit.get_source().getMetadata().getUri());
+                }
+            }
+            if (hit.getHighlight() != null) {
+
+                // Highlights from elastic search are small sections of the document text
+                // with the keywords surrounded by the <em> tags.
+                // There are no offset information for the highlights
+                // or the keywords in the document text. There is a feature
+                // request for it (https://github.com/elastic/elasticsearch/issues/5736).
+                // Until this feature is implemented, we currently try to find
+                // the keywords offsets by finding the matching highlight in the document text,
+                // then the keywords offset within highlight using <em> tags.
+                String originalText = hit.get_source().getDoc().getText();
+
+                // There are highlights, set them in the result
+                List<ExternalSearchHighlight> highlights = new ArrayList<>();
+                for (String highlight : hit.getHighlight().getDoctext()) {
+
+                    // remove markers from the highlight
+                    String highlight_clean = highlight.replace(HIGHLIGHT_START_TAG, "")
+                        .replace(HIGHLIGHT_END_TAG, "");
+
+                    // find the matching highlight offset in the original text
+                    int highlight_start_index = originalText.indexOf(highlight_clean);
+
+                    // find offset to all keywords in the highlight
+                    // they are enclosed in <em> </em> tags in the highlight
+                    String highlightTemp = highlight;
+                    List<OffsetSpan> offsets = new ArrayList<>();
+                    while (highlightTemp.contains(HIGHLIGHT_START_TAG)) {
+                        int start = highlight_start_index +
+                            highlightTemp.indexOf(HIGHLIGHT_START_TAG);
+                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_START_TAG, "");
+                        int end = highlight_start_index +
+                            highlightTemp.indexOf(HIGHLIGHT_END_TAG);
+                        highlightTemp = highlightTemp.replaceFirst(HIGHLIGHT_END_TAG, "");
+                        offsets.add(new OffsetSpan(start, end));
+                    }
+
+                    if (!offsets.isEmpty()) {
+                        highlights.add(new ExternalSearchHighlight(highlight, offsets));
+                    } else {
+                        LOG.warn("Refusing to create ExternalSearchHighlight for {} because it "
+                            + "contains no keyword markers or it is not found in the document "
+                            + "text", highlight);
+                    }
+                }
+                result.setHighlights(highlights);
+            }
+            results.add(result);
+        }
+
+        return results;
     }
 
     @Override
