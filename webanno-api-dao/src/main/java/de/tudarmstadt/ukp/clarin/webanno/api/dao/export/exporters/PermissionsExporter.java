@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -34,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -98,15 +101,22 @@ public class PermissionsExporter
         }
         
         // Give all permissions to the importing user if requested
-        if (aRequest.getManager().isPresent()
-                && !projectService.isManager(aProject, aRequest.getManager().get())) {
-            ProjectPermission permission = new ProjectPermission();
-            permission.setLevel(PermissionLevel.MANAGER);
-            permission.setLevel(PermissionLevel.CURATOR);
-            permission.setLevel(PermissionLevel.ANNOTATOR);
-            permission.setProject(aProject);
-            permission.setUser(aRequest.getManager().get().getUsername());
-            projectService.createProjectPermission(permission);
+        if (aRequest.getManager().isPresent()) {
+            User user = aRequest.getManager().get();
+            String username = user.getUsername();
+
+            if (!projectService.isManager(aProject, user)) {
+                projectService.createProjectPermission(
+                        new ProjectPermission(aProject, username, MANAGER));
+            }
+            if (!projectService.isCurator(aProject, user)) {
+                projectService.createProjectPermission(
+                        new ProjectPermission(aProject, username, CURATOR));
+            }
+            if (!projectService.isAnnotator(aProject, user)) {
+                projectService.createProjectPermission(
+                        new ProjectPermission(aProject, username, ANNOTATOR));
+            }
         }
         
         // Add any users that are referenced by the project but missing in the current instance.
