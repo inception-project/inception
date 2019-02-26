@@ -1,0 +1,5 @@
+[[sect_external-search-repos-elasticsearch]]
+= ElasticSearch
+
+Selecting the **ElasticSearch** repository type allows connecting to remote ElasticSearch instances.
+
