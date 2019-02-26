@@ -36,7 +36,12 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   static newInstance (annotation) {
     let a          = new SpanAnnotation()
+// BEGIN INCEpTION EXTENSION - #593 - add pdfanno sources
+/*
+    a.uuid         = uuid()
+*/
     a.uuid         = annotation.uuid || uuid()
+// END INCEpTION EXTENSION
     a.text         = annotation.text
     a.color        = annotation.color
     a.readOnly     = annotation.readOnly || false
@@ -220,7 +225,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-           console.log('Something went wrong on selecting an annotation for: ' + data)
+           console.log('Something went wrong on selecting a span annotation for: ' + data)
         }]
       });
     }

@@ -43,7 +43,7 @@ public class PdfAnnoModelTest
         pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         pdfAnnoModel.addSpan(new Span("1", 1, "#FF00FF", "sometext", 0, 7));
         pdfAnnoModel.addSpan(new Span("2", 1, "#00AA00", "atest", 8, 12));
-        pdfAnnoModel.addRelation(new Relation("1", "2", "#CCCCCC"));
+        pdfAnnoModel.addRelation(new Relation("3", "1", "2", "#CCCCCC"));
     }
 
     @Test
