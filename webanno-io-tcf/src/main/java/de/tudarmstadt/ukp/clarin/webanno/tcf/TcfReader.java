@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.uima.collection.CollectionException;
@@ -46,6 +47,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.transform.type.SofaChangeAnnotation;
 import eu.clarin.weblicht.wlfxb.io.TextCorpusStreamed;
 import eu.clarin.weblicht.wlfxb.io.WLDObjector;
 import eu.clarin.weblicht.wlfxb.io.WLFormatException;
+import eu.clarin.weblicht.wlfxb.tc.api.CorrectionOperation;
 import eu.clarin.weblicht.wlfxb.tc.api.DependencyParse;
 import eu.clarin.weblicht.wlfxb.tc.api.Reference;
 import eu.clarin.weblicht.wlfxb.tc.api.TextCorpus;
@@ -202,17 +204,19 @@ public class TcfReader extends JCasResourceCollectionReader_ImplBase {
 
     }
 
-    private void convertOrthoGraphy(JCas aJCas, TextCorpus aCorpusData,
-            Map<String, Token> aTokens) {
+    private void convertOrthoGraphy(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
+    {
         if (aCorpusData.getOrthographyLayer() == null) {
             return;
         }
+        
         for (int i = 0; i < aCorpusData.getOrthographyLayer().size(); i++) {
             eu.clarin.weblicht.wlfxb.tc.api.Token[] orthoTokens = aCorpusData.getOrthographyLayer()
                     .getTokens(aCorpusData.getOrthographyLayer().getCorrection(i));
             String value = aCorpusData.getOrthographyLayer().getCorrection(i).getString();
-            String operation = aCorpusData.getOrthographyLayer().getCorrection(i).getOperation()
-                    .name();
+            String operation = Optional
+                    .ofNullable(aCorpusData.getOrthographyLayer().getCorrection(i).getOperation())
+                    .map(CorrectionOperation::name).orElse(null);
 
             SofaChangeAnnotation ortho = new SofaChangeAnnotation(aJCas);
             ortho.setBegin(aTokens.get(orthoTokens[0].getID()).getBegin());
@@ -221,7 +225,6 @@ public class TcfReader extends JCasResourceCollectionReader_ImplBase {
             ortho.setOperation(operation);
             ortho.addToIndexes();
         }
-
     }
 
     private void convertSentences(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens) {
