@@ -270,6 +270,29 @@ public class PdfAnnotationEditor
         }
     }
 
+    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+    {
+        try {
+            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+            if (paramId.isSynthetic()) {
+                Offset offset = new Offset(aParams);
+                Offset docOffset = PdfAnnoRenderer
+                    .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                if (docOffset != null) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                        aJCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                } else {
+                    handleError("Unable to delete recommendation: No match was found", aTarget);
+                }
+            }
+        }
+        catch (AnnotationException | IOException e)
+        {
+            handleError("Unable to delete recommendation", e, aTarget);
+        }
+    }
+
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams,
                                  String aPdftxt)
     {
@@ -288,6 +311,9 @@ public class PdfAnnotationEditor
             case "createRelation": createRelationAnnotation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
             case "selectRelation": selectRelationAnnotation(aTarget, aParams, jCas);
+                break;
+            case "deleteRecommendation":
+                deleteRecommendation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }
