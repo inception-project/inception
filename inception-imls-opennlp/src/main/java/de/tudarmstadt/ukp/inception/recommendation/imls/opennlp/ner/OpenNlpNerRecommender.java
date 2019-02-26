@@ -244,6 +244,7 @@ public class OpenNlpNerRecommender
             if (beginToken == null || endToken == null) {
                 LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
                         annotation.getBegin(), annotation.getEnd(), label);
+                continue;
             }
             
             int begin = idxToken.get(beginToken);
