@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
-import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.Component;
@@ -37,11 +35,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -80,7 +73,8 @@ public class ConceptFeatureEditor
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
-        add(focusComponent = createAutoCompleteTextField(aStateModel.getObject(), aHandler));
+        add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
+                getCandidates(aStateModel.getObject(), aHandler, _query)));
     }
 
     @Override
@@ -91,79 +85,6 @@ public class ConceptFeatureEditor
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
-    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField(AnnotatorState aState,
-            AnnotationActionHandler aHandler)
-    {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(MID_VALUE,
-                new TextRenderer<KBHandle>("uiLabel"))
-        {
-            private static final long serialVersionUID = -1955006051950156603L;
-
-            @Override
-            protected List<KBHandle> getChoices(String aInput)
-            {
-                return getCandidates(aState, aHandler, aInput);
-            }
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-
-                behavior.setOption("autoWidth", true);
-                behavior.setOption("ignoreCase", false);
-                behavior.setOption("delay", 500);
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate()
-            {
-                return new IJQueryTemplate()
-                {
-                    private static final long serialVersionUID = 8656996525796349138L;
-
-                    @Override
-                    public String getText()
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("<div style=\"max-width: 450px\">");
-                        sb.append("  <div class=\"item-title\">");
-                        sb.append("    ${ data.name }");
-                        sb.append("  </div>");
-                        sb.append("  <div class=\"item-identifier\">");
-                        sb.append("    ${ data.identifier }");
-                        sb.append("  </div>");
-                        sb.append("  <div class=\"item-description\">");
-                        sb.append("    ${ data.description }");
-                        sb.append("  </div>");
-                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-                            sb.append("  <div class=\"item-description\">");
-                            sb.append("    ${ data.debugInfo }");
-                            sb.append("  </div>");
-                        }
-                        sb.append("</div>");
-                        return sb.toString();
-                    }
-
-                    @Override
-                    public List<String> getTextProperties()
-                    {
-                        List<String> properties = new ArrayList<>();
-                        properties.add("name");
-                        properties.add("identifier");
-                        properties.add("description");
-                        if (DEVELOPMENT.equals(getApplication().getConfigurationType())) {
-                            properties.add("debugInfo");
-                        }
-                        return properties;
-                    }
-                };
-            }
-        };
-
-        return field;
-    }
-    
     private List<KBHandle> getCandidates(AnnotatorState aState, AnnotationActionHandler aHandler,
             String aInput)
     {
