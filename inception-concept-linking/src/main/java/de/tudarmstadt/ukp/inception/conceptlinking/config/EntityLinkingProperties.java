@@ -29,8 +29,7 @@ public class EntityLinkingProperties
 
     private int mentionContextSize = 5;
     private int candidateQueryLimit = 2500;
-    private int candidateDisplayLimit = 20;
-    private int candidateFrequencyThreshold = 25;
+    private int candidateDisplayLimit = 100;
     private int signatureQueryLimit = Integer.MAX_VALUE;
 
     public int getCacheSize()
@@ -71,16 +70,6 @@ public class EntityLinkingProperties
     public void setCandidateDisplayLimit(int candidateDisplayLimit)
     {
         this.candidateDisplayLimit = candidateDisplayLimit;
-    }
-
-    public int getCandidateFrequencyThreshold()
-    {
-        return candidateFrequencyThreshold;
-    }
-
-    public void setCandidateFrequencyThreshold(int candidateFrequencyThreshold)
-    {
-        this.candidateFrequencyThreshold = candidateFrequencyThreshold;
     }
 
     public int getSignatureQueryLimit()

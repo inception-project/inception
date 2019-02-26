@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -55,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -209,19 +206,7 @@ public class KnowledgeBasePanel
     {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
-        if (kb.isSupportConceptLinking()) {
-            results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
-        }
-        else {
-            results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
-                ConceptFeatureValueType.ANY_OBJECT, aProject);
-            // Sort and filter results
-            String lowerCaseTypedString = aTypedString.toLowerCase();
-            results = results.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(lowerCaseTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-            results = KBHandle.distinctByIri(results);
-        }
+        results = conceptLinkingService.searchItems(kb, aTypedString);
         return results;
     }
 
