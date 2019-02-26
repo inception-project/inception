@@ -72,12 +72,7 @@ examples of how the parameters can be configured below:
 
 | inception.entity-linking.candidateDisplayLimit
 | Candidate Display Limit
-| 20
-| -
-
-| inception.entity-linking.candidateFrequencyThreshold
-| Candidate Frequency Threshold
-| 25
+| 100
 | -
 
 | inception.entity-linking.signatureQueryLimit

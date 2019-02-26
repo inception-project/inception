@@ -24,12 +24,12 @@ database. It consists of the following classes and interfaces:
   serve as the data access layer for logged events.
 * The `EventLoggingListener` which hooks into Spring, captures events, and then uses the
   `EventRepository` to log them.
-*  The `EventLoggingAdapter` interface. Spring components implementing this interface are 
-   used to extract information from Spring events and to convert them into a format
-   suitable to be logged.
- * The `LoggedEvent` entity class which maps the logged events to the database.
- * The `LoggedEventExporter` and `ExportedLoggedEvent` which are used to export/import the
-   event log as part of a project export/import.
+* The `EventLoggingAdapter` interface. Spring components implementing this interface are 
+  used to extract information from Spring events and to convert them into a format
+  suitable to be logged.
+* The `LoggedEvent` entity class which maps the logged events to the database.
+* The `LoggedEventExporter` and `ExportedLoggedEvent` which are used to export/import the
+  event log as part of a project export/import.
 
 The log module comes with a number of adapters for common events such as annotation 
 manipulation, changes to the project configuration, etc. Any event for which no specific
