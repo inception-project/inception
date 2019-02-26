@@ -110,8 +110,8 @@ public class PdfAnnoRenderer
                     color = varc.getColorHint();
                 }
 
-                pdfAnnoModel.addRelation(
-                    new Relation(varc.getSource().toString(), varc.getTarget().toString(), color));
+                pdfAnnoModel.addRelation(new Relation(varc.getVid().toString(),
+                    varc.getSource().toString(), varc.getTarget().toString(), color));
             }
         }
         return pdfAnnoModel;
