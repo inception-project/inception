@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.uima.jcas.JCas;
 
@@ -86,6 +87,14 @@ public interface ConceptLinkingService
      * @param aTypedString What the user has typed so far in the text field. Might be null.
      * @return a list of entities
      */
-    List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString);
+    List<KBHandle> searchItems(KnowledgeBase aKB, String aTypedString);
 
+    /**
+     * This method does the actual ranking of the candidate entities.
+     * First the candidates from full-text matching are sorted by frequency cutoff after a
+     * threshold because they are more numerous.
+     * Then the candidates from exact matching are added and sorted by multiple keys.
+     */
+    List<KBHandle> rankCandidates(String aTypedString, String aMention, Set<KBHandle> aCandidates,
+            JCas aJCas, int aBegin);
 }

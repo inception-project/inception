@@ -245,6 +245,54 @@ public class PdfAnnotationEditor
         }
     }
 
+    private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                          JCas aJCas)
+        throws IOException
+    {
+        try {
+            AnnotationFS originFs = selectByAddr(aJCas,
+                aParams.getParameterValue("origin").toInt());
+            AnnotationFS targetFs = selectByAddr(aJCas,
+                aParams.getParameterValue("target").toInt());
+
+            AnnotatorState state = getModelObject();
+            Selection selection = state.getSelection();
+            selection.selectArc(VID.parseOptional(aParams.getParameterValue("id").toString()),
+                originFs, targetFs);
+
+            if (selection.getAnnotation().isSet()) {
+                getActionHandler().actionSelect(aTarget, aJCas);
+            }
+        }
+        catch (AnnotationException e)
+        {
+            handleError("Unable to select relation annotation", e, aTarget);
+        }
+    }
+
+    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+    {
+        try {
+            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+            if (paramId.isSynthetic()) {
+                Offset offset = new Offset(aParams);
+                Offset docOffset = PdfAnnoRenderer
+                    .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                if (docOffset != null) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                        aJCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                } else {
+                    handleError("Unable to delete recommendation: No match was found", aTarget);
+                }
+            }
+        }
+        catch (AnnotationException | IOException e)
+        {
+            handleError("Unable to delete recommendation", e, aTarget);
+        }
+    }
+
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams,
                                  String aPdftxt)
     {
@@ -262,7 +310,10 @@ public class PdfAnnotationEditor
                 break;
             case "createRelation": createRelationAnnotation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
-            case "selectRelation":
+            case "selectRelation": selectRelationAnnotation(aTarget, aParams, jCas);
+                break;
+            case "deleteRecommendation":
+                deleteRecommendation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }

@@ -27,3 +27,22 @@
   padding: 10px 20px 30px 20px; 
   min-height: 10em;
 }
+
+.k-item .item-title {
+  font-weight: bolder;
+}
+
+.k-item .item-identifier {
+  font-size: 85%;
+  line-height: normal; 
+  font-style: italic;
+  padding-left: 10px;
+}
+
+.k-item .item-description {
+  font-size: 85%;
+  font-weight: lighter;
+  white-space: normal;
+  line-height: normal;
+  padding-left: 10px;
+}
