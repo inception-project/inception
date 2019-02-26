@@ -16,6 +16,7 @@ text = "atest"
 textrange = [8,12]
 
 [[relations]]
+id = "3"
 head = "1"
 tail = "2"
 label = "#CCCCCC"
