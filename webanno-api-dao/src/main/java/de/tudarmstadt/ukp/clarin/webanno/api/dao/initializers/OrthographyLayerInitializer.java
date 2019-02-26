@@ -87,6 +87,7 @@ public class OrthographyLayerInitializer
         operation.setLayer(orthography);
         operation.setVisible(false);
         operation.setTagset(operationTagset);
+        operation.setRequired(true);
 
         annotationSchemaService.createFeature(operation);
     }

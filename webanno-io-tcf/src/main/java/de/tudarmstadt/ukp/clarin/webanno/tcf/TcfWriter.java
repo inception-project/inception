@@ -31,6 +31,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
@@ -398,8 +399,11 @@ public class TcfWriter
             List<SofaChangeAnnotation> scas = selectCovered(aJCas, SofaChangeAnnotation.class,
                     token.getBegin(), token.getEnd());
             if (scas.size() > 0 && orthographyLayer != null) {
+                SofaChangeAnnotation change = scas.get(0);
+                
                 orthographyLayer.addCorrection(scas.get(0).getValue(), tokensLayer.getToken(j),
-                        CorrectionOperation.valueOf(scas.get(0).getOperation()));
+                        Optional.ofNullable(change.getOperation()).map(CorrectionOperation::valueOf)
+                                .orElse(null));
             }
             j++;
         }
