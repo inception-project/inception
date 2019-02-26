@@ -15,9 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.conceptlinking;
-
-import java.util.Properties;
+package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import org.mockito.Mockito;
 import org.springframework.boot.SpringBootConfiguration;
@@ -29,9 +27,7 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 
 @SpringBootConfiguration
@@ -55,29 +51,23 @@ import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 })
 @EnableAutoConfiguration
 public class SpringConfig {
-    @Bean(name = "formats")
-    public Properties getFileFormats()
-    {
-        return new Properties();
-    }
-
-    @Bean
-    @Primary
-    public DocumentService documentService()
-    {
-        return Mockito.mock(DocumentService.class);
-    }
+//    @Bean(name = "formats")
+//    public Properties getFileFormats()
+//    {
+//        return new Properties();
+//    }
+//
+//    @Bean
+//    @Primary
+//    public DocumentService documentService()
+//    {
+//        return Mockito.mock(DocumentService.class);
+//    }
 
     @Bean
     @Primary
     public ProjectService projectService()
     {
         return Mockito.mock(ProjectService.class);
-    }
-
-    @Bean
-    public ConceptLinkingServiceImpl clService()
-    {
-        return new ConceptLinkingServiceImpl();
     }
 }
