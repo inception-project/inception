@@ -17,8 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -37,10 +41,17 @@ public class ElasticSearchProviderTraitsEditor
 
     private static final String MID_FORM = "form";
 
+    private static final String SEED_TOOLTIP = "A number between 0 and 1000, used to compute the "
+        + "reproducible random scores when Random Ordering is selected.";
+
     private @SpringBean ExternalSearchProviderFactory<ElasticSearchProviderTraits> 
             externalSearchProviderFactory;
     private final DocumentRepository documentRepository;
     private final ElasticSearchProviderTraits properties;
+
+    private CheckBox randomOrder;
+
+    private NumberTextField<Integer> seed;
 
     public ElasticSearchProviderTraitsEditor(String aId,
             IModel<DocumentRepository> aDocumentRepository)
@@ -79,8 +90,28 @@ public class ElasticSearchProviderTraitsEditor
         objectType.setRequired(true);
         form.add(objectType);
 
-        CheckBox randomOrder = new CheckBox("randomOrder");
+        randomOrder = new AjaxCheckBox("randomOrder")
+        {
+            @Override protected void onUpdate(AjaxRequestTarget target)
+            {
+                target.add(seed);
+            }
+        };
         form.add(randomOrder);
+
+        seed = new NumberTextField<Integer>("seed", Integer.class) {
+
+            private static final long serialVersionUID = -4652113964375432800L;
+
+            @Override public boolean isEnabled()
+            {
+                return randomOrder.getModelObject();
+            }
+        };
+        seed.add(new AttributeModifier("title", SEED_TOOLTIP));
+        seed.setOutputMarkupId(true);
+        seed.setRequired(true);
+        form.add(seed);
 
         add(form);
     }

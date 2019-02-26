@@ -45,7 +45,7 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
 
-    private static final int ARBITRARY_FIXED_SEED = 5;
+    private static final int DEFAULT_SEED = 5;
 
     private static final String HIGHLIGHT_START_TAG = "<em>";
 
@@ -62,6 +62,8 @@ public class ElasticSearchProvider
     private String objectType = "texts";
 
     private boolean randomOrder = false;
+
+    private int seed = DEFAULT_SEED;
     
     // Number of results retrieved from the server
     private int resultSize = 1000;
@@ -104,6 +106,7 @@ public class ElasticSearchProvider
         indexName = properties.getIndexName();
         searchPath = properties.getSearchPath();
         randomOrder = properties.isRandomOrder();
+        seed = properties.getSeed();
         
         // Set headers
         HttpHeaders headers = new HttpHeaders();
@@ -126,7 +129,7 @@ public class ElasticSearchProvider
             functionScore.putPOJO("query", queryBody);
 
             ObjectNode randomScore = mapper.createObjectNode();
-            randomScore.put("seed", ARBITRARY_FIXED_SEED);
+            randomScore.put("seed", seed);
             randomScore.put("field", "_id");
             functionScore.putPOJO("random_score", randomScore);
 
