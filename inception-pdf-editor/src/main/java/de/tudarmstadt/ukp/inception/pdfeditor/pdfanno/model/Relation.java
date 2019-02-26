@@ -19,17 +19,25 @@ package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
 public class Relation {
 
+    private String id;
+
     private String head;
 
     private String tail;
 
     private String label;
 
-    public Relation(String aHead, String aTail, String aLabel)
+    public Relation(String aId, String aHead, String aTail, String aLabel)
     {
+        id = aId;
         head = aHead;
         tail = aTail;
         label = aLabel;
+    }
+
+    public String getId()
+    {
+        return id;
     }
 
     public String getHead()
@@ -50,6 +58,7 @@ public class Relation {
     public String toAnnoFileString()
     {
         return "[[relations]]\n" +
+            "id = \"" + id + "\"\n" +
             "head = \"" + head +  "\"\n" +
             "tail = \"" + tail + "\"\n" +
             "label = \"" + label + "\"\n";
