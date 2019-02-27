@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
  * Implementation of the external search service API.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalSearchAutoConfiguration#externalSearchService()}.
+ * {@link ExternalSearchAutoConfiguration#externalSearchService}.
  * </p>
  */
 public class ExternalSearchServiceImpl
