@@ -58,8 +58,6 @@ public class ElasticSearchProvider
 
     private String objectType = "texts";
 
-    private boolean randomOrder = false;
-
     // Number of results retrieved from the server
     private int resultSize = 1000;
 
@@ -96,7 +94,7 @@ public class ElasticSearchProvider
         ObjectNode queryBody = mapper.createObjectNode();
         queryBody.putPOJO("match", mapper.createObjectNode()
             .put("doc.text", aQuery));
-        if (randomOrder) {
+        if (properties.isRandomOrder()) {
             ObjectNode query = mapper.createObjectNode();
 
             ObjectNode functionScore = mapper.createObjectNode();
@@ -139,7 +137,6 @@ public class ElasticSearchProvider
         remoteUrl = properties.getRemoteUrl();
         indexName = properties.getIndexName();
         searchPath = properties.getSearchPath();
-        randomOrder = properties.isRandomOrder();
         
         // Set headers
         HttpHeaders headers = new HttpHeaders();
