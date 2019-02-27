@@ -22,12 +22,10 @@ import static org.assertj.core.api.Assertions.linesOf;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Scanner;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Relation;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Span;
@@ -41,17 +39,9 @@ public class PdfAnnoModelTest
     public void setup()
     {
         pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
-        pdfAnnoModel.addSpan(new Span("1", 1, "#FF00FF", "sometext", 0, 7));
-        pdfAnnoModel.addSpan(new Span("2", 1, "#00AA00", "atest", 8, 12));
-        pdfAnnoModel.addRelation(new Relation("3", "1", "2", "#CCCCCC"));
-    }
-
-    @Test
-    public void testColorMap() throws Exception
-    {
-        String colorMapString = JSONUtil.toJsonString(pdfAnnoModel.getColorMap());
-        assertThat(new Scanner(new File("src/test/resources/colormap.json"))
-            .useDelimiter("\\Z").next()).isEqualTo(colorMapString);
+        pdfAnnoModel.addSpan(new Span("1", 1, "somelabel", "#FF00FF", "sometext", 0, 7));
+        pdfAnnoModel.addSpan(new Span("2", 1, "someotherlabel", "#00AA00", "atest", 8, 12));
+        pdfAnnoModel.addRelation(new Relation("3", "1", "2", "label", "#CCCCCC"));
     }
 
     @Test

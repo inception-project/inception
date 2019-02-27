@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -134,7 +133,7 @@ public class PdfAnnotationEditor
                     handleError("Could not find a match for the following annotations: "
                         + annotations, aTarget);
                 }
-                String script = getAnnotationsJS(pdfAnnoModel, aTarget);
+                String script = getAnnotationsJS(pdfAnnoModel);
                 aTarget.appendJavaScript(script);
             }
             catch (IOException e)
@@ -327,21 +326,16 @@ public class PdfAnnotationEditor
     /**
      * Returns JavaScript code that imports annotation data in PDFAnno
      */
-    public String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel, AjaxRequestTarget aTarget)
+    private String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel)
     {
-        try {
-            return String.join("",
-                "var annoFile = `\n",
-                aPdfAnnoModel.getAnnoFileContent(),
-                "`;",
-                "pdfanno.contentWindow.annoPage.importAnnotation({",
-                "'primary': true,",
-                "'colorMap': ", JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()), ",",
-                "'annotations':[annoFile]}, true);"
-            );
-        } catch (IOException e) {
-            handleError("Could not map PDFAnno ColorMap to JSON String", e, aTarget);
-        }
-        return "";
+        return String.join("",
+            "var annoFile = `\n",
+            aPdfAnnoModel.getAnnoFileContent(),
+            "`;",
+            "pdfanno.contentWindow.annoPage.importAnnotation({",
+            "'primary': true,",
+            "'colorMap': {},",
+            "'annotations':[annoFile]}, true);"
+        );
     }
 }
