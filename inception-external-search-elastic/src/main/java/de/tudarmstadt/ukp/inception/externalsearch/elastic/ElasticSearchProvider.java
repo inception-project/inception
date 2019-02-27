@@ -168,7 +168,12 @@ public class ElasticSearchProvider
             // The title will be filled with the hit id, since there is no title in the
             // ElasticSearch hit
             result.setDocumentTitle(hit.get_id());
-            result.setScore(hit.get_score());
+            
+            // If the order is random, then the score doesn't reflect the quality, so we do not 
+            // forward it to the user
+            if (!properties.isRandomOrder()) {
+                result.setScore(hit.get_score());
+            }
 
             if (hit.get_source() != null) {
                 if (hit.get_source().getDoc() != null) {
