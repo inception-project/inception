@@ -207,9 +207,10 @@ public interface FeatureSupport<T>
 
     /**
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
-     * is an acceptable return value for this method. 
+     * is an acceptable return value for this method.
      * 
-     * <b>NOTE:</b> If this method should never be overwritten!
+     * <b>NOTE:</b> If this method should never be overwritten! Overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
      * 
      * @param aFeature
      *            the feature to be rendered.

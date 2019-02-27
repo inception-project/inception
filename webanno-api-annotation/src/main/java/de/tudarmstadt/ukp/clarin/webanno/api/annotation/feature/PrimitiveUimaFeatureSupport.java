@@ -234,4 +234,20 @@ public class PrimitiveUimaFeatureSupport
         // Only string features support tagsets
         return CAS.TYPE_NAME_STRING.equals(aFeature.getType());
     }
+    
+    @Override
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
+    {
+        if (CAS.TYPE_NAME_BOOLEAN.equals(aFeature.getType()) && aLabel != null) {
+            if ("true".equals(aLabel)) {
+                return "+" + aFeature.getUiName();
+            }
+            else {
+                return "-" + aFeature.getUiName();
+            }
+        }
+        else {
+            return FeatureSupport.super.renderFeatureValue(aFeature, aLabel);
+        }
+    }
 }
