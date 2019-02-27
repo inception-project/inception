@@ -24,11 +24,13 @@ interfaces:
 
 * The `ActiveLearningService` interface and its default implementation `ActiveLearningServiceImpl`
   which provide access to the ranked suggestions.
-* The `ActiveLearningStrategy` interface which allows plugging in different ranking strategies.
-* The `UncertaintySamplingStrategy` class which is currently the only ranking strategy available.
+* The `ActiveLearningStrategy` interface which allows plugging in different sampling strategies.
+* The `UncertaintySamplingStrategy` class which is currently the only sampling strategy available.
 * The `ActiveLearningSidebar` class which provides the active learning sidebar for the annotation
-  page.
-
+  page. Here the user can accept/reject/correct/skip suggestions.
+  
+The active learning module relies on the recommendation module for the actual annotation
+recommendations.
 
 [plantuml]
 ....
@@ -61,3 +63,15 @@ ActiveLearningStrategy <|-- UncertaintySamplingStrategy
 * `ActiveLearningRecommendationEvent` - user has accepted/rejected a recommendation
 * `ActiveLearningSessionStartedEvent` - user has opened an active learning session
 * `ActiveLearningSessionCompletedEvent` - user has closed the active learning session
+
+== Sampling strategies
+
+Currently, there is only a single sampling strategy, namely the `UncertaintySamplingStrategy`. It
+it compares the confidence scores of the annotation suggestion. The smaller the difference between
+the best and the second best score, the earlier the suggestion is proposed to the user. The 
+confidence scores produced by different recommenders can be on different scales and are therefore
+not really comparable. Thus, the strategy only compares suggestions from the same recommender to
+each other. So if recommender A produces two suggestions X and Y, they are compared to each other.
+However, if there are two recommenders A and B producing each one suggestion X and Y, then X and Y
+are not compared to each other.
+
