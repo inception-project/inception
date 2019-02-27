@@ -1,0 +1,63 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_activeLearning]]
+= Active Learning
+
+The active learning module aims to guide the user through recommendations in such a way that the
+the judgements made by the user are most informative to the recommenders. The goal is to reduce
+the required user interactions to a minium. The module consists of the following classes and
+interfaces:
+
+* The `ActiveLearningService` interface and its default implementation `ActiveLearningServiceImpl`
+  which provide access to the ranked suggestions.
+* The `ActiveLearningStrategy` interface which allows plugging in different ranking strategies.
+* The `UncertaintySamplingStrategy` class which is currently the only ranking strategy available.
+* The `ActiveLearningSidebar` class which provides the active learning sidebar for the annotation
+  page.
+
+
+[plantuml]
+....
+package "webanno-ui-annotation" {
+  [AnnotationPage]
+}
+
+package "inception-active-learning" {
+  [ActiveLearningService]
+  [ActiveLearningSidebar]
+  [ActiveLearningStrategy]
+  [UncertaintySamplingStrategy]
+}
+
+package "inception-recommendation" {
+  [RecommendationService]
+  [LearningRecordService]
+}
+
+AnnotationPage -- ActiveLearningSidebar
+ActiveLearningSidebar -- ActiveLearningService
+ActiveLearningService -- ActiveLearningStrategy
+ActiveLearningService -- RecommendationService
+ActiveLearningService -- LearningRecordService
+ActiveLearningStrategy <|-- UncertaintySamplingStrategy
+....
+
+.Events
+* `ActiveLearningSuggestionOfferedEvent` - active learning has pointed the user at a recommentation
+* `ActiveLearningRecommendationEvent` - user has accepted/rejected a recommendation
+* `ActiveLearningSessionStartedEvent` - user has opened an active learning session
+* `ActiveLearningSessionCompletedEvent` - user has closed the active learning session
