@@ -179,9 +179,11 @@ public class ConceptFeatureEditor
             AnnotationFeature feat = getModelObject().feature;
 
             ConceptFeatureTraits traits = readFeatureTraits(feat);
-
+            String repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
-            if (!traits.isKBEnabled(feat.getProject())) {
+            if (!(repoId == null
+                || kbService.isKnowledgeBaseAvailable(feat.getProject(), repoId)))
+            {
                 return Collections.emptyList();
             }
 

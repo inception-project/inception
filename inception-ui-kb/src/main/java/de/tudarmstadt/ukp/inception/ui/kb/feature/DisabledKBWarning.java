@@ -78,7 +78,8 @@ public class DisabledKBWarning
     @Override
     protected void onConfigure() {
         super.onConfigure();
-        setVisible(featureTraits.isKBEnabled(project));
+        String repoId = featureTraits.getRepositoryId();
+        setVisible(!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId)));
     }
 
 }

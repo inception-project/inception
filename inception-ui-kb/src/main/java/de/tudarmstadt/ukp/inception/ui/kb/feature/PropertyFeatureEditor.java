@@ -109,7 +109,8 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                if (!traits.isKBEnabled(project)) {
+                String repoId = traits.getRepositoryId();
+                if (!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId))) {
                     return Collections.emptyList();
                 }
                 return factService.getPredicatesFromKB(project, traits);

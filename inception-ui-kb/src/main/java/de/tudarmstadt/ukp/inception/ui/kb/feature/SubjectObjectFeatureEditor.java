@@ -359,9 +359,9 @@ public class SubjectObjectFeatureEditor
         List<KBHandle> handles = new ArrayList<>();
 
         ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
-
+        String repoId = traits.getRepositoryId();
         // Check if kb is actually enabled
-        if (!traits.isKBEnabled(project)) {
+        if (!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId))) {
             return Collections.emptyList();
         }
 
