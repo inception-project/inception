@@ -25,6 +25,8 @@ public class Span {
 
     private String label;
 
+    private String color;
+
     /**
      * This field is part of the PDFAnno Anno File format for spans.
      * It is redundant as startPos and endPos already can be used to obtain the text.
@@ -37,22 +39,13 @@ public class Span {
 
     private int endPos;
 
-    public Span(String aId, int aPage, String aText,
-                int aStartPos, int aEndPos)
-    {
-        id = aId;
-        page = aPage;
-        text = aText;
-        startPos = aStartPos;
-        endPos = aEndPos;
-    }
-
-    public Span(String aId, int aPage, String aLabel, String aText,
+    public Span(String aId, int aPage, String aLabel, String aColor, String aText,
                 int aStartPos, int aEndPos)
     {
         id = aId;
         page = aPage;
         label = aLabel;
+        color = aColor;
         text = aText;
         startPos = aStartPos;
         endPos = aEndPos;
@@ -71,6 +64,11 @@ public class Span {
     public String getLabel()
     {
         return label;
+    }
+
+    public String getColor()
+    {
+        return color;
     }
 
     public String getText()
@@ -94,6 +92,7 @@ public class Span {
             "id = \"" + id +  "\"\n" +
             "page = " + page + "\n" +
             "label = \"" + label + "\"\n" +
+            "color = \"" + color + "\"\n" +
             "text = \"" + text + "\"\n" +
             "textrange = [" + startPos + "," + endPos + "]\n";
     }

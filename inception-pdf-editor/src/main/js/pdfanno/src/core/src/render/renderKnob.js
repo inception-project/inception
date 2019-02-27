@@ -8,7 +8,12 @@ export const DEFAULT_RADIUS = 7
  * Create a bounding circle.
  * @param {Object} the data for rendering.
  */
+// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
+/*
 export function renderKnob ({ x, y, readOnly }) {
+*/
+export function renderKnob ({ x, y, readOnly, text}) {
+// END INCEpTION EXTENSION
 
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
@@ -20,7 +25,12 @@ export function renderKnob ({ x, y, readOnly }) {
   }
 
   // Create a knob.
+// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
+/*
   return $(`<div class="${cssClass}"/>`).css({
+*/
+  return $(`<div title="` + text + `" class="${cssClass}"/>`).css({
+// END INCEpTION EXTENSION
     top    : `${y}px`,
     left   : `${x}px`,
     width  : DEFAULT_RADIUS + 'px',
