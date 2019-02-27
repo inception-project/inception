@@ -85,6 +85,8 @@ public class ElasticSearchProviderTraitsEditor
         form.add(objectType);
 
         NumberTextField<Integer> seed = new NumberTextField<Integer>("seed", Integer.class);
+        seed.setMinimum(0);
+        seed.setMaximum(1000);
         seed.add(visibleWhen(() -> properties.isRandomOrder()));
         seed.add(new AttributeModifier("title", getString("seedTooltip")));
         seed.setOutputMarkupPlaceholderTag(true);
