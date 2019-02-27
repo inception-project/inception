@@ -30,7 +30,10 @@ interfaces:
   page. Here the user can accept/reject/correct/skip suggestions.
   
 The active learning module relies on the recommendation module for the actual annotation
-recommendations.
+recommendations. This means that the active learning module does not directly make use of the
+user feedback. If suggestions are accepted, they are used in the next train/predict run of the 
+recommendation module as training data. The active learning module then samples the new annotation
+suggestions from this run and updates the order in which it offers the suggestions to the user.
 
 [plantuml]
 ....

@@ -17,15 +17,17 @@
 [[sect_recommendation]]
 = Recommendation
 
-[plantuml]
-....
-package "inception-recommendation" {
-  [LearningRecordService]
-}
+For information on the different recommenders, please refer to <<user-guide.adoc#sect_projects_recommendation,user guide>>.
 
-package "webanno-api-dao" {
-  [DocumentService]
-}
-
-DocumentService -- LearningRecordService : AfterDocuemntResetEvent
-....
+// [plantuml]
+// ....
+// package "inception-recommendation" {
+//   [LearningRecordService]
+// }
+// 
+// package "webanno-api-dao" {
+//   [DocumentService]
+// }
+// 
+// DocumentService -- LearningRecordService : AfterDocuemntResetEvent
+// ....
