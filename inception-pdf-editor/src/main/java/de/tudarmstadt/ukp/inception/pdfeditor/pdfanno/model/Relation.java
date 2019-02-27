@@ -27,12 +27,15 @@ public class Relation {
 
     private String label;
 
-    public Relation(String aId, String aHead, String aTail, String aLabel)
+    private String color;
+
+    public Relation(String aId, String aHead, String aTail, String aLabel, String aColor)
     {
         id = aId;
         head = aHead;
         tail = aTail;
         label = aLabel;
+        color = aColor;
     }
 
     public String getId()
@@ -55,13 +58,19 @@ public class Relation {
         return label;
     }
 
+    public String getColor()
+    {
+        return color;
+    }
+
     public String toAnnoFileString()
     {
         return "[[relations]]\n" +
             "id = \"" + id + "\"\n" +
             "head = \"" + head +  "\"\n" +
             "tail = \"" + tail + "\"\n" +
-            "label = \"" + label + "\"\n";
+            "label = \"" + label + "\"\n" +
+            "color = \"" + color + "\"\n";
     }
 
 }
