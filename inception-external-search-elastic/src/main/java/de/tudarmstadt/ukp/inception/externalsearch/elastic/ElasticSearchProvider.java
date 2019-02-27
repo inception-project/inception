@@ -44,9 +44,6 @@ import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 public class ElasticSearchProvider
     implements ExternalSearchProvider
 {
-
-    private static final int DEFAULT_SEED = 5;
-
     private static final String HIGHLIGHT_START_TAG = "<em>";
 
     private static final String HIGHLIGHT_END_TAG = "</em>";
@@ -63,8 +60,6 @@ public class ElasticSearchProvider
 
     private boolean randomOrder = false;
 
-    private int seed = DEFAULT_SEED;
-    
     // Number of results retrieved from the server
     private int resultSize = 1000;
 
@@ -90,30 +85,9 @@ public class ElasticSearchProvider
         return true;
     }
 
-    @Override
-    public List<ExternalSearchResult> executeQuery(Object aProperties,
-            User aUser, String aQuery, String aSortOrder, String... sResultField)
+    private String prepareQuery(ElasticSearchProviderTraits properties, String aQuery)
+        throws JsonProcessingException
     {
-        List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
-
-        RestTemplate restTemplate = new RestTemplate();
-
-        ElasticSearchResult queryResult;
-
-        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
-
-        remoteUrl = properties.getRemoteUrl();
-        indexName = properties.getIndexName();
-        searchPath = properties.getSearchPath();
-        randomOrder = properties.isRandomOrder();
-        seed = properties.getSeed();
-        
-        // Set headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-
-        // Set query
         ObjectMapper mapper = new ObjectMapper();
 
         ObjectNode bodyNode = mapper.createObjectNode();
@@ -129,7 +103,7 @@ public class ElasticSearchProvider
             functionScore.putPOJO("query", queryBody);
 
             ObjectNode randomScore = mapper.createObjectNode();
-            randomScore.put("seed", seed);
+            randomScore.put("seed", properties.getSeed());
             randomScore.put("field", "_id");
             functionScore.putPOJO("random_score", randomScore);
 
@@ -146,13 +120,38 @@ public class ElasticSearchProvider
             .putPOJO("doc.text", emptyNode));
         bodyNode.putPOJO("highlight", highlightNode);
 
-        // Set body
-        String body = null;
+        // Render JSON to string
+        return mapper.writeValueAsString(bodyNode);
+    }
+    
+    @Override
+    public List<ExternalSearchResult> executeQuery(Object aProperties,
+            User aUser, String aQuery, String aSortOrder, String... sResultField)
+    {
+        List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        ElasticSearchResult queryResult;
+
+        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
+
+        remoteUrl = properties.getRemoteUrl();
+        indexName = properties.getIndexName();
+        searchPath = properties.getSearchPath();
+        randomOrder = properties.isRandomOrder();
+        
+        // Set headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Set query
+        String body;
         try {
-            body = mapper.writeValueAsString(bodyNode);
+            body = prepareQuery(properties, aQuery);
         }
         catch (JsonProcessingException e) {
-            log.error("Invalid Json while building search query");
+            log.error("Invalid JSON while building search query");
             return Collections.emptyList();
         }
 
