@@ -259,7 +259,10 @@ public class SPARQLQueryBuilder
     
     private boolean hasPrimaryPatterns()
     {
-        return patterns.stream().map(Pair::getKey).anyMatch(value -> PRIO_PRIMARY == value);
+        // If we force the query to return an empty result, that means that we intentionally skipped
+        // adding a primary query
+        return returnEmptyResult
+                || patterns.stream().map(Pair::getKey).anyMatch(value -> PRIO_PRIMARY == value);
     }
     
     private Projectable getLabelProjection()
@@ -325,6 +328,11 @@ public class SPARQLQueryBuilder
      */
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
+        if (aValues.length == 0) {
+            returnEmptyResult = true;
+            return this;
+        }
+        
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
@@ -459,6 +467,12 @@ public class SPARQLQueryBuilder
      */
     public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
     {
+        if (aPrefixQuery.length() == 0) {
+            returnEmptyResult = true;
+            return this;
+        }
+        
+        
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
@@ -492,6 +506,11 @@ public class SPARQLQueryBuilder
      */
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
+        if (aValues.length == 0) {
+            returnEmptyResult = true;
+            return this;
+        }
+        
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
