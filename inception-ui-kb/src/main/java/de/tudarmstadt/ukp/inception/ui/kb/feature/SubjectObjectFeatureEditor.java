@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
@@ -42,7 +41,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -68,7 +66,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
@@ -76,8 +73,6 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.DisabledKBWarning;
 
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
@@ -362,12 +357,11 @@ public class SubjectObjectFeatureEditor
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
         List<KBHandle> handles = new ArrayList<>();
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(linkedAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+
+        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
 
         // Check if kb is actually enabled
-        if (featureUsesDisabledKB(traits)) {
+        if (!traits.isKBEnabled(project)) {
             return Collections.emptyList();
         }
 
@@ -400,17 +394,6 @@ public class SubjectObjectFeatureEditor
             .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
-    }
-
-    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
-    {
-        Optional<KnowledgeBase> kb = Optional.empty();
-        String repositoryId = aTraits.getRepositoryId();
-        if (repositoryId != null) {
-            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
-                aTraits.getRepositoryId());
-        }
-        return kb.isPresent() && !kb.get().isEnabled() || repositoryId != null && !kb.isPresent();
     }
 
     private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
@@ -448,20 +431,6 @@ public class SubjectObjectFeatureEditor
         if (linkedAnnotationFeature == null) {
             linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
-        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
-
-        Optional<KnowledgeBase> kb = Optional.empty();
-        if (traits != null && traits.getRepositoryId() != null) {
-            kb = kbService.getKnowledgeBaseById(linkedAnnotationFeature.getProject(),
-                traits.getRepositoryId());
-        }
-        String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
-        DisabledKBWarning warning = new DisabledKBWarning("disabledKBWarning",
-            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName));
-
-        warning.add(
-            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
-
-        return warning;
+        return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature));
     }
 }

@@ -22,7 +22,6 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -31,7 +30,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +57,6 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.ui.kb.DisabledKBWarning;
 
 public class PropertyFeatureEditor
     extends FeatureEditor
@@ -90,7 +88,7 @@ public class PropertyFeatureEditor
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
-        add(createDisabledKbWarningLabel());
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 
     @Override
@@ -111,7 +109,7 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                if (featureUsesDisabledKB(traits)) {
+                if (!traits.isKBEnabled(project)) {
                     return Collections.emptyList();
                 }
                 return factService.getPredicatesFromKB(project, traits);
@@ -214,36 +212,6 @@ public class PropertyFeatureEditor
             }
         }
         return kbHandle;
-    }
-
-    private DisabledKBWarning createDisabledKbWarningLabel()
-    {
-        AnnotationFeature feature = getModelObject().feature;
-
-        Optional<KnowledgeBase> kb = Optional.empty();
-        if (traits.getRepositoryId() != null) {
-            kb = kbService.getKnowledgeBaseById(feature.getProject(), traits.getRepositoryId());
-        }
-        String kbName = kb.isPresent() ? kb.get().getName() : "unknown ID";
-
-        DisabledKBWarning warning = new DisabledKBWarning("disabledKBWarning",
-            new StringResourceModel("value.null.disabledKbWarning", this).setParameters(kbName));
-
-        warning.add(
-            LambdaBehavior.onConfigure(label -> label.setVisible(featureUsesDisabledKB(traits))));
-
-        return warning;
-    }
-
-    private boolean featureUsesDisabledKB(ConceptFeatureTraits aTraits)
-    {
-        Optional<KnowledgeBase> kb = Optional.empty();
-        String repositoryId = aTraits.getRepositoryId();
-        if (repositoryId != null) {
-            kb = kbService.getKnowledgeBaseById(getModelObject().feature.getProject(),
-                aTraits.getRepositoryId());
-        }
-        return kb.isPresent() && !kb.get().isEnabled() || repositoryId != null && !kb.isPresent();
     }
 }
 
