@@ -81,6 +81,7 @@ public class QualifierFeatureEditor
     extends FeatureEditor
 {
     private static final long serialVersionUID = 7469241620229001983L;
+    
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -106,8 +107,6 @@ public class QualifierFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
-
-        add(new Label("feature", getModelObject().feature.getUiName()));
 
         // Add warning that shows up if the knowledge base that is used by the concept feature
         // is disabled

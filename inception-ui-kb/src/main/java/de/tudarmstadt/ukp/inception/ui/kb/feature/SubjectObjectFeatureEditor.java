@@ -77,8 +77,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
 {
-
     private static final long serialVersionUID = 4230722501745589589L;
+
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -105,8 +105,8 @@ public class SubjectObjectFeatureEditor
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
 
-        add(new Label("feature", getModelObject().feature.getUiName()));
         add(createDisabledKbWarningLabel());
+
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
         add(content);
