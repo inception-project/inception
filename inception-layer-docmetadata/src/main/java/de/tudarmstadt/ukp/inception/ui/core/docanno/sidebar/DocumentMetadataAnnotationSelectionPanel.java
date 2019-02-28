@@ -30,6 +30,7 @@ import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -43,11 +44,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -80,6 +83,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
+    private final WebMarkupContainer annotationsContainer;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
@@ -97,7 +101,10 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         detailPanel = aDetails;
         selectedLayer = Model.of();
 
-        add(createAnnotationList());
+        annotationsContainer = new WebMarkupContainer("annotationsContainer");
+        annotationsContainer.setOutputMarkupId(true);
+        annotationsContainer.add(createAnnotationList());
+        add(annotationsContainer);
         
         DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>("layer");
         layer.setModel(selectedLayer);
@@ -132,7 +139,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         detailPanel.setModelObject(new VID(aItem.addr));
         
-        aTarget.add(this);
         aTarget.add(detailPanel);
     }
     
@@ -198,6 +204,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         return items;
+    }
+    
+    @OnEvent
+    public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
+    {
+        // If a feature value is updated refresh the annotation list since it might mean that
+        // a label has changed
+        aEvent.getRequestTarget().add(annotationsContainer);
     }
     
     private class AnnotationListItem

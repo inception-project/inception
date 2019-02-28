@@ -24,12 +24,13 @@
         <h3 class="panel-title">
           Details
           <span class="pull-right">
+            <button wicket:id="close" type="button" class="btn btn-xs btn-default"><wicket:message key="close"/></button>
             <button wicket:id="delete" type="button" class="btn btn-xs btn-danger"><wicket:message key="delete"/></button>
           </span> 
         </h3>
       </div>
-      <div class="panel-body flex-v-container">
-        <div id="featureValues" wicket:id="featureValues">
+      <div class="scrolling panel-body flex-v-container">
+        <div wicket:id="featureValues">
           <div wicket:id="editor"></div>
         </div>
       </div>

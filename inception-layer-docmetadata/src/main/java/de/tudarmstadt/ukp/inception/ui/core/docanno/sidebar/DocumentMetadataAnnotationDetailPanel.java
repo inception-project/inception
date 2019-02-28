@@ -102,6 +102,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         add(featureList = createFeaturesList());
         
         add(new LambdaAjaxLink("delete", this::actionDelete));
+        add(new LambdaAjaxLink("close", this::actionClose));
         
         add(LambdaBehavior.visibleWhen(() -> getModelObject() != null && getModelObject().isSet()));
     }
@@ -327,8 +328,16 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
                 aTarget, e);
-        }    }
+        }
+    }
     
+    private void actionClose(AjaxRequestTarget aTarget)
+    {
+        setModelObject(null);
+        
+        aTarget.add(getParent());
+    }
+
     private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
             throws IOException
     {

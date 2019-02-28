@@ -51,6 +51,7 @@ public class DocumentMetadataSidebar
                 "details", Model.of(VID.NONE_ID), sourceDocument, username, aJCasProvider, project,
                 aAnnotationPage);
         add(details);
+        
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
                 username, aJCasProvider, details, aAnnotationPage));
     }
