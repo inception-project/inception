@@ -1,0 +1,7 @@
+[[sect_external-search-sidabar]]
+= External search sidebar
+
+The external search sidebar on the annotation page essentially offers the same functionality as the
+external search page accessible via the project dashboard. Being able to search directly from the
+annotation page may be more convenient though because the user does not have to keep switching
+between the search page and the annotation page.

@@ -1,0 +1,16 @@
+[[sect_external-search-page]]
+= Search page
+
+If document repositories have been configured in a project, the **Search** page becomes accessible
+through the project dashboard. On that page, you can select which document repository to query and
+search for documents via the query text field. The search results are then shown as a table.
+Depending on the repository, you may see a document title or ID, text snippets with highlights
+indicating matches of your query in the document, and a score. If a document has not yet been
+imported into your project, there is an **Import** button which documents the document from the
+repository and adds it to the project, thereby making it available for annotation. If the document
+has already been imported, there is an **Open** button instead. Clicking on the document title or ID
+opens a preview page where the document text can be viewed before importing it.
+
+NOTE: Normally the ability to add new documents to a project is limited to project managers and it
+      is only possibly via the **Documents** tab in the project settings. However, any user can import a
+      document from an external repository.

@@ -143,6 +143,23 @@ include::{include-dir}users.adoc[leveloffset=+1]
 
 = Advanced functionalities
 
+<<<
+
+
+include::{include-dir}external-search.adoc[leveloffset=+1]
+
+include::{include-dir}external-search-page.adoc[leveloffset=+2]
+
+include::{include-dir}external-search-sidebar.adoc[leveloffset=+2]
+
+include::{include-dir}external-search-repos.adoc[leveloffset=+2]
+
+include::{include-dir}external-search-repos-elasticsearch.adoc[leveloffset=+3]
+
+include::{include-dir}external-search-repos-pubannotation.adoc[leveloffset=+3]
+
+<<<
+
 include::{include-dir}constraints.adoc[leveloffset=+1]
 
 <<<

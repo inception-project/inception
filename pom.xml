@@ -83,6 +83,7 @@
     <module>inception-search-mtas</module>
     <module>inception-external-search-core</module>
     <module>inception-external-search-elastic</module>
+    <module>inception-external-search-pubannotation</module>
     <module>inception-ui-external-search</module>
     <module>inception-kb</module>
     <module>inception-ui-core</module>
@@ -224,6 +225,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-external-search-core</artifactId>
+        <version>0.8.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-external-search-pubannotation</artifactId>
         <version>0.8.0-SNAPSHOT</version>
       </dependency>
       <dependency>

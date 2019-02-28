@@ -4,83 +4,95 @@ pdfextract = "0.3.2"
 [[spans]]
 id = "163"
 page = 1
-label = "#8dd3c7"
+label = "NE"
+color = "#8dd3c7"
 text = "Karin"
 textrange = [3,7]
 
 [[spans]]
 id = "169"
 page = 1
-label = "#8dd3c7"
+label = "VVFIN"
+color = "#8dd3c7"
 text = "fliegt"
 textrange = [8,13]
 
 [[spans]]
 id = "175"
 page = 1
-label = "#8dd3c7"
+label = "APPR"
+color = "#8dd3c7"
 text = "nach"
 textrange = [14,17]
 
 [[spans]]
 id = "181"
 page = 1
-label = "#8dd3c7"
+label = "NE"
+color = "#8dd3c7"
 text = "New"
 textrange = [18,20]
 
 [[spans]]
 id = "187"
 page = 1
-label = "#8dd3c7"
+label = "NE"
+color = "#8dd3c7"
 text = "York"
 textrange = [21,24]
 
 [[spans]]
 id = "193"
 page = 1
-label = "#8dd3c7"
+label = "$."
+color = "#8dd3c7"
 text = "."
 textrange = [25,25]
 
 [[spans]]
 id = "199"
 page = 1
-label = "#8dd3c7"
+label = "PPER"
+color = "#8dd3c7"
 text = "Sie"
 textrange = [28,30]
 
 [[spans]]
 id = "205"
 page = 2
-label = "#8dd3c7"
+label = "VMFIN"
+color = "#8dd3c7"
 text = "will"
 textrange = [31,34]
 
 [[spans]]
 id = "211"
 page = 2
-label = "#8dd3c7"
+label = "ADV"
+color = "#8dd3c7"
 text = "dort"
 textrange = [35,38]
 
 [[spans]]
 id = "217"
 page = 2
-label = "#8dd3c7"
+label = "NN"
+color = "#8dd3c7"
 text = "Urlaub"
 textrange = [39,44]
 
 [[spans]]
 id = "223"
 page = 2
-label = "#8dd3c7"
+label = "VVINF"
+color = "#8dd3c7"
 text = "machen"
 textrange = [45,50]
 
 [[spans]]
 id = "229"
 page = 2
-label = "#8dd3c7"
+label = "$."
+color = "#8dd3c7"
 text = "."
 textrange = [51,51]
