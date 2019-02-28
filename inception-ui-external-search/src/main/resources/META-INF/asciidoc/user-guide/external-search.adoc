@@ -1,0 +1,7 @@
+[[sect_external-search]]
+= Corpus building
+
+In order to annotate text, it is first necessary to actually have text documents. Not every text
+documented is worth annotating. For this reason, {product-name} allows connecting to external
+document repositories, to search these repositories for interesting documents, and to import
+relevant documents.

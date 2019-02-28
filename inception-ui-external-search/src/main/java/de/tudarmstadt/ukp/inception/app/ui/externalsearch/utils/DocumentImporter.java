@@ -25,6 +25,11 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public interface DocumentImporter
 {
-    boolean importDocumentFromDocumentRepository(User aUser, Project aProject,
-        String aDocumentTitle, DocumentRepository aRepository) throws IOException;
+    /**
+     * @return a boolean value. True if import was successful. False if import was aborted because
+     *         the document already exists.
+     */
+    boolean importDocumentFromDocumentRepository(User aUser, Project aProject, String aCollectionId,
+            String aDocumentId, DocumentRepository aRepository)
+        throws IOException;
 }

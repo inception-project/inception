@@ -29,10 +29,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.config.ElasticSearchDocumentRepositoryAutoConfiguration;
@@ -74,9 +70,7 @@ public class ElasticSearchProviderFactory
     }
 
     @Override
-    public ExternalSearchProvider getNewExternalSearchProvider(Project aProject,
-            AnnotationSchemaService aAnnotationSchemaService, DocumentService aDocumentService,
-            ProjectService aProjectService, String aDir)
+    public ExternalSearchProvider getNewExternalSearchProvider()
     {
         return new ElasticSearchProvider(); 
     }
