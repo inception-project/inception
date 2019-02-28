@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
@@ -104,6 +105,10 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         {
             private static final long serialVersionUID = 1207122722078977614L;
 
+            {
+                add(new AttributeModifier("title", aTitleModel));
+            }
+            
             @Override
             protected boolean shouldAddAntiCacheParameter()
             {

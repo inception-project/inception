@@ -39,7 +39,7 @@ public class DocumentInfoSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "documentInfoSidebar";
+        return "Document Info";
     }
     
     @Override
