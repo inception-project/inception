@@ -25,6 +25,8 @@ public class ElasticSearchProviderTraits
 
     private static final long serialVersionUID = -3109239605741337123L;
 
+    private static final int ARBITRARY_FIXED_SEED = 5;
+
     private String remoteUrl = "http://localhost:9200";
 
     private String indexName = "common-crawl-en";
@@ -32,6 +34,10 @@ public class ElasticSearchProviderTraits
     private String searchPath = "_search";
     
     private String objectType = "texts";
+
+    private boolean randomOrder = false;
+
+    private int seed = ARBITRARY_FIXED_SEED;
 
     public String getRemoteUrl()
     {
@@ -71,5 +77,25 @@ public class ElasticSearchProviderTraits
     public void setObjectType(String objectType)
     {
         this.objectType = objectType;
+    }
+
+    public boolean isRandomOrder()
+    {
+        return randomOrder;
+    }
+
+    public void setRandomOrder(boolean aRandomOrder)
+    {
+        randomOrder = aRandomOrder;
+    }
+
+    public int getSeed()
+    {
+        return seed;
+    }
+
+    public void setSeed(int seed)
+    {
+        this.seed = seed;
     }
 }
