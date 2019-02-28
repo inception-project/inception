@@ -82,7 +82,6 @@ public class PropertyFeatureEditor
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
         traits = factService.getFeatureTraits(project);
-        add(new Label("feature", getModelObject().feature.getUiName()));
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
