@@ -23,6 +23,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.List;
 
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -74,7 +75,7 @@ public class ConceptFeatureEditor
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
-                getCandidates(aStateModel.getObject(), aHandler, _query)));
+                getCandidates(aStateModel, aHandler, _query)));
     }
 
     @Override
@@ -85,8 +86,8 @@ public class ConceptFeatureEditor
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
-    private List<KBHandle> getCandidates(AnnotatorState aState, AnnotationActionHandler aHandler,
-            String aInput)
+    private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
+            AnnotationActionHandler aHandler, String aInput)
     {
         if (aInput == null) {
             return emptyList();
@@ -100,10 +101,16 @@ public class ConceptFeatureEditor
                     .getFeatureSupport(feat);
             ConceptFeatureTraits traits = fs.readTraits(feat);
 
+            JCas jcas = aHandler != null ? aHandler.getEditorCas() : null;
+            String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
+                    : null;
+            int mentionBegin = aStateModel != null
+                    ? aStateModel.getObject().getSelection().getBegin()
+                    : -1;
+            
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aInput,
-                    aState.getSelection().getText(), aState.getSelection().getBegin(),
-                    aHandler.getEditorCas(), feat.getProject());
+                    traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
+                    jcas, feat.getProject());
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
