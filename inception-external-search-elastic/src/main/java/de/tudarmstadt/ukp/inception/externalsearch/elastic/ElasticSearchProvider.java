@@ -22,6 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,10 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
@@ -48,11 +53,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class ElasticSearchProvider
     implements ExternalSearchProvider<ElasticSearchProviderTraits>
 {
-    private static final String HIGHLIGHT_START_TAG = "<em>";
-
-    private static final String HIGHLIGHT_END_TAG = "</em>";
-
-    private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchProvider.class);
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
@@ -72,27 +73,29 @@ public class ElasticSearchProvider
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        
         // Set query
-        String query = "{\"size\":%d,\"query\":{\"match\":"
-                + "{\"doc.text\":\"%s\"}},\"highlight\":{\"fields\":{\"doc.text\":{}}}}";
-
-        // Set body
-        String body = String.format(query, aTraits.getResultSize(), aQuery);
+        String body;
+        try {
+            body = prepareQuery(aTraits, aQuery);
+        }
+        catch (JsonProcessingException e) {
+            log.error("Invalid JSON while building search query");
+            return Collections.emptyList();
+        }
 
         // Set http entity
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
 
         // Prepare search URL
         String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
-        
+
         // Send post query
         queryResult = restTemplate.postForObject(searchUrl, entity,
                 ElasticSearchResult.class);
 
         for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
             if (hit.get_source() == null || hit.get_source().getMetadata() == null) {
-                LOG.warn("Result has no document metadata: " + hit);
+                log.warn("Result has no document metadata: " + hit);
                 continue;
             }
             
@@ -102,7 +105,12 @@ public class ElasticSearchProvider
             // The title will be filled with the hit id, since there is no title in the
             // ElasticSearch hit
             result.setDocumentTitle(hit.get_id());
-            result.setScore(hit.get_score());
+            
+            // If the order is random, then the score doesn't reflect the quality, so we do not 
+            // forward it to the user
+            if (!aTraits.isRandomOrder()) {
+                result.setScore(hit.get_score());
+            }
 
             // Set the metadata fields
             result.setOriginalSource(hit.get_source().getMetadata().getSource());
@@ -113,12 +121,13 @@ public class ElasticSearchProvider
             if (hit.getHighlight() != null) {
 
                 // Highlights from elastic search are small sections of the document text
-                // with the keywords surrounded by the <em> tags. There are no offset information
-                // for the highlights or the keywords in the document text. There is a feature
+                // with the keywords surrounded by the <em> tags.
+                // There are no offset information for the highlights
+                // or the keywords in the document text. There is a feature
                 // request for it (https://github.com/elastic/elasticsearch/issues/5736).
-                // Until this feature is implemented, we currently try to find the keywords offsets
-                // by finding the matching highlight in the document text, then the keywords offset
-                // within highlight using <em> tags.
+                // Until this feature is implemented, we currently try to find
+                // the keywords offsets by finding the matching highlight in the document text,
+                // then the keywords offset within highlight using <em> tags.
                 String originalText = hit.get_source().getDoc().getText();
 
                 // There are highlights, set them in the result
@@ -135,6 +144,45 @@ public class ElasticSearchProvider
         }
 
         return results;
+    }
+
+    private String prepareQuery(ElasticSearchProviderTraits aTraits, String aQuery)
+        throws JsonProcessingException
+    {
+        ObjectMapper mapper = new ObjectMapper();
+
+        ObjectNode bodyNode = mapper.createObjectNode();
+        bodyNode.put("size", aTraits.getResultSize());
+
+        ObjectNode queryBody = mapper.createObjectNode();
+        queryBody.putPOJO("match", mapper.createObjectNode()
+            .put("doc.text", aQuery));
+        if (aTraits.isRandomOrder()) {
+            ObjectNode query = mapper.createObjectNode();
+
+            ObjectNode functionScore = mapper.createObjectNode();
+            functionScore.putPOJO("query", queryBody);
+
+            ObjectNode randomScore = mapper.createObjectNode();
+            randomScore.put("seed", aTraits.getSeed());
+            randomScore.put("field", "_id");
+            functionScore.putPOJO("random_score", randomScore);
+
+            query.putPOJO("function_score", functionScore);
+            bodyNode.putPOJO("query", query);
+
+        } else {
+            bodyNode.putPOJO("query", queryBody);
+        }
+
+        ObjectNode highlightNode = mapper.createObjectNode();
+        ObjectNode emptyNode = mapper.createObjectNode();
+        highlightNode.putPOJO("fields", mapper.createObjectNode()
+            .putPOJO("doc.text", emptyNode));
+        bodyNode.putPOJO("highlight", highlightNode);
+
+        // Render JSON to string
+        return mapper.writeValueAsString(bodyNode);
     }
 
     @Override
