@@ -70,6 +70,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class DocumentMetadataAnnotationDetailPanel extends Panel
 {
+    private static final long serialVersionUID = 2713520228348549734L;
+
     private static final Logger LOG = LoggerFactory
             .getLogger(DocumentMetadataAnnotationDetailPanel.class);
     
