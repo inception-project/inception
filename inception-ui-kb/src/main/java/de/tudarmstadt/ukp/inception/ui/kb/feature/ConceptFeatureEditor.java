@@ -103,7 +103,7 @@ public class ConceptFeatureEditor
             String repoId = traits.getRepositoryId();
             // Check if kb is actually enabled
             if (!(repoId == null
-                || kbService.isKnowledgeBaseAvailable(feat.getProject(), repoId)))
+                || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId)))
             {
                 return Collections.emptyList();
             }

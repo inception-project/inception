@@ -88,7 +88,8 @@ public class PropertyFeatureEditor
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
-        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature),
+            Model.of(traits)));
     }
 
     @Override
@@ -110,7 +111,7 @@ public class PropertyFeatureEditor
             @Override protected List<KBHandle> getChoices(String input)
             {
                 String repoId = traits.getRepositoryId();
-                if (!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId))) {
+                if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
                     return Collections.emptyList();
                 }
                 return factService.getPredicatesFromKB(project, traits);

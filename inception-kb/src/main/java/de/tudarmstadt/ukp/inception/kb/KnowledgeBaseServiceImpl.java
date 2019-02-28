@@ -1520,7 +1520,7 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public  boolean isKnowledgeBaseAvailable(Project aProject, String aRepositoryId) {
+    public  boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId) {
         Optional<KnowledgeBase> kb = Optional.empty();
         String repositoryId = aRepositoryId;
         if (repositoryId != null) {

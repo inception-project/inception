@@ -28,7 +28,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -111,7 +110,9 @@ public class ConceptFeatureTraitsEditor
         form.add(
             new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
 
+        form.add(new DisabledKBWarning("disabledKBWarning", feature));
         add(form);
+
     }
     
     /**
@@ -136,14 +137,6 @@ public class ConceptFeatureTraitsEditor
                     kbService.readConcept(kb.get(), t.getScope(), true)
                             .ifPresent(concept -> result.setScope(KBHandle.of(concept)));
                 }
-            }
-            else {
-                String kbName = kb.isPresent() ? kb.get().getName() : "";
-                String featureName = feature.getObject().getUiName();
-                String layerName = feature.getObject().getLayer().getUiName();
-                warn(new StringResourceModel("disabledKBWarning", this)
-                    .setParameters(kbName, featureName, layerName).getString());
-            
             }
         }
         // Use the concept from any knowledge base (leave KB unselected)

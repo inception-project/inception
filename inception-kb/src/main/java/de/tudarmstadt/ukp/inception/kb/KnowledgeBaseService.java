@@ -571,5 +571,5 @@ public interface KnowledgeBaseService
      * @param repositoryID id of the knowledge base
      * @return whether the knowledge base with the given id is available or not
      */
-    boolean isKnowledgeBaseAvailable(Project aProject, String repositoryID);
+    boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
 }

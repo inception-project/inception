@@ -22,12 +22,15 @@ import java.util.Optional;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
@@ -38,31 +41,46 @@ public class DisabledKBWarning
     extends Panel
 {
 
-    private @SpringBean FactLinkingService factLinkingService;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
 
-    private ConceptFeatureTraits featureTraits;
+    private IModel<ConceptFeatureTraits> featureTraits;
     private Project project;
 
-    public DisabledKBWarning(String aId, IModel<AnnotationFeature> aModel)
+    public DisabledKBWarning(String aId, IModel<AnnotationFeature> aFeatureModel,
+        IModel<ConceptFeatureTraits> aTraitsModel)
     {
         super(aId);
 
-        AnnotationFeature feature = aModel.getObject();
+        AnnotationFeature feature = aFeatureModel.getObject();
         project = feature.getProject();
-        featureTraits = factLinkingService.getFeatureTraits(project);
 
-        String kbName = resolveKBName(featureTraits);
+        // If traits are not explicitly given, try to resolve them via featureSupportRegistry
+        if (aTraitsModel == null) {
+            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                .getFeatureSupport(aFeatureModel.getObject());
+            featureTraits = Model.of(fs.readTraits(aFeatureModel.getObject()));
+        }
+        else {
+            featureTraits = aTraitsModel;
+        }
+
+        String kbName = resolveKBName(featureTraits.getObject());
 
         WebMarkupContainer warning = new WebMarkupContainer("warning");
         add(warning);
 
         TooltipBehavior tip = new TooltipBehavior();
         warning.add(tip);
-        tip.setOption("content", Options.asString(
-            new StringResourceModel("disabledKbWarning", this).setParameters(kbName)
-                .getString()));
+        tip.setOption("content", Options.asString(new StringResourceModel("disabledKbWarning", this)
+            .setParameters(kbName, feature.getLayer().getUiName(), feature.getUiName())
+            .getString()));
         tip.setOption("width", Options.asString("300px"));
+    }
+
+    public DisabledKBWarning(String aId, IModel<AnnotationFeature> aFeatureModel)
+    {
+        this(aId, aFeatureModel, null);
 
     }
 
@@ -78,8 +96,8 @@ public class DisabledKBWarning
     @Override
     protected void onConfigure() {
         super.onConfigure();
-        String repoId = featureTraits.getRepositoryId();
-        setVisible(!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId)));
+        String repoId = featureTraits.getObject().getRepositoryId();
+        setVisible(!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId)));
     }
 
 }

@@ -379,7 +379,7 @@ public class QualifierFeatureEditor
         ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
         // Check if kb is actually enabled
         String repoId = traits.getRepositoryId();
-        if (!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId))) {
+        if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
             return Collections.emptyList();
         }
 
@@ -425,7 +425,7 @@ public class QualifierFeatureEditor
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 String repoId = traits.getRepositoryId();
-                if (!(repoId == null || kbService.isKnowledgeBaseAvailable(project, repoId))) {
+                if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
                     return Collections.emptyList();
                 }
                 return factService.getPredicatesFromKB(project, traits);
