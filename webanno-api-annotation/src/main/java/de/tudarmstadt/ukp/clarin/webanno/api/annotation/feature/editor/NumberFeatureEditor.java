@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
@@ -37,8 +36,6 @@ public class NumberFeatureEditor<T extends Number>
     public NumberFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-
-        add(new Label("feature", getModelObject().feature.getUiName()));
 
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
