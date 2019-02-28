@@ -213,6 +213,10 @@ public class AnnotationFeatureForm
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
+                if (!getModelObject().isForwardAnnotation()) {
+                    return;
+                }
+                
                 final Request request = RequestCycle.get().getRequest();
                 final String jsKeycode = request.getRequestParameters()
                         .getParameterValue("keycode").toString("");
@@ -240,11 +244,14 @@ public class AnnotationFeatureForm
                 }
                 
                 aTarget.add(textfield);
-                aTarget.add(featureEditorPanelContent.iterator().next());
+                
+                Iterator<Component> componentIterator = featureEditorPanelContent.iterator();
+                if (componentIterator.hasNext()) {
+                    aTarget.add(componentIterator.next());
+                }
             }
         });
         textfield.add(new AttributeAppender("style", "opacity:0", ";"));
-        // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
         return textfield;
     }
     
