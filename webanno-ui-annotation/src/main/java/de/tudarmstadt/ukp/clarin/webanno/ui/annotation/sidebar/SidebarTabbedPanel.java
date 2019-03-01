@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.request.resource.UrlResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -101,19 +102,24 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
         SidebarTab tab = getTabs().get(aIndex);
-        return new Image("image", tab.getIcon())
+        StaticImage image = new StaticImage("image", tab.getIcon());
+        image.add(new AttributeModifier("title", aTitleModel));
+        return image;
+    }
+    
+    private static class StaticImage extends Image
+    {
+        public StaticImage(String aId, final ResourceReference aResourceReference)
         {
-            private static final long serialVersionUID = 1207122722078977614L;
+            super(aId, aResourceReference);
+        }
 
-            {
-                add(new AttributeModifier("title", aTitleModel));
-            }
-            
-            @Override
-            protected boolean shouldAddAntiCacheParameter()
-            {
-                return false;
-            }
-        };
+        private static final long serialVersionUID = 1207122722078977614L;
+        
+        @Override
+        protected boolean shouldAddAntiCacheParameter()
+        {
+            return false;
+        }
     }
 }
