@@ -54,6 +54,7 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-remote</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
