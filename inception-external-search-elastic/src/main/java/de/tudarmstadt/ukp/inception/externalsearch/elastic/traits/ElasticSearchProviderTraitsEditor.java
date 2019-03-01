@@ -17,7 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic.traits;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -26,6 +31,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderFactory;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -77,6 +83,20 @@ public class ElasticSearchProviderTraitsEditor
         TextField<String> objectType = new TextField<>("objectType");
         objectType.setRequired(true);
         form.add(objectType);
+
+        NumberTextField<Integer> seed = new NumberTextField<Integer>("seed", Integer.class);
+        seed.setMinimum(0);
+        seed.setMaximum(Integer.MAX_VALUE);
+        seed.add(visibleWhen(() -> properties.isRandomOrder()));
+        seed.add(new AttributeModifier("title", getString("seedTooltip")));
+        seed.setOutputMarkupPlaceholderTag(true);
+        seed.setRequired(true);
+        form.add(seed);
+
+        CheckBox randomOrder = new CheckBox("randomOrder");
+        randomOrder.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> 
+                t.add(seed, randomOrder)));
+        form.add(randomOrder);
 
         add(form);
     }

@@ -104,7 +104,6 @@ public class SubjectObjectFeatureEditor
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
 
-        add(new Label("feature", getModelObject().feature.getUiName()));
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
         add(content);

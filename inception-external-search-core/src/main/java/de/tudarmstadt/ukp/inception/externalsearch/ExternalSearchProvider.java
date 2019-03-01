@@ -17,21 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
-public interface ExternalSearchProvider
+public interface ExternalSearchProvider<T extends Object>
 {
-    public boolean connect(String aUrl, String aUser, String aPassword);
+    List<ExternalSearchResult> executeQuery(DocumentRepository aRepository, T aTraits,
+            String aQuery);
 
-    void disconnect();
+    String getDocumentText(DocumentRepository aRepository, T aTraits, String aSource,
+            String aDocumentId)
+        throws IOException;
 
-    public boolean isConnected();
+    InputStream getDocumentAsStream(DocumentRepository aRepository, T aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 
-    public List<ExternalSearchResult> executeQuery(Object aProperties, User aUser, String aQuery,
-            String aSortOrder, String... sResultField);
-
-    public ExternalSearchResult getDocumentById(Object aProperties, String aId);
-
+    String getDocumentFormat(DocumentRepository aRepository, Object aTraits, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 }

@@ -37,12 +37,12 @@ public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private static final ResourceReference ICON = new PackageResourceReference(
-            DocumentMetadataSidebarFactory.class, "magnifier.png");
+            DocumentMetadataSidebarFactory.class, "three_tags.png");
     
     @Override
     public String getDisplayName()
     {
-        return "documentMetadataSidebar";
+        return "Document Metadata";
     }
 
     @Override
