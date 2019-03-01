@@ -106,8 +106,6 @@ public class QualifierFeatureEditor
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
 
-        add(new Label("feature", getModelObject().feature.getUiName()));
-
         // Most of the content is inside this container such that we can refresh it independently
         // from the rest of the form
         content = new WebMarkupContainer("content");

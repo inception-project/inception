@@ -29,7 +29,6 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -58,9 +57,6 @@ public class ConceptFeatureEditor
 {
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
     
-    private static final String MID_FEATURE = "feature";
-    private static final String MID_VALUE = "value";
-
     private static final long serialVersionUID = 7763348613632105600L;
 
     private Component focusComponent;
@@ -73,7 +69,6 @@ public class ConceptFeatureEditor
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
     }
