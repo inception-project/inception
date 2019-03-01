@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
@@ -28,14 +30,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -58,10 +56,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -94,6 +98,8 @@ public class SearchAnnotationSidebar
     private IModel<String> targetQuery = Model.of("");
     private IModel<Options> options = CompoundPropertyModel.of(new Options());
     private IModel<List<SearchResult>> searchResults;
+    private IModel<Boolean> overrideModeOn = Model.of(false);
+    private IModel<Boolean> deleteOnlyMatchingFeatureValues = Model.of(false);
     
     private SearchResult selectedResult;
 
@@ -162,11 +168,21 @@ public class SearchAnnotationSidebar
 
         mainContainer.add(searchResultGroups);
 
-        mainContainer.add(new LambdaAjaxLink("annotateAllButton",
-            t -> actionAnnotateAll(t, searchResults.getObject())));
+        Form<Void> annotateForm = new Form("annotateForm");
+        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
+            this::actionAnnotateAll);
+        annotateForm.add(annotateButton);
+        annotateForm.add(new CheckBox("overrideMode", overrideModeOn));
+        LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
+            this::actionDeleteAll);
+        annotateForm.add(deleteButton);
+        annotateForm
+            .add(new CheckBox("deleteOnlyMatchingFeatureValues", deleteOnlyMatchingFeatureValues));
+        annotateForm.setDefaultButton(annotateButton);
 
+        mainContainer.add(annotateForm);
     }
-    
+
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
         selectedResult = null;
         searchResults.detach();
@@ -212,7 +228,7 @@ public class SearchAnnotationSidebar
         }
     }
 
-    public void actionAnnotateAll(AjaxRequestTarget aTarget, List<SearchResult> searchResults) throws IOException
+    public void actionAnnotateAll(AjaxRequestTarget aTarget, Form<Void> aForm) throws IOException
     {
         // get the currently selected annotation layer and feature states
         AnnotatorState state = getModelObject();
@@ -221,7 +237,7 @@ public class SearchAnnotationSidebar
         JCas jCas = getJCasProvider().get();
 
         // annotate all search results according to the current selection
-        for (SearchResult result : searchResults) {
+        for (SearchResult result : searchResults.getObject()) {
             try {
                 createAnnotationForSearchResult(result, layer, featureStates, jCas);
             }
@@ -245,20 +261,76 @@ public class SearchAnnotationSidebar
         SourceDocument sourceDoc = state.getDocument();
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(aLayer);
 
-        AnnotationFS annoFs = adapter
-            .add(sourceDoc, currentUser.getUsername(), aJCas, searchResult.getOffsetStart(),
-                searchResult.getOffsetEnd());
+        Type type = CasUtil.getAnnotationType(aJCas.getCas(), adapter.getAnnotationTypeName());
 
-        // set values for all features
+        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, searchResult.getOffsetStart(),
+            searchResult.getOffsetEnd());
+
+        // if there is already an annotation of the same type at the target location and we don't
+        // want to override it, do nothing
+        if (annoFS != null && !overrideModeOn.getObject()) {
+            return;
+        }
+
+        // create a new annotation if not already there
+        if (annoFS == null) {
+            annoFS = adapter
+                .add(sourceDoc, currentUser.getUsername(), aJCas, searchResult.getOffsetStart(),
+                    searchResult.getOffsetEnd());
+        }
+
+        // set values for all features according to current state
         for (FeatureState featureState : aFeaturesStates) {
             Object featureValue = featureState.value;
             AnnotationFeature feature = featureState.feature;
             if (featureValue != null) {
-                int addr = WebAnnoCasUtil.getAddr(annoFs);
+                int addr = getAddr(annoFS);
                 adapter.setFeatureValue(sourceDoc, currentUser.getUsername(), aJCas, addr, feature,
                     featureValue);
             }
         }
+    }
+
+    private void actionDeleteAll(AjaxRequestTarget aTarget, Form<Void> aForm) throws IOException
+    {
+        // get the currently selected annotation layer and feature states
+        AnnotatorState state = getModelObject();
+        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        List<FeatureState> featureStates = state.getFeatureStates();
+        JCas jCas = getJCasProvider().get();
+        SourceDocument sourceDoc = state.getDocument();
+
+        // annotate all search results according to the current selection
+        for (SearchResult result : searchResults.getObject()) {
+
+            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+            Type type = CasUtil.getAnnotationType(jCas.getCas(), adapter.getAnnotationTypeName());
+            AnnotationFS annoFS = selectSingleFsAt(jCas, type, result.getOffsetStart(),
+                result.getOffsetEnd());
+
+            if (!featureValuesMatch(annoFS, adapter) && deleteOnlyMatchingFeatureValues.getObject()) {
+                continue;
+            }
+            adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
+        }
+
+        documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
+
+        updateTimestamp();
+
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private boolean featureValuesMatch(AnnotationFS aAnnotationFS, TypeAdapter aAdapter) {
+        for (FeatureState state : getModelObject().getFeatureStates()) {
+            Object featureValue = state.value;
+            AnnotationFeature feature = state.feature;
+            Object valueAtFS = aAdapter.getFeatureValue(feature, aAnnotationFS);
+            if (!Objects.equals(valueAtFS, featureValue)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void updateTimestamp() throws IOException

@@ -83,9 +83,26 @@
             </wicket:container>
           </table>
         </div>
-        <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
-          <i class="fa fa-plus" aria-hidden="true"></i>
-        </button>
+        <form wicket:id="annotateForm">
+          <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
+            <i class="fa fa-plus" aria-hidden="true"></i>
+          </button>
+          <div class="checkbox">
+            <label wicket:for="overrideMode">
+              <input wicket:id="overrideMode" type="checkbox">
+              <wicket:label key="limitedToCurrentDocument"/>
+            </label>
+          </div>
+          <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
+            <i class="fa fa-minus" aria-hidden="true"></i>
+          </button>
+            <div class="checkbox">
+              <label wicket:for="deleteOnlyMatchingFeatureValues">
+                <input wicket:id="deleteOnlyMatchingFeatureValues" type="checkbox">
+                <wicket:label key="limitedToCurrentDocument"/>
+              </label>
+            </div>
+        </form>
       </div>
     </div>
   </div>
