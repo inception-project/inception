@@ -36,7 +36,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -76,7 +75,6 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -711,22 +709,32 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public TypeSystemDescription getProjectTypes(Project aProject)
+    public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
-        for (AnnotationLayer type : listAnnotationLayer(aProject)) {
-            if (type.isBuiltIn()) {
-                continue;
-            }
 
-            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(type);
-            layerSupport.generateTypes(tsd, type);
-        }
+        listAnnotationLayer(aProject).stream()
+                .filter(layer -> !layer.isBuiltIn())
+                .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
+                        .generateTypes(tsd, layer));
 
         return tsd;
     }
-    
+
+    @Override
+    public TypeSystemDescription getAllProjectTypes(Project aProject)
+    {
+        // Create a new type system from scratch
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+        
+        listAnnotationLayer(aProject).stream()
+                .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
+                        .generateTypes(tsd, layer));
+
+        return tsd;
+    }
+
     @Override
     public TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException
@@ -752,7 +760,7 @@ public class AnnotationSchemaServiceImpl
         }
 
         // Types declared within the project
-        typeSystems.add(getProjectTypes(aProject));
+        typeSystems.add(getCustomProjectTypes(aProject));
 
         return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }

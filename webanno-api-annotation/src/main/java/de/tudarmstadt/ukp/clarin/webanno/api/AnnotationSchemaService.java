@@ -380,19 +380,28 @@ public interface AnnotationSchemaService
     
     /**
      * Returns the custom types define in the project excluding built-in types.
+     * 
+     * @see #getAllProjectTypes(Project)
      */
-    TypeSystemDescription getProjectTypes(Project aProject);
+    TypeSystemDescription getCustomProjectTypes(Project aProject);
 
     /**
-     * Returns the full type system for the project including any internal types such as
-     * {@link CASMetadata}.
+     * Returns the custom types define in the project including built-in types.
+     * 
+     * @see #getCustomProjectTypes(Project)
+     */
+    TypeSystemDescription getAllProjectTypes(Project aProject);
+
+    /**
+     * Returns the full type system for the project (including any types discovered on the classpath
+     * via uimaFIT) including any internal types such as {@link CASMetadata}.
      */
     TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException;
 
     /**
-     * Returns the full type system for the project optionally including any internal types such as
-     * {@link CASMetadata}.
+     * Returns the full type system for the project (including any types discovered on the classpath
+     * via uimaFIT) optionally including any internal types such as {@link CASMetadata}.
      */
     TypeSystemDescription getFullProjectTypeSystem(Project aProject, boolean aIncludeInternalTypes)
         throws ResourceInitializationException;
