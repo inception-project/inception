@@ -20,11 +20,23 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -147,8 +159,12 @@ public class SearchAnnotationSidebar
         searchResultGroups.setModel(LambdaModel.of(() -> 
                 searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
                         .distinct().collect(Collectors.toList())));
-        
+
         mainContainer.add(searchResultGroups);
+
+        mainContainer.add(new LambdaAjaxLink("annotateAllButton",
+            t -> actionAnnotateAll(t, searchResults.getObject())));
+
     }
     
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
@@ -192,6 +208,69 @@ public class SearchAnnotationSidebar
                         .add(new VTextMarker(VMarker.MATCH_FOCUS,
                                 selectedResult.getOffsetStart() - state.getWindowBeginOffset(),
                                 selectedResult.getOffsetEnd() - state.getWindowBeginOffset()));
+            }
+        }
+    }
+
+    public void actionAnnotateAll(AjaxRequestTarget aTarget, List<SearchResult> searchResults) throws IOException
+    {
+        // get the currently selected annotation layer and feature states
+        AnnotatorState state = getModelObject();
+        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        List<FeatureState> featureStates = state.getFeatureStates();
+        JCas jCas = getJCasProvider().get();
+
+        // annotate all search results according to the current selection
+        for (SearchResult result : searchResults) {
+            try {
+                createAnnotationForSearchResult(result, layer, featureStates, jCas);
+            }
+            catch (AnnotationException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+
+        documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
+
+        updateTimestamp();
+
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private void createAnnotationForSearchResult(SearchResult searchResult, AnnotationLayer aLayer,
+        List<FeatureState> aFeaturesStates, JCas aJCas) throws AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        SourceDocument sourceDoc = state.getDocument();
+        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(aLayer);
+
+        AnnotationFS annoFs = adapter
+            .add(sourceDoc, currentUser.getUsername(), aJCas, searchResult.getOffsetStart(),
+                searchResult.getOffsetEnd());
+
+        // set values for all features
+        for (FeatureState featureState : aFeaturesStates) {
+            Object featureValue = featureState.value;
+            AnnotationFeature feature = featureState.feature;
+            if (featureValue != null) {
+                int addr = WebAnnoCasUtil.getAddr(annoFs);
+                adapter.setFeatureValue(sourceDoc, currentUser.getUsername(), aJCas, addr, feature,
+                    featureValue);
+            }
+        }
+    }
+
+    private void updateTimestamp() throws IOException
+    {
+        // If the currently displayed document is the same one where the annotation was created,
+        // then update timestamp in state to avoid concurrent modification errors
+        AnnotatorState state = getModelObject();
+        if (Objects.equals(state.getDocument().getId(), state.getDocument().getId())) {
+            Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(state.getDocument(), currentUser.getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
     }
