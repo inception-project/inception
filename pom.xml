@@ -57,18 +57,18 @@
     <jackson.version>2.9.8</jackson.version>
     <uima.version>2.10.3</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>5.1.3.RELEASE </spring.version>
-    <spring.boot.version>1.5.18.RELEASE</spring.boot.version>
+    <spring.version>5.1.5.RELEASE </spring.version>
+    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
     <spring.security.version>4.2.10.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>8.1.0</wicket.version>
+    <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.6</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>2.0.2</wicket-jquery-selectors.version>
-    <wicket-webjars.version>2.0.8</wicket-webjars.version>    
+    <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>2.0.7</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>2.0.4</wicket-jquery-selectors.version>
+    <wicket-webjars.version>2.0.11</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.5</wicket-spring-boot.version>
     <hibernate.version>5.3.7.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
