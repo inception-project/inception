@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb.feature;
 import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.FACT_LAYER;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.jcas.JCas;
@@ -29,6 +30,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -85,6 +87,8 @@ public class PropertyFeatureEditor
         add(focusComponent = createAutoCompleteTextField());
         add(createStatementIndicatorLabel());
         add(createNoStatementLabel());
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature),
+            Model.of(traits)));
     }
 
     @Override
@@ -105,6 +109,10 @@ public class PropertyFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
+                String repoId = traits.getRepositoryId();
+                if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+                    return Collections.emptyList();
+                }
                 return factService.getPredicatesFromKB(project, traits);
             }
 
