@@ -21,6 +21,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -80,6 +81,7 @@ public class QualifierFeatureEditor
     extends FeatureEditor
 {
     private static final long serialVersionUID = 7469241620229001983L;
+    
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -105,6 +107,10 @@ public class QualifierFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
+
+        // Add warning that shows up if the knowledge base that is used by the concept feature
+        // is disabled
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getLinkedAnnotationFeature())));
 
         // Most of the content is inside this container such that we can refresh it independently
         // from the rest of the form
@@ -266,11 +272,7 @@ public class QualifierFeatureEditor
     private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
         Item<LinkWithRoleModel> aItem)
     {
-        String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
-        AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
         qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
@@ -285,14 +287,8 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    input = input.replaceAll("[*?]", "").trim();
-                    choices = listInstances(actionHandler, input, linkedAnnotationFeature,
-                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
-                }
-                return choices;
-
+                return listInstances(actionHandler, input, linkedAnnotationFeature,
+                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
             @Override
@@ -301,7 +297,6 @@ public class QualifierFeatureEditor
                 super.onConfigure(behavior);
                 
                 behavior.setOption("autoWidth", true);
-                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -315,6 +310,15 @@ public class QualifierFeatureEditor
         // refreshes of the feature editor panel. This is required to restore the focus.
         field.setOutputMarkupId(true);
         return field;
+    }
+
+    private AnnotationFeature getLinkedAnnotationFeature() {
+        String linkedType = this.getModelObject().feature.getType();
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        AnnotationFeature linkedAnnotationFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        return linkedAnnotationFeature;
     }
 
     private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem) {
@@ -367,16 +371,16 @@ public class QualifierFeatureEditor
         roleAddr)
     {
         if (linkedAnnotationFeature == null) {
-            String linkedType = this.getModelObject().feature.getType();
-            AnnotationLayer linkedLayer = annotationService
-                .getLayer(linkedType, this.stateModel.getObject().getProject());
-            linkedAnnotationFeature = annotationService
-                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+            linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
         List<KBHandle> handles = new ArrayList<>();
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(linkedAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+
+        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
+        // Check if kb is actually enabled
+        String repoId = traits.getRepositoryId();
+        if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+            return Collections.emptyList();
+        }
 
         // Use concept linking if enabled
         try {
@@ -390,8 +394,16 @@ public class QualifierFeatureEditor
             RequestCycle.get().find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
-
         return handles;
+
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
@@ -411,6 +423,10 @@ public class QualifierFeatureEditor
             @Override protected List<KBHandle> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                String repoId = traits.getRepositoryId();
+                if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+                    return Collections.emptyList();
+                }
                 return factService.getPredicatesFromKB(project, traits);
             }
 

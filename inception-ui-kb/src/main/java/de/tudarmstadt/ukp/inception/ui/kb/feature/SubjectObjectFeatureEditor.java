@@ -21,6 +21,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -76,8 +77,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 public class SubjectObjectFeatureEditor
     extends FeatureEditor
 {
-
     private static final long serialVersionUID = 4230722501745589589L;
+
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
@@ -103,6 +104,8 @@ public class SubjectObjectFeatureEditor
         stateModel = aStateModel;
         actionHandler = aHandler;
         project = this.getModelObject().feature.getProject();
+
+        add(createDisabledKbWarningLabel());
 
         content = new WebMarkupContainer("content");
         content.setOutputMarkupId(true);
@@ -252,11 +255,7 @@ public class SubjectObjectFeatureEditor
         else {
             roleModel = links.get(0);
         }
-        String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
-        linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        linkedAnnotationFeature = getLinkedAnnotationFeature();
     }
 
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
@@ -270,12 +269,7 @@ public class SubjectObjectFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    input = input.replaceAll("[*?]", "").trim();
-                    choices = listInstances(actionHandler, input);
-                }
-                return choices;
+                return listInstances(actionHandler, input);
             }
 
             @Override
@@ -284,7 +278,6 @@ public class SubjectObjectFeatureEditor
                 super.onConfigure(behavior);
                 
                 behavior.setOption("autoWidth", true);
-                behavior.setOption("ignoreCase", false);
             }
 
             @Override
@@ -361,16 +354,16 @@ public class SubjectObjectFeatureEditor
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler, String aTypedString)
     {
         if (linkedAnnotationFeature == null) {
-            String linkedType = this.getModelObject().feature.getType();
-            AnnotationLayer linkedLayer = annotationService
-                .getLayer(linkedType, this.stateModel.getObject().getProject());
-            linkedAnnotationFeature = annotationService
-                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+            linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
         List<KBHandle> handles = new ArrayList<>();
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(linkedAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+
+        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
+        String repoId = traits.getRepositoryId();
+        // Check if kb is actually enabled
+        if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+            return Collections.emptyList();
+        }
 
         // Use concept linking if enabled
         try {
@@ -384,8 +377,23 @@ public class SubjectObjectFeatureEditor
             RequestCycle.get().find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
-
         return handles;
+    }
+
+    private AnnotationFeature getLinkedAnnotationFeature() {
+        String linkedType = this.getModelObject().feature.getType();
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        AnnotationFeature linkedAnnotationFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        return linkedAnnotationFeature;
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
@@ -416,5 +424,13 @@ public class SubjectObjectFeatureEditor
             aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + e.getMessage(), e);
         }
+    }
+
+    private DisabledKBWarning createDisabledKbWarningLabel()
+    {
+        if (linkedAnnotationFeature == null) {
+            linkedAnnotationFeature = getLinkedAnnotationFeature();
+        }
+        return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature));
     }
 }
