@@ -48,4 +48,10 @@ NOTE: A zero-width span between two tokens that are directly adjacent, e.g. the 
       first token* rather than at the beginning of the next token. So an annotation between `d` and `.`
       in this example would rendered at the right side of `end` rather than at the left side of `.`. 
 
+.Forward annotation mode
+
+To improve the speed of token-bound-annotations, select *forward annotation* in the *Actions* box on the left side of your screen. This allows you to select POS-tags via the keys of your keyboard. Pushing a key several times successively proposes every POS-tag starting with the respective letter inside the *Features* box. Pressing a key whose letter does not represent the beginning of any tag leads to the first tag in the tagset. Once a POS-tag has been selected, pushing *space* and *Enter* keys automatically assigns the POS-tag to the token in focus and the next token can be annotated as described. Note that the *Enter* key will not work for the *Safari* browser. Also the *Forward annotation* works only for span annotations with 1) *tagset* and 2) a layer with only one *feature*.
+
+image::key_binding_POS.png[align="center"]
+
 link:http://en.wikipedia.org/wiki/Coreference[Co-reference] annotation can be made over several tokens within one sentence. A single token sequence has several co-ref spans simultaneously.
