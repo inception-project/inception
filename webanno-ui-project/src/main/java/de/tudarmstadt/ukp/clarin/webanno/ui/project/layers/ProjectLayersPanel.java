@@ -31,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.NoResultException;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -85,8 +83,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis;
-import de.tudarmstadt.ukp.clarin.webanno.xmi.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
@@ -302,49 +298,8 @@ public class ProjectLayersPanel
             Project project = ProjectLayersPanel.this.getModelObject();
             TypeSystemDescription tsd = UIMAFramework.getXMLParser()
                     .parseTypeSystemDescription(new XMLInputSource(aIS, null));
-            TypeSystemAnalysis analysis = TypeSystemAnalysis.of(tsd);
-            for (AnnotationLayer l : analysis.getLayers()) {
-                if (!annotationService.existsLayer(l.getName(), project)) {
-                    l.setProject(project);
-
-                    // Need to set the attach type
-                    if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
-                        RelationDetails relDetails = analysis.getRelationDetails(l.getName());
-
-                        AnnotationLayer attachLayer;
-                        try {
-                            // First check if this type is already in the project
-                            attachLayer = annotationService.getLayer(relDetails.getAttachLayer(),
-                                    project);
-                        }
-                        catch (NoResultException e) {
-                            // If it does not exist in the project yet, then we create it
-                            attachLayer = analysis.getLayer(relDetails.getAttachLayer());
-                            attachLayer.setProject(project);
-                            annotationService.createLayer(attachLayer);
-                        }
-
-                        l.setAttachType(attachLayer);
-                    }
-
-                    annotationService.createLayer(l);
-                }
-
-                // Import the features for the layer except if the layer is a built-in layer.
-                // We must not touch the built-in layers because WebAnno may rely on their
-                // structure. This is a conservative measure for now any may be relaxed in the
-                // future.
-                AnnotationLayer persistedLayer = annotationService.getLayer(l.getName(), project);
-                if (!persistedLayer.isBuiltIn()) {
-                    for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
-                        if (!annotationService.existsFeature(f.getName(), persistedLayer)) {
-                            f.setProject(project);
-                            f.setLayer(persistedLayer);
-                            annotationService.createFeature(f);
-                        }
-                    }
-                }
-            }
+            
+            annotationService.importUimaTypeSystem(project, tsd);
         }
 
         private void importLayerFile(InputStream aIS) throws IOException

@@ -387,10 +387,12 @@ public interface AnnotationSchemaService
 
     /**
      * Returns the custom types define in the project including built-in types.
+     * @throws ResourceInitializationException 
      * 
      * @see #getCustomProjectTypes(Project)
      */
-    TypeSystemDescription getAllProjectTypes(Project aProject);
+    TypeSystemDescription getAllProjectTypes(Project aProject)
+        throws ResourceInitializationException;
 
     /**
      * Returns the full type system for the project (including any types discovered on the classpath
@@ -454,4 +456,7 @@ public interface AnnotationSchemaService
      */
     CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
         throws ResourceInitializationException, UIMAException, IOException;
+
+    void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
+        throws ResourceInitializationException;
 }

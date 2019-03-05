@@ -107,7 +107,7 @@ public class ChainLayerSupport
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
     {
-        TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", "",
+        TypeDescription tdChains = aTsd.addType(aLayer.getName() + "Chain", aLayer.getDescription(),
                 CAS.TYPE_NAME_ANNOTATION_BASE);
         tdChains.addFeature("first", "", aLayer.getName() + "Link");
         
@@ -119,6 +119,12 @@ public class ChainLayerSupport
         tdLink.addFeature("next", "", aLayer.getName() + "Link");
         tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
         tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+    }
+    
+    @Override
+    public List<String> getGeneratedTypeNames(AnnotationLayer aLayer)
+    {
+        return asList(aLayer.getName() + "Chain", aLayer.getName() + "Link");
     }
     
     void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
