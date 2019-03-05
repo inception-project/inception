@@ -52,6 +52,17 @@
 <body>
   <wicket:panel>
     <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
+      <!-- 
+        Style the form such that it is actionable by keyboard events but does not take up space
+        on the screen.
+       -->
+      <form wicket:id="forwardForm" style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
+        <!-- 
+          The user should never tab into this field accidentally. Focus is set explicitly by the
+          forward annotation mode.
+         -->
+        <input wicket:id=forwardAnno tabindex="-1"></input>
+      </form>
       <form wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
           class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id=deleteAnnotationDialog></div>
@@ -99,11 +110,6 @@
           <div class="scrolling panel-body">
             <div class="col-sm-12">
               <span wicket:id="noAnnotationWarning"></span>
-              
-              <div style="width: 1px; height: 1px; overflow: hidden;">
-                <input style="width: 100%; display: block; overflow: hidden; height: 1px"
-                  wicket:id=forwardAnno></input>
-              </div>
               
               <div class="form-group" wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em;">
                 <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
