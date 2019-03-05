@@ -206,14 +206,14 @@ public class CasStorageServiceImpl
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aDocument.getProject().getId()))) {
-                log.info(
+                log.debug(
                         "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
                         aUserName, aDocument.getName(), aDocument.getId(),
                         aDocument.getProject().getName(), aDocument.getProject().getId());
             }
 
             if (currentVersion.length() < oldVersion.length()) {
-                log.info(
+                log.debug(
                         "Annotations truncated for user [{}] on document [{}]({}) in project "
                                 + "[{}]({}): {} -> {} bytes ({} bytes removed)",
                         aUserName, aDocument.getName(), aDocument.getId(),
@@ -308,7 +308,7 @@ public class CasStorageServiceImpl
 
                         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                                 String.valueOf(aDocument.getProject().getId()))) {
-                            log.info(
+                            log.debug(
                                     "Removed surplus history file [{}] of user [{}] for "
                                             + "document [{}]({}) in project [{}]({})",
                                     file.getName(), aUserName, aDocument.getName(),
@@ -327,7 +327,7 @@ public class CasStorageServiceImpl
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
                                     Logging.KEY_PROJECT_ID,
                                     String.valueOf(aDocument.getProject().getId()))) {
-                                log.info(
+                                log.debug(
                                         "Removed outdated history file [{}] of user [{}] for "
                                                 + "document [{}]({}) in project [{}]({})",
                                         file.getName(), aUserName, aDocument.getName(),
