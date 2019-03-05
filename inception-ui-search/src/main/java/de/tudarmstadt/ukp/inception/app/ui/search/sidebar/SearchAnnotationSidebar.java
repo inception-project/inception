@@ -25,18 +25,21 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -98,9 +101,10 @@ public class SearchAnnotationSidebar
     private IModel<String> targetQuery = Model.of("");
     private IModel<Options> options = CompoundPropertyModel.of(new Options());
     private IModel<List<SearchResult>> searchResults;
-    private IModel<Boolean> overrideModeOn = Model.of(false);
+    private IModel<Boolean> overrideMode = Model.of(false);
     private IModel<Boolean> deleteOnlyMatchingFeatureValues = Model.of(false);
-    
+    private Map<String, Boolean> documentLevelSelections = initDocumentLevelSelections();
+
     private SearchResult selectedResult;
 
     public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
@@ -150,6 +154,9 @@ public class SearchAnnotationSidebar
             protected void populateItem(ListItem<String> item)
             {
                 item.add(new Label("documentTitle", LambdaModel.of(() -> item.getModelObject())));
+                item.add(createDocumentLevelSelectionCheckBox("selectAllInDoc", Model.of(
+                    documentLevelSelections.get(item.getModelObject())),
+                    item.getModelObject()));
                 item.add(new SearchResultGroup("group", "resultGroup", 
                         SearchAnnotationSidebar.this,
                         LambdaModel.of(() -> searchResults.getObject().stream().filter((result) -> {
@@ -169,18 +176,50 @@ public class SearchAnnotationSidebar
         mainContainer.add(searchResultGroups);
 
         Form<Void> annotateForm = new Form("annotateForm");
-        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
-            this::actionAnnotateAll);
+
+        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<Void>("annotateAllButton",
+            (target, form) -> actionApplyToSelectedResults(target,
+                this::createAnnotationAtSearchResult));
         annotateForm.add(annotateButton);
-        annotateForm.add(new CheckBox("overrideMode", overrideModeOn));
+        annotateForm.add(new CheckBox("overrideMode", overrideMode));
+
         LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
-            this::actionDeleteAll);
+            (target, from) -> actionApplyToSelectedResults(target,
+                this::deleteAnnotationAtSearchResult));
         annotateForm.add(deleteButton);
         annotateForm
             .add(new CheckBox("deleteOnlyMatchingFeatureValues", deleteOnlyMatchingFeatureValues));
         annotateForm.setDefaultButton(annotateButton);
 
         mainContainer.add(annotateForm);
+    }
+
+    private Map<String, Boolean> initDocumentLevelSelections()
+    {
+        Map<String, Boolean> docLevelSelections = new HashMap();
+        Project project = getModelObject().getProject();
+        for (SourceDocument document : documentService.listSourceDocuments(project)) {
+            docLevelSelections.put(document.getName(), true);
+        }
+        return docLevelSelections;
+    }
+
+    private AjaxCheckBox createDocumentLevelSelectionCheckBox(String aId, IModel<Boolean> aModel,
+        String aDocumentTitle)
+    {
+        AjaxCheckBox selectAllCheckBox = new AjaxCheckBox(aId, aModel)
+        {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target)
+            {
+                searchResults.getObject().stream()
+                    .filter(r -> r.getDocumentTitle().equals(aDocumentTitle))
+                    .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                documentLevelSelections.put(aDocumentTitle, getModelObject());
+                target.add(mainContainer);
+            }
+        };
+        return selectAllCheckBox;
     }
 
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
@@ -228,100 +267,98 @@ public class SearchAnnotationSidebar
         }
     }
 
-    public void actionAnnotateAll(AjaxRequestTarget aTarget, Form<Void> aForm) throws IOException
+    public void actionApplyToSelectedResults(AjaxRequestTarget aTarget,
+        Consumer<SearchResult> aConsumer)
     {
-        // get the currently selected annotation layer and feature states
-        AnnotatorState state = getModelObject();
-        AnnotationLayer layer = state.getSelectedAnnotationLayer();
-        List<FeatureState> featureStates = state.getFeatureStates();
-        JCas jCas = getJCasProvider().get();
-
-        // annotate all search results according to the current selection
         for (SearchResult result : searchResults.getObject()) {
-            try {
-                createAnnotationForSearchResult(result, layer, featureStates, jCas);
-            }
-            catch (AnnotationException e) {
-                e.printStackTrace();
-                return;
+            if (result.isSelectedForAnnotation()) {
+                aConsumer.accept(result);
             }
         }
-
-        documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
-
-        updateTimestamp();
-
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void createAnnotationForSearchResult(SearchResult searchResult, AnnotationLayer aLayer,
-        List<FeatureState> aFeaturesStates, JCas aJCas) throws AnnotationException
+    private void createAnnotationAtSearchResult(SearchResult searchResult)
     {
-        AnnotatorState state = getModelObject();
-        SourceDocument sourceDoc = state.getDocument();
-        SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(aLayer);
-
-        Type type = CasUtil.getAnnotationType(aJCas.getCas(), adapter.getAnnotationTypeName());
-
-        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, searchResult.getOffsetStart(),
-            searchResult.getOffsetEnd());
-
-        // if there is already an annotation of the same type at the target location and we don't
-        // want to override it, do nothing
-        if (annoFS != null && !overrideModeOn.getObject()) {
-            return;
-        }
-
-        // create a new annotation if not already there
-        if (annoFS == null) {
-            annoFS = adapter
-                .add(sourceDoc, currentUser.getUsername(), aJCas, searchResult.getOffsetStart(),
-                    searchResult.getOffsetEnd());
-        }
-
-        // set values for all features according to current state
-        for (FeatureState featureState : aFeaturesStates) {
-            Object featureValue = featureState.value;
-            AnnotationFeature feature = featureState.feature;
-            if (featureValue != null) {
-                int addr = getAddr(annoFS);
-                adapter.setFeatureValue(sourceDoc, currentUser.getUsername(), aJCas, addr, feature,
-                    featureValue);
-            }
-        }
-    }
-
-    private void actionDeleteAll(AjaxRequestTarget aTarget, Form<Void> aForm) throws IOException
-    {
-        // get the currently selected annotation layer and feature states
         AnnotatorState state = getModelObject();
         AnnotationLayer layer = state.getSelectedAnnotationLayer();
         List<FeatureState> featureStates = state.getFeatureStates();
-        JCas jCas = getJCasProvider().get();
-        SourceDocument sourceDoc = state.getDocument();
-
-        // annotate all search results according to the current selection
-        for (SearchResult result : searchResults.getObject()) {
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
+        try {
+            JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
 
             SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
             Type type = CasUtil.getAnnotationType(jCas.getCas(), adapter.getAnnotationTypeName());
-            AnnotationFS annoFS = selectSingleFsAt(jCas, type, result.getOffsetStart(),
-                result.getOffsetEnd());
+            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
+                searchResult.getOffsetEnd());
 
-            if (!featureValuesMatch(annoFS, adapter) && deleteOnlyMatchingFeatureValues.getObject()) {
-                continue;
+            // if there is already an annotation of the same type at the target location
+            // and we don't want to override it, do nothing
+            if (annoFS != null && !overrideMode.getObject()) {
+                return;
             }
-            adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
+
+            // create a new annotation if not already there
+            if (annoFS == null) {
+                annoFS = adapter
+                    .add(sourceDoc, currentUser.getUsername(), jCas, searchResult.getOffsetStart(),
+                        searchResult.getOffsetEnd());
+            }
+
+            // set values for all features according to current state
+            for (FeatureState featureState : featureStates) {
+                Object featureValue = featureState.value;
+                AnnotationFeature feature = featureState.feature;
+                if (featureValue != null) {
+                    int addr = getAddr(annoFS);
+                    adapter
+                        .setFeatureValue(sourceDoc, currentUser.getUsername(), jCas, addr, feature,
+                            featureValue);
+                }
+            }
+            documentService.writeAnnotationCas(jCas, sourceDoc, currentUser, true);
+
+            updateTimestamp();
         }
-
-        documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
-
-        updateTimestamp();
-
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        catch (IOException | AnnotationException e) {
+            return;
+        }
     }
 
-    private boolean featureValuesMatch(AnnotationFS aAnnotationFS, TypeAdapter aAdapter) {
+    private void deleteAnnotationAtSearchResult(SearchResult searchResult)
+    {
+        AnnotatorState state = getModelObject();
+        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
+        try {
+            JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+
+            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+            Type type = CasUtil.getAnnotationType(jCas.getCas(), adapter.getAnnotationTypeName());
+            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
+                searchResult.getOffsetEnd());
+
+            if (!featureValuesMatchCurrentState(annoFS) && deleteOnlyMatchingFeatureValues
+                .getObject()) {
+                return;
+            }
+            adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
+
+            documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
+
+            updateTimestamp();
+        }
+        catch (IOException e) {
+            return;
+        }
+    }
+
+    private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
+    {
+        SpanAdapter aAdapter = (SpanAdapter) annotationService
+            .getAdapter(getModelObject().getSelectedAnnotationLayer());
         for (FeatureState state : getModelObject().getFeatureStates()) {
             Object featureValue = state.value;
             AnnotationFeature feature = state.feature;
@@ -391,6 +428,24 @@ public class SearchAnnotationSidebar
 
                     }
                     aItem.add(lambdaAjaxLink);
+
+                    AjaxCheckBox selected = new AjaxCheckBox("selected",
+                        Model.of(aItem.getModelObject().isSelectedForAnnotation()))
+                    {
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget target)
+                        {
+                            SearchResult modelObject = aItem.getModelObject();
+                            modelObject.setSelectedForAnnotation(getModelObject());
+                            if (getModelObject() == false) {
+                                // not all results in the document are selected, so set document
+                                // level selection to false
+                                documentLevelSelections.put(modelObject.getDocumentTitle(), false);
+                                target.add(mainContainer);
+                            }
+                        }
+                    };
+                    aItem.add(selected);
 
                     String sentence = new String();
 

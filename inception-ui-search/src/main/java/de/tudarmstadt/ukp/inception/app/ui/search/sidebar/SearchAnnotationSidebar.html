@@ -75,8 +75,15 @@
           <table id="bd" class="table table-striped table-condensed">
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
-                <th class="headers" style="text-align: left; padding-left: 1em;" colspan="2">
+                <th class="headers" style="text-align: left; padding-left: 1em;" colspan="1">
                   <wicket:container wicket:id="documentTitle" />
+                </th>
+                <th class="headers" style="text-align: left;" colspan="1">
+                  <div class="checkbox">
+                      <label wicket:for="selectAllInDoc">
+                      <input wicket:id="selectAllInDoc" type="checkbox">
+                      </label>
+                  </div>
                 </th>
               </tr>
               <wicket:container wicket:id="group" />
@@ -90,7 +97,7 @@
           <div class="checkbox">
             <label wicket:for="overrideMode">
               <input wicket:id="overrideMode" type="checkbox">
-              <wicket:label key="limitedToCurrentDocument"/>
+              <wicket:label key="overrideMode"/>
             </label>
           </div>
           <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
@@ -99,7 +106,7 @@
             <div class="checkbox">
               <label wicket:for="deleteOnlyMatchingFeatureValues">
                 <input wicket:id="deleteOnlyMatchingFeatureValues" type="checkbox">
-                <wicket:label key="limitedToCurrentDocument"/>
+                <wicket:label key="deleteOnlyMatchingFV"/>
               </label>
             </div>
         </form>
@@ -111,6 +118,13 @@
   <tr wicket:id="results" style="display: table-row;">
     <td style="text-align: center;"><a wicket:id="showSelectedDocument"><span
         wicket:id="sentence"></span></a></td>
+      <td>
+    <div class="checkbox">
+        <label wicket:for="selected">
+          <input wicket:id="selected" type="checkbox">
+        </label>
+    </div>
+      </td>
   </tr>
 </wicket:fragment>
 </html>
