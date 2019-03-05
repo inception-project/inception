@@ -19,10 +19,10 @@
 <html xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container flex-gutter">
+    <div class="flex-content flex-v-container flex-gutter" style="margin-left:1.2em;">
       <h1 wicket:id="title"></h1>
-      <div class="scrolling flex-content">
-        <wicket:container wicket:id="text"/>
+      <div class="scrolling flex-content" style="white-space:pre-wrap; text-align:left; padding:10px;">
+        <p wicket:id="text"></p>
       </div>
     </div>
   </wicket:extend>
