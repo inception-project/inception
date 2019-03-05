@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -28,15 +30,30 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
  */
 public interface ExternalSearchService
 {
-    List<ExternalSearchResult> query(User aUser, DocumentRepository aDocumentRepository,
-            String aQuery);
+    List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository, String aQuery);
 
-    ExternalSearchResult getDocumentById(User aUser, DocumentRepository aDocumentRepository,
-            String aId);
+    /**
+     * Obtains only the text from the document.
+     */
+    String getDocumentText(DocumentRepository aRepository, String aCollectionId, String aDocumentId)
+        throws IOException;
+
+    /**
+     * Obtains the document in its original format suitable for import.
+     */
+    InputStream getDocumentAsStream(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 
     List<DocumentRepository> listDocumentRepositories(Project aProject);
 
-    void createOrUpdateDocumentRepository(DocumentRepository aDocumentRepository);
+    void createOrUpdateDocumentRepository(DocumentRepository aRepository);
 
-    void deleteDocumentRepository(DocumentRepository object);
+    void deleteDocumentRepository(DocumentRepository aRepository);
+
+    DocumentRepository getRepository(long aId);
+
+    String getDocumentFormat(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
 }

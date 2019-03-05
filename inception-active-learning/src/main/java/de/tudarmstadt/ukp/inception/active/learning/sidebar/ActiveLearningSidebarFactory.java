@@ -36,7 +36,7 @@ public class ActiveLearningSidebarFactory extends AnnotationSidebarFactory_ImplB
 
     @Override
     public String getDisplayName() {
-        return "activeLearningSidebar";
+        return "Active Learning";
     }
 
     @Override

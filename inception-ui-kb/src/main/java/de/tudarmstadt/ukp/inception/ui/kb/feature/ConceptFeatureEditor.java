@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.wicket.Component;
@@ -28,9 +29,9 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -57,9 +58,6 @@ public class ConceptFeatureEditor
 {
     private static final Logger LOG = LoggerFactory.getLogger(ConceptFeatureEditor.class);
     
-    private static final String MID_FEATURE = "feature";
-    private static final String MID_VALUE = "value";
-
     private static final long serialVersionUID = 7763348613632105600L;
 
     private Component focusComponent;
@@ -72,9 +70,9 @@ public class ConceptFeatureEditor
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-        add(new Label(MID_FEATURE, getModelObject().feature.getUiName()));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel.getObject(), aHandler, _query)));
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 
     @Override
@@ -96,9 +94,14 @@ public class ConceptFeatureEditor
         try {
             AnnotationFeature feat = getModelObject().feature;
 
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(feat);
-            ConceptFeatureTraits traits = fs.readTraits(feat);
+            ConceptFeatureTraits traits = readFeatureTraits(feat);
+            String repoId = traits.getRepositoryId();
+            // Check if kb is actually enabled
+            if (!(repoId == null
+                || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId)))
+            {
+                return Collections.emptyList();
+            }
 
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), aInput,
@@ -114,6 +117,14 @@ public class ConceptFeatureEditor
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         return choices;
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     @Override

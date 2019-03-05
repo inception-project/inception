@@ -41,9 +41,10 @@ import de.tudarmstadt.ukp.inception.externalsearch.exporter.DocumentRepositoryEx
 public class ExternalSearchAutoConfiguration
 {
     @Bean
-    public ExternalSearchService externalSearchService()
+    @Autowired
+    public ExternalSearchService externalSearchService(ExternalSearchProviderRegistry aRegistry)
     {
-        return new ExternalSearchServiceImpl();
+        return new ExternalSearchServiceImpl(aRegistry);
     }
     
     @Bean

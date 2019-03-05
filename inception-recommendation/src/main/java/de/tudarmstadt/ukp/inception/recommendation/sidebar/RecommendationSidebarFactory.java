@@ -39,7 +39,7 @@ public class RecommendationSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "recommendationSidebar";
+        return "Recommendation";
     }
 
     @Override

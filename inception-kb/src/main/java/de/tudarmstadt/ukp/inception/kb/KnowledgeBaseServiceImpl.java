@@ -1518,4 +1518,14 @@ public class KnowledgeBaseServiceImpl
                     aKB + "] does not support rebuilding its full text index.");
         }
     }
+
+    @Override
+    public  boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId) {
+        Optional<KnowledgeBase> kb = Optional.empty();
+        String repositoryId = aRepositoryId;
+        if (repositoryId != null) {
+            kb = getKnowledgeBaseById(aProject, aRepositoryId);
+        }
+        return kb.isPresent() && kb.get().isEnabled();
+    }
 }

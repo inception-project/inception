@@ -39,7 +39,7 @@ public class SearchAnnotationSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "searchSidebar";
+        return "Search";
     }
 
     @Override
