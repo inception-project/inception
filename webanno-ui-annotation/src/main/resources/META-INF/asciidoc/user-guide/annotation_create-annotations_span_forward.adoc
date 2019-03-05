@@ -34,15 +34,22 @@ feature editor when an annotation is created. This is intentional. Assume your t
 tags `ADJ`, `ADV` and `NOUN`. When you press the `A` key once, the feature editor loads the first 
 value starting with that letter, i.e. `ADJ`. Press `A` again to move to the second tag `ADV`. 
 Pressing a key multiple times cycles through all the tags starting with the respective letter. Thus,
-pressing `A` a third time loads `ADJ` again. Pressing `N` loads `NOUN`.
+pressing `A` a third time loads `ADJ` again. Pressing `N` loads `NOUN`. 
 
-Press *space* to complete the annotation and to move on to the next token. In the general case, 
+If the feature is associated with a tagset, pressing the *BACKSPACE* key deletes the current
+annotation and moves on. Otherwise the current annotation is removed if the feature editor is empty
+(no value entered) when completing the annotation.
+
+Press *ENTER* to complete the annotation and to move on to the next token. In the general case, 
 a new annotation is created on the next token and it is loaded into the feature editor. However, 
 if stacking is disabled and if there is already an annotation on that token, this would naturally
 fail. In this case, no new annotation is created and instead an existing annotation is opened for
 editing. 
 
-If the feature editor is empty (no value entered) when moving on to the next annotation, then 
-the current annotation is removed.
-
 image::key_binding_POS.png[align="center"]
+
+If the **Remember layer** setting is turned on, it is possible to select and edit an annotation
+which is not on the layer for which the forward-mode is enabled. In this case, the forward-mode is
+paused and the user can edit the annotation normally. The forward-mode resumes when the user
+creates a new annotation or selects an annotation on the forward-enabled layer.
+
