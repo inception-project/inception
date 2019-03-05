@@ -565,4 +565,11 @@ public interface KnowledgeBaseService
      * @return set of properties
      */
     Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
+
+    /**
+     * Checks weather a knowledge base is present and enabled, given a repository id
+     * @param repositoryID id of the knowledge base
+     * @return whether the knowledge base with the given id is available or not
+     */
+    boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
 }
