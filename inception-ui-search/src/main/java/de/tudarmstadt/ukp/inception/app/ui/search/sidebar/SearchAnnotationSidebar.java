@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +78,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -99,11 +101,14 @@ public class SearchAnnotationSidebar
     private final WebMarkupContainer mainContainer;
 
     private IModel<String> targetQuery = Model.of("");
-    private IModel<Options> options = CompoundPropertyModel.of(new Options());
+    private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
     private IModel<List<SearchResult>> searchResults;
-    private IModel<Boolean> overrideMode = Model.of(false);
-    private IModel<Boolean> deleteOnlyMatchingFeatureValues = Model.of(false);
     private Map<String, Boolean> documentLevelSelections = initDocumentLevelSelections();
+    private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
+        .of(new CreateAnnotationsOptions());
+    private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
+        .of(new DeleteAnnotationsOptions());
+
 
     private SearchResult selectedResult;
 
@@ -126,7 +131,7 @@ public class SearchAnnotationSidebar
         searchForm.setDefaultButton(searchButton);
         mainContainer.add(searchForm);
 
-        Form<Options> searchOptionsForm = new Form<>("searchOptionsForm", options);
+        Form<SearchOptions> searchOptionsForm = new Form<>("searchOptionsForm", searchOptions);
         searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
@@ -176,20 +181,45 @@ public class SearchAnnotationSidebar
         mainContainer.add(searchResultGroups);
 
         Form<Void> annotateForm = new Form("annotateForm");
-
+        // create-annotation button and options form
         LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<Void>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
                 this::createAnnotationAtSearchResult));
         annotateForm.add(annotateButton);
-        annotateForm.add(new CheckBox("overrideMode", overrideMode));
 
+        Form<CreateAnnotationsOptions> annotationOptionsForm = new Form<>("createOptions",
+            createOptions);
+        annotationOptionsForm.add(new CheckBox("overrideExistingAnnotations"));
+        annotationOptionsForm
+            .add(visibleWhen(() -> annotationOptionsForm.getModelObject().isVisible()));
+        annotationOptionsForm.setOutputMarkupPlaceholderTag(true);
+        annotateForm.add(annotationOptionsForm);
+
+        annotateForm.add(new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
+            annotationOptionsForm.getModelObject().toggleVisibility();
+            _target.add(annotationOptionsForm);
+        }));
+
+        // delete-annotation button and options form
         LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
             (target, from) -> actionApplyToSelectedResults(target,
                 this::deleteAnnotationAtSearchResult));
         annotateForm.add(deleteButton);
-        annotateForm
-            .add(new CheckBox("deleteOnlyMatchingFeatureValues", deleteOnlyMatchingFeatureValues));
+
+        Form<DeleteAnnotationsOptions> deleteOptionsForm = new Form<>("deleteOptions",
+            deleteOptions);
+        deleteOptionsForm.add(new CheckBox("deleteOnlyMatchingFeatureValues"));
+        deleteOptionsForm.add(visibleWhen(() -> deleteOptionsForm.getModelObject().isVisible()));
+        deleteOptionsForm.setOutputMarkupPlaceholderTag(true);
+        annotateForm.add(deleteOptionsForm);
+
+        annotateForm.add(new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
+            deleteOptionsForm.getModelObject().toggleVisibility();
+            _target.add(deleteOptionsForm);
+        }));
+
         annotateForm.setDefaultButton(annotateButton);
+        annotateForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
 
         mainContainer.add(annotateForm);
     }
@@ -238,7 +268,7 @@ public class SearchAnnotationSidebar
         try {
             AnnotatorState state = getModelObject();
             Project project = state.getProject();
-            SourceDocument limitToDocument = options.getObject().isLimitedToCurrentDocument()
+            SourceDocument limitToDocument = searchOptions.getObject().isLimitedToCurrentDocument()
                     ? state.getDocument()
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
@@ -295,7 +325,7 @@ public class SearchAnnotationSidebar
 
             // if there is already an annotation of the same type at the target location
             // and we don't want to override it, do nothing
-            if (annoFS != null && !overrideMode.getObject()) {
+            if (annoFS != null && !createOptions.getObject().isOverrideExistingAnnotations()) {
                 return;
             }
 
@@ -340,8 +370,8 @@ public class SearchAnnotationSidebar
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
-            if (!featureValuesMatchCurrentState(annoFS) && deleteOnlyMatchingFeatureValues
-                .getObject()) {
+            if (!featureValuesMatchCurrentState(annoFS) && deleteOptions.getObject()
+                .isDeleteOnlyMatchingFeatureValues()) {
                 return;
             }
             adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
@@ -459,39 +489,6 @@ public class SearchAnnotationSidebar
             };
             statementList.setModel(aModel);
             add(statementList);        
-        }
-    }
-    
-    public static class Options
-        implements Serializable
-    {
-        private static final long serialVersionUID = 3030323391922717647L;
-        
-        private boolean visible = false;
-        
-        private boolean limitedToCurrentDocument = false;
-
-        /**
-         * Whether or not the options form should be displayed
-         */
-        public boolean isVisible()
-        {
-            return visible;
-        }
-
-        public void toggleVisibility()
-        {
-            visible = !visible;
-        }
-
-        public boolean isLimitedToCurrentDocument()
-        {
-            return limitedToCurrentDocument;
-        }
-
-        public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
-        {
-            limitedToCurrentDocument = aLimitedToCurrentDocument;
         }
     }
 }
