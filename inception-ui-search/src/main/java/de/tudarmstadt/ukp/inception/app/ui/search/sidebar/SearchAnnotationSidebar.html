@@ -80,9 +80,9 @@
                 </th>
                 <th class="headers" style="text-align: left;" colspan="1">
                   <div class="checkbox">
-                      <label wicket:for="selectAllInDoc">
+                    <label wicket:for="selectAllInDoc">
                       <input wicket:id="selectAllInDoc" type="checkbox">
-                      </label>
+                    </label>
                   </div>
                 </th>
               </tr>
@@ -91,66 +91,67 @@
           </table>
         </div>
         <form wicket:id="annotateForm" style="margin-top: 5px">
-            <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-                <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
-                    <i class="fa fa-plus" aria-hidden="true"></i>
-                    Create Annotations
-                </button>
-                <button wicket:id="toggleCreateOptionsVisibility" type="button" class="btn btn-default">
-                    <i class="fa fa-cog" aria-hidden="true"></i>
-                </button>
+          <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+            <button wicket:id="annotateAllButton" type="submit" class="btn btn-primary flex-content">
+              <i class="fa fa-plus" aria-hidden="true"></i>
+                Create Annotations
+            </button>
+            <button wicket:id="toggleCreateOptionsVisibility" type="button" class="btn btn-default">
+              <i class="fa fa-cog" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form wicket:id="createOptions" class="panel-small panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <wicket:message key="options"/>
+              </h3>
             </div>
-            <form wicket:id="createOptions" class="panel-small panel panel-default panel-flex">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <wicket:message key="options"/>
-                    </h3>
-                </div>
-                <div class="panel-body form-horizontal">
-                    <div class="col-sm-12">
-                        <div class="form-group" wicket:enclosure="overrideExistingAnnotations">
-                            <div class="col-sm-12">
-                                <div class="checkbox">
-                                    <label wicket:for="overrideExistingAnnotations">
-                                        <input wicket:id="overrideExistingAnnotations" type="checkbox">
-                                        <wicket:label key="overrideMode"/>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+            <div class="panel-body form-horizontal">
+              <div class="col-sm-12">
+                <div class="form-group" wicket:enclosure="overrideExistingAnnotations">
+                  <div class="col-sm-12">
+                    <div class="checkbox">
+                      <label wicket:for="overrideExistingAnnotations">
+                        <input wicket:id="overrideExistingAnnotations" type="checkbox">
+                          <wicket:label key="overrideMode"/>
+                      </label>
                     </div>
+                  </div>
                 </div>
-            </form>
-            <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
-                <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
-                    <i class="fa fa-trash" aria-hidden="true"></i>
-                    Delete Annotations
-                </button>
-                <button wicket:id="toggleDeleteOptionsVisibility" type="button" class="btn btn-default">
-                    <i class="fa fa-cog" aria-hidden="true"></i>
-                </button>
+              </div>
             </div>
-            <form wicket:id="deleteOptions" class="panel-small panel panel-default panel-flex">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <wicket:message key="options"/>
-                    </h3>
-                </div>
-                <div class="panel-body form-horizontal">
-                    <div class="col-sm-12">
-                        <div class="form-group" wicket:enclosure="deleteOnlyMatchingFeatureValues">
-                            <div class="col-sm-12">
-                                <div class="checkbox">
-                                    <label wicket:for="deleteOnlyMatchingFeatureValues">
-                                        <input wicket:id="deleteOnlyMatchingFeatureValues" type="checkbox">
-                                        <wicket:label key="deleteOnlyMatchingFeatureValues"/>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
+          </form>
+
+          <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
+            <button wicket:id="deleteButton" type="submit" class="btn btn-primary flex-content">
+              <i class="fa fa-trash" aria-hidden="true"></i>
+                Delete Annotations
+            </button>
+            <button wicket:id="toggleDeleteOptionsVisibility" type="button" class="btn btn-default">
+              <i class="fa fa-cog" aria-hidden="true"></i>
+            </button>
+          </div>
+          <form wicket:id="deleteOptions" class="panel-small panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title">
+                <wicket:message key="options"/>
+              </h3>
+            </div>
+            <div class="panel-body form-horizontal">
+              <div class="col-sm-12">
+                <div class="form-group" wicket:enclosure="deleteOnlyMatchingFeatureValues">
+                  <div class="col-sm-12">
+                    <div class="checkbox">
+                      <label wicket:for="deleteOnlyMatchingFeatureValues">
+                        <input wicket:id="deleteOnlyMatchingFeatureValues" type="checkbox">
+                          <wicket:label key="deleteOnlyMatchingFeatureValues"/>
+                      </label>
                     </div>
+                  </div>
                 </div>
-            </form>
+              </div>
+            </div>
+          </form>
         </form>
       </div>
     </div>

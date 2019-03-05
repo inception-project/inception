@@ -52,6 +52,8 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -89,6 +91,8 @@ public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SearchAnnotationSidebar.class);
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -180,12 +184,12 @@ public class SearchAnnotationSidebar
 
         mainContainer.add(searchResultGroups);
 
-        Form<Void> annotateForm = new Form("annotateForm");
-        // create-annotation button and options form
+        Form<Void> annotationForm = new Form("annotateForm");
+        // create annotate-button and options form
         LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<Void>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
                 this::createAnnotationAtSearchResult));
-        annotateForm.add(annotateButton);
+        annotationForm.add(annotateButton);
 
         Form<CreateAnnotationsOptions> annotationOptionsForm = new Form<>("createOptions",
             createOptions);
@@ -193,35 +197,35 @@ public class SearchAnnotationSidebar
         annotationOptionsForm
             .add(visibleWhen(() -> annotationOptionsForm.getModelObject().isVisible()));
         annotationOptionsForm.setOutputMarkupPlaceholderTag(true);
-        annotateForm.add(annotationOptionsForm);
+        annotationForm.add(annotationOptionsForm);
 
-        annotateForm.add(new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
+        annotationForm.add(new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
             annotationOptionsForm.getModelObject().toggleVisibility();
             _target.add(annotationOptionsForm);
         }));
 
-        // delete-annotation button and options form
+        // create delete-button and options form
         LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
             (target, from) -> actionApplyToSelectedResults(target,
                 this::deleteAnnotationAtSearchResult));
-        annotateForm.add(deleteButton);
+        annotationForm.add(deleteButton);
 
         Form<DeleteAnnotationsOptions> deleteOptionsForm = new Form<>("deleteOptions",
             deleteOptions);
         deleteOptionsForm.add(new CheckBox("deleteOnlyMatchingFeatureValues"));
         deleteOptionsForm.add(visibleWhen(() -> deleteOptionsForm.getModelObject().isVisible()));
         deleteOptionsForm.setOutputMarkupPlaceholderTag(true);
-        annotateForm.add(deleteOptionsForm);
+        annotationForm.add(deleteOptionsForm);
 
-        annotateForm.add(new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
+        annotationForm.add(new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
             deleteOptionsForm.getModelObject().toggleVisibility();
             _target.add(deleteOptionsForm);
         }));
 
-        annotateForm.setDefaultButton(annotateButton);
-        annotateForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
+        annotationForm.setDefaultButton(annotateButton);
+        annotationForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
 
-        mainContainer.add(annotateForm);
+        mainContainer.add(annotationForm);
     }
 
     private Map<String, Boolean> initDocumentLevelSelections()
@@ -347,12 +351,15 @@ public class SearchAnnotationSidebar
                             featureValue);
                 }
             }
-            documentService.writeAnnotationCas(jCas, sourceDoc, currentUser, true);
 
-            updateTimestamp();
+            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
         }
         catch (IOException | AnnotationException e) {
-            return;
+            error(
+                "Unable to create annotation for search result [" + searchResult.toString() + " ]: "
+                    + e.getLocalizedMessage());
+            LOG.error("Unable to create annotation for search result [" + searchResult.toString()
+                + " ]: ", e);
         }
     }
 
@@ -370,19 +377,33 @@ public class SearchAnnotationSidebar
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
-            if (!featureValuesMatchCurrentState(annoFS) && deleteOptions.getObject()
+            if (annoFS == null
+                || !featureValuesMatchCurrentState(annoFS) && deleteOptions.getObject()
                 .isDeleteOnlyMatchingFeatureValues()) {
                 return;
             }
             adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
 
-            documentService.writeAnnotationCas(jCas, state.getDocument(), currentUser, true);
-
-            updateTimestamp();
+            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
         }
         catch (IOException e) {
-            return;
+            error(
+                "Unable to create annotation for search result [" + searchResult.toString() + " ]: "
+                    + e.getLocalizedMessage());
+            LOG.error("Unable to create annotation for search result [" + searchResult.toString()
+                + " ]: ", e);
         }
+    }
+
+    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, JCas aJCas)
+        throws IOException
+    {
+        if (!documentService.existsAnnotationDocument(aSourceDoc, currentUser)) {
+            documentService.createOrGetAnnotationDocument(aSourceDoc, currentUser);
+        }
+        documentService.writeAnnotationCas(aJCas, aSourceDoc, currentUser, true);
+
+        updateTimestamp(aSourceDoc);
     }
 
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
@@ -400,14 +421,14 @@ public class SearchAnnotationSidebar
         return true;
     }
 
-    private void updateTimestamp() throws IOException
+    private void updateTimestamp(SourceDocument aModifiedDocument) throws IOException
     {
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors
         AnnotatorState state = getModelObject();
-        if (Objects.equals(state.getDocument().getId(), state.getDocument().getId())) {
+        if (Objects.equals(state.getDocument().getId(), aModifiedDocument.getId())) {
             Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(state.getDocument(), currentUser.getUsername());
+                .getAnnotationCasTimestamp(aModifiedDocument, currentUser.getUsername());
             if (diskTimestamp.isPresent()) {
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
