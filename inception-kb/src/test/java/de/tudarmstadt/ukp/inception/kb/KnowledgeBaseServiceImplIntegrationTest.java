@@ -1520,7 +1520,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     }
 
-    @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
+    @Test
+    public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1537,6 +1538,30 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         assertThat(sut.readKBIdentifier(kb, propertyId).get())
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
+    }
+
+    @Test
+    public void checkIfKBIsEnabledById_WithExistingAndEnabledKB_ShouldReturnTrue() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String repoId = kb.getRepositoryId();
+        assertThat(sut.isKnowledgeBaseEnabled(project, repoId))
+            .as("Check that correct accessibility value is returned for enabled kb ")
+            .isTrue();
+    }
+
+    @Test
+    public void checkIfKBIsEnabledById_WithDisabledKBAndNonExistingId_ShouldReturnFalse() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        kb.setEnabled(false);
+        String repoId = kb.getRepositoryId();
+
+        assertThat(sut.isKnowledgeBaseEnabled(project, repoId))
+            .as("Check that correct accessibility value is returned for disabled kb ")
+            .isFalse();
+
+        assertThat(sut.isKnowledgeBaseEnabled(project, "NonExistingID"))
+            .as("Check that correct accessibility value is returned for non existing id ")
+            .isFalse();
     }
 
     // Helper
