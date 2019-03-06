@@ -422,7 +422,7 @@ public class LayerDetailForm
     {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             TypeSystemDescription tsd = annotationService
-                    .getProjectTypes(getModelObject().getProject());
+                    .getAllProjectTypes(getModelObject().getProject());
             tsd.toXML(bos);
             return new InputStreamResourceStream(new ByteArrayInputStream(bos.toByteArray()));
         }

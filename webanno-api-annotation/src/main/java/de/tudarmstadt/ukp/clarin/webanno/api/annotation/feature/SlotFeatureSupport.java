@@ -194,9 +194,10 @@ public class SlotFeatureSupport
                 CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+        
         // Link feature
-        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
-                false);
+        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), CAS.TYPE_NAME_FS_ARRAY,
+                linkTD.getName(), false);
     }
     
     @Override

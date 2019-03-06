@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.xmi;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 
@@ -25,14 +25,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class TypeSystemAnalysisTest
 {
@@ -346,7 +344,4 @@ public class TypeSystemAnalysisTest
                     "org.cleartk.token.type.Token:span");
         softly.assertAll();
     }
-
-    @Rule
-    public DkproTestContext testContext = new DkproTestContext();
 }
