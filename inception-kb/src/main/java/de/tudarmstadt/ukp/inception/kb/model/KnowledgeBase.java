@@ -154,6 +154,12 @@ public class KnowledgeBase
     @Column(nullable = false)
     private IRI propertyDescriptionIri;
 
+    /**
+     * The IRI of the default dataset
+     */
+    @Column(nullable = true)
+    private IRI defaultDatasetIri;
+
     @Column(nullable = false)
     private boolean readOnly;
 
@@ -441,6 +447,15 @@ public class KnowledgeBase
         }
     }
 
+    public IRI getDefaultDatasetIri()
+    {
+        return defaultDatasetIri;
+    }
+
+    public void setDefaultDatasetIri(IRI aDefaultDatasetIri)
+    {
+        defaultDatasetIri = aDefaultDatasetIri;
+    }
 
     @Override
     public String toString()
