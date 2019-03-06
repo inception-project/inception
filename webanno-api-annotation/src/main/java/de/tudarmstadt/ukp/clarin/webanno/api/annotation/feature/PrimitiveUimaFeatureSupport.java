@@ -249,7 +249,7 @@ public class PrimitiveUimaFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
-        aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), aFeature.getType());
     }
     
     @Override

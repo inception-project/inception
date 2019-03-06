@@ -31,6 +31,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
@@ -728,6 +729,53 @@ public class WebAnnoCasUtil
             seletedTextSb.append(token.getCoveredText()).append(" ");
         }
         return seletedTextSb.toString();
+    }
+    
+    public static boolean isNativeUimaType(String aType)
+    {
+        Validate.notNull(aType, "Type must not be null");
+        
+        switch (aType) {
+        case CAS.TYPE_NAME_ANNOTATION:
+        case CAS.TYPE_NAME_ANNOTATION_BASE:
+        case CAS.TYPE_NAME_ARRAY_BASE:
+        case CAS.TYPE_NAME_BOOLEAN:
+        case CAS.TYPE_NAME_BOOLEAN_ARRAY:
+        case CAS.TYPE_NAME_BYTE:
+        case CAS.TYPE_NAME_BYTE_ARRAY:
+        case CAS.TYPE_NAME_DOCUMENT_ANNOTATION:
+        case CAS.TYPE_NAME_DOUBLE:
+        case CAS.TYPE_NAME_DOUBLE_ARRAY:
+        case CAS.TYPE_NAME_EMPTY_FLOAT_LIST:
+        case CAS.TYPE_NAME_EMPTY_FS_LIST:
+        case CAS.TYPE_NAME_EMPTY_INTEGER_LIST:
+        case CAS.TYPE_NAME_EMPTY_STRING_LIST:
+        case CAS.TYPE_NAME_FLOAT:
+        case CAS.TYPE_NAME_FLOAT_ARRAY:
+        case CAS.TYPE_NAME_FLOAT_LIST:
+        case CAS.TYPE_NAME_FS_ARRAY:
+        case CAS.TYPE_NAME_FS_LIST:
+        case CAS.TYPE_NAME_INTEGER:
+        case CAS.TYPE_NAME_INTEGER_ARRAY:
+        case CAS.TYPE_NAME_INTEGER_LIST:
+        case CAS.TYPE_NAME_LIST_BASE:
+        case CAS.TYPE_NAME_LONG:
+        case CAS.TYPE_NAME_LONG_ARRAY:
+        case CAS.TYPE_NAME_NON_EMPTY_FLOAT_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_FS_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_INTEGER_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_STRING_LIST:
+        case CAS.TYPE_NAME_SHORT:
+        case CAS.TYPE_NAME_SHORT_ARRAY:
+        case CAS.TYPE_NAME_SOFA:
+        case CAS.TYPE_NAME_STRING:
+        case CAS.TYPE_NAME_STRING_ARRAY:
+        case CAS.TYPE_NAME_STRING_LIST:
+        case CAS.TYPE_NAME_TOP:
+            return true;
+        }
+        
+        return false;
     }
 
     public static boolean isPrimitiveFeature(FeatureStructure aFS, String aFeatureName)

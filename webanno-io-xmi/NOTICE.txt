@@ -1,3 +1,0 @@
-This module contains XMI support backported from DKPro Core 1.9.0-SNAPSHOT and is meant to be
-dropped again and replaced by the proper DKPro Core 1.9.0 XMI module when it has been released
-and when WebAnno is able to depend on this version of DKPro Core.
