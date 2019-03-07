@@ -223,6 +223,74 @@ public class SPARQLQueryBuilderTest
         
         assertThat(result).isFalse();
     }
+    
+    /**
+     * Checks that an explicitly defined class can be retrieved using its identifier.
+     */
+    @Test
+    public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .withIdentifier("http://example.org/#explicitRoot"));
+        
+        assertThat(result).isTrue();
+    }
+
+    /**
+     * Checks that an implicitly defined class can be retrieved using its identifier.
+     */
+    @Test
+    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .withIdentifier("http://example.org/#implicitRoot"));
+        
+        assertThat(result).isTrue();
+    }
+
+    /**
+     * Checks that a either explicitly nor implicitly defined class can be retrieved using its 
+     * identifier.
+     */
+    @Test
+    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .withIdentifier("http://example.org/#DoesNotExist"));
+        
+        assertThat(result).isFalse();
+    }
+
+    /**
+     * Checks that item information can be obtained for a given subject.
+     */
+    @Test
+    public void thatCanRetrieveItemInfoForIdentifier() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .withIdentifier("http://example.org/#red-goblin")
+                .retrieveLabel()
+                .retrieveDescription());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "description", "language")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"));
+    }
 
     @Test
     public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception

@@ -451,30 +451,14 @@ public class KnowledgeBaseServiceImpl
     public Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.readConcept(aKB, 1,labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oItem", vf.createIRI(aIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "oItem");
-        });
-        
-        if (resultList.isEmpty()) {
-            return Optional.empty();
-        }
-        else {
-            KBHandle conceptHandle = resultList.get(0);
-            KBConcept kbConcept = KBHandle.convertTo(KBConcept.class, conceptHandle);
-            return Optional.of(kbConcept);
-        }
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forClasses(aKB)
+                .withIdentifier(aIdentifier)
+                .excludeInferred()
+                .retrieveLabel()
+                .retrieveDescription()
+                .asHandle(conn, aAll)
+                .map(handle -> KBHandle.convertTo(KBConcept.class, handle)));
     }
     
     @Override

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
@@ -39,10 +40,39 @@ public interface SPARQLQuery
      * @param aConnection
      *            a connection to a triple store.
      * @param aAll
-     *            True if entities with implicit namespaces (e.g. defined by RDF)
+     *            if items from implicit namespaces (e.g. defined by RDF) should be included.
      * @return a list of the retrieved handles.
      */
     List<KBHandle> asHandles(RepositoryConnection aConnection, boolean aAll);
 
-    boolean exists(RepositoryConnection aConnection, boolean aAll);
+    /**
+     * Execute the query and see if it returns any results.
+     * 
+     * This may be optimized internally, e.g. by requesting only a single result so it should be
+     * faster than e.g. using {@link #asHandles} and checking if the result is (non)empty.
+     * 
+     * @param aConnection
+     *            a connection to a triple store.
+     * @param aAll
+     *            if items from implicit namespaces (e.g. defined by RDF) should be included.
+     * @return a list of the retrieved handles.
+     */
+    default boolean exists(RepositoryConnection aConnection, boolean aAll)
+    {
+        return !asHandles(aConnection, aAll).isEmpty();
+    }
+    
+    /**
+     * Execute the query and return a single handle. 
+     * 
+     * @param aConnection
+     *            a connection to a triple store.
+     * @param aAll
+     *            if items from implicit namespaces (e.g. defined by RDF) should be included.
+     * @return the matching handle (if there is one).
+     */    
+    default Optional<KBHandle> asHandle(RepositoryConnection aConnection, boolean aAll)
+    {
+        return asHandles(aConnection, aAll).stream().findFirst();
+    }
 }

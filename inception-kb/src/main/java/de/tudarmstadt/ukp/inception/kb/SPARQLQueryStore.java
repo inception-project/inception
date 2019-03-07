@@ -173,30 +173,7 @@ public final class SPARQLQueryStore
                 , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
                 , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
                 , "} GROUP BY ?s"
-                , "LIMIT " + aKB.getMaxResults());    }
-    
-    /** 
-     * Query to read concept from a knowledge base.
-     */
-    public static final String readConcept(KnowledgeBase aKB, int limit,
-            Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-            , SPARQL_PREFIX    
-            , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ((?labelGeneral) AS ?lGen) ?descGeneral ?spl WHERE { "
-            , "  { ?oItem ?pTYPE ?oCLASS . } "
-            , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
-            , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
-            , "  UNION {?oItem ?pTYPE ?oCLASS ."
-            , "    ?oItem owl:intersectionOf ?list . "
-            , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-            , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
-            , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
-            , optionalLanguageFilteredValue("?pLABEL", null,"?oItem","?labelGeneral")
-            , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?oItem","?descGeneral")
-            , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?oItem","?spl")
-            , "} "
-            , "LIMIT " + limit);
+                , "LIMIT " + aKB.getMaxResults());    
     }
 
     /**
