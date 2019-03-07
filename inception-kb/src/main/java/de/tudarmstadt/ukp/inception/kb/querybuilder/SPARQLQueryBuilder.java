@@ -1331,9 +1331,11 @@ public class SPARQLQueryBuilder
     {
         Map<String, KBHandle> cMap = new LinkedHashMap<>();
         for (KBHandle handle : aHandles) {
+            // Not recorded yet -> add it
             if (!cMap.containsKey(handle.getIdentifier())) {
                 cMap.put(handle.getIdentifier(), handle);
             }
+            // Found an exact language match -> use that one instead
             else if (kb.getDefaultLanguage().equals(handle.getLanguage())) {
                 cMap.put(handle.getIdentifier(), handle);
             }

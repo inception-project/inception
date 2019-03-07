@@ -153,29 +153,6 @@ public final class SPARQLQueryStore
                 , "LIMIT " + aKB.getMaxResults());
     }
     
-    
-    /** 
-     * Query to list root concepts from a knowledge base.
-     */
-    public static final String listRootConcepts(KnowledgeBase aKB, Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?s (MIN(?label) AS ?l) (MIN(?labelGeneral) AS ?lGen) (MIN(?splabel) AS ?spl) WHERE { "
-                , "  { ?s ?pTYPE ?oCLASS . } "
-                , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "  FILTER NOT EXISTS { "
-                , "    ?s ?pSUBCLASS ?otherSub . "
-                , "    FILTER (?s != ?otherSub) }"
-                , "  FILTER NOT EXISTS { "
-                , "    ?s owl:intersectionOf ?list . }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
-                , "} GROUP BY ?s"
-                , "LIMIT " + aKB.getMaxResults());    
-    }
-
     /**
      * Query to read an instance from a knowledge base
      */
