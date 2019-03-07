@@ -183,12 +183,14 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
      * 
      * @see #reduceRedundantResults(List)
      */
-    private boolean serverSideReduce = true;
+    // This is presently disabled because we cannot guarantee that the MIN operation
+    // prefers the label with the language as opposed to "any label".
+    private boolean serverSideReduce = false;
     
-    public static enum Mode {
+    private static enum Mode {
         ITEM, CLASS, INSTANCE, PROPERTY;
         
-        public Iri getLabelProperty(KnowledgeBase aKb) {
+        protected Iri getLabelProperty(KnowledgeBase aKb) {
             switch (this) {
             case ITEM:
                 return iri(aKb.getLabelIri().toString());
@@ -203,7 +205,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }
         }
 
-        public Iri getDescriptionProperty(KnowledgeBase aKb) {
+        protected Iri getDescriptionProperty(KnowledgeBase aKb) {
             switch (this) {
             case ITEM:
                 return iri(aKb.getDescriptionIri().toString());
@@ -218,7 +220,10 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }
         }
         
-        public GraphPattern descendentsPattern(KnowledgeBase aKB, Iri aContext)
+        /**
+         * @see SPARQLQueryPrimaryConditions#descendantsOf(String)
+         */
+        protected GraphPattern descendentsPattern(KnowledgeBase aKB, Iri aContext)
         {
             Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
             Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
@@ -258,7 +263,10 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }            
         }
 
-        public GraphPattern ancestorsPattern(KnowledgeBase aKB, Iri aContext)
+        /**
+         * @see SPARQLQueryPrimaryConditions#ancestorsOf(String)
+         */
+        protected GraphPattern ancestorsPattern(KnowledgeBase aKB, Iri aContext)
         {
             Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
             Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
@@ -285,7 +293,10 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }            
         }
         
-        public GraphPattern childrenPattern(KnowledgeBase aKB, Iri aContext)
+        /**
+         * @see SPARQLQueryPrimaryConditions#childrenOf(String)
+         */
+        protected GraphPattern childrenPattern(KnowledgeBase aKB, Iri aContext)
         {
             Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
                         
@@ -306,7 +317,10 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }            
         }
         
-        public GraphPattern parentsPattern(KnowledgeBase aKB, Iri aContext)
+        /**
+         * @see SPARQLQueryPrimaryConditions#parentsOf(String)
+         */
+        protected GraphPattern parentsPattern(KnowledgeBase aKB, Iri aContext)
         {
             Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
              
@@ -327,7 +341,10 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             }            
         }
 
-        public GraphPattern rootsPattern(KnowledgeBase aKb)
+        /**
+         * @see SPARQLQueryPrimaryConditions#roots()
+         */
+        protected GraphPattern rootsPattern(KnowledgeBase aKb)
         {
             Iri classIri = Rdf.iri(aKb.getClassIri().toString());
             Iri subClassProperty = Rdf.iri(aKb.getSubclassIri().toString());
@@ -993,16 +1010,16 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         String language = kb.getDefaultLanguage();
         
         List<GraphPattern> labelPatterns = new ArrayList<>();
-        
+
+        // Find all labels without any language
+        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+
         // Find all labels corresponding to the KB language
         if (language != null) {
             labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), 
                             literalOf(language))));
         }
-
-        // Find all labels without any language
-        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
 
         addPattern(Priority.SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
         

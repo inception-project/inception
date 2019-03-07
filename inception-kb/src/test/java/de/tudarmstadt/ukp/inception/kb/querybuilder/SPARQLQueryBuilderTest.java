@@ -132,7 +132,7 @@ public class SPARQLQueryBuilderTest
     private Repository britishMuseum;
     
     @Before
-    public void setup()
+    public void setUp()
     {
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
@@ -156,53 +156,64 @@ public class SPARQLQueryBuilderTest
         lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
         lucenesail.setBaseSail(new MemoryStore());
         rdf4jLocalRepo = new SailRepository(lucenesail);
-        rdf4jLocalRepo.initialize();
+        rdf4jLocalRepo.init();
         
         ukpVirtuosoRepo = new SPARQLRepository(
                 "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql");
-        ukpVirtuosoRepo.initialize();
+        ukpVirtuosoRepo.init();
 
         // http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/stw/query
         zbwStw = new SPARQLRepository("http://zbw.eu/beta/sparql/stw/query");
-        zbwStw.initialize();
+        zbwStw.init();
 
         // http://zbw.eu/beta/sparql-lab/?endpoint=http://zbw.eu/beta/sparql/gnd/query
         zbwGnd = new SPARQLRepository("http://zbw.eu/beta/sparql/gnd/query");
-        zbwGnd.initialize();
+        zbwGnd.init();
 
         // https://query.wikidata.org/sparql
         wikidata = new SPARQLRepository("https://query.wikidata.org/sparql");
-        wikidata.initialize();
+        wikidata.init();
         
         // https://dbpedia.org/sparql
         dbpedia = new SPARQLRepository("https://dbpedia.org/sparql");
-        dbpedia.initialize();
+        dbpedia.init();
 
         // https://linkeddata1.calcul.u-psud.fr/sparql
         yago = new SPARQLRepository("https://linkeddata1.calcul.u-psud.fr/sparql");
-        yago.initialize();
+        yago.init();
 
         // http://nlp.dainst.org:8888/sparql
         hucit = new SPARQLRepository("http://nlp.dainst.org:8888/sparql");
-        hucit.initialize();
+        hucit.init();
         
         // http://collection.britishmuseum.org/sparql
         britishMuseum = new SPARQLRepository("http://collection.britishmuseum.org/sparql");
-        britishMuseum.initialize();
+        britishMuseum.init();
     }
     
+    /**
+     * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return 
+     * {@code true} by querying for a list of all classes in {@link #DATA_CLASS_RDFS_HIERARCHY}
+     * which contains a number of classes.
+     */
     @Test
-    public void thatExistsQueryReturnsTrue() throws Exception
+    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
-        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb));
+        boolean result = exists(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb));
         
         assertThat(result).isTrue();
     }
 
+    /**
+     * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return 
+     * {@code false} by querying for the parent of a root class in 
+     * {@link #DATA_CLASS_RDFS_HIERARCHY} which does not exist.
+     */
     @Test
-    public void thatExistsQueryReturnsFalse() throws Exception
+    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 

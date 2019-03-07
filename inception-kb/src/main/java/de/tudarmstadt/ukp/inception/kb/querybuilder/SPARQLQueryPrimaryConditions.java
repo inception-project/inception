@@ -53,6 +53,9 @@ public interface SPARQLQueryPrimaryConditions
      */
     SPARQLQueryPrimaryConditions withLabelContainingAnyOf(String... aValues);
 
+    /**
+     * Match all the roots of the class hierarchy.
+     */
     SPARQLQueryPrimaryConditions roots();
 
     /**

@@ -82,7 +82,7 @@ db_pedia:
   reification: NONE
   access:
     access-url: http://dbpedia.org/sparql
-    full-text-search: FTS:NONE
+    full-text-search: bif:contains
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf

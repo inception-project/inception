@@ -127,13 +127,13 @@ public class SPARQLQueryBuilderGenericTest
             lucenesail.setParameter(LuceneSail.LUCENE_RAMDIR_KEY, "true");
             lucenesail.setBaseSail(new MemoryStore());
             repo = new SailRepository(lucenesail);
-            repo.initialize();
+            repo.init();
             importData(repo, profile.getAccess().getAccessUrl());
             break;
         }
         case REMOTE: {
             repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
-            repo.initialize();
+            repo.init();
             break;
         }
         default:

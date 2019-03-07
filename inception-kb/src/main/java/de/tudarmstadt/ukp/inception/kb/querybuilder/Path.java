@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static java.util.stream.Collectors.joining;
+
+import java.util.Arrays;
+
 import org.eclipse.rdf4j.sparqlbuilder.core.QueryElement;
 import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfPredicate;
@@ -28,16 +32,9 @@ public class Path
 {
     public static RdfPredicate of(QueryElement... aElements)
     {
-        return () -> {
-            StringBuilder sb = new StringBuilder();
-            for (QueryElement element : aElements) {
-                if (sb.length() > 0) {
-                    sb.append("/");
-                }
-                sb.append(element.getQueryString());
-            }
-            return sb.toString();
-        };
+        return () -> Arrays.stream(aElements)
+                .map(QueryElement::getQueryString)
+                .collect(joining("/"));
     }
 
     public static QueryElement zeroOrMore(QueryElement aElement)

@@ -65,7 +65,7 @@
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
     <dl4j.version>1.0.0-beta3</dl4j.version>
-    <rdf4j.version>2.5.0-inception-1-SNAPSHOT</rdf4j.version>
+    <rdf4j.version>2.5.0-inception-1</rdf4j.version>
     <mockito.version>2.23.4</mockito.version>
     <assertj.version>3.11.1</assertj.version>
     <okhttp.version>3.11.0</okhttp.version>

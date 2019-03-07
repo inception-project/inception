@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.kb.model;
 
 import static de.tudarmstadt.ukp.inception.kb.reification.Reification.NONE;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
@@ -437,13 +439,13 @@ public class KnowledgeBase
     public void applyRootConcepts(KnowledgeBaseProfile aProfile)
     {
         if (aProfile.getRootConcepts() == null) {
-            setRootConcepts(new ArrayList<>());
+            rootConcepts = emptyList();
         }
         else {
             ValueFactory vf = SimpleValueFactory.getInstance();
-            for (String rootConcept : aProfile.getRootConcepts()) {
-                rootConcepts.add(vf.createIRI(rootConcept));
-            }
+            rootConcepts = aProfile.getRootConcepts().stream()
+                    .map(vf::createIRI)
+                    .collect(Collectors.toList());
         }
     }
 
