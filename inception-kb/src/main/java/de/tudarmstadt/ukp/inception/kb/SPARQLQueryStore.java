@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -35,7 +34,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
 public final class SPARQLQueryStore
 {
@@ -176,25 +174,6 @@ public final class SPARQLQueryStore
                 , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
                 , "} GROUP BY ?s"
                 , "LIMIT " + aKB.getMaxResults());    }
-    
-    /** 
-     * Query to list child concepts from a knowledge base.
-     */
-    public static final String listChildConcepts(KnowledgeBase aKB, Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?s (MIN(?label) AS ?l) (MIN(?labelGeneral) AS ?lGen) (MIN(?splabel) AS ?spl) WHERE { "
-                , "  {?s ?pSUBCLASS ?oPARENT . }" 
-                , "  UNION { ?s ?pTYPE ?oCLASS ."
-                , "    ?s owl:intersectionOf ?list . "
-                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
-                , "} GROUP BY ?s"
-                , "LIMIT " + aKB.getMaxResults());
-    }
     
     /** 
      * Query to read concept from a knowledge base.
@@ -364,24 +343,6 @@ public final class SPARQLQueryStore
     }
     
     /**
-     *  Query to retrieve super class concept for a concept
-     */
-    public static final String queryForParentConcept(KnowledgeBase aKB)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) WHERE { "
-                , "   {?oChild ?pSUBCLASS ?s . }"
-                , "   UNION { ?s ?pTYPE ?oCLASS ."
-                , "     ?oChild owl:intersectionOf ?list . "
-                , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-            , "}");
-
-    }
-    
-    /**
      *  Query to retrieve concept for an instance
      */
     public static final String queryForConceptForInstance(KnowledgeBase aKB)
@@ -410,43 +371,6 @@ public final class SPARQLQueryStore
             , "LIMIT " + aKB.getMaxResults());
     }
     
-    
-    /**
-     * This query retrieves candidates via full-text matching of their labels and full-text-search
-     * 
-     * @param aKb
-     *            the Knowledge Base
-     * @param aString
-     *            String for which to perform full text search
-     * @return a query to retrieve candidate entities
-     */
-    public static List<KBHandle> searchItemsStartingWith(KnowledgeBase aKb,
-        RepositoryConnection aConn, String aString)
-    {
-        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
-        builder.withLabelStartingWith(aString);
-        builder.retrieveLabel();
-        builder.retrieveDescription();
-        return builder.asHandles(aConn, true);
-    }
-    
-    /**
-     * This query retrieves candidates via full-text matching of their labels and full-text-search
-     *
-     * @param aKb
-     *            the Knowledge Base
-     * @return a query to retrieve candidate entities
-     */
-    public static List<KBHandle> searchItemsContaining(KnowledgeBase aKb,
-            RepositoryConnection aConn, String... aValues)
-    {
-        SPARQLQueryBuilder builder = SPARQLQueryBuilder.forItems(aKb);
-        builder.withLabelContainingAnyOf(aValues);
-        builder.retrieveLabel();
-        builder.retrieveDescription();
-        return builder.asHandles(aConn, true);
-    }
-
     /**
      *
      * @param aIri an IRI, e.g. "http://www.wikidata.org/entity/Q3"

@@ -52,6 +52,8 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.IResourceStream;
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryException;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
@@ -62,6 +64,7 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Fil
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.TempFileResource;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -119,6 +122,9 @@ public class AccessSpecificSettingsPanel
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
+    private TextField<String> urlField;
+    private TextField<String> defaultDatasetField;
+    
     public AccessSpecificSettingsPanel(String id,
         CompoundPropertyModel<KnowledgeBaseWrapper> aModel,
         Map<String, KnowledgeBaseProfile> aKnowledgeBaseProfiles)
@@ -150,7 +156,7 @@ public class AccessSpecificSettingsPanel
     }
 
     private void setUpRemoteSpecificSettings(WebMarkupContainer wmc) {
-        RequiredTextField<String> urlField = new RequiredTextField<>("url");
+        urlField = new RequiredTextField<>("url");
         urlField.add(Validators.URL_VALIDATOR);
         wmc.add(urlField);
 
@@ -166,12 +172,26 @@ public class AccessSpecificSettingsPanel
         infoContainerRemote = createKbInfoContainer("infoContainer");
         infoContainerRemote.setOutputMarkupId(true);
         wmc.add(infoContainerRemote);
-        wmc.add(remoteSuggestionsList("suggestions", suggestions, urlField));
+        wmc.add(remoteSuggestionsList("suggestions", suggestions));
 
+        defaultDatasetField = defaultDataset("defaultDataset",
+                kbModel.bind("kb.defaultDatasetIri"));
+        wmc.add(defaultDatasetField);
+    }
+
+    private TextField<String> defaultDataset(String aId, IModel<IRI> model)
+    {
+        IModel<String> adapter = new LambdaModelAdapter<String>(() -> {
+            return model.getObject() != null ? model.getObject().stringValue() : null;
+        }, str -> {
+            model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null);
+        });
+        
+        return new TextField<String>(aId, adapter);
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,
-        List<KnowledgeBaseProfile> aSuggestions, TextField aUrlField)
+        List<KnowledgeBaseProfile> aSuggestions)
     {
         return new ListView<KnowledgeBaseProfile>(aId, aSuggestions)
         {
@@ -193,8 +213,10 @@ public class AccessSpecificSettingsPanel
                     kbModel.getObject().getKb()
                         .setDefaultLanguage(item.getModelObject().getDefaultLanguage());
                     kbModel.getObject().getKb()
+                        .setDefaultDatasetIri(item.getModelObject().getDefaultDataset());
+                    kbModel.getObject().getKb()
                         .setReification(item.getModelObject().getReification());
-                    t.add(aUrlField, infoContainerRemote);
+                    t.add(urlField, defaultDatasetField, infoContainerRemote);
                 });
                 link.add(new Label("suggestionLabel", item.getModelObject().getName()));
                 item.add(link);

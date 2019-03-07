@@ -994,7 +994,7 @@ public class ActiveLearningSidebar
         JCas jCas = this.getJCasProvider().get();
         Optional<AnnotationFS> anno = getMatchingAnnotation(jCas.getCas(), aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), jCas,
+            state.getSelection().selectSpan(new VID(anno.get()), jCas.getCas(),
                     aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
             getActionHandler().actionDelete(aTarget);
         }
