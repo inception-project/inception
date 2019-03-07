@@ -92,8 +92,8 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 /**
  * Build queries against the KB.
  * 
- * <h4>Handling of subclasses</h4>
  * <p>
+ * <b>Handling of subclasses: </b>
  * Queries for subclasses return only resources which declare being a class via the class property
  * defined in the KB specification. This means that if the KB is configured to use rdfs:Class but a
  * subclass defines itself using owl:Class, then this subclass is *not* returned. We do presently
