@@ -1075,6 +1075,11 @@
         <artifactId>rdf4j-util</artifactId>
         <version>${rdf4j.version}</version>
       </dependency>
+      <dependency>
+        <groupId>com.github.jsonld-java</groupId>
+        <artifactId>jsonld-java</artifactId>
+        <version>0.12.0</version>
+      </dependency>
         
       <dependency>
         <groupId>org.webjars</groupId>

@@ -129,6 +129,10 @@
       <version>${rdf4j.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.github.jsonld-java</groupId>
+      <artifactId>jsonld-java</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.cyberborean</groupId>
       <artifactId>rdfbeans</artifactId>
       <version>2.2</version>
