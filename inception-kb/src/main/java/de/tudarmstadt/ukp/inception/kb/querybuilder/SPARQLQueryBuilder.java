@@ -1123,7 +1123,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         else {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
             results = evaluateListQuery(tupleQuery, aAll);
-            results.sort(Comparator.comparing(KBObject::getUiLabel));
+            results.sort(Comparator.comparing(KBObject::getUiLabel, String.CASE_INSENSITIVE_ORDER));
             
             LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
                     currentTimeMillis() - startTime);

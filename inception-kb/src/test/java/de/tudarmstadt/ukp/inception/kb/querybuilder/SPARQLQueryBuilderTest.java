@@ -922,7 +922,7 @@ public class SPARQLQueryBuilderTest
         
         assertThat(results)
                 .extracting(KBHandle::getName)
-                .contains("Agent", "Thing");
+                .contains("agent", "Thing");
     }
 
     public void _thatChildrenOfExplicitRootCanBeRetrieved(Repository aRepository, String aRootClass)
