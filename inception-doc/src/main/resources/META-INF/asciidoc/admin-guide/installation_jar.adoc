@@ -17,7 +17,10 @@
 = Running via embedded Tomcat (JAR)
 
 The {product-name} standalone JAR with an embedded Tomcat server and can be easily set up as a 
-UNIX service. This is the recommended way of running {product-name} on a server.
+UNIX service. This is the recommended way of running {product-name} on a server. 
+
+The instructions below expect a Debian Linux system. Details may vary on other OSes and Linux
+distributions.
 
 == Installing as a service
 
@@ -63,6 +66,13 @@ $ chown root:root /srv/inception/inception.conf
 $ chown www-data:www-data /srv/inception/inception.jar
 ----
 +
+* Make the JAR file executable:
++
+[source,bash]
+----
+$ chmod +x /srv/inception/inception.jar
+----
++
 * Create a symlink from `/etc/init.d` to the `/srv/inception/inception.jar`:
 +
 [source,bash]
@@ -82,6 +92,13 @@ $ systemctl enable inception
 [source,bash]
 ----
 $ service inception start
+----
++
+* Check the log output
++
+[source,bash]
+----
+$ cat /var/log/inception.log
 ----
 +
 * Stop {product-name} using
