@@ -104,6 +104,9 @@ public class ConceptFeatureEditor
                 return Collections.emptyList();
             }
 
+            // If there is a selection, we try obtaining its text from the CAS and use it as an
+            // additional item in the query. Note that there is not always a mention, e.g. when the
+            // feature is used in a document-level annotations.
             JCas jcas = aHandler != null ? aHandler.getEditorCas() : null;
             String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
                     : null;

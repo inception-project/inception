@@ -74,6 +74,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private static final Logger LOG = LoggerFactory
             .getLogger(DocumentMetadataAnnotationSelectionPanel.class);
     
+    private static final String CID_LABEL = "label";
+    private static final String CID_ANNOTATION_LINK = "annotationLink";
+    private static final String CID_TYPE = "type";
+    private static final String CID_ANNOTATIONS = "annotations";
+    private static final String CID_LAYER = "layer";
+    private static final String CID_CREATE = "create";
+    private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
+    
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     
@@ -101,19 +109,19 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         detailPanel = aDetails;
         selectedLayer = Model.of();
 
-        annotationsContainer = new WebMarkupContainer("annotationsContainer");
+        annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
         annotationsContainer.add(createAnnotationList());
         add(annotationsContainer);
         
-        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>("layer");
+        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>(CID_LAYER);
         layer.setModel(selectedLayer);
         layer.setChoices(this::listMetadataLayers);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         add(layer);
         
-        add(new LambdaAjaxLink("create", this::actionCreate));
+        add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
     }
     
     public Project getModelObject()
@@ -144,7 +152,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     private ListView<AnnotationListItem> createAnnotationList()
     {
-        return new ListView<AnnotationListItem>("annotations",
+        return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
                 LoadableDetachableModel.of(this::listAnnotations))
         {
             private static final long serialVersionUID = -6833373063896777785L;
@@ -154,11 +162,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
 
-                aItem.add(new Label("type", aItem.getModelObject().layer.getUiName()));
+                aItem.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
 
-                LambdaAjaxLink link = new LambdaAjaxLink("annotationLink",
+                LambdaAjaxLink link = new LambdaAjaxLink(CID_ANNOTATION_LINK,
                     _target -> actionSelect(_target, aItem.getModelObject()));
-                link.add(new Label("label"));
+                link.add(new Label(CID_LABEL));
                 aItem.add(link);
             }
         };
