@@ -42,6 +42,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -96,6 +97,8 @@ public class ProjectsOverviewPage
     private static final String MID_IMPORT_PROJECT_FORM = "importProjectForm";
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
+    private static final String MID_LEAVE_PROJECT = "leaveProject";
+	private static final String MID_CONFIRM_LEAVE = "confirmLeave";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -178,10 +181,29 @@ public class ProjectsOverviewPage
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
                         aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                ConfirmActionDialog confirmLeaveDialog = new ConfirmActionDialog(MID_CONFIRM_LEAVE,
+                        "Leave Project");
+                confirmLeaveDialog.setConfirmAction((target) -> {
+                    // TODO use ProjectServiceImpl (?) to remove user
+                });
+                AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
+                {
+
+                    private static final long serialVersionUID = -6496680664449646359L;
+
+                    @Override
+                    public void onClick(AjaxRequestTarget target)
+                    {
+                        confirmLeaveDialog.show(target);
+                    }
+
+                };
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
                 aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
+                aItem.add(leaveProjectLink);
+                aItem.add(confirmLeaveDialog);
             }
 
             @Override
@@ -201,8 +223,8 @@ public class ProjectsOverviewPage
         
         return projectList;
     }
-    
-    private WebMarkupContainer createRoleFilters()
+
+	private WebMarkupContainer createRoleFilters()
     {
         ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
                 asList(PermissionLevel.values()))
