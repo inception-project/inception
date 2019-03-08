@@ -51,7 +51,7 @@ public class TrieTest
 
         assertThat(sut.size()).isEqualTo(keys.size());
         assertThat(sut.keys()).containsExactlyInAnyOrderElementsOf(keys);
-        assertThat(sut.keyIterator()).containsExactlyInAnyOrderElementsOf(keys);
+        assertThat(sut.keyIterator()).toIterable().containsExactlyInAnyOrderElementsOf(keys);
         
         for (String key : keys) {
             assertThat(sut.getNode(key)).isNotNull();
