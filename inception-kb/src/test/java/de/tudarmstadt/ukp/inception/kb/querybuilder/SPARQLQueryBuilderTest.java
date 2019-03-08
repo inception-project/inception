@@ -59,17 +59,22 @@ public class SPARQLQueryBuilderTest
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
             "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .");
     
-    private static final String DATA_LABELS_WITH_LANGUAGE = String.join("\n",
+    private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n",
             "<#green-goblin>",
             "    rdfs:label 'Green Goblin' ;",
-            "    rdfs:label 'Green Goblin'@en .",
+            "    rdfs:label 'Green Goblin'@en ;",
+            "    rdfs:comment 'Little green monster' ;",
+            "    rdfs:comment 'Little green monster'@en .",
             "",
             "<#lucky-green>",
             "    rdfs:label 'Lucky Green' ;",
-            "    rdfs:label 'Lucky Green'@en .",
+            "    rdfs:label 'Lucky Green'@en ;",
+            "    rdfs:comment 'Lucky Irish charm' ;",
+            "    rdfs:comment 'Lucky Irish charm'@en .",
             "",
             "<#red-goblin>",
-            "    rdfs:label 'Red Goblin' .");
+            "    rdfs:label 'Red Goblin' ;",
+            "    rdfs:comment 'Little red monster' .");
 
     private static final String DATA_LABELS_WITHOUT_LANGUAGE = String.join("\n",
             "<#green-goblin>",
@@ -276,7 +281,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatCanRetrieveItemInfoForIdentifier() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forItems(kb)
@@ -289,7 +295,8 @@ public class SPARQLQueryBuilderTest
                 .usingElementComparatorOnFields(
                         "identifier", "name", "description", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#red-goblin", "Red Goblin"));
+                        new KBHandle("http://example.org/#red-goblin", "Red Goblin",
+                                "Little red monster"));
     }
 
     @Test
@@ -485,7 +492,7 @@ public class SPARQLQueryBuilderTest
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelContainingAnyOf_RDF4J_withLanguage();
+        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
     }
     
     @Test
@@ -493,14 +500,16 @@ public class SPARQLQueryBuilderTest
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
-        __testWithLabelContainingAnyOf_RDF4J_withLanguage();
+        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
     }
     
-    public void __testWithLabelContainingAnyOf_RDF4J_withLanguage() throws Exception
+    public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
+        throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forItems(kb)
                 .withLabelContainingAnyOf("Goblin"));
         
@@ -509,7 +518,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#red-goblin", "Red Goblin"),
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
@@ -521,7 +530,7 @@ public class SPARQLQueryBuilderTest
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage();
+        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
     }
 
     @Test
@@ -529,14 +538,16 @@ public class SPARQLQueryBuilderTest
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage();
+        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
     }
 
-    public void __testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage() throws Exception
+    public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
+        throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forItems(kb)
                 .withLabelMatchingExactlyAnyOf("Green Goblin"));
         
@@ -545,7 +556,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
                                 null, "en"));
@@ -558,7 +569,7 @@ public class SPARQLQueryBuilderTest
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty();
+        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
     }
     
     @Test
@@ -568,16 +579,17 @@ public class SPARQLQueryBuilderTest
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty();
+        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
     }
     
-    public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty() throws Exception
+    public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(Repository aRepository)
+        throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
         
         // The label "Green Goblin" is not assigned directly via rdfs:label but rather via a
         // subproperty of it. Thus, this test also checks if the label sub-property support works.
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forItems(kb)
+        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder.forItems(kb)
                     .withLabelMatchingExactlyAnyOf("Green Goblin"));
         
         assertThat(results).extracting(KBHandle::getUiLabel)
@@ -585,7 +597,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }    
@@ -619,7 +631,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin"));
     }
@@ -627,7 +639,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(null);
         
@@ -640,7 +652,7 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#green-goblin", "Green Goblin",
                                 null, "en"));
@@ -649,7 +661,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_1() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -664,16 +676,16 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
-                        new KBHandle("http://example.org/#green-goblin", "Green Goblin", null, 
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin", null,
                                 "en"));
     }
     
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_2() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -697,7 +709,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_3() throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITH_LANGUAGE);
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
@@ -967,8 +979,7 @@ public class SPARQLQueryBuilderTest
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
                 .forClasses(kb)
                 .roots()
-                .retrieveLabel()
-                .retrieveDescription());
+                .retrieveLabel());
         
         assertThat(results).isNotEmpty();
         
@@ -983,8 +994,7 @@ public class SPARQLQueryBuilderTest
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
                 .forClasses(kb)
                 .ancestorsOf("http://dbpedia.org/ontology/Organisation")
-                .retrieveLabel()
-                .retrieveDescription());
+                .retrieveLabel());
         
         assertThat(results).isNotEmpty();
         
@@ -993,13 +1003,13 @@ public class SPARQLQueryBuilderTest
                 .contains("agent", "Thing");
     }
 
-    public void _thatChildrenOfExplicitRootCanBeRetrieved(Repository aRepository, String aRootClass)
+    public void __thatChildrenOfExplicitRootCanBeRetrieved(Repository aRepository,
+            String aRootClass)
     {
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forClasses(kb)
                 .childrenOf(aRootClass)
-                .retrieveLabel()
-                .retrieveDescription());
+                .retrieveLabel());
         
         assertThat(results).isNotEmpty();
         
@@ -1021,15 +1031,14 @@ public class SPARQLQueryBuilderTest
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forItems(kb)
-                .withLabelContainingAnyOf("Socke")
-                .retrieveDescription());
+                .withLabelContainingAnyOf("Socke"));
         
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.contains("Socke"));
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description", "language")
+                        "identifier", "name", "language")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://mbugert.de/pets#socke", "Socke"));
     }
