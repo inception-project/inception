@@ -170,7 +170,7 @@ public class StatementGroupPanel extends Panel {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
                 
-                Set<KBHandle> parentConceptList = kbService.getParentConceptList(
+                List<KBHandle> parentConceptList = kbService.getParentConceptList(
                         groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
                 
                 for (KBHandle parent : parentConceptList) {
