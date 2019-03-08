@@ -29,6 +29,7 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.ExternalImage;
@@ -123,8 +124,15 @@ public class ImageSidebar
 
         // Extract the URLs
         List<String> urls = new ArrayList<>();
+        TypeSystem ts = cas.getTypeSystem();
         for (AnnotationFeature feat : imageFeatures) {
             Type t = getType(cas, feat.getLayer().getName());
+            
+            // We only consider images that are annotated at the text level
+            if (!ts.subsumes(cas.getAnnotationType(), t)) {
+                continue;
+            }
+            
             Feature f = t.getFeatureByBaseName(feat.getName());
             
             List<AnnotationFS> annotations = selectCovered(cas, t,
