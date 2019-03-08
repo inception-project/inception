@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -126,7 +125,7 @@ public class ImageFeatureSupport
         switch (feature.getMultiValueMode()) {
         case NONE:
             if (feature.getType().startsWith("img:")) {
-                editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                editor = new ImageFeatureEditor(aId, aOwner, aFeatureStateModel);
             }
             else {
                 throw unsupportedMultiValueModeException(feature);

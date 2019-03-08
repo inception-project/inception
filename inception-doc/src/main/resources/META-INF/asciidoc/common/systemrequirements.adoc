@@ -27,14 +27,14 @@
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 9 or higher
+| version 8 or higher
 |===
 
 .Requirements run the server version
 [cols="2*"]
 |===
 | Java Runtime Environment
-| version 9 or higher
+| version 8 or higher
 
 | Apache Tomcat
 | version 8.5 or higher (Servlet API 3.1.0)

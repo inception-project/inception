@@ -70,9 +70,16 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class DocumentMetadataAnnotationDetailPanel extends Panel
 {
+    private static final long serialVersionUID = 2713520228348549734L;
+
     private static final Logger LOG = LoggerFactory
             .getLogger(DocumentMetadataAnnotationDetailPanel.class);
-    
+
+    private static final String CID_EDITOR = "editor";
+    private static final String CID_FEATURE_VALUES = "featureValues";
+    private static final String CID_CLOSE = "close";
+    private static final String CID_DELETE = "delete";
+
     public static final String ID_PREFIX = "metaFeatureEditorHead";
     
     private @SpringBean AnnotationSchemaService annotationService;
@@ -101,7 +108,8 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         
         add(featureList = createFeaturesList());
         
-        add(new LambdaAjaxLink("delete", this::actionDelete));
+        add(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
+        add(new LambdaAjaxLink(CID_CLOSE, this::actionClose));
         
         add(LambdaBehavior.visibleWhen(() -> getModelObject() != null && getModelObject().isSet()));
     }
@@ -118,7 +126,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
     private ListView<FeatureState> createFeaturesList()
     {
-        return new ListView<FeatureState>("featureValues",
+        return new ListView<FeatureState>(CID_FEATURE_VALUES,
                 LoadableDetachableModel.of(this::listFeatures))
         {
             private static final long serialVersionUID = -1139622234318691941L;
@@ -136,7 +144,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 // Look up a suitable editor and instantiate it
                 FeatureSupport featureSupport = featureSupportRegistry
                         .getFeatureSupport(featureState.feature);
-                editor = featureSupport.createEditor("editor",
+                editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, null, null, item.getModel());
 
                 if (!featureState.feature.getLayer().isReadonly()) {
@@ -327,8 +335,16 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
                 aTarget, e);
-        }    }
+        }
+    }
     
+    private void actionClose(AjaxRequestTarget aTarget)
+    {
+        setModelObject(null);
+        
+        aTarget.add(getParent());
+    }
+
     private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
             throws IOException
     {

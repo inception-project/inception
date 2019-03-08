@@ -84,6 +84,9 @@ public class ExportedKnowledgeBase
     @JsonProperty("default_language")
     private String defaultLanguage;
 
+    @JsonProperty("default_dataset_iri")
+    private String defaultDatasetIri;
+    
     @JsonProperty("max_results")
     private int maxResults;
     
@@ -316,5 +319,15 @@ public class ExportedKnowledgeBase
     public void setRemoteURL(String aRemoteURL)
     {
         remoteURL = aRemoteURL;
+    }
+
+    public String getDefaultDatasetIri()
+    {
+        return defaultDatasetIri;
+    }
+
+    public void setDefaultDatasetIri(String aDefaultDatasetIri)
+    {
+        defaultDatasetIri = aDefaultDatasetIri;
     }
 }

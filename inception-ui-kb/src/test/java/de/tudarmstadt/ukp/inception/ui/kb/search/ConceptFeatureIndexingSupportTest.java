@@ -24,10 +24,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -138,7 +136,7 @@ public class ConceptFeatureIndexingSupportTest
         when(kbService.readKBIdentifier(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbInstance));
 
-        Set<KBHandle> dummyValue = new HashSet<KBHandle>();
+        List<KBHandle> dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
         
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
