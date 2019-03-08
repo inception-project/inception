@@ -139,6 +139,8 @@ public class SPARQLQueryBuilder
     public static final Iri RDF_REST = Rdf.iri(RDF.REST.stringValue());
     public static final Iri RDF_FIRST = Rdf.iri(RDF.FIRST.stringValue());
         
+    private static final RdfValue EMPTY_STRING = () -> "\"\"";
+    
     private final Set<Prefix> prefixes = new LinkedHashSet<>();
     private final Set<Projectable> projections = new LinkedHashSet<>();
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
@@ -950,14 +952,21 @@ public class SPARQLQueryBuilder
         
         // Match with default language
         if (language != null) {
-            expressions.add(and(function(aFunction, variable, literalOf(value)),
+            expressions.add(and(
+                    function(aFunction, variable, literalOf(value)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
         }
 
         // Match without language
-        expressions.add(function(aFunction, variable, literalOf(value)));
-        
+        expressions.add(and(
+                function(aFunction, variable, literalOf(value)),
+                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                        .parenthesize());
+
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // expressions.add(function(aFunction, variable, literalOf(value)));
+
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
@@ -1070,8 +1079,12 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> labelPatterns = new ArrayList<>();
 
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        
         // Find all labels without any language
-        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
 
         // Find all labels corresponding to the KB language
         if (language != null) {
@@ -1113,8 +1126,12 @@ public class SPARQLQueryBuilder
                             literalOf(language))));
         }
 
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
+        
         // Find all descriptions without any language
-        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
+        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
+                .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
         // normally match to be removed from the results set. Using a UNION seems to address this
@@ -1341,9 +1358,9 @@ public class SPARQLQueryBuilder
             }
         }
         
-//        LOG.trace("Input: {}", aHandles);
-//        LOG.trace("Output: {}", cMap.values());
-        
+        LOG.trace("Input: {}", aHandles);
+        LOG.trace("Output: {}", cMap.values());
+
         return cMap.values().stream().limit(getLimit()).collect(Collectors.toList());
     }
     

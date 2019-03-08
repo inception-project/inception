@@ -63,8 +63,11 @@ public class SPARQLQueryBuilderTest
             "<#green-goblin>",
             "    rdfs:label 'Green Goblin' ;",
             "    rdfs:label 'Green Goblin'@en ;",
+            "    rdfs:label 'Grüner Goblin'@de ;",
+            "    rdfs:label 'Goblin vert'@fr ;",
             "    rdfs:comment 'Little green monster' ;",
-            "    rdfs:comment 'Little green monster'@en .",
+            "    rdfs:comment 'Little green monster'@en ;",
+            "    rdfs:comment 'Kleines grünes Monster'@de .",
             "",
             "<#lucky-green>",
             "    rdfs:label 'Lucky Green' ;",
@@ -212,6 +215,63 @@ public class SPARQLQueryBuilderTest
         assertThat(result).isTrue();
     }
 
+    /**
+     * If the KB has no default language set, then only labels and descriptions with no language
+     * at all should be returned.
+     */
+    @Test
+    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws Exception
+    {
+        kb.setDefaultLanguage(null);
+        
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .withIdentifier("http://example.org/#green-goblin")
+                .retrieveLabel()
+                .retrieveDescription());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "description", "language")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#green-goblin", "Green Goblin",
+                                "Little green monster"));
+    }
+    
+    /**
+     * If the KB has a default language set, then labels/descriptions in that language should be 
+     * preferred it is permitted to fall back to labels/descriptions without any language.
+     * The dataset contains only labels for French but no descriptions, so it should fall back to
+     * returning the description without any language.
+     */
+    @Test
+    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws Exception
+    {
+        // The dataset contains only labels for French but no descriptions
+        kb.setDefaultLanguage("fr");
+        
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
+                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .withIdentifier("http://example.org/#green-goblin")
+                .retrieveLabel()
+                .retrieveDescription());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "description", "language")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#green-goblin", "Goblin vert",
+                                "Little green monster", "fr"));
+    }
+    
     /**
      * Checks that {@code SPARQLQueryBuilder#exists(RepositoryConnection, boolean)} can return 
      * {@code false} by querying for the parent of a root class in 
