@@ -218,7 +218,7 @@ public class PredictionTask
                                 predictionCas.get(), predictionType, labelFeature, scoreFeature,
                                 document, recommender);
                         
-                        // Calculate the visbility of the suggestions. This happens via the original
+                        // Calculate the visibility of the suggestions. This happens via the original
                         // CAS which contains only the manually created annotations and *not* the
                         // suggestions.
                         Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
@@ -361,7 +361,7 @@ public class PredictionTask
                 continue;
             }
 
-            // This iterator gives us pairs of annotations and suggestions. Note that bot lists must
+            // This iterator gives us pairs of annotations and suggestions. Note that both lists must
             // be sorted in the same way. The suggestion offsets are sorted because they are the
             // keys in a TreeSet - and the annotation offsets are sorted in the same way manually
             OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
@@ -402,10 +402,10 @@ public class PredictionTask
             List<LearningRecord> aRecordedRecommendations)
     {
         // If there is no label, then hide it
-        if (aSuggestion.getLabel() == null) {
+        /*if (aSuggestion.getLabel() == null) {
             aSuggestion.hide(FLAG_NO_LABEL);
             return;
-        }
+        }*/
 
         // If it was rejected or skipped, it hide it
         for (LearningRecord record : aRecordedRecommendations) {

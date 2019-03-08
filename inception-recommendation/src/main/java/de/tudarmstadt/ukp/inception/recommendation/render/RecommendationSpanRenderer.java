@@ -129,22 +129,28 @@ public class RecommendationSpanRenderer
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
                     continue;
                 }
+                
+                String label= getAnnotationDescriptor(ao);
+                // Skip rendering if annotation label and feature is null
+                if (label == null) {
+                    continue;
+                }
 
-                if (!labelMap.containsKey(ao.getLabel())
-                        || !labelMap.get(ao.getLabel())
+                if (!labelMap.containsKey(label)
+                        || !labelMap.get(label)
                                 .containsKey(ao.getRecommenderId())
-                        || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
+                        || labelMap.get(label).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationSuggestion> confidencePerClassifier;
-                    if (labelMap.get(ao.getLabel()) == null) {
+                    if (labelMap.get(label) == null) {
                         confidencePerClassifier = new HashMap<>();
                     } else {
-                        confidencePerClassifier = labelMap.get(ao.getLabel());
+                        confidencePerClassifier = labelMap.get(label);
                     }
 
                     confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                    labelMap.put(ao.getLabel(), confidencePerClassifier);
+                    labelMap.put(label, confidencePerClassifier);
                 }
             }
             
@@ -175,7 +181,8 @@ public class RecommendationSpanRenderer
 
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
-                        .filter(p -> p.getLabel().equals(label))
+                        //check for label or feature for no-label annotations as key
+                        .filter(p -> (p.getLabel()==null && p.getFeature().equals(label)) || p.getLabel().equals(label))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
@@ -222,5 +229,21 @@ public class RecommendationSpanRenderer
                 }
             }
         }
+    }
+
+    /**
+     * Describe this annotation by its label or feature
+     * 
+     * @param aSuggestion
+     *            suggestion for an annotation
+     * @return the suggestion's label or feature
+     */
+    private String getAnnotationDescriptor(AnnotationSuggestion aSuggestion)
+    {
+        String label = aSuggestion.getLabel();
+        if (label == null) {
+            label = aSuggestion.getFeature();
+        }
+        return label;
     }
 }

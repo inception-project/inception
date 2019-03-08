@@ -164,8 +164,10 @@ public class StringMatchingRecommender
                     if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
                         for (LabelStats lc : node.value.getBest(maxRecommendations)) {
                             String label = lc.getLabel();
-                            if (label == UNKNOWN_LABEL)
+                            // check instance equality to avoid collision with user labels
+                            if (label == UNKNOWN_LABEL) {
                                 label = null;
+                            }
                             spans.add(new Span(begin, end, text.substring(begin, end), label,
                                     lc.getRelFreq()));
                         }
