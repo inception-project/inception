@@ -190,8 +190,8 @@ public class PdfAnnotationEditor
                         aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
                         docOffset.getEnd());
                 } else {
-                    getModelObject().getSelection()
-                        .selectSpan(paramId, aJCas, docOffset.getBegin(), docOffset.getEnd());
+                    getModelObject().getSelection().selectSpan(paramId, aJCas.getCas(),
+                            docOffset.getBegin(), docOffset.getEnd());
                     getActionHandler().actionSelect(aTarget, aJCas);
                 }
             } else {

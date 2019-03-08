@@ -21,8 +21,10 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -30,6 +32,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -69,7 +72,8 @@ public class ConceptFeatureEditor
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
-                getCandidates(aStateModel.getObject(), aHandler, _query)));
+                getCandidates(aStateModel, aHandler, _query)));
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 
     @Override
@@ -80,8 +84,8 @@ public class ConceptFeatureEditor
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
-    private List<KBHandle> getCandidates(AnnotatorState aState, AnnotationActionHandler aHandler,
-            String aInput)
+    private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,
+            AnnotationActionHandler aHandler, String aInput)
     {
         if (aInput == null) {
             return emptyList();
@@ -91,14 +95,28 @@ public class ConceptFeatureEditor
         try {
             AnnotationFeature feat = getModelObject().feature;
 
-            FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-                    .getFeatureSupport(feat);
-            ConceptFeatureTraits traits = fs.readTraits(feat);
+            ConceptFeatureTraits traits = readFeatureTraits(feat);
+            String repoId = traits.getRepositoryId();
+            // Check if kb is actually enabled
+            if (!(repoId == null
+                || kbService.isKnowledgeBaseEnabled(feat.getProject(), repoId)))
+            {
+                return Collections.emptyList();
+            }
 
+            // If there is a selection, we try obtaining its text from the CAS and use it as an
+            // additional item in the query. Note that there is not always a mention, e.g. when the
+            // feature is used in a document-level annotations.
+            JCas jcas = aHandler != null ? aHandler.getEditorCas() : null;
+            String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
+                    : null;
+            int mentionBegin = aStateModel != null
+                    ? aStateModel.getObject().getSelection().getBegin()
+                    : -1;
+            
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aInput,
-                    aState.getSelection().getText(), aState.getSelection().getBegin(),
-                    aHandler.getEditorCas(), feat.getProject());
+                    traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
+                    jcas, feat.getProject());
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
@@ -109,6 +127,14 @@ public class ConceptFeatureEditor
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
         return choices;
+    }
+
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+                .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
     }
 
     @Override

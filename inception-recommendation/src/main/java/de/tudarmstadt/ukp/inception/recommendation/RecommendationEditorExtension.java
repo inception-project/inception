@@ -170,7 +170,7 @@ public class RecommendationEditorExtension
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
-        aState.getSelection().selectSpan(new VID(address), aJCas, aBegin, aEnd);
+        aState.getSelection().selectSpan(new VID(address), aJCas.getCas(), aBegin, aEnd);
         aActionHandler.actionSelect(aTarget, aJCas);            
         aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
 

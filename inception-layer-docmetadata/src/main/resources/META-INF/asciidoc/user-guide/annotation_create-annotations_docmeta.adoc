@@ -1,0 +1,8 @@
+= Document metadata
+
+To manage document-level annotations, access the **Document metadata** sidebar on the annotation
+page.
+
+NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
+      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file. 
+

@@ -497,7 +497,7 @@ public interface KnowledgeBaseService
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
-    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
     
     /**
@@ -565,4 +565,11 @@ public interface KnowledgeBaseService
      * @return set of properties
      */
     Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
+
+    /**
+     * Checks weather a knowledge base is present and enabled, given a repository id
+     * @param repositoryID id of the knowledge base
+     * @return whether the knowledge base with the given id is available or not
+     */
+    boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
 }

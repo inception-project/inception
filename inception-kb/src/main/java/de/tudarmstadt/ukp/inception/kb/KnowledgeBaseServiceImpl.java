@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 import java.io.BufferedInputStream;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -1052,7 +1052,10 @@ public class KnowledgeBaseServiceImpl
     @Override
     public boolean hasChildConcepts(KnowledgeBase aKB, String aParentIdentifier, boolean aAll)
     {
-        return !listChildConcepts(aKB, aParentIdentifier, aAll, 1).isEmpty();
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forClasses(aKB)
+                .childrenOf(aParentIdentifier)
+                .exists(conn, aAll));
     }
 
     @Override
@@ -1060,7 +1063,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        return listChildConcepts(aKB, aParentIdentifier, aAll, aKB.getMaxResults());
+        return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
     }
     
     @Override
@@ -1068,23 +1071,10 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForParentConcept(aKB);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oChild", vf.createIRI(aHandle.getIdentifier()));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forClasses(aKB)
+                .parentsOf(aHandle.getIdentifier())
+                .asHandles(conn, aAll));
     }
     
     @Override
@@ -1110,75 +1100,29 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    public List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> parentConceptSet = new LinkedHashSet<KBHandle>();
-        if (aIdentifier != null) {
-            Optional<KBObject> identifierKBObj = readKBIdentifier(aKB.getProject(), aIdentifier);
-            if (!identifierKBObj.isPresent()) {
-                return parentConceptSet;
-            }
-            else if (identifierKBObj.get() instanceof KBConcept) {
-                parentConceptSet.add(identifierKBObj.get().toKBHandle());
-                getParentConceptListforConcept(parentConceptSet, aKB,
-                        identifierKBObj.get().toKBHandle(), aAll);
-            }
-            else if (identifierKBObj.get() instanceof KBInstance) {
-                List<KBHandle> conceptList = getConceptForInstance(aKB, aIdentifier, aAll);
-                parentConceptSet.addAll(conceptList);
-                for (KBHandle parent : conceptList) {
-                    getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
-                }
-            }
-        }
-        return parentConceptSet;
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forClasses(aKB)
+                .ancestorsOf(aIdentifier)
+                .retrieveLabel()
+                .retrieveDescription()
+                .asHandles(conn, aAll));
     }
     
-    // recursive method to get concept tree
-    public Set<KBHandle> getParentConceptListforConcept(Set<KBHandle> parentConceptSet,
-            KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
-        throws QueryEvaluationException
-    {
-        List<KBHandle> parentList = getParentConcept(aKB, aHandle, aAll);
-        for (KBHandle parent : parentList) {
-            if (!parentConceptSet.contains(parent)) {
-                parentConceptSet.add(parent);
-                getParentConceptListforConcept(parentConceptSet, aKB, parent, aAll);
-            }
-        }
-        return parentConceptSet;
-    }
-
     @Override
     public List<KBHandle> listChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
             boolean aAll, int aLimit)
         throws QueryEvaluationException
     {
-        // The query below only returns subclasses which simultaneously declare being a class
-        // via the class property defined in the KB specification. This means that if the KB
-        // is configured to use rdfs:Class but a subclass defines itself using owl:Class, then
-        // this subclass is *not* returned. We do presently *not* support mixed schemes in a
-        // single KB.
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.listChildConcepts(aKB, labels);
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("oPARENT", vf.createIRI(aParentIdentifier));
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oCLASS", aKB.getClassIri());
-            tupleQuery.setBinding("pSUBCLASS", aKB.getSubclassIri());
-            tupleQuery.setBinding("pLABEL", aKB.getLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(false);
-
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forClasses(aKB)
+                .childrenOf(aParentIdentifier)
+                .retrieveLabel()
+                .retrieveDescription()
+                .limit(aLimit)
+                .asHandles(conn, aAll));
     }
     
     @Override
@@ -1217,7 +1161,12 @@ public class KnowledgeBaseServiceImpl
             }
 
             String id = bindings.getBinding(itemVariable).getValue().stringValue();
-            if (!id.contains(":") || (!aAll && hasImplicitNamespace(aKB, id))) {
+            if (
+                    // Filter out blank nodes
+                    !id.contains(":") || 
+                    // Some KBs (e.g. YAGO) returns blank nodes as "nodeID://bXXXX"
+                    id.startsWith("nodeID") || 
+                    (!aAll && hasImplicitNamespace(aKB, id))) {
                 continue;
             }
             Binding label = bindings.getBinding(SPARQLQueryBuilder.VAR_LABEL_NAME);
@@ -1517,5 +1466,15 @@ public class KnowledgeBaseServiceImpl
             throw new IllegalArgumentException(
                     aKB + "] does not support rebuilding its full text index.");
         }
+    }
+
+    @Override
+    public  boolean isKnowledgeBaseEnabled(Project aProject, String aRepositoryId) {
+        Optional<KnowledgeBase> kb = Optional.empty();
+        String repositoryId = aRepositoryId;
+        if (repositoryId != null) {
+            kb = getKnowledgeBaseById(aProject, aRepositoryId);
+        }
+        return kb.isPresent() && kb.get().isEnabled();
     }
 }

@@ -40,6 +40,8 @@ include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+3]
 
 include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+3]
 
+include::{include-dir}annotation-schema-layer-docmeta.adoc[leveloffset=+3]
+
 include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
 
 include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
