@@ -78,7 +78,7 @@ public class PredictionGroupTest
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
         
-        assertThat(sut.iterator())
+        assertThat(sut.iterator()).toIterable()
                 .as("Sorted by confidence score (decreasing) but retain insertion order on tie")
                 .containsExactly(rec2Sug2, rec1Sug2, rec1Sug1, rec2Sug1);
     }
