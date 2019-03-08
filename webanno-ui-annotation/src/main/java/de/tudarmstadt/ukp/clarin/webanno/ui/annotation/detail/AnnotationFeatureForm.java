@@ -530,7 +530,7 @@ public class AnnotationFeatureForm
         
         List<AnnotationFeature> features = getEnabledAndVisibleFeatures(
                 AnnotationFeatureForm.this.getModelObject()
-                        .getSelectedAnnotationLayer());
+                        .getDefaultAnnotationLayer());
         if (features.size() != 1) {
             // should not come here in the first place (controlled during
             // forward annotation process)

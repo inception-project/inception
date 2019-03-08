@@ -272,7 +272,7 @@ public abstract class AnnotationDetailEditorPanel
     Map<String, String> buildKeySequenceToTagMap()
     {
         AnnotationFeature f = annotationService
-                .listAnnotationFeature(getModelObject().getSelectedAnnotationLayer()).get(0);
+                .listAnnotationFeature(getModelObject().getDefaultAnnotationLayer()).get(0);
         TagSet tagSet = f.getTagset();
         Map<Character, String> tagNames = new LinkedHashMap<>();
         Map<String, String> bindTag2Key = new LinkedHashMap<>();
@@ -664,7 +664,7 @@ public abstract class AnnotationDetailEditorPanel
             // disabled, then select that annotation and load the feature value of that annotation
             // into the {@link AnnotationFeatureForm#setSelectedTag(String) selected tag}.
             SpanAdapter adapter = (SpanAdapter) annotationService
-                    .getAdapter(state.getSelectedAnnotationLayer());
+                    .getAdapter(state.getDefaultAnnotationLayer());
             Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
             AnnotationFS annotation = selectSingleFsAt(aJCas, type, nextToken.getBegin(),
                     nextToken.getEnd());
@@ -832,7 +832,7 @@ public abstract class AnnotationDetailEditorPanel
         // #186 - After filling a slot, the annotation detail panel is not updated
         aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
 
-        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
+        TypeAdapter adapter = annotationService.getAdapter(state.getDefaultAnnotationLayer());
 
         // If this is an annotation creation action, create the annotation
         if (state.getSelection().getAnnotation().isNotSet()) {
