@@ -13,20 +13,39 @@ For the local KB, the user can optionally choose a RDF file from which to import
 
 For remote KBs, INCEpTION provides the user with some pre-configured knowledge base such as WikiData, British Museum, BabelNet, DBPediaa or Yago. The user can also set up a custom remote KB, in which case the user needs to provide the SPARQL endpoint URL for the knowledge base as in the figure below.
 
-
 [.thumb]
 image::kb2.png[align="center"]
 
-== Schema mapping
+== Settings
+
+There are various settings for knowledge bases.
+
+[.thumb]
+image::kb3.png[align="center"]
+
+=== Remote KBs
+
+The remote knowledge bases, there are the following settings:
+
+* **SPARQL endpoint URL:** The SPARQL URL used to access the knowledge base
+* **Default dataset:** A SPARQL endpoint may server multiple datasets. This setting can be used to
+  restrict queries to a specific one. Consult with the operator of the SPARQL server to see which
+  datasets are available.
+* **Result limit for SPARQL queries:** this is used to limit the amount of data retrieved from the
+  remote server, e.g when populating dropdown boxes for concept search.
+* **Full text search mode:** a SPARQL endpoint capable of full-text searching makes the knowledge
+  based considerably more responsive. Use `bif:contains` for Virtuoso servers and `lucenesail` for
+  RDF4J-based servers. Note that full-text search must be enabled on the server by the server 
+  operator.
+
+
+=== Schema mapping
 
 Different types of knowledge base schemata are supported via a configurable mapping mechanism. The user can choose one of the pre-configured mapping or provide her own custom defined mapping as shown in the screenshot below. 
 
 In the advanced settings, the user can leverage this feature of KB settings when one doesn't want the entire knowledge base to be used and rather choose to identify some specific root concepts. This feature specially helps in case of large knowledge bases such as Wikidata.
  
-[.thumb]
-image::kb3.png[align="center"]
-
-== Full text search
+=== Full text search
 
 Full text search in knowledge bases enables searching for entities by their textual context, e.g. their label. This is a prerequisite for some advanced features such as re-ranking linking candidates during entity linking. Two full text search modes are supported:
 

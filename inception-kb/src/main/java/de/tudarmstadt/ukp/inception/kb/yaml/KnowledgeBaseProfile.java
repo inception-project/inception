@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.yaml;
 
+import static java.util.Collections.emptyList;
+
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -26,6 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import org.eclipse.rdf4j.model.IRI;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -63,6 +68,38 @@ public class KnowledgeBaseProfile implements Serializable
 
     @JsonProperty("default-language")
     private String defaultLanguage;
+
+    @JsonProperty("default-dataset")
+    private IRI defaultDataset;
+
+    public KnowledgeBaseProfile()
+    {
+    }
+    
+    public KnowledgeBaseProfile(@JsonProperty("name") String aName,
+            @JsonProperty("type") RepositoryType aType,
+            @JsonProperty("access") KnowledgeBaseAccess aAccess,
+            @JsonProperty("mapping") KnowledgeBaseMapping aMapping,
+            @JsonProperty("root-concepts") List<String> aRootConcepts,
+            @JsonProperty("info") KnowledgeBaseInfo aInfo,
+            @JsonProperty("reification") Reification aReification,
+            @JsonProperty("default-language") String aDefaultLanguage,
+            @JsonProperty("default-dataset") String aDefaultDataset)
+    {
+        name = aName;
+        type = aType;
+        access = aAccess;
+        mapping = aMapping;
+        rootConcepts = aRootConcepts;
+        info = aInfo;
+        reification = aReification;
+        defaultLanguage = aDefaultLanguage;
+        
+        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+        if (aDefaultDataset != null) {
+            defaultDataset = vf.createIRI(aDefaultDataset);
+        }
+    }
 
     public String getName()
     {
@@ -106,7 +143,7 @@ public class KnowledgeBaseProfile implements Serializable
 
     public List<String> getRootConcepts()
     {
-        return rootConcepts;
+        return rootConcepts != null ? rootConcepts : emptyList();
     }
 
     public void setRootConcepts(List<String> aRootConcepts)
@@ -143,6 +180,16 @@ public class KnowledgeBaseProfile implements Serializable
     {
         defaultLanguage = aDefaultLanguage;
     }
+    
+    public IRI getDefaultDataset()
+    {
+        return defaultDataset;
+    }
+
+    public void setDefaultDataset(IRI aDefaultDataset)
+    {
+        defaultDataset = aDefaultDataset;
+    }
 
     public static Map<String, KnowledgeBaseProfile> readKnowledgeBaseProfiles()
         throws IOException
@@ -170,12 +217,13 @@ public class KnowledgeBaseProfile implements Serializable
                 && Objects.equals(rootConcepts, that.rootConcepts)
                 && Objects.equals(info, that.info)
                 && Objects.equals(reification, that.reification)
-                && Objects.equals(defaultLanguage, that.defaultLanguage);
+                && Objects.equals(defaultLanguage, that.defaultLanguage)
+                && Objects.equals(defaultDataset, that.defaultDataset);
     }
 
     @Override public int hashCode()
     {
-        return Objects
-            .hash(name, type, access, mapping, rootConcepts, info, reification, defaultLanguage);
+        return Objects.hash(name, type, access, mapping, rootConcepts, info, reification,
+                defaultLanguage, defaultDataset);
     }
 }
