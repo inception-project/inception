@@ -59,6 +59,7 @@ public class StringMatchingRecommender
     implements RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
+    private static final String UNKNOWN_LABEL = "unknown";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -162,8 +163,11 @@ public class StringMatchingRecommender
                     // Need to check that the match actually ends at a token boundary!
                     if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
                         for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            spans.add(new Span(begin, end, text.substring(begin, end),
-                                    lc.getLabel(), lc.getRelFreq()));
+                            String label = lc.getLabel();
+                            if (label == UNKNOWN_LABEL)
+                                label = null;
+                            spans.add(new Span(begin, end, text.substring(begin, end), label,
+                                    lc.getRelFreq()));
                         }
                     }
                 }
@@ -303,14 +307,16 @@ public class StringMatchingRecommender
     }
     
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
-        if (isNoneBlank(aLabel)) {
+        String label = (aLabel == null) ? UNKNOWN_LABEL : aLabel;
+    	
+        if (isNoneBlank(label)) {
             DictEntry entry = aDict.get(aText);
             if (entry == null) {
                 entry = new DictEntry(aText);
                 aDict.put(aText, entry);
             }
             
-            entry.put(aLabel);
+            entry.put(label);
         }
     }
     
