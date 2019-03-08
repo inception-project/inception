@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Resource;
@@ -273,11 +274,8 @@ public class KBConcept
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("KBConcept [identifier=");
-        builder.append(identifier);
-        builder.append("]");
-        return builder.toString();
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("language", language).append("description", description).toString();
     }
 
     @Override

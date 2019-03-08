@@ -24,6 +24,9 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.oneOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -37,6 +40,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATC
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LCASE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.union;
@@ -51,6 +55,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -100,24 +105,28 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * *not* support mixed schemes in a single KB.
  * </p>
  */
-public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQueryOptionalElements
+public class SPARQLQueryBuilder
+    implements SPARQLQueryPrimaryConditions, SPARQLQueryOptionalElements
 {
     private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
 
     public static final int DEFAULT_LIMIT = 0;
     
     public static final String VAR_SUBJECT_NAME = "s";
+    public static final String VAR_PREDICATE_NAME = "p";
     public static final String VAR_LABEL_PROPERTY_NAME = "pLabel";
     public static final String VAR_LABEL_NAME = "l";
     public static final String VAR_LABEL_CANDIDATE_NAME = "lc";
     public static final String VAR_DESCRIPTION_NAME = "d";
+    public static final String VAR_DESCRIPTION_CANDIDATE_NAME = "dc";
     
-    public static final Variable VAR_SUBJECT = SparqlBuilder.var(VAR_SUBJECT_NAME);
-    public static final Variable VAR_LABEL = SparqlBuilder.var(VAR_LABEL_NAME);
-    public static final Variable VAR_LABEL_CANDIDATE = SparqlBuilder.var(VAR_LABEL_CANDIDATE_NAME);
-    public static final Variable VAR_LABEL_PROPERTY = SparqlBuilder.var(VAR_LABEL_PROPERTY_NAME);
-    public static final Variable VAR_DESCRIPTION = SparqlBuilder.var(VAR_DESCRIPTION_NAME);
-    public static final Variable VAR_DESC_CANDIDATE = SparqlBuilder.var("dc");
+    public static final Variable VAR_SUBJECT = var(VAR_SUBJECT_NAME);
+    public static final Variable VAR_PREDICATE = var(VAR_PREDICATE_NAME);
+    public static final Variable VAR_LABEL = var(VAR_LABEL_NAME);
+    public static final Variable VAR_LABEL_CANDIDATE = var(VAR_LABEL_CANDIDATE_NAME);
+    public static final Variable VAR_LABEL_PROPERTY = var(VAR_LABEL_PROPERTY_NAME);
+    public static final Variable VAR_DESCRIPTION = var(VAR_DESCRIPTION_NAME);
+    public static final Variable VAR_DESC_CANDIDATE = var(VAR_DESCRIPTION_CANDIDATE_NAME);
 
     public static final Prefix PREFIX_LUCENE_SEARCH = SparqlBuilder.prefix("search",
             iri("http://www.openrdf.org/contrib/lucenesail#"));
@@ -130,6 +139,8 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     public static final Iri RDF_REST = Rdf.iri(RDF.REST.stringValue());
     public static final Iri RDF_FIRST = Rdf.iri(RDF.FIRST.stringValue());
         
+    private static final RdfValue EMPTY_STRING = () -> "\"\"";
+    
     private final Set<Prefix> prefixes = new LinkedHashSet<>();
     private final Set<Projectable> projections = new LinkedHashSet<>();
     private final List<GraphPattern> primaryPatterns = new ArrayList<>();
@@ -159,6 +170,8 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     private boolean caseInsensitive = true;
     
     private int limitOverride = DEFAULT_LIMIT;
+    
+    private boolean includeInferred = true;
     
     /**
      * This flag controls whether we attempt to drop duplicate labels and descriptions on the
@@ -349,7 +362,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             Iri classIri = Rdf.iri(aKb.getClassIri().toString());
             Iri subClassProperty = Rdf.iri(aKb.getSubclassIri().toString());
             Iri typeOfProperty = Rdf.iri(aKb.getTypeIri().toString());
-            Variable otherSubclass = SparqlBuilder.var("otherSubclass");
+            Variable otherSubclass = var("otherSubclass");
             
             switch (this) {
             case CLASS: {
@@ -386,7 +399,9 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
     
     /**
-     * Retrieve classes and instances.
+     * Retrieve any item from the KB. There is no check if the item looks like a class, instance or
+     * property. The IRI and property mapping used in the patters is obtained from the given KB
+     * configuration.
      */
     public static SPARQLQueryPrimaryConditions forItems(KnowledgeBase aKB)
     {
@@ -394,7 +409,9 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
 
     /**
-     * Retrieve classes.
+     * Retrieve only things that look like classes. Identifiers for classes participate as ID
+     * in {@code ID IS-A CLASS-IRI}, {@code X SUBCLASS-OF ID}, {@code ID SUBCLASS-OF X}. The
+     * IRI and property mapping used in the patters is obtained from the given KB configuration.
      */
     public static SPARQLQueryPrimaryConditions forClasses(KnowledgeBase aKB)
     {
@@ -404,7 +421,8 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
 
     /**
-     * Retrieve instances.
+     * Retrieve instances. Instances do <b>not</b> look like classes. The IRI and property mapping
+     * used in the patters is obtained from the given KB configuration.
      */
     public static SPARQLQueryPrimaryConditions forInstances(KnowledgeBase aKB)
     {
@@ -414,7 +432,8 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
 
     /**
-     * Retrieve properties.
+     * Retrieve properties. The IRI and property mapping used in the patters is obtained from the
+     * given KB configuration.
      */
     public static SPARQLQueryPrimaryConditions forProperties(KnowledgeBase aKB)
     {
@@ -472,6 +491,30 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
 
     @Override
+    public SPARQLQueryOptionalElements includeInferred()
+    {
+        includeInferred(true);
+        
+        return this;
+    }
+    
+    @Override
+    public SPARQLQueryOptionalElements excludeInferred()
+    {
+        includeInferred(false);
+        
+        return this;
+    }
+    
+    @Override
+    public SPARQLQueryOptionalElements includeInferred(boolean aEnabled)
+    {
+        includeInferred = aEnabled;
+
+        return this;
+    }
+    
+    @Override
     public SPARQLQueryOptionalElements limit(int aLimit)
     {
         limitOverride = aLimit;
@@ -512,6 +555,14 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     }
 
     @Override
+    public SPARQLQueryPrimaryConditions withIdentifier(String aIdentifier)
+    {
+        addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT, iri(aIdentifier)));
+                
+        return this;
+    }
+    
+    @Override
     public SPARQLQueryBuilder withLabelMatchingExactlyAnyOf(String... aValues)
     {
         if (aValues.length == 0) {
@@ -522,13 +573,13 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(Priority.PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -626,13 +677,13 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
         }
         else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(Priority.PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
         }
         else {
             throw new IllegalStateException(
@@ -658,13 +709,13 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         IRI ftsMode = kb.getFullTextSearchIri();
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(Priority.PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
         }
         else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(Priority.PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -901,21 +952,28 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         
         // Match with default language
         if (language != null) {
-            expressions.add(and(function(aFunction, variable, literalOf(value)),
+            expressions.add(and(
+                    function(aFunction, variable, literalOf(value)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
         }
 
         // Match without language
-        expressions.add(function(aFunction, variable, literalOf(value)));
-        
+        expressions.add(and(
+                function(aFunction, variable, literalOf(value)),
+                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                        .parenthesize());
+
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // expressions.add(function(aFunction, variable, literalOf(value)));
+
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
     @Override
     public SPARQLQueryPrimaryConditions roots()
     {
-        addPattern(Priority.PRIMARY, mode.rootsPattern(kb));
+        addPattern(PRIMARY, mode.rootsPattern(kb));
         
         return this;
     }
@@ -925,7 +983,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     {
         Iri contextIri = Rdf.iri(aItemIri);
         
-        addPattern(Priority.PRIMARY, mode.ancestorsPattern(kb, contextIri));
+        addPattern(PRIMARY, mode.ancestorsPattern(kb, contextIri));
         
         return this;
     }
@@ -935,7 +993,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     {
         Iri contextIri = Rdf.iri(aClassIri);
         
-        addPattern(Priority.PRIMARY, mode.descendentsPattern(kb, contextIri));
+        addPattern(PRIMARY, mode.descendentsPattern(kb, contextIri));
         
         return this;
     }
@@ -945,7 +1003,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     {
         Iri contextIri = Rdf.iri(aClassIri);
         
-        addPattern(Priority.PRIMARY, mode.childrenPattern(kb, contextIri));
+        addPattern(PRIMARY, mode.childrenPattern(kb, contextIri));
         
         return this;
     }
@@ -955,7 +1013,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     {
         Iri contextIri = Rdf.iri(aClassIri);
         
-        addPattern(Priority.PRIMARY, mode.parentsPattern(kb, contextIri));
+        addPattern(PRIMARY, mode.parentsPattern(kb, contextIri));
         
         return this;
     }
@@ -965,15 +1023,25 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         Iri classIri = Rdf.iri(kb.getClassIri().toString());
         Iri subClassProperty = Rdf.iri(kb.getSubclassIri().toString());
         Iri typeOfProperty = Rdf.iri(kb.getTypeIri().toString());
+
+        List<GraphPattern> classPatterns = new ArrayList<>();
+        
+        // ... it is explicitly defined as being a class
+        classPatterns.add(VAR_SUBJECT.has(typeOfProperty, classIri));
+        // ... it has any subclass
+        classPatterns.add(bNode().has(subClassProperty, VAR_SUBJECT));
+        // ... it has any superclass
+        classPatterns.add(VAR_SUBJECT.has(subClassProperty, bNode()));
+        
+        if (OWL.CLASS.equals(kb.getClassIri())) {
+            classPatterns.add(VAR_SUBJECT.has(
+                    Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                    bNode()));
+        }
         
         // An item is a class if ...
-        addPattern(Priority.PRIMARY_RESTRICTIONS, filterExists(union(new GraphPattern[] {
-                // ... it is explicitly defined as being a class
-                VAR_SUBJECT.has(typeOfProperty, classIri),
-                // ... it has any subclass
-                bNode().has(subClassProperty, VAR_SUBJECT),
-                // ... it has any superclass
-                VAR_SUBJECT.has(subClassProperty, bNode())})));
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterExists(union(classPatterns.stream().toArray(GraphPattern[]::new))));
     }
     
     private void limitToInstances()
@@ -983,7 +1051,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         Iri typeOfProperty = Rdf.iri(kb.getTypeIri().toString());
         
         // An item is a class if ...
-        addPattern(Priority.PRIMARY_RESTRICTIONS, VAR_SUBJECT.has(typeOfProperty, bNode())
+        addPattern(PRIMARY_RESTRICTIONS, VAR_SUBJECT.has(typeOfProperty, bNode())
                 // ... it is explicitly defined as being a class
                 .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
                 // ... it has any subclass
@@ -1011,8 +1079,12 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         
         List<GraphPattern> labelPatterns = new ArrayList<>();
 
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        
         // Find all labels without any language
-        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+        labelPatterns.add(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                .filter(function(LANGMATCHES, function(LANG, VAR_LABEL_CANDIDATE), EMPTY_STRING)));
 
         // Find all labels corresponding to the KB language
         if (language != null) {
@@ -1021,12 +1093,12 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
                             literalOf(language))));
         }
 
-        addPattern(Priority.SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
+        addPattern(SECONDARY, bindLabelProperties(VAR_LABEL_PROPERTY));
         
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
         // normally match to be removed from the results set. Using a UNION seems to address this
         //labelPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
-        addPattern(Priority.SECONDARY,
+        addPattern(SECONDARY,
                 optional(union(labelPatterns.toArray(new GraphPattern[labelPatterns.size()]))));
         
         return this;
@@ -1054,16 +1126,25 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
                             literalOf(language))));
         }
 
+        // Match with any language (the reduce code doesn't handle this properly atm)
+        // descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
+        
         // Find all descriptions without any language
-        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE));
+        descriptionPatterns.add(VAR_SUBJECT.has(descProperty, VAR_DESC_CANDIDATE)
+                .filter(function(LANGMATCHES, function(LANG, VAR_DESC_CANDIDATE), EMPTY_STRING)));
 
         // Virtuoso has trouble with multiple OPTIONAL clauses causing results which would 
         // normally match to be removed from the results set. Using a UNION seems to address this
-        //descriptionPatterns.forEach(pattern -> addPattern(Priority.SECONDARY, optional(pattern)));
-        addPattern(Priority.SECONDARY, optional(
+        //descriptionPatterns.forEach(pattern -> addPattern(SECONDARY, optional(pattern)));
+        addPattern(SECONDARY, optional(
                 union(descriptionPatterns.toArray(new GraphPattern[descriptionPatterns.size()]))));
         
         return this;
+    }
+    
+    private int getLimit()
+    {
+        return limitOverride > 0 ? limitOverride : kb.getMaxResults();
     }
     
     @Override
@@ -1097,7 +1178,16 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
                     SparqlBuilder.from(Rdf.iri(kb.getDefaultDatasetIri().stringValue()))));
         }
         
-        query.limit(limitOverride > 0 ? limitOverride : kb.getMaxResults());
+        int actualLimit = getLimit();
+        
+        if (!serverSideReduce) {
+            // If we do not do a server-side reduce, then we may get two results for every item
+            // from the server (one with and one without the language), so we need to double the
+            // query limit and cut down results locally later.
+            actualLimit = actualLimit * 2;
+        }
+        
+        query.limit(actualLimit);
         
         return query;
     }
@@ -1122,6 +1212,7 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
         }
         else {
             TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+            tupleQuery.setIncludeInferred(includeInferred);
             results = evaluateListQuery(tupleQuery, aAll);
             results.sort(Comparator.comparing(KBObject::getUiLabel, String.CASE_INSENSITIVE_ORDER));
             
@@ -1171,6 +1262,36 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
             
             return result;
         }
+    }
+    
+    @Override
+    public Optional<KBHandle> asHandle(RepositoryConnection aConnection, boolean aAll)
+    {
+        long startTime = currentTimeMillis();
+        String queryId = toHexString(hashCode());
+
+        limit(1);
+        
+        String queryString = selectQuery().getQueryString();
+        LOG.trace("[{}] Query: {}", queryId, queryString);
+
+        Optional<KBHandle> result;
+        if (returnEmptyResult) {
+            result = Optional.empty();
+            
+            LOG.debug("[{}] Query was skipped because it would not return any results anyway",
+                    queryId);
+        }
+        else {
+            TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+            tupleQuery.setIncludeInferred(includeInferred);
+            result = evaluateListQuery(tupleQuery, aAll).stream().findFirst();
+            
+            LOG.debug("[{}] Query returned a result in {}ms", queryId,
+                    currentTimeMillis() - startTime);
+        }
+
+        return result;    
     }
     
     /**
@@ -1227,18 +1348,20 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     {
         Map<String, KBHandle> cMap = new LinkedHashMap<>();
         for (KBHandle handle : aHandles) {
+            // Not recorded yet -> add it
             if (!cMap.containsKey(handle.getIdentifier())) {
                 cMap.put(handle.getIdentifier(), handle);
             }
+            // Found an exact language match -> use that one instead
             else if (kb.getDefaultLanguage().equals(handle.getLanguage())) {
                 cMap.put(handle.getIdentifier(), handle);
             }
         }
         
-//        LOG.trace("Input: {}", aHandles);
-//        LOG.trace("Output: {}", cMap.values());
-        
-        return new ArrayList<>(cMap.values());
+        LOG.trace("Input: {}", aHandles);
+        LOG.trace("Output: {}", cMap.values());
+
+        return cMap.values().stream().limit(getLimit()).collect(Collectors.toList());
     }
     
     private void extractLabel(KBHandle aTargetHandle, BindingSet aSourceBindings)
@@ -1274,12 +1397,12 @@ public class SPARQLQueryBuilder implements SPARQLQueryPrimaryConditions, SPARQLQ
     private void extractDescription(KBHandle aTargetHandle, BindingSet aSourceBindings)
     {
         Binding description = aSourceBindings.getBinding(VAR_DESCRIPTION_NAME);
-        Binding descGeneral = aSourceBindings.getBinding("descGeneral");
+        Binding descCandidate = aSourceBindings.getBinding(VAR_DESCRIPTION_CANDIDATE_NAME);
         if (description != null) {
             aTargetHandle.setDescription(description.getValue().stringValue());
         }
-        else if (descGeneral != null) {
-            aTargetHandle.setDescription(descGeneral.getValue().stringValue());
+        else if (descCandidate != null) {
+            aTargetHandle.setDescription(descCandidate.getValue().stringValue());
         }
     }
     
