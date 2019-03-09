@@ -41,4 +41,31 @@ public interface SPARQLQueryOptionalElements
     SPARQLQueryOptionalElements caseSensitive(boolean aEnabled);
 
     SPARQLQueryOptionalElements caseInsensitive();
+
+    /**
+     * Include inferred statements in query results. This is the default.
+     * 
+     * This setting is only effective for methods which actually return results (e.g.
+     * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
+     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     */
+    SPARQLQueryOptionalElements includeInferred();
+
+    /**
+     * Exclude inferred statements in query results. The default is to include them.
+     * 
+     * This setting is only effective for methods which actually return results (e.g.
+     * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
+     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     */
+    SPARQLQueryOptionalElements excludeInferred();
+
+    /**
+     * Set whether to include inferred statements in query results. The default is {@code true}.
+     * 
+     * This setting is only effective for methods which actually return results (e.g.
+     * {@link SPARQLQuery#asHandles} or {@link SPARQLQuery#exists}) but not for methods which just
+     * construct the query (e.g. {@link SPARQLQuery#selectQuery}.
+     */
+    SPARQLQueryOptionalElements includeInferred(boolean aEnabled);
 }
