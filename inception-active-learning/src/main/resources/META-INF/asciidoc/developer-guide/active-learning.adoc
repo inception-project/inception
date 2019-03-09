@@ -69,6 +69,8 @@ ActiveLearningStrategy <|-- UncertaintySamplingStrategy
 
 == Sampling strategies
 
+[[sect_activeLearning_uncertaintySampling]]
+=== Uncertainty sampling
 Currently, there is only a single sampling strategy, namely the `UncertaintySamplingStrategy`. It
 it compares the confidence scores of the annotation suggestion. The smaller the difference between
 the best and the second best score, the earlier the suggestion is proposed to the user. The 
