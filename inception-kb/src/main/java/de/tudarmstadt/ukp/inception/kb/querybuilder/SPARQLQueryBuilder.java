@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Pr
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
@@ -50,8 +51,8 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfLanguage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -168,8 +169,6 @@ public class SPARQLQueryBuilder
      * the query string against which to match a label causes the query to become empty.
      */
     private boolean returnEmptyResult = false;
-    
-    private String uniqueResultIdentifier;
     
     private final KnowledgeBase kb;
     private final Mode mode;
@@ -566,11 +565,10 @@ public class SPARQLQueryBuilder
     }
 
     @Override
-    public SPARQLQueryPrimaryConditions withIdentifier(String aIdentifier)
+    public SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers)
     {
-        addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT, iri(aIdentifier)));
-        
-        uniqueResultIdentifier = aIdentifier;
+        addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT,
+                Arrays.stream(aIdentifiers).map(Rdf::iri).toArray(RdfValue[]::new)));
         
         return this;
     }
@@ -1326,9 +1324,8 @@ public class SPARQLQueryBuilder
             // The only way to tell if a statement was inferred or not is by running the same query
             // twice, once with and once without inference being enabled. Those that are in the
             // first but not in the second were the inferred statements.
-            List<Statement> explicitStmts = listStatements(tupleQuery, uniqueResultIdentifier,
-                    false);
-            List<Statement> allStmts = listStatements(tupleQuery, uniqueResultIdentifier, true);
+            List<Statement> explicitStmts = listStatements(tupleQuery, false);
+            List<Statement> allStmts = listStatements(tupleQuery, true);
             
             results = new ArrayList<>();
             for (Statement stmt : allStmts) {
@@ -1349,13 +1346,12 @@ public class SPARQLQueryBuilder
                     continue;
                 }
 
-                Set<Statement> originalStatements = new HashSet<>();
-                originalStatements.add(stmt);
-
-                KBStatement kbStatement = new KBStatement(new KBHandle(uniqueResultIdentifier),
-                        new KBHandle(stmt.getPredicate().stringValue()), value);
+                KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
+                KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
+                
+                KBStatement kbStatement = new KBStatement(subject, predicate, value);
                 kbStatement.setInferred(!explicitStmts.contains(stmt));
-                kbStatement.setOriginalStatements(originalStatements);
+                kbStatement.setOriginalStatements(singleton(stmt));
 
                 results.add(kbStatement);
             }
@@ -1367,14 +1363,12 @@ public class SPARQLQueryBuilder
         return results;
     }
     
-    private List<Statement> listStatements(TupleQuery aQuery, String aIdentifier,
-            boolean aIncludeInferred)
+    private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
     {
         aQuery.setIncludeInferred(aIncludeInferred);
         TupleQueryResult result = aQuery.evaluate();
         
         ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI subject = vf.createIRI(aIdentifier);
         
         List<Statement> statements = new ArrayList<>();
         while (result.hasNext()) {
@@ -1385,9 +1379,11 @@ public class SPARQLQueryBuilder
             
             LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
             
+            Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
             Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
             Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
 
+            IRI subject = vf.createIRI(subj.getValue().stringValue());
             IRI predicate = vf.createIRI(pred.getValue().stringValue());
             Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
             
