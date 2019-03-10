@@ -476,13 +476,6 @@ public class SPARQLQueryBuilder
         }
     }
     
-    private boolean hasPrimaryPatterns()
-    {
-        // If we force the query to return an empty result, that means that we intentionally skipped
-        // adding a primary query
-        return returnEmptyResult || !primaryPatterns.isEmpty();
-    }
-    
     private Projectable getLabelProjection()
     {
         if (serverSideReduce) {
@@ -1108,10 +1101,6 @@ public class SPARQLQueryBuilder
             return this;
         }
         
-        if (!hasPrimaryPatterns()) {
-            throw new IllegalStateException("Call a method which adds primary patterns first");
-        }
-        
         // Retain only the first description
         projections.add(getLabelProjection());
         
@@ -1147,10 +1136,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryOptionalElements retrieveDescription()
     {
-        if (!hasPrimaryPatterns()) {
-            throw new IllegalStateException("Call a method which adds primary patterns first");
-        }
-        
         // Retain only the first description
         projections.add(getDescriptionProjection());
         
