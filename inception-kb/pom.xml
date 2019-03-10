@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.8.1-SNAPSHOT</version>
   </parent>
   <artifactId>inception-kb</artifactId>
   <name>INCEpTION - Knowledge Base - Core</name>
@@ -59,9 +59,8 @@
       <artifactId>commons-compress</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-repository-sail</artifactId>
-        <version>${inception-rdf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
@@ -76,19 +75,16 @@
       <artifactId>rdf4j-repository-manager</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-sail-lucene</artifactId>
-      <version>${inception-rdf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-sail-lucene-api</artifactId>
-      <version>${inception-rdf4j.version}</version>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.rdf4j</groupId>
+      <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-sail-nativerdf</artifactId>
-      <version>${inception-rdf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
@@ -126,6 +122,15 @@
     <dependency>
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-query</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-sparqlbuilder</artifactId>
+      <version>${rdf4j.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.github.jsonld-java</groupId>
+      <artifactId>jsonld-java</artifactId>
     </dependency>
     <dependency>
       <groupId>org.cyberborean</groupId>
@@ -252,6 +257,11 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-sail-memory</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

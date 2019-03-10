@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -134,7 +133,7 @@ public class PdfAnnotationEditor
                     handleError("Could not find a match for the following annotations: "
                         + annotations, aTarget);
                 }
-                String script = getAnnotationsJS(pdfAnnoModel, aTarget);
+                String script = getAnnotationsJS(pdfAnnoModel);
                 aTarget.appendJavaScript(script);
             }
             catch (IOException e)
@@ -191,8 +190,8 @@ public class PdfAnnotationEditor
                         aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
                         docOffset.getEnd());
                 } else {
-                    getModelObject().getSelection()
-                        .selectSpan(paramId, aJCas, docOffset.getBegin(), docOffset.getEnd());
+                    getModelObject().getSelection().selectSpan(paramId, aJCas.getCas(),
+                            docOffset.getBegin(), docOffset.getEnd());
                     getActionHandler().actionSelect(aTarget, aJCas);
                 }
             } else {
@@ -245,6 +244,54 @@ public class PdfAnnotationEditor
         }
     }
 
+    private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                          JCas aJCas)
+        throws IOException
+    {
+        try {
+            AnnotationFS originFs = selectByAddr(aJCas,
+                aParams.getParameterValue("origin").toInt());
+            AnnotationFS targetFs = selectByAddr(aJCas,
+                aParams.getParameterValue("target").toInt());
+
+            AnnotatorState state = getModelObject();
+            Selection selection = state.getSelection();
+            selection.selectArc(VID.parseOptional(aParams.getParameterValue("id").toString()),
+                originFs, targetFs);
+
+            if (selection.getAnnotation().isSet()) {
+                getActionHandler().actionSelect(aTarget, aJCas);
+            }
+        }
+        catch (AnnotationException e)
+        {
+            handleError("Unable to select relation annotation", e, aTarget);
+        }
+    }
+
+    private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
+                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+    {
+        try {
+            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+            if (paramId.isSynthetic()) {
+                Offset offset = new Offset(aParams);
+                Offset docOffset = PdfAnnoRenderer
+                    .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                if (docOffset != null) {
+                    extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
+                        aJCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                } else {
+                    handleError("Unable to delete recommendation: No match was found", aTarget);
+                }
+            }
+        }
+        catch (AnnotationException | IOException e)
+        {
+            handleError("Unable to delete recommendation", e, aTarget);
+        }
+    }
+
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams,
                                  String aPdftxt)
     {
@@ -262,7 +309,10 @@ public class PdfAnnotationEditor
                 break;
             case "createRelation": createRelationAnnotation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
-            case "selectRelation":
+            case "selectRelation": selectRelationAnnotation(aTarget, aParams, jCas);
+                break;
+            case "deleteRecommendation":
+                deleteRecommendation(aTarget, aParams, jCas, pdfExtractFile);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }
@@ -276,21 +326,16 @@ public class PdfAnnotationEditor
     /**
      * Returns JavaScript code that imports annotation data in PDFAnno
      */
-    public String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel, AjaxRequestTarget aTarget)
+    private String getAnnotationsJS(PdfAnnoModel aPdfAnnoModel)
     {
-        try {
-            return String.join("",
-                "var annoFile = `\n",
-                aPdfAnnoModel.getAnnoFileContent(),
-                "`;",
-                "pdfanno.contentWindow.annoPage.importAnnotation({",
-                "'primary': true,",
-                "'colorMap': ", JSONUtil.toJsonString(aPdfAnnoModel.getColorMap()), ",",
-                "'annotations':[annoFile]}, true);"
-            );
-        } catch (IOException e) {
-            handleError("Could not map PDFAnno ColorMap to JSON String", e, aTarget);
-        }
-        return "";
+        return String.join("",
+            "var annoFile = `\n",
+            aPdfAnnoModel.getAnnoFileContent(),
+            "`;",
+            "pdfanno.contentWindow.annoPage.importAnnotation({",
+            "'primary': true,",
+            "'colorMap': {},",
+            "'annotations':[annoFile]}, true);"
+        );
     }
 }

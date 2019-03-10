@@ -40,6 +40,8 @@ include::{include-dir}annotation-schema-layer-span.adoc[leveloffset=+3]
 
 include::{include-dir}annotation-schema-layer-relation.adoc[leveloffset=+3]
 
+include::{include-dir}annotation-schema-layer-docmeta.adoc[leveloffset=+3]
+
 include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloffset=+2]
 
 include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
@@ -59,6 +61,8 @@ include::{include-dir}log-adapter.adoc[leveloffset=+2]
 include::{include-dir}knowledgebase.adoc[leveloffset=+1]
 
 include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
+
+include::{include-dir}concept-linking.adoc[leveloffset=+1]
 
 <<<
 

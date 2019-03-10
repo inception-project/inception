@@ -131,8 +131,6 @@ public interface KnowledgeBaseService
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
         throws RepositoryConfigException, RepositoryException;
 
-    void registerImplicitNamespace(String aImplicitNameSpace);
-
     /**
      * Creates a new concept in the given knowledge base. Does nothing 
      * if the knowledge base is read only.
@@ -499,7 +497,7 @@ public interface KnowledgeBaseService
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
-    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
     
     /**
@@ -512,8 +510,6 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
-
-    boolean hasImplicitNamespace(KnowledgeBase kb, String s);
 
     /**
      * List all the concepts
@@ -561,28 +557,6 @@ public interface KnowledgeBaseService
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 
-   /**
-     *  List all Instances of a given knowledge base
-     * @param aKB the knowledge base
-     * @param aAll indicates whether to include everything
-     * @return list of all the instances {@link KBHandle}
-     */
-    List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll);
-
-    /**
-     * List all the concepts/instances in a given scope. The scope is given in form of a knowledge
-     * base id and a concept id. Null can be passed as a wildcard. If the the given
-     * knowledge base id or concept id can not be found the method will return an empty list.
-     *
-     * @param aRepositoryId the id of the knowledge base that is searched in
-     * @param aConceptScope the id of a concept that defines a scope
-     * @param aValueType    whether only concepts/instances or both should be returned
-     * @param project       the corresponding project
-     * @return a list of all entities within the given scope
-     */
-    List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
-        ConceptFeatureValueType aValueType, Project project);
-
     /**
      * Gets a list of sub-property of label 
      * 
@@ -591,4 +565,11 @@ public interface KnowledgeBaseService
      * @return set of properties
      */
     Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
+
+    /**
+     * Checks weather a knowledge base is present and enabled, given a repository id
+     * @param repositoryID id of the knowledge base
+     * @return whether the knowledge base with the given id is available or not
+     */
+    boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
 }

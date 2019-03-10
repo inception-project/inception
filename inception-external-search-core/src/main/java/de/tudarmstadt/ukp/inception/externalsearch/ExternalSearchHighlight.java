@@ -17,49 +17,55 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import static java.util.Collections.emptyList;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.Validate;
 
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
 
 /**
- * This class represents a highlight from external search result.
- * A highlight is a section of text containing occurrence(s) of keywords.
- * The offsets tells where those keywords are within the original text document.
+ * This class represents a highlight from external search result. A highlight is a section of text
+ * containing occurrence(s) of keywords. The offsets tells where those keywords are within the
+ * original text document.
  */
-public class ExternalSearchHighlight implements Serializable
+public class ExternalSearchHighlight
+    implements Serializable
 {
-
     private static final long serialVersionUID = 4044755133816131842L;
 
-    private String highlight = null;
+    private final String highlight;
 
-    private List<OffsetSpan> offsets;
+    private final List<OffsetSpan> offsets;
 
-    public ExternalSearchHighlight(List<OffsetSpan> aOffsets) throws IllegalArgumentException
+    public ExternalSearchHighlight(String aHighlight) throws IllegalArgumentException
     {
-        Validate.notEmpty(aOffsets, "Offsets must not be empty");
-        offsets = new ArrayList<>(aOffsets);
+        Validate.notNull(aHighlight, "Highlight text must be present");
 
+        offsets = null;
+        highlight = aHighlight;
     }
 
     public ExternalSearchHighlight(String aHighlight, List<OffsetSpan> aOffsets)
         throws IllegalArgumentException
     {
-        this(aOffsets);
+        Validate.notNull(aOffsets, "Offsets must not be null");
+        Validate.notNull(aHighlight, "Highlight text must be present");
+
+        offsets = new ArrayList<>(aOffsets);
         highlight = aHighlight;
     }
 
-    public Optional<String> getHighlight()
+    public String getHighlight()
     {
-        return Optional.ofNullable(highlight);
+        return highlight;
     }
 
-    public List<OffsetSpan> getOffsets() {
-        return offsets;
+    public List<OffsetSpan> getOffsets()
+    {
+        return offsets != null ? offsets : emptyList();
     }
 }

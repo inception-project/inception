@@ -114,7 +114,12 @@ export function renderRelation (a) {
 
   group.appendChild(relation)
 
+// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
+/*
   const $base = $('<div/>').css({
+*/
+  const $base = $('<div title="' + a.text + '"/>').css({
+// END INCEpTION EXTENSION
     position   : 'absolute',
     top        : 0,
     left       : 0,
