@@ -596,20 +596,27 @@ public class KnowledgeBaseServiceImpl
     public List<KBHandle> listProperties(KnowledgeBase aKB, boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
+        return read(aKB, conn -> SPARQLQueryBuilder
+                .forProperties(aKB)
+                .retrieveLabel()
+                .retrieveDescription()
+                .includeInferred(aIncludeInferred)
+                .asHandles(conn, aAll));
+        
+//        Set<KBHandle> labels = getSubPropertyLabels(aKB);
+//        List<KBHandle> resultList = read(aKB, (conn) -> {
+//            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB, labels);
+//            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+//            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
+//            tupleQuery.setBinding("oPROPERTY", aKB.getPropertyTypeIri());
+//            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
+//            tupleQuery.setBinding("pDESCRIPTION", aKB.getDescriptionIri());
+//            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
+//            tupleQuery.setIncludeInferred(aIncludeInferred);
+//            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
+//        });
+//        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
+//        return resultList;
     }
     
     @Override
@@ -636,7 +643,6 @@ public class KnowledgeBaseServiceImpl
         return subPropertyLabelSet;
     }
 
-    
     
     public List<KBHandle> getSubProperty(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException
@@ -919,29 +925,6 @@ public class KnowledgeBaseServiceImpl
         List<KBHandle> resultLabelList = readLabelsWithoutLanguage(aKB, aAll, resultList);
         resultLabelList.sort(Comparator.comparing(KBObject::getUiLabel));
         return resultLabelList;
-    }
-    
-    @Override
-    public List<KBHandle> listProperties(KnowledgeBase aKB, IRI aType, boolean aIncludeInferred,
-            boolean aAll)
-        throws QueryEvaluationException
-    {
-        Set<KBHandle> labels = getSubPropertyLabels(aKB);
-        List<KBHandle> resultList = read(aKB, (conn) -> {
-            String QUERY = SPARQLQueryStore.queryForPropertyList(aKB, labels);
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("pTYPE", aKB.getTypeIri());
-            tupleQuery.setBinding("oPROPERTY", aType);
-            tupleQuery.setBinding("pLABEL", aKB.getPropertyLabelIri());
-            tupleQuery.setBinding("pDESCRIPTION", aKB.getPropertyDescriptionIri());
-            tupleQuery.setBinding("pSUBPROPERTY", aKB.getSubPropertyIri());
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            return evaluateListQuery(aKB, tupleQuery, aAll, "s");
-        });
-
-        resultList.sort(Comparator.comparing(KBObject::getUiLabel));
-        return resultList;
     }
     
     @Override

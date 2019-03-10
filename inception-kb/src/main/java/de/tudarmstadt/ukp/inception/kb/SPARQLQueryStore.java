@@ -221,29 +221,7 @@ public final class SPARQLQueryStore
         query.append("\n" + "} " + "\n" + "LIMIT " + limit);        
         return query.toString();
     }
-    
-    
-    /** 
-     * Query to list properties from a knowledge base.
-     */
-    public static final String queryForPropertyList(KnowledgeBase aKB,
-        Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) ?spl WHERE {"
-                , "  { ?s ?pTYPE ?oPROPERTY .}"
-                , "  UNION "
-                , "  { ?s a ?prop" 
-                , "    VALUES ?prop { rdf:Property owl:ObjectProperty owl:DatatypeProperty owl:AnnotationProperty }"
-                , "  }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?spl")
-            , "}"
-                , "LIMIT " + aKB.getMaxResults());
-    }
-        
+            
     /** 
      * Query to get sub property from a knowledge base.
      */

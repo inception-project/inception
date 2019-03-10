@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -235,7 +237,8 @@ public class KBHandle
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
-                .append("description", description).append("language", language).toString();
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("identifier", identifier)
+                .append("name", name).append("description", description)
+                .append("language", language).toString();
     }
 }

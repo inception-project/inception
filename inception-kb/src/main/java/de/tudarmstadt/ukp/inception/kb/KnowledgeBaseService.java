@@ -403,22 +403,6 @@ public interface KnowledgeBaseService
             boolean aIncludeInferred, boolean aAll);
     
     /**
-     * List the properties
-     * 
-     * @param kb
-     *            The knowledge base
-     * @param aType
-     *            a {@link IRI} for type of property
-     * @param aIncludeInferred
-     *            indicates whether inferred statements should be included in the result.
-     * @param aAll
-     *            indicates whether to include base properties or not
-     * @return All properties 
-     */
-    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-            aAll);
-
-    /**
      * Adds a new qualifier in the given knowledge base. Does
      * nothing if the knowledge base is read only.
      * @param kb The knowledge base from which the new qualifier will be added

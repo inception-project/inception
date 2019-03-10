@@ -35,6 +35,7 @@ import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -57,7 +58,9 @@ public class SPARQLQueryBuilderTest
     private static final String TURTLE_PREFIX = String.join("\n",
             "@base <http://example.org/> .",
             "@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .",
-            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .");
+            "@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .",
+            "@prefix so: <http://schema.org/> .",
+            "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .");
     
     private static final String DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE = String.join("\n",
             "<#green-goblin>",
@@ -127,7 +130,34 @@ public class SPARQLQueryBuilderTest
             "<#1-1-1-instance-4>",
             "    rdf:type <#subclass1-1-1> ."
     );
-
+    
+    /**
+     * This dataset contains properties, some in a hierarchical relationship. There is again a
+     * naming scheme: all properties have "property" in their name. Subproperties start with
+     * "subproperty" and then a number. The dataset also contains some non-properties to be able
+     * to ensure that queries limited to properties do not return non-properties.
+     */
+    private static final String DATA_PROPERTIES = String.join("\n",
+            "<#explicitRoot>",
+            "    rdf:type rdfs:Class .",
+            "<#property-1>",
+            "    rdf:type rdf:Property ;",
+            "    skos:prefLabel 'Property 1' ;",
+            "    so:description 'Property One' .",
+            "<#property-2>",
+            "    rdf:type rdf:Property ;",
+            "    skos:prefLabel 'Property 2' ;",
+            "    so:description 'Property Two' .",
+            "<#subproperty-1-1>",
+            "    rdfs:subPropertyOf <#property-1> ;",
+            "    skos:prefLabel 'Subproperty 1-1' ;",
+            "    so:description 'Property One-One' .",
+            "<#subclass1>",
+            "    rdf:type rdfs:Class ;",
+            "    rdfs:subClassOf <#explicitRoot> ;",
+            "    <#implicit-property-1> 'value1' ."
+    );
+    
     private KnowledgeBase kb;
     private Repository rdf4jLocalRepo;
     private Repository ukpVirtuosoRepo;
@@ -142,18 +172,24 @@ public class SPARQLQueryBuilderTest
     @Before
     public void setUp()
     {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.LOCAL);
+
+        kb.setTypeIri(RDF.TYPE);
+
         kb.setClassIri(RDFS.CLASS);
         kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
         kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
         kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setPropertyLabelIri(RDFS.LABEL);
-        kb.setPropertyDescriptionIri(RDFS.COMMENT);
+        
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
         
@@ -358,6 +394,46 @@ public class SPARQLQueryBuilderTest
                         new KBHandle("http://example.org/#red-goblin", "Red Goblin",
                                 "Little red monster"));
     }
+    
+    @Test
+    public void thatAllPropertiesCanBeRetrieved() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forProperties(kb)
+                .retrieveLabel()
+                .retrieveDescription());
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .usingElementComparatorOnFields(
+                        "identifier", "name", "description")
+                .containsExactlyInAnyOrder(
+                        new KBHandle("http://example.org/#property-1", "Property 1",
+                                "Property One"),
+                        new KBHandle("http://example.org/#property-2", "Property 2",
+                                "Property Two"),
+                        new KBHandle("http://example.org/#subproperty-1-1", "Subproperty 1-1",
+                                "Property One-One"));
+    }
+
+    @Test
+    public void thatPropertyQueryLimitdToDescendantsDoesNotReturnOutOfScopeResults()
+        throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forProperties(kb)
+                .descendantsOf("http://example.org/#property-1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#subproperty-1-1");
+    }
+
 
     @Test
     public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception

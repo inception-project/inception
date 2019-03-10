@@ -238,14 +238,14 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern descendentsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
-            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri());
+            Iri subPropertyProperty = Rdf.iri(aKB.getSubPropertyIri());
                         
             switch (this) {
             case ITEM: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString() + "+", aContext));
+                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
                 classPatterns.add(VAR_SUBJECT
                         .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {
@@ -271,6 +271,8 @@ public class SPARQLQueryBuilder
             case INSTANCE:
                 return VAR_SUBJECT.has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)),
                         aContext);
+            case PROPERTY:
+                return VAR_SUBJECT.has(Path.of(oneOrMore(subPropertyProperty)), aContext);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }            
@@ -281,8 +283,9 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern ancestorsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
-            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri());
+            Iri subPropertyProperty = Rdf.iri(aKB.getSubPropertyIri());
                         
             switch (this) {
             case ITEM:
@@ -301,6 +304,8 @@ public class SPARQLQueryBuilder
                 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
+            case PROPERTY:
+                return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }            
@@ -311,7 +316,8 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern childrenPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri());
+            Iri subPropertyProperty = Rdf.iri(aKB.getSubPropertyIri());
                         
             switch (this) {
             case CLASS: {
@@ -325,6 +331,8 @@ public class SPARQLQueryBuilder
                 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
+            case PROPERTY:
+                return VAR_SUBJECT.has(Path.of(oneOrMore(subPropertyProperty)), aContext);
             default:
                 throw new IllegalStateException("Can only request children of classes");
             }            
@@ -335,7 +343,8 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern parentsPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri());
+            Iri subPropertyProperty = Rdf.iri(aKB.getSubPropertyIri());
              
             switch (this) {
             case CLASS: {
@@ -349,6 +358,8 @@ public class SPARQLQueryBuilder
                 
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
+            case PROPERTY:
+                return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Can only request parents of classes");
             }            
@@ -437,7 +448,9 @@ public class SPARQLQueryBuilder
      */
     public static SPARQLQueryPrimaryConditions forProperties(KnowledgeBase aKB)
     {
-        return new SPARQLQueryBuilder(aKB, Mode.PROPERTY);
+        SPARQLQueryBuilder builder = new SPARQLQueryBuilder(aKB, Mode.PROPERTY);
+        builder.limitToProperties();
+        return builder;
     }
 
     private SPARQLQueryBuilder(KnowledgeBase aKB, Mode aMode)
@@ -1059,6 +1072,33 @@ public class SPARQLQueryBuilder
                 // ... it has any superclass
                 .filterNotExists(VAR_SUBJECT.has(subClassProperty, bNode())));
     }
+        
+    private void limitToProperties()
+    {
+        Iri propertyIri = iri(kb.getPropertyTypeIri());
+        Iri subPropertyProperty = iri(kb.getSubPropertyIri());
+        Iri typeOfProperty = iri(kb.getTypeIri());
+        Iri pSubClass = iri(kb.getSubclassIri()); 
+        
+        List<GraphPattern> propertyPatterns = new ArrayList<>();
+
+        // An item is a property if ...
+        // ... it is explicitly defined as being a property
+        propertyPatterns
+                .add(VAR_SUBJECT.has(Path.of(typeOfProperty, zeroOrMore(pSubClass)), propertyIri));
+        // ... it has any subproperties
+        propertyPatterns.add(bNode().has(subPropertyProperty, VAR_SUBJECT));
+        // ... it has any superproperties
+        propertyPatterns.add(VAR_SUBJECT.has(subPropertyProperty, bNode()));
+        
+        // This may be a bit too general... e.g. it takes forever to complete on YAGO
+        //// ... or it essentially appears in the predicate position :)
+        //propertyPatterns.add(bNode().has(VAR_SUBJECT, bNode()));
+        
+        addPattern(PRIMARY_RESTRICTIONS,
+                filterExists(union(propertyPatterns.stream().toArray(GraphPattern[]::new))));    
+    }
+
         
     @Override
     public SPARQLQueryOptionalElements retrieveLabel()
