@@ -60,7 +60,9 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 
-public class StatementsPanel extends Panel {
+public class StatementsPanel
+    extends Panel
+{
     private static final long serialVersionUID = -6655528906388195399L;
     private static final Logger LOG = LoggerFactory.getLogger(StatementsPanel.class);
 
@@ -237,12 +239,12 @@ public class StatementsPanel extends Panel {
         this.statementGroupComparator.setObject(statementGroupComparator);
     }
 
-    private List<StatementGroupBean> getStatementGroupBeans() {        
+    private List<StatementGroupBean> getStatementGroupBeans()
+    {
         // obtain list of statements according to the detail preferences
         StatementDetailPreference prefs = detailPreference.getObject();
         List<KBStatement> statements = new ArrayList<>();
         try {
-
             statements = kbService.listStatements(kbModel.getObject(), instance.getObject(),
                     prefs == StatementDetailPreference.ALL);
         }

@@ -84,20 +84,27 @@ public class NoReification implements ReificationStrategy {
     @Override
     public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aItem, boolean aAll)
     {
+        // Fetch all the properties from the KB so we can quickly look them up in the loop below
+        // and do not have to do additional queries.
+        // FIXME: This could be optimized by only fetching the properties actually used in the 
+        // statements
         Map<String, KBHandle> props = new HashMap<>();
         for (KBHandle prop : kbService.listProperties(kb, aAll)) {
             props.put(prop.getIdentifier(), prop);
         }
 
+        // The only way to tell if a statement was inferred or not is by running the same query
+        // twice, once with and once without inference being enabled. Those whoe are in the first
+        // but not in the second were the inferred statements.
         List<Statement> explicitStmts = listStatements(kb, aItem.getIdentifier(), false);
         List<Statement> allStmts = listStatements(kb, aItem.getIdentifier(), true);
 
         List<KBStatement> result = new ArrayList<>();
         for (Statement stmt : allStmts) {
-            // Can this really happen?
 
             Value value = stmt.getObject();
             if (value == null) {
+                // Can this really happen?
                 log.warn("Property with null value detected.");
                 continue;
             }
