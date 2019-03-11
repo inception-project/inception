@@ -22,35 +22,32 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.html.WebComponent;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.chart.Chart;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
-import de.tudarmstadt.ukp.inception.recommendation.model.Chart;
+import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
 
 public class LearningCurveChartPanel
     extends Panel
@@ -60,8 +57,8 @@ public class LearningCurveChartPanel
     private static final String MID_CHART_CONTAINER = "chart-container";
 
     private static final Logger LOG = LoggerFactory.getLogger(LearningCurveChartPanel.class);
-    private final WebComponent chartContainer;
-
+    
+    private final Chart chart;
     private @SpringBean EventRepository eventRepo;
     private @SpringBean RecommendationService recommendationService;
 
@@ -73,25 +70,9 @@ public class LearningCurveChartPanel
         super(aId);
         model = aModel;
 
-        chartContainer = new Label(MID_CHART_CONTAINER);
-        chartContainer.setOutputMarkupId(true);
-        add(chartContainer);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        // import Js
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
-
-        // import Css
-        aResponse.render(
-                CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
+        chart = new Chart(MID_CHART_CONTAINER, Model.of());
+        chart.setOutputMarkupId(true);
+        add(chart);
     }
 
     @OnEvent
@@ -110,19 +91,26 @@ public class LearningCurveChartPanel
 
             return;
         }
-        
-        Chart chart = new Chart(chartContainer.getMarkupId(), MAX_POINTS_TO_PLOT);
+
+        Map<String,String> curveData = new HashMap<String,String>();
+        ChartData learningCurve = new ChartData();
 
         // iterate over recommenderScoreMap to create data arrays to feed to the c3 graph
         for (String recommenderName : recommenderScoreMap.keySet()) {
+        
+            
             // extract the scores from the recommenderScoreMao. The value of data calculates to be
             // something like 2,4,6,5,3,9,
             String data = recommenderScoreMap.get(recommenderName).stream().map(Object::toString)
                     .collect(Collectors.joining(", "));
-            chart.addLearningCurve(data, recommenderName);
+            
+            curveData.put(recommenderName,data);
+            learningCurve.setCurveData(curveData);
+            learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
+            learningCurve.setaRequestHandler(aEvent.getRequestHandler());
         }
 
-        chart.renderChart(this, aEvent.getRequestHandler());
+        chart.setDefaultModel(Model.of(learningCurve));
     }
 
     /**

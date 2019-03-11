@@ -19,26 +19,21 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.CssHeaderItem;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.html.WebComponent;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
-import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -51,7 +46,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.model.Chart;
+import de.tudarmstadt.ukp.inception.recommendation.chart.Chart;
+import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
 
 public class EvaluationSimulationPanel
     extends Panel
@@ -65,14 +61,15 @@ public class EvaluationSimulationPanel
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
-    
+    private final static int MAX_POINTS_TO_PLOT = 50;
+
     private static final Logger LOG = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
 
-    private final WebComponent chartContainer;
+    private final Chart chart;
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
@@ -85,15 +82,36 @@ public class EvaluationSimulationPanel
                 
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
-
-        chartContainer = new Label(MID_CHART_CONTAINER);
-        chartContainer.setOutputMarkupId(true);
-        form.add(chartContainer);
         
-        form.add(new LambdaAjaxButton<>(MID_SIMULATION_START_BUTTON, this::actionStartEvaluation));
+        chart = new Chart(MID_CHART_CONTAINER, Model.of());
+        chart.setOutputMarkupId(true);
+        form.add(chart);
+
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
+            (_target, _form) -> {
+                String scores = evaluate(_target);
+                
+                if (scores == null) {
+                    return;
+                }
+                
+                ChartData learningCurve = new ChartData();
+                
+                Map<String,String> curveData = new HashMap<String,String>();
+                
+                curveData.put(selectedRecommenderPanel.getObject().getName(),scores);
+                learningCurve.setCurveData(curveData);
+                learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
+                learningCurve.setaRequestHandler(_target);
+                
+                chart.setDefaultModel(Model.of(learningCurve));
+            });
+        
+        form.add(startButton);
     }
     
-    private void actionStartEvaluation(AjaxRequestTarget aTarget, Form<Void> aForm)
+    private String evaluate(AjaxRequestTarget aTarget)
         throws IOException
     {
         //there must be some recommender selected by the user on the UI
@@ -102,7 +120,7 @@ public class EvaluationSimulationPanel
             LOG.error("Please select a recommender from the list");
             error("Please select a recommender from the list");
             aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+            return null;
         }
 
         Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
@@ -135,7 +153,7 @@ public class EvaluationSimulationPanel
             LOG.warn("Unknown Recommender selected");
             warn("Unknown Recommender selected");
             aTarget.addChildren(getPage(), IFeedback.class);
-            return;
+            return null;
         }
         
         StringBuilder sb = new StringBuilder();
@@ -160,27 +178,8 @@ public class EvaluationSimulationPanel
         }
 
         String data = sb.toString();
-        String recommenderName = selectedRecommenderPanel.getObject().getName();
+        //String recommenderName = selectedRecommenderPanel.getObject().getName();
 
-        Chart chart = new Chart(chartContainer.getMarkupId(), iterations);
-        chart.addLearningCurve(data, recommenderName);
-        chart.renderChart(this,aTarget);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-
-        // import Js
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
-        aResponse.render(JavaScriptHeaderItem
-                .forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
-
-        // import Css
-        aResponse.render(
-                CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
-
+        return data;
     }
 }

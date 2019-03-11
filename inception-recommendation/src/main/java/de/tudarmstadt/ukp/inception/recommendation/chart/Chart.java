@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.model;
+package de.tudarmstadt.ukp.inception.recommendation.chart;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import static org.apache.commons.lang3.StringUtils.substring;
@@ -26,28 +26,116 @@ import java.util.stream.IntStream;
 
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.head.CssHeaderItem;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.html.WebComponent;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Chart
+import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
+import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
+import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
+
+public class Chart extends Panel
 {
+    private static final long serialVersionUID = -3849226240909011148L;
+
     private static final Logger LOG  = LoggerFactory.getLogger(Chart.class);
+    
+    private static final String MID_CHART_CONTAINER = "chart";
+    private final static int MAX_POINTS_TO_PLOT = 50;
     
     private StringBuilder dataColumns;
     private StringBuilder chartType;
-    private String javascript;
-    private int maximumPointsToPlot;
+    private String javascript; 
     private String markupId;
-    
-    public Chart(String aMarkupId, int aMaximumPointsToPlot)
+    IModel<ChartData> model;
+    private final WebComponent chart;
+
+    public Chart(String aId, IModel<ChartData> aModel )
     {
+        super(aId);
+        model = (aModel);
         dataColumns = new StringBuilder();
-        chartType = new StringBuilder();
-        markupId = aMarkupId;
-        maximumPointsToPlot = aMaximumPointsToPlot;
+        chartType = new StringBuilder(); 
+        
+        chart = new Label(MID_CHART_CONTAINER);
+        chart.setOutputMarkupId(true);
+        add(chart);
+        
+        markupId = chart.getMarkupId();
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        // import Js
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("d3js/current/d3.js")));
+
+        // import Css
+        aResponse.render(
+                CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
+    }
+    
+    @SuppressWarnings("unchecked")
+    public IModel<ChartData> getModel()
+    {
+        return (IModel<ChartData>) getDefaultModel();
     }
 
+    /**
+     * Renders the chart using the given request handler 
+     * 
+     */
+    public void renderChart(ChartData aChartData)
+    {
+        IPartialPageRequestHandler requestHandler = aChartData.getaRequestHandler();
+        try {
+            for (String data : aChartData.getCurveData().keySet()) {
+                addLearningCurve(aChartData.getCurveData().get(data), data);
+            }
+            
+            createJSScript();
+
+            LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
+
+            requestHandler.prependJavaScript(javascript);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to render chart", e);
+            error("Unable to render chart: " + e.getMessage());
+            requestHandler.addChildren(getPage(), IFeedback.class);
+        }
+    }
+    
+    @Override
+    protected void onModelChanged()
+    {
+        super.onModelChanged();
+        
+        Object chartdata = getModel();
+        
+        if (chartdata == null) {
+            return;
+        }     
+        
+        resetChart();
+        
+        @SuppressWarnings("unchecked")
+        ChartData chartData = (ChartData) chartdata;
+        
+        renderChart(chartData);
+    }
+    
     /**
      * to create a learning curve, it creates/updates the strings dataColumns and chartTypes for the
      * given recommender by appending data string. The type of the chart is set to be step. Calling
@@ -73,6 +161,12 @@ public class Chart
         dataColumns.append("]");
         dataColumns.append(",");
     }
+    
+    public void resetChart()
+    {
+        chartType = new StringBuilder();
+        dataColumns = new StringBuilder();
+    }
 
     /**
      * Creates the JS script to render graph with the help of given data points. Also creates an
@@ -89,7 +183,7 @@ public class Chart
      */
     public void createJSScript() throws IOException
     {
-        int[] intArray = IntStream.range(0, maximumPointsToPlot).map(i -> i).toArray();
+        int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
         String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
         String data = toJsonString(dataColumns).substring(1,
                 dataColumns.toString().length());
@@ -103,25 +197,5 @@ public class Chart
                 + chartType
                 + "}},"
                 + "axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
-    }
-    
-    /**
-     * Renders the chart using the given request handler 
-     * 
-     */
-    public void renderChart(Panel aPanel, IPartialPageRequestHandler aRequestHandler)
-    {
-        try {
-            createJSScript();
-
-            LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-
-            aRequestHandler.prependJavaScript(javascript);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to render chart", e);
-            aPanel.error("Unable to render chart: " + e.getMessage());
-            aRequestHandler.addChildren(aPanel.getPage(), IFeedback.class);
-        }
     }
 }
