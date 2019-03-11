@@ -310,7 +310,7 @@ public class StringMatchingRecommender
     
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
         String label = (aLabel == null) ? UNKNOWN_LABEL : aLabel;
-    	
+    
         if (isNoneBlank(label)) {
             DictEntry entry = aDict.get(aText);
             if (entry == null) {

@@ -130,7 +130,7 @@ public class RecommendationSpanRenderer
                     continue;
                 }
                 
-                String label= getAnnotationDescriptor(ao);
+                String label = getAnnotationDescriptor(ao);
                 // Skip rendering if annotation label and feature is null
                 if (label == null) {
                     continue;
@@ -181,8 +181,9 @@ public class RecommendationSpanRenderer
 
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
-                        //check for label or feature for no-label annotations as key
-                        .filter(p -> (p.getLabel()==null && p.getFeature().equals(label)) || p.getLabel().equals(label))
+                        // check for label or feature for no-label annotations as key
+                        .filter(p -> (p.getLabel() == null && p.getFeature().equals(label))
+                                || (p.getLabel() != null && p.getLabel().equals(label)))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
