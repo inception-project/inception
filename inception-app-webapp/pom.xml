@@ -598,7 +598,17 @@
               <product-website-url>https://inception-project.github.io</product-website-url>
               <icons>font</icons>
             </attributes>
+            <requires>
+              <require>asciidoctor-diagram</require>
+            </requires>
           </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj-diagram</artifactId>
+              <version>1.5.12</version>
+            </dependency>
+          </dependencies>
         </plugin>
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>

@@ -50,9 +50,13 @@ include::{include-dir}search.adoc[leveloffset=+1]
 
 include::{include-dir}search-mtas.adoc[leveloffset=+2]
 
-include::{include-dir}implementing_recommender_tutorial.adoc[leveloffset=+1]
+include::{include-dir}recommendation.adoc[leveloffset=+1]
 
-include::{include-dir}external_recommender.adoc[leveloffset=+1]
+include::{include-dir}implementing_recommender_tutorial.adoc[leveloffset=+2]
+
+include::{include-dir}external_recommender.adoc[leveloffset=+2]
+
+include::{include-dir}active-learning.adoc[leveloffset=+1]
 
 include::{include-dir}log.adoc[leveloffset=+1]
 
