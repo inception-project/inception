@@ -340,7 +340,7 @@ public class PredictionTask
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
             MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
-            annotationsInWindow.stream().filter(fs -> fs.getFeatureValueAsString(feat) != null)
+            annotationsInWindow.stream()
                     .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
             // We need to constructed a sorted list of the keys for the OverlapIterator below
             List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
@@ -376,10 +376,9 @@ public class PredictionTask
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion suggestion : group) {
-                            if (!aLayer.isAllowStacking() || label.equals(suggestion.getLabel())
+                            if (!aLayer.isAllowStacking()
+                                    || (label != null && label.equals(suggestion.getLabel()))
                                     || suggestion.getLabel() == null) {
-                                // TODO overlapping with both null label,
-                                // annotation null labels were already removed
                                 suggestion.hide(FLAG_OVERLAP);
                             }
                         }
