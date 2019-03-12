@@ -31,7 +31,6 @@ import java.util.List;
 
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.uima.analysis_engine.AnalysisEngine;
-import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -42,11 +41,13 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 
 public class ExternalSearchSentenceExtractor {
-    public static String TYPE_NAME_UNIT = "Unit";
-    public static String FEATURE_NAME_SCORE = "score";
+    private static String TYPE_NAME_UNIT = "Unit";
+    private static String FEATURE_NAME_SCORE = "score";
     private List<ExternalSearchResult> externalSearchResults;
+    private ExternalSearchService externalSearchService;
     
     private JCas doc;
     private AnalysisEngine splitter;
@@ -54,9 +55,11 @@ public class ExternalSearchSentenceExtractor {
     private AnalysisEngine scorer;
     
     public ExternalSearchSentenceExtractor(List<ExternalSearchResult> externalSearchResults,
+                                           ExternalSearchService externalSearchService,
                                            String query) throws Exception
     {
         this.externalSearchResults = externalSearchResults;
+        this.externalSearchService = externalSearchService;
         
         // Set up custom type system
         TypeSystemDescription customTypes = getResourceSpecifierFactory()
@@ -76,14 +79,15 @@ public class ExternalSearchSentenceExtractor {
     }
     
     public List<Triple<String, Double, String>> extractSentences()
-            throws AnalysisEngineProcessException
+            throws Exception
     {
         // Process text files
         List<Triple<String, Double, String>> relevantSentences = new ArrayList<>();
         for (ExternalSearchResult result: externalSearchResults) {
             // Clear contents so we can process the next file
             doc.reset();
-            doc.setDocumentText(result.getText());
+            doc.setDocumentText(externalSearchService.getDocumentText(
+                    result.getRepository(), result.getCollectionId(), result.getDocumentId()));
     
             // Annotate sentences and tokens
             splitter.process(doc);

@@ -42,7 +42,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.layers.GravesLSTM;
+import org.deeplearning4j.nn.conf.layers.LSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.recurrent.Bidirectional;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -551,7 +551,7 @@ public class DL4JSequenceRecommender
                 .gradientNormalization(aTraits.getGradientNormalization())
                 .gradientNormalizationThreshold(aTraits.getGradientNormalizationThreshold())
                 .list()
-                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new GravesLSTM.Builder()
+                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new LSTM.Builder()
                         .nIn(aEmbeddingsDim)
                         .nOut(200)
                         .activation(aTraits.getActivationL0())
@@ -562,8 +562,6 @@ public class DL4JSequenceRecommender
                         .activation(aTraits.getActivationL1())
                         .lossFunction(aTraits.getLossFunction())
                         .build())
-                .pretrain(false)
-                .backprop(true)
                 .build();
         
         // log.info("Network configuration: {}", conf.toYaml());

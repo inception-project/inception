@@ -562,6 +562,7 @@
   </owl:Class>
   
   <owl:Class rdf:ID="Sauternes">
+    <rdfs:label xml:lang="en">Sauternes</rdfs:label>
     <rdfs:subClassOf rdf:resource="#LateHarvest" />
     <rdfs:subClassOf rdf:resource="#Bordeaux" />
     <rdfs:subClassOf>

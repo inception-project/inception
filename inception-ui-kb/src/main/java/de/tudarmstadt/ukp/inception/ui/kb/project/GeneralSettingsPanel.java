@@ -27,6 +27,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
 
@@ -34,7 +35,6 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
@@ -52,7 +52,7 @@ public class GeneralSettingsPanel
     private @SpringBean KnowledgeBaseProperties kbproperties;
 
     public GeneralSettingsPanel(String id, IModel<Project> aProjectModel,
-        CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
+            CompoundPropertyModel<KnowledgeBaseWrapper> aModel)
     {
         super(id);
         setOutputMarkupId(true);
@@ -66,57 +66,58 @@ public class GeneralSettingsPanel
         add(createCheckbox("enabled", "kb.enabled"));
     }
 
-    private TextField<String> nameField(String id, String property) {
-        TextField<String> nameField = new RequiredTextField<>(id, kbModel.bind(property));
-        nameField.add(knowledgeBaseNameValidator());
-        return nameField;
-    }
-
-    private IValidator<String> knowledgeBaseNameValidator()
+    private TextField<String> nameField(String id, String property)
     {
-        return (validatable -> {
-            String kbName = validatable.getValue();
-            if (kbService.knowledgeBaseExists(projectModel.getObject(), kbName)) {
-                String message = String.format(
-                    "There already exists a knowledge base in the project with name: [%s]!",
-                    kbName
-                );
-                validatable.error(new ValidationError(message));
-            }
-        });
+        TextField<String> nameField = new RequiredTextField<>(id, kbModel.bind(property));
+        nameField.add(new KnowledgeBaseNameValidator());
+        return nameField;
     }
 
     private ComboBox<String> languageComboBox(String id, IModel<String> aModel)
     {
         // Only set kbModel object if it has not been initialized yet
-        if (aModel.getObject() == null) {
+        if (aModel.getObject() == null && !languages.isEmpty()) {
             aModel.setObject(languages.get(0));
         }
 
-        IModel<String> adapter = new LambdaModelAdapter<String>(aModel::getObject,
-            aModel::setObject);
-
-        ComboBox<String> comboBox = new ComboBox<String>(id, adapter, languages);
+        ComboBox<String> comboBox = new ComboBox<String>(id, aModel, languages);
         comboBox.setOutputMarkupId(true);
         comboBox.setRequired(true);
-        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
-            // Do nothing just update the kbModel values
-        }));
+        // Do nothing just update the kbModel values
+        comboBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         return comboBox;
     }
 
-    private CheckBox createCheckbox(String aId, String aProperty) {
+    private CheckBox createCheckbox(String aId, String aProperty)
+    {
         return new CheckBox(aId, kbModel.bind(aProperty));
     }
 
-    private ComboBox<String> basePrefixField(String aId, String aProperty) {
+    private ComboBox<String> basePrefixField(String aId, String aProperty)
+    {
         // Add textfield and label for basePrefix
-        ComboBox<String> basePrefix = new ComboBox<String>(aId,
-            kbModel.bind(aProperty), Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
+        ComboBox<String> basePrefix = new ComboBox<String>(aId, kbModel.bind(aProperty),
+                Arrays.asList(IriConstants.INCEPTION_NAMESPACE));
         basePrefix.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         basePrefix.setConvertEmptyInputStringToNull(false);
         basePrefix.setOutputMarkupId(true);
         return basePrefix;
     }
+    
+    private class KnowledgeBaseNameValidator implements IValidator<String>
+    {
+        private static final long serialVersionUID = 4125256951093164889L;
 
+        @Override
+        public void validate(IValidatable<String> aValidatable)
+        {
+            String kbName = aValidatable.getValue();
+            if (kbService.knowledgeBaseExists(projectModel.getObject(), kbName)) {
+                String message = String.format(
+                        "There already exists a knowledge base in the project with name: [%s]!",
+                        kbName);
+                aValidatable.error(new ValidationError(message));
+            }
+        }
+    }
 }

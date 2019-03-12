@@ -21,6 +21,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.newDirectoryStream;
 import static java.nio.file.Files.readAllBytes;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
@@ -29,32 +31,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.tuple.Triple;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceClusterer;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceExtractor;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class ProcessTest
 {
-    @Test
-    public void test() throws Exception {
-        // Parameters
-        String queryword = "test";
+    private @Mock ExternalSearchService externalSearchService;
+    private @Mock DocumentRepository documentRepository;
+    private List<ExternalSearchResult> externalSearchResultList = new ArrayList<>();
+    private ExternalSearchSentenceExtractor extractor;
+    
+    
+    @Before
+    public void setUp() throws Exception {
+        initMocks(this);
     
         // Create artificial list of external results
-        List<ExternalSearchResult> externalSearchResultList = new ArrayList<>();
         DirectoryStream<Path> directoryStream = newDirectoryStream(
                 Paths.get("src/test/resources/texts"));
-        for (Path p : directoryStream) {
-            ExternalSearchResult externalSearchResult = new ExternalSearchResult();
-            externalSearchResult.setText(new String(readAllBytes(p), UTF_8));
-            externalSearchResultList.add(externalSearchResult);
-        }
         
-        // Extract relevant sentences (relevant to query) from external results
-        ExternalSearchSentenceExtractor extractor =
-                new ExternalSearchSentenceExtractor(externalSearchResultList, queryword);
+        for (Path p : directoryStream) {
+            ExternalSearchResult externalSearchResult =
+                    new ExternalSearchResult(documentRepository, "", p.toString());
+            externalSearchResultList.add(externalSearchResult);
+            when(externalSearchService.getDocumentText(documentRepository, "", p.toString())).
+                    thenReturn(new String(readAllBytes(p), UTF_8));
+        }
+    
+        String query = "test";
+        extractor = new ExternalSearchSentenceExtractor(
+                externalSearchResultList, externalSearchService, query);
+    }
+    
+    @Test
+    public void test() throws Exception {
+        // Extract sentences relevant to query from external results
         List<Triple<String, Double, String>> relevantSentences = extractor.extractSentences();
     
         // Assertions checking that relevant sentences have been extracted correctly

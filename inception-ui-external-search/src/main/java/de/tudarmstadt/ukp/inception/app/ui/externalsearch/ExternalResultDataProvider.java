@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.extensions.markup.html.repeater.util.SortableDataProvider;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -35,9 +36,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class ExternalResultDataProvider
     extends SortableDataProvider<ExternalSearchResult, String>
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 5594618512472876346L;
 
     private static final Logger log = LoggerFactory.getLogger(SearchPage.class);
@@ -46,12 +44,9 @@ public class ExternalResultDataProvider
 
     private ExternalSearchService externalSearchService;
 
-    DocumentRepository repository;
+    private User user;
 
-    User user;
-
-    public ExternalResultDataProvider(ExternalSearchService aExternalSearchService, User aUser,
-            DocumentRepository aRepository, String aQuery)
+    public ExternalResultDataProvider(ExternalSearchService aExternalSearchService, User aUser)
     {
 //        // Set default sort
 //        setSort("documentTitle", SortOrder.ASCENDING);
@@ -61,11 +56,8 @@ public class ExternalResultDataProvider
 
         // Set user
         user = aUser;
-
-        // Set repository
-        repository = aRepository;
     }
-
+    
     @Override
     public Iterator<ExternalSearchResult> iterator(long first, long count)
     {
@@ -100,23 +92,15 @@ public class ExternalResultDataProvider
         };
     }
 
-    public void searchDocuments(String aQuery)
+    public void searchDocuments(DocumentRepository aRepository, String aQuery)
     {
         results.clear();
         
-        if (aQuery.isEmpty()) {
+        // No query, no results
+        if (StringUtils.isBlank(aQuery)) {
             return;
         }
 
-        try {
-            for (ExternalSearchResult result : externalSearchService.query(user, repository,
-                    aQuery)) {
-                results.add(result);
-            }
-        }
-        catch (Exception e) {
-            log.error("Unable to perform query", e);
-        }
+        results.addAll(externalSearchService.query(user, aRepository, aQuery));
     }
-
 }

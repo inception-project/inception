@@ -25,6 +25,7 @@ public class ExternalRecommenderTraits
     private static final long serialVersionUID = -3109239605741337123L;
 
     private String remoteUrl;
+    private boolean trainable;
 
     public String getRemoteUrl()
     {
@@ -34,5 +35,15 @@ public class ExternalRecommenderTraits
     public void setRemoteUrl(String aRemoteUrl)
     {
         remoteUrl = aRemoteUrl;
+    }
+
+    public boolean isTrainable()
+    {
+        return trainable;
+    }
+
+    public void setTrainable(boolean aTrainable)
+    {
+        trainable = aTrainable;
     }
 }

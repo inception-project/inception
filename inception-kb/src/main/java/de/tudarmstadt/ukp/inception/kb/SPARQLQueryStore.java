@@ -19,22 +19,35 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import java.util.Set;
 
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.QueryLanguage;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.rio.ntriples.NTriplesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public final class SPARQLQueryStore
 {
-
+    private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryStore.class);
+    
     public static final String SPARQL_PREFIX = String.join("\n",
             "PREFIX rdf: <" + RDF.NAMESPACE + ">",
             "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
-            "PREFIX owl: <" + OWL.NAMESPACE + ">");
-
+            "PREFIX owl: <" + OWL.NAMESPACE + ">",
+            "PREFIX skos:<" + SKOS.NAMESPACE + ">",
+            "PREFIX e:<http://www.wikidata.org/entity/>",
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
+    
     /**
      * Return formatted String for the OPTIONAL part of SPARQL query for language and description
      * filter
@@ -66,8 +79,10 @@ public final class SPARQLQueryStore
 
     /**
      * Returns formatted string that filters the given variable for the given language
+     * 
      * @param filterVariable
-     * @return
+     *            the variable by which to filer.
+     * @return the query fragment.
      */
     private static final String languageFilter(String filterVariable, String aLanguage) {
         StringBuilder fragment = new StringBuilder();
@@ -88,8 +103,8 @@ public final class SPARQLQueryStore
     }
   
     /**
-     * adds an OPTIONAL block which looks for a value that is declared with a
-     * subproperty of the given property
+     * adds an OPTIONAL block which looks for a value that is declared with a sub-property of the
+     * given property
      */
     private static final String queryForOptionalSubPropertyLabel(Set<KBHandle> labelProperties,
             String aLanguage, String variable, String filterVariable)
@@ -138,71 +153,6 @@ public final class SPARQLQueryStore
                 , "LIMIT " + aKB.getMaxResults());
     }
     
-    
-    /** 
-     * Query to list root concepts from a knowledge base.
-     */
-    public static final String listRootConcepts(KnowledgeBase aKB, Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?s (MIN(?label) AS ?l) (MIN(?labelGeneral) AS ?lGen) (MIN(?splabel) AS ?spl) WHERE { "
-                , "  { ?s ?pTYPE ?oCLASS . } "
-                , "  UNION { ?someSubClass ?pSUBCLASS ?s . } ."
-                , "  FILTER NOT EXISTS { "
-                , "    ?s ?pSUBCLASS ?otherSub . "
-                , "    FILTER (?s != ?otherSub) }"
-                , "  FILTER NOT EXISTS { "
-                , "    ?s owl:intersectionOf ?list . }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
-                , "} GROUP BY ?s"
-                , "LIMIT " + aKB.getMaxResults());    }
-    
-    /** 
-     * Query to list child concepts from a knowledge base.
-     */
-    public static final String listChildConcepts(KnowledgeBase aKB, Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX    
-                , "SELECT ?s (MIN(?label) AS ?l) (MIN(?labelGeneral) AS ?lGen) (MIN(?splabel) AS ?spl) WHERE { "
-                , "  {?s ?pSUBCLASS ?oPARENT . }" 
-                , "  UNION { ?s ?pTYPE ?oCLASS ."
-                , "    ?s owl:intersectionOf ?list . "
-                , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?label")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-                , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?s","?splabel")
-                , "} GROUP BY ?s"
-                , "LIMIT " + aKB.getMaxResults());
-    }
-    
-    /** 
-     * Query to read concept from a knowledge base.
-     */
-    public static final String readConcept(KnowledgeBase aKB, int limit,
-            Set<KBHandle> labelProperties)
-    {
-        return String.join("\n"
-            , SPARQL_PREFIX    
-            , "SELECT ?oItem ((?label) AS ?l) ((?desc) AS ?d) ((?labelGeneral) AS ?lGen) ?descGeneral ?spl WHERE { "
-            , "  { ?oItem ?pTYPE ?oCLASS . } "
-            , "  UNION {?someSubClass ?pSUBCLASS ?oItem . } "
-            , "  UNION {?oItem ?pSUBCLASS ?oPARENT . }" 
-            , "  UNION {?oItem ?pTYPE ?oCLASS ."
-            , "    ?oItem owl:intersectionOf ?list . "
-            , "    FILTER EXISTS { ?list rdf:rest*/rdf:first ?oPARENT} }"
-            , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?oItem","?label")
-            , optionalLanguageFilteredValue("?pDESCRIPTION", aKB.getDefaultLanguage(),"?oItem","?desc")
-            , optionalLanguageFilteredValue("?pLABEL", null,"?oItem","?labelGeneral")
-            , optionalLanguageFilteredValue("?pDESCRIPTION", null,"?oItem","?descGeneral")
-            , queryForOptionalSubPropertyLabel(labelProperties, aKB.getDefaultLanguage(),"?oItem","?spl")
-            , "} "
-            , "LIMIT " + limit);
-    }
-
     /**
      * Query to read an instance from a knowledge base
      */
@@ -347,24 +297,6 @@ public final class SPARQLQueryStore
     }
     
     /**
-     *  Query to retrieve super class concept for a concept
-     */
-    public static final String queryForParentConcept(KnowledgeBase aKB)
-    {
-        return String.join("\n"
-                , SPARQL_PREFIX
-                , "SELECT DISTINCT ?s ?l ((?labelGeneral) AS ?lGen) WHERE { "
-                , "   {?oChild ?pSUBCLASS ?s . }"
-                , "   UNION { ?s ?pTYPE ?oCLASS ."
-                , "     ?oChild owl:intersectionOf ?list . "
-                , "     FILTER EXISTS {?list rdf:rest*/rdf:first ?s. } }"
-                , optionalLanguageFilteredValue("?pLABEL", aKB.getDefaultLanguage(),"?s","?l")
-                , optionalLanguageFilteredValue("?pLABEL", null,"?s","?labelGeneral")
-            , "}");
-
-    }
-    
-    /**
      *  Query to retrieve concept for an instance
      */
     public static final String queryForConceptForInstance(KnowledgeBase aKB)
@@ -391,5 +323,35 @@ public final class SPARQLQueryStore
             , languageFilter("?o", aLanguage)
             , "}"
             , "LIMIT " + aKB.getMaxResults());
+    }
+    
+    /**
+     *
+     * @param aIri an IRI, e.g. "http://www.wikidata.org/entity/Q3"
+     * @param aLimit maximum number of results
+     * @param aKb the Knowledge Base
+     * @return a query to retrieve the semantic signature
+     */
+    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection conn, String aIri,
+        int aLimit, KnowledgeBase aKb)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        String query = String.join("\n",
+            SPARQL_PREFIX,
+            "SELECT DISTINCT ?label ?p WHERE ",
+            "  {",
+            "    { ?e1  ?rd ?m . ?m ?p ?e2 . }",
+            "    UNION",
+            "    { ?e2 ?p ?m . ?m ?rr ?e1 . }",
+            "    ?e1 ?labelIri ?label. ",
+            "  }",
+            " LIMIT " + aLimit);
+
+        TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("language", vf.createLiteral((aKb.getDefaultLanguage() != null)
+            ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        return tupleQuery;
     }
 }

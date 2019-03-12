@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 public class StringMatchingRecommenderTest
 {
@@ -102,6 +104,40 @@ public class StringMatchingRecommenderTest
         assertThat(predictions).as("Some score is not perfect")
             .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
     }
+    
+    @Test
+    public void thatPredictionWithPretrainigWorks() throws Exception
+    {
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> casList = loadDevelopmentData();
+        
+        CAS cas = casList.get(0);
+        
+        List<GazeteerEntry> gazeteer = new ArrayList<>();
+        gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
+        gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
+        gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
+
+        sut.pretrain(gazeteer);
+        
+        sut.train(context, emptyList());
+
+        sut.predict(context, cas);
+
+        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+
+        assertThat(predictions).as("Predictions have been written to CAS")
+            .isNotEmpty();
+        
+        assertThat(predictions)
+            .as("Score is positive")
+            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+
+        assertThat(predictions)
+            .as("Some score is not perfect")
+            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+    }
+
 
     @Test
     public void thatEvaluationWorks() throws Exception

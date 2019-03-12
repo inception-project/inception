@@ -86,7 +86,8 @@ public class PdfAnnoRenderer
                 }
 
                 // convert to PDFAnno span. if it is null no match was found
-                Span span = convertToPdfAnnoSpan(vspan, color, aDocumentText, aPdfExtractFile);
+                Span span =
+                    convertToPdfAnnoSpan(vspan, labelText, color, aDocumentText, aPdfExtractFile);
                 if (span.getStartPos() != -1) {
                     pdfAnnoModel.addSpan(span);
                 } else {
@@ -110,8 +111,8 @@ public class PdfAnnoRenderer
                     color = varc.getColorHint();
                 }
 
-                pdfAnnoModel.addRelation(
-                    new Relation(varc.getSource().toString(), varc.getTarget().toString(), color));
+                pdfAnnoModel.addRelation(new Relation(varc.getVid().toString(),
+                    varc.getSource().toString(), varc.getTarget().toString(), labelText, color));
             }
         }
         return pdfAnnoModel;
@@ -133,8 +134,8 @@ public class PdfAnnoRenderer
         return vids;
     }
 
-    private static Span convertToPdfAnnoSpan(VSpan aVSpan, String aColor, String aDocumentText,
-                                             PdfExtractFile aPdfExtractFile)
+    private static Span convertToPdfAnnoSpan(VSpan aVSpan, String label, String aColor,
+                                             String aDocumentText, PdfExtractFile aPdfExtractFile)
     {
         int docTextLen = aDocumentText.length();
         // search for begin of the first range and end of the last range
@@ -168,7 +169,7 @@ public class PdfAnnoRenderer
                 // get according PDFExtract file lines for begin and end of annotation
                 PdfExtractLine firstLine = aPdfExtractFile.getStringPdfExtractLine(annotationBegin);
                 PdfExtractLine lastLine = aPdfExtractFile.getStringPdfExtractLine(annotationEnd);
-                return new Span(aVSpan.getVid().toString(), firstLine.getPage(), aColor,
+                return new Span(aVSpan.getVid().toString(), firstLine.getPage(), label, aColor,
                     annotatedText, firstLine.getPosition(), lastLine.getPosition());
             } catch (MultipleMatchesFoundException e) {
                 // continue and increase context window
@@ -180,7 +181,7 @@ public class PdfAnnoRenderer
                 break;
             }
         }
-        return new Span(aVSpan.getVid().toString(), -1, null, annotatedText, -1, -1);
+        return new Span(aVSpan.getVid().toString(), -1, null, null, annotatedText, -1, -1);
     }
 
     /**

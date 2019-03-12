@@ -36,7 +36,7 @@ wikidata:
       instance-of: http://www.wikidata.org/prop/direct/P31
       label: http://www.w3.org/2000/01/rdf-schema#label
       property-type: http://www.wikidata.org/entity/Q18616576
-      description: http://www.w3.org/2000/01/rdf-schema#comment
+      description: http://schema.org/description
       property-label: http://www.w3.org/2000/01/rdf-schema#label
       property-description: http://www.w3.org/2000/01/rdf-schema#comment
       subproperty-of: http://www.wikidata.org/prop/direct/P1647
@@ -71,15 +71,18 @@ virtuoso:
     host-institution-name: UKP Lab TU Darmstadt
     author-name: UKP Lab TU Darmstadt
     website-url: https://www.informatik.tu-darmstadt.de/ukp/ukp_home/index.en.jsp
+  root-concepts:
+    - http://www.wikidata.org/entity/Q35120
 
 db_pedia:
   name: DBpedia
   type: REMOTE
   default-language: en
+  default-dataset: http://dbpedia.org
   reification: NONE
   access:
     access-url: http://dbpedia.org/sparql
-    full-text-search: FTS:NONE
+    full-text-search: bif:contains
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf

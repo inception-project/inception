@@ -79,7 +79,6 @@ public class KnowledgeBaseMapping implements Serializable
         propertyTypeIri = vf.createIRI(aPropertyTypeIri);
         propertyLabelIri = vf.createIRI(aPropertyLabelIri);
         propertyDescriptionIri = vf.createIRI(aPropertyDescriptionIri);
-
     }
     
     public KnowledgeBaseMapping() {

@@ -17,141 +17,111 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import static java.util.Collections.emptyList;
+
 import java.io.Serializable;
 import java.util.List;
+
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class ExternalSearchResult
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 2698492628701213714L;
 
-    private int tokenStart = -1;
-    private int tokenLength = -1;
-    private int offsetStart = -1;
-    private int offsetEnd = -1;
-    private String text;
-    private String leftContext;
-    private String rightContext;
-    private String documentId;
+    private final DocumentRepository repository;
+    private final String collectionId;
+    private final String documentId;
     private String documentTitle;
     private String source;
     private String uri;
     private String timestamp;
     private String language;
     private Double score;
-    private List<String> highlights;
+    private List<ExternalSearchHighlight> highlights;
 
-    public int getTokenStart()
+    public ExternalSearchResult(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
     {
-        return tokenStart;
+        repository = aRepository;
+        collectionId = aCollectionId;
+        documentId = aDocumentId;
+        highlights = emptyList();
+    }
+    
+    public DocumentRepository getRepository()
+    {
+        return repository;
     }
 
-    public void setTokenStart(int aTokenStart)
+    /**
+     * Get the ID of the collecting containing the matching document. This is typically a system ID.
+     */
+    public String getCollectionId()
     {
-        tokenStart = aTokenStart;
+        return collectionId;
     }
 
-    public int getTokenLength()
-    {
-        return tokenLength;
-    }
-
-    public void setTokenLength(int aTokenLength)
-    {
-        tokenLength = aTokenLength;
-    }
-
-    public int getOffsetStart()
-    {
-        return offsetStart;
-    }
-
-    public void setOffsetStart(int offsetStart)
-    {
-        this.offsetStart = offsetStart;
-    }
-
-    public int getOffsetEnd()
-    {
-        return offsetEnd;
-    }
-
-    public void setOffsetEnd(int offsetEnd)
-    {
-        this.offsetEnd = offsetEnd;
-    }
-
-    public String getText()
-    {
-        return text;
-    }
-
-    public void setText(String aText)
-    {
-        text = aText;
-    }
-
-    public String getLeftContext()
-    {
-        return leftContext;
-    }
-
-    public void setLeftContext(String aLeftContext)
-    {
-        leftContext = aLeftContext;
-    }
-
-    public String getRightContext()
-    {
-        return rightContext;
-    }
-
-    public void setRightContext(String aRightContext)
-    {
-        rightContext = aRightContext;
-    }
-
+    /**
+     * Get the ID of the matching document. This is typically a system ID.
+     */
     public String getDocumentId()
     {
         return documentId;
     }
 
-    public void setDocumentId(String aDocumentId)
-    {
-        documentId = aDocumentId;
-    }
-
+    /**
+     * Set the title of the matching document. This is typically a human-readable title.
+     */
     public String getDocumentTitle()
     {
         return documentTitle;
     }
 
+    /**
+     * Get the title of the matching document.
+     */
     public void setDocumentTitle(String aDocumentTitle)
     {
         documentTitle = aDocumentTitle;
     }
 
-    public String getSource()
+    /**
+     * Set the source of the matching document. This identifies where the document originally came
+     * from before it was indexed. Mind that a collection may contain documents from different
+     * sources.
+     */
+    public String getOriginalSource()
     {
         return source;
     }
 
-    public void setSource(String source)
+    /**
+     * Get the source of the matching document.
+     */
+    public void setOriginalSource(String aSource)
     {
-        this.source = source;
+        source = aSource;
     }
 
-    public String getUri()
+    /**
+     * Set the source URI of the matching document. This identifies where the document originally
+     * came from before it was indexed. Mind that a collection may contain documents from different
+     * sources.
+     */
+    public String getOriginalUri()
     {
         return uri;
     }
 
-    public void setUri(String uri)
+    /**
+     * Get the source URI of the matching document.
+     */
+    public void setOriginalUri(String aUri)
     {
-        this.uri = uri;
+        this.uri = aUri;
     }
 
     public String getTimestamp()
@@ -159,9 +129,9 @@ public class ExternalSearchResult
         return timestamp;
     }
 
-    public void setTimestamp(String timestamp)
+    public void setTimestamp(String aTimestamp)
     {
-        this.timestamp = timestamp;
+        timestamp = aTimestamp;
     }
 
     public String getLanguage()
@@ -169,9 +139,9 @@ public class ExternalSearchResult
         return language;
     }
 
-    public void setLanguage(String language)
+    public void setLanguage(String aLanguage)
     {
-        this.language = language;
+        language = aLanguage;
     }
 
     public Double getScore()
@@ -179,18 +149,35 @@ public class ExternalSearchResult
         return score;
     }
 
-    public void setScore(Double score)
+    public void setScore(Double aScore)
     {
-        this.score = score;
+        score = aScore;
     }
 
-    public List<String> getHighlights()
+    public List<ExternalSearchHighlight> getHighlights()
     {
         return highlights;
     }
 
-    public void setHighlights(List<String> highlights)
+    public void setHighlights(List<ExternalSearchHighlight> aHighlights)
     {
-        this.highlights = highlights;
+        if (aHighlights == null) {
+            highlights = emptyList();
+        }
+        else {
+            highlights = aHighlights;
+        }
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this)
+                .append("collectionId", collectionId)
+                .append("documentId", documentId)
+                .append("originalSource", source)
+                .append("originalUri", uri)
+                .append("documentTitle", documentTitle)
+                .toString();
     }
 }

@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -45,17 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -71,6 +61,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.KnowledgeBaseItemAutoCompleteField;
 
 /**
  * Houses the UI for interacting with one knowledge base.<br>
@@ -133,9 +124,7 @@ public class KnowledgeBasePanel
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
 
-        add(createSearchField("searchBar", searchHandleModel, aProjectModel)
-            .add(AttributeModifier.append("placeholder",
-                new ResourceModel("page.search.placeholder"))));
+        add(createSearchField("searchBar", searchHandleModel, aProjectModel));
 
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
@@ -149,26 +138,13 @@ public class KnowledgeBasePanel
         detailContainer.add(details);
     }
 
-    private AutoCompleteTextField<KBHandle> createSearchField(String aId,
+    private KnowledgeBaseItemAutoCompleteField createSearchField(String aId,
         IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(aId,
-            aHandleModel, new TextRenderer<>("uiLabel"))
-        {
-            private static final long serialVersionUID = -1955006051950156603L;
-
-            @Override
-            protected List<KBHandle> getChoices(String input)
-            {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    // Remove wildcards and leading/trailing whitespace from the input string
-                    String cleanInput = input.replaceAll("[*?]", "").trim();
-                    choices = listSearchResults(aProjectModel.getObject(), cleanInput);
-                }
-                return choices;
-
-            }
+        KnowledgeBaseItemAutoCompleteField field = new KnowledgeBaseItemAutoCompleteField(
+                aId, aHandleModel, _query -> 
+                        listSearchResults(aProjectModel.getObject(), _query)) {
+            private static final long serialVersionUID = 3188821013226116770L;
 
             @Override
             protected void onSelected(AjaxRequestTarget aTarget)
@@ -182,24 +158,13 @@ public class KnowledgeBasePanel
                     sendSelectionChangedEvents(aTarget, kbObject);
                 }
             }
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-
-                behavior.setOption("autoWidth", true);
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate() {
-                return KendoChoiceDescriptionScriptReference.template();
-            }
         };
-
+        
+        field.add(AttributeModifier.append("placeholder",
+                new ResourceModel("page.search.placeholder")));
+        
         return field;
     }
-
     /**
      * Search for Entities in the current knowledge base based on a typed string. Use full text
      * search if it is available. Returns a sorted/ranked list of KBHandles
@@ -208,18 +173,7 @@ public class KnowledgeBasePanel
     {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
-        if (kb.isSupportConceptLinking()) {
-            results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
-        }
-        else {
-            results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
-                ConceptFeatureValueType.ANY_OBJECT, aProject);
-            // Sort and filter results
-            results = results.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-            results = KBHandle.distinctByIri(results);
-        }
+        results = conceptLinkingService.searchItems(kb, aTypedString);
         return results;
     }
 

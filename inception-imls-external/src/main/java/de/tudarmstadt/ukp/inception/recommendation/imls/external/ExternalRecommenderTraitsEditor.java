@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -62,6 +63,9 @@ public class ExternalRecommenderTraitsEditor
         remoteUrl.setRequired(true);
         remoteUrl.add(new UrlValidator());
         form.add(remoteUrl);
+
+        CheckBox trainable = new CheckBox("trainable");
+        form.add(trainable);
 
         add(form);
     }

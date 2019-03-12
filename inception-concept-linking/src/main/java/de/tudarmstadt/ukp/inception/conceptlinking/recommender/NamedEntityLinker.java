@@ -48,7 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -70,7 +70,7 @@ public class NamedEntityLinker
     private NamedEntityLinkerTraits traits;
     
     private KnowledgeBaseService kbService;
-    private ConceptLinkingServiceImpl clService;
+    private ConceptLinkingService clService;
     private FeatureSupportRegistry fsRegistry;
     private ConceptFeatureTraits featureTraits;
 
@@ -78,7 +78,7 @@ public class NamedEntityLinker
         = new Key<>("model");
 
     public NamedEntityLinker(Recommender aRecommender, NamedEntityLinkerTraits aTraits,
-            KnowledgeBaseService aKbService, ConceptLinkingServiceImpl aClService,
+            KnowledgeBaseService aKbService, ConceptLinkingService aClService,
             FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
         recommender = aRecommender;

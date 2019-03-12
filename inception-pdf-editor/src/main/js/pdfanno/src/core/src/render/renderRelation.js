@@ -13,7 +13,15 @@ export function renderRelation (a) {
   a.color = a.color || '#F00'
 
   // Adjust the start/end points.
+// BEGIN INCEpTION EXTENSION - #839 - Creation of relations in PDF editor
+/*
   let theta = Math.atan((a.y1 - a.y2) / (a.x1 - a.x2))
+*/
+  let xDiff = a.x1 - a.x2
+  let yDiff = a.y1 - a.y2
+  // if difference of x and difference of y is both 0 use 0 for atan
+  let theta = Math.atan(xDiff === 0 && yDiff === 0 ? 0 : (yDiff / xDiff))
+// END INCEpTION EXTENSION
   let sign = (a.x1 < a.x2 ? 1 : -1)
   a.x1 += DEFAULT_RADIUS * Math.cos(theta) * sign
   a.x2 -= DEFAULT_RADIUS * Math.cos(theta) * sign
@@ -106,7 +114,12 @@ export function renderRelation (a) {
 
   group.appendChild(relation)
 
+// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
+/*
   const $base = $('<div/>').css({
+*/
+  const $base = $('<div title="' + a.text + '"/>').css({
+// END INCEpTION EXTENSION
     position   : 'absolute',
     top        : 0,
     left       : 0,

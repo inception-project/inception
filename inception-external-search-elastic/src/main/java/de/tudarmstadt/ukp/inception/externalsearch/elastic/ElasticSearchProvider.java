@@ -1,6 +1,6 @@
 /*
  * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,58 +17,47 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
-import java.util.ArrayList;
-import java.util.List;
+import static java.nio.charset.StandardCharsets.UTF_8;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
 
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
+import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
+import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class ElasticSearchProvider
-    implements ExternalSearchProvider
+    implements ExternalSearchProvider<ElasticSearchProviderTraits>
 {
-
-    private String remoteUrl = "http://xxxx";
-
-    private String indexName = "common-crawl-en";
-    
-    private String searchPath = "_search";
-    private String objectType = "texts";
-    
-    // Number of results retrieved from the server
-    private int resultSize = 1000;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
-    public boolean connect(String aUrl, String aUser, String aPassword)
-    {
-        // Always return true, no connection needed
-        return true;
-    }
-
-    @Override
-    public void disconnect()
-    {
-        // Nothing to do, no connection needed in this provider
-    }
-
-    @Override
-    public boolean isConnected()
-    {
-        // Always return true, no connection needed
-        return true;
-    }
-
-    @Override
-    public List<ExternalSearchResult> executeQuery(Object aProperties,
-            User aUser, String aQuery, String aSortOrder, String... sResultField)
+    public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aQuery)
     {
         List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -76,59 +65,79 @@ public class ElasticSearchProvider
 
         ElasticSearchResult queryResult;
 
-        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
-
-        remoteUrl = properties.getRemoteUrl();
-        indexName = properties.getIndexName();
-        searchPath = properties.getSearchPath();
+        String remoteUrl = aTraits.getRemoteUrl();
+        String indexName = aTraits.getIndexName();
+        String searchPath = aTraits.getSearchPath();
         
         // Set headers
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        
         // Set query
-        String query = "{\"size\":%d,\"query\":{\"match\":"
-                + "{\"doc.text\":\"%s\"}},\"highlight\":{\"fields\":{\"doc.text\":{}}}}";
-
-        // Set body
-        String body = String.format(query, resultSize, aQuery);
+        String body;
+        try {
+            body = prepareQuery(aTraits, aQuery);
+        }
+        catch (JsonProcessingException e) {
+            log.error("Invalid JSON while building search query");
+            return Collections.emptyList();
+        }
 
         // Set http entity
         HttpEntity<String> entity = new HttpEntity<String>(body, headers);
 
         // Prepare search URL
         String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
-        
+
         // Send post query
         queryResult = restTemplate.postForObject(searchUrl, entity,
                 ElasticSearchResult.class);
 
         for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
-            ExternalSearchResult result = new ExternalSearchResult();
+            if (hit.get_source() == null || hit.get_source().getMetadata() == null) {
+                log.warn("Result has no document metadata: " + hit);
+                continue;
+            }
+            
+            ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
+                    hit.get_id());
 
             // The title will be filled with the hit id, since there is no title in the
             // ElasticSearch hit
             result.setDocumentTitle(hit.get_id());
-            result.setScore(hit.get_score());
-
-            if (hit.get_source() != null) {
-                if (hit.get_source().getDoc() != null) {
-                    result.setText(hit.get_source().getDoc().getText());
-                }
-                if (hit.get_source().getMetadata() != null) {
-                    // Set the metadata fields
-                    result.setDocumentId(hit.get_source().getMetadata().getId());
-                    result.setLanguage(hit.get_source().getMetadata().getLanguage());
-                    result.setSource(hit.get_source().getMetadata().getSource());
-                    result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
-                    result.setUri(hit.get_source().getMetadata().getUri());
-                }
+            
+            // If the order is random, then the score doesn't reflect the quality, so we do not 
+            // forward it to the user
+            if (!aTraits.isRandomOrder()) {
+                result.setScore(hit.get_score());
             }
+
+            // Set the metadata fields
+            result.setOriginalSource(hit.get_source().getMetadata().getSource());
+            result.setOriginalUri(hit.get_source().getMetadata().getUri());
+            result.setLanguage(hit.get_source().getMetadata().getLanguage());
+            result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
+
             if (hit.getHighlight() != null) {
+
+                // Highlights from elastic search are small sections of the document text
+                // with the keywords surrounded by the <em> tags.
+                // There are no offset information for the highlights
+                // or the keywords in the document text. There is a feature
+                // request for it (https://github.com/elastic/elasticsearch/issues/5736).
+                // Until this feature is implemented, we currently try to find
+                // the keywords offsets by finding the matching highlight in the document text,
+                // then the keywords offset within highlight using <em> tags.
+                String originalText = hit.get_source().getDoc().getText();
+
                 // There are highlights, set them in the result
-                List<String> highlights = new ArrayList<>();
-                highlights.add(hit.getHighlight().getDoctext().get(0));
+                List<ExternalSearchHighlight> highlights = new ArrayList<>();
+                for (String highlight : hit.getHighlight().getDoctext()) {
+                    Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                            .parseHighlight(highlight, originalText);
+                    
+                    exHighlight.ifPresent(highlights::add);
+                }
                 result.setHighlights(highlights);
             }
             results.add(result);
@@ -137,28 +146,96 @@ public class ElasticSearchProvider
         return results;
     }
 
-    @Override
-    public ExternalSearchResult getDocumentById(Object aProperties, String aId)
+    private String prepareQuery(ElasticSearchProviderTraits aTraits, String aQuery)
+        throws JsonProcessingException
     {
-        ElasticSearchProviderTraits properties = (ElasticSearchProviderTraits) aProperties; 
+        ObjectMapper mapper = new ObjectMapper();
 
-        remoteUrl = properties.getRemoteUrl();
-        indexName = properties.getIndexName();
-        objectType = properties.getObjectType();
+        ObjectNode bodyNode = mapper.createObjectNode();
+        bodyNode.put("size", aTraits.getResultSize());
 
-        RestTemplate restTemplate = new RestTemplate();
+        ObjectNode queryBody = mapper.createObjectNode();
+        queryBody.putPOJO("match", mapper.createObjectNode()
+            .put("doc.text", aQuery));
+        if (aTraits.isRandomOrder()) {
+            ObjectNode query = mapper.createObjectNode();
 
-        String getUrl = remoteUrl + "/" + indexName + "/" + objectType + "/" + aId;
+            ObjectNode functionScore = mapper.createObjectNode();
+            functionScore.putPOJO("query", queryBody);
 
-        // Send get query
-        ElasticSearchHit document = restTemplate.getForObject(getUrl, ElasticSearchHit.class);
+            ObjectNode randomScore = mapper.createObjectNode();
+            randomScore.put("seed", aTraits.getSeed());
+            randomScore.put("field", "_id");
+            functionScore.putPOJO("random_score", randomScore);
 
-        ExternalSearchResult result = new ExternalSearchResult();
-        
-        result.setDocumentId(aId);
-        result.setText(document.get_source().getDoc().getText());
-        
-        return result;
+            query.putPOJO("function_score", functionScore);
+            bodyNode.putPOJO("query", query);
+
+        } else {
+            bodyNode.putPOJO("query", queryBody);
+        }
+
+        ObjectNode highlightNode = mapper.createObjectNode();
+        ObjectNode emptyNode = mapper.createObjectNode();
+        highlightNode.putPOJO("fields", mapper.createObjectNode()
+            .putPOJO("doc.text", emptyNode));
+        bodyNode.putPOJO("highlight", highlightNode);
+
+        // Render JSON to string
+        return mapper.writeValueAsString(bodyNode);
     }
 
+    @Override
+    public String getDocumentText(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+    {
+        if (!aCollectionId.equals(aTraits.getIndexName())) {
+            throw new IllegalArgumentException(
+                    "Requested collection name does not match connection collection name");
+        }
+        
+        Map<String, String> variables = new HashMap<>();
+        variables.put("index", aTraits.getIndexName());
+        variables.put("object", aTraits.getObjectType());
+        variables.put("documentId", aDocumentId);
+        
+        // Send get query
+        RestTemplate restTemplate = new RestTemplate();
+        ElasticSearchHit document = restTemplate.getForObject(
+                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
+                variables);
+
+        return document.get_source().getDoc().getText();
+    }
+
+    @Override
+    public InputStream getDocumentAsStream(DocumentRepository aRepository,
+            ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+    {
+        if (!aCollectionId.equals(aTraits.getIndexName())) {
+            throw new IllegalArgumentException(
+                    "Requested collection name does not match connection collection name");
+        }
+        
+        Map<String, String> variables = new HashMap<>();
+        variables.put("index", aTraits.getIndexName());
+        variables.put("object", aTraits.getObjectType());
+        variables.put("documentId", aDocumentId);
+        
+        // Send get query
+        RestTemplate restTemplate = new RestTemplate();
+        ElasticSearchHit document = restTemplate.getForObject(
+                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
+                variables);
+
+        return IOUtils.toInputStream(document.get_source().getDoc().getText(), UTF_8);
+    }
+    
+    @Override
+    public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
+            String aCollectionId, String aDocumentId)
+        throws IOException
+    {
+        return TextFormatSupport.ID;
+    }
 }

@@ -36,27 +36,27 @@
 <body>
   <wicket:extend>
     <div class="flex-content flex-v-container flex-gutter">
-      <div class="flex-h-container flex-gutter">
-        <form wicket:id="repositorySelectionForm" style="width: 220px;">
-          <span class="input-group">
+      <form wicket:id="searchForm" class="flex-h-container flex-gutter">
+        <div style="width: 240px;">
+          <div class="input-group">
             <span class="input-group-addon">
               <i class="fa fa-database"></i>
             </span>
-            <select wicket:id="repositoryCombo" class="form-control" data-container="body"></select>
-          </span>
-        </form>
-        <form wicket:id="searchForm" class="flex-content">
+            <select wicket:id="repository" class="form-control" data-container="body"></select>
+          </div>
+        </div>
+        <div class="flex-content">
           <div class="input-group">
             <span class="input-group-addon">
               <i class="fa fa-search"></i>
             </span>
-            <input wicket:id="queryInput" class="form-control" type="text" />
+            <input wicket:id="query" class="form-control" type="text" />
             <div class="input-group-btn">
               <button wicket:id="submitSearch" class="btn btn-default" type="submit">Search</button>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </form>
       <div wicket:id="dataTableContainer" class="scrolling flex-content flex-h-container">
         <table wicket:id="resultsTable" class="table" cellspacing="0" >
           [Results table]
