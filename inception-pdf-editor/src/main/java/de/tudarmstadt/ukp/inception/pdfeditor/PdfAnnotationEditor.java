@@ -49,10 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
 import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
@@ -157,10 +158,11 @@ public class PdfAnnotationEditor
     {
         try
         {
+            DocumentModel documentModel = new DocumentModel(aJCas.getDocumentText());
             Offset offset = new Offset(aParams);
-            Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
-            if (docOffset != null) {
+            Offset docOffset =
+                PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, aPdfExtractFile);
+            if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 getModelObject().getSelection()
                     .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
                 getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
@@ -180,11 +182,12 @@ public class PdfAnnotationEditor
     {
         try
         {
+            DocumentModel documentModel = new DocumentModel(aJCas.getDocumentText());
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             Offset offset = new Offset(aParams);
-            Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
-            if (docOffset != null) {
+            Offset docOffset =
+                PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, aPdfExtractFile);
+            if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(),
                         aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
@@ -275,10 +278,11 @@ public class PdfAnnotationEditor
         try {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             if (paramId.isSynthetic()) {
+                DocumentModel documentModel = new DocumentModel(aJCas.getDocumentText());
                 Offset offset = new Offset(aParams);
-                Offset docOffset = PdfAnnoRenderer
-                    .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
-                if (docOffset != null) {
+                Offset docOffset =
+                    PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, aPdfExtractFile);
+                if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
                         aJCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
                 } else {
