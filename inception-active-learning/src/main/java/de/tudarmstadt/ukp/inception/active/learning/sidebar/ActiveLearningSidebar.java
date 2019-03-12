@@ -660,13 +660,19 @@ public class ActiveLearningSidebar
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
-        
-        suggestion.hide(selectedValue.equals(suggestion.getLabel()) ? FLAG_TRANSIENT_ACCEPTED
+
+        boolean areBothLabelsNull = suggestion.getLabel() == null && selectedValue == null;
+        boolean areLabelsEqual = selectedValue != null
+                && selectedValue.equals(suggestion.getLabel());
+
+        suggestion.hide((areBothLabelsNull || areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED
                 : FLAG_TRANSIENT_CORRECTED);
 
         // Log the action to the learning record
-        writeLearningRecordInDatabaseAndEventLog(suggestion, 
-                selectedValue.equals(suggestion.getLabel()) ? ACCEPTED : CORRECTED, selectedValue);
+        writeLearningRecordInDatabaseAndEventLog(suggestion,
+                (areBothLabelsNull || areLabelsEqual) ? ACCEPTED
+                        : CORRECTED,
+                selectedValue);
         
         recommendationService.getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(suggestion.getDocumentName(),
@@ -874,7 +880,7 @@ public class ActiveLearningSidebar
         // now point to the correct one
         JCas jCas = getJCasProvider().get();
 
-        // ... if a matching annotation exists, highlight the annotaiton
+        // ... if a matching annotation exists, highlight the annotation
         Optional<AnnotationFS> annotation = getMatchingAnnotation(jCas.getCas(), aRecord);
         if (annotation.isPresent()) {
             setHighlight(aRecord.getSourceDocument(), annotation.get());

@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -44,24 +46,20 @@ public class AnnotationSuggestion
      */
     public static final int FLAG_REJECTED = 1 << 2;
     /**
-     * Suggestion has no label
-     */
-    public static final int FLAG_NO_LABEL = 1 << 3;
-    /**
      * User has accepted the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 4;
+    public static final int FLAG_TRANSIENT_ACCEPTED = 1 << 3;
     /**
      * User has rejected the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_REJECTED = 1 << 5;
+    public static final int FLAG_TRANSIENT_REJECTED = 1 << 4;
     /**
      * User has corrected the suggestion and prediction has not re-run yet (which would reinitialize
      * the visbility state)
      */
-    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 6;
+    public static final int FLAG_TRANSIENT_CORRECTED = 1 << 5;
     
     private final int id;
 
@@ -144,6 +142,7 @@ public class AnnotationSuggestion
         return id;
     }
 
+    @Nullable
     public String getLabel()
     {
         return label;
@@ -214,9 +213,6 @@ public class AnnotationSuggestion
         }
         if ((hidingFlags & FLAG_SKIPPED) != 0) {
             sb.append("skipped ");
-        }
-        if ((hidingFlags & FLAG_NO_LABEL) != 0) {
-            sb.append("no-label ");
         }
         if ((hidingFlags & FLAG_TRANSIENT_ACCEPTED) != 0) {
             sb.append("transient-accepted ");

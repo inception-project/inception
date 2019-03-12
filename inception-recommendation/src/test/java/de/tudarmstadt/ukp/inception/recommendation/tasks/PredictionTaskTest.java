@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
@@ -42,15 +43,30 @@ import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 
 public class PredictionTaskTest
 {
     private @Mock LearningRecordService recordService;
     private @Mock AnnotationSchemaService annoService;
+    
     private Project project;
     private AnnotationLayer layer;
     private String user;
+    private String neName;
+    long layerId;
+    
+    // AnnotationSuggestion constants
+    private long recommenderId = 1;
+    private String feature = "value";
+    private String documentName = "TestDocument";
+    private String uiLabel = "TestUiLabel";
+    private double confidence = 0.2;
+    private String recommenderName = "TestEntityRecommender";
+    private String coveredText = "TestText";
+   
 
 
     @Before
@@ -59,44 +75,122 @@ public class PredictionTaskTest
         initMocks(this);
 
         user = "Testuser";
+        neName = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
         
         layer = new AnnotationLayer();
-        String neName = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
         layer.setName(neName);
+        layer.setId(new Long(42));
+        layerId = layer.getId();
 
         project = new Project();
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
-        featureList.add(new AnnotationFeature("NamedEntity", neName));
+        featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
      
     }
 
     @Test
-    public void testCalculateVisibilityNoRecords() throws Exception
+    public void testCalculateVisibilityNoRecordsAllHidden() throws Exception
     {
-        List<AnnotationSuggestion> expectedSuggestions = null; // TODO fill
-        when(recordService.listRecords(user, layer)).thenReturn(null);
+        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<LearningRecord>());
 
         CAS cas = getTestCas();
-        Collection<SuggestionGroup> suggestions = getTestSuggestionGroup();
+        Collection<SuggestionGroup> suggestions = getASuggestionGroup(
+                new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
         PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
                 suggestions, 0, 25);
 
-        List<AnnotationSuggestion> visibleSuggestions = suggestions.stream()
-                .flatMap(SuggestionGroup::stream).filter(AnnotationSuggestion::isVisible)
-                .collect(Collectors.toList());
+        List<AnnotationSuggestion> invisibleSuggestions = getInVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+
+        // check the invisible suggestions' states
+        assertTrue(invisibleSuggestions.size() > 0);
+        assertThat(invisibleSuggestions)
+                .as("All invisible suggestions are hidden because of overlapping")
+                .allMatch(s -> s.getReasonForHiding().equals("overlapping "));
         
-        assertThat(visibleSuggestions).as("Visible suggestions are visible.")
-                .allMatch(s -> expectedSuggestions.contains(s));
+        // check no visible suggestions
+        assertTrue(visibleSuggestions.size() == 0);
     }
 
-    private Collection<SuggestionGroup> getTestSuggestionGroup()
+    @Test
+    public void testCalculateVisibilityNoRecordsNotHidden() throws Exception
     {
-        // TODO Auto-generated method stub
-        return null;
+        when(recordService.listRecords(user, layer)).thenReturn(new ArrayList<LearningRecord>());
+
+        CAS cas = getTestCas();
+        Collection<SuggestionGroup> suggestions = getASuggestionGroup(
+                new int[][] { { 1, 5, 10 }});
+        PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
+                suggestions, 0, 25);
+
+        List<AnnotationSuggestion> invisibleSuggestions = getInVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+
+        // check the invisible suggestions' states
+        assertTrue(visibleSuggestions.size() > 0);
+        assertThat(invisibleSuggestions.size() == 0);
+    }
+    
+    @Test
+    public void testCalculateVisibilityRejected() throws Exception
+    {
+        List<LearningRecord> records = new ArrayList<LearningRecord>();
+        LearningRecord rejectedRecord = new LearningRecord();
+        rejectedRecord.setUserAction(LearningRecordType.REJECTED);
+        rejectedRecord.setOffsetCharacterBegin(5);
+        rejectedRecord.setOffsetCharacterEnd(10);
+        records.add(rejectedRecord);
+        when(recordService.listRecords(user, layer)).thenReturn(records);
+
+        CAS cas = getTestCas();
+        Collection<SuggestionGroup> suggestions = getASuggestionGroup(
+                new int[][] { { 1, 5, 10 }});
+        PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
+                suggestions, 0, 25);
+
+        List<AnnotationSuggestion> invisibleSuggestions = getInVisibleSuggestions(suggestions);
+        List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
+
+        // check the invisible suggestions' states
+        assertTrue(visibleSuggestions.size() == 0);
+        assertThat(invisibleSuggestions).as("Invisible suggestions are hidden because of rejection")
+        .allMatch(s -> s.getReasonForHiding().equals("rejected "));
+    }
+
+    private List<AnnotationSuggestion> getInVisibleSuggestions(
+            Collection<SuggestionGroup> aSuggestions)
+    {
+        return aSuggestions.stream()
+                .flatMap(SuggestionGroup::stream).filter(s -> !s.isVisible())
+                .collect(Collectors.toList());
+    }
+
+    private List<AnnotationSuggestion> getVisibleSuggestions(
+            Collection<SuggestionGroup> aSuggestions)
+    {
+        return aSuggestions.stream()
+                .flatMap(SuggestionGroup::stream).filter(s -> s.isVisible())
+                .collect(Collectors.toList());
+    }    
+
+    private Collection<SuggestionGroup> getASuggestionGroup(int[][] vals)
+    {
+
+        List<AnnotationSuggestion> suggestions = new ArrayList<AnnotationSuggestion>();
+        for (int[] val : vals) {
+            suggestions.add(new AnnotationSuggestion(val[0], recommenderId, recommenderName,
+                    layerId, feature, documentName, val[1], val[2], coveredText, null, uiLabel,
+                    confidence));
+            suggestions.add(new AnnotationSuggestion(val[0], recommenderId, recommenderName,
+                    layerId, feature, documentName, val[1], val[2], coveredText, null, uiLabel,
+                    confidence));
+        }
+
+        return SuggestionGroup.group(suggestions);
     }
 
     private CAS getTestCas() throws Exception

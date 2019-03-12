@@ -91,14 +91,15 @@ public class ActiveLearningServiceImpl
         List<SuggestionGroup> suggestions = getSuggestions(user,
                 aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
-            if (listOfAO.stream().anyMatch(suggestion -> 
-                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
-                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
-                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
-                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
-                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
-                    suggestion.isVisible())
-            ) {
+            if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
+                    .equals(aRecord.getSourceDocument().getName())
+                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
+                    && ((suggestion.getLabel() != null
+                            && suggestion.getLabel().equals(aRecord.getAnnotation()))
+                            || (suggestion.getLabel() == null && aRecord.getAnnotation() == null))
+                    && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
+                    && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
+                    && suggestion.isVisible())) {
                 return true;
             }
         }
@@ -132,7 +133,9 @@ public class ActiveLearningServiceImpl
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
                                     && r.getOffsetCharacterBegin() == s.getBegin()
                                     && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && r.getAnnotation().equals(s.getLabel()))
+                                    && ((r.getAnnotation() != null
+                                            && r.getAnnotation().equals(s.getLabel()))
+                                            || (s.getLabel() == null && r.getAnnotation() == null)))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
                                     s.hide(FLAG_REJECTED);

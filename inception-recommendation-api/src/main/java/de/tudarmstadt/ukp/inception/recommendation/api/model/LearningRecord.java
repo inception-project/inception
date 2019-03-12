@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.model;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.annotation.Nullable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -152,6 +153,7 @@ public class LearningRecord
         this.tokenText = tokenText.substring(0, targetLength);
     }
 
+    @Nullable
     public String getAnnotation() {
         return annotation;
     }
