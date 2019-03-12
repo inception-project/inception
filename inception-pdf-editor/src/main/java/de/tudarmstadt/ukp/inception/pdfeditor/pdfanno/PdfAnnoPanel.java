@@ -23,7 +23,6 @@ import java.io.IOException;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -99,6 +98,7 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
+                    aPdfAnnotationEditor.setPdfExtractFile(pdftext);
                     getRequestCycle().scheduleRequestHandlerAfterCurrent(
                             new ResourceStreamRequestHandler(
                                     new StringResourceStream(pdftext))
@@ -119,23 +119,7 @@ public class PdfAnnoPanel
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                SourceDocument doc = aModel.getObject().getDocument();
-
-                File pdfFile = documentService.getSourceDocumentFile(doc);
-
-                try
-                {
-                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    aPdfAnnotationEditor.renderPdfAnnoModel(aTarget, pdftext);
-                }
-                catch (IOException e)
-                {
-                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
-                        + "with PDFExtractor.", e);
-                    error("Unable to get PDF text for " + pdfFile.getName()
-                        + "with PDFExtractor.");
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
+                aPdfAnnotationEditor.renderPdfAnnoModel(aTarget);
             }
         });
 
@@ -144,23 +128,7 @@ public class PdfAnnoPanel
 
             @Override
             protected void respond(AjaxRequestTarget aTarget) {
-                SourceDocument doc = aModel.getObject().getDocument();
-                File pdfFile = documentService.getSourceDocumentFile(doc);
-
-                try
-                {
-                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    aPdfAnnotationEditor.handleAPIRequest(
-                        aTarget, getRequest().getPostParameters(), pdftext);
-                }
-                catch (IOException e)
-                {
-                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
-                        + "with PDFExtractor.", e);
-                    error("Unable to get PDF text for " + pdfFile.getName()
-                        + "with PDFExtractor.");
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                }
+                aPdfAnnotationEditor.handleAPIRequest(aTarget, getRequest().getPostParameters());
             }
         });
 
