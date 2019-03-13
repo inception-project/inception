@@ -6,7 +6,7 @@ For a SNAPSHOT build:
 For a release build:
 
   mvn -Pdocker clean install docker:build -Ddocker.image.name="webanno/webanno"
-  mvn -Pdocker clean install docker:push
+  mvn -Pdocker clean install docker:push -Ddocker.image.name="webanno/webanno"
 
 
 docker run -v /path/on/host/webanno/repository:/export -p port-on-host:8080 webanno/webanno:latest
