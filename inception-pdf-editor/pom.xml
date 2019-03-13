@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.8.1</version>
+    <version>0.8.2-SNAPSHOT</version>
   </parent>
   <name>INCEpTION - Editor - PDF</name>
   <artifactId>inception-pdf-editor</artifactId>
