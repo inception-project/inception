@@ -17,13 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
@@ -213,50 +211,6 @@ public class KBProperty
             originalStatements.add(rangeStmt);
             aConn.add(rangeStmt);
         }
-    }
-
-    public static KBProperty read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase kb)
-    {
-        KBProperty kbProp = new KBProperty();
-        kbProp.setIdentifier(aStmt.getSubject().stringValue());
-        kbProp.setKB(kb);
-        kbProp.originalStatements.add(aStmt);
-
-        readFirst(aConn, aStmt.getSubject(), kb.getPropertyLabelIri(), null, 
-                kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbProp.setName(stmt.getObject().stringValue());
-                kbProp.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbProp::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aStmt.getSubject(), kb.getPropertyDescriptionIri(), null, 
-                kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbProp.setDescription(stmt.getObject().stringValue());
-                kbProp.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbProp::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aStmt.getSubject(), RDFS.RANGE, null, kb).ifPresent((stmt) -> {
-            kbProp.setRange(stmt.getObject().stringValue());
-            kbProp.originalStatements.add(stmt);
-        });
-
-        readFirst(aConn, aStmt.getSubject(), RDFS.DOMAIN, null, kb).ifPresent((stmt) -> {
-            kbProp.setDomain(stmt.getObject().stringValue());
-            kbProp.originalStatements.add(stmt);
-        });
-
-        return kbProp;
     }
 
     @Override
