@@ -832,7 +832,11 @@ public abstract class AnnotationDetailEditorPanel
         // #186 - After filling a slot, the annotation detail panel is not updated
         aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
 
-        TypeAdapter adapter = annotationService.getAdapter(state.getDefaultAnnotationLayer());
+        // internalCommitAnnotation is used to update an existing annotation as well as to create
+        // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
+        // use the defaultAnnotationLayer here as e.g. when creating relation annotations, it would
+        // point to the span type to which the relation attaches, not to the relation type!
+        TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
 
         // If this is an annotation creation action, create the annotation
         if (state.getSelection().getAnnotation().isNotSet()) {
