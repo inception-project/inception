@@ -22,9 +22,10 @@ import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -33,43 +34,42 @@ import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
-import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
-public class Chart extends Panel
+public class ChartPanel
+    extends Panel
 {
     private static final long serialVersionUID = -3849226240909011148L;
 
-    private static final Logger LOG  = LoggerFactory.getLogger(Chart.class);
-    
+    private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
+
     private static final String MID_CHART_CONTAINER = "chart";
-    private final static int MAX_POINTS_TO_PLOT = 50;
-    
+    private static final int MAX_POINTS_TO_PLOT = 50;
+
     private StringBuilder dataColumns;
     private StringBuilder chartType;
-    private String javascript; 
-    private String markupId;
-    IModel<ChartData> model;
+    private String javascript;
+    private IModel<LearningCurve> model;
     private final WebComponent chart;
 
-    public Chart(String aId, IModel<ChartData> aModel )
+    public ChartPanel(String aId, IModel<LearningCurve> aModel)
     {
         super(aId);
         model = (aModel);
         dataColumns = new StringBuilder();
-        chartType = new StringBuilder(); 
-        
+        chartType = new StringBuilder();
+
         chart = new Label(MID_CHART_CONTAINER);
         chart.setOutputMarkupId(true);
         add(chart);
-        
-        markupId = chart.getMarkupId();
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
@@ -85,64 +85,62 @@ public class Chart extends Panel
         aResponse.render(
                 CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
     }
-    
+
     @SuppressWarnings("unchecked")
-    public IModel<ChartData> getModel()
+    public IModel<LearningCurve> getModel()
     {
-        return (IModel<ChartData>) getDefaultModel();
+        return (IModel<LearningCurve>) getDefaultModel();
     }
 
     /**
-     * Renders the chart using the given request handler 
+     * renders the chart and plot learning curve
      * 
      */
-    public void renderChart(ChartData aChartData)
+    public void renderChart(LearningCurve aLearningCurve)
     {
-        IPartialPageRequestHandler requestHandler = aChartData.getaRequestHandler();
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        
         try {
-            for (String data : aChartData.getCurveData().keySet()) {
-                addLearningCurve(aChartData.getCurveData().get(data), data);
+            // there can be multiple learning curves. iterate over them to create data columns for
+            // all
+            for (String data : aLearningCurve.getCurveData().keySet()) {
+                addLearningCurve(aLearningCurve.getCurveData().get(data), data);
             }
-            
+
             createJSScript();
 
             LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
 
-            requestHandler.prependJavaScript(javascript);
+            target.get().prependJavaScript(javascript);
         }
         catch (IOException e) {
             LOG.error("Unable to render chart", e);
             error("Unable to render chart: " + e.getMessage());
-            requestHandler.addChildren(getPage(), IFeedback.class);
+            target.get().addChildren(getPage(), IFeedback.class);
         }
     }
-    
+
     @Override
     protected void onModelChanged()
     {
         super.onModelChanged();
-        
-        Object chartdata = getModel();
-        
-        if (chartdata == null) {
-            return;
-        }     
-        
+
+        LearningCurve chartdata = getModel().getObject();
+
         resetChart();
-        
-        @SuppressWarnings("unchecked")
-        ChartData chartData = (ChartData) chartdata;
-        
-        renderChart(chartData);
+
+        renderChart(chartdata);
     }
-    
+
     /**
      * to create a learning curve, it creates/updates the strings dataColumns and chartTypes for the
      * given recommender by appending data string. The type of the chart is set to be step. Calling
      * this method iteratively will generate multiple learning curves
      * 
-     * @param aData a string that looks something like 2,5,3,7,8,4,
-     * @param aName name of the learning curve
+     * @param aData
+     *            a string that looks something like 2,5,3,7,8,4,
+     * @param aName
+     *            name of the learning curve
      */
     public void addLearningCurve(String aData, String aName)
     {
@@ -150,18 +148,18 @@ public class Chart extends Panel
         chartType.append("'");
         chartType.append(aName);
         chartType.append("': 'step', ");
-        
+
         // append recommender name to the data
         dataColumns.append("['");
         dataColumns.append(aName);
-    
+
         // append data columns
         dataColumns.append("', ");
         dataColumns.append(aData);
         dataColumns.append("]");
         dataColumns.append(",");
     }
-    
+
     public void resetChart()
     {
         chartType = new StringBuilder();
@@ -170,13 +168,14 @@ public class Chart extends Panel
 
     /**
      * Creates the JS script to render graph with the help of given data points. Also creates an
-     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of
-     * aDataColumns: 
+     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of aDataColumns:
+     * 
      * <pre>
      * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
      * </pre>
      * 
      * Example value of aChartType
+     * 
      * <pre>
      * recommender1: 'step', recommender2 : 'step'
      * </pre>
@@ -185,16 +184,11 @@ public class Chart extends Panel
     {
         int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
         String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
-        String data = toJsonString(dataColumns).substring(1,
-                dataColumns.toString().length());
-    
+        String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
+
         // bind data to chart container
-        javascript = "var chart=c3.generate({bindto:'#" 
-                + markupId
-                + "',data:{ x:'x', columns:[" 
-                + xaxisValues + " ," 
-                + data + "],types:{"
-                + chartType
+        javascript = "var chart=c3.generate({bindto:'#" + chart.getMarkupId()
+                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + chartType
                 + "}},"
                 + "axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
     }

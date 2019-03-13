@@ -25,15 +25,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,9 +49,9 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.chart.Chart;
+import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
-import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
 public class LearningCurveChartPanel
     extends Panel
@@ -55,62 +59,81 @@ public class LearningCurveChartPanel
     private static final long serialVersionUID = 4306746527837380863L;
 
     private static final String MID_CHART_CONTAINER = "chart-container";
-
+    private final static int MAX_POINTS_TO_PLOT = 50;
     private static final Logger LOG = LoggerFactory.getLogger(LearningCurveChartPanel.class);
     
-    private final Chart chart;
     private @SpringBean EventRepository eventRepo;
     private @SpringBean RecommendationService recommendationService;
-
+    
+    private final ChartPanel chartPanel;
     private final IModel<AnnotatorState> model;
-    private final static int MAX_POINTS_TO_PLOT = 50;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId);
         model = aModel;
 
-        chart = new Chart(MID_CHART_CONTAINER, Model.of());
-        chart.setOutputMarkupId(true);
-        add(chart);
+        //initially the chart is empty. passing empty model
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, Model.of());
+        chartPanel.setOutputMarkupId(true);
+        add(chartPanel);
     }
 
+    @Override
+    protected void onRender()
+    {
+        super.onRender();
+        
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        
+        if (!target.equals(Optional.empty()))
+            renderChart(target.get());
+    }
+    
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         LOG.trace("rendered annotation event");
 
-        MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores(aEvent);
+        renderChart( aEvent.getRequestHandler());
+    }
+
+    private void renderChart(IPartialPageRequestHandler aRequestHandler)
+    {
+        MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores(aRequestHandler);
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
             LOG.error("No evaluation data for the learning curve. Project: {}",
                     model.getObject().getProject());
 
             error("Cannot plot the learning curve. Please make some annotations");
-            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+            aRequestHandler.addChildren(getPage(), IFeedback.class);
 
             return;
         }
 
         Map<String,String> curveData = new HashMap<String,String>();
-        ChartData learningCurve = new ChartData();
+        LearningCurve learningCurve = new LearningCurve();
 
-        // iterate over recommenderScoreMap to create data arrays to feed to the c3 graph
+        // iterate over recommenderScoreMap to create data
         for (String recommenderName : recommenderScoreMap.keySet()) {
-        
-            
-            // extract the scores from the recommenderScoreMao. The value of data calculates to be
-            // something like 2,4,6,5,3,9,
+            // extract the scores from the recommenderScoreMap. The format of data is a comma
+            // separated string of scores(each score is Double cast-able) to be. 
+            // Example 2.3, 4.5 ,6, 5, 3, 9,
             String data = recommenderScoreMap.get(recommenderName).stream().map(Object::toString)
                     .collect(Collectors.joining(", "));
             
             curveData.put(recommenderName,data);
+            
             learningCurve.setCurveData(curveData);
+            
+            // the Curve is not allowed to have more points as compared to MAX_POINTS_TO_PLOT. This
+            // is how many scores we have retrieved from the database
             learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
-            learningCurve.setaRequestHandler(aEvent.getRequestHandler());
         }
 
-        chart.setDefaultModel(Model.of(learningCurve));
+        //provide the chart above calculated data to plot the learning curve
+        chartPanel.setDefaultModel(Model.of(learningCurve));
     }
 
     /**
@@ -119,7 +142,8 @@ public class LearningCurveChartPanel
      * 
      * @return
      */
-    private MultiValuedMap<String, Double> getLatestScores(RenderAnnotationsEvent aEvent)
+    private MultiValuedMap<String, Double> getLatestScores(
+            IPartialPageRequestHandler aRequestHandler)
     {
         // we want to plot RecommenderEvaluationResultEvent for the learning curve. The
         // value of the event
@@ -135,7 +159,7 @@ public class LearningCurveChartPanel
 
             error("Cannot plot the learning curve. There is not recommender in the project.");
 
-            aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+            aRequestHandler.addChildren(getPage(), IFeedback.class);
         }
         
         for (Recommender recommender : listEnabledRecommenders) {
@@ -184,7 +208,7 @@ public class LearningCurveChartPanel
                 error("Invalid logged Event detail. Skipping record with logged event id: "
                         + loggedEvent.getId());
 
-                aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+                aRequestHandler.addChildren(getPage(), IFeedback.class);
             }
         }
         return recommenderScoreMap;

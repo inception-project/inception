@@ -20,24 +20,21 @@ package de.tudarmstadt.ukp.inception.recommendation.model;
 import java.io.Serializable;
 import java.util.Map;
 
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-
-public class ChartData implements Serializable
+public class LearningCurve implements Serializable
 {
     private static final long serialVersionUID = 6542281189066805238L;
     
     Map<String,String> curveData;
     int maximumPointsToPlot;
-    IPartialPageRequestHandler aRequestHandler;
     
     public Map<String, String> getCurveData()
     {
         return curveData;
     }
 
-    public void setCurveData(Map<String, String> curveData)
+    public void setCurveData(Map<String, String> aCurveData)
     {
-        this.curveData = curveData;
+        this.curveData = aCurveData;
     }
 
     public int getMaximumPointsToPlot()
@@ -45,18 +42,8 @@ public class ChartData implements Serializable
         return maximumPointsToPlot;
     }
 
-    public void setMaximumPointsToPlot(int maximumPointsToPlot)
+    public void setMaximumPointsToPlot(int aMaximumPointsToPlot)
     {
-        this.maximumPointsToPlot = maximumPointsToPlot;
-    }
-
-    public IPartialPageRequestHandler getaRequestHandler()
-    {
-        return aRequestHandler;
-    }
-
-    public void setaRequestHandler(IPartialPageRequestHandler aRequestHandler)
-    {
-        this.aRequestHandler = aRequestHandler;
+        this.maximumPointsToPlot = aMaximumPointsToPlot;
     }
 }

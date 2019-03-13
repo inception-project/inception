@@ -46,8 +46,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
-import de.tudarmstadt.ukp.inception.recommendation.chart.Chart;
-import de.tudarmstadt.ukp.inception.recommendation.model.ChartData;
+import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
+import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
 public class EvaluationSimulationPanel
     extends Panel
@@ -69,7 +69,7 @@ public class EvaluationSimulationPanel
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
 
-    private final Chart chart;
+    private final ChartPanel chartPanel;
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
@@ -83,34 +83,47 @@ public class EvaluationSimulationPanel
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
-        chart = new Chart(MID_CHART_CONTAINER, Model.of());
-        chart.setOutputMarkupId(true);
-        form.add(chart);
+        //initially the chart is empty. passing empty model
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, Model.of());
+        chartPanel.setOutputMarkupId(true);
+        form.add(chartPanel);
 
+        // clicking the start button the annotated documents are evaluated and the learning curve
+        // for the selected recommender is plotted in the hCart Panel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
                 String scores = evaluate(_target);
                 
-                if (scores == null) {
+                if (scores.isEmpty() || scores.isBlank()) {
+                    LOG.warn("There were no evaluation to show");
+                    warn("There were no evaluation to showed");
+                    _target.addChildren(getPage(), IFeedback.class);
+                    
                     return;
                 }
                 
-                ChartData learningCurve = new ChartData();
-                
                 Map<String,String> curveData = new HashMap<String,String>();
+                curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
                 
-                curveData.put(selectedRecommenderPanel.getObject().getName(),scores);
+                LearningCurve learningCurve = new LearningCurve();
                 learningCurve.setCurveData(curveData);
                 learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
-                learningCurve.setaRequestHandler(_target);
                 
-                chart.setDefaultModel(Model.of(learningCurve));
+                //provide the chart above calculated data to plot the learning curve
+                chartPanel.setDefaultModel(Model.of(learningCurve));
             });
         
         form.add(startButton);
     }
     
+    /**
+     * evaluates the selected recommender with the help of the annotated documents in the project. 
+     * 
+     * @param aTarget uses to log errors on the page in case of unwanted behaviour
+     * 
+     * @return comma separated string of scores
+     */
     private String evaluate(AjaxRequestTarget aTarget)
         throws IOException
     {
@@ -123,6 +136,7 @@ public class EvaluationSimulationPanel
             return null;
         }
 
+        //get all the source documents related to the project
         Map<SourceDocument, AnnotationDocument> listAllDocuments = documentService
                 .listAllDocuments(project, userDao.getCurrentUser());
 
@@ -144,6 +158,7 @@ public class EvaluationSimulationPanel
         IncrementalSplitter splitStrategy = new IncrementalSplitter(TRAIN_PERCENTAGE,
                 INCREMENT, LOW_SAMPLE_THRESHOLD);
 
+        @SuppressWarnings("rawtypes")
         RecommendationEngineFactory factory = recommenderRegistry
                 .getFactory(selectedRecommenderPanel.getObject().getTool());
         RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
@@ -177,9 +192,6 @@ public class EvaluationSimulationPanel
             iterations++;
         }
 
-        String data = sb.toString();
-        //String recommenderName = selectedRecommenderPanel.getObject().getName();
-
-        return data;
+        return sb.toString();
     }
 }
