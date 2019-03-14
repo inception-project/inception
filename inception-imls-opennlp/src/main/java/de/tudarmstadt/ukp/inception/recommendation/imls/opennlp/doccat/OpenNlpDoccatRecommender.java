@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -133,9 +134,11 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<DocumentSample> data = extractSamples(aCasses);
         List<DocumentSample> trainingSet = new ArrayList<>();
         List<DocumentSample> testSet = new ArrayList<>();
@@ -154,9 +157,15 @@ public class OpenNlpDoccatRecommender
             }            
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        result.setTestSetSize(testSetSize);
+        result.setTrainingSetSize(trainingSetSize);
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setDefaultScore(0.0);
+            return result;
         }
 
         LOG.info("Evaluating on {} items (training set size {}, test set size {})", data.size(),
@@ -170,7 +179,8 @@ public class OpenNlpDoccatRecommender
         try (DocumentSampleStream stream = new DocumentSampleStream(testSet)) {
             DocumentCategorizerEvaluator evaluator = new DocumentCategorizerEvaluator(doccat);
             evaluator.evaluate(stream);
-            return evaluator.getAccuracy();
+            result.setDefaultScore(evaluator.getAccuracy());
+            return result;
         }
         catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);

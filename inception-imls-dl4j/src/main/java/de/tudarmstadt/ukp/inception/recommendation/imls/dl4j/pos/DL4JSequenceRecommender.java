@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -457,8 +458,9 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
     {
+        EvaluationResult result = new EvaluationResult();
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label
         Object2IntMap<String> tagsetCollector = new Object2IntOpenHashMap<>();
@@ -483,9 +485,15 @@ public class DL4JSequenceRecommender
             }            
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        result.setTestSetSize(testSetSize);
+        result.setTrainingSetSize(trainingSetSize);
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             log.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setDefaultScore(0.0);
+            return result;
         }
 
         log.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -527,7 +535,9 @@ public class DL4JSequenceRecommender
                 }
             }
             
-            return correct / total;
+            double accuracy = correct / total;
+            result.setDefaultScore(accuracy);
+            return result;
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);
