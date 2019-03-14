@@ -53,17 +53,31 @@ public class CandidateEntity
     public static final Key<List<String>> KEY_MENTION_CONTEXT = new Key<>("mentionContext");
 
     /**
-     * edit distance between mention and candidate entity label
+     * Edit distance between mention and candidate entity label.
+     * <p>
+     * The smaller the distance, the better the ranking. Thus we use {@link Integer#MAX_VALUE} as
+     * the default value to ensure that candidates are ranked last on this feature if it could not
+     * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention", 0);
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION = new Key<>("levMention",
+            Integer.MAX_VALUE);
 
     /**
-     * edit distance between mention + context and candidate entity label
+     * Edit distance between mention + context and candidate entity label
+     * <p>
+     * The smaller the distance, the better the ranking. Thus we use {@link Integer#MAX_VALUE} as
+     * the default value to ensure that candidates are ranked last on this feature if it could not
+     * be calculated.
      */
-    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext", 0);
+    public static final Key<Integer> KEY_LEVENSHTEIN_MENTION_CONTEXT = new Key<>("levContext",
+            Integer.MAX_VALUE);
 
     /**
-     * edit distance between typed string and candidate entity label
+     * Edit distance between typed string and candidate entity label
+     * <p>
+     * The smaller the distance, the better the ranking. Thus we use {@link Integer#MAX_VALUE} as
+     * the default value to ensure that candidates are ranked last on this feature if it could not
+     * be calculated.
      */
     public static final Key<Integer> KEY_LEVENSHTEIN_QUERY = new Key<>("levQuery",
             Integer.MAX_VALUE);
