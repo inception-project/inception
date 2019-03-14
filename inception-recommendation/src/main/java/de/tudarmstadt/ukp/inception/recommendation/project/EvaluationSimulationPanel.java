@@ -95,7 +95,7 @@ public class EvaluationSimulationPanel
             (_target, _form) -> {
                 String scores = evaluate(_target);
                 
-                if (scores.isEmpty() || scores.isBlank()) {
+                if (scores.isEmpty()) {
                     LOG.warn("There were no evaluation to show");
                     warn("There were no evaluation to showed");
                     _target.addChildren(getPage(), IFeedback.class);
