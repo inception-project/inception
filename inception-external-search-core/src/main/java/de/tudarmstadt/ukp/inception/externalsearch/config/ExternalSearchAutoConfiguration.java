@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.exporter.DocumentRepositoryEx
  */
 @Configuration
 @ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class ExternalSearchAutoConfiguration
 {
     @Bean

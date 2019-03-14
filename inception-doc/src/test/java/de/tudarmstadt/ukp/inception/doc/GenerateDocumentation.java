@@ -74,6 +74,7 @@ public class GenerateDocumentation
                 .safe(SafeMode.UNSAFE)
                 .attributes(attributes);
         Asciidoctor asciidoctor = Asciidoctor.Factory.create();
+        asciidoctor.requireLibrary("asciidoctor-diagram");
         File f = new File(outputDir.resolve("asciidoc").resolve(type).toString() + ".adoc");
         asciidoctor.convertFile(f , options);
     }
