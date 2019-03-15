@@ -98,7 +98,7 @@ public class PdfAnnoPanel
                 try
                 {
                     String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    aPdfAnnotationEditor.setPdfExtractFile(pdftext);
+                    aPdfAnnotationEditor.loadPdfExtractFile(pdftext);
                     getRequestCycle().scheduleRequestHandlerAfterCurrent(
                             new ResourceStreamRequestHandler(
                                     new StringResourceStream(pdftext))

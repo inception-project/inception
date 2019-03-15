@@ -37,58 +37,45 @@ public class RenderSpan
     private String windowBeforeText;
     private String windowAfterText;
 
-    public RenderSpan()
+    public RenderSpan(Offset aOffset)
     {
-        this.vSpan = null;
-        this.span = null;
-        text = "";
-        begin = 0;
-        end = 0;
-        windowBeforeText = "";
-        windowAfterText = "";
-    }
-
-    public RenderSpan(Offset offset)
-    {
-        super();
         // search for begin of the first range and end of the last range
-        begin = offset.getBegin();
-        end = offset.getEnd();
+        begin = aOffset.getBegin();
+        end = aOffset.getEnd();
     }
 
     public RenderSpan(VSpan aVSpan, Span aSpan)
     {
-        super();
-        this.vSpan = aVSpan;
-        this.span = aSpan;
+        vSpan = aVSpan;
+        span = aSpan;
         // search for begin of the first range and end of the last range
         begin = vSpan.getRanges().stream().mapToInt(VRange::getBegin).min().getAsInt();
         end = vSpan.getRanges().stream().mapToInt(VRange::getEnd).max().getAsInt();
     }
 
-    public void setText(String text)
+    public void setText(String aText)
     {
-        this.text = text;
+        text = aText;
     }
 
-    public void setBegin(int begin)
+    public void setBegin(int aBegin)
     {
-        this.begin = begin;
+        begin = aBegin;
     }
 
-    public void setEnd(int end)
+    public void setEnd(int aEnd)
     {
-        this.end = end;
+        end = aEnd;
     }
 
-    public void setWindowBeforeText(String windowBeforeText)
+    public void setWindowBeforeText(String aWindowBeforeText)
     {
-        this.windowBeforeText = windowBeforeText;
+        windowBeforeText = aWindowBeforeText;
     }
 
-    public void setWindowAfterText(String windowAfterText)
+    public void setWindowAfterText(String aWindowAfterText)
     {
-        this.windowAfterText = windowAfterText;
+        windowAfterText = aWindowAfterText;
     }
 
     public VSpan getVSpan()

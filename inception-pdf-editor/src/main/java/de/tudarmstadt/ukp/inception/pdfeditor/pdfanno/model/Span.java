@@ -93,24 +93,24 @@ public class Span {
         return endPos;
     }
 
-    public void setPage(int page)
+    public void setPage(int aPage)
     {
-        this.page = page;
+        page = aPage;
     }
 
-    public void setText(String text)
+    public void setText(String aText)
     {
-        this.text = text;
+        text = aText;
     }
 
-    public void setStartPos(int startPos)
+    public void setStartPos(int aStartPos)
     {
-        this.startPos = startPos;
+        startPos = aStartPos;
     }
 
-    public void setEndPos(int endPos)
+    public void setEndPos(int aEndPos)
     {
-        this.endPos = endPos;
+        endPos = aEndPos;
     }
 
     public String toAnnoFileString()

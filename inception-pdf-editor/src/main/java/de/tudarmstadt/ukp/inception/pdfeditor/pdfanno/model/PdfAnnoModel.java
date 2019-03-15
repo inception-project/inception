@@ -81,7 +81,7 @@ public class PdfAnnoModel
 
     public void addSpans(List<Span> aSpans)
     {
-        aSpans.forEach(span -> addSpan(span));
+        aSpans.forEach(this::addSpan);
     }
 
     public List<Relation> getRelations()

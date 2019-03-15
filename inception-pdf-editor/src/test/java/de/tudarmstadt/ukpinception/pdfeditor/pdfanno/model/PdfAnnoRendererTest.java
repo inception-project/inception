@@ -177,6 +177,9 @@ public class PdfAnnoRendererTest
             "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
     }
 
+    /**
+     * Tests if given offsets for PDFAnno can be converted to offsets for the document in INCEpTION
+     */
     @Test
     public void tetsConvertToDocumentOffset() throws Exception
     {
@@ -197,11 +200,14 @@ public class PdfAnnoRendererTest
         state.setProject(project);
 
         DocumentModel documentModel = new DocumentModel(cas.getDocumentText());
+        // List of PDFAnno offsets
+        // indices represent line numbers in the PDFExtractFile for the according character
         List<Offset> offsets = new ArrayList<>();
         offsets.add(new Offset(3, 7));
         offsets.add(new Offset(8, 13));
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
+        // convert to offests for document in INCEpTION
         List<Offset> docOffsets =
             PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();

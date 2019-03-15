@@ -93,7 +93,7 @@ public class PdfAnnotationEditor
         renderPdfAnnoModel(aTarget);
         if (selection.getAnnotation() != null) {
             aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById("
-                + selection.getAnnotation().toString() + ");"
+                + selection.getAnnotation() + ");"
                 + "anno && anno.select();");
         }
     }
@@ -325,7 +325,7 @@ public class PdfAnnotationEditor
         );
     }
 
-    public void setPdfExtractFile(String aPdfText)
+    public void loadPdfExtractFile(String aPdfText)
     {
         pdfExtractFile = new PdfExtractFile(aPdfText);
     }
