@@ -94,9 +94,7 @@ public class ActiveLearningServiceImpl
             if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
                     .equals(aRecord.getSourceDocument().getName())
                     && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
-                    && ((suggestion.getLabel() != null
-                            && suggestion.getLabel().equals(aRecord.getAnnotation()))
-                            || (suggestion.getLabel() == null && aRecord.getAnnotation() == null))
+                    && suggestion.labelEquals(aRecord.getAnnotation())
                     && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
                     && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
                     && suggestion.isVisible())) {
@@ -133,9 +131,7 @@ public class ActiveLearningServiceImpl
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
                                     && r.getOffsetCharacterBegin() == s.getBegin()
                                     && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && ((r.getAnnotation() != null
-                                            && r.getAnnotation().equals(s.getLabel()))
-                                            || (s.getLabel() == null && r.getAnnotation() == null)))
+                                    && s.labelEquals(r.getAnnotation()))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
                                     s.hide(FLAG_REJECTED);

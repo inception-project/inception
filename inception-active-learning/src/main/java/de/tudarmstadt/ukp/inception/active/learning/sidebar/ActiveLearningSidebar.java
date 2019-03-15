@@ -661,16 +661,14 @@ public class ActiveLearningSidebar
             }
         }
 
-        boolean areBothLabelsNull = suggestion.getLabel() == null && selectedValue == null;
-        boolean areLabelsEqual = selectedValue != null
-                && selectedValue.equals(suggestion.getLabel());
+        boolean areLabelsEqual = suggestion.labelEquals(selectedValue);
 
-        suggestion.hide((areBothLabelsNull || areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED
+        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED
                 : FLAG_TRANSIENT_CORRECTED);
 
         // Log the action to the learning record
         writeLearningRecordInDatabaseAndEventLog(suggestion,
-                (areBothLabelsNull || areLabelsEqual) ? ACCEPTED
+                (areLabelsEqual) ? ACCEPTED
                         : CORRECTED,
                 selectedValue);
         

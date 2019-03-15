@@ -269,4 +269,16 @@ public class AnnotationSuggestion
                 .append("visible", isVisible())
                 .append("reasonForHiding", getReasonForHiding()).toString();
     }
+    
+    /**
+     * Determine if the given label is equal to this object's label or if they are both null
+     * 
+     * @param aLabel
+     * @return true if both labels are null or equal
+     */
+    public boolean labelEquals(String aLabel)
+    {
+        return (aLabel == null && label == null) || (label != null && label.equals(aLabel));
+
+    }
 }

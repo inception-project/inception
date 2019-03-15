@@ -406,11 +406,7 @@ public class PredictionTask
         for (LearningRecord record : aRecordedRecommendations) {
             boolean isAtTheSamePlace = record.getOffsetCharacterBegin() == aSuggestion
                     .getBegin() && record.getOffsetCharacterEnd() == aSuggestion.getEnd();
-            boolean isLabelEqual = record.getAnnotation() != null
-                    && record.getAnnotation().equals(aSuggestion.getLabel());
-            boolean isNoLabelAnnotation = record.getAnnotation() == null
-                    && aSuggestion.getLabel() == null;
-            if (isAtTheSamePlace && (isLabelEqual || isNoLabelAnnotation)) {
+            if (isAtTheSamePlace && aSuggestion.labelEquals(record.getAnnotation())) {
                 switch (record.getUserAction()) {
                 case REJECTED:
                     aSuggestion.hide(FLAG_REJECTED);

@@ -97,13 +97,9 @@ public class UncertaintySamplingStrategy
         String documentName = recommendationItem.getDocumentName();
         
         for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) {
-            String existingLabel = existingRecommendation.getLabel();
-            boolean isLabelEqual = existingLabel != null && existingLabel.equals(annotation);
-            boolean isNullLabel = existingLabel == null && annotation == null;
-            if (existingRecommendation.getRecommenderName().equals(source)
-                    && (isLabelEqual || isNullLabel)
-                    && existingRecommendation.getDocumentName().equals(documentName)
-            ) {
+            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
+            if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
+                    && existingRecommendation.getDocumentName().equals(documentName)) {
                 return true;
             }
         }
