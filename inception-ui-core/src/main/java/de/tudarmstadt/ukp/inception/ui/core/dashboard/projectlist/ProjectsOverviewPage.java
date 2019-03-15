@@ -54,6 +54,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -76,6 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -98,7 +100,7 @@ public class ProjectsOverviewPage
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
-	private static final String MID_CONFIRM_LEAVE = "confirmLeave";
+    private static final String MID_CONFIRM_LEAVE = "confirmLeave";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -181,11 +183,19 @@ public class ProjectsOverviewPage
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
                         aItem.getModelObject().getCreated(), "yyyy-MM-dd");
-                ConfirmActionDialog confirmLeaveDialog = new ConfirmActionDialog(MID_CONFIRM_LEAVE,
-                        "Leave Project");
+                ConfirmationDialog confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
+                        new StringResourceModel("LeaveDialog.title", this),
+                        new StringResourceModel("LeaveDialog.text", this));
+
                 confirmLeaveDialog.setConfirmAction((target) -> {
-                    // TODO use ProjectServiceImpl (?) to remove user
+                    Project currentProject = aItem.getModelObject();
+                    User user = userRepository.getCurrentUser();
+                    projectService.listProjectPermissionLevel(user, currentProject)
+                            .forEach(permission -> projectService
+                                    .removeProjectPermission(permission));
+                    setResponsePage(getPage());
                 });
+                // TODO: do not show this to project admins, so we don't lock out projects
                 AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
                 {
 
@@ -224,7 +234,7 @@ public class ProjectsOverviewPage
         return projectList;
     }
 
-	private WebMarkupContainer createRoleFilters()
+    private WebMarkupContainer createRoleFilters()
     {
         ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
                 asList(PermissionLevel.values()))
