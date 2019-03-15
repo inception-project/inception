@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -22,10 +22,11 @@ public class EvaluationResult
     private double defaultScore;
     private int trainingSetSize;
     private int testSetSize;
+    private boolean skippedEvaluation;
 
     /**
-     * Get default score of the recommender evaluation.
-     * @return evaluation score 
+     * Get the specific score which the recommender evaluation uses e.g. accuracy or f-score as a
+     * default.
      */
     public double getDefaultScore()
     {
@@ -33,8 +34,7 @@ public class EvaluationResult
     }
 
     /**
-     * Set the default score of the recommender evaluation.
-     * @param aDefaultScore
+     * Set the specific score which the recommender evaluation uses e.g. accuracy or f-score.
      */
     public void setDefaultScore(double aDefaultScore)
     {
@@ -43,6 +43,7 @@ public class EvaluationResult
 
     /**
      * Get the size of the training data used in the recommender evaluation.
+     * 
      * @return the training set size
      */
     public int getTrainingSetSize()
@@ -52,7 +53,6 @@ public class EvaluationResult
 
     /**
      * Set the size of the training data used in the recommender evaluation.
-     * @param aTrainingSetSize
      */
     public void setTrainingSetSize(int aTrainingSetSize)
     {
@@ -61,6 +61,7 @@ public class EvaluationResult
 
     /**
      * Get the size of the test data used in the recommender evaluation.
+     * 
      * @return the test size
      */
     public int getTestSetSize()
@@ -70,11 +71,25 @@ public class EvaluationResult
 
     /**
      * Set the size of the test data used in the recommender evaluation.
-     * @param aTestSetSize
      */
     public void setTestSetSize(int aTestSetSize)
     {
         testSetSize = aTestSetSize;
+    }
+
+    public void setEvaluationSkipped(boolean aSkipVal)
+    {
+        skippedEvaluation = aSkipVal;
+    }
+
+    /**
+     * Determine if evaluation was skipped.
+     * 
+     * @return true if evaluation was skipped
+     */
+    public boolean isEvaluationSkipped()
+    {
+        return skippedEvaluation;
     }
 
 }

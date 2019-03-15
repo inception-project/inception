@@ -168,7 +168,7 @@ public class OpenNlpNerRecommender
 
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            result.setDefaultScore(0.0);
+            result.setEvaluationSkipped(true);
             return result;
         }
 
@@ -185,8 +185,7 @@ public class OpenNlpNerRecommender
             evaluator.evaluate(stream);
             // getFMeasure returns -1 if the evaluation cannot be performed, but we want any 
             // recommender to get activated when the threshold is set to 0, so we cap at 0.
-            double fMeasure = Math.max(0, evaluator.getFMeasure().getFMeasure());
-            result.setDefaultScore(fMeasure);
+            result.setDefaultScore(Math.max(0, evaluator.getFMeasure().getFMeasure()));
             return result;
         } catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);

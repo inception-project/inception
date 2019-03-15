@@ -164,7 +164,7 @@ public class OpenNlpDoccatRecommender
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            result.setDefaultScore(0.0);
+            result.setEvaluationSkipped(true);
             return result;
         }
 

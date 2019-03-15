@@ -196,8 +196,7 @@ public class DataMajorityNerRecommender
             }
         }
 
-        double accuracy = (double) correct / (double) testData.size();
-        result.setDefaultScore(accuracy);
+        result.setDefaultScore((double) correct / (double) testData.size());
         return result;
     }
 // end::evaluate[]

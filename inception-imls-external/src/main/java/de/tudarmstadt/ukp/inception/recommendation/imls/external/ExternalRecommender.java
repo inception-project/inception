@@ -284,7 +284,7 @@ public class ExternalRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
         EvaluationResult result = new EvaluationResult();
-        result.setDefaultScore(0.0);
+        result.setEvaluationSkipped(true);
         return result;
     }
 
