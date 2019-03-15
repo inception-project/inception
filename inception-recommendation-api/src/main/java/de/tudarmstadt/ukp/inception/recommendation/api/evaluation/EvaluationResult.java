@@ -22,32 +22,59 @@ public class EvaluationResult
     private double defaultScore;
     private int trainingSetSize;
     private int testSetSize;
-    
+
+    /**
+     * Get default score of the recommender evaluation.
+     * @return evaluation score 
+     */
     public double getDefaultScore()
     {
         return defaultScore;
     }
+
+    /**
+     * Set the default score of the recommender evaluation.
+     * @param aDefaultScore
+     */
     public void setDefaultScore(double aDefaultScore)
     {
         defaultScore = aDefaultScore;
     }
+
+    /**
+     * Get the size of the training data used in the recommender evaluation.
+     * @return the training set size
+     */
     public int getTrainingSetSize()
     {
         return trainingSetSize;
     }
+
+    /**
+     * Set the size of the training data used in the recommender evaluation.
+     * @param aTrainingSetSize
+     */
     public void setTrainingSetSize(int aTrainingSetSize)
     {
         trainingSetSize = aTrainingSetSize;
     }
+
+    /**
+     * Get the size of the test data used in the recommender evaluation.
+     * @return the test size
+     */
     public int getTestSetSize()
     {
         return testSetSize;
     }
+
+    /**
+     * Set the size of the test data used in the recommender evaluation.
+     * @param aTestSetSize
+     */
     public void setTestSetSize(int aTestSetSize)
     {
         testSetSize = aTestSetSize;
     }
-    
-    
 
 }
