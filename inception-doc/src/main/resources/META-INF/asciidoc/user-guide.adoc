@@ -61,9 +61,13 @@ include::{include-dir}annotation_create-annotations.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_create-annotations_span.adoc[leveloffset=+3]
 
+include::{include-dir}annotation_create-annotations_span_forward.adoc[leveloffset=+4]
+
 include::{include-dir}annotation_create-annotations_relation.adoc[leveloffset=+3]
 
 include::{include-dir}annotation_create-annotations_chain.adoc[leveloffset=+3]
+
+include::{include-dir}annotation_create-annotations_docmeta.adoc[leveloffset=+3]
 
 include::{include-dir}annotation_create-annotations_primitive-features.adoc[leveloffset=+3]
 

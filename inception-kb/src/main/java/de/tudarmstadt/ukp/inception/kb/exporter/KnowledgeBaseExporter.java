@@ -125,6 +125,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
                     .map(conceptIRI -> conceptIRI.stringValue())
                     .collect(Collectors.toList()));
             exportedKB.setDefaultLanguage(kb.getDefaultLanguage());
+            exportedKB.setDefaultDatasetIri(
+                    kb.getDefaultDatasetIri() != null ? kb.getDefaultDatasetIri().stringValue()
+                            : null);
             exportedKB.setMaxResults(kb.getMaxResults());
             exportedKB.setSubPropertyIri(kb.getSubPropertyIri().stringValue());
             exportedKnowledgeBases.add(exportedKB);
@@ -229,6 +232,9 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kb.setRootConcepts(new ArrayList<>());
             }
             kb.setDefaultLanguage(exportedKB.getDefaultLanguage());
+            kb.setDefaultDatasetIri(exportedKB.getDefaultDatasetIri() != null
+                    ? vf.createIRI(exportedKB.getDefaultDatasetIri())
+                    : null);
             kb.setMaxResults(exportedKB.getMaxResults());
             // If not setting, initialize with default
             if (kb.getMaxResults() == 0) {

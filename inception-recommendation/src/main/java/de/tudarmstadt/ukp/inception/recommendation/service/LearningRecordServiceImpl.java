@@ -23,9 +23,11 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -43,6 +45,14 @@ public class LearningRecordServiceImpl
     @PersistenceContext
     private EntityManager entityManager;
 
+    @Transactional
+    @EventListener
+    public void afterDocumentReset(AfterDocumentResetEvent aEvent) {
+        SourceDocument currentDocument = aEvent.getDocument().getDocument();
+        String currentUser = aEvent.getDocument().getUser();
+        deleteRecords(currentDocument, currentUser);
+    }
+    
     @Transactional
     @Override
     public void logRecord(SourceDocument aDocument, String aUsername,

@@ -82,16 +82,15 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll)
+    public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aItem, boolean aAll)
     {
         Map<String, KBHandle> props = new HashMap<>();
         for (KBHandle prop : kbService.listProperties(kb, aAll)) {
             props.put(prop.getIdentifier(), prop);
         }
 
-        List<Statement> explicitStmts = listStatementsForInstance(kb, aInstance.getIdentifier(),
-            false);
-        List<Statement> allStmts = listStatementsForInstance(kb, aInstance.getIdentifier(), true);
+        List<Statement> explicitStmts = listStatements(kb, aItem.getIdentifier(), false);
+        List<Statement> allStmts = listStatements(kb, aItem.getIdentifier(), true);
 
         List<KBStatement> result = new ArrayList<>();
         for (Statement stmt : allStmts) {
@@ -124,7 +123,7 @@ public class NoReification implements ReificationStrategy {
             Set<Statement> originalStatements = new HashSet<>();
             originalStatements.add(stmt);
 
-            KBStatement kbStatement = new KBStatement(aInstance, property, value);
+            KBStatement kbStatement = new KBStatement(aItem, property, value);
             kbStatement.setInferred(!explicitStmts.contains(stmt));
             kbStatement.setOriginalStatements(originalStatements);
 
@@ -137,8 +136,8 @@ public class NoReification implements ReificationStrategy {
     /**
      * Returns all statements for which the given instance identifier is the subject
      */
-    private List<Statement> listStatementsForInstance(KnowledgeBase kb, String aInstanceIdentifier,
-        boolean aIncludeInferred)
+    private List<Statement> listStatements(KnowledgeBase kb, String aIdentifier,
+            boolean aIncludeInferred)
     {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -147,7 +146,7 @@ public class NoReification implements ReificationStrategy {
             ValueFactory vf = conn.getValueFactory();
             String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
             TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aInstanceIdentifier));
+            tupleQuery.setBinding("s", vf.createIRI(aIdentifier));
             tupleQuery.setIncludeInferred(aIncludeInferred);
 
             TupleQueryResult result;
@@ -160,7 +159,7 @@ public class NoReification implements ReificationStrategy {
             }
 
             List<Statement> statements = new ArrayList<>();
-            IRI subject = vf.createIRI(aInstanceIdentifier);
+            IRI subject = vf.createIRI(aIdentifier);
             while (result.hasNext()) {
                 BindingSet bindings = result.next();
                 Binding pred = bindings.getBinding("p");
@@ -168,7 +167,9 @@ public class NoReification implements ReificationStrategy {
 
                 IRI predicate = vf.createIRI(pred.getValue().stringValue());
                 Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                statements.add(stmt);
+                if (!statements.contains(stmt)) {
+                    statements.add(stmt);
+                }
             }
             return statements;
         }

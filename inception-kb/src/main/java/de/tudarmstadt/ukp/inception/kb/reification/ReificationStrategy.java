@@ -30,17 +30,29 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public interface ReificationStrategy {
+public interface ReificationStrategy
+{
     Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
+
     List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
+
     void deleteInstance(KnowledgeBase kb, KBInstance aInstance);
+
     void deleteProperty(KnowledgeBase kb, KBProperty aProperty);
+
     void deleteConcept(KnowledgeBase kb, KBConcept aConcept);
+
     void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
+
     void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
+
     void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
+
     void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
+
     void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
+
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
+
     boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
 }
