@@ -977,6 +977,27 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.toLowerCase().contains("work"));
     }
+    
+    @Test
+    public void testWithLabelStartingWith_OLIA_FTS() throws Exception
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        
+        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setLabelIri(vf.createIRI("http://purl.org/olia/system.owl#hasTag"));
+        
+        importDataFromFile("src/test/resources/data/penn.owl");
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forInstances(kb)
+                .withLabelStartingWith("N"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .containsExactlyInAnyOrder("NN", "NNP", "NNPS", "NNS");
+    }
+    
 
     @Test
     public void thatRootsCanBeRetrieved_BritishMuseum()
