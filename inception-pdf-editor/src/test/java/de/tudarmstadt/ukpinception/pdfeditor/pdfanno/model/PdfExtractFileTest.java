@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -39,7 +40,7 @@ public class PdfExtractFileTest
     {
         String pdftxt = new Scanner(new File("src/test/resources/pdfextract.txt"))
             .useDelimiter("\\Z").next();
-        pdfExtractFile = new PdfExtractFile(pdftxt);
+        pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
     }
 
     @Test

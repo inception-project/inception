@@ -21,7 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CASRuntimeException;
@@ -36,6 +40,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -338,9 +343,17 @@ public class PdfAnnotationEditor
         File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
 
         try {
+            File file = new File(getClass().getClassLoader()
+                .getResource("substitutionTable.xml").getFile());
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+            LigatureHandler ligatureHandler = new LigatureHandler();
+            saxParser.parse(file, ligatureHandler);
+            Map<String, String> ligatureMap = ligatureHandler.getLigatures();
+
             String pdfText = PDFExtractor.processFileToString(pdfFile, false);
-            pdfExtractFile = new PdfExtractFile(pdfText);
-        } catch (IOException e) {
+            pdfExtractFile = new PdfExtractFile(pdfText, ligatureMap);
+        } catch (IOException | SAXException | ParserConfigurationException e) {
             handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
                 + "with PDFExtractor.", e, aTarget);
         }

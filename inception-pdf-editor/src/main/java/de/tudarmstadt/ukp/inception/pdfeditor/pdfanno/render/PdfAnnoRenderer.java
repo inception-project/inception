@@ -137,7 +137,7 @@ public class PdfAnnoRenderer
             addContextToSpans(spans, windowSize, aDocumentText);
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
-                findOccurrences(spans, aPdfExtractFile.getStringContent());
+                findOccurrences(spans, aPdfExtractFile.getLigaturelessContent());
 
             for (RenderSpan renderSpan : spans) {
                 // get occurrence list for span text with context window
@@ -240,7 +240,7 @@ public class PdfAnnoRenderer
 
         do {
             // add context before and after each span
-            addContextToSpans(iterList, windowSize, aPdfExtractFile.getStringContent());
+            addContextToSpans(iterList, windowSize, aPdfExtractFile.getLigaturelessContent());
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
                 findOccurrences(iterList, aDocumentModel.getWhitespacelessText());
