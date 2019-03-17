@@ -223,7 +223,7 @@ public class StringMatchingRecommender
                     "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
                     trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                     testSetLabeledSamplesCount, data.size());
-            result.setDefaultScore(0.0);
+            result.setEvaluationSkipped(true);
             return result;
         }
 
