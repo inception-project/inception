@@ -178,42 +178,16 @@ public class ProjectsOverviewPage
             @Override
             protected void populateItem(ListItem<Project> aItem)
             {
-                LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK, () -> 
-                        selectProject(aItem.getModelObject()));
+                LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK,
+                    () -> selectProject(aItem.getModelObject()));
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
-                        aItem.getModelObject().getCreated(), "yyyy-MM-dd");
-                ConfirmationDialog confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                        new StringResourceModel("LeaveDialog.title", this),
-                        new StringResourceModel("LeaveDialog.text", this));
-
-                confirmLeaveDialog.setConfirmAction((target) -> {
-                    Project currentProject = aItem.getModelObject();
-                    User user = userRepository.getCurrentUser();
-                    projectService.listProjectPermissionLevel(user, currentProject)
-                            .forEach(permission -> projectService
-                                    .removeProjectPermission(permission));
-                    setResponsePage(getPage());
-                });
-                // TODO: do not show this to project admins, so we don't lock out projects
-                AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
-                {
-
-                    private static final long serialVersionUID = -6496680664449646359L;
-
-                    @Override
-                    public void onClick(AjaxRequestTarget target)
-                    {
-                        confirmLeaveDialog.show(target);
-                    }
-
-                };
+                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
+                    () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                addLeaveProjectOption(aItem);
+                aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
-                aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
-                aItem.add(leaveProjectLink);
-                aItem.add(confirmLeaveDialog);
             }
 
             @Override
@@ -232,6 +206,51 @@ public class ProjectsOverviewPage
         projectList.add(listview);
         
         return projectList;
+    }
+    
+    private void addLeaveProjectOption(ListItem<Project> aItem)
+    {
+        User user = userRepository.getCurrentUser();
+        Project currentProject = aItem.getModelObject();
+        ConfirmationDialog confirmLeaveDialog = createLeaveProjectDialog(user, currentProject);
+        AjaxLink<Void> leaveProjectLink = createLeaveProjectButton(user, currentProject,
+                confirmLeaveDialog);
+        aItem.add(leaveProjectLink);
+        aItem.add(confirmLeaveDialog);
+    }
+
+    private ConfirmationDialog createLeaveProjectDialog(User user, Project currentProject)
+    {
+        ConfirmationDialog confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
+                new StringResourceModel("LeaveDialog.title", this),
+                new StringResourceModel("LeaveDialog.text", this));
+        confirmLeaveDialog.setConfirmAction((target) -> {
+            projectService.listProjectPermissionLevel(user, currentProject).stream()
+                    .forEach(projectService::removeProjectPermission);
+            setResponsePage(getPage());
+        });
+        return confirmLeaveDialog;
+    }
+
+    private AjaxLink<Void> createLeaveProjectButton(User user, Project currentProject,
+            ConfirmationDialog confirmLeaveDialog)
+    {
+        AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
+        {
+
+            private static final long serialVersionUID = -6496680664449646359L;
+
+            @Override
+            public void onClick(AjaxRequestTarget target)
+            {
+                confirmLeaveDialog.show(target);
+            }
+
+        };
+        if (projectService.isAdmin(currentProject, user)) {
+            leaveProjectLink.setVisible(false);
+        }
+        return leaveProjectLink;
     }
 
     private WebMarkupContainer createRoleFilters()
