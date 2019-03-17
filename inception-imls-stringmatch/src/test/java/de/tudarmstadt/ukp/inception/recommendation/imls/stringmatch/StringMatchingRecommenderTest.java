@@ -120,7 +120,8 @@ public class StringMatchingRecommenderTest
 
         Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
 
-        assertThat(predictions).as("Has all null labels").allMatch(p -> p.getLabel() == null);
+        assertThat(predictions).as("Has all null labels").extracting(PredictedSpan::getLabel)
+                .containsOnlyNulls();
     }
     
     private CAS getTestCasNoLabelLabels() throws Exception

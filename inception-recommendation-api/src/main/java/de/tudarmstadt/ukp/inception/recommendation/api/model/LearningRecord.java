@@ -153,8 +153,13 @@ public class LearningRecord
         this.tokenText = tokenText.substring(0, targetLength);
     }
 
+    /**
+     * Get annotation label, might be null if the recorded annotation was an annotation without
+     * label.
+     */
     @Nullable
-    public String getAnnotation() {
+    public String getAnnotation()
+    {
         return annotation;
     }
 

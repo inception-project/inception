@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -308,18 +308,18 @@ public class StringMatchingRecommender
         }
     }
     
-    private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
-        String label = (aLabel == null) ? UNKNOWN_LABEL : aLabel;
-    
-        if (isNoneBlank(label)) {
-            DictEntry entry = aDict.get(aText);
-            if (entry == null) {
-                entry = new DictEntry(aText);
-                aDict.put(aText, entry);
-            }
-            
-            entry.put(label);
+    private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
+    {
+        String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
+
+        DictEntry entry = aDict.get(aText);
+        if (entry == null) {
+            entry = new DictEntry(aText);
+            aDict.put(aText, entry);
         }
+
+        entry.put(label);
+
     }
     
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)

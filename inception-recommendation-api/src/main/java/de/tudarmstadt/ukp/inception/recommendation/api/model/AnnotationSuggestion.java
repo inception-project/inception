@@ -142,6 +142,12 @@ public class AnnotationSuggestion
         return id;
     }
 
+    /**
+     * Get the annotation's label, might be null if this is a suggestion for an annotation but not
+     * for a specific label.
+     * 
+     * @return the label value or null
+     */
     @Nullable
     public String getLabel()
     {
@@ -269,11 +275,10 @@ public class AnnotationSuggestion
                 .append("visible", isVisible())
                 .append("reasonForHiding", getReasonForHiding()).toString();
     }
-    
+
     /**
      * Determine if the given label is equal to this object's label or if they are both null
      * 
-     * @param aLabel
      * @return true if both labels are null or equal
      */
     public boolean labelEquals(String aLabel)
