@@ -22,19 +22,16 @@ import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.IntStream;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebComponent;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +51,6 @@ public class ChartPanel
 
     private StringBuilder dataColumns;
     private StringBuilder chartType;
-    private String javascript;
     private IModel<LearningCurve> model;
     private final WebComponent chart;
 
@@ -84,52 +80,37 @@ public class ChartPanel
         // import Css
         aResponse.render(
                 CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
+
+        model = getModel();
+
+        if (model == null)
+            return;
+
+        resetChart();
+
+        LearningCurve learningCurve = model.getObject();
+
+        // there can be multiple learning curves. iterate over them to create data
+        // columns for all
+        for (String data : learningCurve.getCurveData().keySet()) {
+            addLearningCurve(learningCurve.getCurveData().get(data), data);
+        }
+
+        String javascript = createJSScript();
+
+        if (javascript == null || javascript.isEmpty()) {
+            LOG.warn("No javascript to render the learning curve diagram.");
+            return;
+        }
+
+        LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
+        aResponse.render(OnDomReadyHeaderItem.forScript(javascript));
     }
 
     @SuppressWarnings("unchecked")
     public IModel<LearningCurve> getModel()
     {
         return (IModel<LearningCurve>) getDefaultModel();
-    }
-
-    /**
-     * renders the chart and plot learning curve
-     * 
-     */
-    public void renderChart(LearningCurve aLearningCurve)
-    {
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-        
-        try {
-            // there can be multiple learning curves. iterate over them to create data columns for
-            // all
-            for (String data : aLearningCurve.getCurveData().keySet()) {
-                addLearningCurve(aLearningCurve.getCurveData().get(data), data);
-            }
-
-            createJSScript();
-
-            LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-
-            target.get().prependJavaScript(javascript);
-        }
-        catch (IOException e) {
-            LOG.error("Unable to render chart", e);
-            error("Unable to render chart: " + e.getMessage());
-            target.get().addChildren(getPage(), IFeedback.class);
-        }
-    }
-
-    @Override
-    protected void onModelChanged()
-    {
-        super.onModelChanged();
-
-        LearningCurve chartdata = getModel().getObject();
-
-        resetChart();
-
-        renderChart(chartdata);
     }
 
     /**
@@ -180,16 +161,23 @@ public class ChartPanel
      * recommender1: 'step', recommender2 : 'step'
      * </pre>
      */
-    public void createJSScript() throws IOException
+    public String createJSScript()
     {
-        int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
-        String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
-        String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
+        try {
+            int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
+            String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
+            String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
 
-        // bind data to chart container
-        javascript = "var chart=c3.generate({bindto:'#" + chart.getMarkupId()
-                + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{" + chartType
-                + "}},"
-                + "axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
+            // bind data to chart container
+            String javascript = "var chart=c3.generate({bindto:'#" + chart.getMarkupId()
+                    + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{"
+                    + chartType + "}},"
+                    + "axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
+            return javascript;
+        }
+        catch (IOException e) {
+            LOG.error("Could not create the dataColumns. Bad Value. Javascript creation failed");
+            return null;
+        }
     }
 }

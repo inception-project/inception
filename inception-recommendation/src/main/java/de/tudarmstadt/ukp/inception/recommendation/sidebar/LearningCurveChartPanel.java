@@ -134,6 +134,14 @@ public class LearningCurveChartPanel
 
         //provide the chart above calculated data to plot the learning curve
         chartPanel.setDefaultModel(Model.of(learningCurve));
+
+        //to avoid the error, A partial update of the page is being rendered
+        try {
+			aRequestHandler.add(chartPanel);
+		} catch (IllegalStateException e) {
+			LOG.warn("Not updating the chart. "+ e.toString());
+			setResponsePage(getPage());
+		}
     }
 
     /**

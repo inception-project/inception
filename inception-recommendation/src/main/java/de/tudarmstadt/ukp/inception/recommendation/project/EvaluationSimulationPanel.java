@@ -112,6 +112,7 @@ public class EvaluationSimulationPanel
                 
                 //provide the chart above calculated data to plot the learning curve
                 chartPanel.setDefaultModel(Model.of(learningCurve));
+                _target.add(chartPanel);
             });
         
         form.add(startButton);
