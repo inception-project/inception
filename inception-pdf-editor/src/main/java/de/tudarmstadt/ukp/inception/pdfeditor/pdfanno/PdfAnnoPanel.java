@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno;
 
 import java.io.File;
-import java.io.IOException;
 
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -41,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.config.PdfEditorProperties;
-import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnoPanel
     extends Panel
@@ -79,36 +77,24 @@ public class PdfAnnoPanel
                 File pdfFile = documentService.getSourceDocumentFile(doc);
 
                 getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                        new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
-                                doc.getName()));
+                    new ResourceStreamRequestHandler(new FileResourceStream(pdfFile),
+                        doc.getName()));
             }
         });
 
-        add(pdftxtProvider = new AbstractAjaxBehavior()
+        add(pdftxtProvider = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = -8676150164372852265L;
 
             @Override
-            public void onRequest()
+            public void respond(AjaxRequestTarget aTarget)
             {
-                SourceDocument doc = aModel.getObject().getDocument();
-
-                File pdfFile = documentService.getSourceDocumentFile(doc);
-
-                try
-                {
-                    String pdftext = PDFExtractor.processFileToString(pdfFile, false);
-                    aPdfAnnotationEditor.loadPdfExtractFile(pdftext);
-                    getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                            new ResourceStreamRequestHandler(
-                                    new StringResourceStream(pdftext))
-                    );
-                }
-                catch (IOException e)
-                {
-                    log.error("Unable to get PDF text for [{}]", pdfFile.getName()
-                        + "with PDFExtractor.", e);
-                }
+                aPdfAnnotationEditor.initialize(aTarget);
+                String pdftext = aPdfAnnotationEditor.getPdfExtractFile().getPdftxt();
+                getRequestCycle().scheduleRequestHandlerAfterCurrent(
+                    new ResourceStreamRequestHandler(
+                        new StringResourceStream(pdftext))
+                );
             }
         });
 

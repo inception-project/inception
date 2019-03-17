@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.stream.Collectors;
 
@@ -53,6 +54,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
+import paperai.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase
@@ -73,11 +75,6 @@ public class PdfAnnotationEditor
         super(aId, aModel, aActionHandler, aJCasProvider);
 
         add(new PdfAnnoPanel("vis", aModel, this));
-        try {
-            documentModel = new DocumentModel(getJCasProvider().get().getDocumentText());
-        } catch (IOException e) {
-            LOG.error("Unable to load data", e);
-        }
     }
 
     @Override
@@ -325,8 +322,27 @@ public class PdfAnnotationEditor
         );
     }
 
-    public void loadPdfExtractFile(String aPdfText)
+    public PdfExtractFile getPdfExtractFile()
     {
-        pdfExtractFile = new PdfExtractFile(aPdfText);
+        return pdfExtractFile;
+    }
+
+    public void initialize(AjaxRequestTarget aTarget)
+    {
+        try {
+            documentModel = new DocumentModel(getJCasProvider().get().getDocumentText());
+        } catch (IOException e) {
+            handleError("Unable to load data", e, aTarget);
+        }
+
+        File pdfFile = documentService.getSourceDocumentFile(getModel().getObject().getDocument());
+
+        try {
+            String pdfText = PDFExtractor.processFileToString(pdfFile, false);
+            pdfExtractFile = new PdfExtractFile(pdfText);
+        } catch (IOException e) {
+            handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
+                + "with PDFExtractor.", e, aTarget);
+        }
     }
 }
