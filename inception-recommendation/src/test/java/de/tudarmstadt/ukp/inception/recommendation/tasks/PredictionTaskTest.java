@@ -129,7 +129,7 @@ public class PredictionTaskTest
 
         // check the invisible suggestions' states
         assertThat(visibleSuggestions).isNotEmpty();
-        assertThat(invisibleSuggestions.size() == 0);
+        assertThat(invisibleSuggestions).isEmpty();
     }
 
     @Test
@@ -177,9 +177,6 @@ public class PredictionTaskTest
 
         List<AnnotationSuggestion> suggestions = new ArrayList<AnnotationSuggestion>();
         for (int[] val : vals) {
-            suggestions.add(new AnnotationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
-                    layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
-                    CONFIDENCE));
             suggestions.add(new AnnotationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
                     CONFIDENCE));
