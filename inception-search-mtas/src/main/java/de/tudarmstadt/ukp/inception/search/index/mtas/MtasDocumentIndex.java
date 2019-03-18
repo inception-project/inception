@@ -142,7 +142,7 @@ public class MtasDocumentIndex
     // Default prefix for CQL queries
     private static final String DEFAULT_PREFIX = "Token";
 
-    private static final int RESULT_WINDOW_SIZE = 2;
+    private static final int RESULT_WINDOW_SIZE = 3;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -349,9 +349,11 @@ public class MtasDocumentIndex
                             // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
 
                             while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-                                int windowStart = Math
-                                        .max(spans.startPosition() - RESULT_WINDOW_SIZE, 0);
-                                int windowEnd = spans.startPosition() + RESULT_WINDOW_SIZE;
+                                int matchStart = spans.startPosition();
+                                int matchEnd = spans.endPosition();
+                                
+                                int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
+                                int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
                                 
                                 List<MtasTokenString> tokens = mtasCodecInfo
                                         .getPrefixFilteredObjectsByPositions(field, spans.docID(),
@@ -369,28 +371,41 @@ public class MtasDocumentIndex
                                 StringBuilder rightContext = new StringBuilder();
                                 result.setDocumentId(sourceDocumentId);
                                 result.setDocumentTitle(documentTitle);
-                                result.setOffsetStart(
-                                        tokens.stream().mapToInt(MtasTokenString::getOffsetStart)
-                                                .min().getAsInt());
-                                result.setOffsetEnd(
-                                        tokens.stream().mapToInt(MtasTokenString::getOffsetEnd)
-                                                .max().getAsInt());
-                                result.setTokenStart(spans.startPosition());
-                                result.setTokenLength(spans.endPosition() - spans.startPosition());
+                                result.setOffsetStart(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart && 
+                                                t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetStart)
+                                        .min()
+                                        .getAsInt());
+                                result.setOffsetEnd(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart && 
+                                                t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetEnd)
+                                        .max()
+                                        .getAsInt());
+                                result.setTokenStart(matchStart);
+                                result.setTokenLength(matchEnd - matchStart);
                                 
                                 MtasTokenString prevToken = null;
-                                for (int i = 0; i < tokens.size(); i++) {
-                                    MtasTokenString token = tokens.get(i);
+                                for (MtasTokenString token : tokens) {
                                     if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
                                         continue;
                                     }
-                                    if (token.getPositionStart() < spans.startPosition()) {
-                                        fill(leftContext, prevToken, token);
-                                        leftContext.append(CodecUtil.termValue(token.getValue()));
+                                    
+                                    // When searching for an annotation, we don't get the matching
+                                    // text back... not sure why...
+                                    String tokenText = CodecUtil.termValue(token.getValue());
+                                    if (tokenText == null) {
+                                        continue;
                                     }
-                                    else if (token.getPositionStart() >= spans.endPosition()) {
+                                    
+                                    if (token.getPositionStart() < matchStart) {
+                                        fill(leftContext, prevToken, token);
+                                        leftContext.append(tokenText);
+                                    }
+                                    else if (token.getPositionStart() >= matchEnd) {
                                         fill(rightContext, prevToken, token);
-                                        rightContext.append(CodecUtil.termValue(token.getValue()));
+                                        rightContext.append(tokenText);
                                     }
                                     else {
                                         // Only add the whitespace to the match if we already have
@@ -402,7 +417,7 @@ public class MtasDocumentIndex
                                         else {
                                             fill(leftContext, prevToken, token);
                                         }
-                                        resultText.append(CodecUtil.termValue(token.getValue()));
+                                        resultText.append(tokenText);
                                     }
                                     prevToken = token;
                                 }
