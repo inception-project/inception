@@ -311,6 +311,9 @@ public class ConceptLinkingServiceImpl
                 .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
                 // A low wikidata ID rank is preferred.
                 .append(e1.getIdRank(), e2.getIdRank())
+                // Finally order alphabetically
+                .append(e1.getLabel().toLowerCase(e1.getLocale()), 
+                        e2.getLabel().toLowerCase(e2.getLocale()))
                 .toComparison();
     }
     
