@@ -49,8 +49,8 @@
     
     <beans:bean id="http403EntryPoint"
         class="org.springframework.security.web.authentication.Http403ForbiddenEntryPoint">
-
     </beans:bean>
+    
     <beans:bean id="ShibbolethHeaderFilter"
         class="de.tudarmstadt.ukp.clarin.webanno.security.preauth.ShibbolethRequestHeaderAuthenticationFilter">
 
