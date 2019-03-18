@@ -267,6 +267,48 @@ public class MtasDocumentIndexTest
     }
 
     @Test
+    public void thatLastTokenInDocumentCanBeFound() throws Exception
+    {
+        Project project = new Project();
+        project.setName("TestRawTextQuery");
+        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+
+        createProject(project);
+
+        SourceDocument sourceDocument = new SourceDocument();
+
+        sourceDocument.setName("Raw text document");
+        sourceDocument.setProject(project);
+        sourceDocument.setFormat("text");
+
+        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+
+        uploadDocument(Pair.of(sourceDocument, fileContent));
+
+        User user = userRepository.get("admin");
+
+        String query = "\"\\.\"";
+
+        // Execute query
+        List<SearchResult> results = searchService.query(user, project, query);
+
+        // Test results
+        SearchResult expectedResult = new SearchResult();
+        expectedResult.setDocumentId(sourceDocument.getId());
+        expectedResult.setDocumentTitle("Raw text document");
+        expectedResult.setLeftContext("Santiago de Compostela");
+        expectedResult.setText(".");
+        expectedResult.setRightContext("");
+        expectedResult.setOffsetStart(48);
+        expectedResult.setOffsetEnd(49);
+        expectedResult.setTokenStart(8);
+        expectedResult.setTokenLength(1);
+
+        assertThat(results)
+                .usingFieldByFieldElementComparator()
+                .containsExactly(expectedResult);
+    }
+    @Test
     public void testLimitQueryToDocument() throws Exception
     {
         Project project = new Project();
