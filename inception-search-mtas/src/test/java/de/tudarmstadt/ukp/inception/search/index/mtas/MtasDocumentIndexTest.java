@@ -270,7 +270,7 @@ public class MtasDocumentIndexTest
     public void thatLastTokenInDocumentCanBeFound() throws Exception
     {
         Project project = new Project();
-        project.setName("TestRawTextQuery");
+        project.setName("LastTokenInDocumentCanBeFound");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         createProject(project);
