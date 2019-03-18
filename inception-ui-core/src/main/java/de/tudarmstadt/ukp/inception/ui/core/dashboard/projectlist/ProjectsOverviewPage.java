@@ -219,20 +219,20 @@ public class ProjectsOverviewPage
         aItem.add(confirmLeaveDialog);
     }
 
-    private ConfirmationDialog createLeaveProjectDialog(User user, Project currentProject)
+    private ConfirmationDialog createLeaveProjectDialog(User aUser, Project aCurrentProject)
     {
         ConfirmationDialog confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                new StringResourceModel("LeaveDialog.title", this),
-                new StringResourceModel("LeaveDialog.text", this));
+                new StringResourceModel("leaveDialog.title", this),
+                new StringResourceModel("leaveDialog.text", this));
         confirmLeaveDialog.setConfirmAction((target) -> {
-            projectService.listProjectPermissionLevel(user, currentProject).stream()
+            projectService.listProjectPermissionLevel(aUser, aCurrentProject).stream()
                     .forEach(projectService::removeProjectPermission);
             setResponsePage(getPage());
         });
         return confirmLeaveDialog;
     }
 
-    private AjaxLink<Void> createLeaveProjectButton(User user, Project currentProject,
+    private AjaxLink<Void> createLeaveProjectButton(User aUser, Project aCurrentProject,
             ConfirmationDialog confirmLeaveDialog)
     {
         AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
@@ -247,7 +247,9 @@ public class ProjectsOverviewPage
             }
 
         };
-        if (projectService.isAdmin(currentProject, user)) {
+        boolean hasNoProjectPermissions = projectService
+                .listProjectPermissionLevel(aUser, aCurrentProject).isEmpty();
+        if (hasNoProjectPermissions || projectService.isAdmin(aCurrentProject, aUser)) {
             leaveProjectLink.setVisible(false);
         }
         return leaveProjectLink;
