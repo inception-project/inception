@@ -170,11 +170,17 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            List<KBHandle> exactMatches =  newQueryBuilder(aValueType, aKB)
-                    .withLabelMatchingExactlyAnyOf(exactLabels)
+            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
+                    .withLabelMatchingExactlyAnyOf(exactLabels);
+            
+            if (aConceptScope != null) {
+                exactBuilder.childrenOf(aConceptScope);
+            }
+            
+            List<KBHandle> exactMatches = exactBuilder
                     .retrieveLabel()
                     .retrieveDescription()
-                    .asHandles((RepositoryConnection) conn, true);
+                    .asHandles(conn, true);
 
             log.debug("Found [{}] candidates exactly matching {}",
                     exactMatches.size(), asList(exactLabels));
@@ -185,11 +191,17 @@ public class ConceptLinkingServiceImpl
             if (aQuery != null && aQuery.length() > threshold) {
                 // Collect matches starting with the query - this is the main driver for the
                 // auto-complete functionality
-                List<KBHandle> startingWithMatches = newQueryBuilder(aValueType, aKB)
-                        .withLabelStartingWith(aQuery)
+                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB)
+                        .withLabelStartingWith(aQuery);
+                
+                if (aConceptScope != null) {
+                    startingWithBuilder.childrenOf(aConceptScope);
+                }
+                
+                List<KBHandle> startingWithMatches = startingWithBuilder
                         .retrieveLabel()
                         .retrieveDescription()
-                        .asHandles((RepositoryConnection) conn, true);
+                        .asHandles(conn, true);
                 
                 log.debug("Found [{}] candidates starting with [{}]]",
                         startingWithMatches.size(), aQuery);            
@@ -204,11 +216,17 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            List<KBHandle> containingMatches = newQueryBuilder(aValueType, aKB)
-                    .withLabelContainingAnyOf(containingLabels)
+            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB)
+                    .withLabelContainingAnyOf(containingLabels);
+            
+            if (aConceptScope != null) {
+                containingBuilder.childrenOf(aConceptScope);
+            }
+            
+            List<KBHandle> containingMatches = containingBuilder
                     .retrieveLabel()
                     .retrieveDescription()
-                    .asHandles((RepositoryConnection) conn, true);
+                    .asHandles(conn, true);
             
             log.debug("Found [{}] candidates using containing {}",
                     containingMatches.size(), asList(containingLabels));
