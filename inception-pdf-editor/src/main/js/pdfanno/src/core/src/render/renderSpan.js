@@ -61,8 +61,14 @@ export function renderSpan (a) {
       readOnly
 */
       readOnly,
+// BEGIN INCEpTION EXTENSION - #1056 - Knob color in PDF editor
+/*
       text : a.text
-// END INCEpTION EXTENSION
+*/
+      text : a.text,
+      color : a.color
+// END INCEpTION EXTENSION - #1056
+// END INCEpTION EXTENSION - #981
     }))
   }
 
