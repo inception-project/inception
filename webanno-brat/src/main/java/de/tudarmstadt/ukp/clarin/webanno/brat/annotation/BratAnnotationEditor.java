@@ -315,7 +315,7 @@ public class BratAnnotationEditor
         }
         else {
             if (!paramId.isSynthetic()) {
-                selection.selectSpan(paramId, jCas, offsets.getBegin(), offsets.getEnd());
+                selection.selectSpan(paramId, jCas.getCas(), offsets.getBegin(), offsets.getEnd());
 
                 if (selection.getAnnotation().isNotSet()) {
                     // Create new annotation

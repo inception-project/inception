@@ -106,20 +106,6 @@ public interface FeatureSupport<T>
             AnnotationFeature aFeature);
 
     /**
-     * Checks whether tagsets are supported on the given feature which must be provided by the
-     * current feature support (i.e. {@link #accepts(AnnotationFeature)} must have returned
-     * {@code true} on this feature.
-     * 
-     * @param aFeature
-     *            a feature definition.
-     * @return whether tagsets are supported on the given feature.
-     */
-    default boolean isTagsetSupported(AnnotationFeature aFeature)
-    {
-        return false;
-    }
-    
-    /**
      * Called when the user selects a feature in the feature detail form. It allows the feature
      * support to fill in settings which are not configurable through the UI, e.g. link feature
      * details.
@@ -207,9 +193,10 @@ public interface FeatureSupport<T>
 
     /**
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
-     * is an acceptable return value for this method. 
+     * is an acceptable return value for this method.
      * 
-     * <b>NOTE:</b> If this method should never be overwritten!
+     * <b>NOTE:</b> If this method should never be overwritten! Overwrite
+     * {@link #renderFeatureValue(AnnotationFeature, String) instead}.
      * 
      * @param aFeature
      *            the feature to be rendered.

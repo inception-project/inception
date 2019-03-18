@@ -63,6 +63,13 @@ $ chown root:root /srv/webanno/webanno.conf
 $ chown www-data:www-data /srv/webanno/webanno.jar
 ----
 +
+* Make the JAR file executable:
++
+[source,bash]
+----
+$ chmod +x /srv/webanno/webanno.jar
+----
++
 * Create a symlink from `/etc/init.d` to the `/srv/webanno/webanno.jar`:
 +
 [source,bash]
@@ -82,6 +89,13 @@ $ systemctl enable webanno
 [source,bash]
 ----
 $ service webanno start
+----
++
+* Check the log output
++
+[source,bash]
+----
+$ cat /var/log/webanno.log
 ----
 +
 * Stop {product-name} using

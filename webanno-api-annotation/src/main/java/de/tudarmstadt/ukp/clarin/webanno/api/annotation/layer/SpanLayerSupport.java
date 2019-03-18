@@ -103,7 +103,8 @@ public class SpanLayerSupport
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), "", CAS.TYPE_NAME_ANNOTATION);
+        TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
+                CAS.TYPE_NAME_ANNOTATION);
         
         generateFeatures(aTsd, td, aLayer);
     }

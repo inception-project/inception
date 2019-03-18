@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -169,7 +170,8 @@ public class BratRendererTest
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(linesOf(new File("src/test/resources/output_cas_to_json_document_expected.json"),
-                "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));
+        assertThat(contentOf(
+                new File("src/test/resources/output_cas_to_json_document_expected.json"), UTF_8))
+                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 }

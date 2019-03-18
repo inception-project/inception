@@ -43,38 +43,11 @@
     </dependency>
     <dependency>
       <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-json</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-    <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.resources-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
-      <scope>test</scope>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.json-asl</artifactId>
     </dependency>
   </dependencies>
 </project>

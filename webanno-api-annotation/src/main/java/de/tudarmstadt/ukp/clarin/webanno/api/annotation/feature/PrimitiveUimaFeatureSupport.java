@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
@@ -46,12 +48,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 
 @Component
 public class PrimitiveUimaFeatureSupport
     implements FeatureSupport<Void>, InitializingBean
 {
     private final PrimitiveUimaFeatureSupportProperties properties;
+    
+    private final AnnotationSchemaService schemaService;
     
     private List<FeatureType> primitiveTypes;
 
@@ -63,12 +68,15 @@ public class PrimitiveUimaFeatureSupport
     public PrimitiveUimaFeatureSupport()
     {
         properties = new PrimitiveUimaFeatureSupportProperties();
+        schemaService = null;
     }
 
-    @Autowired(required = true)
-    public PrimitiveUimaFeatureSupport(PrimitiveUimaFeatureSupportProperties aProperties)
+    @Autowired
+    public PrimitiveUimaFeatureSupport(PrimitiveUimaFeatureSupportProperties aProperties,
+            @Autowired(required = false) AnnotationSchemaService aSchemaService)
     {
         properties = aProperties;
+        schemaService = aSchemaService;
     }
 
     @Override
@@ -119,6 +127,31 @@ public class PrimitiveUimaFeatureSupport
         }
     }
 
+    @Override
+    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    {
+        if (
+                aValue != null &&
+                schemaService != null && 
+                aFeature.getTagset() != null && 
+                CAS.TYPE_NAME_STRING.equals(aFeature.getType()) && 
+                !schemaService.existsTag((String) aValue, aFeature.getTagset())
+        ) {
+            if (!aFeature.getTagset().isCreateTag()) {
+                throw new IllegalArgumentException("[" + aValue
+                        + "] is not in the tag list. Please choose from the existing tags");
+            }
+            else {
+                Tag selectedTag = new Tag();
+                selectedTag.setName((String) aValue);
+                selectedTag.setTagSet(aFeature.getTagset());
+                schemaService.createTag(selectedTag);
+            }
+        }
+        
+        FeatureSupport.super.setFeatureValue(aJcas, aFeature, aAddress, aValue);
+    }
+    
     @Override
     public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
@@ -216,7 +249,7 @@ public class PrimitiveUimaFeatureSupport
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
-        aTD.addFeature(aFeature.getName(), "", aFeature.getType());
+        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), aFeature.getType());
     }
     
     @Override
@@ -227,11 +260,20 @@ public class PrimitiveUimaFeatureSupport
             aFeature.setTagset(null);
         }
     }
-    
+
     @Override
-    public boolean isTagsetSupported(AnnotationFeature aFeature)
+    public String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
-        // Only string features support tagsets
-        return CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+        if (CAS.TYPE_NAME_BOOLEAN.equals(aFeature.getType()) && aLabel != null) {
+            if ("true".equals(aLabel)) {
+                return "+" + aFeature.getUiName();
+            }
+            else {
+                return "-" + aFeature.getUiName();
+            }
+        }
+        else {
+            return FeatureSupport.super.renderFeatureValue(aFeature, aLabel);
+        }
     }
 }

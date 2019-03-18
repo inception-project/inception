@@ -15,7 +15,7 @@
 // limitations under the License.
 
 [[sect_login]]
-== Logging in
+= Logging in
 
 Upon opening the application in the browser, the login screen opens. Please enter your
 credentials to  proceed.

@@ -330,7 +330,11 @@ public class WebannoTsv3Reader
                                 if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+                                    
+                                    prevAnnoFs.getCAS().removeFsFromIndexes(prevAnnoFs);
                                     prevAnnoFs.setIntValue(endF, end);
+                                    prevAnnoFs.getCAS().addFsToIndexes(prevAnnoFs);
+                                    
                                     mAnno = getEscapeChars(mAnno);
                                     prevAnnoFs.setFeatureValueFromString(feat, mAnno);
                                     if (feat.getShortName().equals(REF_LINK)) {
@@ -339,7 +343,6 @@ public class WebannoTsv3Reader
                                         annos.set(i, prevAnnoFs);
                                     }
                                     setAnnoRefPerUnit(unit, type, ref, prevAnnoFs);
-
                                 }
                                 else {
                                     if (roleLinks.containsKey(feat)) {
@@ -481,12 +484,16 @@ public class WebannoTsv3Reader
                                         if (depFs.getBegin() <= annos.get(i).getBegin()) {
                                             Feature beginF = type.getFeatureByBaseName(
                                                     CAS.FEATURE_BASE_NAME_BEGIN);
+                                            annos.get(i).getCAS().removeFsFromIndexes(annos.get(i));
                                             annos.get(i).setIntValue(beginF, depFs.getBegin());
+                                            annos.get(i).getCAS().addFsToIndexes(annos.get(i));
                                         }
                                         else {
                                             Feature endF = type.getFeatureByBaseName(
                                                     CAS.FEATURE_BASE_NAME_END);
+                                            annos.get(i).getCAS().removeFsFromIndexes(annos.get(i));
                                             annos.get(i).setIntValue(endF, depFs.getEnd());
+                                            annos.get(i).getCAS().addFsToIndexes(annos.get(i));
                                         }
                                         aJCas.addFsToIndexes(annos.get(i));
 
@@ -578,7 +585,9 @@ public class WebannoTsv3Reader
                     if (isMultitoken) {
 
                         Feature endF = aType.getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
+                        multiAnnoFs.getCAS().removeFsFromIndexes(multiAnnoFs);
                         multiAnnoFs.setIntValue(endF, aEnd);
+                        multiAnnoFs.getCAS().addFsToIndexes(multiAnnoFs);
                         setAnnoRefPerUnit(aUnit, aType, aRef, multiAnnoFs);
 
                     }

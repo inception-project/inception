@@ -68,10 +68,6 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-dkprocore</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-security</artifactId>
     </dependency>
     <dependency>
@@ -156,6 +152,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.semantics-asl</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
