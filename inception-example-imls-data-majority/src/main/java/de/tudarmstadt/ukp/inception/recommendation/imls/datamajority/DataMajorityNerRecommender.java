@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -161,9 +162,11 @@ public class DataMajorityNerRecommender
 // end::predict2[]
 // tag::evaluate[]
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
@@ -179,6 +182,9 @@ public class DataMajorityNerRecommender
                 break;
             }
         }
+        
+        result.setTestSetSize(testData.size());
+        result.setTrainingSetSize(trainingData.size());
 
         DataMajorityModel model = trainModel(trainingData);
 
@@ -190,7 +196,8 @@ public class DataMajorityNerRecommender
             }
         }
 
-        return (double) correct / (double) testData.size();
+        result.setDefaultScore((double) correct / (double) testData.size());
+        return result;
     }
 // end::evaluate[]
 // tag::utility[]
