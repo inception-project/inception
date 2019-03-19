@@ -1,0 +1,20 @@
+== TextAnnotationGraphs
+
+Package: de.tudarmstadt.ukp.inception.tageditor.tag(.js/.css)
+Source:  https://creativecodinglab.github.io/TextAnnotationGraphs/
+License: MIT License.
+Files:   tag.css
+         tag.css.map
+         tag.min.css
+         tag.min.css.map
+         tag.js
+         tag.min.js
+
+== DKPro Core UIMA -> BRAT conversion
+
+Package: de.tudarmstadt.ukp.inception.tageditor.brat
+Source:  https://dkpro.github.io/dkpro-core/
+License: Apache License 2.0
+Files:   all files in the package
+
+         

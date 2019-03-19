@@ -90,6 +90,7 @@
     <module>inception-ui-kb</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-tag-editor</module>
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
@@ -255,6 +256,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
+        <version>0.9.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-tag-editor</artifactId>
         <version>0.9.0-SNAPSHOT</version>
       </dependency>
       <dependency>
