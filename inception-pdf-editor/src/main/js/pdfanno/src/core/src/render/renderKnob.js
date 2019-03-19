@@ -12,8 +12,13 @@ export const DEFAULT_RADIUS = 7
 /*
 export function renderKnob ({ x, y, readOnly }) {
 */
+// BEGIN INCEpTION EXTENSION - #1056 - Knob color in PDF editor
+/*
 export function renderKnob ({ x, y, readOnly, text}) {
-// END INCEpTION EXTENSION
+*/
+export function renderKnob ({ x, y, readOnly, text, color}) {
+// END INCEpTION EXTENSION - #1056
+// END INCEpTION EXTENSION - #981
 
   // Adjust the position.
   [x, y] = adjustPoint(x, (y - (DEFAULT_RADIUS + 2)), DEFAULT_RADIUS)
@@ -34,7 +39,13 @@ export function renderKnob ({ x, y, readOnly, text}) {
     top    : `${y}px`,
     left   : `${x}px`,
     width  : DEFAULT_RADIUS + 'px',
+// BEGIN INCEpTION EXTENSION - #1056 - Knob color in PDF editor
+/*
     height : DEFAULT_RADIUS + 'px'
+*/
+    height : DEFAULT_RADIUS + 'px',
+    backgroundColor : color
+// END INCEpTION EXTENSION - #1056
   })
 }
 
