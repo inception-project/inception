@@ -24,13 +24,12 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.commons.text.similarity.CosineDistance;
 
 public class ExternalSearchSentenceClusterer {
     private CosineDistance cd;
     private double clusterDistanceTolerance;
-    private List<Set<Triple<String, Double, String>>> sentenceClusters;
+    private List<Set<ExtractedSentence>> sentenceClusters;
     
     public ExternalSearchSentenceClusterer()
     {
@@ -39,22 +38,23 @@ public class ExternalSearchSentenceClusterer {
         clusterDistanceTolerance = 0.3;
     }
     
-    public void cluster(List<Triple<String, Double, String>> sentences)
+    public List<Set<ExtractedSentence>> getSentenceClusters (List<ExtractedSentence> sentences)
     {
-        for (Triple<String, Double, String> sentence: sentences) {
+        for (ExtractedSentence sentence: sentences) {
             if (sentenceClusters.size() == 0) {
-                Set<Triple<String, Double, String>> firstCluster = new HashSet<>();
+                Set<ExtractedSentence> firstCluster = new HashSet<>();
                 firstCluster.add(sentence);
                 sentenceClusters.add(firstCluster);
             } else {
                 // One giant cluster could be generated, bestDistance can make it grow element-wise.
                 // Should use average!
                 double bestDistance = Double.MAX_VALUE;
-                Set<Triple<String, Double, String>> bestCluster = new HashSet<>();
-                for (Set<Triple<String, Double, String>> cluster : sentenceClusters) {
+                Set<ExtractedSentence> bestCluster = new HashSet<>();
+                for (Set<ExtractedSentence> cluster : sentenceClusters) {
                     List<Double> cmpDistances = new ArrayList<>();
-                    for (Triple<String, Double, String> compareSentence : cluster) {
-                        cmpDistances.add(cd.apply(compareSentence.getLeft(), sentence.getLeft()));
+                    for (ExtractedSentence compareSentence : cluster) {
+                        cmpDistances.add(cd.apply(compareSentence.getSentenceText(),
+                                sentence.getSentenceText()));
                     }
                     if (bestDistance > Collections.min(cmpDistances)) {
                         bestDistance = Collections.min(cmpDistances);
@@ -65,16 +65,12 @@ public class ExternalSearchSentenceClusterer {
                 if (bestDistance < clusterDistanceTolerance) {
                     bestCluster.add(sentence);
                 } else {
-                    Set<Triple<String, Double, String>> newCluster = new HashSet<>();
+                    Set<ExtractedSentence> newCluster = new HashSet<>();
                     newCluster.add(sentence);
                     sentenceClusters.add(newCluster);
                 }
             }
         }
-    }
-    
-    public List<Set<Triple<String, Double, String>>> getSentenceClusters()
-    {
         return sentenceClusters;
     }
 }

@@ -37,7 +37,7 @@ public class ElasticSearchProviderTraits
     /**
      *  Number of results retrieved from the server
      */
-    private int resultSize = 1000;
+    private int resultSize = 100;
 
     private boolean randomOrder = false;
 

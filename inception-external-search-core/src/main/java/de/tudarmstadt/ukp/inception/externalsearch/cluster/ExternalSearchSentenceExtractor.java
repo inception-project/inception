@@ -29,7 +29,6 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
@@ -78,11 +77,11 @@ public class ExternalSearchSentenceExtractor {
         doc = createJCas(mergeTypeSystems(asList(customTypes, createTypeSystemDescription())));
     }
     
-    public List<Triple<String, Double, String>> extractSentences()
+    public List<ExtractedSentence> extractSentences()
             throws Exception
     {
         // Process text files
-        List<Triple<String, Double, String>> relevantSentences = new ArrayList<>();
+        List<ExtractedSentence> relevantSentences = new ArrayList<>();
         for (ExternalSearchResult result: externalSearchResults) {
             // Clear contents so we can process the next file
             doc.reset();
@@ -102,7 +101,7 @@ public class ExternalSearchSentenceExtractor {
             Type tUnit = doc.getTypeSystem().getType(TYPE_NAME_UNIT);
             Feature fScore = tUnit.getFeatureByBaseName(FEATURE_NAME_SCORE);
             for (AnnotationFS unit : CasUtil.select(doc.getCas(), tUnit)) {
-                relevantSentences.add(Triple.of(
+                relevantSentences.add(new ExtractedSentence(
                         unit.getCoveredText(),
                         unit.getDoubleValue(fScore),
                         result.getDocumentId()));

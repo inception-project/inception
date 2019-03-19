@@ -30,7 +30,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -39,6 +38,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceClusterer;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceExtractor;
+import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExtractedSentence;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class ProcessTest
@@ -73,17 +73,15 @@ public class ProcessTest
     @Test
     public void test() throws Exception {
         // Extract sentences relevant to query from external results
-        List<Triple<String, Double, String>> relevantSentences = extractor.extractSentences();
+        List<ExtractedSentence> relevantSentences = extractor.extractSentences();
     
         // Assertions checking that relevant sentences have been extracted correctly
         assertThat(relevantSentences).hasSize(5);
-        assertThat(relevantSentences).extracting(Triple::getMiddle).allMatch(score -> score > 0.0);
-    
-        // Cluster relevant sentences
-        ExternalSearchSentenceClusterer clusterer = new ExternalSearchSentenceClusterer();
-        clusterer.cluster(relevantSentences);
+        assertThat(relevantSentences).extracting(ExtractedSentence::getScore).
+                allMatch(score -> score > 0.0);
     
         // Assertion checking that clustering of relevant sentences works correctly
-        assertThat(clusterer.getSentenceClusters().size()).isGreaterThan(0);
+        assertThat(new ExternalSearchSentenceClusterer().
+                getSentenceClusters(relevantSentences).size()).isGreaterThan(0);
     }
 }
