@@ -30,8 +30,8 @@ public class CreateAnnotationsOptions
         return overrideExistingAnnotations;
     }
 
-    public void setOverrideExistingAnnotations(boolean overrideExistingAnnotations)
+    public void setOverrideExistingAnnotations(boolean aOverrideExistingAnnotations)
     {
-        this.overrideExistingAnnotations = overrideExistingAnnotations;
+        aOverrideExistingAnnotations = overrideExistingAnnotations;
     }
 }

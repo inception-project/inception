@@ -186,7 +186,7 @@ public class SearchAnnotationSidebar
 
         Form<Void> annotationForm = new Form("annotateForm");
         // create annotate-button and options form
-        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<Void>("annotateAllButton",
+        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
                 this::createAnnotationAtSearchResult));
         annotationForm.add(annotateButton);

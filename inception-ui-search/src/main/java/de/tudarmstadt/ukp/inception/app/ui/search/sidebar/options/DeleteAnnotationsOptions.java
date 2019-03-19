@@ -26,8 +26,8 @@ public class DeleteAnnotationsOptions extends Options
         return deleteOnlyMatchingFeatureValues;
     }
 
-    public void setDeleteOnlyMatchingFeatureValues(boolean deleteOnlyMatchingFeatureValues)
+    public void setDeleteOnlyMatchingFeatureValues(boolean aDeleteOnlyMatchingFeatureValues)
     {
-        this.deleteOnlyMatchingFeatureValues = deleteOnlyMatchingFeatureValues;
+        deleteOnlyMatchingFeatureValues = aDeleteOnlyMatchingFeatureValues;
     }
 }
