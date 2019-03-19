@@ -96,7 +96,7 @@ public class ChartPanel
             addLearningCurve(learningCurve.getCurveData().get(data), data);
         }
 
-        String javascript = createJSScript();
+        String javascript = createJSScript(learningCurve.getXaxis());
 
         if (javascript == null || javascript.isEmpty()) {
             LOG.warn("No javascript to render the learning curve diagram.");
@@ -161,7 +161,7 @@ public class ChartPanel
      * recommender1: 'step', recommender2 : 'step'
      * </pre>
      */
-    public String createJSScript()
+    public String createJSScript(String xaxis)
     {
         try {
             int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();

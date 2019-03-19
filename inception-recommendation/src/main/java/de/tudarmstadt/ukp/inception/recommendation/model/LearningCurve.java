@@ -26,6 +26,7 @@ public class LearningCurve implements Serializable
     
     Map<String,String> curveData;
     int maximumPointsToPlot;
+    String xaxis;
     
     public Map<String, String> getCurveData()
     {
@@ -45,5 +46,15 @@ public class LearningCurve implements Serializable
     public void setMaximumPointsToPlot(int aMaximumPointsToPlot)
     {
         this.maximumPointsToPlot = aMaximumPointsToPlot;
+    }
+
+    public String getXaxis()
+    {
+        return xaxis;
+    }
+
+    public void setXaxis(String xaxis)
+    {
+        this.xaxis = xaxis;
     }
 }

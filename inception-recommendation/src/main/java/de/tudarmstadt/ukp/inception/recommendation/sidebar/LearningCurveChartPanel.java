@@ -18,15 +18,18 @@
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
@@ -130,6 +133,11 @@ public class LearningCurveChartPanel
             // the Curve is not allowed to have more points as compared to MAX_POINTS_TO_PLOT. This
             // is how many scores we have retrieved from the database
             learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
+            
+            int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
+            String xaxisValues =  substring(Arrays.toString(intArray), 1, -1)  ;
+            
+            learningCurve.setXaxis(xaxisValues);
         }
 
         //provide the chart above calculated data to plot the learning curve

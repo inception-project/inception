@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -93,9 +94,12 @@ public class EvaluationSimulationPanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                String scores = evaluate(_target);
+                String[] scores = evaluate(_target);
+
+                String score = scores[0];
+                String xaxis = scores[1];
                 
-                if (scores.isEmpty()) {
+                if (score.isEmpty()) {
                     LOG.warn("There were no evaluation to show");
                     warn("There were no evaluation to showed");
                     _target.addChildren(getPage(), IFeedback.class);
@@ -104,12 +108,13 @@ public class EvaluationSimulationPanel
                 }
                 
                 Map<String,String> curveData = new HashMap<String,String>();
-                curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
+                curveData.put(selectedRecommenderPanel.getObject().getName(), score);
                 
                 LearningCurve learningCurve = new LearningCurve();
                 learningCurve.setCurveData(curveData);
                 learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
-                
+                learningCurve.setXaxis(xaxis);
+
                 //provide the chart above calculated data to plot the learning curve
                 chartPanel.setDefaultModel(Model.of(learningCurve));
                 _target.add(chartPanel);
@@ -125,7 +130,7 @@ public class EvaluationSimulationPanel
      * 
      * @return comma separated string of scores
      */
-    private String evaluate(AjaxRequestTarget aTarget)
+    private String[] evaluate(AjaxRequestTarget aTarget)
         throws IOException
     {
         //there must be some recommender selected by the user on the UI
@@ -172,27 +177,36 @@ public class EvaluationSimulationPanel
             return null;
         }
         
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sbScore = new StringBuilder();
+        StringBuilder sbTrainingSize = new StringBuilder();
 
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
-        int iterations = 0;
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
+            double trainingSize;
             double score;
             try {
-                score = recommender.evaluate(casList, splitStrategy);
+                EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
+                
+                if(evaluationResult.isEvaluationSkipped())
+                {
+                    LOG.warn("Evaluation skipped. Chart cannot to be shown");
+                }
+                
+                score = evaluationResult.getDefaultScore();
+                trainingSize = evaluationResult.getTrainingSetSize();
             }
             catch (RecommendationException e) {
                 LOG.error(e.toString(),e);
                 continue;
             }
 
-            sb.append(score + ",");
-            iterations++;
+            sbScore.append(score + ",");
+            sbTrainingSize.append(trainingSize + ",");
         }
 
-        return sb.toString();
+        return new String[] {sbScore.toString(), sbTrainingSize.toString() };
     }
 }
