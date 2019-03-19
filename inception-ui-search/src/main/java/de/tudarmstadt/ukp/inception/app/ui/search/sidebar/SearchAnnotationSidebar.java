@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Type;
@@ -302,40 +302,51 @@ public class SearchAnnotationSidebar
     }
 
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget,
-        Consumer<SearchResult> aConsumer)
+        BiConsumer<SearchResult, SpanAdapter> aConsumer)
     {
-        for (SearchResult result : searchResults.getObject()) {
-            if (result.isSelectedForAnnotation()) {
-                aConsumer.accept(result);
+        AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
+        try {
+            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+            for (SearchResult result : searchResults.getObject()) {
+                if (result.isSelectedForAnnotation()) {
+                    aConsumer.accept(result, adapter);
+                }
             }
+        }
+        catch (ClassCastException e) {
+            error(
+                "Can only create SPAN annotations for search results: " + e.getLocalizedMessage());
+            LOG.error("Can only create SPAN annotations for search results", e);
         }
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
 
-    private void createAnnotationAtSearchResult(SearchResult searchResult)
+    private void createAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
-        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+        AnnotationLayer layer = aAdapter.getLayer();
         List<FeatureState> featureStates = state.getFeatureStates();
         SourceDocument sourceDoc = documentService
             .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
         try {
             JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
 
-            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-            Type type = CasUtil.getAnnotationType(jCas.getCas(), adapter.getAnnotationTypeName());
+            Type type = CasUtil.getAnnotationType(jCas.getCas(), aAdapter.getAnnotationTypeName());
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
+            boolean overrideExisting = createOptions.getObject().isOverrideExistingAnnotations();
+
             // if there is already an annotation of the same type at the target location
-            // and we don't want to override it, do nothing
-            if (annoFS != null && !createOptions.getObject().isOverrideExistingAnnotations()) {
+            // and we don't want to override it and stacking is not enabled, do nothing.
+            if (annoFS != null && !overrideExisting && !layer.isAllowStacking()) {
                 return;
             }
 
-            // create a new annotation if not already there
-            if (annoFS == null) {
-                annoFS = adapter
+            // create a new annotation if not already there or if stacking is enabled and the
+            // new annotation has different features than the existing one
+            if (annoFS == null || !featureValuesMatchCurrentState(annoFS) && !overrideExisting) {
+                annoFS = aAdapter
                     .add(sourceDoc, currentUser.getUsername(), jCas, searchResult.getOffsetStart(),
                         searchResult.getOffsetEnd());
             }
@@ -346,7 +357,7 @@ public class SearchAnnotationSidebar
                 AnnotationFeature feature = featureState.feature;
                 if (featureValue != null) {
                     int addr = getAddr(annoFS);
-                    adapter
+                    aAdapter
                         .setFeatureValue(sourceDoc, currentUser.getUsername(), jCas, addr, feature,
                             featureValue);
                 }
@@ -363,17 +374,15 @@ public class SearchAnnotationSidebar
         }
     }
 
-    private void deleteAnnotationAtSearchResult(SearchResult searchResult)
+    private void deleteAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
-        AnnotationLayer layer = state.getSelectedAnnotationLayer();
         SourceDocument sourceDoc = documentService
             .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
         try {
             JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
 
-            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-            Type type = CasUtil.getAnnotationType(jCas.getCas(), adapter.getAnnotationTypeName());
+            Type type = CasUtil.getAnnotationType(jCas.getCas(), aAdapter.getAnnotationTypeName());
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
@@ -382,15 +391,15 @@ public class SearchAnnotationSidebar
                 .isDeleteOnlyMatchingFeatureValues()) {
                 return;
             }
-            adapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
+            aAdapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
 
             writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
         }
         catch (IOException e) {
             error(
-                "Unable to create annotation for search result [" + searchResult.toString() + " ]: "
+                "Unable to delete annotation for search result [" + searchResult.toString() + " ]: "
                     + e.getLocalizedMessage());
-            LOG.error("Unable to create annotation for search result [" + searchResult.toString()
+            LOG.error("Unable to delete annotation for search result [" + searchResult.toString()
                 + " ]: ", e);
         }
     }
