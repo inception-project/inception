@@ -540,7 +540,7 @@ public class AnnotationPage
     
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
         
@@ -622,7 +622,7 @@ public class AnnotationPage
             handleException(aTarget, e);
         }
 
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
     
     @Override
