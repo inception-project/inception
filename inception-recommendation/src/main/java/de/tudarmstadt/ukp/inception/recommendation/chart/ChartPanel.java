@@ -18,11 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.chart;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
-import static org.apache.commons.lang3.StringUtils.substring;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -47,7 +44,6 @@ public class ChartPanel
     private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
 
     private static final String MID_CHART_CONTAINER = "chart";
-    private static final int MAX_POINTS_TO_PLOT = 50;
 
     private StringBuilder dataColumns;
     private StringBuilder chartType;
@@ -164,15 +160,14 @@ public class ChartPanel
     public String createJSScript(String xaxis)
     {
         try {
-            int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
-            String xaxisValues = "[ 'x' ," + substring(Arrays.toString(intArray), 1, -1) + "]";
+            String xaxisValues = "[ 'x' ," + xaxis + "]";
             String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
 
             // bind data to chart container
             String javascript = "var chart=c3.generate({bindto:'#" + chart.getMarkupId()
                     + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{"
                     + chartType + "}},"
-                    + "axis: { y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
+                    + "axis: { x:{type: 'category',tick: {rotate: 0,multiline: true}}, y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
             return javascript;
         }
         catch (IOException e) {

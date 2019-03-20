@@ -132,8 +132,6 @@ public class LearningCurveChartPanel
             
             // the Curve is not allowed to have more points as compared to MAX_POINTS_TO_PLOT. This
             // is how many scores we have retrieved from the database
-            learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
-            
             int[] intArray = IntStream.range(0, MAX_POINTS_TO_PLOT).map(i -> i).toArray();
             String xaxisValues =  substring(Arrays.toString(intArray), 1, -1)  ;
             

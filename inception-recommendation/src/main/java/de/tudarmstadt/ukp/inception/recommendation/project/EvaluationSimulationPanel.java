@@ -62,7 +62,6 @@ public class EvaluationSimulationPanel
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
-    private final static int MAX_POINTS_TO_PLOT = 50;
 
     private static final Logger LOG = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
     
@@ -94,12 +93,12 @@ public class EvaluationSimulationPanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                String[] scores = evaluate(_target);
+                String[] scoresAndTrainingSizes = evaluate(_target);
 
-                String score = scores[0];
-                String xaxis = scores[1];
+                String scores = scoresAndTrainingSizes[0];
+                String trainingSizes = scoresAndTrainingSizes[1];
                 
-                if (score.isEmpty()) {
+                if (scores.isEmpty()) {
                     LOG.warn("There were no evaluation to show");
                     warn("There were no evaluation to showed");
                     _target.addChildren(getPage(), IFeedback.class);
@@ -108,12 +107,11 @@ public class EvaluationSimulationPanel
                 }
                 
                 Map<String,String> curveData = new HashMap<String,String>();
-                curveData.put(selectedRecommenderPanel.getObject().getName(), score);
+                curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
                 
                 LearningCurve learningCurve = new LearningCurve();
                 learningCurve.setCurveData(curveData);
-                learningCurve.setMaximumPointsToPlot(MAX_POINTS_TO_PLOT);
-                learningCurve.setXaxis(xaxis);
+                learningCurve.setXaxis(trainingSizes);
 
                 //provide the chart above calculated data to plot the learning curve
                 chartPanel.setDefaultModel(Model.of(learningCurve));
@@ -128,7 +126,7 @@ public class EvaluationSimulationPanel
      * 
      * @param aTarget uses to log errors on the page in case of unwanted behaviour
      * 
-     * @return comma separated string of scores
+     * @return comma separated string of scores in the first index of the array
      */
     private String[] evaluate(AjaxRequestTarget aTarget)
         throws IOException
@@ -190,9 +188,9 @@ public class EvaluationSimulationPanel
             try {
                 EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
                 
-                if(evaluationResult.isEvaluationSkipped())
-                {
+                if (evaluationResult.isEvaluationSkipped())                {
                     LOG.warn("Evaluation skipped. Chart cannot to be shown");
+                    continue;
                 }
                 
                 score = evaluationResult.getDefaultScore();
@@ -209,4 +207,5 @@ public class EvaluationSimulationPanel
 
         return new String[] {sbScore.toString(), sbTrainingSize.toString() };
     }
+    
 }

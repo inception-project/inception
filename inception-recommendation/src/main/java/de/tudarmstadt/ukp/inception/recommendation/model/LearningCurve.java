@@ -25,7 +25,6 @@ public class LearningCurve implements Serializable
     private static final long serialVersionUID = 6542281189066805238L;
     
     Map<String,String> curveData;
-    int maximumPointsToPlot;
     String xaxis;
     
     public Map<String, String> getCurveData()
@@ -36,16 +35,6 @@ public class LearningCurve implements Serializable
     public void setCurveData(Map<String, String> aCurveData)
     {
         this.curveData = aCurveData;
-    }
-
-    public int getMaximumPointsToPlot()
-    {
-        return maximumPointsToPlot;
-    }
-
-    public void setMaximumPointsToPlot(int aMaximumPointsToPlot)
-    {
-        this.maximumPointsToPlot = aMaximumPointsToPlot;
     }
 
     public String getXaxis()
