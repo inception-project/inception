@@ -220,4 +220,5 @@
         </pluginManagement>
       </build>
     </profile>
-  </profiles></project>
+  </profiles>
+</project>
