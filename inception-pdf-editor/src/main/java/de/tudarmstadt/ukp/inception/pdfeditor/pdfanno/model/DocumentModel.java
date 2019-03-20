@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,8 +25,10 @@ import java.util.Map;
  * Contains information and mappings for document text provided by INCEpTION.
  * This class is used for annotation alignment between INCEpTION and PDFAnno.
  */
-public class DocumentModel
+public class DocumentModel implements Serializable
 {
+
+    private static final long serialVersionUID = 28043850700314856L;
 
     /**
      * Document text provided by INCEpTION

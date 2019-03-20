@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +32,10 @@ import org.apache.commons.collections4.bidimap.DualHashBidiMap;
  * This includes characters and their order and position but also about
  * draw operations and their positions.
  */
-public class PdfExtractFile
+public class PdfExtractFile implements Serializable
 {
+
+    private static final long serialVersionUID = -8596941152876909935L;
 
     private String pdftxt;
 
