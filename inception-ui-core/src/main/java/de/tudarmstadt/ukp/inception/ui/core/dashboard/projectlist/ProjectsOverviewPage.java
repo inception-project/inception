@@ -64,8 +64,10 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -88,6 +90,7 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
+    private static final String MID_LEAVE_PROJECT_ICON = "leaveProjectIcon";
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
     private static final String MID_PROJECT_LINK = "projectLink";
@@ -235,6 +238,7 @@ public class ProjectsOverviewPage
     private AjaxLink<Void> createLeaveProjectButton(User aUser, Project aCurrentProject,
             ConfirmationDialog confirmLeaveDialog)
     {
+        Icon leaveProjectIcon = new Icon(MID_LEAVE_PROJECT_ICON, FontAwesomeIconType.times_circle);
         AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
         {
 
@@ -247,6 +251,8 @@ public class ProjectsOverviewPage
             }
 
         };
+        
+        leaveProjectLink.add(leaveProjectIcon);
         boolean hasNoProjectPermissions = projectService
                 .listProjectPermissionLevel(aUser, aCurrentProject).isEmpty();
         if (hasNoProjectPermissions || projectService.isAdmin(aCurrentProject, aUser)) {
