@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -36,6 +37,21 @@ public interface AnnotatorState
     extends Serializable, AnnotatorViewState, AnnotatorDocumentNavigation
 {
     void reset();
+    
+    /**
+     * Get the timestamp when the annotation document was last changed on this.
+     * 
+     * @see #setAnnotationDocumentTimestamp(long)
+     */
+    Optional<Long> getAnnotationDocumentTimestamp();
+
+    /**
+     * Set the timestamp when the annotation document was last changed on this. This value must
+     * be set explicitly whenever the annotation document is loaded by the editor. It can be used
+     * to detect modifications to the file on disk which might make it incompatible with the current
+     * state of the annotation editor (in particular it might invalidate the VIDs).
+     */
+    void setAnnotationDocumentTimestamp(long aTimeStamp);
 
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
@@ -47,13 +63,25 @@ public interface AnnotatorState
 
     void setForwardAnnotation(boolean forwardAnnotation);
 
+    /**
+     * Get annotation layer of currently selected annotation.
+     */
     AnnotationLayer getSelectedAnnotationLayer();
 
-    void setSelectedAnnotationLayer(AnnotationLayer selectedAnnotationLayer);
+    /**
+     * Set annotation layer of currently selected annotation.
+     */
+    void setSelectedAnnotationLayer(AnnotationLayer aLayer);
 
+    /**
+     * Get annotation layer used for newly created annotations.
+     */
     AnnotationLayer getDefaultAnnotationLayer();
 
-    void setDefaultAnnotationLayer(AnnotationLayer defaultAnnotationLayer);
+    /**
+     * Set annotation layer used for newly created annotations.
+     */
+    void setDefaultAnnotationLayer(AnnotationLayer aLayer);
 
     // REC: would be very nice if we didn't need the mode - the behaviors specific to annotation,
     // curation, automation, correction, etc. should be local to the respective modules / pages

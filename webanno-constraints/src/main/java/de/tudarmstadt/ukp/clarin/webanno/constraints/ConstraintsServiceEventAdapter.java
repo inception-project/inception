@@ -17,30 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.constraints;
 
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-
-import javax.annotation.Resource;
-
-import org.apache.commons.io.FilenameUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectImportEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 
 @Component
 public class ConstraintsServiceEventAdapter
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
-    private @Resource ConstraintsService service;
+    private @Autowired ConstraintsService service;
     
     @EventListener
     public void beforeProjectRemove(BeforeProjectRemovedEvent aEvent)
@@ -49,35 +36,6 @@ public class ConstraintsServiceEventAdapter
         //Remove Constraints
         for (ConstraintSet set : service.listConstraintSets(aEvent.getProject())) {
             service.removeConstraintSet(set);
-        }
-    }
-    
-    @EventListener
-    public void onProjectImport(ProjectImportEvent aEvent)
-        throws Exception
-    {
-        Project project = aEvent.getProject();
-        ZipFile zipFile = aEvent.getZip();
-        
-        for (Enumeration zipEnumerate = zipFile.entries(); zipEnumerate.hasMoreElements();) {
-            ZipEntry entry = (ZipEntry) zipEnumerate.nextElement();
-            
-            // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
-            String entryName = ZipUtils.normalizeEntryName(entry);
-            
-            if (entryName.startsWith(ConstraintsService.CONSTRAINTS + "/")) {
-                String fileName = FilenameUtils.getName(entry.getName());
-                if (fileName.trim().isEmpty()) {
-                    continue;
-                }
-                ConstraintSet constraintSet = new ConstraintSet();
-                constraintSet.setProject(project);
-                constraintSet.setName(fileName);
-                service.createConstraintSet(constraintSet);
-                service.writeConstraintSet(constraintSet, zipFile.getInputStream(entry));
-                log.info("Imported constraint [" + fileName + "] for project [" + project.getName()
-                        + "] with id [" + project.getId() + "]");
-            }
         }
     }
 }

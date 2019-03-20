@@ -28,17 +28,41 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 public interface FeatureSupportRegistry
 {
     String SERVICE_NAME = "featureSupportRegistry";
-    
+
+    /**
+     * Get the types of all features the user should be able to create. There can also be internal
+     * types reserved for built-in features. These are not returned.
+     */
     default List<FeatureType> getAllTypes(AnnotationLayer aLayer)
     {
-        List<FeatureType> types = new ArrayList<>();
-        for (FeatureSupport featureSupport : getFeatureSupports()) {
-            types.addAll(featureSupport.getSupportedFeatureTypes(aLayer));
+        List<FeatureType> allTypes = new ArrayList<>();
+
+        for (FeatureSupport<?> featureSupport : getFeatureSupports()) {
+            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
+            types.stream().forEach(allTypes::add);
         }
 
-        types.sort(comparing(FeatureType::getUiName));
-        
-        return types;
+        allTypes.sort(comparing(FeatureType::getUiName));
+
+        return allTypes;
+    }
+    
+    /**
+     * Get the types of all features the user should be able to create. There can also be internal
+     * types reserved for built-in features. These are not returned.
+     */
+    default List<FeatureType> getUserSelectableTypes(AnnotationLayer aLayer)
+    {
+        List<FeatureType> allTypes = new ArrayList<>();
+
+        for (FeatureSupport<?> featureSupport : getFeatureSupports()) {
+            List<FeatureType> types = featureSupport.getSupportedFeatureTypes(aLayer);
+            types.stream().filter(it -> !it.isInternal()).forEach(allTypes::add);
+        }
+
+        allTypes.sort(comparing(FeatureType::getUiName));
+
+        return allTypes;
     }
 
     List<FeatureSupport> getFeatureSupports();
@@ -47,7 +71,9 @@ public interface FeatureSupportRegistry
      * Get the feature support providing the given feature. This method must only be called on
      * completely configured and saved features, not on unsafed features.
      */
-    FeatureSupport getFeatureSupport(AnnotationFeature aFeature);
+    <T> FeatureSupport<T> getFeatureSupport(AnnotationFeature aFeature);
     
-    FeatureSupport getFeatureSupport(String aFeatureSupportId);
+    <T extends FeatureSupport<?>> T getFeatureSupport(String aFeatureSupportId);
+
+    FeatureType getFeatureType(AnnotationFeature aFeature);
 }

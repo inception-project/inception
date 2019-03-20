@@ -1,0 +1,38 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_database]]
+= Database
+
+{product-name} uses an SQL database to store project and user data. 
+
+{product-name} uses by default an embedded HSQLDB database. However, we recommend using the embedded
+database only for testing purposes. For production use, we recommend using a MySQL server. The reason
+for this is, that:
+
+* some users have reported that HSQLDB databases may become corrupt when the computer crashes
+  (note that this could probably also happen with MySQL, but we did so far not have any reports
+  about this);
+* most {product-name} developers use MySQL when running {product-name} on their servers;
+* in the past, we had cases where we described in-place upgrade procedures that required performing
+  SQL commands to change the data model as part of the upgrade. We promise to try avoiding this in
+  the future. However, in case we offer advice on fixing anything directly in the database, this
+  advice will refer to a MySQL database.
+
+We try to keep the data model simple, so there should be no significant requirements to the database
+being used. Theoretically, it should be possible to use any JDBC-compatible database after adding a
+corresponding driver to the classpath and configuring {product-name} to use the driver in the
+`settings.properties` file.

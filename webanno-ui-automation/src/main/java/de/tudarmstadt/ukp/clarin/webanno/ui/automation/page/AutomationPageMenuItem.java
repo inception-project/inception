@@ -36,6 +36,12 @@ public class AutomationPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
     
     @Override
+    public String getPath()
+    {
+        return "/automation";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/update.png";

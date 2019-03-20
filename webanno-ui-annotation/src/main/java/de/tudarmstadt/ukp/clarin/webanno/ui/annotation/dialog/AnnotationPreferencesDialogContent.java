@@ -17,18 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Arrays.asList;
+
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -48,16 +51,18 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ReadonlyColoringBehaviour;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -76,100 +81,94 @@ public class AnnotationPreferencesDialogContent
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorRegistry annotationEditorRegistry;
+    private @SpringBean UserDao userDao;
+    private @SpringBean UserPreferencesService userPreferencesService;
 
     private final ModalWindow modalWindow;
-    private final AnnotationLayerDetailForm form;
+    private final Form<Preferences> form;
     private final IModel<AnnotatorState> stateModel;
 
     public AnnotationPreferencesDialogContent(String aId, final ModalWindow aModalWindow,
             IModel<AnnotatorState> aModel)
     {
         super(aId);
+        
         stateModel = aModel;
         modalWindow = aModalWindow;
-        add(form = new AnnotationLayerDetailForm("form"));
-    }
-    
-    private class AnnotationLayerDetailForm
-        extends Form<Preferences>
-    {
-        private static final long serialVersionUID = -683824912741426241L;
+        
+        form = new Form<>("form", new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
 
-        public AnnotationLayerDetailForm(String id)
-        {
-            super(id);
-            setModel(new CompoundPropertyModel<>(loadModel(stateModel.getObject())));
+        NumberTextField<Integer> windowSizeField = new NumberTextField<>("windowSize");
+        windowSizeField.setType(Integer.class);
+        windowSizeField.setMinimum(1);
+        form.add(windowSizeField);
 
-            NumberTextField<Integer> windowSizeField = new NumberTextField<>("windowSize");
-            windowSizeField.setType(Integer.class);
-            windowSizeField.setMinimum(1);
-            add(windowSizeField);
+        NumberTextField<Integer> sidebarSizeField = new NumberTextField<>("sidebarSize");
+        sidebarSizeField.setType(Integer.class);
+        sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
+        sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
+        form.add(sidebarSizeField);
 
-            NumberTextField<Integer> sidebarSizeField = new NumberTextField<>("sidebarSize");
-            sidebarSizeField.setType(Integer.class);
-            sidebarSizeField.setMinimum(AnnotationPreference.SIDEBAR_SIZE_MIN);
-            sidebarSizeField.setMaximum(AnnotationPreference.SIDEBAR_SIZE_MAX);
-            add(sidebarSizeField);
+        NumberTextField<Integer> fontZoomField = new NumberTextField<>("fontZoom");
+        fontZoomField.setType(Integer.class);
+        fontZoomField.setMinimum(AnnotationPreference.FONT_ZOOM_MIN);
+        fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
+        form.add(fontZoomField);
 
-            NumberTextField<Integer> fontZoomField = new NumberTextField<>("fontZoom");
-            fontZoomField.setType(Integer.class);
-            fontZoomField.setMinimum(AnnotationPreference.FONT_ZOOM_MIN);
-            fontZoomField.setMaximum(AnnotationPreference.FONT_ZOOM_MAX);
-            add(fontZoomField);
+        List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
+                .stream()
+                .map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
+                .collect(Collectors.toList());
+        DropDownChoice<Pair<String, String>> editor = new BootstrapSelect<>("editor");
+        editor.setChoiceRenderer(new ChoiceRenderer<>("value"));
+        editor.setChoices(editorChoices);
+        editor.add(visibleWhen(() -> editor.getChoices().size() > 1));
+        form.add(editor);
 
-            List<Pair<String, String>> editorChoices = annotationEditorRegistry.getEditorFactories()
-                    .stream().map(f -> Pair.of(f.getBeanName(), f.getDisplayName()))
-                    .collect(Collectors.toList());
-            DropDownChoice<Pair<String, String>> editor = new DropDownChoice<>("editor",
-                    editorChoices, new ChoiceRenderer<>("value"));
-            editor.setVisible(editorChoices.size() > 1);
-            add(editor);
+        // Add layer check boxes and combo boxes
+        form.add(createLayerContainer());
 
-            // Add layer check boxes and combo boxes
-            add(createLayerContainer());
+        // Add a check box to enable/disable automatic page navigations while annotating
+        form.add(new CheckBox("scrollPage"));
+        
+        form.add(new CheckBox("rememberLayer"));
 
-            // Add a check box to enable/disable automatic page navigations while annotating
-            add(new CheckBox("scrollPage"));
-            
-            add(new CheckBox("rememberLayer"));
+        // Add global read-only coloring strategy combo box
+        DropDownChoice<ReadonlyColoringBehaviour> readOnlyColor = new BootstrapSelect<>(
+                "readonlyLayerColoringBehaviour");
+        readOnlyColor.setChoices(asList(ReadonlyColoringBehaviour.values()));
+        readOnlyColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
+        form.add(readOnlyColor);
 
-            // Add global read-only coloring strategy combo box
-            ChoiceRenderer<ReadonlyColoringBehaviour> choiceRenderer = new ChoiceRenderer<>(
-                    "descriptiveName");
-            List<ReadonlyColoringBehaviour> choices = new ArrayList<ReadonlyColoringBehaviour>(
-                    EnumSet.allOf(ReadonlyColoringBehaviour.class));
-            Model<ReadonlyColoringBehaviour> initialSelected = Model
-                    .of(getModelObject().readonlyLayerColoringBehaviour);
-            DropDownChoice<ReadonlyColoringBehaviour> rolayer_color = 
-                    new DropDownChoice<ReadonlyColoringBehaviour>("readonlylayercoloring", 
-                            initialSelected, choices, choiceRenderer);
-            rolayer_color.add(new AjaxFormComponentUpdatingBehavior("change")
-            {
-                private static final long serialVersionUID = 1060397773470276585L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget target)
-                {
-                    ReadonlyColoringBehaviour selected = rolayer_color.getModelObject();
-                    getModelObject().readonlyLayerColoringBehaviour = selected;
-                }
-            });
-            add(rolayer_color);
-
-            add(new LambdaAjaxButton<>("save",
-                    AnnotationPreferencesDialogContent.this::actionSave));
-            add(new LambdaAjaxLink("cancel",
-                    AnnotationPreferencesDialogContent.this::actionCancel));
-        }
+        form.add(new LambdaAjaxButton<>("save", this::actionSave));
+        form.add(new LambdaAjaxLink("cancel", this::actionCancel));
+        
+        add(form);
     }
 
-    private void actionSave(AjaxRequestTarget aTarget,
-            Form<Preferences> aForm)
+    private void actionSave(AjaxRequestTarget aTarget, Form<Preferences> aForm)
     {
+        String username = userDao.getCurrentUser().getUsername();
+        
         try {
             AnnotatorState state = stateModel.getObject();
-            commitModel(state);
-            PreferencesUtil.savePreference(state, projectService);
+            Preferences model = form.getModelObject();
+
+            AnnotationPreference prefs = state.getPreferences();
+            prefs.setScrollPage(model.scrollPage);
+            prefs.setRememberLayer(model.rememberLayer);
+            prefs.setWindowSize(model.windowSize);
+            prefs.setSidebarSize(model.sidebarSize);
+            prefs.setFontZoom(model.fontZoom);
+            prefs.setColorPerLayer(model.colorPerLayer);
+            prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
+            prefs.setEditor(model.editor.getKey());
+
+            state.setAnnotationLayers(model.annotationLayers.stream()
+                    .filter(l -> !prefs.getHiddenAnnotationLayerIds().contains(l.getId()))
+                    .collect(Collectors.toList()));
+            
+            PreferencesUtil.savePreference(userPreferencesService, state, username);
         }
         catch (IOException e) {
             error("Preference file not found");
@@ -184,72 +183,41 @@ public class AnnotationPreferencesDialogContent
         modalWindow.close(aTarget);
     }
 
-    private Preferences loadModel(AnnotatorState bModel)
+    private Preferences loadModel(AnnotatorState state)
     {
-        Preferences model = new Preferences();
+        AnnotationPreference prefs = state.getPreferences();
 
         // Import current settings from the annotator
-        model.windowSize = bModel.getPreferences().getWindowSize() < 1 ? 1
-                : bModel.getPreferences().getWindowSize();
-        model.sidebarSize = bModel.getPreferences().getSidebarSize();
-        model.fontZoom = bModel.getPreferences().getFontZoom();
-        model.scrollPage = bModel.getPreferences().isScrollPage();
-        model.colorPerLayer = bModel.getPreferences().getColorPerLayer();
-        model.readonlyLayerColoringBehaviour = bModel.getPreferences()
-                .getReadonlyLayerColoringBehaviour();
-        model.rememberLayer = bModel.getPreferences().isRememberLayer();
+        Preferences model = new Preferences();
+        model.windowSize = Math.max(prefs.getWindowSize(), 1);
+        model.sidebarSize = prefs.getSidebarSize();
+        model.fontZoom = prefs.getFontZoom();
+        model.scrollPage = prefs.isScrollPage();
+        model.colorPerLayer = prefs.getColorPerLayer();
+        model.readonlyLayerColoringBehaviour = prefs.getReadonlyLayerColoringBehaviour();
+        model.rememberLayer = prefs.isRememberLayer();
 
-        String editorId = bModel.getPreferences().getEditor();
-        AnnotationEditorFactory editorFactory = annotationEditorRegistry.getEditorFactory(editorId);
+        AnnotationEditorFactory editorFactory = annotationEditorRegistry
+                .getEditorFactory(state.getPreferences().getEditor());
         if (editorFactory == null) {
             editorFactory = annotationEditorRegistry.getDefaultEditorFactory();
         }
         model.editor = Pair.of(editorFactory.getBeanName(), editorFactory.getDisplayName());
 
-        model.annotationLayers = annotationService.listAnnotationLayer(bModel.getProject()).stream()
+        model.annotationLayers = annotationService.listAnnotationLayer(state.getProject()).stream()
                 // hide disabled Layers
                 .filter(layer -> layer.isEnabled())
                 // hide Token layer
                 .filter(layer -> !Token.class.getName().equals(layer.getName()))
-                .filter(layer -> !(layer.getType().equals(WebAnnoConst.CHAIN_TYPE)
-                        && (bModel.getMode().equals(Mode.CORRECTION)
+                .filter(layer -> !(layer.getType().equals(CHAIN_TYPE)
+                        && (state.getMode().equals(CORRECTION)
                                 // disable coreference annotation for correction/curation pages
-                                || bModel.getMode().equals(Mode.CURATION))))
+                                || state.getMode().equals(CURATION))))
                 .collect(Collectors.toList());
 
         return model;
     }
     
-    private void commitModel(AnnotatorState state)
-    {
-        AnnotationPreference prefs = state.getPreferences();
-        Preferences model = form.getModelObject();
-
-        List<Long> hiddenLayerIds = state.getPreferences().getHiddenAnnotationLayerIds();
-        state.setAnnotationLayers(
-                model.annotationLayers.stream()
-                .filter(l -> !hiddenLayerIds.contains(l.getId()))
-                .collect(Collectors.toList()));
-
-        prefs.setScrollPage(model.scrollPage);
-        prefs.setRememberLayer(model.rememberLayer);
-        prefs.setWindowSize(model.windowSize);
-        prefs.setSidebarSize(model.sidebarSize);
-        prefs.setFontZoom(model.fontZoom);
-        prefs.setColorPerLayer(model.colorPerLayer);
-        prefs.setReadonlyLayerColoringBehaviour(model.readonlyLayerColoringBehaviour);
-        prefs.setEditor(model.editor.getKey());
-        
-        // Make sure the currently selected layer (layer selection dropdown) isn't a layer we
-        // have just hidden.
-        if (!state.getAnnotationLayers().contains(state.getSelectedAnnotationLayer())) {
-            state.setSelectedAnnotationLayer(
-                    state.getAnnotationLayers().size() > 0 ? state.getAnnotationLayers().get(0)
-                            : null);
-            state.setDefaultAnnotationLayer(state.getSelectedAnnotationLayer());
-        }
-    }
-
     private ListView<AnnotationLayer> createLayerContainer()
     {
         return new ListView<AnnotationLayer>("annotationLayers")
@@ -257,72 +225,39 @@ public class AnnotationPreferencesDialogContent
             private static final long serialVersionUID = -4040731191748923013L;
 
             @Override
-            protected void populateItem(ListItem<AnnotationLayer> item)
+            protected void populateItem(ListItem<AnnotationLayer> aItem)
             {
-                // add checkbox
-                // get initial state
-                AnnotationPreference pref = stateModel.getObject().getPreferences();
-                List<Long> hiddenLayerIds = pref.getHiddenAnnotationLayerIds();
-                boolean isPreferredToShow = !hiddenLayerIds.contains(item.getModelObject().getId());
+                Preferences prefs = form.getModelObject();
+                AnnotationLayer layer = aItem.getModelObject();
+                Set<Long> hiddenLayerIds = stateModel.getObject().getPreferences()
+                        .getHiddenAnnotationLayerIds();
                 
-                CheckBox layer_cb = new CheckBox("annotationLayerActive",
-                        Model.of(isPreferredToShow));
-                
-                layer_cb.add(new AjaxEventBehavior("change")
-                {
-                    private static final long serialVersionUID = 8378489004897115519L;
+                // add visibility checkbox
+                CheckBox layerVisible = new CheckBox("annotationLayerActive",
+                        Model.of(!hiddenLayerIds.contains(layer.getId())));
 
-                    @Override
-                    protected void onEvent(AjaxRequestTarget target)
-                    {
-                        // check state & live update preferences
-                        List<Long> hiddenLayerIds = stateModel.getObject()
-                                .getPreferences().getHiddenAnnotationLayerIds();
-                        // get and switch state of checkbox
-                        boolean isPreferredToShow = layer_cb.getModelObject();
-                        layer_cb.setModelObject(!isPreferredToShow);
-                        // live update preferences
-                        if (isPreferredToShow) {
-                            // prefer to deactivate layer
-                            hiddenLayerIds.add(item.getModelObject().getId());
-                        }
-                        else {
-                            // prefer to activate layer
-                            hiddenLayerIds.remove(item.getModelObject().getId());
-                        }
+                layerVisible.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> {
+                    if (!layerVisible.getModelObject()) {
+                        hiddenLayerIds.add(layer.getId());
                     }
-                });
-                item.add(layer_cb);
-
-                // add coloring strategy combobox
-                ChoiceRenderer<ColoringStrategyType> choiceRenderer = new ChoiceRenderer<>(
-                        "descriptiveName");
-                List<ColoringStrategyType> choices = new ArrayList<ColoringStrategyType>(
-                        EnumSet.allOf(ColoringStrategyType.class));
-                Model<ColoringStrategyType> initialSelected = Model
-                        .of(form.getModelObject().colorPerLayer
-                                .get(item.getModelObject().getId()));
-                DropDownChoice<ColoringStrategyType> layer_color = 
-                        new DropDownChoice<ColoringStrategyType>( "layercoloring", 
-                                initialSelected, choices, choiceRenderer);
-                layer_color.add(new AjaxFormComponentUpdatingBehavior("change")
-                {
-                    private static final long serialVersionUID = 1060397773470276585L;
-
-                    @Override
-                    protected void onUpdate(AjaxRequestTarget target)
-                    {
-                        AnnotationLayer current_layer = item.getModelObject();
-                        ColoringStrategyType selectedColor = layer_color.getModelObject();
-                        form.getModelObject().colorPerLayer
-                                .put(current_layer.getId(), selectedColor);
+                    else {
+                        hiddenLayerIds.remove(layer.getId());
                     }
-                });
-                item.add(layer_color);
+                }));
+                aItem.add(layerVisible);
+
+                // add coloring strategy choice
+                DropDownChoice<ColoringStrategyType> layerColor = new BootstrapSelect<>(
+                        "layercoloring");
+                layerColor.setModel(Model.of(prefs.colorPerLayer.get(layer.getId())));
+                layerColor.setChoiceRenderer(new ChoiceRenderer<>("descriptiveName"));
+                layerColor.setChoices(asList(ColoringStrategyType.values()));
+                layerColor.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target ->
+                        prefs.colorPerLayer.put(layer.getId(), layerColor.getModelObject())));
+                aItem.add(layerColor);
 
                 // add label
-                Label lbl = new Label("annotationLayerDesc", item.getModelObject().getUiName());
-                item.add(lbl);
+                aItem.add(new Label("annotationLayerDesc", layer.getUiName()));
             }
         };
     }
@@ -335,6 +270,7 @@ public class AnnotationPreferencesDialogContent
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
+        
         private Pair<String, String> editor;
         private int windowSize;
         private int sidebarSize;

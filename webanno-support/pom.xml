@@ -37,7 +37,7 @@
       <groupId>com.github.rjeschke</groupId>
       <artifactId>txtmark</artifactId>
     </dependency>
-    
+
     <!-- JFreeChart dependencies -->
     <dependency>
       <groupId>org.jfree</groupId>
@@ -72,10 +72,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-beans</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-web</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -121,6 +117,22 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-urlfragment</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>jquery-selectors</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.openjson</groupId>
+      <artifactId>openjson</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
 
     <!-- Hibernate dependencies -->
     <dependency>
@@ -128,8 +140,8 @@
       <artifactId>hibernate-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.hibernate.javax.persistence</groupId>
-      <artifactId>hibernate-jpa-2.1-api</artifactId>
+      <groupId>javax.persistence</groupId>
+      <artifactId>javax.persistence-api</artifactId>
     </dependency>
 
     <!-- Jackson dependencies -->
@@ -154,24 +166,6 @@
       <artifactId>slf4j-api</artifactId>
     </dependency>
   </dependencies>
-  <build>
-    <resources>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/resources</directory>
-      </resource>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-  </build>
   <profiles>
     <profile>
       <id>rat-check</id>
@@ -188,8 +182,12 @@
               <artifactId>apache-rat-plugin</artifactId>
               <configuration>
                 <excludes combine.children="append">
+                  <!-- Apache License without header -->
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/*.java</exclude>
                   <!-- MIT License -->
                   <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/wicketstuff/UrlParametersReceivingBehavior.java</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/css/*</exclude>
+                  <exclude>src/main/java/de/tudarmstadt/ukp/clarin/webanno/support/bootstrap/select/js/*</exclude>
                 </excludes>
               </configuration>
             </plugin>

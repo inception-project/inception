@@ -20,14 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.analysis_component.JCasAnnotator_ImplBase;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.jcas.JCas;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -41,64 +41,50 @@ public interface ImportExportService
     // --------------------------------------------------------------------------------------------
     // Methods related to import/export data formats
     // --------------------------------------------------------------------------------------------
+    
+    List<FormatSupport> getFormats();
+    
+    default List<FormatSupport> getReadableFormats()
+    {
+        return getFormats().stream().filter(FormatSupport::isReadable).collect(Collectors.toList());
+    }
 
-    /**
-     * Returns the labels on the UI for the format of the {@link SourceDocument} to be read from a
-     * properties File
-     *
-     * @return labels of readable formats.
-     */
-    List<String> getReadableFormatLabels();
+    default List<FormatSupport> getWritableFormats()
+    {
+        return getFormats().stream().filter(FormatSupport::isWritable).collect(Collectors.toList());
+    }
 
-    /**
-     * Returns the Id of the format for the {@link SourceDocument} to be read from a properties File
-     *
-     * @param label
-     *            the label.
-     *
-     * @return the ID.
-     */
-    String getReadableFormatId(String label);
+    default Optional<FormatSupport> getReadableFormatById(String aFormatId)
+    {
+        return getFormats().stream().filter(f -> f.getId().equals(aFormatId) && f.isReadable())
+                .findFirst();
+    }
 
-    /**
-     * Returns formats of the {@link SourceDocument} to be read from a properties File
-     *
-     * @return the formats.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
-     */
-    Map<String, Class<CollectionReader>> getReadableFormats()
-        throws IOException, ClassNotFoundException;
+    default Optional<FormatSupport> getWritableFormatById(String aFormatId)
+    {
+        return getFormats().stream().filter(f -> f.getId().equals(aFormatId) && f.isWritable())
+                .findFirst();
+    }
 
-    /**
-     * Returns the labels on the UI for the format of {@link AnnotationDocument} while exporting
-     *
-     * @return the labels.
-     */
-    List<String> getWritableFormatLabels();
+    default Optional<FormatSupport> getWritableFormatByName(String aFormatName)
+    {
+        return getFormats().stream().filter(f -> f.getName().equals(aFormatName) && f.isWritable())
+                .findFirst();
+    }
 
-    /**
-     * Returns the Id of the format for {@link AnnotationDocument} while exporting
-     *
-     * @param label
-     *            the label.
-     * @return the ID.
-     */
-    String getWritableFormatId(String label);
+    default Optional<FormatSupport> getFormatById(String aFormatId)
+    {
+        return getFormats().stream().filter(f -> f.getId().equals(aFormatId)).findFirst();
+    }
 
-    /**
-     * Returns formats of {@link AnnotationDocument} while exporting
-     *
-     * @return the formats.
-     * @throws IOException
-     *             if an I/O error occurs.
-     * @throws ClassNotFoundException
-     *             if a DKPro Core reader/writer cannot be loaded.
-     */
-    Map<String, Class<JCasAnnotator_ImplBase>> getWritableFormats()
-        throws IOException, ClassNotFoundException;
+    default Optional<FormatSupport> getFormatByName(String aFormatName)
+    {
+        return getFormats().stream().filter(f -> f.getName().equals(aFormatName)).findFirst();
+    }
+    
+    // --------------------------------------------------------------------------------------------
+    // Methods related to importing/exporting
+    // --------------------------------------------------------------------------------------------
     
     /**
      * Convert a file to a CAS.
@@ -107,7 +93,7 @@ public interface ImportExportService
      *            the file.
      * @param aProject
      *            the project to which this file belongs (required to get the type system).
-     * @param aFormat
+     * @param aFormatId
      *            ID of a supported file format
      * @return the JCas.
      * @throws UIMAException
@@ -115,23 +101,30 @@ public interface ImportExportService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    JCas importCasFromFile(File aFile, Project aProject, String aFormat)
+    JCas importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException;
 
-    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName,
-            Class aWriter, boolean aStripExtension)
+    /**
+     * Exports the given CAS to a file on disk. 
+     * 
+     * A new directory is created using UUID so that every exported file will reside in its own
+     * directory. This is useful as the written file can have multiple extensions based on the
+     * Writer class used.
+     */
+    File exportCasToFile(CAS cas, SourceDocument aDocument, String aFileName, FormatSupport aFormat,
+            boolean aStripExtension)
         throws IOException, UIMAException;
     
     /**
-     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats.
+     * Exports an {@link AnnotationDocument } CAS Object as TCF/TXT/XMI... file formats. 
      *
      * @param document
      *            The {@link SourceDocument} where we get the id which hosts both the source
      *            Document and the annotated document
      * @param user
      *            the {@link User} who annotates the document.
-     * @param writer
-     *            the DKPro Core writer.
+     * @param aFormat
+     *            the format.
      * @param fileName
      *            the file name.
      * @param mode
@@ -144,13 +137,11 @@ public interface ImportExportService
      * @throws ClassNotFoundException
      *             if the DKPro Core writer could not be found.
      */
-    @SuppressWarnings("rawtypes")
-    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode)
         throws UIMAException, IOException, ClassNotFoundException;
 
-    @SuppressWarnings("rawtypes")
-    File exportAnnotationDocument(SourceDocument document, String user, Class writer,
+    File exportAnnotationDocument(SourceDocument document, String user, FormatSupport aFormat,
             String fileName, Mode mode, boolean stripExtension)
         throws UIMAException, IOException, ClassNotFoundException;
 }

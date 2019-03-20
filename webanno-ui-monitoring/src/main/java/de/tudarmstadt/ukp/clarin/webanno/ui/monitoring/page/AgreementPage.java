@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -26,7 +27,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.TreeMap;
+
+import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.jcas.JCas;
@@ -36,6 +40,7 @@ import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -45,13 +50,16 @@ import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.AbstractResourceStream;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
@@ -62,7 +70,6 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
@@ -83,8 +90,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
@@ -103,15 +110,52 @@ public class AgreementPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    private final ProjectSelectionForm projectSelectionForm;
-    private final AgreementForm agreementForm;
+    private ProjectSelectionForm projectSelectionForm;
+    private AgreementForm agreementForm;
 
     public AgreementPage()
+    {
+        super();
+        
+        commonInit();
+    }
+
+    public AgreementPage(final PageParameters aPageParameters)
+    {
+        super(aPageParameters);
+        
+        commonInit();
+       
+        projectSelectionForm.setVisibilityAllowed(false);
+        
+        User user = userRepository.getCurrentUser();
+        
+        // Get current project from parameters
+        StringValue projectParameter = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        Optional<Project> project = getProjectFromParameters(projectParameter);
+        
+        if (project.isPresent()) {
+            // Check access to project
+            if (project != null && !(projectService.isCurator(project.get(), user)
+                    || projectService.isManager(project.get(), user))) {
+                error("You have no permission to access project [" + project.get().getId() + "]");
+                setResponsePage(getApplication().getHomePage());
+            }
+            
+            projectSelectionForm.selectProject(project.get());
+        }
+        else {
+            error("Project [" + projectParameter + "] does not exist");
+            setResponsePage(getApplication().getHomePage());
+        }
+    }    
+    
+    private void commonInit()
     {
         add(projectSelectionForm = new ProjectSelectionForm("projectSelectionForm"));
         add(agreementForm = new AgreementForm("agreementForm"));
     }
-
+    
     private void updateAgreementTable(AjaxRequestTarget aTarget, boolean aClearCache)
     {
         try {
@@ -151,7 +195,7 @@ public class AgreementPage
         Project project = projectSelectionForm.getModelObject().project;
 
         List<User> users = projectService.listProjectUsersWithPermissions(project,
-                PermissionLevel.USER);
+                PermissionLevel.ANNOTATOR);
 
         List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
 
@@ -169,7 +213,8 @@ public class AgreementPage
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
                             jCas = documentService.readAnnotationCas(annotationDocument);
-                            annotationService.upgradeCas(jCas.getCas(), annotationDocument);
+                            annotationService.upgradeCasIfRequired(jCas.getCas(),
+                                    annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
 
@@ -223,6 +268,9 @@ public class AgreementPage
             setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            add(new Label("name",
+                    PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
+            
             WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults") {
                 private static final long serialVersionUID = -2465552557800612807L;
 
@@ -230,6 +278,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(featureList.getModelObject() != null);
                 }
             };
@@ -242,12 +291,12 @@ public class AgreementPage
                     new StringResourceModel("legend.content", legend), config));
             agreementResults.add(legend);
             
-            add(measureDropDown = new DropDownChoice<>("measure",
+            add(measureDropDown = new BootstrapSelect<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
             addUpdateAgreementTableBehavior(measureDropDown);
 
-            add(linkCompareBehaviorDropDown = new DropDownChoice<LinkCompareBehavior>(
+            add(linkCompareBehaviorDropDown = new BootstrapSelect<LinkCompareBehavior>(
                     "linkCompareBehavior", asList(LinkCompareBehavior.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
             {
@@ -256,6 +305,8 @@ public class AgreementPage
                 @Override
                 protected void onConfigure()
                 {
+                    super.onConfigure();
+
                     AgreementFormModel model = AgreementForm.this.getModelObject();
                     if (model != null && model.feature != null) {
                         setVisible(!LinkMode.NONE.equals(model.feature.getLinkMode()));
@@ -269,7 +320,7 @@ public class AgreementPage
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
             addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
 
-            agreementResults.add(new DropDownChoice<AgreementReportExportFormat>("exportFormat",
+            agreementResults.add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
                             .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
@@ -282,6 +333,7 @@ public class AgreementPage
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setEnabled(AgreementForm.this.getModelObject().measure.isNullValueSupported());
                 }
             });
@@ -438,7 +490,15 @@ public class AgreementPage
                 }
 
                 @Override
-                protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+                protected void onConfigure()
+                {
+                    super.onConfigure();
+
+                    setVisible(featureList.getModelObject() != null);
+                }
+
+                @Override
+                protected void onSubmit(AjaxRequestTarget aTarget)
                 {
                     download.initiate(aTarget, "agreement"
                             + AgreementForm.this.getModelObject().exportFormat.getExtension());
@@ -450,8 +510,9 @@ public class AgreementPage
         @Override
         protected void onConfigure()
         {
-            ProjectSelectionModel model = projectSelectionForm.getModelObject();
+            super.onConfigure();
 
+            ProjectSelectionModel model = projectSelectionForm.getModelObject();
             setVisible(model != null && model.project != null);
         }
 
@@ -544,7 +605,7 @@ public class AgreementPage
 
             ListChoice<Project> projectList = new OverviewListChoice<>("project");
             projectList.setChoiceRenderer(new ChoiceRenderer<>("name"));
-            projectList.setChoices(LambdaModel.of(this::listAllowedProjects));
+            projectList.setChoices(LoadableDetachableModel.of(this::listAllowedProjects));
             projectList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
                     this::onSelectionChanged));
             add(projectList);
@@ -552,12 +613,8 @@ public class AgreementPage
         
         private void onSelectionChanged(AjaxRequestTarget aTarget)
         {
-            agreementForm.setModelObject(new AgreementFormModel());
+            selectProject(getModelObject().project);
             aTarget.add(agreementForm);
-
-            // Clear the cached CASes. When we switch to another project, we'll have to
-            // reload them.
-            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class), true);
         }
         
         private List<Project> listAllowedProjects()
@@ -568,12 +625,22 @@ public class AgreementPage
 
             List<Project> allProjects = projectService.listProjects();
             for (Project project : allProjects) {
-                if (SecurityUtil.isProjectAdmin(project, projectService, user)
-                        || SecurityUtil.isCurator(project, projectService, user)) {
+                if (projectService.isManager(project, user)
+                        || projectService.isCurator(project, user)) {
                     allowedProject.add(project);
                 }
             }
             return allowedProject;
+        }
+        
+        private void selectProject(Project aProject)
+        {
+            getModelObject().project = aProject;
+            agreementForm.setModelObject(new AgreementFormModel());
+
+            // Clear the cached CASes. When we switch to another project, we'll have to reload them.
+            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).orElse(null),
+                    true);
         }
     }
 
@@ -598,5 +665,19 @@ public class AgreementPage
         public Project project;
         public Map<String, Integer> annotatorsProgress = new TreeMap<>();
         public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
+    }
+    
+    private Optional<Project> getProjectFromParameters(StringValue projectParam)
+    {
+        if (projectParam == null || projectParam.isEmpty()) {
+            return Optional.empty();
+        }
+        
+        try {
+            return Optional.of(projectService.getProject(projectParam.toLong()));
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
     }
 }

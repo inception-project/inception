@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.DocumentStateChangedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.RemoteApiController2;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 public class DocumentStateChangeMessage
 {
@@ -44,8 +44,8 @@ public class DocumentStateChangeMessage
         documentId = aEvent.getDocument().getId();
         documentName = aEvent.getDocument().getName();
         
-        documentState = RemoteApiController2.sourceDocumentStateToString(aEvent.getNewState());
-        documentPreviousState = RemoteApiController2
+        documentState = AeroRemoteApiController.sourceDocumentStateToString(aEvent.getNewState());
+        documentPreviousState = AeroRemoteApiController
                 .sourceDocumentStateToString(aEvent.getPreviousState());
     }
 

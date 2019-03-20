@@ -36,7 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -53,6 +52,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -73,17 +73,12 @@ public class MiraAutomationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Resource(name = "automationCasStorageService")
-    private AutomationCasStorageService automationCasStorageService;
-    
     @Value(value = "${repository.path}")
     private File dir;
 
-    @Resource(name = "casDoctor")
-    private CasDoctor casDoctor;
-    
-    @Resource(name = "importExportService")
-    private ImportExportService importExportService;
+    private @Autowired AutomationCasStorageService automationCasStorageService;
+    private @Autowired CasDoctor casDoctor;
+    private @Autowired ImportExportService importExportService;
     
     @PersistenceContext
     private EntityManager entityManager;

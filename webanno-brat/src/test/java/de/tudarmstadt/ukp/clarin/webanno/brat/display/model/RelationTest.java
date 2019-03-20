@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 
 import org.junit.Test;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
@@ -36,10 +35,7 @@ public class RelationTest
     public void toJsonTest()
         throws IOException
     {
-        MappingJackson2HttpMessageConverter jsonConverter = 
-                new MappingJackson2HttpMessageConverter();
-
-        String json = JSONUtil.toPrettyJsonString(jsonConverter, new Relation(new VID(1, 2), "type",
+        String json = JSONUtil.toPrettyJsonString(new Relation(new VID(1, 2), "type",
                 asList(new Argument("arg1", 1), new Argument("arg2", 2)), "label", "color"));
         
         assertEquals(

@@ -32,23 +32,22 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
-    private FeatureSupportRegistry featureSupportRegistry;
-    private ApplicationEventPublisher applicationEventPublisher;
+    private final FeatureSupportRegistry featureSupportRegistry;
+    private final ApplicationEventPublisher applicationEventPublisher;
     
-    private AnnotationLayer layer;
+    private final AnnotationLayer layer;
 
-    private Map<String, AnnotationFeature> features;
-
-    private boolean deletable;
+    private final Map<String, AnnotationFeature> features;
 
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -78,24 +77,13 @@ public abstract class TypeAdapter_ImplBase
         return features.values();
     }
     
-    public void setDeletable(boolean deletable)
-    {
-        this.deletable = deletable;
-    }
-
     @Override
-    public boolean isDeletable()
-    {
-        return deletable;
-    }
-
-    @Override
-    public void setFeatureValue(AnnotatorState aState, JCas aJcas,
+    public void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aJcas, aAddress);
+        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
 
-        Object oldValue =  getValue(fs, aFeature);
+        Object oldValue = getValue(fs, aFeature);
         
         featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
                 aAddress, aValue);
@@ -103,8 +91,8 @@ public abstract class TypeAdapter_ImplBase
         Object newValue = getValue(fs, aFeature);
         
         if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(new FeatureValueUpdatedEvent(this, aState.getDocument(),
-                    aState.getUser().getUsername(), fs, aFeature, newValue, oldValue));
+            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, fs, aFeature,
+                    newValue, oldValue));
         }
     }
     
@@ -129,7 +117,8 @@ public abstract class TypeAdapter_ImplBase
     @Override
     public <T> T getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        return featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature, aFs);
+        return (T) featureSupportRegistry.getFeatureSupport(aFeature).getFeatureValue(aFeature,
+                aFs);
     }
     
     public void publishEvent(ApplicationEvent aEvent)
@@ -137,5 +126,28 @@ public abstract class TypeAdapter_ImplBase
         if (applicationEventPublisher != null) {
             applicationEventPublisher.publishEvent(aEvent);
         }
+    }
+    
+    @Override
+    public void initialize(AnnotationSchemaService aSchemaService)
+    {
+        // Nothing to do
+    }
+    
+    @Override
+    public String getAttachFeatureName()
+    {
+        return getLayer().getAttachFeature() == null ? null
+                : getLayer().getAttachFeature().getName();
+    }
+
+    /**
+     * A field that takes the name of the annotation to attach to, e.g.
+     * "de.tudarmstadt...type.Token" (Token.class.getName())
+     */
+    @Override
+    public String getAttachTypeName()
+    {
+        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
     }
 }

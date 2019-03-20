@@ -36,6 +36,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -45,6 +46,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
@@ -62,17 +64,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.AutomationTypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -89,7 +92,6 @@ import edu.lium.mira.Mira;
  */
 public class AutomationUtil
 {
-
     private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
@@ -117,10 +119,11 @@ public class AutomationUtil
                         i)) != -1; i = i + selectedText.length()) {
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
-                        int addr = adapter.add(aState, jCas, sentence.getBegin() + i,
-                                sentence.getBegin() + i + selectedText.length() - 1);
-                        adapter.setFeatureValue(aState, jCas, addr,
-                                aFeature, aValue);
+                        int addr = getAddr(adapter.add(aState.getDocument(),
+                                aState.getUser().getUsername(), jCas, sentence.getBegin() + i,
+                                sentence.getBegin() + i + selectedText.length() - 1));
+                        adapter.setFeatureValue(aState.getDocument(),
+                                aState.getUser().getUsername(), jCas, addr, aFeature, aValue);
                     }
                 }
             }
@@ -139,7 +142,8 @@ public class AutomationUtil
                     aState.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
+            RelationAdapter adapter = (RelationAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -165,7 +169,7 @@ public class AutomationUtil
                 governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
             }
 
-            if (adapter.isCrossMultipleSentence()) {
+            if (adapter.getLayer().isCrossSentence()) {
                 List<AnnotationFS> mSpanAnnos = new ArrayList<>(
                         getAllAnnoFss(jCas, governorFs.getType()));
                 repeatRelation(aState, 0, jCas.getDocumentText().length() - 1, aFeature, aValue,
@@ -185,7 +189,7 @@ public class AutomationUtil
     }
 
     private static void repeatRelation(AnnotatorState aState, int aStart, int aEnd,
-            AnnotationFeature aFeature, String aValue, JCas jCas, ArcAdapter adapter,
+            AnnotationFeature aFeature, String aValue, JCas jCas, RelationAdapter adapter,
             AnnotationFS aDepFS, AnnotationFS aGovFS, List<AnnotationFS> aSpanAnnos)
         throws AnnotationException
     {
@@ -197,8 +201,10 @@ public class AutomationUtil
         for (AnnotationFS fs : aSpanAnnos) {
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
-                    AnnotationFS arc = adapter.add(g, fs, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
+                    AnnotationFS arc = adapter.add(aState.getDocument(),
+                            aState.getUser().getUsername(), g, fs, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
+                            jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                     continue;// so we don't go to the other if
@@ -211,8 +217,10 @@ public class AutomationUtil
             // we don't use else, in case gov and dep are the same
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
-                    AnnotationFS arc = adapter.add(fs, d, jCas, aStart, aEnd);
-                    adapter.setFeatureValue(aState, jCas, getAddr(arc), aFeature, aValue);
+                    AnnotationFS arc = adapter.add(aState.getDocument(),
+                            aState.getUser().getUsername(), fs, d, jCas, aStart, aEnd);
+                    adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
+                            jCas, getAddr(arc), aFeature, aValue);
                     g = null;
                     d = null;
                 }
@@ -309,8 +317,7 @@ public class AutomationUtil
                     aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
 
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                    .getAdapter(aFeature.getLayer());
+            TypeAdapter adapter = aAnnotationService.getAdapter(aFeature.getLayer());
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
                 String sentenceText = sentence.getCoveredText().toLowerCase();
@@ -319,7 +326,8 @@ public class AutomationUtil
                     if (selectCovered(jCas, Token.class, sentence.getBegin() + i,
                             sentence.getBegin() + i + selectedText.length()).size() > 0) {
 
-                        adapter.delete(aBModel, jCas, aFeature, sentence.getBegin() + i,
+                        deleteSpanAnnotation(adapter, aBModel, jCas, aFeature,
+                                sentence.getBegin() + i,
                                 sentence.getBegin() + i + selectedText.length() - 1, aValue);
                     }
                 }
@@ -328,6 +336,21 @@ public class AutomationUtil
         }
     }
 
+    @Deprecated
+    private static void deleteSpanAnnotation(TypeAdapter aAdapter, AnnotatorState aState,
+            JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+    {
+        Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
+                if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
+                    aAdapter.delete(aState.getDocument(), aState.getUser().getUsername(), aJCas,
+                            new VID(getAddr(fs)));
+                }
+            }
+        }
+    }
+    
     public static void deleteRelationAnnotation(AnnotatorState aBModel,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
@@ -338,7 +361,8 @@ public class AutomationUtil
             loadDocument(d, aAnnotationService, aDocumentService, aCorrectionDocumentService,
                     aBModel.getUser());
             JCas jCas = aCorrectionDocumentService.readCorrectionCas(d);
-            ArcAdapter adapter = (ArcAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
+            RelationAdapter adapter = (RelationAdapter) aAnnotationService
+                    .getAdapter(aFeature.getLayer());
             String sourceFName = adapter.getSourceFeatureName();
             String targetFName = adapter.getTargetFeatureName();
 
@@ -370,12 +394,51 @@ public class AutomationUtil
             String depCoveredText = dependentFs.getCoveredText();
             String govCoveredText = governorFs.getCoveredText();
 
-            adapter.delete(aBModel, jCas, aFeature, beginOffset, endOffset, depCoveredText,
-                    govCoveredText, aValue);
+            deleteRelationAnnotation(adapter, aBModel.getDocument(),
+                    aBModel.getUser().getUsername(), jCas, aFeature, beginOffset, endOffset,
+                    depCoveredText, govCoveredText, aValue);
             aCorrectionDocumentService.writeCorrectionCas(jCas, d);
         }
     }
 
+    private static void deleteRelationAnnotation(RelationAdapter aAdapter, SourceDocument aDocument,
+            String aUsername, JCas aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
+            String aDepCoveredText, String aGovCoveredText, Object aValue)
+    {
+        Feature dependentFeature = aAdapter.getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(aAdapter.getTargetFeatureName());
+        Feature governorFeature = aAdapter.getAnnotationType(aJCas.getCas())
+                .getFeatureByBaseName(aAdapter.getSourceFeatureName());
+
+        AnnotationFS dependentFs = null;
+        AnnotationFS governorFs = null;
+
+        Type type = CasUtil.getType(aJCas.getCas(), aAdapter.getAnnotationTypeName());
+        Type spanType = getType(aJCas.getCas(), aAdapter.getAttachTypeName());
+        Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
+
+        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
+            if (aAdapter.getAttachFeatureName() != null) {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
+                        .getFeatureValue(arcSpanFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature)
+                        .getFeatureValue(arcSpanFeature);
+
+            }
+            else {
+                dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature);
+                governorFs = (AnnotationFS) fs.getFeatureValue(governorFeature);
+            }
+
+            if (aDepCoveredText.equals(dependentFs.getCoveredText())
+                    && aGovCoveredText.equals(governorFs.getCoveredText())) {
+                if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
+                    aAdapter.delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
+                }
+            }
+        }
+    }
+    
     // generates training document that will be used to predict the training document
     // to add extra features, for example add POS tag as a feature for NE classifier
     public static void addOtherFeatureTrainDocument(MiraTemplate aTemplate,
@@ -405,16 +468,15 @@ public class AutomationUtil
             }
 
             BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-            AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                    .getAdapter(feature.getLayer());
+            TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
             for (TrainingDocument trainingDocument : aAutomationService
                     .listTrainingDocuments(feature.getProject())) {
                 if ((trainingDocument.getFeature() != null
                         && trainingDocument.getFeature().equals(feature))) {
                     JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                     for (Sentence sentence : select(jCas, Sentence.class)) {
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString())
-                                .append("\n");
+                        trainOut.append(getMiraLine(aAnnotationService, sentence, feature, adapter)
+                                .toString()).append("\n");
                     }
                     trainingDocument.setProcessed(false);
                     status.setTrainDocs(status.getTrainDocs() - 1);
@@ -434,23 +496,26 @@ public class AutomationUtil
             List<List<String>> aPredictions, SourceDocument aSourceDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(aFeature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(aFeature.getLayer());
         List<String> annotations = new ArrayList<>();
-     // this is training - all training documents will be converted to a single training file
+        // this is training - all training documents will be converted to a single training file
         if (aSourceDocument == null) {
             for (TrainingDocument trainingDocument : aAutomationServic
                     .listTrainingDocuments(aFeature.getProject())) {
 
                 JCas jCas = aAutomationServic.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
-
-                    if (aFeature.getLayer().isMultipleTokens()) {
-                        annotations.addAll(((SpanAdapter) adapter)
-                                .getMultipleAnnotation(sentence, aFeature).values());
-                    }
-                    else {
-                        annotations.addAll(adapter.getAnnotation(sentence, aFeature));
+                    switch (aFeature.getLayer().getAnchoringMode()) {
+                    case TOKENS:
+                        annotations.addAll(
+                                getMultipleAnnotation(aAnnotationService, sentence, aFeature)
+                                        .values());
+                        break;
+                    case SINGLE_TOKEN:
+                        annotations.addAll(getAnnotation(adapter, sentence, aFeature));
+                    default:
+                        throw new IllegalStateException("Unsupported anchoring mode: ["
+                                + aFeature.getLayer().getAnchoringMode() + "]");
                     }
                 }
             }
@@ -463,12 +528,17 @@ public class AutomationUtil
                     user);
             JCas jCas = aRepository.readAnnotationCas(annodoc);
             for (Sentence sentence : select(jCas, Sentence.class)) {
-                if (aFeature.getLayer().isMultipleTokens()) {
-                    annotations.addAll(((SpanAdapter) adapter)
-                            .getMultipleAnnotation(sentence, aFeature).values());
-                }
-                else {
-                    annotations.addAll(adapter.getAnnotation(sentence, aFeature));
+                switch (aFeature.getLayer().getAnchoringMode()) {
+                case TOKENS:
+                    annotations.addAll(
+                            getMultipleAnnotation(aAnnotationService, sentence, aFeature).values());
+                    break;
+                case SINGLE_TOKEN:
+                    annotations.addAll(getAnnotation(adapter, sentence, aFeature));
+                    break;
+                default:
+                    throw new IllegalStateException("Unsupported anchoring mode: ["
+                            + aFeature.getLayer().getAnchoringMode() + "]");
                 }
             }
             aPredictions.add(annotations);
@@ -594,8 +664,7 @@ public class AutomationUtil
         AutomationStatus status = aAutomationService.getAutomationStatus(aTemplate);
 
         BufferedWriter trainOut = new BufferedWriter(new FileWriter(trainFile));
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(feature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
         // Training documents (Curated or webanno-compatible imported ones - read using UIMA)
         List<TrainingDocument> trainingDocuments = aAutomationService
                 .listTrainingDocuments(feature.getProject());
@@ -607,11 +676,11 @@ public class AutomationUtil
                 JCas jCas = aAutomationService.readTrainingAnnotationCas(trainingDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) { // base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter)
+                        trainOut.append(getMiraLine(aAnnotationService, sentence, null, adapter)
                             .toString()).append("\n");
                     }
                     else { // training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter)
+                        trainOut.append(getMiraLine(aAnnotationService, sentence, feature, adapter)
                             .toString()).append("\n");
                     }
                 }
@@ -629,12 +698,13 @@ public class AutomationUtil
                 JCas jCas = aCurationDocumentService.readCurationCas(sourceDocument);
                 for (Sentence sentence : select(jCas, Sentence.class)) {
                     if (aBase) { // base training document
-                        trainOut.append(getMiraLine(sentence, null, adapter).toString())
+                        trainOut.append(
+                                getMiraLine(aAnnotationService, sentence, null, adapter).toString())
                                 .append("\n");
                     }
                     else { // training document with other features
-                        trainOut.append(getMiraLine(sentence, feature, adapter).toString())
-                                .append("\n");
+                        trainOut.append(getMiraLine(aAnnotationService, sentence, feature, adapter)
+                                .toString()).append("\n");
                     }
                 }
                 if (!aBase) {
@@ -698,8 +768,7 @@ public class AutomationUtil
 
         User user = aUserDao.getCurrentUser();
         AnnotationFeature feature = aTemplate.getTrainFeature();
-        AutomationTypeAdapter adapter = (AutomationTypeAdapter) aAnnotationService
-                .getAdapter(feature.getLayer());
+        TypeAdapter adapter = aAnnotationService.getAdapter(feature.getLayer());
         for (SourceDocument document : aRepository.listSourceDocuments(feature.getProject())) {
             File predFile = new File(miraDir, document.getId() + ".pred.ft");
             BufferedWriter predOut = new BufferedWriter(new FileWriter(predFile));
@@ -714,14 +783,15 @@ public class AutomationUtil
             }
 
             for (Sentence sentence : select(jCas, Sentence.class)) {
-                predOut.append(getMiraLine(sentence, null, adapter).toString()).append("\n");
+                predOut.append(getMiraLine(aAnnotationService, sentence, null, adapter).toString())
+                        .append("\n");
             }
             predOut.close();
         }
     }
 
-    private static StringBuffer getMiraLine(Sentence sentence, AnnotationFeature aLayerFeature,
-            AutomationTypeAdapter aAdapter)
+    private static StringBuffer getMiraLine(AnnotationSchemaService aAnnotationService,
+            Sentence sentence, AnnotationFeature aLayerFeature, TypeAdapter aAdapter)
         throws CASException
     {
         StringBuffer sb = new StringBuffer();
@@ -730,13 +800,15 @@ public class AutomationUtil
         List<String> annotations = new ArrayList<>();
         Map<Integer, String> multAnno = null;
         if (aLayerFeature != null) {
-            if (aLayerFeature.getLayer().isMultipleTokens()) {
-                multAnno = ((SpanAdapter) aAdapter).getMultipleAnnotation(sentence, aLayerFeature);
+            switch (aLayerFeature.getLayer().getAnchoringMode()) {
+            case TOKENS:
+                multAnno = getMultipleAnnotation(aAnnotationService, sentence, aLayerFeature);
+            case SINGLE_TOKEN:
+                annotations = getAnnotation(aAdapter, sentence, aLayerFeature);
+            default:
+                throw new IllegalStateException("Unsupported anchoring mode: ["
+                        + aLayerFeature.getLayer().getAnchoringMode() + "]");
             }
-            else {
-                annotations = aAdapter.getAnnotation(sentence, aLayerFeature);
-            }
-
         }
 
         int i = 0;
@@ -746,7 +818,10 @@ public class AutomationUtil
             char[] words = word.toCharArray();
 
             String prefix1 = "", prefix2 = "", prefix3 = "", prefix4 = "", suffix1 = "", suffix2 = "", suffix3 = "", suffix4 = "";
-            if (aLayerFeature == null || aLayerFeature.getLayer().isLockToTokenOffset()) {
+            if (
+                    aLayerFeature == null || 
+                    AnchoringMode.SINGLE_TOKEN.equals(aLayerFeature.getLayer().getAnchoringMode())
+            ) {
                 prefix1 = Character.toString(words[0]) + " ";
                 prefix2 = (words.length > 1 ? prefix1.trim()
                         + (Character.toString(words[1]).trim().equals("") ? "__nil__" : Character
@@ -777,7 +852,7 @@ public class AutomationUtil
             String nl = "\n";
 
             if (aLayerFeature != null) {
-                if (aLayerFeature.getLayer().isMultipleTokens()) {
+                if (AnchoringMode.TOKENS.equals(aLayerFeature.getLayer().getAnchoringMode())) {
                     tag = multAnno.get(getAddr(token)) == null ? "O" : multAnno.get(getAddr(token));
                 }
                 else {
@@ -875,8 +950,16 @@ public class AutomationUtil
 
             boolean randomInit = false;
 
-            if (!feature.getLayer().isLockToTokenOffset()) {
+            switch (feature.getLayer().getAnchoringMode()) {
+            case SINGLE_TOKEN:
+                // Nothing extra to do
+                break;
+            case TOKENS:
                 mira.setIobScorer();
+                break;
+            default:
+                throw new IllegalStateException("Unsupported anchoring mode: ["
+                        + feature.getLayer().getAnchoringMode() + "]");
             }
             mira.loadTemplates(templateName);
             mira.setClip(sigma);
@@ -966,14 +1049,24 @@ public class AutomationUtil
     public static String createTemplate(AnnotationFeature aFeature, File templateFile, int aOther)
         throws IOException
     {
-
         StringBuffer sb = new StringBuffer();
-        if (aFeature == null || aFeature.getLayer().isLockToTokenOffset()) {
+        if (aFeature == null) {
             setMorphoTemplate(sb, aOther);
         }
         else {
-            setNgramForLable(sb, aOther);
+            switch (aFeature.getLayer().getAnchoringMode()) {
+            case SINGLE_TOKEN:
+                setMorphoTemplate(sb, aOther);
+                break;
+            case TOKENS:
+                setNgramForLable(sb, aOther);
+                break;
+            default:
+                throw new IllegalStateException("Unsupported anchoring mode: ["
+                        + aFeature.getLayer().getAnchoringMode() + "]");
+            }
         }
+        
         sb.append("\n");
         sb.append("B\n");
         FileUtils.writeStringToFile(templateFile, sb.toString());
@@ -1249,8 +1342,17 @@ public class AutomationUtil
         }
 
         boolean randomInit = false;
-        if (!layerFeature.getLayer().isLockToTokenOffset()) {
+        
+        switch (layerFeature.getLayer().getAnchoringMode()) {
+        case SINGLE_TOKEN:
+            // Nothing extra to do
+            break;
+        case TOKENS:
             mira.setIobScorer();
+            break;
+        default:
+            throw new IllegalStateException("Unsupported anchoring mode: ["
+                    + layerFeature.getLayer().getAnchoringMode() + "]");
         }
         mira.loadTemplates(trainTemplate);
         mira.setClip(sigma);
@@ -1494,14 +1596,20 @@ public class AutomationUtil
             StringTokenizer st = new StringTokenizer(line, " ");
             // if the target feature is on multiple token, we do not need the morphological features
             // in the prediction file
-            if (aFeature.getLayer().isMultipleTokens()) {
+            switch (aFeature.getLayer().getAnchoringMode()) {
+            case TOKENS:
                 predBuffer.append(st.nextToken()).append(" ");
-            }
-            else {
+                break;
+            case SINGLE_TOKEN:
                 while (st.hasMoreTokens()) {
                     predBuffer.append(st.nextToken()).append(" ");
                 }
+                break;
+            default:
+                throw new IllegalStateException("Unsupported anchoring mode: ["
+                        + aFeature.getLayer().getAnchoringMode() + "]");
             }
+            
             for (List<String> prediction : aPredictions) {
                 predBuffer.append(prediction.get(i)).append(" ");
             }
@@ -1509,8 +1617,8 @@ public class AutomationUtil
             predBuffer.append("\n");
             i++;
         }
+        
         IOUtils.write(predBuffer.toString(), new FileOutputStream(aPredFile));
-
     }
 
     /**
@@ -1547,7 +1655,8 @@ public class AutomationUtil
         // automation, no care
         clearAnnotations(aJcas, type);
 
-        if (!aFeature.getLayer().isLockToTokenOffset() || aFeature.getLayer().isMultipleTokens()) {
+        switch (aFeature.getLayer().getAnchoringMode()) {
+        case TOKENS:
             for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);
                 AnnotationFS newAnnotation;
@@ -1568,12 +1677,11 @@ public class AutomationUtil
 
                 }
                 else if (!value.equals("O") && !prevNe.equals("O")) {
-                    if (value.replace("B-", "").replace("I-", "")
-                            .equals(prevNe.replace("B-", "").replace("I-", ""))
-                            && value.startsWith("B-")) {
+                    if (value.replace("B-", "").replace("I-", "").equals(
+                            prevNe.replace("B-", "").replace("I-", "")) && value.startsWith("B-")) {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
-                                .replace("I-", ""));
+                        newAnnotation.setFeatureValueFromString(feature,
+                                prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
@@ -1589,8 +1697,8 @@ public class AutomationUtil
                     }
                     else {
                         newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
-                        newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", "")
-                                .replace("I-", ""));
+                        newAnnotation.setFeatureValueFromString(feature,
+                                prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
@@ -1600,10 +1708,8 @@ public class AutomationUtil
                 }
 
                 i++;
-
             }
-        }
-        else {
+        case SINGLE_TOKEN: {
             // check if annotation is on an AttachType
             Feature attachFeature = null;
             Type attachType;
@@ -1613,8 +1719,8 @@ public class AutomationUtil
             }
 
             for (Token token : select(aJcas, Token.class)) {
-                AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type,
-                        token.getBegin(), token.getEnd());
+                AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, token.getBegin(),
+                        token.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
                 if (attachFeature != null) {
@@ -1622,6 +1728,11 @@ public class AutomationUtil
                 }
                 aJcas.getCas().addFsToIndexes(newAnnotation);
             }
+            break;
+        }
+        default:
+            throw new IllegalStateException(
+                    "Unsupported anchoring mode: [" + aFeature.getLayer().getAnchoringMode() + "]");
         }
     }
 
@@ -1705,5 +1816,55 @@ public class AutomationUtil
         for (AnnotationFS annotation : annotationsToRemove) {
             aJCas.removeFsFromIndexes(annotation);
         }
+    }
+    
+    public static Map<Integer, String> getMultipleAnnotation(
+            AnnotationSchemaService aAnnotationService, Sentence sentence,
+            AnnotationFeature aFeature)
+        throws CASException
+    {
+        SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aFeature.getLayer());
+        Map<Integer, String> multAnno = new HashMap<>();
+        Type type = getType(sentence.getCAS(), adapter.getAnnotationTypeName());
+        for (AnnotationFS fs : selectCovered(type, sentence)) {
+            boolean isBegin = true;
+            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
+            for (Token token : selectCovered(Token.class, fs)) {
+                if (multAnno.get(getAddr(token)) == null) {
+                    if (isBegin) {
+                        multAnno.put(getAddr(token),
+                                "B-" + fs.getFeatureValueAsString(labelFeature));
+                        isBegin = false;
+                    }
+                    else {
+                        multAnno.put(getAddr(token),
+                                "I-" + fs.getFeatureValueAsString(labelFeature));
+                    }
+                }
+            }
+        }
+        return multAnno;
+    }
+    
+    private static List<String> getAnnotation(TypeAdapter aAdapter, Sentence aSentence,
+            AnnotationFeature aFeature)
+    {
+        CAS cas = aSentence.getCAS();
+        
+        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        List<String> annotations = new ArrayList<>();
+
+        for (Token token : selectCovered(Token.class, aSentence)) {
+            List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
+            if (tokenLevelAnnotations.size() > 0) {
+                AnnotationFS anno = tokenLevelAnnotations.get(0);
+                Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
+                annotations.add(anno.getFeatureValueAsString(labelFeature));
+            }
+            else {
+                annotations.add(NILL);
+            }
+        }
+        return annotations;
     }
 }

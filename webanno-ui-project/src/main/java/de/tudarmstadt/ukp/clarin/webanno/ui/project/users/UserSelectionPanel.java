@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
+import static java.util.stream.Collectors.joining;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 
@@ -71,7 +72,7 @@ class UserSelectionPanel
         overviewList = new OverviewListChoice<>("user");
         overviewList.setChoiceRenderer(makeUserChoiceRenderer());
         overviewList.setModel(userModel);
-        overviewList.setChoices(LambdaModel.of(this::listUsersWithPermissions));
+        overviewList.setChoices(this::listUsersWithPermissions);
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
         
@@ -91,7 +92,7 @@ class UserSelectionPanel
             }
         };
         usersToAdd.setModel(usersToAddModel);
-        usersToAdd.setChoices(LambdaModel.of(this::listUsersWithoutPermissions));
+        usersToAdd.setChoices(this::listUsersWithoutPermissions);
         usersToAdd.setChoiceRenderer(new ChoiceRenderer<>("username"));
         form.add(usersToAdd);
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
@@ -104,16 +105,14 @@ class UserSelectionPanel
             private static final long serialVersionUID = 4607720784161484145L;
 
             @Override
-            public Object getDisplayValue(User aObject)
+            public Object getDisplayValue(User aUser)
             {
-                List<ProjectPermission> projectPermissions = projectRepository
-                        .listProjectPermissionLevel(aObject, projectModel.getObject());
-                List<String> permissionLevels = new ArrayList<>();
-                for (ProjectPermission projectPermission : projectPermissions) {
-                    permissionLevels.add(projectPermission.getLevel().getName());
-                }
-                return aObject.getUsername() + " " + permissionLevels
-                        + (aObject.isEnabled() ? "" : " (login disabled)");
+                String permissionLevels = projectRepository
+                        .getProjectPermissionLevels(aUser, projectModel.getObject()).stream()
+                        .map(PermissionLevel::getName).collect(joining(", ", "[", "]"));
+                
+                return aUser.getUsername() + " " + permissionLevels
+                        + (aUser.isEnabled() ? "" : " (login disabled)");
             }
         };
     }
@@ -134,7 +133,7 @@ class UserSelectionPanel
     {
         for (User user : aForm.getModelObject()) {
             projectRepository.createProjectPermission(new ProjectPermission(
-                    projectModel.getObject(), user.getUsername(), PermissionLevel.USER));
+                    projectModel.getObject(), user.getUsername(), PermissionLevel.ANNOTATOR));
         }
         
         aForm.getModelObject().clear();

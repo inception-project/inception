@@ -273,16 +273,40 @@ public abstract class ColoringStrategy
 
     public final static String DISABLED = "#bebebe";
 
-    public final static String[] PALETTE_PASTEL = { "#8dd3c7", "#ffffb3", "#bebada", "#fb8072",
-            "#80b1d3", "#fdb462", "#b3de69", "#fccde5", "#d9d9d9", "#bc80bd", "#ccebc5",
-            "#ffed6f" };
+    public final static String[] PALETTE_PASTEL = { 
+            // The names behind each color are approximations obtained via 
+            // http://chir.ag/projects/name-that-color
+            "#8dd3c7",   // Monte Carlo - bluish
+            "#ffffb3",   // Portafino - yellowish
+            "#bebada",   // Lavender Gray
+            "#fb8072",   // Salmon
+            "#80b1d3",   // Half Baked - bluish
+            "#fdb462",   // Koromiko - peachy
+            "#b3de69",   // Yellow Green
+            "#fccde5",   // Classic Rose
+            // Grey colors reserved for special purposes, e.g. for read-only
+            // "#d9d9d9",   // Alto - grey
+            "#bc80bd",   // Wisteria - purpleish
+            "#ccebc5",   // Peppermint
+            "#ffed6f" }; // Kournikova - yellowish
+    
 
     // public final static String[] PALETTE_PASTEL_FILTERED = filterLightColors(PALETTE_PASTEL,
     // LIGHTNESS_FILTER_THRESHOLD);
 
-    public final static String[] PALETTE_NORMAL = { "#a6cee3", "#1f78b4", "#b2df8a", "#33a02c",
-            "#fb9a99", "#e31a1c", "#fdbf6f", "#ff7f00", "#cab2d6", "#6a3d9a", "#ffff99",
-            "#b15928" };
+    public final static String[] PALETTE_NORMAL = { 
+            "#a6cee3",   // Regent St Blue
+            "#1f78b4",   // Matisse - dark bluish
+            "#b2df8a",   // Feijoa - greenish
+            "#33a02c",   // Forest Green
+            "#fb9a99",   // Sweet Pink
+            "#e31a1c",   // Alizarin Crimson
+            "#fdbf6f",   // Macaroni and Cheese - peachy
+            "#ff7f00",   // Flush Orange
+            "#cab2d6",   // Lavender Gray
+            "#6a3d9a",   // Royal Purple
+            "#ffff99",   // Pale Canary
+            "#b15928" }; // Paarl - brownish
 
     public final static String[] PALETTE_NORMAL_FILTERED = filterLightColors(PALETTE_NORMAL,
             LIGHTNESS_FILTER_THRESHOLD);

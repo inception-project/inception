@@ -1,0 +1,50 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_users]]
+= User Management
+
+NOTE: This functionality is only available to *administrators*.
+
+After selecting this functionality, a frame which shows all users is displayed. By selecting a user, a frame is displayed on the right. 
+
+image::manage_users.png[align="center"]
+
+Now you may change his role or password, specify  an e-mail address and dis- or enable his account by placing the tick.
+
+NOTE: Disabling an account prevents the user from logging in. The user remains associated with any
+      projects and remains visible in on the <<sect_monitoring>> page.
+
+To create a new user, click on *Create* in the left frame. This will display a similar frame as the one described in the last paragraph. Here you have to give a login-name to the new user.
+
+In both cases, do not forget to save your changes by pressing the *Save* button.
+
+. User roles
+|====
+| Role | Description
+| ROLE_USER
+| *User.* Required to log in to the application. Removal of this role from an account will prevent
+  login even for users that additionally hold the ROLE_ADMIN!
+
+| ROLE_ADMIN
+| *Administrator.* Can manage users and has access to all other functionalities.
+
+| ROLE_PROJECT_CREATOR
+| *Project creator.* Can create new projects.
+
+| ROLE_REMOTE
+| *Remote API access.* Currently experimental and undocumented. Do not use.
+|====

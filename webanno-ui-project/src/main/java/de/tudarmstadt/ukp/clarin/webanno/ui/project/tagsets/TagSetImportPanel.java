@@ -32,7 +32,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.form.upload.FileUploadField;
@@ -47,12 +46,12 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedTagSetConstant;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -64,7 +63,6 @@ public class TagSetImportPanel
 
     private static final Logger LOG = LoggerFactory.getLogger(TagSetImportPanel.class);
     
-    private @SpringBean ImportService importService;
     private @SpringBean AnnotationSchemaService annotationService;
     
     private IModel<Project> selectedProject;
@@ -86,7 +84,8 @@ public class TagSetImportPanel
         selectedTagSet = aTagSet;
         
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
-        form.add(new DropDownChoice<>("format", LambdaModel.of(this::supportedFormats)));
+        form.add(new BootstrapSelect<>("format", LambdaModel.of(this::supportedFormats))
+                .setRequired(true));
         form.add(new CheckBox("overwrite"));
         form.add(fileUpload = new FileUploadField("content", new ListModel<>()));
         fileUpload.setRequired(true);

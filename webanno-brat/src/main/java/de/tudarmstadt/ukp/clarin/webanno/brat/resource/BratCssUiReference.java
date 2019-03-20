@@ -17,13 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.resource;
 
-import org.apache.wicket.request.resource.CssResourceReference;
+import de.agilecoders.wicket.less.LessResourceReference;
 
 public class BratCssUiReference
-    extends CssResourceReference
+    extends LessResourceReference
 {
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -7167264646343829988L;
+    
     private static final BratCssUiReference INSTANCE = new BratCssUiReference();
 
     /**
@@ -41,6 +41,6 @@ public class BratCssUiReference
      */
     private BratCssUiReference()
     {
-        super(BratCssUiReference.class, "style-ui.css");
+        super(BratCssUiReference.class, "style-ui.less");
     }
 }

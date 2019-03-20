@@ -17,17 +17,21 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 public class VTextMarker
-    implements VMarker
+    extends VMarker
 {
-    private @JsonIgnore String type;
+    private String type;
     private int begin;
     private int end;
-    
+
     public VTextMarker(String aType, int aBegin, int aEnd)
     {
+        this(null, aType, aBegin, aEnd);
+    }
+
+    public VTextMarker(Object aSource, String aType, int aBegin, int aEnd)
+    {
+        super(aSource);
         type = aType;
         begin = aBegin;
         end = aEnd;

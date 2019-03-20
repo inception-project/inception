@@ -22,13 +22,11 @@ import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add user permissions to a selected {@link Project}
  */
-@ProjectSettingsPanel(label = "Users", prio = 100)
 public class ProjectUsersPanel
     extends ProjectSettingsPanelBase
 {

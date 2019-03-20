@@ -1054,4 +1054,110 @@
       </column>
     </addColumn>
   </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20180331-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_feature" columnName="traits"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_feature">
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181003-1">
+    <preConditions onFail="MARK_RAN">
+      <changeSetExecuted 
+        id="1512223050574-9" 
+        author="WebAnno Team" 
+        changeLogFile="de/tudarmstadt/ukp/clarin/webanno/model/db-changelog.xml" />
+    </preConditions>
+    <addNotNullConstraint 
+      tableName="project" 
+      columnName="mode"
+      columnDataType="VARCHAR(255)" 
+      defaultNullValue="annotation" />
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181005-2">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="anchoring_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="characters"/>
+      <where>lockToTokenOffset = false and multipleTokens = false</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>lockToTokenOffset = true and multipleTokens = false</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>lockToTokenOffset = true and multipleTokens = true</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="tokens"/>
+      <where>lockToTokenOffset = false and multipleTokens = true</where>
+    </update>
+    <addNotNullConstraint 
+      tableName="annotation_type" 
+      columnName="anchoring_mode"
+      columnDataType="VARCHAR(255)" />
+  </changeSet>  
+  
+  <changeSet author="WebAnno Team" id="20181101-1">
+    <preConditions onFail="WARN">
+      <changeSetExecuted author="WebAnno Team" id="1512223050574-3"/>
+    </preConditions>
+    <addForeignKeyConstraint baseColumnNames="annotation_feature" baseTableName="annotation_type"
+      constraintName="FK_annotation_type_attach_feature" deferrable="false" initiallyDeferred="false"
+      onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" 
+      referencedTableName="annotation_feature" />
+  </changeSet>
+  
+  <!--
+   - We had a bug causing the anchoring mode of Token, POS, Lemma, and MorphologicalFeatures to be
+   - set to TOKENS instead of SINGLE_TOKEN. This change set fixes the anchoring mode. 
+   -->
+  <changeSet author="INCEpTION Team" id="20181126-2">
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = 'de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = 'de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma'</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="anchoring_mode" type="VARCHAR(255)" value="singleToken"/>
+      <where>name = 'de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures'</where>
+    </update>
+  </changeSet>
+  
+  <changeSet author="WebAnno Team" id="20100129-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="validation_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="validation_mode" type="VARCHAR(255)" defaultValue="never">
+        <constraints nullable="false"/>
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>

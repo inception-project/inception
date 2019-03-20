@@ -1,0 +1,47 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+= Relations
+
+To create a relation annotation, click on a span annotation and drag the mouse to another span
+annotation. While you drag, an arc is drawn. It is not possible to create arbitrary relation
+annotations. In order to create one, a corresponding relation layer needs to be defined between
+the source and target spans.
+
+Depending on the layer behavior configuration, relation annotations can stack, can cross each other,
+and can cross sentence boundaries.
+
+.Self-looping relations
+To create a relation from a span to itself, press the *SHIFT* key before starting to drag the mouse
+and hold it until you release the mouse button.
+
+To abort the creation of an annotation, hold the *CTRL* key when you release the mouse button.
+
+NOTE: Currently, there can be at most one relation layer per span layer. Relations between spans
+      of different layers are not supported.
+
+NOTE: Not all arcs displayed in the annotation view are belonging to chain or relation layers. Some
+      are induced by <<sect_annotation_link_features>>.
+
+When moving the mouse over an annotation with outgoing relations, the info popup includes the
+*yield* of the relations. This is the text transitively covered by the outgoing relations. This
+is useful e.g. in order to see all text governed the head of a particular dependency relation.
+The text may be abbreviated.
+
+.Example of the yield of a dependency relation
+image::annotation_relation_yield.png[align="center"]

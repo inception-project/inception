@@ -141,7 +141,7 @@
                         key="type" />
                     </label>
                     <div class="col-sm-8">
-                      <select wicket:id="type" class="form-control"></select>
+                      <select wicket:id="type" class="form-control" data-container="body"></select>
                     </div>
                   </div>
                   <div class="form-group">
@@ -149,7 +149,7 @@
                         key="attachToLayer" />
                     </label>
                     <div class="col-sm-8">
-                      <select wicket:id="attachType" class="form-control"></select>
+                      <select wicket:id="attachType" class="form-control" data-container="body"></select>
                     </div>
                   </div>
                 </div>
@@ -170,39 +170,61 @@
               <div class="panel-body">
                 <div class="col-sm-12">
                   <div class="form-horizontal">
-                    <div class="form-group">
-                      <div class="col-sm-12">
-                        <div class="checkbox" wicket:enclosure="readonly">
+                    <div class="form-group" wicket:enclosure="readonly">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="readonly">
                             <input wicket:id="readonly" type="checkbox"> <wicket:label key="readonly"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="lockToTokenOffset">
-                          <label wicket:for="lockToTokenOffset">
-                            <input wicket:id="lockToTokenOffset" type="checkbox"> <wicket:label key="lockToTokenOffset"/>
-                          </label>
-                        </div>
-                        <div class="checkbox" wicket:enclosure="multipleTokens">
-                          <label wicket:for="multipleTokens">
-                            <input wicket:id="multipleTokens" type="checkbox"> <wicket:label key="allowMultipleTokens"/>
-                          </label>
-                        </div>
-                        <div class="checkbox" wicket:enclosure="allowStacking">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="validationMode">
+                      <label wicket:for="validationMode" class="col-sm-4 control-label"> <wicket:label
+                          key="validationMode" />
+                      </label>
+                      <div class="col-sm-8">
+                        <select wicket:id="validationMode" class="form-control" data-container="body"></select>
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="anchoringMode">
+                      <label wicket:for="anchoringMode" class="col-sm-4 control-label"> <wicket:label
+                          key="anchoringMode" />
+                      </label>
+                      <div class="col-sm-8">
+                        <select wicket:id="anchoringMode" class="form-control" data-container="body"></select>
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="allowStacking">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="allowStacking">
                             <input wicket:id="allowStacking" type="checkbox"> <wicket:label key="allowStacking"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="crossSentence">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="crossSentence">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="crossSentence">
                             <input wicket:id="crossSentence" type="checkbox"> <wicket:label key="allowCrossSentence"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="showTextInHover">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="showTextInHover">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="showTextInHover">
                             <input wicket:id="showTextInHover" type="checkbox"> <wicket:label key="showTextInHover"/>
                           </label>
                         </div>
-                        <div class="checkbox" wicket:enclosure="linkedListBehavior">
+                      </div>
+                    </div>
+                    <div class="form-group" wicket:enclosure="linkedListBehavior">
+                      <div class="col-sm-offset-4 col-sm-8">
+                        <div class="checkbox">
                           <label wicket:for="linkedListBehavior">
                             <input wicket:id="linkedListBehavior" type="checkbox"> <wicket:label key="linkedListBehavior"/>
                           </label>
@@ -219,12 +241,15 @@
             </div>
           </div>  
           <div class="panel-footer flex-h-container">
-            <div>
-              <label wicket:for="exportMode" class="text-nowrap">
-                <wicket:label key="format"/>
-              </label>
-              <select wicket:id="exportMode" class="form-component flex-content"></select>
-              <input wicket:id="export" type="button" class="btn btn-default" wicket:message="value:export"/> 
+            <div class="flex-content form-group form-horizontal">
+              <div class="input-group">
+                <select class="form-control" wicket:id="exportMode" data-container="body"></select>
+                <span class="input-group-btn">
+                  <button wicket:id="export" type="button" class="btn btn-default">
+                    <i class="fa fa-download" aria-hidden="true"></i>
+                  </button>
+                </span>
+              </div>
             </div>
             <div class="flex-content text-right">
               <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
@@ -255,6 +280,7 @@
         </form>
         
         <form wicket:id="featureDetailForm" class="flex-content panel panel-default panel-flex">
+          <div wicket:id="confirmationDialog"></div>
           <div class="panel-heading">
             <h3 class="panel-title">
               <wicket:message key="feature.details"/>
@@ -288,7 +314,7 @@
                   <wicket:label key="type"/>
                 </label>
                 <div class="col-sm-8">
-                  <select wicket:id="type" class="form-control"></select>
+                  <select wicket:id="type" class="form-control" data-container="body"></select>
                 </div>
               </div>
               <div class="form-group">
@@ -297,14 +323,6 @@
                 </label>
                 <div class="col-sm-8">
                   <textarea wicket:id="description" rows="4" class="form-control"></textarea>
-                </div>
-              </div>
-              <div class="form-group">
-                <label wicket:for="tagset" class="col-sm-4 control-label">
-                  <wicket:label key="tagset"/>
-                </label>
-                <div class="col-sm-8">
-                  <select wicket:id="tagset" class="form-control"></select>
                 </div>
               </div>
               <div class="form-group">
@@ -350,14 +368,17 @@
                   </div>
                 </div>
               </div>
+              <div wicket:id="traitsContainer">
+                <div wicket:id="traits"></div>
+              </div>
             </div>
           </div>
           <div class="panel-footer text-right">
             <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/>
+            <input wicket:id="delete" type="button" class="btn btn-danger" wicket:message="value:delete"/>
             <input wicket:id="cancel" type="submit" class="btn btn-default" wicket:message="value:cancel"/>
           </div>            
         </form>
-        
       </div>
     </div>
   </wicket:panel>

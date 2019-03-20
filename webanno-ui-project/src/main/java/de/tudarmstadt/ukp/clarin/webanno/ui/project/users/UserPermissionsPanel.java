@@ -17,16 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import java.util.Arrays;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
+import static java.util.Arrays.asList;
+
 import java.util.Collection;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.AbstractChoice.LabelPosition;
 import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -35,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 
 public class UserPermissionsPanel
@@ -73,11 +78,11 @@ public class UserPermissionsPanel
             projectRepository.setProjectPermissionLevels(user.getObject(), project.getObject(),
                     lvls);
         }));
-        levels.setChoices(LambdaModel.of(() -> Arrays.asList(PermissionLevel.ADMIN,
-                    PermissionLevel.CURATOR, PermissionLevel.USER)));
-        levels.setChoiceRenderer(new ChoiceRenderer<PermissionLevel>("name"));
+        levels.setChoices(asList(MANAGER, CURATOR, ANNOTATOR));
+        levels.setChoiceRenderer(new EnumChoiceRenderer<>(levels));
         form.add(levels);
         
+        form.add(new Label("username", PropertyModel.of(aUser, "username")));
         form.add(new LambdaAjaxButton<>("save", this::actionSave));
         form.add(new LambdaAjaxLink("cancel", this::actionCancel));
     }

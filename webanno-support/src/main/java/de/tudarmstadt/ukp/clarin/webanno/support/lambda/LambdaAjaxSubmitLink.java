@@ -59,10 +59,10 @@ public class LambdaAjaxSubmitLink
     }
 
     @Override
-    protected void onSubmit(AjaxRequestTarget aTarget, Form<?> aForm)
+    protected void onSubmit(AjaxRequestTarget aTarget)
     {
         try {
-            action.accept(aTarget, aForm);
+            action.accept(aTarget, getForm());
         }
         catch (Exception e) {
             if (exceptionHandler != null) {

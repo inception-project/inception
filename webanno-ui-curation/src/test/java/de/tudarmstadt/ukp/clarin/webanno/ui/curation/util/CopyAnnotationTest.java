@@ -17,8 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.JCasFactory.createJCas;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
@@ -34,24 +43,25 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerBehaviorRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -59,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import mockit.Mock;
@@ -67,12 +78,15 @@ import mockit.MockUp;
 public class CopyAnnotationTest
 {
     private AnnotationSchemaService annotationSchemaService;
+    private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private Project project;
     private AnnotationLayer tokenLayer;
     private AnnotationFeature tokenPosFeature;
     private AnnotationLayer posLayer;
     private AnnotationFeature posFeature;
+    private AnnotationLayer neLayer;
+    private AnnotationFeature neFeature;
     private AnnotationLayer slotLayer;
     private AnnotationFeature slotFeature;
     private AnnotationFeature stringFeature;
@@ -82,8 +96,8 @@ public class CopyAnnotationTest
     {
         project = new Project();
         
-        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
-                SPAN_TYPE, null, true);
+        tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
+                SINGLE_TOKEN);
         
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -94,8 +108,8 @@ public class CopyAnnotationTest
         tokenPosFeature.setProject(project);
         tokenPosFeature.setVisible(true);
         
-        posLayer = new AnnotationLayer(POS.class.getName(), "POS",
-                SPAN_TYPE, project, true);
+        posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
+                SINGLE_TOKEN);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         
@@ -108,8 +122,20 @@ public class CopyAnnotationTest
         posFeature.setProject(project);
         posFeature.setVisible(true);
         
-        slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE,
-                SPAN_TYPE, project, false);
+        neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
+                project, true, TOKENS);
+        
+        neFeature = new AnnotationFeature();
+        neFeature.setName("value");
+        neFeature.setEnabled(true);
+        neFeature.setType(CAS.TYPE_NAME_STRING);
+        neFeature.setUiName("value");
+        neFeature.setLayer(neLayer);
+        neFeature.setProject(project);
+        neFeature.setVisible(true);
+        
+        slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE, SPAN_TYPE,
+                project, false, SINGLE_TOKEN);
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
         slotFeature.setEnabled(true);
@@ -136,6 +162,9 @@ public class CopyAnnotationTest
                 if (type.getName().equals(POS.class.getName())) {
                     return asList(posFeature);
                 }
+                if (type.getName().equals(NamedEntity.class.getName())) {
+                    return asList(neFeature);
+                }
                 if (type.getName().equals(DiffUtils.HOST_TYPE)) {
                     return asList(slotFeature, stringFeature);
                 }
@@ -145,41 +174,64 @@ public class CopyAnnotationTest
             @Mock
             TypeAdapter getAdapter(AnnotationLayer aLayer)
             {
-                return AnnotationSchemaServiceImpl.getAdapter(annotationSchemaService,
-                        featureSupportRegistry, null, aLayer);
+                return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
             }
 
         }.getMockInstance();
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
-                asList(new PrimitiveUimaFeatureSupport(), new SlotFeatureSupport()));
+                asList(new PrimitiveUimaFeatureSupport(),
+                        new SlotFeatureSupport(annotationSchemaService)));
         featureSupportRegistry.init();
+
+        LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
+        layerBehaviorRegistry.init();
+
+        layerSupportRegistry = new LayerSupportRegistryImpl(asList(
+                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        layerBehaviorRegistry),
+                new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        layerBehaviorRegistry),
+                new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                        layerBehaviorRegistry)));
+        layerSupportRegistry.init();
     }
     
     @Test
     public void simpleCopyToEmptyTest()
         throws Exception
     {
-        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
-        JCas jcas = JCasFactory.createJCas();
-        Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
-        AnnotationFS clickedFs = createPOSAnno(jcas, type, "NN", 0, 0);
+        JCas jcas = createJCas();
+        AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = JCasFactory.createJCas();
-        createTokenAnno(mergeCAs, 0, 0);
+        JCas mergeCas = createJCas();
+        createTokenAnno(mergeCas, 0, 0);
 
         MergeCas.addSpanAnnotation(state, annotationSchemaService,
-                posLayer, mergeCAs, clickedFs, false);
+                neLayer, mergeCas, clickedFs, false);
 
-        assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(1, selectCovered(mergeCas, NamedEntity.class, 0, 0).size());
     }
 
-    private AnnotationFS createPOSAnno(JCas aJCas, Type aType, String aValue, int aBegin, int aEnd)
+    private AnnotationFS createNEAnno(JCas aJCas, String aValue, int aBegin, int aEnd)
     {
-        AnnotationFS clickedFs = aJCas.getCas().createAnnotation(aType, aBegin, aEnd);
-        Feature posValue = aType.getFeatureByBaseName("PosValue");
+        Type type = aJCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
+        AnnotationFS clickedFs = aJCas.getCas().createAnnotation(type, aBegin, aEnd);
+        Feature value = type.getFeatureByBaseName("value");
+        clickedFs.setStringValue(value, aValue);
+        aJCas.addFsToIndexes(clickedFs);
+        return clickedFs;
+    }
+
+    private AnnotationFS createPOSAnno(JCas aJCas, String aValue, int aBegin, int aEnd)
+    {
+        Type type = aJCas.getTypeSystem().getType(POS.class.getTypeName());
+        
+        AnnotationFS clickedFs = aJCas.getCas().createAnnotation(type, aBegin, aEnd);
+        Feature posValue = type.getFeatureByBaseName("PosValue");
         clickedFs.setStringValue(posValue, aValue);
         aJCas.addFsToIndexes(clickedFs);
         return clickedFs;
@@ -197,36 +249,37 @@ public class CopyAnnotationTest
     public void simpleCopyToSameExistingAnnoTest()
         throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        JCas jcas = createJCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
-        AnnotationFS clickedFs = createPOSAnno(jcas, type, "NN", 0, 0);
+        AnnotationFS clickedFs = createPOSAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = JCasFactory.createJCas();
-        AnnotationFS existingFs = mergeCAs.getCas().createAnnotation(type, 0, 0);
+        JCas mergeCas = createJCas();
+        AnnotationFS existingFs = mergeCas.getCas().createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         existingFs.setStringValue(posValue, "NN");
-        mergeCAs.addFsToIndexes(existingFs);
+        mergeCas.addFsToIndexes(existingFs);
 
-        exception.expect(AnnotationException.class);
-        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
-                posLayer, mergeCAs, clickedFs, false);
+        Assertions.assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION),
+                        annotationSchemaService, posLayer, mergeCas, clickedFs, false))
+                .withMessageContaining("annotation already exists");
     }
 
     @Test
     public void simpleCopyToDiffExistingAnnoWithNoStackingTest()
         throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        JCas jcas = createJCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
-        AnnotationFS clickedFs = createPOSAnno(jcas, type, "NN", 0, 0);
+        AnnotationFS clickedFs = createPOSAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = JCasFactory.createJCas();
+        JCas mergeCAs = createJCas();
         AnnotationFS existingFs = mergeCAs.getCas().createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
                 posLayer, mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
@@ -236,26 +289,26 @@ public class CopyAnnotationTest
     public void simpleCopyToDiffExistingAnnoWithStackingTest()
         throws Exception
     {
-        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
-        posLayer.setAllowStacking(true);
+        neLayer.setAllowStacking(true);
 
-        JCas jcas = JCasFactory.createJCas();
-        Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
-        AnnotationFS clickedFs = createPOSAnno(jcas, type, "NN", 0, 0);
+        JCas jcas = createJCas();
+        Type type = jcas.getTypeSystem().getType(NamedEntity.class.getTypeName());
+        AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = JCasFactory.createJCas();
+        JCas mergeCAs = createJCas();
         createTokenAnno(mergeCAs, 0, 0);
         AnnotationFS existingFs = mergeCAs.getCas().createAnnotation(type, 0, 0);
-        Feature posValue = type.getFeatureByBaseName("PosValue");
+        Feature posValue = type.getFeatureByBaseName("value");
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(state, annotationSchemaService, posLayer, mergeCAs, clickedFs,
+        MergeCas.addSpanAnnotation(state, annotationSchemaService, neLayer, mergeCAs, clickedFs,
                 true);
 
-        assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
 
     @Test
@@ -264,7 +317,7 @@ public class CopyAnnotationTest
     {
         slotLayer.setAllowStacking(false);
         
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -277,22 +330,23 @@ public class CopyAnnotationTest
         DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION), annotationSchemaService,
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
                 slotLayer, mergeCAs, clickedFs, false);
 
-        assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
 
     @Test
     public void copySpanWithSlotWithStackingTest()
         throws Exception
     {
-        AnnotatorState state = new AnnotatorStateImpl(Mode.CURATION);
+        AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
+        slotLayer.setAnchoringMode(TOKENS);
         slotLayer.setAllowStacking(true);
         
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -308,16 +362,14 @@ public class CopyAnnotationTest
         MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs, clickedFs,
                 true);
 
-        assertEquals(2, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
 
     @Test
     public void copyLinkToEmptyTest()
         throws Exception
     {
-
-        JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas mergeCAs = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         Type type = mergeCAs.getTypeSystem().getType(DiffUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -330,7 +382,7 @@ public class CopyAnnotationTest
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
                 DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
@@ -370,7 +422,7 @@ public class CopyAnnotationTest
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
                 DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
@@ -395,15 +447,14 @@ public class CopyAnnotationTest
     public void simpleCopyRelationToEmptyAnnoTest()
         throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        JCas jcas = createJCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
-        Type posType = jcas.getTypeSystem().getType(POS.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
         AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
 
-        AnnotationFS originClicked = createPOSAnno(jcas, posType, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, posType, "NN", 1, 1);
+        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
+        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
 
         jcas.addFsToIndexes(originClicked);
         jcas.addFsToIndexes(targetClicked);
@@ -413,17 +464,17 @@ public class CopyAnnotationTest
         targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
                 targetClicked);
 
-        Feature sourceFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
+        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
         AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = JCasFactory.createJCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, posType, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, posType, "NN", 1, 1);
+        JCas mergeCAs = createJCas();
+        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
+        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
         mergeCAs.addFsToIndexes(origin);
         mergeCAs.addFsToIndexes(target);
@@ -438,22 +489,22 @@ public class CopyAnnotationTest
 
         MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false, originToken,
                 targetToken);
-        assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 1).size());
+        
+        assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 1).size());
     }
 
     @Test
     public void simpleCopyRelationToStackedTargetsTest()
         throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        JCas jcas = createJCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
-        Type posType = jcas.getTypeSystem().getType(POS.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
         AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
 
-        AnnotationFS originClicked = createPOSAnno(jcas, posType, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, posType, "NN", 1, 1);
+        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
+        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
 
         jcas.addFsToIndexes(originClicked);
         jcas.addFsToIndexes(targetClicked);
@@ -463,17 +514,17 @@ public class CopyAnnotationTest
         targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
                 targetClicked);
 
-        Feature sourceFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
+        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
         AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = JCasFactory.createJCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, posType, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, posType, "NN", 1, 1);
+        JCas mergeCAs = createJCas();
+        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
+        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
         mergeCAs.addFsToIndexes(origin);
         mergeCAs.addFsToIndexes(target);
@@ -486,8 +537,8 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(originToken);
         mergeCAs.addFsToIndexes(targetToken);
 
-        AnnotationFS origin2 = createPOSAnno(mergeCAs, posType, "NN", 0, 0);
-        AnnotationFS target2 = createPOSAnno(mergeCAs, posType, "NN", 1, 1);
+        AnnotationFS origin2 = createPOSAnno(mergeCAs, "NN", 0, 0);
+        AnnotationFS target2 = createPOSAnno(mergeCAs, "NN", 1, 1);
 
         mergeCAs.addFsToIndexes(origin2);
         mergeCAs.addFsToIndexes(target2);
@@ -500,25 +551,24 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(originToken2);
         mergeCAs.addFsToIndexes(targetToken2);
 
-        exception.expect(AnnotationException.class);
-        MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false, originToken,
-                targetToken);
-
+        assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true,
+                        false, originToken, targetToken))
+                .withMessageContaining("Stacked sources exist");
     }
 
     @Test
-    public void simpleCopyStackedRelationTest()
+    public void thatMergingRelationIsRejectedIfAlreadyExists()
         throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
+        JCas jcas = createJCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
-        Type posType = jcas.getTypeSystem().getType(POS.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
         AnnotationFS targetClickedToken = createTokenAnno(jcas, 1, 1);
 
-        AnnotationFS originClicked = createPOSAnno(jcas, posType, "NN", 0, 0);
-        AnnotationFS targetClicked = createPOSAnno(jcas, posType, "NN", 1, 1);
+        AnnotationFS originClicked = createPOSAnno(jcas, "NN", 0, 0);
+        AnnotationFS targetClicked = createPOSAnno(jcas, "NN", 1, 1);
 
         jcas.addFsToIndexes(originClicked);
         jcas.addFsToIndexes(targetClicked);
@@ -528,17 +578,17 @@ public class CopyAnnotationTest
         targetClickedToken.setFeatureValue(targetClickedToken.getType().getFeatureByBaseName("pos"),
                 targetClicked);
 
-        Feature sourceFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
-        Feature targetFeature = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
+        Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
+        Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
         AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = JCasFactory.createJCas();
-        AnnotationFS origin = createPOSAnno(mergeCAs, posType, "NN", 0, 0);
-        AnnotationFS target = createPOSAnno(mergeCAs, posType, "NN", 1, 1);
+        JCas mergeCAs = createJCas();
+        AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
+        AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
         mergeCAs.addFsToIndexes(origin);
         mergeCAs.addFsToIndexes(target);
@@ -556,11 +606,9 @@ public class CopyAnnotationTest
         existing.setFeatureValue(targetFeature, targetToken);
         mergeCAs.addFsToIndexes(clickedFs);
 
-        exception.expect(AnnotationException.class);
-        MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false, originToken,
-                targetToken);
+        assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true,
+                        false, originToken, targetToken))
+                .withMessageContaining("annotation already exists");
     }
-
-    @Rule
-    public final ExpectedException exception = ExpectedException.none();
 }

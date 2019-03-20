@@ -18,24 +18,18 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import java.io.IOException;
-import java.util.Collection;
 
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public abstract class AnnotationSidebar_ImplBase
     extends Panel
@@ -96,64 +90,18 @@ public abstract class AnnotationSidebar_ImplBase
         return jcasProvider;
     }
 
-    /**
-     * Show the next document if it exists
-     */
-    protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    public AnnotationPage getAnnotationPage()
     {
-        annotationPage.actionShowSelectedDocument(aTarget, aDocument);
+        return annotationPage;
     }
-
-    /**
-     * Show the next document if it exists, starting in a certain token position
-     */
-    @Deprecated
-    protected void actionShowSelectedDocumentByTokenPosition(AjaxRequestTarget aTarget,
-            SourceDocument aDocument, int aTokenNumber)
-        throws IOException
-    {
-        annotationPage.actionShowSelectedDocument(aTarget, aDocument);
-
-        AnnotatorState state = getModelObject();
-
-        JCas jCas = annotationPage.getEditorCas();
-
-        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
-        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
-
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas,
-                tokens[aTokenNumber].getBegin());
-        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, tokens[aTokenNumber].getBegin());
-
-        annotationPage.getGotoPageTextField().setModelObject(sentenceNumber);
-
-        state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(sentenceNumber);
-
-        annotationPage.actionRefreshDocument(aTarget);
-    }
-
+    
     /**
      * Show the next document if it exists, starting in a certain begin offset
      */
     protected void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBeginOffset)
+            int aBegin, int aEnd)
         throws IOException
     {
-        annotationPage.actionShowSelectedDocument(aTarget, aDocument);
-
-        AnnotatorState state = getModelObject();
-
-        JCas jCas = annotationPage.getEditorCas();
-
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBeginOffset);
-        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBeginOffset);
-
-        annotationPage.getGotoPageTextField().setModelObject(sentenceNumber);
-
-        state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(sentenceNumber);
-
-        annotationPage.actionRefreshDocument(aTarget);
+        getAnnotationPage().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 }

@@ -341,7 +341,6 @@ public class WebannoTsv3Reader
                                         annos.set(i, prevAnnoFs);
                                     }
                                     setAnnoRefPerUnit(unit, type, ref, prevAnnoFs);
-
                                 }
                                 else {
                                     if (roleLinks.containsKey(feat)) {
@@ -359,8 +358,7 @@ public class WebannoTsv3Reader
                                         linkFSesPerSlotAnno.get(annos.get(i)).add(link);
 
                                     }
-                                    else if (roleTargets.containsKey(feat)) {
-
+                                    else if (roleTargets.containsKey(feat) && mAnno != null) {
                                         FeatureStructure link = linkFSesPerSlotAnno
                                                 .get(annos.get(i)).get(slot);
                                         int customTypeNumber = 0;
@@ -492,7 +490,9 @@ public class WebannoTsv3Reader
                                         else {
                                             Feature endF = type.getFeatureByBaseName(
                                                     CAS.FEATURE_BASE_NAME_END);
+                                            annos.get(i).getCAS().removeFsFromIndexes(annos.get(i));
                                             annos.get(i).setIntValue(endF, depFs.getEnd());
+                                            annos.get(i).getCAS().addFsToIndexes(annos.get(i));
                                         }
                                         aJCas.addFsToIndexes(annos.get(i));
 

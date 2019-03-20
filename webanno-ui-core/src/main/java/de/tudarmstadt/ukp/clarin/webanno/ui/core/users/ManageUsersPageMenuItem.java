@@ -17,29 +17,23 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
-import java.util.Properties;
-
 import org.apache.wicket.Page;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
 @Component
 public class ManageUsersPageMenuItem implements MenuItem
 {
-    private @Autowired UserDao userRepo;
-    private @Autowired ProjectService projectService;
-    private @Autowired ApplicationContext applicationContext;
+    private @Autowired UserDao userRepository;
+    
+    @Override
+    public String getPath()
+    {
+        return "/admin/users";
+    }
     
     @Override
     public String getIcon()
@@ -59,19 +53,20 @@ public class ManageUsersPageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
-        User user = userRepo.getCurrentUser();
-
-        List<String> activeProfiles = asList(
-                applicationContext.getEnvironment().getActiveProfiles());
-        Properties settings = SettingsUtil.getSettings();
-        return SecurityUtil.isSuperAdmin(projectService, user)
-                || (!activeProfiles.contains("auto-mode-preauth") && "true"
-                        .equals(settings.getProperty(SettingsUtil.CFG_USER_ALLOW_PROFILE_ACCESS)));
+        return userRepository.isAdministrator(userRepository.getCurrentUser());
     }
     
     @Override
     public Class<? extends Page> getPageClass()
     {
         return ManageUsersPage.class;
+    }
+    
+    @Override
+    public boolean isDirectAccessAllowed()
+    {
+        // Users should not see the menu item for the user management page, but they may access this
+        // page directly in order to edit their own profile via the link in the menu bar.
+        return true;
     }
 }

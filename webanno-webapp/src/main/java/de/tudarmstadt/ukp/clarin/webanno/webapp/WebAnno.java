@@ -91,6 +91,7 @@ public class WebAnno
     
     private static void init(SpringApplicationBuilder aBuilder)
     {
+        // WebAnno relies on FS IDs being stable, so we need to enable this
         System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
         
         aBuilder.banner(new WebAnnoBanner());

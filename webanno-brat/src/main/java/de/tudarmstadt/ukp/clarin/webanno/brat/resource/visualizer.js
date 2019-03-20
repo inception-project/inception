@@ -3284,15 +3284,23 @@ Util.profileStart('rows');
               // TODO: using rectShadowSize, but this shadow should
               // probably have its own setting for shadow size
               shadowRect = svg.rect(sentNumGroup,
+// WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin
+/*
                   box.x - rectShadowSize, box.y - rectShadowSize,
                   box.width + 2 * rectShadowSize, box.height + 2 * rectShadowSize, {
-
-                  'class': 'shadow_' + sentComment.type,
-                  filter: 'url(#Gaussian_Blur)',
-                  rx: rectShadowRounding,
-                  ry: rectShadowRounding,
-                  'data-sent': row.sentence,
-              });
+*/
+                  rtlmode ? box.x + rowPadding + rectShadowSize : box.x - rectShadowSize, 
+                  box.y - rectShadowSize,
+                  box.width + 2 * rectShadowSize, 
+                  box.height + 2 * rectShadowSize, 
+                  {
+// WEBANNO EXTENSION END - RTL support - Sentence comment in margin
+                      'class': 'shadow_' + sentComment.type,
+                      filter: 'url(#Gaussian_Blur)',
+                      rx: rectShadowRounding,
+                      ry: rectShadowRounding,
+                      'data-sent': row.sentence,
+                  });
 // WEBANNO EXTENSION BEGIN - RTL support - Sentence comment in margin           
 /*
               var text = svg.text(sentNumGroup, sentNumMargin - Configuration.visual.margin.x, y - rowPadding,
@@ -3369,7 +3377,7 @@ Util.profileStart('chunkFinish');
             sentenceText = svg.createText();
           }
 */
-          if (!rowTextGroup || prevChunk.row != chunk.row) {
+          if (!rowTextGroup || prevChunk.row != chunk.row) {
             if (rowTextGroup) {
               horizontalSpacer(svg, rowTextGroup, 0, prevChunk.row.textY, 1, {
                 'data-chunk-id': prevChunk.index,
@@ -3614,18 +3622,20 @@ Util.profileStart('chunkFinish');
               textRowDesc[1] - 2, textRowDesc[0].textY - sizes.fragments.height,
               textRowDesc[2] - textRowDesc[1] + 4, sizes.fragments.height + 4,
 // WEBANNO EXTENSION BEGIN - #876 - Add ability to highlight text in brat view
+// WEBANNO EXTENSION BEGIN - #1119 - Improve control over markers
 /*          
               { fill: 'yellow' } // TODO: put into css file, as default - turn into class
 */
-              { fill: 'skyblue', 'class': 'animated flash' }
+              { 'class': textRowDesc[3] }
+// WEBANNO EXTENSION END - #1119 - Improve control over markers
 // WEBANNO EXTENSION END - #876 - Add ability to highlight text in brat view
           );
+// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
+/*          
           // NOTE: changing highlightTextSequence here will give
           // different-colored highlights
           // TODO: entirely different settings for non-animations?
           var markedType = textRowDesc[3];
-// WEBANNO EXTENSION BEGIN - Issue #1319 - Glowing highlight causes 100% CPU load
-/*          
           svg.other(textHighlight, 'animate', {
             'data-type': markedType,
             attributeName: 'fill',
@@ -4419,7 +4429,7 @@ Util.profileStart('before render');
 // WEBANNO EXTENSION BEGIN - RTL - Need to find scrollable ancestor
 // https://stackoverflow.com/a/35940276/2511197
     function findClosestHorizontalScrollable(node) {
-      if (node === null || node.is('html')) {
+      if (node === null || node.is('html')) {
         return null;
       }
 

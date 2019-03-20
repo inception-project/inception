@@ -17,19 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static java.util.Objects.isNull;
+import static org.apache.wicket.RuntimeConfigurationType.DEVELOPMENT;
+import static org.apache.wicket.util.string.Strings.escapeMarkup;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
@@ -37,7 +43,6 @@ import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
-import org.apache.wicket.ajax.attributes.IAjaxCallListener;
 import org.apache.wicket.ajax.attributes.ThrottlingSettings;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -53,15 +58,15 @@ import org.apache.wicket.markup.repeater.RefreshingView;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
-
-import com.googlecode.wicket.kendo.ui.form.TextField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -76,48 +81,54 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
-import de.tudarmstadt.ukp.clarin.webanno.brat.util.JavascriptUtils;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
-import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.AttachStatus;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public class AnnotationFeatureForm
     extends Form<AnnotatorState>
 {
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationFeatureForm.class);
+    
+    public static final String ID_PREFIX = "featureEditorHead";
+    
     private static final long serialVersionUID = 3635145598405490893L;
 
     // Add "featureEditorPanel" to AjaxRequestTargets instead of "featureEditorPanelContent"
     private WebMarkupContainer featureEditorPanel;
     private FeatureEditorPanelContent featureEditorPanelContent;
 
-    private String selectedTag = "";
     private Label selectedAnnotationLayer;
-    private CheckBox forwardAnnotation;
-    private TextField<String> forwardAnnotationText;
+    private CheckBox forwardAnnotationCheckBox;
     private ConfirmationDialog deleteAnnotationDialog;
     private ConfirmationDialog replaceAnnotationDialog;
     private Label relationHint;
-    private LayerSelector layerSelector;
+    private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
 
     private final AnnotationDetailEditorPanel editorPanel;
     
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserPreferencesService userPreferencesService;
+    private @SpringBean UserDao userDao;
 
     AnnotationFeatureForm(AnnotationDetailEditorPanel aEditorPanel, String id,
-        IModel<AnnotatorState> aBModel)
+        IModel<AnnotatorState> aState)
     {
-        super(id, new CompoundPropertyModel<>(aBModel));
+        super(id, new CompoundPropertyModel<>(aState));
         editorPanel = aEditorPanel;
-        add(forwardAnnotationText = createForwardAnnotationTextField());
-        add(forwardAnnotation = createForwardAnnotationCheckBox());
+        add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
@@ -127,26 +138,17 @@ public class AnnotationFeatureForm
         add(relationHint = createRelationHint());
         add(layerSelector = createDefaultAnnotationLayerSelector());
         add(featureEditorPanel = createFeatureEditorPanel());
+        add(createSelectedAnnotationTypeLabel());
     }
 
     private WebMarkupContainer createFeatureEditorPanel()
     {
-        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer")
-        {
-            private static final long serialVersionUID = 8908304272310098353L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getSelection().getAnnotation().isSet());
-            }
-        };
+        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
+        container.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
 
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
         container.setOutputMarkupPlaceholderTag(true);
-        container.setOutputMarkupId(true);
 
         container.add(createNoFeaturesWarningLabel());
         container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
@@ -158,99 +160,24 @@ public class AnnotationFeatureForm
 
     private Label createNoFeaturesWarningLabel()
     {
-        return new Label("noFeaturesWarning", "No features available!")
-        {
-            private static final long serialVersionUID = 4398704672665066763L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getFeatureStates().isEmpty());
-            }
-        };
+        Label label = new Label("noFeaturesWarning", "No features available!");
+        label.add(visibleWhen(() -> getModelObject().getFeatureStates().isEmpty()));
+        return label;
     }
 
     private FeatureEditorPanelContent createFeatureEditorPanelContent()
     {
         return new FeatureEditorPanelContent("featureValues");
     }
-
-    private TextField<String> createForwardAnnotationTextField()
-    {
-        TextField<String> textfield = new TextField<>("forwardAnno");
-        textfield.setOutputMarkupId(true);
-        textfield.add(new AjaxFormComponentUpdatingBehavior("keyup")
-        {
-            private static final long serialVersionUID = 4554834769861958396L;
-
-            @Override
-            protected void updateAjaxAttributes(AjaxRequestAttributes attributes)
-            {
-                super.updateAjaxAttributes(attributes);
-
-                IAjaxCallListener listener = new AjaxCallListener()
-                {
-                    private static final long serialVersionUID = -7968540662654079601L;
-
-                    @Override
-                    public CharSequence getPrecondition(Component component)
-                    {
-                        return "var keycode = Wicket.Event.keyCode(attrs.event);    return true;";
-                    }
-                };
-                attributes.getAjaxCallListeners().add(listener);
-
-                attributes.getDynamicExtraParameters().add("var eventKeycode = Wicket.Event" +
-                        ".keyCode(attrs.event);return {keycode: eventKeycode};");
-                attributes.setPreventDefault(false);
-            }
-
-            @Override
-            protected void onUpdate(AjaxRequestTarget aTarget)
-            {
-                final Request request = RequestCycle.get().getRequest();
-                final String jsKeycode = request.getRequestParameters()
-                        .getParameterValue("keycode").toString("");
-                if (jsKeycode.equals("32")) {
-                    try {
-                        JCas jCas = editorPanel.getEditorCas();
-                        editorPanel.actionCreateForward(aTarget, jCas);
-                        selectedTag = "";
-                    }
-                    catch (Exception e) {
-                        handleException(textfield, aTarget, e);
-                    }
-                    return;
-                }
-                if (jsKeycode.equals("13")) {
-                    selectedTag = "";
-                    return;
-                }
-                selectedTag = (textfield.getModelObject() == null ? ""
-                        : textfield.getModelObject().charAt(0)) + selectedTag;
-                Map<String, String> bindTags = getBindTags();
-                if (!bindTags.isEmpty()) {
-                    List<FeatureState> featureStates = getModelObject().getFeatureStates();
-                    featureStates.get(0).value = getKeyBindValue(selectedTag, bindTags);
-                }
-                aTarget.add(textfield);
-                aTarget.add(featureEditorPanelContent.get(0));
-            }
-        });
-        textfield.add(new AttributeAppender("style", "opacity:0", ";"));
-        // forwardAnno.add(new AttributeAppender("style", "filter:alpha(opacity=0)", ";"));
-        return textfield;
-    }
     
-    public FeatureEditor getFirstFeatureEditor()
+    public Optional<FeatureEditor> getFirstFeatureEditor()
     {
         Iterator<Item<FeatureState>> itemIterator = featureEditorPanelContent.getItems();
         if (!itemIterator.hasNext()) {
-            return null;
+            return Optional.empty();
         }
         else {
-            return (FeatureEditor) itemIterator.next().get("editor");
+            return Optional.ofNullable((FeatureEditor) itemIterator.next().get("editor"));
         }
     }
 
@@ -269,111 +196,190 @@ public class AnnotationFeatureForm
 
     private Label createSelectedAnnotationLayerLabel()
     {
-        return new Label("selectedAnnotationLayer", new Model<String>())
-        {
-            private static final long serialVersionUID = 4059460390544343324L;
+        Label label = new Label("selectedAnnotationLayer", new Model<String>());
+        label.setOutputMarkupPlaceholderTag(true);
+        label.add(visibleWhen(() -> getModelObject().getPreferences().isRememberLayer()));
+        return label;
+    }
 
-            {
-                setOutputMarkupId(true);
+    private Label createSelectedAnnotationTypeLabel()
+    {
+        Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
+            try {
+                return String.valueOf(WebAnnoCasUtil.selectByAddr(editorPanel.getEditorCas(),
+                        getModelObject().getSelection().getAnnotation().getId())).trim();
             }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setVisible(getModelObject().getPreferences().isRememberLayer());
+            catch (IOException e) {
+                return "";
             }
-        };
+        }));
+        label.setOutputMarkupPlaceholderTag(true);
+        // We show the extended info on the selected annotation only when run in development mode
+        label.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()
+                && DEVELOPMENT.equals(getApplication().getConfigurationType())));
+        return label;
     }
 
     private Label createRelationHint()
     {
-        return new Label("relationHint", Model.of()) {
-            private static final long serialVersionUID = 1L;
-            
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-                setEscapeModelStrings(false);
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                if (layerSelector.getModelObject() != null) {
-                    List<AnnotationLayer> relLayers = annotationService
-                            .listAttachedRelationLayers(layerSelector.getModelObject());
-                    if (relLayers.isEmpty()) {
-                        setVisible(false);
-                    }
-                    else if (relLayers.size() == 1) {
-                        setDefaultModelObject("Create a <b>" + relLayers.get(0).getUiName()
-                                + "</b> relation by drawing an arc between annotations of this layer.");
-                        setVisible(true);
-                    }
-                    else {
-                        setDefaultModelObject(
-                                "Whoops! Found more than one relation layer attaching to this span layer!");
-                        setVisible(true);
-                    }
+        Label label = new Label("relationHint", Model.of());
+        label.setOutputMarkupPlaceholderTag(true);
+        label.setEscapeModelStrings(false);
+        label.add(LambdaBehavior.onConfigure(_this -> {
+            if (layerSelector.getModelObject() != null) {
+                List<AnnotationLayer> relLayers = annotationService
+                        .listAttachedRelationLayers(layerSelector.getModelObject());
+                if (relLayers.isEmpty()) {
+                    _this.setVisible(false);
+                }
+                else if (relLayers.size() == 1) {
+                    _this.setDefaultModelObject("Create a <b>"
+                            + escapeMarkup(relLayers.get(0).getUiName(), false, false)
+                            + "</b> relation by drawing an arc between annotations of this layer.");
+                    _this.setVisible(true);
                 }
                 else {
-                    setVisible(false);
+                    _this.setDefaultModelObject(
+                            "Whoops! Found more than one relation layer attaching to this span layer!");
+                    _this.setVisible(true);
                 }
             }
-        };
+            else {
+                _this.setVisible(false);
+            }
+        }));
+        return label;
     }
     
-    private LayerSelector createDefaultAnnotationLayerSelector()
+    private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
-        return new LayerSelector("defaultAnnotationLayer",
-            new PropertyModel<>(this, "annotationLayers"));
+        DropDownChoice<AnnotationLayer> selector = new BootstrapSelect<>("defaultAnnotationLayer");
+        selector.setChoices(new PropertyModel<>(this, "annotationLayers"));
+        selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
+        selector.setOutputMarkupId(true);
+        selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
+                this::actionChangeDefaultLayer));
+        return selector;
+    }
+    
+    private void actionChangeDefaultLayer(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = getModelObject();
+
+        aTarget.add(relationHint);
+        aTarget.add(forwardAnnotationCheckBox);
+        
+        // If forward annotation was enabled, disable it
+        if (state.isForwardAnnotation()) {
+            state.setForwardAnnotation(false);
+        }
+        
+        // If "remember layer" is set, the we really just update the selected layer...
+        // we do not touch the selected annotation not the annotation detail panel
+        if (state.getPreferences().isRememberLayer()) {
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+        }
+        // If "remember layer" is not set, then changing the layer means that we
+        // want to change the type of the currently selected annotation
+        else if (!Objects.equals(state.getSelectedAnnotationLayer(), 
+                state.getDefaultAnnotationLayer())
+            && state.getSelection().getAnnotation().isSet()) {
+            try {
+                if (state.getSelection().isArc()) {
+                    editorPanel.actionClear(aTarget);
+                }
+                else {
+                    actionReplace(aTarget);
+                }
+            }
+            catch (Exception e) {
+                handleException(this, aTarget, e);
+            }
+        }
+        // If no annotation is selected, then prime the annotation detail panel for the new type
+        else {
+            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+            selectedAnnotationLayer
+                    .setDefaultModelObject(Optional.ofNullable(state.getDefaultAnnotationLayer())
+                            .map(AnnotationLayer::getUiName).orElse(null));
+            aTarget.add(selectedAnnotationLayer);
+            editorPanel.clearFeatureEditorModels(aTarget);
+        }
+        
+        // Save the currently selected layer as a user preference so it is remains active when a
+        // user leaves the application and later comes back to continue annotating
+        long prevDefaultLayer = state.getPreferences().getDefaultLayer();
+        if (state.getDefaultAnnotationLayer() != null) {
+            state.getPreferences().setDefaultLayer(state.getDefaultAnnotationLayer().getId());
+        }
+        else {
+            state.getPreferences().setDefaultLayer(-1);
+        }
+        if (prevDefaultLayer != state.getPreferences().getDefaultLayer()) {
+            try {
+                userPreferencesService.savePreferences(state.getProject(),
+                        userDao.getCurrentUser().getUsername(), state.getMode(),
+                        state.getPreferences());
+            }
+            catch (IOException e) {
+                handleException(this, aTarget, e);
+            }
+        }
     }
 
-    private Label createSelectedTextLabel()
+    private LambdaAjaxLink createSelectedTextLabel()
     {
-        Label selectedTextLabel = new Label("selectedText", PropertyModel.of(getModelObject(),
-                "selection.text"));
-        selectedTextLabel.setOutputMarkupId(true);
-        return selectedTextLabel;
+        LambdaAjaxLink link = new LambdaAjaxLink("jumpToAnnotation",
+                this::actionJumpToAnnotation);
+        link.add(new Label("selectedText", PropertyModel.of(getModelObject(),
+                "selection.text")).setOutputMarkupId(true));
+        link.setOutputMarkupId(true);
+        return link;
+    }
+    
+    private void actionJumpToAnnotation(AjaxRequestTarget aTarget) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        
+        editorPanel.getEditorPage().actionShowSelectedDocument(aTarget, state.getDocument(),
+                state.getSelection().getBegin(), state.getSelection().getEnd());
     }
 
     private LambdaAjaxLink createClearButton()
     {
-        return new LambdaAjaxLink("clear", editorPanel::actionClear).onConfigure((_this) -> {
-            _this.setVisible(AnnotationFeatureForm.this.getModelObject().getSelection()
-                    .getAnnotation().isSet());
-        });
+        LambdaAjaxLink link = new LambdaAjaxLink("clear", editorPanel::actionClear);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        return link;
     }
 
     private Component createReverseButton()
     {
-        return new LambdaAjaxLink("reverse", editorPanel::actionReverse)
-            .onConfigure((_this) -> {
-                AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-    
-                _this.setVisible(state.getSelection().getAnnotation().isSet()
-                        && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
-                                .getType().equals(WebAnnoConst.RELATION_TYPE));
-    
-                // Avoid reversing in read-only layers
-                _this.setEnabled(state.getSelectedAnnotationLayer() != null
-                        && !state.getSelectedAnnotationLayer().isReadonly());
-            })
-            .setOutputMarkupPlaceholderTag(true);
+        LambdaAjaxLink link = new LambdaAjaxLink("reverse", editorPanel::actionReverse);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(LambdaBehavior.onConfigure(_this -> {
+            AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
+            
+            _this.setVisible(state.getSelection().getAnnotation().isSet()
+                    && state.getSelection().isArc() && state.getSelectedAnnotationLayer()
+                            .getType().equals(WebAnnoConst.RELATION_TYPE));
+
+            // Avoid reversing in read-only layers
+            _this.setEnabled(state.getSelectedAnnotationLayer() != null
+                    && !state.getSelectedAnnotationLayer().isReadonly());
+        }));
+        return link;
     }
 
     private LambdaAjaxLink createDeleteButton()
     {
-        return new LambdaAjaxLink("delete", this::actionDelete).onConfigure((_this) -> {
-            AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-            _this.setVisible(state.getSelection().getAnnotation().isSet());
-            // Avoid deleting in read-only layers
-            _this.setEnabled(state.getSelectedAnnotationLayer() != null
-                    && !state.getSelectedAnnotationLayer().isReadonly());
-        });
+        LambdaAjaxLink link = new LambdaAjaxLink("delete", this::actionDelete);
+        link.setOutputMarkupPlaceholderTag(true);
+        link.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        // Avoid deleting in read-only layers
+        link.add(enabledWhen(() -> getModelObject().getSelectedAnnotationLayer() != null
+                && !getModelObject().getSelectedAnnotationLayer().isReadonly()));
+        return link;
     }
     
     private void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
@@ -479,167 +485,143 @@ public class AnnotationFeatureForm
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(!getModelObject().getSelection().getAnnotation().isSet());
             }
         };
     }
 
+    /**
+     * Part of <i>forward annotation</i> mode: creates the checkbox to toggle forward annotation
+     * mode.
+     */
     private CheckBox createForwardAnnotationCheckBox()
     {
-        return new CheckBox("forwardAnnotation")
-        {
-            private static final long serialVersionUID = 8908304272310098353L;
-
-            {
-                setOutputMarkupId(true);
-                add(new AjaxFormComponentUpdatingBehavior("change")
-                {
-                    private static final long serialVersionUID = 5179816588460867471L;
-
-                    @Override
-                    protected void onUpdate(AjaxRequestTarget aTarget) {
-                        if (AnnotationFeatureForm.this.getModelObject().isForwardAnnotation()) {
-                            List<AnnotationFeature> features = getEnabledFeatures(
-                                    AnnotationFeatureForm.this.getModelObject()
-                                            .getSelectedAnnotationLayer());
-                            if (features.size() > 1) {
-                                // should not come here in the first place (controlled during
-                                // forward annotation process checking)
-                                return;
-                            }
-                            
-                            // Check if this is a free text annotation or a tagset is attached. Use
-                            // the hidden forwardAnnotationText element only for tagset based
-                            // forward annotations
-                            if (!features.isEmpty() && features.get(0).getTagset() == null) {
-                                FeatureEditor editor = getFirstFeatureEditor();
-                                if (editor != null) {
-                                    aTarget.focusComponent(editor.getFocusComponent());
-                                }
-                            } else {
-                                aTarget.appendJavaScript(
-                                        JavascriptUtils.getFocusScript(forwardAnnotationText));
-                                selectedTag = "";
-                            }
-                        }
-                    }
-                });
+        CheckBox checkbox = new CheckBox("forwardAnnotation");
+        checkbox. setOutputMarkupId(true);
+        checkbox.add(visibleWhen(this::isForwardable));
+        checkbox.add(LambdaBehavior.onConfigure(_this -> {
+            // Force-disable forward annotation mode if current layer is not forwardable
+            if (!isForwardable()) {
+                AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
             }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                setEnabled(isForwardable());
-                if (!isForwardable()) {
-                    AnnotationFeatureForm.this.getModelObject().setForwardAnnotation(false);
-                }
+        }));
+        checkbox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
+                focusForwardAnnotationComponent(_target, true)));
+        
+        return checkbox;
+    }
+    
+    /**
+     * Part of <i>forward annotation</i> mode: move focus to the hidden forward annotation input
+     * field or to the free text component at the end of the rendering process
+     * 
+     * @param aResetSelectedTag
+     *            whether to clear {@code selectedTag} if the forward features has a tagset. Has
+     *            no effect if the forward feature is a free text feature.
+     */
+    private void focusForwardAnnotationComponent(AjaxRequestTarget aTarget,
+            boolean aResetSelectedTag)
+    {
+        AnnotatorState state = getModelObject();
+        if (!state.isForwardAnnotation()) {
+            return;
+        }
+        
+        List<AnnotationFeature> features = getEnabledAndVisibleFeatures(
+                AnnotationFeatureForm.this.getModelObject()
+                        .getDefaultAnnotationLayer());
+        if (features.size() != 1) {
+            // should not come here in the first place (controlled during
+            // forward annotation process)
+            return;
+        }
+        
+        AnnotationFeature feature = features.get(0);
+        
+        // Check if this is a free text annotation or a tagset is attached. Use the hidden
+        // forwardAnnotationText element only for tagset based forward annotations
+        if (feature.getTagset() == null) {
+            getFirstFeatureEditor()
+                    .ifPresent(_editor -> aTarget.focusComponent(_editor.getFocusComponent()));
+        }
+        else {
+            aTarget.focusComponent(editorPanel.getForwardAnnotationTextField());
+            if (aResetSelectedTag) {
+                editorPanel.setForwardAnnotationKeySequence("", "resetting on forward");
             }
-        };
+        }
     }
 
-    private List<AnnotationFeature> getEnabledFeatures(AnnotationLayer aLayer) {
-        return annotationService.listAnnotationFeature(aLayer).stream().filter(f -> f.isEnabled())
-                .filter(f -> f.isVisible()).collect(Collectors.toList());
+    /**
+     * Returns all enabled and visible features of the given annotation layer.
+     */
+    private List<AnnotationFeature> getEnabledAndVisibleFeatures(AnnotationLayer aLayer)
+    {
+        return annotationService.listAnnotationFeature(aLayer).stream()
+                .filter(f -> f.isEnabled())
+                .filter(f -> f.isVisible())
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Part of <i>forward annotation</i> mode: determines whether the currently selected layer is
+     * forwardable or not.
+     */
     private boolean isForwardable()
     {
         AnnotatorState state = getModelObject();
-        AnnotationLayer selectedLayer = state.getSelectedAnnotationLayer();
+        
+        // Fetch the current default layer (the one which determines the type of new annotations)
+        AnnotationLayer layer = state.getDefaultAnnotationLayer();
 
-        if (isNull(selectedLayer) || isNull(selectedLayer.getId())) {
+        if (isNull(layer) || isNull(layer.getId())) {
             return false;
         }
 
-        if (!selectedLayer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+        if (!SPAN_TYPE.equals(layer.getType())) {
             return false;
         }
 
-        if (!selectedLayer.isLockToTokenOffset()) {
+        if (!SINGLE_TOKEN.equals(layer.getAnchoringMode())) {
             return false;
         }
 
-        // no forward annotation for multi-feature and zero-feature  layers (where features count
+        // Forward annotation mode requires that there is exactly one feature.
+        // No forward annotation for multi-feature and zero-feature layers (where features count
         // which are are both enabled and visible).
-        if (getEnabledFeatures(selectedLayer).size() != 1) {
+        List<AnnotationFeature> features = getEnabledAndVisibleFeatures(layer);
+        if (features.size() != 1) {
             return false;
         }
 
-        // we allow forward annotation only for a feature with a tagset
-        if (annotationService.listAnnotationFeature(selectedLayer).get(0).getTagset() != null) {
-            // there should be at least one tag in the tagset
-            TagSet tagSet = annotationService.listAnnotationFeature(selectedLayer).get(0)
-                    .getTagset();
-            return !annotationService.listTags(tagSet).isEmpty();
+        AnnotationFeature feature = features.get(0);
+        
+        // Forward mode is only valid for string features
+        if (!CAS.TYPE_NAME_STRING.equals(feature.getType())) {
+            return false;
         }
-
-        // Or layers with a single visible/enabled free-text feature.
-        return true;
+        
+        // If there is a tagset, it must have tags
+        if (feature.getTagset() != null) {
+            return !annotationService.listTags(feature.getTagset()).isEmpty();
+        }
+        else {
+            return true;
+        }
     }
 
     @Override
     protected void onConfigure()
     {
         super.onConfigure();
+        
         // Avoid reversing in read-only layers
         setEnabled(getModelObject().getDocument() != null && !editorPanel.isAnnotationFinished());
     }
 
-    private String getKeyBindValue(String aKey, Map<String, String> aBindTags)
-    {
-        // check if all the key pressed are the same character
-        // if not, just check a Tag for the last char pressed
-        if (aKey.isEmpty()) {
-            return aBindTags.get(aBindTags.keySet().iterator().next());
-        }
-        char prevC = aKey.charAt(0);
-        for (char ch : aKey.toCharArray()) {
-            if (ch != prevC) {
-                break;
-            }
-        }
-
-        if (aBindTags.get(aKey) != null) {
-            return aBindTags.get(aKey);
-        }
-        // re-cycle suggestions
-        if (aBindTags.containsKey(aKey.substring(0, 1))) {
-            selectedTag = aKey.substring(0, 1);
-            return aBindTags.get(aKey.substring(0, 1));
-        }
-        // set it to the first in the tag list , when arbitrary key is pressed
-        return aBindTags.get(aBindTags.keySet().iterator().next());
-    }
-
-    Map<String, String> getBindTags()
-    {
-        AnnotationFeature f = annotationService
-                .listAnnotationFeature(getModelObject().getSelectedAnnotationLayer()).get(0);
-        TagSet tagSet = f.getTagset();
-        Map<Character, String> tagNames = new LinkedHashMap<>();
-        Map<String, String> bindTag2Key = new LinkedHashMap<>();
-        for (Tag tag : annotationService.listTags(tagSet)) {
-            if (tagNames.containsKey(tag.getName().toLowerCase().charAt(0))) {
-                String oldBinding = tagNames.get(tag.getName().toLowerCase().charAt(0));
-                String newBinding = oldBinding + tag.getName().toLowerCase().charAt(0);
-                tagNames.put(tag.getName().toLowerCase().charAt(0), newBinding);
-                bindTag2Key.put(newBinding, tag.getName());
-            }
-            else {
-                tagNames.put(tag.getName().toLowerCase().charAt(0),
-                    tag.getName().toLowerCase().substring(0, 1));
-                bindTag2Key.put(tag.getName().toLowerCase().substring(0, 1), tag.getName());
-            }
-        }
-        return bindTag2Key;
-
-    }
-
     public void updateLayersDropdown()
     {
-        editorPanel.getLog().trace("updateLayersDropdown()");
-
         AnnotatorState state = getModelObject();
         annotationLayers.clear();
         AnnotationLayer l = null;
@@ -676,8 +658,6 @@ public class AnnotationFeatureForm
 
     void updateRememberLayer()
     {
-        editorPanel.getLog().trace("updateRememberLayer()");
-
         AnnotatorState state = getModelObject();
         if (state.getPreferences().isRememberLayer()) {
             if (state.getDefaultAnnotationLayer() == null) {
@@ -692,69 +672,6 @@ public class AnnotationFeatureForm
         if (state.getSelectedAnnotationLayer() != null) {
             selectedAnnotationLayer.setDefaultModelObject(
                 state.getSelectedAnnotationLayer().getUiName());
-        }
-    }
-
-    protected class LayerSelector
-        extends DropDownChoice<AnnotationLayer>
-    {
-        private static final long serialVersionUID = 2233133653137312264L;
-
-        LayerSelector(String aId, IModel<List<? extends AnnotationLayer>> aChoices)
-        {
-            super(aId, aChoices, new ChoiceRenderer<>("uiName"));
-            setOutputMarkupId(true);
-            add(new AjaxFormComponentUpdatingBehavior("change")
-            {
-                private static final long serialVersionUID = 5179816588460867471L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    AnnotatorState state = AnnotationFeatureForm.this.getModelObject();
-
-                    aTarget.add(relationHint);
-                    aTarget.add(forwardAnnotation);
-                    
-                    // If forward annotation was enabled, disable it
-                    if (state.isForwardAnnotation()) {
-                        state.setForwardAnnotation(false);
-                    }
-                    
-                    // If "remember layer" is set, the we really just update the selected
-                    // layer...
-                    // we do not touch the selected annotation not the annotation detail panel
-                    if (state.getPreferences().isRememberLayer()) {
-                        state.setSelectedAnnotationLayer(getModelObject());
-                    }
-                    
-                    // If "remember layer" is not set, then changing the layer means that we
-                    // want to change the type of the currently selected annotation
-                    else if (!state.getSelectedAnnotationLayer().equals(getModelObject())
-                        && state.getSelection().getAnnotation().isSet()) {
-                        try {
-                            if (state.getSelection().isArc()) {
-                                editorPanel.actionClear(aTarget);
-                            }
-                            else {
-                                actionReplace(aTarget);
-                            }
-                        }
-                        catch (Exception e) {
-                            handleException(AnnotationFeatureForm.LayerSelector.this,
-                                aTarget, e);
-                        }
-                    }
-                    // If no annotation is selected, then prime the annotation detail panel for
-                    // the new type
-                    else {
-                        state.setSelectedAnnotationLayer(getModelObject());
-                        selectedAnnotationLayer.setDefaultModelObject(getModelObject().getUiName());
-                        aTarget.add(selectedAnnotationLayer);
-                        editorPanel.clearFeatureEditorModels(aTarget);
-                    }
-                }
-            });
         }
     }
 
@@ -778,47 +695,32 @@ public class AnnotationFeatureForm
         {
             super.onAfterRender();
             
-            AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-            if (target != null) {
-                // Put focus on hidden input field if we are in forward-mode
-                if (getModelObject().isForwardAnnotation()) {
-                    List<AnnotationFeature> features = getEnabledFeatures(
-                            AnnotationFeatureForm.this.getModelObject()
-                                    .getSelectedAnnotationLayer());
-                    if (features.size() > 1) {
-                        // should not come here in the first place (controlled during
-                        // forward annotation process)
-                        return;
-                    }
-                    // Check if this is a free text annotation or a tagset is attached. Use
-                    // the hidden forwardAnnotationText element only for tagset based
-                    // forward annotations
-                    if (features.size() > 0 && features.get(0).getTagset() == null) {
-                        FeatureEditor editor = getFirstFeatureEditor();
-                        if (editor != null) {
-                            target.focusComponent(editor.getFocusComponent());
-                        }
-                    } 
-                    else {
-                        target.focusComponent(forwardAnnotationText);
-                    }
+            RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
+                // Put focus on hidden input field if we are in forward-mode unless the user has
+                // selected an annotation which is not on the forward-mode layer
+                AnnotatorState state = getModelObject();
+                AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                if (
+                        getModelObject().isForwardAnnotation() &&
+                        layer != null &&
+                        layer.equals(state.getDefaultAnnotationLayer())
+                ) {
+                    focusForwardAnnotationComponent(_target, false);
                 }
                 // If the user selects or creates an annotation then we put the focus on the
                 // first of the feature editors
                 else if (!Objects.equals(getRequestCycle().getMetaData(IsSidebarAction.INSTANCE),
                         true)) {
-                    FeatureEditor editor = getFirstFeatureEditor();
-                    if (editor != null) {
-                        target.focusComponent(editor.getFocusComponent());
-                    }
+                    getFirstFeatureEditor().ifPresent(_editor -> 
+                            _target.focusComponent(_editor.getFocusComponent()));
                 }
-            }
+            });
         }
 
         @Override
         protected void populateItem(final Item<FeatureState> item)
         {
-            editorPanel.getLog().trace("FeatureEditorPanelContent.populateItem("
+            LOG.trace("FeatureEditorPanelContent.populateItem("
                 + item.getModelObject().feature.getUiName() + ": "
                 + item.getModelObject().value + ")");
 
@@ -827,12 +729,12 @@ public class AnnotationFeatureForm
             item.setOutputMarkupId(true);
 
             final FeatureState featureState = item.getModelObject();
-            final FeatureEditor frag;
+            final FeatureEditor editor;
             
             // Look up a suitable editor and instantiate it
             FeatureSupport featureSupport = featureSupportRegistry
                     .getFeatureSupport(featureState.feature);
-            frag = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
+            editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
                     AnnotationFeatureForm.this.getModel(), item.getModel());
 
             if (!featureState.feature.getLayer().isReadonly()) {
@@ -843,11 +745,11 @@ public class AnnotationFeatureForm
                 // edited LinkFeatureEditors must be excluded because the auto-update will break
                 // the ability to add slots. Adding a slot is NOT an annotation action.
                 if (state.getSelection().getAnnotation().isSet()
-                    && !(frag instanceof LinkFeatureEditor)) {
-                    addAnnotateActionBehavior(frag);
+                    && !(editor instanceof LinkFeatureEditor)) {
+                    addAnnotateActionBehavior(editor);
                 }
-                else if (!(frag instanceof LinkFeatureEditor)) {
-                    addRefreshFeaturePanelBehavior(frag);
+                else if (!(editor instanceof LinkFeatureEditor)) {
+                    addRefreshFeaturePanelBehavior(editor);
                 }
 
                 // Add tooltip on label
@@ -859,20 +761,28 @@ public class AnnotationFeatureForm
                     tooltipTitle.append(')');
                 }
 
-                Component labelComponent = frag.getLabelComponent();
+                Component labelComponent = editor.getLabelComponent();
                 labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                 labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
                     featureState.feature.getDescription()));
             }
             else {
-                frag.getFocusComponent().setEnabled(false);
+                editor.getFocusComponent().setEnabled(false);
             }
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
             // that automatically saves feature editors on change/blur. 
             // Check addAnnotateActionBehavior.
-            frag.setOutputMarkupId(true);
-            item.add(frag);
+            editor.setOutputMarkupId(true);
+            editor.setOutputMarkupPlaceholderTag(true);
+            
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshes of the feature editor panel. This is required to restore the focus.
+            editor.getFocusComponent().setOutputMarkupId(true);
+            editor.getFocusComponent()
+                    .setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
+            
+            item.add(editor);
         }
 
         private void addRefreshFeaturePanelBehavior(final FeatureEditor aFrag)
@@ -944,7 +854,12 @@ public class AnnotationFeatureForm
                         getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
                         
                         JCas jCas = editorPanel.getEditorCas();
-                        if (state.isForwardAnnotation()) {
+                        AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                        if (
+                                state.isForwardAnnotation() &&
+                                layer != null &&
+                                layer.equals(state.getDefaultAnnotationLayer())
+                        ) {
                             editorPanel.actionCreateForward(aTarget, jCas);
                         } else {
                             editorPanel.actionCreateOrUpdate(aTarget, jCas);
@@ -975,16 +890,6 @@ public class AnnotationFeatureForm
         }
     }
 
-    protected void setSelectedTag(String aSelectedTag)
-    {
-        selectedTag = aSelectedTag;
-    }
-
-    protected TextField<String> getForwardAnnotationText()
-    {
-        return forwardAnnotationText;
-    }
-
     protected List<AnnotationLayer> getAnnotationLayers()
     {
         return annotationLayers;
@@ -995,7 +900,7 @@ public class AnnotationFeatureForm
         return featureEditorPanel;
     }
     
-    protected LayerSelector getLayerSelector()
+    protected DropDownChoice<AnnotationLayer> getLayerSelector()
     {
         return layerSelector;
     }

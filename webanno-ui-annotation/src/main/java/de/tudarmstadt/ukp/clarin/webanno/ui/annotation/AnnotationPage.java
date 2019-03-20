@@ -17,11 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAdmin;
-import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isAnnotator;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
@@ -37,6 +37,7 @@ import javax.persistence.NoResultException;
 
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -63,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -85,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -120,7 +122,7 @@ public class AnnotationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
@@ -236,13 +238,12 @@ public class AnnotationPage
         
         add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
 
-        add(new ActionBarLink("showExportDialog", exportDialog::show)
-                .onConfigure(_this -> {
-                    AnnotatorState state = AnnotationPage.this.getModelObject();
-                    _this.setVisible(state.getProject() != null
-                            && (isAdmin(state.getProject(), projectService,
-                                    state.getUser()) || !state.getProject().isDisableExport()));
-                }));
+        add(new ActionBarLink("showExportDialog", exportDialog::show).onConfigure(_this -> {
+            AnnotatorState state = AnnotationPage.this.getModelObject();
+            _this.setVisible(state.getProject() != null
+                    && (projectService.isAdmin(state.getProject(), state.getUser())
+                            || !state.getProject().isDisableExport()));
+        }));
 
         add(new ActionBarLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
@@ -281,6 +282,7 @@ public class AnnotationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()));
@@ -297,7 +299,7 @@ public class AnnotationPage
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
-                if (isAnnotator(project, projectService, user)
+                if (projectService.isAnnotator(project, user)
                         && WebAnnoConst.PROJECT_TYPE_ANNOTATION.equals(project.getMode())) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
@@ -306,14 +308,10 @@ public class AnnotationPage
         });
     }
 
+    @Override
     public NumberTextField<Integer> getGotoPageTextField()
     {
         return gotoPageTextField;
-    }
-
-    public void setGotoPageTextField(NumberTextField<Integer> aGotoPageTextField)
-    {
-        gotoPageTextField = aGotoPageTextField;
     }
 
     private DocumentNamePanel createDocumentInfoLabel()
@@ -323,7 +321,7 @@ public class AnnotationPage
 
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -338,6 +336,12 @@ public class AnnotationPage
             {
                 actionRefreshDocument(aTarget);
             }
+            
+            @Override
+            public JCas getEditorCas() throws IOException
+            {
+                return AnnotationPage.this.getEditorCas();
+            }
         };
     }
     
@@ -350,7 +354,11 @@ public class AnnotationPage
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        return factory.create("editor", getModel(), detailEditor, this::getEditorCas);
+        AnnotationEditorBase editor = factory.create("editor", getModel(), detailEditor,
+                this::getEditorCas);
+        editor.add(LambdaBehavior.visibleWhen(() -> getModelObject().getDocument() != null));
+        editor.setOutputMarkupPlaceholderTag(true);
+        return editor;
     }
 
     private SidebarPanel createLeftSidebar()
@@ -412,14 +420,13 @@ public class AnnotationPage
         if (state.getDocument() == null) {
             throw new IllegalStateException("Please open a document first!");
         }
+
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
         
-        SourceDocument aDocument = getModelObject().getDocument();
-
-        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
-                state.getUser());
-
-        // If there is no CAS yet for the annotation document, create one.
-        return documentService.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(state.getDocument(),
+                state.getUser().getUsername());
     }
 
     private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
@@ -495,15 +502,16 @@ public class AnnotationPage
             WicketUtil.refreshPage(aTarget, getPage());
         }
         catch (Exception e) {
-            LOG.info("Error reading CAS " + e.getMessage());
+            LOG.info("Error reading CAS: {}", e.getMessage());
             error("Error reading CAS " + e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
     }
     
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            actionValidateDocument(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
@@ -532,7 +540,7 @@ public class AnnotationPage
     
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
         
@@ -556,13 +564,16 @@ public class AnnotationPage
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
+            
+            // Initialize timestamp in state
+            updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
-                    projectService, annotationService, state, state.getMode());
+            loadPreferences();
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -611,14 +622,23 @@ public class AnnotationPage
             handleException(aTarget, e);
         }
 
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
     
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
-        annotationEditor.requestRender(aTarget);
         gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
+        
+        try {
+            annotationEditor.requestRender(aTarget);
+        }
+        catch (Exception e) {
+            LOG.warn("Editor refresh requested at illegal time, forcing page refresh",
+                    new RuntimeException());
+            throw new RestartResponseException(getPage());
+        }
+        
         aTarget.add(gotoPageTextField);
         aTarget.add(getOrCreatePositionInfoLabel());
         aTarget.addChildren(getPage(), IFeedback.class);
@@ -740,7 +760,7 @@ public class AnnotationPage
         
         // Check access to project
         if (project != null
-                && !isAnnotator(project, projectService, getModelObject().getUser())) {
+                && !projectService.isAnnotator(project, getModelObject().getUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }

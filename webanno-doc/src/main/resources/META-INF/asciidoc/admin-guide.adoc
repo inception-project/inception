@@ -1,0 +1,92 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= {product-name} Administrator Guide
+The {product-name} Team
+
+This guide covers handling {product-name} from an administrator's perspective.
+
+
+
+include::{include-dir}installation.adoc[]
+
+include::common/systemrequirements.adoc[leveloffset=+1]
+
+include::{include-dir}installation_java.adoc[leveloffset=+1]
+
+include::{include-dir}installation_home.adoc[leveloffset=+1]
+
+include::{include-dir}installation_database.adoc[leveloffset=+1]
+
+include::{include-dir}installation_database_mysql.adoc[leveloffset=+2]
+
+include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
+
+include::{include-dir}installation_jar.adoc[leveloffset=+1]
+
+include::{include-dir}installation_tomcat.adoc[leveloffset=+1]
+
+include::{include-dir}installation_ssl.adoc[leveloffset=+2]
+
+include::{include-dir}installation_ssl_lets_encrypt.adoc[leveloffset=+2]
+
+include::{include-dir}installation_ssl_nginx.adoc[leveloffset=+2]
+
+include::{include-dir}installation_ssl_nginx_reverse_proxy.adoc[leveloffset=+2]
+
+include::{include-dir}installation_docker.adoc[leveloffset=+1]
+
+<<<
+
+
+
+include::{include-dir}upgrade.adoc[]
+
+include::{include-dir}upgrade_backup.adoc[leveloffset=+1]
+
+include::{include-dir}upgrade_jar.adoc[leveloffset=+1]
+
+include::{include-dir}upgrade_tomcat.adoc[leveloffset=+1]
+
+include::{include-dir}upgrade_imexport.adoc[leveloffset=+1]
+
+include::common/migration.adoc[leveloffset=+1]
+
+<<<
+
+
+
+include::{include-dir}remote-api.adoc[]
+
+include::{include-dir}remote-api-webhooks.adoc[leveloffset=+1]
+
+<<<
+
+
+
+include::{include-dir}settings.adoc[]
+
+include::{include-dir}settings_general.adoc[leveloffset=+1]
+
+include::{include-dir}settings_database.adoc[leveloffset=+1]
+
+include::{include-dir}settings_internal-backup.adoc[leveloffset=+1]
+
+include::{include-dir}settings_custom-header-icons.adoc[leveloffset=+1]
+
+include::{include-dir}settings_annotation-editor.adoc[leveloffset=+1]
+
+include::{include-dir}security-preauth.adoc[leveloffset=+1]

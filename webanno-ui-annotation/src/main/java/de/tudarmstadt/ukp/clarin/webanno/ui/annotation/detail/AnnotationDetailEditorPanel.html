@@ -52,6 +52,17 @@
 <body>
   <wicket:panel>
     <div id="annotationDetailEditorPanel" class="flex-content flex-v-container">
+      <!-- 
+        Style the form such that it is actionable by keyboard events but does not take up space
+        on the screen.
+       -->
+      <form wicket:id="forwardForm" style="width: 1px; height: 1px; overflow: hidden; opacity: 0; margin-top: -1px;">
+        <!-- 
+          The user should never tab into this field accidentally. Focus is set explicitly by the
+          forward annotation mode.
+         -->
+        <input wicket:id=forwardAnno tabindex="-1"></input>
+      </form>
       <form wicket:id="annotationFeatureForm" id="annotationFeatureForm" 
           class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id=deleteAnnotationDialog></div>
@@ -65,13 +76,14 @@
                     <wicket:label key="layer"/>
                   </label>
                   <div class="col-sm-9">
-                    <select wicket:id="defaultAnnotationLayer" class="form-control"></select>
+                    <select wicket:id="defaultAnnotationLayer" class="form-control" 
+                        data-container="body"></select>
                   </div>
                   <div class="col-sm-offset-3 col-sm-9 small">
                     <em wicket:id="relationHint"></em>
                   </div>
                 </div>
-                <div class="form-group">
+                <div class="form-group" wicket:enclosure="forwardAnnotation">
                   <div class="col-sm-offset-3 col-sm-9">
                     <div class="checkbox">
                       <label wicket:for="forwardAnnotation">
@@ -88,22 +100,23 @@
           <div class="panel-heading">
             <h3 class="panel-title">
               Annotation
-              <div class="pull-right">
+              <span class="pull-right">
                 <input wicket:id="delete" type="button" class="btn btn-xs btn-danger" wicket:message="value:delete"/>
                 <input wicket:id="reverse" type="button" class="btn btn-xs btn-default" wicket:message="value:reverse"/>
                 <input wicket:id="clear" type="button" class="btn btn-xs btn-default" wicket:message="value:clear"/>
-              </div> 
+              </span> 
             </h3>
           </div>
           <div class="scrolling panel-body">
             <div class="col-sm-12">
               <span wicket:id="noAnnotationWarning"></span>
               
-              <div style="width: 1px; height: 1px; overflow: hidden;">
-                <input style="width: 100%; display: block; overflow: hidden; height: 1px"
-                  wicket:id=forwardAnno></input>
+              <div class="form-group" wicket:enclosure="selectedAnnotationType" style="position: relative; height: 5em;">
+                <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0;" readonly>
+                  <wicket:container wicket:id="selectedAnnotationType"/>
+                </div>
               </div>
-              
+
               <div wicket:id="featureEditorsContainer" class="form-horizontal">
                 <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
                   <label class="col-sm-3 control-label">Layer</label>
@@ -111,17 +124,17 @@
                     <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>
                   </div>
                 </div>
-                <div class="form-group" wicket:enclosure="selectedText">
+                <div class="form-group">
                   <label class="col-sm-3 control-label">Text</label>
                   <div class="col-sm-9" style="position: relative; height: 5em;">
-                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 15px; right: 15px;" readonly>
-                      <wicket:container wicket:id="selectedText"/>
+                    <div class="form-control" style="overflow-y: auto; width: unset; word-wrap: break-word; height: 5em; position: absolute; top: 0; left: 10px; right: 10px;" readonly>
+                      <a wicket:id="jumpToAnnotation"><wicket:container wicket:id="selectedText"/></a>
                     </div>
                   </div>
                 </div>
                 <hr/>
                 <div wicket:id="noFeaturesWarning"></div>
-                <div id="featureValues" wicket:id="featureValues">
+                <div wicket:id="featureValues">
                   <div wicket:id="editor"></div>
                 </div>
               </div>

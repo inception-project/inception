@@ -1,0 +1,30 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+[[sect_annotation_link_features]]
+= Link Features
+
+Link features can be used to link one annotation to others. Before a link can be made, a slot with 
+a role must be added. Enter the role label in the text field and press the *add* button to create
+the slot. Next, click on field in the newly created slot to *arm* it. The field's color will change
+to indicate that it is armed. Now you can fill the slot by double-clicking on a span 
+annotation. To remove a slot, arm it and then press the *del* button.
+
+== Changing role names
+
+To change a previously selected role name, no prior deletion is needed. Just double-click on the instance you want to change, it will be highlighted in orange, and chose another role name.

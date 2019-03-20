@@ -24,18 +24,20 @@ import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,8 +56,8 @@ public class CurationDocumentServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private @Resource CasStorageService casStorageService;
-    private @Resource AnnotationSchemaService annotationService;
+    private @Autowired CasStorageService casStorageService;
+    private @Autowired AnnotationSchemaService annotationService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -131,5 +133,13 @@ public class CurationDocumentServiceImpl
                 .setParameter("state", AnnotationDocumentState.FINISHED).getResultList();
         docs.sort(SourceDocument.NAME_COMPARATOR);
         return docs;
+    }
+    
+    @Override
+    public Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
     }
 }

@@ -312,6 +312,7 @@
     </textstructure>
     <orthography>
       <correction operation="replace" tokenIDs="t_0">Karina</correction>
+      <correction tokenIDs="t_1">flog</correction>
     </orthography>
     <tc:lemmas xmlns:tc="http://www.dspin.de/data/textcorpus">
       <tc:lemma ID="l_0" tokenIDs="t_0">Karin</tc:lemma>

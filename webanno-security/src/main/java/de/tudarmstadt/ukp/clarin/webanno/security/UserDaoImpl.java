@@ -17,16 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.Validate;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 /**
@@ -85,16 +91,25 @@ public class UserDaoImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
+    @Transactional
     public User get(String aUsername)
     {
-        if (!exists(aUsername)) {
+        Validate.notBlank(aUsername, "User must be specified");
+        
+        String query = "FROM " + User.class.getName() + " o WHERE o.username = :username";
+        
+        List<User> users = entityManager
+                .createQuery(query, User.class)
+                .setParameter("username", aUsername)
+                .setMaxResults(1)
+                .getResultList();
+        
+        if (users.isEmpty()) {
             return null;
         }
-        return entityManager
-                .createQuery("FROM " + User.class.getName() + " o WHERE o.username = :username",
-                        User.class)
-                .setParameter("username", aUsername).getSingleResult();
+        else {
+            return users.get(0);
+        }
     }
 
     @Override
@@ -111,5 +126,73 @@ public class UserDaoImpl
     {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         return get(username);
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public List<Authority> listAuthorities(User aUser)
+    {
+        String query =
+                "FROM Authority " + 
+                "WHERE username = :username";
+        return entityManager
+                .createQuery(query, Authority.class)
+                .setParameter("username", aUser).getResultList();
+    }
+    
+    /**
+     * Check if the user has global administrator permissions.
+     */
+    @Override
+    @Transactional
+    public boolean isAdministrator(User aUser)
+    {
+        boolean roleAdmin = false;
+        for (String role : getRoles(aUser)) {
+            if (Role.ROLE_ADMIN.name().equals(role)) {
+                roleAdmin = true;
+                break;
+            }
+        }
+        return roleAdmin;
+    }
+
+    /**
+     * Check if the user has the permission to create projects.
+     */
+    @Override
+    @Transactional
+    public boolean isProjectCreator(User aUser)
+    {
+        boolean roleAdmin = false;
+        for (String role : getRoles(aUser)) {
+            if (Role.ROLE_PROJECT_CREATOR.name().equals(role)) {
+                roleAdmin = true;
+                break;
+            }
+        }
+        return roleAdmin;
+    }
+
+    @Override
+    @Transactional
+    public Set<String> getRoles(User aUser)
+    {
+        // When looking up roles for the user who is currently logged in, then we look in the
+        // security context - otherwise we ask the database.
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Set<String> roles = new HashSet<>();
+        if (aUser.getUsername().equals(username)) {
+            for (GrantedAuthority ga : SecurityContextHolder.getContext().getAuthentication()
+                    .getAuthorities()) {
+                roles.add(ga.getAuthority());
+            }
+        }
+        else {
+            for (Authority a : listAuthorities(aUser)) {
+                roles.add(a.getAuthority());
+            }
+        }
+        return roles;
     }
 }

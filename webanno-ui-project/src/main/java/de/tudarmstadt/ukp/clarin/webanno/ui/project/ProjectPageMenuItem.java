@@ -23,7 +23,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 
@@ -34,6 +33,12 @@ public class ProjectPageMenuItem implements MenuItem
     private @Autowired UserDao userRepo;
     private @Autowired ProjectService projectService;
 
+    @Override
+    public String getPath()
+    {
+        return "/admin/project";
+    }
+    
     @Override
     public String getIcon()
     {
@@ -52,7 +57,7 @@ public class ProjectPageMenuItem implements MenuItem
     @Override
     public boolean applies()
     {
-        return SecurityUtil.projectSettingsEnabeled(projectService, userRepo.getCurrentUser());
+        return projectService.managesAnyProject(userRepo.getCurrentUser());
     }
     
     @Override

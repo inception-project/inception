@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;
 
+import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController.API_BASE;
+import static java.util.Arrays.asList;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -30,19 +32,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.io.File;
 import java.util.Collections;
-import java.util.Properties;
-
-import javax.annotation.Resource;
 
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -62,24 +63,29 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.BackupProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasStorageServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.DocumentServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.ImportExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.ProjectExportServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ExportServiceImpl;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportService;
-import de.tudarmstadt.ukp.clarin.webanno.export.ImportServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.project.ProjectServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDaoImpl;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextReader;
-import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
+import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.AeroRemoteApiController;
 
 @RunWith(SpringRunner.class) 
 @EnableAutoConfiguration
@@ -92,8 +98,8 @@ import de.tudarmstadt.ukp.dkpro.core.io.text.TextWriter;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RemoteApiController2Test
 {
-    private @Resource WebApplicationContext context;
-    private @Resource UserDao userRepository;
+    private @Autowired WebApplicationContext context;
+    private @Autowired UserDao userRepository;
     
     private MockMvc mvc;
 
@@ -122,14 +128,14 @@ public class RemoteApiController2Test
     @Test
     public void t001_testProjectCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects")
+        mvc.perform(get(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(post("/api/v2/projects")
+        mvc.perform(post(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
@@ -139,7 +145,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("project1"));
         
-        mvc.perform(get("/api/v2/projects")
+        mvc.perform(get(API_BASE + "/projects")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -151,14 +157,14 @@ public class RemoteApiController2Test
     @Test
     public void t002_testDocumentCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(multipart("/api/v2/projects/1/documents")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -169,7 +175,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.id").value("1"))
             .andExpect(jsonPath("$.body.name").value("test.txt"));
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -182,14 +188,14 @@ public class RemoteApiController2Test
     @Test
     public void t003_testAnnotationCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+        mvc.perform(get(API_BASE + "/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"))
             .andExpect(jsonPath("$.messages").isEmpty());
         
-        mvc.perform(multipart("/api/v2/projects/1/documents/1/annotations/admin")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents/1/annotations/admin")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -201,7 +207,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.state").value("IN-PROGRESS"))
             .andExpect(jsonPath("$.body.timestamp").doesNotExist());
      
-        mvc.perform(get("/api/v2/projects/1/documents/1/annotations")
+        mvc.perform(get(API_BASE + "/projects/1/documents/1/annotations")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -214,7 +220,7 @@ public class RemoteApiController2Test
     @Test
     public void t004_testCurationCreate() throws Exception
     {
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -223,7 +229,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body[0].name").value("test.txt"))
             .andExpect(jsonPath("$.body[0].state").value("NEW"));
         
-        mvc.perform(multipart("/api/v2/projects/1/documents/1/curation")
+        mvc.perform(multipart(API_BASE + "/projects/1/documents/1/curation")
                 .file("content", "This is a test.".getBytes("UTF-8"))
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
@@ -236,7 +242,7 @@ public class RemoteApiController2Test
             .andExpect(jsonPath("$.body.state").value("COMPLETE"))
             .andExpect(jsonPath("$.body.timestamp").exists());
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -249,7 +255,7 @@ public class RemoteApiController2Test
     @Test
     public void t005_testCurationDelete() throws Exception
     {
-        mvc.perform(delete("/api/v2/projects/1/documents/1/curation")
+        mvc.perform(delete(API_BASE + "/projects/1/documents/1/curation")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN"))
                 .param("projectId", "1")
@@ -257,7 +263,7 @@ public class RemoteApiController2Test
             .andExpect(status().isOk())
             .andExpect(content().contentType("application/json;charset=UTF-8"));
      
-        mvc.perform(get("/api/v2/projects/1/documents")
+        mvc.perform(get(API_BASE + "/projects/1/documents")
                 .with(csrf().asHeader())
                 .with(user("admin").roles("ADMIN")))
             .andExpect(status().isOk())
@@ -269,10 +275,12 @@ public class RemoteApiController2Test
 
     @Configuration
     public static class TestContext {
+        @Autowired ApplicationEventPublisher applicationEventPublisher;
+        
         @Bean
-        public RemoteApiController2 remoteApiV2()
+        public AeroRemoteApiController remoteApiV2()
         {
-            return new RemoteApiController2();
+            return new AeroRemoteApiController();
         }
         
         @Bean
@@ -290,7 +298,9 @@ public class RemoteApiController2Test
         @Bean
         public DocumentService documentService()
         {
-            return new DocumentServiceImpl();
+            return new DocumentServiceImpl(repositoryProperties(), userRepository(),
+                    casStorageService(), importExportService(), projectService(),
+                    applicationEventPublisher);
         }
         
         @Bean
@@ -308,13 +318,14 @@ public class RemoteApiController2Test
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl();
+            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
         }
         
         @Bean
         public ImportExportService importExportService()
         {
-            return new ImportExportServiceImpl();
+            return new ImportExportServiceImpl(repositoryProperties(),
+                    asList(new TextFormatSupport()), casStorageService(), annotationService());
         }
         
         @Bean
@@ -324,31 +335,38 @@ public class RemoteApiController2Test
         }
 
         @Bean
-        public ImportService importService()
+        public ProjectExportService exportService()
         {
-            return new ImportServiceImpl();
-        }
-
-        @Bean
-        public ExportService exportService()
-        {
-            return new ExportServiceImpl();
-        }
-
-        @Bean
-        public Properties formats()
-        {
-            Properties props = new Properties();
-            props.put("text.label", "Plain text");
-            props.put("text.reader", TextReader.class.getName());
-            props.put("text.writer", TextWriter.class.getName());
-            return props;
+            return new ProjectExportServiceImpl(null, projectService());
         }
         
+        @Bean
+        public RepositoryProperties repositoryProperties()
+        {
+            return new RepositoryProperties();
+        }
+
+        @Bean 
+        public BackupProperties backupProperties()
+        {
+            return new BackupProperties();
+        }
+
         @Bean
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
+        }
+        
+        @Bean
+        public LayerSupportRegistry layerSupportRegistry()
+        {
+            return new LayerSupportRegistryImpl(asList(
+                    new SpanLayerSupport(featureSupportRegistry(), null, annotationService(), null),
+                    new RelationLayerSupport(featureSupportRegistry(), null, annotationService(),
+                            null),
+                    new ChainLayerSupport(featureSupportRegistry(), null, annotationService(),
+                            null)));
         }
     }
 }

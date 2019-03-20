@@ -119,14 +119,4 @@ public class AnnotationPreferencesDialog
             close(aTarget);
         }
     }    
-    
-    public boolean isCloseButtonClicked()
-    {
-        return closeButtonClicked;
-    }
-
-    public void setCloseButtonClicked(boolean closeButtonClicked)
-    {
-        this.closeButtonClicked = closeButtonClicked;
-    }
 }

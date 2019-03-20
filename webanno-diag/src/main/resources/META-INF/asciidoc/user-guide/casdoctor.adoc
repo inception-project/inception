@@ -1,0 +1,260 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_casdoctor]]
+== CAS Doctor
+
+The CAS Doctor is an essential development tool. When enabled, it checks the CAS for
+consistency when loading or saving a CAS. It can also automatically repair inconsistencies when
+configured to do so. This section gives an overview of the available checks and repairs.
+
+It is safe to enable any <<sect_checks,checks>>. However, active checks may considerably slow down 
+the application, in particular for large documents or for actions that work with many documents, e.g. 
+curation or the calculation of agreement. Thus, checks should not be enabled on a production system
+unless the application behaves strangely and it is necessary to check the documents for consistency.
+
+Enabling <<sect_repairs,repairs>> should be done with great care as most repairs are performing
+destructive actions. Repairs should never be enabled on a production system. The repairs are
+executed in the order in which they are appear in the `debug.casDoctor.repairs` setting. This is
+important in particular when applying destructive repairs.
+
+When documents are loaded, CAS Doctor first tries to apply any enabled <<sect_repairs,repairs>>
+and afterwards applies enabled <<sect_checks,checks>> to ensure that the potentially repaired
+document is consistent.
+
+Additionally, CAS Doctor applies enabled <<sect_checks,checks>> *before* saving a document. This
+ensures that a bug in the user interface introduces inconsistencies into the document on disk. I.e.
+the consistency of the persisted document is protected! Of course, it requires that relevant checks
+have been implemented and are actually enabled.
+
+By default, CAS Doctor generates an exception when a check or repair fails. This ensures that
+inconsistencies are contained and do not propagate further. In some cases, e.g. when it is known
+that by its nature an inconsistency does not propagate and can be avoided by the user, it may be
+convenient to allow the user to continue working with the application while a repair is being developed.
+In such a case, CAS Doctor can be configured to be non-fatal. Mind that users can always continue
+to work on documents that are consistent. CAS Doctor only prevents loading inconsistent documents
+and saving inconsistent documents.
+
+=== Configuration
+
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| debug.casDoctor.fatal
+| If the extra checks trigger an exception
+| true
+| false
+
+| debug.casDoctor.checks
+| Extra checks to perform when a CAS is saved (also on load if any repairs are enabled)
+| _unset_
+| comma-separated list of <<sect_checks,checks>>
+
+| debug.casDoctor.repairs
+| Repairs to be performed when a CAS is loaded - order matters!
+| _unset_
+| comma-separated list of <<sect_repairs,repairs>>
+
+| debug.casDoctor.forceReleaseBehavior
+| Behave as like a release version even if it is a beta or snapshot version.
+| false
+| true
+|===
+
+[[sect_checks]]
+=== Checks
+
+[[check_AllFeatureStructuresIndexedCheck]]
+==== All Feature Structures Indexed
+
+[horizontal]
+ID:: `AllFeatureStructuresIndexedCheck`
+Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>, <<repair_RemoveDanglingRelationsRepair>>, <<repair_ReindexFeatureAttachedSpanAnnotationsRepair>>
+
+This check verifies if all reachable feature structures in the CAS are also indexed. We do not
+currently use any un-indexed feature structures. If there are any un-indexed feature structures in the
+CAS, it is likely due to a bug in the application and can cause undefined behavior.
+
+For example, older versions of {product-name} had a bug that caused deleted spans still to be
+accessible through relations which had used the span as a source or target.
+
+This check is very extensive and slow. 
+
+[[check_FeatureAttachedSpanAnnotationsTrulyAttachedCheck]]
+==== Feature-Attached Span Annotations Truly Attached
+
+[horizontal]
+ID:: `FeatureAttachedSpanAnnotationsTrulyAttachedCheck`
+Related repairs:: <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>, <<repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair>>
+
+Certain span layers are attached to another span layer through a feature reference
+from that second layer. For example, annotations in the POS layer must always be referenced from
+a Token annotation via the Token feature `pos`. This check ensures that annotations on layers such
+as the POS layer are properly referenced from the attaching layer (e.g. the Token layer).
+
+[[check_LinksReachableThroughChainsCheck]]
+==== Links Reachable Through Chains
+
+[horizontal]
+ID:: `LinksReachableThroughChainsCheck`
+Related repairs:: <<repair_RemoveDanglingChainLinksRepair>>
+
+Each chain in a chain layers consist of a *chain* and several *links*. The chain
+points to the first link and each link points to the following link. If the CAS contains any links
+that are not reachable through a chain, then this is likely due to a bug.
+
+[[check_NoMultipleIncomingRelationsCheck]]
+==== No Multiple Incoming Relations
+
+[horizontal]
+ID:: `NoMultipleIncomingRelationsCheck`
+
+Check that nodes have only one in-going dependency relation inside the same annotation layer.
+Since dependency relations form a tree, every node of this tree can only have at most one parent node.
+This check outputs a message that includes the sentence number (useful to jump directly to the problem) and the actual offending dependency edges.
+
+[[check_NoZeroSizeTokensAndSentencesCheck]]
+==== No Zero-Size Tokens and Sentences
+
+[horizontal]
+ID:: `NoZeroSizeTokensAndSentencesCheck`
+Related repairs:: <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
+
+Zero-sized tokens and sentences are not valid and can cause undefined behavior.
+
+[[check_RelationOffsetsCheck]]
+==== Relation Offsets Check
+
+[horizontal]
+ID:: `RelationOffsetsCheck`
+Related repairs:: <<repair_RelationOffsetsRepair>>
+
+Checks that the offsets of relations match the target of the relation. This mirrors the DKPro
+Core convention that the offsets of a dependency relation must match the offsets of the 
+dependent.
+
+[[check_CASMetadataTypeIsPresentCheck]]
+==== CASMetadata Type Is PresentCheck
+[horizontal]
+ID:: `CASMetadataTypeIsPresentCheck`
+Related repairs:: <<repair_UpgradeCasRepair>>
+
+Checks if the ìnternal type `CASMetadata is defined in the type system of this CAS. If this is
+not the case, then the application may not be able to detect concurrent modifications.
+
+
+[[sect_repairs]]
+=== Repairs
+
+[[repair_ReattachFeatureAttachedSpanAnnotationsRepair]]
+==== Re-attach Feature-Attached Span Annotations
+
+[horizontal]
+ID:: `ReattachFeatureAttachedSpanAnnotationsRepair`
+
+This repair action attempts to attach spans that should be attached to another span, but are not.
+E.g. it tries to set the `pos` feature of tokens to the POS annotation for that respective token.
+The action is not performed if there are multiple stacked annotations to choose from. Stacked
+attached annotations would be an indication of a bug because attached layers are not allowed to
+stack.
+
+This is a safe repair action as it does not delete anything.
+
+
+[[repair_ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair]]
+==== Re-attach Feature-Attached Span Annotations And Delete Extras
+
+[horizontal]
+ID:: `ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair`
+
+This is a destructive variant of <<repair_ReattachFeatureAttachedSpanAnnotationsRepair>>. In
+addition to re-attaching unattached annotations, it also removes all extra candidates that cannot
+be attached. For example, if there are two unattached Lemma annotations at the position of a Token
+annotation, then one will be attached and the other will be deleted. Which one is attached and 
+which one is deleted is undefined.
+
+
+[[repair_ReindexFeatureAttachedSpanAnnotationsRepair]]
+==== Re-index Feature-Attached Span Annotations
+
+[horizontal]
+ID:: `ReindexFeatureAttachedSpanAnnotationsRepair`
+
+This repair locates annotations that are reachable via a attach feature but which are not actually
+indexed in the CAS. Such annotations are then added back to the CAS indexes.
+
+This is a safe repair action as it does not delete anything.
+
+[[repair_RelationOffsetsRepair]]
+==== Repair Relation Offsets
+
+[horizontal]
+ID:: `RelationOffsetsRepair`
+
+Fixes that the offsets of relations match the target of the relation. This mirrors the DKPro
+Core convention that the offsets of a dependency relation must match the offsets of the 
+dependent.
+
+[[repair_RemoveDanglingChainLinksRepair]]
+==== Remove Dangling Chain Links
+
+[horizontal]
+ID:: `RemoveDanglingChainLinksRepair`
+
+This repair action removes all chain links that are not reachable through a chain.
+
+Although this is a destructive repair action, it is likely a safe action in most cases. Users are
+not able see chain links that are not part of a chain in the user interface anyway.
+
+[[repair_RemoveDanglingRelationsRepair]]
+==== Remove Dangling Relations
+
+[horizontal]
+ID:: `RemoveDanglingRelationsRepair`
+
+This repair action removes all relations that point to unindexed spans. 
+
+Although this is a destructive repair action, it is likely a safe action in most cases. When
+deleting a span, normally any attached relations are also deleted (unless there is a bug).
+Dangling relations are not visible in the user interface.
+
+[[repair_RemoveZeroSizeTokensAndSentencesRepair]]
+==== Remove Zero-Size Tokens and Sentences
+
+[horizontal]
+ID:: `RemoveZeroSizeTokensAndSentencesRepair`
+
+This is a destructive repair action and should be used with care. When tokens are removed, also
+any attached lemma, POS, or stem annotations are removed. However, no relations that attach to 
+lemma, POS, or stem are removed, thus this action could theoretically leave dangling relations
+behind. Thus, the <<repair_RemoveDanglingRelationsRepair>> repair action should be configured
+*after* this repair action in the settings file.
+
+[[repair_UpgradeCasRepair]]
+==== Upgrade CAS
+
+[horizontal]
+ID:: `UpgradeCasRepair`
+
+Ensures that the CAS is up-to-date with the project type system. It performs the same operation
+which is regularly performed when a user opens a document for annotation/curation.
+
+This is considered to be safe repair action as it only garbage-collects data from the CAS that is
+no longer reachable anyway.

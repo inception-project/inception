@@ -20,13 +20,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.documents;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Documents to the selected {@link Project}
  */
-@ProjectSettingsPanel(label = "Documents", prio = 200)
 public class ProjectDocumentsPanel
     extends ProjectSettingsPanelBase
 {
@@ -40,5 +38,3 @@ public class ProjectDocumentsPanel
         add(new DocumentListPanel("documents", aProject));
     }
 }
-
-

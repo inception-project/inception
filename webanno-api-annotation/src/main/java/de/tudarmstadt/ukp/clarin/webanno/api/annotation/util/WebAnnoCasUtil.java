@@ -20,17 +20,18 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.JCasUtil.selectCovering;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FSIterator;
@@ -87,42 +88,49 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Check if the two given offsets are within the same sentence.
+     * Check if the two given begin offsets are within the same sentence. If the second offset
+     * is at the end of the sentence, it is no longer considered to be part of the sentence.
+     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
+     * is no sentence covering the offsets, the method returns <code>false</code>.
      *
      * @param aJcas
      *            the JCAs.
-     * @param aReferenceOffset
+     * @param aBegin1
      *            the reference offset.
-     * @param aCompareOffset
+     * @param aBegin2
      *            the comparison offset.
      * @return if the two offsets are within the same sentence.
      */
-    public static boolean isSameSentence(JCas aJcas, int aReferenceOffset, int aCompareOffset)
+    public static boolean isBeginInSameSentence(JCas aJcas, int aBegin1, int aBegin2)
     {
-        // Trivial case
-        if (aReferenceOffset == aCompareOffset) {
-            return true;
-        }
-
-        int offset1 = Math.min(aReferenceOffset, aCompareOffset);
-        int offset2 = Math.max(aReferenceOffset, aCompareOffset);
-
-        // Scanning through sentences
-        Iterator<Sentence> si = JCasUtil.iterator(aJcas, Sentence.class);
-        while (si.hasNext()) {
-            Sentence s = si.next();
-            if (s.getBegin() <= offset1 && offset1 <= s.getEnd()) {
-                return s.getBegin() <= offset2 && offset2 <= s.getEnd();
-            }
-
-            // Sentences are sorted. When we hit the first sentence that is beyond the reference
-            // offset, we will never again find a sentence that contains it.
-            if (offset1 < s.getBegin()) {
-                return false;
-            }
-        }
-
-        return false;
+        return selectCovering(aJcas, Sentence.class, aBegin1, aBegin1).stream()
+            .filter(s -> s.getBegin() <= aBegin1 && aBegin1 < s.getEnd())
+            .filter(s -> s.getBegin() <= aBegin2 && aBegin2 < s.getEnd())
+            .findFirst()
+            .isPresent();
+    }
+    
+    /**
+     * Check if the begin/end offsets are within the same sentence. If the end offset
+     * is at the end of the sentence, it is considered to be part of the sentence.
+     * Mind that annotations in UIMA are half-open intervals <code>[begin,end)</code>. If there
+     * is no sentence covering the offsets, the method returns <code>false</code>.
+     *
+     * @param aJcas
+     *            the JCAs.
+     * @param aBegin
+     *            the reference offset.
+     * @param aEnd
+     *            the comparison offset.
+     * @return if the two offsets are within the same sentence.
+     */
+    public static boolean isBeginEndInSameSentence(JCas aJcas, int aBegin, int aEnd)
+    {
+        return selectCovering(aJcas, Sentence.class, aBegin, aBegin).stream()
+                .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
+                .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
+                .findFirst()
+                .isPresent();
     }
 
     public static int getAddr(FeatureStructure aFS)
@@ -181,7 +189,8 @@ public class WebAnnoCasUtil
     }
 
     /**
-     * Get an annotation using the begin/offsets and its type
+     * Get an annotation using the begin/offsets and its type. If there is more than one annotation
+     * at this point, get one of them.
      *
      * @param aJcas
      *            the JCas.
@@ -720,6 +729,53 @@ public class WebAnnoCasUtil
             seletedTextSb.append(token.getCoveredText()).append(" ");
         }
         return seletedTextSb.toString();
+    }
+    
+    public static boolean isNativeUimaType(String aType)
+    {
+        Validate.notNull(aType, "Type must not be null");
+        
+        switch (aType) {
+        case CAS.TYPE_NAME_ANNOTATION:
+        case CAS.TYPE_NAME_ANNOTATION_BASE:
+        case CAS.TYPE_NAME_ARRAY_BASE:
+        case CAS.TYPE_NAME_BOOLEAN:
+        case CAS.TYPE_NAME_BOOLEAN_ARRAY:
+        case CAS.TYPE_NAME_BYTE:
+        case CAS.TYPE_NAME_BYTE_ARRAY:
+        case CAS.TYPE_NAME_DOCUMENT_ANNOTATION:
+        case CAS.TYPE_NAME_DOUBLE:
+        case CAS.TYPE_NAME_DOUBLE_ARRAY:
+        case CAS.TYPE_NAME_EMPTY_FLOAT_LIST:
+        case CAS.TYPE_NAME_EMPTY_FS_LIST:
+        case CAS.TYPE_NAME_EMPTY_INTEGER_LIST:
+        case CAS.TYPE_NAME_EMPTY_STRING_LIST:
+        case CAS.TYPE_NAME_FLOAT:
+        case CAS.TYPE_NAME_FLOAT_ARRAY:
+        case CAS.TYPE_NAME_FLOAT_LIST:
+        case CAS.TYPE_NAME_FS_ARRAY:
+        case CAS.TYPE_NAME_FS_LIST:
+        case CAS.TYPE_NAME_INTEGER:
+        case CAS.TYPE_NAME_INTEGER_ARRAY:
+        case CAS.TYPE_NAME_INTEGER_LIST:
+        case CAS.TYPE_NAME_LIST_BASE:
+        case CAS.TYPE_NAME_LONG:
+        case CAS.TYPE_NAME_LONG_ARRAY:
+        case CAS.TYPE_NAME_NON_EMPTY_FLOAT_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_FS_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_INTEGER_LIST:
+        case CAS.TYPE_NAME_NON_EMPTY_STRING_LIST:
+        case CAS.TYPE_NAME_SHORT:
+        case CAS.TYPE_NAME_SHORT_ARRAY:
+        case CAS.TYPE_NAME_SOFA:
+        case CAS.TYPE_NAME_STRING:
+        case CAS.TYPE_NAME_STRING_ARRAY:
+        case CAS.TYPE_NAME_STRING_LIST:
+        case CAS.TYPE_NAME_TOP:
+            return true;
+        }
+        
+        return false;
     }
 
     public static boolean isPrimitiveFeature(FeatureStructure aFS, String aFeatureName)

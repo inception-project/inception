@@ -17,6 +17,5 @@
  */
 /**
  * Remote API.
- * 
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi;

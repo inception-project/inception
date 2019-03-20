@@ -19,14 +19,17 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -70,14 +73,21 @@ public interface AnnotationSchemaService
      *
      * @param type
      *            the type.
-     * @throws IOException
-     *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void createLayer(AnnotationLayer type)
-        throws IOException;
+    void createLayer(AnnotationLayer type);
 
     void createFeature(AnnotationFeature feature);
+
+    
+    /**
+     * Get Tag by its ID
+     * 
+     * @param id
+     *            the tag id.
+     * @return the tag.
+     */
+    Optional<Tag> getTag(long id);
 
     /**
      * gets a {@link Tag} using its name and a {@link TagSet}
@@ -230,38 +240,6 @@ public interface AnnotationSchemaService
     boolean existsType(String name, String type);
 
     /**
-     * This method only exists to support importing projects previous to WebAnno version 2.0.
-     * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
-     * s. This is done per Project. For older projects, this method is used to import old tagsets
-     * and convert to the new scheme.
-     * 
-     * @param project
-     *            the project.
-     * @param postags
-     *            the pos tags.
-     * @param posTagDescriptions
-     *            the pos-tag descriptions.
-     * @param depTags
-     *            the dep tags.
-     * @param depTagDescriptions
-     *            the dep-tag descriptions.
-     * @param neTags
-     *            the ne tags.
-     * @param neTagDescriptions
-     *            the ne-tag descriptions.
-     * @param corefTypeTags
-     *            the coref tags.
-     * @param corefRelTags
-     *            the relation tags.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    void initializeTypesForProjectV0(Project project, String[] postags, String[] posTagDescriptions,
-            String[] depTags, String[] depTagDescriptions, String[] neTags,
-            String[] neTagDescriptions, String[] corefTypeTags, String[] corefRelTags)
-        throws IOException;
-
-    /**
      * Initialize the project with default {@link AnnotationLayer}, {@link TagSet}s, and {@link Tag}
      * s. This is done per Project.
      * 
@@ -270,7 +248,7 @@ public interface AnnotationSchemaService
      * @throws IOException
      *             if an I/O error occurs.
      */ 
-    void initializeTypesForProject(Project aProject)
+    void initializeProject(Project aProject)
             throws IOException;
     
     /**
@@ -400,13 +378,85 @@ public interface AnnotationSchemaService
             String[] aTagDescription, Project aProject)
                 throws IOException;
     
-    TypeSystemDescription getProjectTypes(Project aProject);
+    /**
+     * Returns the custom types define in the project excluding built-in types.
+     * 
+     * @see #getAllProjectTypes(Project)
+     */
+    TypeSystemDescription getCustomProjectTypes(Project aProject);
+
+    /**
+     * Returns the custom types define in the project including built-in types.
+     * @throws ResourceInitializationException 
+     * 
+     * @see #getCustomProjectTypes(Project)
+     */
+    TypeSystemDescription getAllProjectTypes(Project aProject)
+        throws ResourceInitializationException;
+
+    /**
+     * Returns the full type system for the project (including any types discovered on the classpath
+     * via uimaFIT) including any internal types such as {@link CASMetadata}.
+     */
+    TypeSystemDescription getFullProjectTypeSystem(Project aProject)
+        throws ResourceInitializationException;
+
+    /**
+     * Returns the full type system for the project (including any types discovered on the classpath
+     * via uimaFIT) optionally including any internal types such as {@link CASMetadata}.
+     */
+    TypeSystemDescription getFullProjectTypeSystem(Project aProject, boolean aIncludeInternalTypes)
+        throws ResourceInitializationException;
     
-    void upgradeCas(CAS aCurCas, AnnotationDocument annotationDocument)
+    /**
+     * Upgrade the CAS to the current project type system. This also compacts the CAS and removes
+     * any unreachable feature structures. This should be called at key points such as when the user
+     * opens an annotation document via the open document dialog. It is a slow call. The upgraded
+     * CAS is not automatically persisted - the calling code needs to take care of this. If the CAS
+     * will not be persisted, it is usually a better idea to use {@link #upgradeCasIfRequired}.
+     */
+    void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
     
+    /**
+     * @see #upgradeCas(CAS, SourceDocument, String)
+     */
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
 
+    /**
+     * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
+     * nicely to the log files. This method here is rather for unconditional bulk use such as
+     * by the CAS doctor.
+     * 
+     * @see #upgradeCas(CAS, SourceDocument, String)
+     */
+    void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException;
+    
+    /**
+     * Checks if the given CAS is compatible with the current type system of the project to which
+     * it belongs and upgrades it if necessary. This should be preferred over the mandatory CAS 
+     * upgrade if the CAS is loaded in a read-only mode or in scenarios where it is not saved later.
+     */
+    void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+            throws UIMAException, IOException;
+
+    /**
+     * @see #upgradeCasIfRequired(CAS, SourceDocument, String)
+     */
+    void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+            throws UIMAException, IOException;
+
     TypeAdapter getAdapter(AnnotationLayer aLayer);
+
+    /**
+     * Performs a CAS upgrade and removes all internal feature structures from the CAS. The 
+     * resulting CAS should be <b>only</b> used for export and never be persisted within the
+     * repository.
+     */
+    CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException;
+
+    void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
+        throws ResourceInitializationException;
 }

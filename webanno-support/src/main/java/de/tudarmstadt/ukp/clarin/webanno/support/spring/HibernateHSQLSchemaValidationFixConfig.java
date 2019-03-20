@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.spring;
 
-import javax.annotation.PostConstruct;
 import javax.persistence.EntityManagerFactory;
 
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.jpa.EntityManagerFactoryDependsOnPostProcessor;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -28,12 +28,13 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration("HibernateHSQLSchemaValidationFixConfig")
 public class HibernateHSQLSchemaValidationFixConfig
+    implements InitializingBean
 {
     private @Autowired DataSourceProperties dataSource;
     private @Autowired JpaProperties jpa;
-    
-    @PostConstruct
-    public void apply()
+
+    @Override
+    public void afterPropertiesSet() throws Exception
     {
         // If we run Hibernate in validation mode on HSQLDB, then Hibernate does not
         // seem to be able that it needs to retrieve table metadata from the default
@@ -45,14 +46,16 @@ public class HibernateHSQLSchemaValidationFixConfig
     }
     
     /**
-     * Additional configuration to ensure that {@link EntityManagerFactory} beans
-     * depend-on this fix.
+     * Additional configuration to ensure that {@link EntityManagerFactory} beans depend-on this
+     * fix.
      */
     @Configuration
     protected static class LiquibaseJpaDependencyConfiguration
-            extends EntityManagerFactoryDependsOnPostProcessor {
+        extends EntityManagerFactoryDependsOnPostProcessor
+    {
 
-        public LiquibaseJpaDependencyConfiguration() {
+        public LiquibaseJpaDependencyConfiguration()
+        {
             super("HibernateHSQLSchemaValidationFixConfig");
         }
     }

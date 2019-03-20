@@ -25,14 +25,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
@@ -54,15 +52,17 @@ public interface Renderer
      *            the features.
      * @param aBuffer
      *            The rendering buffer.
-     * @param aState
-     *            Annotation editor state.
+     * @param windowBeginOffset
+     *            The start position of the window offset.
+     * @param windowEndOffset
+     *            The end position of the window offset.
      */
     void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
-            AnnotatorState aState);
+            int windowBeginOffset, int windowEndOffset);
     
     FeatureSupportRegistry getFeatureSupportRegistry();
 
-    default Map<String, String> getFeatures(TypeAdapter aAdapter, AnnotationFS aFs,
+    default Map<String, String> getFeatures(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
@@ -74,9 +74,8 @@ public interface Renderer
                 continue;
             }
             
-            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String label = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
             
             features.put(feature.getName(), label);
         }
@@ -90,8 +89,9 @@ public interface Renderer
         FeatureSupportRegistry fsr = getFeatureSupportRegistry();
         Map<String, String> hoverfeatures = new LinkedHashMap<>();
 
-        if (aAdapter.getLayer().isShowTextInHover())
+        if (aAdapter.getLayer().isShowTextInHover()) {
             hoverfeatures.put("__spantext__", aFs.getCoveredText());
+        }
 
         for (AnnotationFeature feature : aFeatures) {
             if (!feature.isEnabled() || !feature.isIncludeInHover()
@@ -99,9 +99,8 @@ public interface Renderer
                 continue;
             }
             
-            Feature labelFeature = aFs.getType().getFeatureByBaseName(feature.getName());
             String text = defaultString(
-                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs, labelFeature));
+                    fsr.getFeatureSupport(feature).renderFeatureValue(feature, aFs));
             
             hoverfeatures.put(feature.getName(), text);
         }

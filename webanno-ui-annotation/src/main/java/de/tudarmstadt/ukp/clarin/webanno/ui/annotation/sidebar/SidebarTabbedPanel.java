@@ -18,7 +18,9 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.tabs.AjaxTabbedPanel;
@@ -26,9 +28,11 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.Image;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.Url;
+import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.request.resource.UrlResourceReference;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
     extends AjaxTabbedPanel<T>
@@ -61,7 +65,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     private void showHideAction(AjaxRequestTarget aTarget)
     {
         expanded = !expanded;
-        aTarget.add(getPage());
+        WicketUtil.refreshPage(aTarget, getPage());
     }
 
     public boolean isExpanded()
@@ -73,6 +77,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onConfigure()
     {
         super.onConfigure();
+        
         icon.setImageResourceReference(expanded ? ICON_EXPANDED : ICON_COLLAPSED);
     }
     
@@ -84,12 +89,12 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     }
     
     @Override
-    protected void onAjaxUpdate(AjaxRequestTarget aTarget)
+    protected void onAjaxUpdate(Optional<AjaxRequestTarget> aTarget)
     {
         super.onAjaxUpdate(aTarget);
         if (!expanded) {
             expanded = true;
-            aTarget.add(getPage());
+            aTarget.ifPresent(_target -> _target.add(getPage()));
         }
     }
 
@@ -97,15 +102,24 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
         SidebarTab tab = getTabs().get(aIndex);
-        return new Image("image", tab.getIcon())
+        StaticImage image = new StaticImage("image", tab.getIcon());
+        image.add(new AttributeModifier("title", aTitleModel));
+        return image;
+    }
+    
+    private static class StaticImage extends Image
+    {
+        public StaticImage(String aId, final ResourceReference aResourceReference)
         {
-            private static final long serialVersionUID = 1207122722078977614L;
+            super(aId, aResourceReference);
+        }
 
-            @Override
-            protected boolean shouldAddAntiCacheParameter()
-            {
-                return false;
-            }
-        };
+        private static final long serialVersionUID = 1207122722078977614L;
+        
+        @Override
+        protected boolean shouldAddAntiCacheParameter()
+        {
+            return false;
+        }
     }
 }

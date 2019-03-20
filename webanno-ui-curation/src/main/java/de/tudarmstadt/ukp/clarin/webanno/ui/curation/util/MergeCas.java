@@ -251,6 +251,8 @@ public class MergeCas
      */
     private static boolean isBasicFeature(Feature aFeature)
     {
+        // FIXME The two parts of this OR statement seem to be redundant. Also the order
+        // of the check should be changes such that equals is called on the constant.
         return aFeature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                 || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
     }
@@ -260,7 +262,8 @@ public class MergeCas
             AnnotationFS aMergeAnno)
     {
         for (String user : aUsers) {
-            List<AnnotationFS> fssAtThisPosition = getFSAtPosition(aJCases, aMergeAnno, user);
+            List<AnnotationFS> fssAtThisPosition = selectCovered(aJCases.get(user).getCas(),
+                    aMergeAnno.getType(), aMergeAnno.getBegin(), aMergeAnno.getEnd());
             if (!aAnnosPerUser.containsKey(user)) {
                 aAnnosPerUser.put(user, (List) fssAtThisPosition);
             }
@@ -290,15 +293,6 @@ public class MergeCas
                 }
             }
         }
-    }
-
-    /**
-     * Returns list of Annotations on this particular position (basically when stacking is allowed).
-     */
-    private static List<AnnotationFS> getFSAtPosition(Map<String, JCas> aJCases,
-            AnnotationFS fs, String aUser)
-    {
-        return selectCovered(aJCases.get(aUser).getCas(), fs.getType(), fs.getBegin(), fs.getEnd());
     }
 
     /**
@@ -518,7 +512,8 @@ public class MergeCas
         SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aAnnotationLayer);
 
         // Create the annotation - this also takes care of attaching to an annotation if necessary
-        int id = adapter.add(aState, aJCas, aOldFs.getBegin(), aOldFs.getEnd());
+        int id = getAddr(adapter.add(aState.getDocument(), aState.getUser().getUsername(), aJCas,
+                aOldFs.getBegin(), aOldFs.getEnd()));
 
         List<AnnotationFeature> features = aAnnotationService
                 .listAnnotationFeature(adapter.getLayer());
@@ -531,7 +526,8 @@ public class MergeCas
                 continue;
             }
             Object value = adapter.getFeatureValue(feature, aOldFs);
-            adapter.setFeatureValue(aState, aJCas, id, feature, value);
+            adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, id,
+                    feature, value);
         }
     }
 
@@ -620,7 +616,7 @@ public class MergeCas
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
             throw new AnnotationException(
-                    "Same Annotation exists on the mergeview. Please add it manually.");
+                    "Same annotation already exists on the mergeview. Please add it manually.");
         }
 
         // a) if stacking allowed add this new annotation to the mergeview

@@ -1,0 +1,12 @@
+= Users
+
+After clicking on *Users*, you are displayed a new pane in which you can add new users by clicking on the button *Add User*.  After doing so, you get a list of users in the system which can be added to the project. By making a tick in front of the login, you can chose a new user.
+
+image::project4.jpg[align="center"]
+
+Please do not forget to save after choosing all members of the project. Close the pane by clicking on *Cancel*. The rights of users created like this are that of an annotator. If you want to expand the user's status, you can do so by clicking on the user and then on *Change Permission*. The following frame will pop up.
+
+image::project5.jpg[align="center"]
+
+After ticking the wished permissions, click on *Update*.
+To remove a user, click on the login and then *Remove User*.

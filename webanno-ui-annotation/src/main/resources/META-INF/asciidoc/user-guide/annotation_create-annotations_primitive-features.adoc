@@ -1,0 +1,24 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+= Primitive Features
+
+Supported primitive features types are string, boolean, integer, and float.
+Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
+float features are displayed using a number field. String features are displayed using a text field
+or - in case they have a tagset - using a combobox.

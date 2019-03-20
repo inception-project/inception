@@ -280,6 +280,7 @@ public class WebannoTsv2Reader
                                 governorAnno.getBegin(), governorAnno.getEnd()).get(0);
                         governorAnno.setFeatureValue(attachFeature, posGovernorAnno);
                     }
+                    
                     // update begin/end of relation annotation
                     relationAnno.getCAS().removeFsFromIndexes(relationAnno);
                     if (dependentAnno.getEnd() <= governorAnno.getEnd()) {
@@ -294,6 +295,8 @@ public class WebannoTsv2Reader
 
                     relationAnno.setFeatureValue(dependentFeature, dependentAnno);
                     relationAnno.setFeatureValue(governorFeature, governorAnno);
+                    
+                    relationAnno.getCAS().addFsToIndexes(relationAnno);
                     i++;
                 }
 

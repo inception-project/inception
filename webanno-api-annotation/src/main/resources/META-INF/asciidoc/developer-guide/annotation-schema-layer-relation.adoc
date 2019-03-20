@@ -1,0 +1,21 @@
+= Relation layer
+
+A relation layer allows to draw arcs between span annotations. The `attachType` is mandatory for 
+relation types and specifies which type of annotations arcs can be drawn between. 
+
+Arcs can only be drawn between annotations of the same layer. It is not possible to draw an arc 
+between two spans of different layers. 
+
+Only a single relation layer can attach to any given span layer.
+
+If the `annotation_feature` is set, then the arc is not drawn between annotations of the layer 
+indicated by `annotation_type`, but between annotations of the type specified by the feature. E.g. 
+for a dependency relation layer, `annotation_type` would be set to `Token` and `annotation_feature`
+to `pos`. The `Token` type has no visual representation in the UI. However, the `pos` feature points
+to a `POS` annotation, which is rendered and between which the dependency relation arcs are then 
+drawn. 
+
+Deleting an annotation that is the endpoint of a relation will also delete the relation. In the case
+that `annotation_feature`, this is also the case if the annotation pointed to is deleted. E.g. if
+a POS annotation in the above example is deleted, then the attaching relation annotations are also
+deleted.

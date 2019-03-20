@@ -1,0 +1,12 @@
+[[sect_ssl]]
+
+= Securing with SSL
+
+This section assumes Debian 9.1 (Stretch) as the operating system using link:https://www.nginx.com/[NGINX] as a web server with {product-name} running through a separate Tomcat instance.
+
+It further assumes that you want to use link:https://letsencrypt.org/[Let's Encrypt] as a CA for obtaining valid SSL
+certificates.
+
+* In addition, you will need a fully registered domain name. This tutorial uses `example.com`. Replace it accordingly.
+
+NOTE: We strongly encourage securing your production system with a firewall like UFW.

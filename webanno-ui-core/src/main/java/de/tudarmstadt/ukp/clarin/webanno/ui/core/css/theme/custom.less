@@ -58,7 +58,7 @@ html, body {
 .feedback-panel {
   position: fixed;
   bottom: @page-footer-height;
-  z-index: 1;
+  z-index: 1000;
   min-width: 30%;
   max-height: ~"calc(100vh - " @page-footer-height ~" - " @page-header-height ~")";
   overflow: auto;
@@ -282,4 +282,14 @@ ul.nav.nav-tabs + div.panel.panel-default {
 /* Fixes to brat CSS */
 #commentpopup {
   text-align: initial;
+}
+
+/* Class for disabled links (doesn't really disable the link, but it looks like it)*/
+a.disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
+.bootstrap-select.bs-container .dropdown-menu {
+  z-index: 21060 !important;
 }

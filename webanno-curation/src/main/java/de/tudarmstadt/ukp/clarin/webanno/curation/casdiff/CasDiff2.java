@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -71,7 +71,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
 public class CasDiff2
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    private final static Logger LOG = LoggerFactory.getLogger(CasDiff2.class);
     
     private Map<String, List<CAS>> cases = new LinkedHashMap<>();
     
@@ -196,6 +196,30 @@ public class CasDiff2
     {
         List<DiffAdapter> adapters = CasDiff2.getAdapters(aService, aProject);
         
+        return doDiffSingle(aEntryTypes, adapters, aLinkCompareBehavior, aCasMap, aBegin, aEnd);
+    }
+    
+    /**
+     * Calculate the differences between CASes. This method scopes the calculation of differences to
+     * a span instead of calculating them on the whole text.
+     * 
+     * @param aAdapters
+     *            a set of diff adapters telling how the diff algorithm should handle different
+     *            features
+     * @param aEntryTypes
+     *            the types for which differences are to be calculated.
+     * @param aCasMap
+     *            a set of CASes, each associated with an ID
+     * @param aBegin
+     *            begin of the span for which differences should be calculated.
+     * @param aEnd
+     *            end of the span for which differences should be calculated.
+     * @return a diff result.
+     */
+    public static DiffResult doDiffSingle(List<Type> aEntryTypes,
+            Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
+            Map<String, JCas> aCasMap, int aBegin, int aEnd)
+    {
         List<String> entryTypes = new ArrayList<>();
         for (Type t : aEntryTypes) {
             entryTypes.add(t.getName());
@@ -205,7 +229,8 @@ public class CasDiff2
         for (Entry<String, JCas> e : aCasMap.entrySet()) {
             casMap.put(e.getKey(), asList(e.getValue()));
         }
-        return doDiff(entryTypes, adapters, casMap, aBegin, aEnd, aLinkCompareBehavior);
+        
+        return doDiff(entryTypes, aAdapters, casMap, aBegin, aEnd, aLinkCompareBehavior);
     }
 
     /**
@@ -229,6 +254,8 @@ public class CasDiff2
             Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap,
             int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
+        long startTime = System.currentTimeMillis();
+        
         sanityCheck(aCasMap);
         
         CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
@@ -243,6 +270,8 @@ public class CasDiff2
                 casId++;
             }
         }
+        
+        LOG.trace("CASDiff2 completed in {} ms", System.currentTimeMillis() - startTime);
         
         return new DiffResult(diff);
     }
@@ -283,7 +312,7 @@ public class CasDiff2
     {
         DiffAdapter adapter = typeAdapters.get(aType);
         if (adapter == null) {
-            log.warn("No diff adapter for type [" + aType + "] -- treating as without features");
+            LOG.warn("No diff adapter for type [" + aType + "] -- treating as without features");
             adapter = new SpanDiffAdapter(aType, Collections.EMPTY_SET);
             typeAdapters.put(aType, adapter);
         }
@@ -324,13 +353,13 @@ public class CasDiff2
         // null elements in the list can occur if a user has never worked on a CAS
         // We add these to the internal list above, but then we bail out here.
         if (aCas == null) {
-            log.debug("CAS group [" + aCasGroupId + "] does not contain a CAS at index [" + aCasId
+            LOG.debug("CAS group [" + aCasGroupId + "] does not contain a CAS at index [" + aCasId
                     + "].");
             return;
         }
         
-        if (log.isDebugEnabled()) {
-            log.debug("Processing CAS group [" + aCasGroupId + "] CAS [" + aCasId
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Processing CAS group [" + aCasGroupId + "] CAS [" + aCasId
                     + "].");
             
             String collectionId = null;
@@ -340,7 +369,7 @@ public class CasDiff2
                 collectionId = dmd.getCollectionId();
                 documentId = dmd.getDocumentId();
                 
-                log.debug("User [" + collectionId + "] - Document [" + documentId + "]");
+                LOG.debug("User [" + collectionId + "] - Document [" + documentId + "]");
             }
             catch (IllegalArgumentException e) {
                 // We use this information only for debugging - so we can ignore if the information
@@ -357,17 +386,17 @@ public class CasDiff2
         }
         
         if (annotations.isEmpty()) {
-            log.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
+            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId
                     + "] contains no annotations of type [" + aType + "]");
             return;
         }
         else {
-            log.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
+            LOG.debug("CAS group [" + aCasGroupId + "] CAS [" + aCasId + "] contains ["
                     + annotations.size() + "] annotations of type [" + aType + "]");
         }
 
         int posBefore = configSets.keySet().size();
-        log.debug("Positions before: [" + posBefore + "]");
+        LOG.debug("Positions before: [" + posBefore + "]");
 
         for (AnnotationFS fs : annotations) {
             List<Position> positions = new ArrayList<>();
@@ -399,7 +428,7 @@ public class CasDiff2
             }
         }
 
-        log.debug("Positions after: [" + configSets.keySet().size() + "] (delta: "
+        LOG.debug("Positions after: [" + configSets.keySet().size() + "] (delta: "
                 + (configSets.keySet().size() - posBefore) + ")");
 
 //        
@@ -1093,7 +1122,7 @@ public class CasDiff2
         DiffAdapter adapter = typeAdapters.get(type1.getName());
 
         if (adapter == null) {
-            log.warn("No diff adapter for type [" + type1.getName() + "] -- ignoring!");
+            LOG.warn("No diff adapter for type [" + type1.getName() + "] -- ignoring!");
             return true;
         }
 
@@ -1810,7 +1839,7 @@ public class CasDiff2
                 break;
             }
             case RELATION_TYPE: {
-                ArcAdapter typeAdpt = (ArcAdapter) annotationService.getAdapter(layer);
+                RelationAdapter typeAdpt = (RelationAdapter) annotationService.getAdapter(layer);
                 adpt = new ArcDiffAdapter(layer.getName(),
                         typeAdpt.getSourceFeatureName(), typeAdpt.getTargetFeatureName(),
                         labelFeatures);

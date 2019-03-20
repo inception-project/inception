@@ -1,0 +1,26 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_troubleshooting]]
+= Troubleshooting
+
+If the tool is kept open in the browser, but not used for a long period of time, you will have to
+log in again. For this, press the reload button of your browser.
+
+If the tool does not react for more than 1 minute, please also reload and re-login. 
+
+We are collecting error reports to improve the tool. For this, the error must be reproducible: 
+If you find a way how to produce the error, please open an issue and describe it.

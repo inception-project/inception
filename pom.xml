@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>17</version>
+    <version>20</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -56,26 +56,30 @@
     </repository>
   </distributionManagement>
   <properties>
-    <jackson.version>2.9.4</jackson.version>
-    <uima.version>3.0.0</uima.version>
+    <jackson.version>2.9.8</jackson.version>
+    <uima.version>3.0.2</uima.version>
     <uimafit.version>3.0.0-SNAPSHOT</uimafit.version>
-    <spring.version>5.0.4.RELEASE </spring.version>
-    <spring.boot.version>1.5.10.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.4.RELEASE</spring.security.version>
+    <spring.version>5.1.5.RELEASE </spring.version>
+    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
+    <spring.security.version>4.2.10.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>7.10.0</wicket.version>
+    <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>7.10.1</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>0.10.16</wicket-bootstrap.version>
-    <wicket-webjars.version>0.5.6</wicket-webjars.version>    
-    <wicket-spring-boot.version>1.0.10</wicket-spring-boot.version>
-    <hibernate.version>5.2.13.Final</hibernate.version>
+    <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>2.0.7</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>2.0.4</wicket-jquery-selectors.version>
+    <wicket-webjars.version>2.0.11</wicket-webjars.version>    
+    <wicket-spring-boot.version>2.1.5</wicket-spring-boot.version>
+    <hibernate.version>5.3.7.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>2.0.0-SNAPSHOT</dkpro.version>
     <springfox.version>2.7.0</springfox.version>
     <batik.version>1.9.1</batik.version>
+    <json.version>20180130</json.version>
+    <mockito.version>2.23.4</mockito.version>
+    <assertj.version>3.11.1</assertj.version>
   </properties>
   <repositories>
   <repository>
@@ -110,6 +114,61 @@
       </snapshots>
     </repository>
   </repositories>
+  <dependencies>
+    <!-- The logging subsystem used by WebAnno -->
+    <dependency>
+      <!-- Use Log4J v2 as logging backend -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Use Log4J v2 as logging backend -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Route Log4J v1 over SLF4J -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Route Java Commons Logging over SLF4J -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <!-- Avoid Commons Logging -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JAXB is no longer included with Java 9+ by default -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>javax.activation-api</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -118,9 +177,14 @@
         <version>4.12</version>
       </dependency>
       <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.assertj</groupId>
         <artifactId>assertj-core</artifactId>
-        <version>3.9.0</version>
+        <version>${assertj.version}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.uima</groupId>
@@ -150,6 +214,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-api-annotation</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-api-formats</artifactId>
         <version>4.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -254,11 +323,6 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-        <artifactId>webanno-fontawesome</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
-      </dependency>
-      <dependency>
-        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-support-standalone</artifactId>
         <version>4.0.0-SNAPSHOT</version>
       </dependency>
@@ -323,19 +387,9 @@
         <version>4.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
-        <version>${dkpro.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
+        <groupId>org.json</groupId>
+        <artifactId>json</artifactId>
+        <version>${json.version}</version>
       </dependency>
       <dependency>
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
@@ -361,6 +415,11 @@
         <groupId>com.googlecode.wicket-jquery-ui</groupId>
         <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.wicketstuff</groupId>
+        <artifactId>wicketstuff-select2</artifactId>
+        <version>${wicketstuff.version}</version>
       </dependency>
       <dependency>
         <groupId>org.wicketstuff</groupId>
@@ -415,6 +474,11 @@
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket</groupId>
+        <artifactId>jquery-selectors</artifactId>
+         <version>${wicket-jquery-selectors.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-themes</artifactId>
         <version>${wicket-bootstrap.version}</version>
       </dependency>
@@ -432,6 +496,11 @@
         <groupId>com.giffing.wicket.spring.boot.starter</groupId>
         <artifactId>wicket-spring-boot-starter</artifactId>
         <version>${wicket-spring-boot.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>font-awesome</artifactId>
+        <version>4.7.0</version>
       </dependency>
       <dependency>
         <groupId>com.github.sommeri</groupId>
@@ -523,20 +592,22 @@
         <version>${batik.version}</version>
       </dependency>
       <dependency>
-        <groupId>dom4j</groupId>
+        <groupId>org.dom4j</groupId>
         <artifactId>dom4j</artifactId>
-        <version>1.6.1</version>
+        <version>2.1.1</version>
+        <!--  
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
             <artifactId>xml-apis</artifactId>
           </exclusion>
         </exclusions>
+        -->
       </dependency>
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.6</version>
         <exclusions>
           <exclusion>
             <groupId>xml-apis</groupId>
@@ -555,6 +626,27 @@
             <artifactId>xalan</artifactId>
           </exclusion>
         </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>javax.xml.bind</groupId>
+        <artifactId>jaxb-api</artifactId>
+        <version>2.3.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-core</artifactId>
+        <version>2.3.0</version>
+      </dependency>
+      <dependency>
+        <groupId>com.sun.xml.bind</groupId>
+        <artifactId>jaxb-impl</artifactId>
+        <version>2.3.0</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>javax.activation-api</artifactId>
+        <version>1.2.0</version>
       </dependency>
 
       <dependency>
@@ -629,6 +721,12 @@
       </dependency>
 
       <dependency>
+        <groupId>com.github.openjson</groupId>
+        <artifactId>openjson</artifactId>
+        <version>1.0.10</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-core</artifactId>
         <version>${hibernate.version}</version>
@@ -650,17 +748,22 @@
         <version>5.3.5.Final</version>
       </dependency>
       <dependency>
-        <groupId>org.hibernate.javax.persistence</groupId>
-        <artifactId>hibernate-jpa-2.1-api</artifactId>
-        <version>1.0.0.Final</version>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
+        <version>2.2</version>
       </dependency>
       <dependency>
         <groupId>org.javassist</groupId>
         <artifactId>javassist</artifactId>
         <version>3.19.0-GA</version>
       </dependency>
+      <dependency>
+        <groupId>net.bytebuddy</groupId>
+        <artifactId>byte-buddy</artifactId>
+        <version>1.8.17</version>
+      </dependency>
 
-          <!-- SPRING -->
+      <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
         <artifactId>spring-core</artifactId>
@@ -752,7 +855,7 @@
       <dependency>
         <groupId>org.hsqldb</groupId>
         <artifactId>hsqldb</artifactId>
-        <version>2.4.0</version>
+        <version>2.4.1</version>
       </dependency>
       <!--  
       <dependency>
@@ -775,6 +878,22 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+        <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+        <version>${dkpro.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
       <dependency>
         <!-- Import dependency management from Wicket -->
         <groupId>org.apache.wicket</groupId>
@@ -809,14 +928,14 @@
     <module>webanno-project</module>
     <module>webanno-api</module>
     <module>webanno-api-annotation</module>
-    <module>webanno-model-export</module>
+    <module>webanno-api-formats</module>
     <module>webanno-api-dao</module>
+    <module>webanno-model-export</module>
     <module>webanno-support</module>
     <module>webanno-support-standalone</module>
     <module>webanno-diag</module>
     <module>webanno-remote</module>
     <module>webanno-security</module>
-    <module>webanno-fontawesome</module>
     <module>webanno-curation</module>
     <module>webanno-constraints</module>
     <module>webanno-export</module>
@@ -894,6 +1013,39 @@
           </tags>
         </configuration>
       </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>analyze-only</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <failOnWarning>true</failOnWarning>
+          <usedDependencies combine.children="append">
+            <!-- 
+              - Logging is used via reflection and cannot be detected by Maven
+            -->
+            <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
+            <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
+            <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
+            <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
+            <usedDependency>commons-logging:commons-logging</usedDependency>
+            <!-- 
+              - JAXB is used via reflection and cannot be detected by Maven
+            -->
+            <usedDependency>javax.xml.bind:jaxb-api</usedDependency>
+            <usedDependency>com.sun.xml.bind:jaxb-core</usedDependency>
+            <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
+            <usedDependency>javax.activation:javax.activation-api</usedDependency>
+          </usedDependencies>
+        </configuration>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
@@ -901,47 +1053,6 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-war-plugin</artifactId>
           <version>3.1.0</version>
-        </plugin>
-        <!--
-          Downgrade from 2.7 due to
-          https://mail-archives.apache.org/mod_mbox/maven-users/201410.mbox/%3C5432C360.9080903@gmx.de%3E
-        -->
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-jar-plugin</artifactId>
-          <version>3.0.2</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-assembly-plugin</artifactId>
-          <version>3.1.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>build-helper-maven-plugin</artifactId>
-          <version>3.0.0</version>
-        </plugin>
-        <plugin>
-          <groupId>org.asciidoctor</groupId>
-          <artifactId>asciidoctor-maven-plugin</artifactId>
-          <version>1.5.6</version>
-          <dependencies>
-            <dependency>
-              <groupId>org.asciidoctor</groupId>
-              <artifactId>asciidoctorj-pdf</artifactId>
-              <version>1.5.0-alpha.16</version>
-            </dependency>
-            <dependency>
-              <groupId>org.jruby</groupId>
-              <artifactId>jruby-complete</artifactId>
-              <version>9.1.16.0</version>
-            </dependency>
-          </dependencies>
         </plugin>
         <plugin>
           <groupId>io.fabric8</groupId>
@@ -952,6 +1063,40 @@
     </pluginManagement>
   </build>
   <profiles>
+    <profile>
+      <id>wicket-module</id>
+      <activation>
+        <file><exists>marker-wicket-module</exists></file>
+      </activation>
+      <build>
+        <resources>
+          <resource>
+            <filtering>false</filtering>
+            <directory>src/main/resources</directory>
+            <excludes>
+              <exclude>META-INF/version.properties</exclude>
+            </excludes>
+          </resource>
+          <resource>
+            <filtering>true</filtering>
+            <directory>src/main/resources</directory>
+            <includes>
+              <include>**</include>
+            </includes>
+          </resource>
+          <resource>
+            <filtering>false</filtering>
+            <directory>src/main/java</directory>
+            <includes>
+              <include>**</include>
+            </includes>
+            <excludes>
+              <exclude>**/*.java</exclude>
+            </excludes>
+          </resource>
+        </resources>
+      </build>
+    </profile>
     <profile>
       <id>m2e</id>
       <activation>
@@ -1014,10 +1159,12 @@
                   <goal>check</goal>
                 </goals>
                 <configuration>
+                  <consoleOutput>true</consoleOutput>
                   <excludes>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
                     <exclude>suppressions.xml</exclude>
+                    <exclude>marker-*</exclude>
                     <!-- maven config files -->
                     <exclude>src/filter/**/*</exclude>
                     <!-- release generated artifact -->
@@ -1045,6 +1192,63 @@
       </build>
     </profile>
     <profile>
+      <id>run-jcasgen</id>
+      <activation>
+        <file>
+          <exists>.activate-run-jcasgen</exists>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <!--generate types dynamically -->
+            <groupId>org.apache.uima</groupId>
+            <artifactId>jcasgen-maven-plugin</artifactId>
+            <version>${uima.version}</version>
+            <configuration>
+              <limitToProject>true</limitToProject>
+              <typeSystemIncludes>
+                <include>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*.xml</include>
+              </typeSystemIncludes>
+              <typeSystemExcludes>
+                <exclude>src/main/resources/de/tudarmstadt/ukp/clarin/webanno/**/type/**/*_customized.xml</exclude>
+              </typeSystemExcludes>
+            </configuration>
+            <executions>
+              <execution>
+                <!--call it in the generate-source phase -->
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>generate</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>build-helper-maven-plugin</artifactId>
+            <version>1.10</version>
+            <executions>
+              <execution>
+                <id>addToSourceFolder</id>
+                <goals>
+                  <!--add the generated sources -->
+                  <goal>add-source</goal>
+                </goals>
+                <phase>process-sources</phase>
+                <configuration>
+                  <sources>
+                    <!--default path to generated sources -->
+                    <source>${project.build.directory}/generated-sources/jcasgen</source>
+                  </sources>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
       <id>checkstyle</id>
       <activation>
         <file>
@@ -1063,7 +1267,7 @@
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-checkstyle-plugin</artifactId>
-              <version>2.17</version>
+              <version>3.0.0</version>
               <inherited>true</inherited>
               <dependencies>
                 <dependency>
@@ -1074,10 +1278,13 @@
                 <dependency>
                   <groupId>com.puppycrawl.tools</groupId>
                   <artifactId>checkstyle</artifactId>
-                  <version>8.8</version>
+                  <version>8.18</version>
                 </dependency>
               </dependencies>
               <configuration>
+                <!-- See: https://github.com/m2e-code-quality/m2e-code-quality/issues/117#issuecomment-380022879 -->
+                <sourceDirectories>${project.compileSourceRoots}</sourceDirectories>
+                <testSourceDirectories>${project.testCompileSourceRoots}</testSourceDirectories>
                 <configLocation>webanno/checkstyle.xml</configLocation>
                 <propertyExpansion>basedir=${project.basedir}</propertyExpansion>
                 <consoleOutput>true</consoleOutput>
@@ -1102,6 +1309,20 @@
           </plugins>
         </pluginManagement>
       </build>
+    </profile>
+    <profile>
+      <id>doc-only</id>
+      <properties>
+        <mdep.analyze.skip>true</mdep.analyze.skip>
+        <maven.main.skip>true</maven.main.skip>
+        <maven.test.skip>true</maven.test.skip>
+        <rat.skip>true</rat.skip>
+        <maven.buildNumber.skip>true</maven.buildNumber.skip>
+        <checkstyle.skip>true</checkstyle.skip>
+        <spring-boot.repackage.skip>true</spring-boot.repackage.skip>
+        <maven.war.skip>true</maven.war.skip>
+        <remoteresources.skip>true</remoteresources.skip>
+      </properties>
     </profile>
   </profiles>
 </project>

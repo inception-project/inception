@@ -17,27 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -58,21 +53,18 @@ import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.ArcAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -100,10 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReferenc
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JSONPatchResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Brat annotator component.
@@ -258,7 +247,7 @@ public class BratAnnotationEditor
 
                 // Serialize updated document to JSON
                 if (result == null) {
-                    LOG.warn("AJAX-RPC: Action [{}] produced no result!", action);
+                    LOG.debug("AJAX-RPC: Action [{}] produced no result!", action);
                 }
                 else {
                     String json;
@@ -326,7 +315,7 @@ public class BratAnnotationEditor
         }
         else {
             if (!paramId.isSynthetic()) {
-                selection.selectSpan(paramId, jCas, offsets.getBegin(), offsets.getEnd());
+                selection.selectSpan(paramId, jCas.getCas(), offsets.getBegin(), offsets.getEnd());
 
                 if (selection.getAnnotation().isNotSet()) {
                     // Create new annotation
@@ -409,8 +398,8 @@ public class BratAnnotationEditor
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
-            OffsetsList offsetLists = JSONUtil.getJsonConverter().getObjectMapper()
-                    .readValue(offsets, OffsetsList.class);
+            OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
+                    OffsetsList.class);
 
             int annotationBegin = getModelObject().getWindowBeginOffset()
                     + offsetLists.get(0).getBegin();
@@ -430,6 +419,7 @@ public class BratAnnotationEditor
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(getModelObject() != null && getModelObject().getProject() != null);
     }
 
@@ -473,8 +463,8 @@ public class BratAnnotationEditor
         // on a reload.
         // We only do this if we are *not* in a partial page reload. The case of a partial
         // page reload is covered in onAfterRender()
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (target == null && getModelObject().getProject() != null) {
+        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+        if (!target.isPresent() && getModelObject().getProject() != null) {
             bratInitRenderLater(aResponse);
         }
     }
@@ -492,8 +482,7 @@ public class BratAnnotationEditor
         // adding the editor to the AJAX request because it creates less initialization 
         // overhead (e.g. it doesn't have to send the collection info again and doesn't require
         // a delay).
-        AjaxRequestTarget target = RequestCycle.get().find(AjaxRequestTarget.class);
-        if (target != null) {
+        RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
             try {
                 String script = "setTimeout(function() { " +
                         bratInitCommand() +
@@ -516,7 +505,7 @@ public class BratAnnotationEditor
                 error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
                 target.addChildren(getPage(), IFeedback.class);
             }
-        }
+        });
     }
 
     private String bratRenderCommand(JCas aJCas)
@@ -538,7 +527,7 @@ public class BratAnnotationEditor
         JsonNode current = null;
         JsonNode previous = null;
         try {
-            ObjectMapper mapper = JSONUtil.getJsonConverter().getObjectMapper();
+            ObjectMapper mapper = JSONUtil.getObjectMapper();
             current = mapper.readTree(json);
             previous = lastRenderedJson != null ? mapper.readTree(lastRenderedJson) : null;
         }
@@ -572,60 +561,12 @@ public class BratAnnotationEditor
         return "Wicket.$('" + vis.getMarkupId() + "').dispatcher.post('" + cmd + "', [" + data
                 + "]);";
     }
-    
+
     private void render(GetDocumentResponse response, JCas aJCas)
     {
-        VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, getModelObject(), aJCas, getLayersToRender());
-        
-        // Fire render event into backend
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
-
-        // Fire render event into UI
-        Page page = (Page) RequestCycle.get().find(IPageRequestHandler.class).getPage();
-        if (page == null) {
-            page = getPage();
-        }
-        send(page, Broadcast.BREADTH,
-                new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class), aJCas,
-                        getModelObject(), vdoc));
-
-        if (isHighlightEnabled()) {
-            AnnotatorState state = getModelObject();
-            
-            // Disabling for 3.3.0 by default per #406
-            // FIXME: should be enabled by default and made optional per #606
-            // if (state.getFocusUnitIndex() > 0) {
-            // response.addMarker(new SentenceMarker(Marker.FOCUS, state.getFocusUnitIndex()));
-            // }
-            
-            if (state.getSelection().getAnnotation().isSet()) {
-                vdoc.add(new VAnnotationMarker(
-                        VMarker.FOCUS, state.getSelection().getAnnotation()));
-            }
-        }
-
-        BratRenderer.render(response, getModelObject(), vdoc, aJCas, annotationService);
-    }
-
-    private List<AnnotationLayer> getLayersToRender()
-    {
-        AnnotatorState state = getModelObject();
-        List<AnnotationLayer> layersToRender = new ArrayList<>();
-        for (AnnotationLayer layer : state.getAnnotationLayers()) {
-            boolean isSegmentationLayer = layer.getName().equals(Token.class.getName())
-                    || layer.getName().equals(Sentence.class.getName());
-            boolean isUnsupportedLayer = layer.getType().equals(CHAIN_TYPE)
-                    && (state.getMode().equals(Mode.AUTOMATION)
-                            || state.getMode().equals(Mode.CORRECTION)
-                            || state.getMode().equals(Mode.CURATION));
-            
-            if (layer.isEnabled() && !isSegmentationLayer && !isUnsupportedLayer) {
-                layersToRender.add(layer);
-            }
-        }
-        return layersToRender;
+        AnnotatorState aState = getModelObject();
+        VDocument vdoc = render(aJCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
+        BratRenderer.render(response, aState, vdoc, aJCas, annotationService);
     }
     
     private String bratInitCommand()

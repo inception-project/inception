@@ -19,8 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
 import java.io.File;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.NonResettingRestartException;
@@ -39,7 +40,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -66,8 +69,8 @@ public class ExportDocumentDialogContent
         super(aId);
         state = aModel;
 
-        ArrayList<String> writeableFormats = (ArrayList<String>) importExportService
-                .getWritableFormatLabels();
+        List<String> writeableFormats = importExportService.getWritableFormats().stream()
+                .map(FormatSupport::getName).sorted().collect(Collectors.toList());
 
         Preferences prefs = new Preferences();
         prefs.format = writeableFormats.get(0);
@@ -78,10 +81,10 @@ public class ExportDocumentDialogContent
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(preferences));
         add(form);
         
-        form.add(new DropDownChoice<String>("format", writeableFormats));
+        form.add(new BootstrapSelect<>("format", writeableFormats));
 
         // FIXME Use EnumChoiceRenderer?
-        DropDownChoice<String> documentType = new DropDownChoice<>("documentType",
+        DropDownChoice<String> documentType = new BootstrapSelect<>("documentType",
                 Model.of(SELECTEXPORT.ANNOTATED.toString()), Arrays.asList(
                         SELECTEXPORT.ANNOTATED.toString(), SELECTEXPORT.AUTOMATED.toString()));
         documentType.setVisible(state.getObject().getMode().equals(Mode.AUTOMATION));
@@ -107,11 +110,9 @@ public class ExportDocumentDialogContent
         try {
             downloadFile = importExportService.exportAnnotationDocument(
                     state.getObject().getDocument(), username,
-                    importExportService.getWritableFormats()
-                            .get(importExportService
-                                    .getWritableFormatId(preferences.getObject().format)),
-                    state.getObject().getDocument().getName(),
-                    state.getObject().getMode());
+                    importExportService.getFormatByName(preferences.getObject().format)
+                            .get(),
+                    state.getObject().getDocument().getName(), state.getObject().getMode());
         }
         catch (Exception e) {
             LOG.error("Export failed", e);

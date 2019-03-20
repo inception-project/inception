@@ -17,11 +17,31 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
-public interface VMarker
+public abstract class VMarker
 {
     public static final String FOCUS = "focus";
     public static final String MATCH_FOCUS = "matchfocus";
     public static final String MATCH = "match";
     
-    String getType();
+    private final Object source;
+    
+    /**
+     * @param aSource
+     *            markers can have a source. This source can be used to retrieve markers from a
+     *            document being rendered, e.g. to clear them. This can at time be useful when a
+     *            marker has already been added but later in the rendering process it needs to be
+     *            replaced by another marker. It may not always be feasible to defer the creation
+     *            of the marker until its final position is clear.
+     */
+    public VMarker(Object aSource)
+    {
+        source = aSource;
+    }
+    
+    public abstract String getType();
+    
+    public final Object getSource()
+    {
+        return source;
+    }
 }

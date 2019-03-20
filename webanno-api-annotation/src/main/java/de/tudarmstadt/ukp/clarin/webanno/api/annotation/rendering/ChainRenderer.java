@@ -22,19 +22,24 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
 import static org.apache.uima.fit.util.CasUtil.selectFS;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -46,17 +51,30 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 public class ChainRenderer
     extends Renderer_ImplBase<ChainAdapter>
 {
-    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    private final List<SpanLayerBehavior> behaviors;
+    
+    public ChainRenderer(ChainAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
+            List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
 
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
-            AnnotatorState aState)
+            int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
+                .filter(f -> f.isVisible() && f.isEnabled())
+                .collect(Collectors.toList());
         
         // Find the features for the arc and span labels - it is possible that we do not find a
         // feature for arc/span labels because they may have been disabled.
@@ -74,9 +92,12 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = typeAdapter.getAnnotationType(aJcas.getCas());
+        Type chainType = CasUtil.getType(aJcas.getCas(), typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
+        // Sorted index mapping annotations to the corresponding rendered spans
+        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        
         int colorIndex = 0;
         // Iterate over the chains
         for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
@@ -90,14 +111,14 @@ public class ChainRenderer
                 AnnotationFS nextLinkFs = (AnnotationFS) linkFs.getFeatureValue(linkNext);
 
                 // Is link after window? If yes, we can skip the rest of the chain
-                if (linkFs.getBegin() >= aState.getWindowEndOffset()) {
+                if (linkFs.getBegin() >= windowEndOffset) {
                     break; // Go to next chain
                 }
 
                 // Is link before window? We only need links that being within the window and that
                 // end within the window
-                if (!(linkFs.getBegin() >= aState.getWindowBeginOffset())
-                        && (linkFs.getEnd() <= aState.getWindowEndOffset())) {
+                if (!(linkFs.getBegin() >= windowBeginOffset)
+                        && (linkFs.getEnd() <= windowEndOffset)) {
                     // prevLinkFs remains null until we enter the window
                     linkFs = nextLinkFs;
                     continue; // Go to next link
@@ -111,12 +132,16 @@ public class ChainRenderer
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
                     String bratHoverText = TypeUtil.getUiHoverText(typeAdapter, linkFs,
                             (spanLabelFeature != null) ? asList(spanLabelFeature) : emptyList());
-                    VRange offsets = new VRange(linkFs.getBegin() - aState.getWindowBeginOffset(),
-                            linkFs.getEnd() - aState.getWindowBeginOffset());
+                    VRange offsets = new VRange(linkFs.getBegin() - windowBeginOffset,
+                            linkFs.getEnd() - windowBeginOffset);
 
-                    aResponse.add(new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
+                    VSpan span = new VSpan(typeAdapter.getLayer(), linkFs, bratTypeName, offsets,
                             colorIndex, singletonMap("label", bratLabelText), 
-                            singletonMap("label", bratHoverText)));
+                            singletonMap("label", bratHoverText));
+                    
+                    annoToSpanIdx.put(linkFs, span);
+                    
+                    aResponse.add(span);
                 }
 
                 // Render arc (we do this on prevLinkFs because then we easily know that the current
@@ -143,11 +168,6 @@ public class ChainRenderer
                 // Render errors if required features are missing
                 renderRequiredFeatureErrors(visibleFeatures, linkFs, aResponse);
 
-                // if (BratAjaxCasUtil.isSame(linkFs, nextLinkFs)) {
-                // log.error("Loop in CAS detected, aborting rendering of chains");
-                // break;
-                // }
-
                 prevLinkFs = linkFs;
                 linkFs = nextLinkFs;
             }
@@ -156,6 +176,10 @@ public class ChainRenderer
             // window because we would like the chain color to be independent of visibility. In
             // particular the color of a chain should not change when switching pages/scrolling.
             colorIndex++;
+        }
+        
+        for (SpanLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
         }
     }
 }

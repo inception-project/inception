@@ -18,11 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,10 +34,11 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.jcas.JCas;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanLayerBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
@@ -53,99 +57,58 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 public class SpanRenderer
     extends Renderer_ImplBase<SpanAdapter>
 {
-    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry)
+    private final List<SpanLayerBehavior> behaviors;
+    
+    public SpanRenderer(SpanAdapter aTypeAdapter, FeatureSupportRegistry aFeatureSupportRegistry,
+            List<SpanLayerBehavior> aBehaviors)
     {
         super(aTypeAdapter, aFeatureSupportRegistry);
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
     
     @Override
     public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
-            VDocument aResponse, AnnotatorState aBratAnnotatorModel)
+            VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
-        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
-                .filter(f -> f.isVisible() && f.isEnabled()).collect(Collectors.toList());
         SpanAdapter typeAdapter = getTypeAdapter();
-        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
         
-        int windowBegin = aBratAnnotatorModel.getWindowBeginOffset();
-        int windowEnd = aBratAnnotatorModel.getWindowEndOffset();
+        List<AnnotationFeature> visibleFeatures = aFeatures.stream()
+                .filter(f -> f.isVisible() && f.isEnabled())
+                .collect(Collectors.toList());
 
-        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, windowBegin,
-                windowEnd);
+        // Collect the visible sentences. The sentence boundary information is used to generate
+        // multiple ranges for annotations crossing sentence boundaries
+        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, aWindowBegin,
+                aWindowEnd);
         
-        for (AnnotationFS fs : selectCovered(aJcas.getCas(), type, windowBegin, windowEnd)) {
+        // Index mapping annotations to the corresponding rendered spans
+        Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
+        
+        // Iterate over the span annotations of the current type and render each of them
+        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
+        List<AnnotationFS> annotations = selectCovered(aJcas.getCas(), type, aWindowBegin,
+                aWindowEnd);
+        for (AnnotationFS fs : annotations) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
-            
-            Sentence beginSent = null;
-            Sentence endSent = null;
-            
-            // check if annotation extends beyond viewable window - if yes, then constrain it to 
-            // the visible window
-            for (Sentence sent : visibleSentences) {
-                if (beginSent == null) {
-                    // Here we catch the first sentence in document order which covers the begin
-                    // offset of the current annotation.
-                    if (sent.getBegin() <= fs.getBegin() && fs.getBegin() <= sent.getEnd()) {
-                        beginSent = sent;
-                    }
-                    // Make sure that zero-width annotations always start and end in the same
-                    // sentence. Zero-width annotations that are on the boundary of two directly
-                    // adjacent sentences (i.e. without whitespace between them) are considered
-                    // to be at the end of the first sentence rather than at the beginning of the
-                    // second sentence.
-                    if (fs.getBegin() == fs.getEnd()) {
-                        endSent = sent;
-                    }
-                }
-                
-                if (endSent == null) {
-                    if (sent.getBegin() <= fs.getEnd() && fs.getEnd() <= sent.getEnd()) {
-                        endSent = sent;
-                    }
-                }
-                
-                if (beginSent != null && endSent != null) {
-                    break;
-                }
-            }
-            
-            if (beginSent == null || endSent == null) {
-                throw new IllegalStateException(
-                        "Unable to determine sentences in which the annotation starts/ends: " + fs);
-            }
+            List<VRange> ranges = calculateRanges(aJcas, visibleSentences, aResponse,
+                    aWindowBegin, aWindowEnd, fs);
 
-            List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
-                    endSent.getEnd());
-            List<VRange> ranges = new ArrayList<>();
-            if (sentences.size() > 1) {
-                for (Sentence sentence : sentences) {
-                    if (sentence.getBegin() <= fs.getBegin() && fs.getBegin() < sentence.getEnd()) {
-                        ranges.add(new VRange(fs.getBegin() - windowBegin,
-                                sentence.getEnd() - windowBegin));
-                    }
-                    else if (sentence.getBegin() <= fs.getEnd()
-                            && fs.getEnd() <= sentence.getEnd()) {
-                        ranges.add(new VRange(sentence.getBegin() - windowBegin,
-                                fs.getEnd() - windowBegin));
-                    }
-                    else {
-                        ranges.add(new VRange(sentence.getBegin() - windowBegin,
-                                sentence.getEnd() - windowBegin));
-                    }
-                }
-                aResponse.add(
-                        new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features, 
-                                hoverFeatures));
-            }
-            else {
-                // FIXME It should be possible to remove this case and the if clause because
-                // the case that a FS is inside a single sentence is just a special case
-                aResponse.add(new VSpan(typeAdapter.getLayer(), fs, bratTypeName,
-                        new VRange(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin),
-                        features, hoverFeatures));
-            }
+            VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
+                    hoverFeatures);
+            
+            annoToSpanIdx.put(fs, span);
+            
+            aResponse.add(span);
             
             // Render errors if required features are missing
             renderRequiredFeatureErrors(visibleFeatures, fs, aResponse);
@@ -165,6 +128,83 @@ public class SpanRenderer
                 }
                 fi++;
             }
+        }
+        
+        for (SpanLayerBehavior behavior : behaviors) {
+            behavior.onRender(typeAdapter, aResponse, annoToSpanIdx);
+        }
+    }
+    
+    private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,
+            VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
+    {
+        Sentence beginSent = null;
+        Sentence endSent = null;
+
+        // check if annotation extends beyond viewable window - if yes, then constrain it to
+        // the visible window
+        for (Sentence sent : aVisibleSentences) {
+            if (beginSent == null) {
+                // Here we catch the first sentence in document order which covers the begin
+                // offset of the current annotation. Note that in UIMA annotations are
+                // half-open intervals [begin,end) so that a begin offset must always be
+                // smaller than the end of a covering annotation to be considered properly
+                // covered.
+                if (sent.getBegin() <= aFS.getBegin() && aFS.getBegin() < sent.getEnd()) {
+                    beginSent = sent;
+                }
+                // Make sure that zero-width annotations always start and end in the same
+                // sentence. Zero-width annotations that are on the boundary of two directly
+                // adjacent sentences (i.e. without whitespace between them) are considered
+                // to be at the end of the first sentence rather than at the beginning of the
+                // second sentence.
+                if (aFS.getBegin() == aFS.getEnd()) {
+                    endSent = sent;
+                }
+            }
+
+            if (endSent == null) {
+                if (sent.getBegin() <= aFS.getEnd() && aFS.getEnd() <= sent.getEnd()) {
+                    endSent = sent;
+                }
+            }
+
+            if (beginSent != null && endSent != null) {
+                break;
+            }
+        }
+
+        if (beginSent == null || endSent == null) {
+            throw new IllegalStateException(
+                    "Unable to determine sentences in which the annotation starts/ends: " + aFS);
+        }
+
+        // If the annotation extends across sentence boundaries, create multiple ranges for the
+        // annotation, one for every sentence.
+        List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
+                endSent.getEnd());
+        List<VRange> ranges = new ArrayList<>();
+        if (sentences.size() > 1) {
+            for (Sentence sentence : sentences) {
+                if (sentence.getBegin() <= aFS.getBegin() && aFS.getBegin() < sentence.getEnd()) {
+                    ranges.add(new VRange(aFS.getBegin() - aWindowBegin,
+                            sentence.getEnd() - aWindowBegin));
+                }
+                else if (sentence.getBegin() <= aFS.getEnd() && aFS.getEnd() <= sentence.getEnd()) {
+                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
+                            aFS.getEnd() - aWindowBegin));
+                }
+                else {
+                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
+                            sentence.getEnd() - aWindowBegin));
+                }
+            }
+
+            return ranges;
+        }
+        else {
+            return asList(
+                    new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin));
         }
     }
 }

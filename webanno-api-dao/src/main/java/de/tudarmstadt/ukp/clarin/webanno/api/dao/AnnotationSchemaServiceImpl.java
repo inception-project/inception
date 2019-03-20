@@ -17,52 +17,72 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
+import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
-import javax.annotation.Resource;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.factory.TypeSystemDescriptionFactory;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -85,15 +105,47 @@ public class AnnotationSchemaServiceImpl
     @Value(value = "${repository.path}")
     private File dir;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    private @Resource FeatureSupportRegistry featureSupportRegistry;
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired FeatureSupportRegistry featureSupportRegistry;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
+    private @Autowired LayerSupportRegistry layerSupportRegistry;
+    private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    private List<ProjectInitializer> initializers;
 
     public AnnotationSchemaServiceImpl()
     {
         // Nothing to do
+    }
+
+    @EventListener
+    public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
+    {
+        init();
+    }
+    
+    /* package private */ void init()
+    {
+        List<ProjectInitializer> inits = new ArrayList<>();
+
+        if (initializerProxy != null) {
+            inits.addAll(initializerProxy);
+            AnnotationAwareOrderComparator.sort(inits);
+        
+            Set<Class<? extends ProjectInitializer>> initializerClasses = new HashSet<>();
+            for (ProjectInitializer init : inits) {
+                if (initializerClasses.add(init.getClass())) {
+                    log.info("Found project initializer: {}",
+                            ClassUtils.getAbbreviatedName(init.getClass(), 20));
+                }
+                else {
+                    throw new IllegalStateException("There cannot be more than once instance "
+                            + "of each project initializer class! Duplicate instance of class: "
+                                    + init.getClass());
+                }
+            }
+        }
+        
+        initializers = Collections.unmodifiableList(inits);
     }
 
     @Override
@@ -139,7 +191,6 @@ public class AnnotationSchemaServiceImpl
     @Override
     @Transactional
     public void createLayer(AnnotationLayer aLayer)
-        throws IOException
     {
         if (isNull(aLayer.getId())) {
             entityManager.persist(aLayer);
@@ -168,6 +219,21 @@ public class AnnotationSchemaServiceImpl
         }
     }
 
+    @Override
+    @Transactional
+    public Optional<Tag> getTag(long aId)
+    {
+        try {
+            final String query = "FROM Tag WHERE id = :id";
+            return Optional.of(entityManager.createQuery(query, Tag.class)
+                    .setParameter("id", aId)
+                    .getSingleResult());
+        }
+        catch (NoResultException e) {
+            return Optional.empty();
+        }
+    }
+    
     @Override
     @Transactional
     public Tag getTag(String aTagName, TagSet aTagSet)
@@ -307,10 +373,71 @@ public class AnnotationSchemaServiceImpl
     @Transactional(noRollbackFor = NoResultException.class)
     public AnnotationLayer getLayer(String aName, Project aProject)
     {
-        return entityManager
-                .createQuery("From AnnotationLayer where name = :name AND project =:project",
-                        AnnotationLayer.class).setParameter("name", aName)
-                .setParameter("project", aProject).getSingleResult();
+        // If there is a layer definition for the given name, then return it immediately
+        Optional<AnnotationLayer> layer = getLayerInternal(aName, aProject);
+        if (layer.isPresent()) {
+            return layer.get();
+        }
+        
+        TypeSystemDescription tsd;
+        try {
+            tsd = getFullProjectTypeSystem(aProject);
+        }
+        catch (ResourceInitializationException e) {
+            throw new RuntimeException(e);
+        }
+
+        TypeDescription type = tsd.getType(aName);
+        // If the super-type is not covered by the type system, then it is most likely a
+        // UIMA built-in type. In this case we can stop the search since we do not have
+        // layer definitions for UIMA built-in types.
+        if (type == null) {
+            throw new NoResultException("Type [" + aName + "] not found in the type system");
+        }
+        
+        // If there is no layer definition for the given type name, try using the type system
+        // definition to determine a suitable layer definition for a super type of the given type.
+        while (true) {
+            // If there is no super type, then we cannot find a suitable layer definition
+            if (type.getSupertypeName() == null) {
+                throw new NoResultException(
+                        "No more super-types - no suitable layer definition found for type ["
+                                + aName + "]");
+            }
+
+            // If there is a super-type then see if there is layer definition for it
+            type = tsd.getType(type.getSupertypeName());
+
+            // If the super-type is not covered by the type system, then it is most likely a
+            // UIMA built-in type. In this case we can stop the search since we do not have
+            // layer definitions for UIMA built-in types.
+            if (type == null) {
+                throw new NoResultException(
+                        "Super-type not in type system - no suitable layer definition found for type ["
+                                + aName + "]");
+            }
+
+            layer = getLayerInternal(type.getName(), aProject);
+            
+            // If the a layer definition of the given type was found, return it
+            if (layer.isPresent()) {
+                return layer.get();
+            }
+            
+            // Otherwise attempt going one level higher in the inheritance hierarchy
+        }
+    }
+    
+    private Optional<AnnotationLayer> getLayerInternal(String aName, Project aProject)
+    {
+        String query = String.join("\n",
+                "FROM AnnotationLayer ",
+                "WHERE name = :name AND project = :project");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("name", aName)
+                .setParameter("project", aProject)
+                .getResultStream().findFirst();
     }
     
     @Override
@@ -371,6 +498,7 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
+    @Transactional
     public TagSet createTagSet(String aDescription, String aTagSetName, String aLanguage,
             String[] aTags, String[] aTagDescription, Project aProject)
                 throws IOException
@@ -398,22 +526,46 @@ public class AnnotationSchemaServiceImpl
 
     @Override
     @Transactional
-    public void initializeTypesForProjectV0(Project aProject, String[] aPostags,
-            String[] aPosTagDescriptions, String[] aDepTags, String[] aDepTagDescriptions,
-            String[] aNeTags, String[] aNeTagDescriptions, String[] aCorefTypeTags,
-            String[] aCorefRelTags)
+    public void initializeProject(Project aProject)
         throws IOException
     {
-        new ProjectInitializer(this).initializeV0(aProject, aPostags, aPosTagDescriptions, aDepTags,
-                aDepTagDescriptions, aNeTags, aNeTagDescriptions, aCorefTypeTags, aCorefRelTags);
-    }
+        Deque<ProjectInitializer> deque = new LinkedList<>(initializers);
+        Set<Class<? extends ProjectInitializer>> initsSeen = new HashSet<>();
+        Set<ProjectInitializer> initsDeferred = SetUtils.newIdentityHashSet();
 
-    @Override
-    @Transactional
-    public void initializeTypesForProject(Project aProject)
-        throws IOException
-    {
-        new ProjectInitializer(this).initialize(aProject);
+        Set<Class<? extends ProjectInitializer>> allInits = new HashSet<>();
+
+        for (ProjectInitializer initializer : deque) {
+            allInits.add(initializer.getClass());
+        }
+        
+        while (!deque.isEmpty()) {
+            ProjectInitializer initializer = deque.pop();
+
+            if (!allInits.containsAll(initializer.getDependencies())) {
+                throw new IllegalStateException(
+                        "Missing dependencies of " + initializer + " initializer from " + deque);
+            }
+
+            if (initsDeferred.contains(initializer)) {
+                throw new IllegalStateException("Circular initializer dependencies in "
+                        + initsDeferred + " via " + initializer);
+            }
+            
+            if (initsSeen.containsAll(initializer.getDependencies())) {
+                log.debug("Applying project initializer: {}", initializer);
+                initializer.configure(aProject);
+                initsSeen.add(initializer.getClass());
+                initsDeferred.clear();
+            }
+            else {
+                log.debug(
+                        "Deferring project initializer as dependencies are not yet fulfilled: [{}]",
+                        initializer);
+                deque.add(initializer);
+                initsDeferred.add(initializer);
+            }
+        }
     }
 
     @Override
@@ -542,7 +694,8 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public void removeAnnotationFeature(AnnotationFeature aFeature)
     {
-        entityManager.remove(aFeature);
+        entityManager.remove(
+                entityManager.contains(aFeature) ? aFeature : entityManager.merge(aFeature));
     }
 
     @Override
@@ -562,54 +715,117 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public TypeSystemDescription getProjectTypes(Project aProject)
+    public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
-        for (AnnotationLayer type : listAnnotationLayer(aProject)) {
-            if (type.getType().equals(SPAN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                
-                generateFeatures(tsd, td, type);
-            }
-            else if (type.getType().equals(RELATION_TYPE) && !type.isBuiltIn()) {
-                TypeDescription td = tsd.addType(type.getName(), "", CAS.TYPE_NAME_ANNOTATION);
-                AnnotationLayer attachType = type.getAttachType();
 
-                td.addFeature(WebAnnoConst.FEAT_REL_TARGET, "", attachType.getName());
-                td.addFeature(WebAnnoConst.FEAT_REL_SOURCE, "", attachType.getName());
+        listAnnotationLayer(aProject).stream()
+                .filter(layer -> !layer.isBuiltIn())
+                .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
+                        .generateTypes(tsd, layer));
 
-                generateFeatures(tsd, td, type);
+        return tsd;
+    }
+
+    @Override
+    public TypeSystemDescription getAllProjectTypes(Project aProject)
+        throws ResourceInitializationException
+    {
+        // Create a new type system from scratch
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+
+        TypeSystemDescription builtInTypes = createTypeSystemDescription();
+        
+        List<AnnotationLayer> layers = listAnnotationLayer(aProject);
+        
+        for (AnnotationLayer layer : layers) {
+            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+            
+            // for built-in layers, we clone the information from the built-in type descriptors
+            if (layer.isBuiltIn()) {
+                for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
+                    exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
+                }
             }
-            else if (type.getType().equals(CHAIN_TYPE) && !type.isBuiltIn()) {
-                TypeDescription tdChains = tsd.addType(type.getName() + "Chain", "",
-                        CAS.TYPE_NAME_ANNOTATION_BASE);
-                tdChains.addFeature("first", "", type.getName() + "Link");
-                
-                // Custom features on chain layers are currently not supported
-                // generateFeatures(tsd, tdChains, type);
-                
-                TypeDescription tdLink = tsd.addType(type.getName() + "Link", "",
-                        CAS.TYPE_NAME_ANNOTATION);
-                tdLink.addFeature("next", "", type.getName() + "Link");
-                tdLink.addFeature("referenceType", "", CAS.TYPE_NAME_STRING);
-                tdLink.addFeature("referenceRelation", "", CAS.TYPE_NAME_STRING);
+            // for custom layers, we use the information from the project settings
+            else {
+                layerSupport.generateTypes(tsd, layer);
             }
         }
 
         return tsd;
     }
     
-    private void generateFeatures(TypeSystemDescription aTSD, TypeDescription aTD,
-            AnnotationLayer aLayer)
+    private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
+            TypeSystemDescription aTarget, String aType)
     {
-        List<AnnotationFeature> features = listAnnotationFeature(aLayer);
-        for (AnnotationFeature feature : features) {
-            FeatureSupport fs = featureSupportRegistry.getFeatureSupport(feature);
-            fs.generateFeature(aTSD, aTD, feature);
+        TypeDescription builtInType = aSource.getType(aType);
+        
+        if (builtInType == null) {
+            throw new IllegalArgumentException(
+                    "No type description found for type [" + aType + "]");
+        }
+        
+        TypeDescription clonedType = aTarget.addType(builtInType.getName(),
+                builtInType.getDescription(), builtInType.getSupertypeName());
+        
+        if (builtInType.getFeatures() != null) {
+            for (FeatureDescription feature : builtInType.getFeatures()) {
+                clonedType.addFeature(feature.getName(), feature.getDescription(),
+                        feature.getRangeTypeName(), feature.getElementType(),
+                        feature.getMultipleReferencesAllowed());
+                
+                // Export types referenced by built-in types also as built-in types. Note that
+                // it is conceptually impossible for built-in types to refer to custom types, so
+                // this is cannot lead to a custom type being exported as a built-in type.
+                if (
+                        feature.getElementType() != null && 
+                        !isNativeUimaType(feature.getElementType()) &&
+                        aTarget.getType(feature.getElementType()) == null
+                ) {
+                    exportBuiltInTypeDescription(aSource, aTarget, feature.getElementType());
+                }
+                else if (
+                        feature.getRangeTypeName() != null && 
+                        !isNativeUimaType(feature.getRangeTypeName()) &&
+                        aTarget.getType(feature.getRangeTypeName()) == null
+                ) {
+                    exportBuiltInTypeDescription(aSource, aTarget, feature.getRangeTypeName());
+                }
+            }
         }
     }
 
+    @Override
+    public TypeSystemDescription getFullProjectTypeSystem(Project aProject)
+        throws ResourceInitializationException
+    {
+        return getFullProjectTypeSystem(aProject, true);
+    }
+
+    @Override
+    public TypeSystemDescription getFullProjectTypeSystem(Project aProject,
+            boolean aIncludeInternalTypes)
+        throws ResourceInitializationException
+    {
+        List<TypeSystemDescription> typeSystems = new ArrayList<>();
+        
+        // Types detected by uimaFIT
+        typeSystems.add(createTypeSystemDescription());
+        
+        if (aIncludeInternalTypes) {
+            // Types internally used by WebAnno (which we intentionally exclude from being detected
+            // by uimaFIT because we want to have an easy way to create a type system excluding
+            // these types when we export files from the project
+            typeSystems.add(CasMetadataUtils.getInternalTypeSystem());
+        }
+
+        // Types declared within the project
+        typeSystems.add(getCustomProjectTypes(aProject));
+
+        return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
+    }
     @Override
     public void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
         throws UIMAException, IOException
@@ -621,33 +837,8 @@ public class AnnotationSchemaServiceImpl
     public void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
         throws UIMAException, IOException
     {
-        TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                .createTypeSystemDescription();
-        TypeSystemDescription projectTypes = getProjectTypes(aSourceDocument.getProject());
-        TypeSystemDescription allTypes = CasCreationUtils
-                .mergeTypeSystems(asList(projectTypes, builtInTypes));
-
-        // Prepare template for new CAS
-        CAS newCas = JCasFactory.createJCas(allTypes).getCas();
-        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) newCas);
-
-        // Save old type system
-        TypeSystem oldTypeSystem = aCas.getTypeSystem();
-
-        // Save old CAS contents
-        ByteArrayOutputStream os2 = new ByteArrayOutputStream();
-        Serialization.serializeWithCompression(aCas, os2, oldTypeSystem);
-
-        // Prepare CAS with new type system
-        Serialization.deserializeCASComplete(serializer, (CASImpl) aCas);
-
-        // Restore CAS data to new type system
-        Serialization.deserializeCAS(aCas, new ByteArrayInputStream(os2.toByteArray()),
-                oldTypeSystem, null);
-
-        // Make sure JCas is properly initialized too
-        aCas.getJCas();
-
+        upgradeCas(aCas, aSourceDocument.getProject());
+        
         try (MDC.MDCCloseable closable = MDC.putCloseable(
                 Logging.KEY_PROJECT_ID,
                 String.valueOf(aSourceDocument.getProject().getId()))) {
@@ -659,53 +850,214 @@ public class AnnotationSchemaServiceImpl
                     project.getId());
         }
     }
+    
+    @Override
+    public void upgradeCas(CAS aCas, Project aProject) throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aProject);
+        upgradeCas(aCas, ts);
+    }
+    
+    @Override
+    public void upgradeCasIfRequired(CAS aCas, AnnotationDocument aAnnotationDocument)
+        throws UIMAException, IOException
+    {
+        upgradeCasIfRequired(aCas, aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getUser());
+    }
+    
+    @Override
+    public void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)
+        throws UIMAException, IOException
+    {
+        TypeSystemDescription ts = getFullProjectTypeSystem(aSourceDocument.getProject());
+        
+        // Check if the current CAS already contains the required type system
+        if (!isUpgradeRequired(aCas, ts)) {
+            log.debug(
+                    "CAS of user [{}] for document [{}]({}) in project [{}]({}) is already "
+                            + "compatible with project type system - skipping upgrade",
+                    aUser, aSourceDocument.getName(), aSourceDocument.getId(),
+                    aSourceDocument.getProject().getName(), aSourceDocument.getProject().getId());
+            return;
+        }
+
+        upgradeCas(aCas, ts);
+    }
+    
+    @Override
+    public CAS prepareCasForExport(CAS aCas, SourceDocument aSourceDocument)
+        throws ResourceInitializationException, UIMAException, IOException
+    {
+        CAS exportCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        upgradeCas(aCas, exportCas, getFullProjectTypeSystem(aSourceDocument.getProject(), false));
+        return exportCas;
+    }
+    
+    /**
+     * In-place upgrade of the given CAS to the target type system.
+     */
+    private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException
+    {
+        upgradeCas(aCas, aCas, aTargetTypeSystem);
+    }
+
+    /**
+     * Load the contents from the source CAS, upgrade it to the target type system and write the
+     * results to the target CAS. An in-place upgrade can be achieved by using the same CAS as
+     * source and target.
+     */
+    private void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException
+    {
+        // Save source CAS type system (do this early since we might do an in-place upgrade)
+        TypeSystem sourceTypeSystem = aSourceCas.getTypeSystem();
+
+        // Save source CAS contents
+        ByteArrayOutputStream serializedCasContents = new ByteArrayOutputStream();
+        Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
+
+        // Re-initialize the target CAS with new type system
+        CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
+        CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
+        Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
+
+        // Leniently load the source CAS contents into the target CAS
+        CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
+                sourceTypeSystem);
+
+        // Make sure JCas is properly initialized too
+        aTargetCas.getJCas();
+    }
+    
+    /**
+     * Check if the current CAS already contains the required type system.
+     */
+    private boolean isUpgradeRequired(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+    {
+        TypeSystem ts = aCas.getTypeSystem();
+        boolean upgradeRequired = false;
+        nextType: for (TypeDescription tdesc : aTargetTypeSystem.getTypes()) {
+            Type t = ts.getType(tdesc.getName());
+            
+            // Type does not exist
+            if (t == null) {
+                log.info("CAS update required: type {} does not exist", tdesc.getName());
+                upgradeRequired = true;
+                break nextType;
+            }
+            
+            // Super-type does not match
+            if (!Objects.equals(tdesc.getSupertypeName(), ts.getParent(t).getName())) {
+                log.info("CAS update required: supertypes of {} do not match: {} <-> {}",
+                        tdesc.getName(), tdesc.getSupertypeName(), ts.getParent(t).getName());
+                upgradeRequired = true;
+                break nextType;
+            }
+            
+            // Check features
+            for (FeatureDescription fdesc : tdesc.getFeatures()) {
+                Feature f = t.getFeatureByBaseName(fdesc.getName());
+                
+                // Feature does not exist
+                if (f == null) {
+                    log.info("CAS update required: feature {} on type {} does not exist",
+                            fdesc.getName(), tdesc.getName());
+                    upgradeRequired = true;
+                    break nextType;
+                }
+                
+                // Range does not match
+                if (CAS.TYPE_NAME_FS_ARRAY.equals(fdesc.getRangeTypeName())) {
+                    if (!Objects.equals(fdesc.getElementType(),
+                            f.getRange().getComponentType().getName())) {
+                        log.info(
+                                "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
+                                fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
+                                f.getRange().getName());
+                        upgradeRequired = true;
+                        break nextType;
+                    }
+                }
+                else {
+                    if (!Objects.equals(fdesc.getRangeTypeName(), f.getRange().getName())) {
+                        log.info(
+                                "CAS update required: ranges of feature {} on type {} do not match: {} <-> {}",
+                                fdesc.getName(), tdesc.getName(), fdesc.getRangeTypeName(),
+                                f.getRange().getName());
+                        upgradeRequired = true;
+                        break nextType;
+                    }
+                }
+            }
+        }
+        
+        return upgradeRequired;
+    }
 
     @Override
     @Transactional
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
-        return getAdapter(this, featureSupportRegistry, applicationEventPublisher, aLayer);
+        return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
     }
     
-    public static TypeAdapter getAdapter(AnnotationSchemaService aSchemaService,
-            FeatureSupportRegistry aFeatureSupportRegistry,
-            ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer)
+    @Override
+    @Transactional
+    public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
+        throws ResourceInitializationException
     {
-        switch (aLayer.getType()) {
-        case WebAnnoConst.SPAN_TYPE: {
-            SpanAdapter adapter = new SpanAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                    aSchemaService.listAnnotationFeature(aLayer));
-            adapter.setLockToTokenOffsets(aLayer.isLockToTokenOffset());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
-            adapter.setAllowMultipleToken(aLayer.isMultipleTokens());
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-            return adapter;
-        }
-        case WebAnnoConst.RELATION_TYPE: {
-            ArcAdapter adapter = new ArcAdapter(aFeatureSupportRegistry, aEventPublisher, aLayer,
-                    aLayer.getId(), aLayer.getName(), WebAnnoConst.FEAT_REL_TARGET,
-                    WebAnnoConst.FEAT_REL_SOURCE,
-                    aLayer.getAttachFeature() == null ? null : aLayer.getAttachFeature().getName(),
-                    aLayer.getAttachType().getName(), aSchemaService.listAnnotationFeature(aLayer));
+        TypeSystemDescription builtInTypes = createTypeSystemDescription();
+        
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(aTSD);
+        for (AnnotationLayer l : analysis.getLayers()) {
+            // Modifications/imports of built-in layers are not supported
+            if (builtInTypes.getType(l.getName()) != null) {
+                continue;
+            }
+            
+            // If a custom layer does not exist yet, create it
+            if (!existsLayer(l.getName(), aProject)) {
+                l.setProject(aProject);
 
-            adapter.setCrossMultipleSentence(aLayer.isCrossSentence());
-            adapter.setAllowStacking(aLayer.isAllowStacking());
+                // Need to set the attach type
+                if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
+                    RelationDetails relDetails = analysis.getRelationDetails(l.getName());
 
-            return adapter;
-            // default is chain (based on operation, change to CoreferenceLinK)
-        }
-        case WebAnnoConst.CHAIN_TYPE: {
-            ChainAdapter adapter = new ChainAdapter(aFeatureSupportRegistry, aEventPublisher,
-                    aLayer, aLayer.getId(), aLayer.getName() + ChainAdapter.CHAIN, aLayer.getName(),
-                    "first", "next", aSchemaService.listAnnotationFeature(aLayer));
+                    AnnotationLayer attachLayer;
+                    try {
+                        // First check if this type is already in the project
+                        attachLayer = getLayer(relDetails.getAttachLayer(),
+                                aProject);
+                    }
+                    catch (NoResultException e) {
+                        // If it does not exist in the project yet, then we create it
+                        attachLayer = analysis.getLayer(relDetails.getAttachLayer());
+                        attachLayer.setProject(aProject);
+                        createLayer(attachLayer);
+                    }
 
-            adapter.setLinkedListBehavior(aLayer.isLinkedListBehavior());
+                    l.setAttachType(attachLayer);
+                }
 
-            return adapter;
-        }
-        default:
-            throw new IllegalArgumentException(
-                    "No adapter for type with name [" + aLayer.getName() + "]");
+                createLayer(l);
+            }
+
+            // Import the features for the layer except if the layer is a built-in layer.
+            // We must not touch the built-in layers because WebAnno may rely on their
+            // structure. This is a conservative measure for now any may be relaxed in the
+            // future.
+            AnnotationLayer persistedLayer = getLayer(l.getName(), aProject);
+            if (!persistedLayer.isBuiltIn()) {
+                for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
+                    if (!existsFeature(f.getName(), persistedLayer)) {
+                        f.setProject(aProject);
+                        f.setLayer(persistedLayer);
+                        createFeature(f);
+                    }
+                }
+            }
         }
     }
 }

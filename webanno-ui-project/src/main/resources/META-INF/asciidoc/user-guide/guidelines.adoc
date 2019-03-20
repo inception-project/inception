@@ -1,0 +1,11 @@
+= Annotation Guidelines
+
+Providing your annotation team with guidelines helps assuring that every team member knows exactly
+what is expected of them.
+
+*Annotators* can access the guidelines via the *Guidelines* button on the *annotation page*.
+
+*Project managers* can provide these guidelines via the *Guidelines* tab in the 
+*project settings*. Guidelines are provided as files (e.g. PDF files). To upload guidelines, 
+click on *Choose files*, select a file from your local disc and then click *Import guidelines*. 
+Remove a guideline document by selecting it and pressing the *Delete* button.

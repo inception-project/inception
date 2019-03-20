@@ -21,8 +21,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class SpanCreatedEvent extends ApplicationEvent
+public class SpanCreatedEvent
+    extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
     

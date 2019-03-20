@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
+import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CASException;
@@ -119,7 +121,7 @@ public class AnnotatorStateImpl
      */
     private int unitCount;
 
-    private List<FeatureState> featureModels = new ArrayList<>();          
+    private final List<FeatureState> featureModels = new ArrayList<>();          
     
     /**
      * Constraints object from rule file
@@ -166,6 +168,8 @@ public class AnnotatorStateImpl
 
     // User action while annotating on document
     private String userAction;
+    
+    private Long annotationDocumentTimestamp;
 
     public AnnotatorStateImpl(Mode aMode)
     {
@@ -337,7 +341,13 @@ public class AnnotatorStateImpl
     @Override
     public void setAnnotationLayers(List<AnnotationLayer> aAnnotationLayers)
     {
-        annotationLayers = aAnnotationLayers;
+        annotationLayers = unmodifiableList(new ArrayList<>(aAnnotationLayers));
+        
+        // Make sure the currently selected layer is actually visible/exists
+        if (!annotationLayers.contains(selectedAnnotationLayer)) {
+            selectedAnnotationLayer = !annotationLayers.isEmpty() ? annotationLayers.get(0) : null;
+            defaultAnnotationLayer = selectedAnnotationLayer;
+        }
     }
 
     @Override
@@ -535,6 +545,7 @@ public class AnnotatorStateImpl
         unitCount = 0;
         windowBeginOffset = 0;
         windowEndOffset = 0;
+        annotationDocumentTimestamp = null;
     }
 
     private AnnotationFeature armedFeature;
@@ -593,5 +604,17 @@ public class AnnotatorStateImpl
             }
         }
         return null;
+    }
+
+    @Override
+    public Optional<Long> getAnnotationDocumentTimestamp()
+    {
+        return Optional.ofNullable(annotationDocumentTimestamp);
+    }
+
+    @Override
+    public void setAnnotationDocumentTimestamp(long aAnnotationDocumentTimestamp)
+    {
+        annotationDocumentTimestamp = aAnnotationDocumentTimestamp;
     }
 }

@@ -1,0 +1,49 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_projects]]
+= Projects
+
+NOTE: This functionality is only available to *managers* of existing projects, 
+      *project creators* (users with the ability to create new projects), and *administrators*.
+      Project managers only see projects in which they hold the respective roles. Project creators
+      only see projects in which they hold the project manager role.
+
+This is the place to specify/edit annotation projects.  
+You can either select one of the existing projects for editing, or click *Create Project* to add a project.
+
+Although correction and automation projects function similarly, the management differs after the creation of the document. For further description, look at the corresponding chapters <<sect_automation>> and <<sect_correction>>.
+
+Click on *Create Project* to create a new project. 
+
+image::project1.jpg[align="center"]
+
+After doing so, a new pane is displayed, where you can name and describe your new project. It is also important to chose the kind of project you want to create. You have the choice between annotation, automation, and correction.
+Please do not forget to save.
+
+image::project2.jpg[align="center"]
+
+After saving the details of the new project, it can be treated like any other already existing one.  Also, a new pane with many options to organize the project is displayed.
+
+image::project10.jpg[align="center"]
+
+To delete a project, click on it in the frame *Details*. The project details are displayed. Now, click on *Delete*.
+
+The pane with the options to organize and edit a project, as described above, can also be reached by clicking on the desired project in the left frame.
+
+image::project3.jpg[align="center"]
+
+By clicking on the tabs, you can now set up the chosen project. 

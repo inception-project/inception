@@ -59,6 +59,7 @@ public class WebAnnoTsv2ReaderWriterTest
         AnalysisEngineDescription writer = createPrimitiveDescription(
                 WebannoTsv2Writer.class,
                 WebannoTsv2Writer.PARAM_TARGET_LOCATION, targetFolder,
+                WebannoTsv2Writer.PARAM_OVERWRITE, true, 
                 WebannoTsv2Writer.PARAM_STRIP_EXTENSION, true, 
                 WebannoTsv2Writer.PARAM_OVERWRITE, true,
                 WebannoTsv2Writer.MULTIPLE_SPAN_ANNOTATIONS, multipleSpans);

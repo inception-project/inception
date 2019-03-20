@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
@@ -28,13 +32,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NoResultException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -45,7 +53,9 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -56,11 +66,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
+import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
@@ -79,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
@@ -112,7 +121,7 @@ public class CurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
@@ -141,12 +150,48 @@ public class CurationPage
     
     public CurationPage()
     {
+        super();
+        LOG.debug("Setting up curation page without parameters");
+        commonInit();
+        
+        Map<String, StringValue> fragmentParameters = Session.get()
+                .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+        if (fragmentParameters != null) {
+            // Clear the URL fragment parameters - we only use them once!
+            Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
+            
+            StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
+            StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
+            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+            
+            handleParameters(null, project, document, focus, false);
+        }
+    }
+    
+    public CurationPage(final PageParameters aPageParameters)
+    {
+        super(aPageParameters);
+        LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
+        
+        commonInit();
+
+        StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
+        StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
+        StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
+        
+        handleParameters(null, project, document, focus, true);
+    }
+    
+    private void commonInit()
+    {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
 
         curationContainer = new CurationContainer();
         curationContainer.setBratAnnotatorModel(getModelObject());
 
-        curationPanel = new CurationPanel("curationPanel", new Model<>(
+        curationPanel = new CurationPanel("curationPanel", this, new Model<>(
                 curationContainer))
         {
             private static final long serialVersionUID = 2175915644696513166L;
@@ -193,7 +238,7 @@ public class CurationPage
                         upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
-                        curationPanel.editor.loadFeatureEditorModels(aTarget);
+                        curationPanel.getEditor().loadFeatureEditorModels(aTarget);
                     }
                     catch (Exception e) {
                         LOG.error("Unable to load data", e);
@@ -257,9 +302,11 @@ public class CurationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CurationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
         
@@ -297,6 +344,7 @@ public class CurationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = CurationPage.this.getModelObject();
                 setEnabled(state.getProject() != null && state.getDocument() != null
                         && !documentService
@@ -349,7 +397,7 @@ public class CurationPage
                 List<Project> projectsWithFinishedAnnos = projectService
                         .listProjectsWithFinishedAnnos();
                 for (Project project : projectService.listProjects()) {
-                    if (SecurityUtil.isCurator(project, projectService, user)) {
+                    if (projectService.isCurator(project, user)) {
                         DecoratedObject<Project> dp = DecoratedObject.of(project);
                         if (projectsWithFinishedAnnos.contains(project)) {
                             dp.setColor("green");
@@ -363,6 +411,12 @@ public class CurationPage
                 return allowedProject;
             }
         };
+    }
+
+    @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
     }
 
     @Override
@@ -402,7 +456,6 @@ public class CurationPage
         gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
         aTarget.add(gotoPageTextField);
-        aTarget.add(curationPanel);
     }
 
     /**
@@ -469,8 +522,6 @@ public class CurationPage
         state.setFocusUnitIndex(selectedSentence);        
         
         actionRefreshDocument(aTarget);
-        
-        curationPanel.updatePanel(aTarget, curationContainer);
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
@@ -513,7 +564,7 @@ public class CurationPage
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            actionValidateDocument(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
             SourceDocument sourceDocument = state.getDocument();
@@ -529,7 +580,7 @@ public class CurationPage
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(curationPanel.editor);
+            aCallbackTarget.add(curationPanel.getEditor());
             aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
@@ -564,14 +615,19 @@ public class CurationPage
         }
     }
 
+    @Override
+    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    {
+        actionLoadDocument(aTarget, 0);
+    }
+    
     /**
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    @Override
-    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
+        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
         
@@ -589,8 +645,7 @@ public class CurationPage
             }
     
             // Load user preferences
-            PreferencesUtil.loadPreferences(username, settingsService, projectService,
-                    annotationService, state, state.getMode());            
+            loadPreferences();
             
             // Re-render whole page as sidebar size preference may have changed
             aTarget.add(CurationPage.this);
@@ -627,8 +682,13 @@ public class CurationPage
             state.getPreferences()
                     .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
             
+            // Initialize timestamp in state
+            updateDocumentTimestampAfterWrite(state, curationDocumentService
+                    .getCurationCasTimestamp(state.getDocument()));
+                        
             // Initialize the visible content
-            state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(mergeJCas));
+            state.moveToUnit(mergeJCas, aFocus);
+            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
     
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -642,7 +702,7 @@ public class CurationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setBratAnnotatorModel(state);
-            curationPanel.editor.reset(aTarget);
+            curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
             updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);
@@ -673,6 +733,106 @@ public class CurationPage
         }
         catch (Exception e) {
             handleException(aTarget, e);
+        }
+    }
+    
+    private Project getProjectFromParameters(StringValue projectParam)
+    {
+        Project project = null;
+        if (projectParam != null && !projectParam.isEmpty()) {
+            long projectId = projectParam.toLong();
+            project = projectService.getProject(projectId);
+        }
+        return project;
+    }
+
+    private SourceDocument getDocumentFromParameters(Project aProject, StringValue documentParam)
+    {
+        SourceDocument document = null;
+        if (documentParam != null && !documentParam.isEmpty()) {
+            long documentId = documentParam.toLong();
+            document = documentService.getSourceDocument(aProject.getId(), documentId);
+        }
+        return document;
+    }
+    
+    private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
+            StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
+    {
+        // Get current project from parameters
+        Project project = null;
+        try {
+            project = getProjectFromParameters(aProjectParameter);
+        }
+        catch (NoResultException e) {
+            error("Project [" + aProjectParameter + "] does not exist");
+            return;
+        }
+        
+        // Get current document from parameters
+        SourceDocument document = null;
+        if (project != null) {
+            try {
+                document = getDocumentFromParameters(project, aDocumentParameter);
+            }
+            catch (NoResultException e) {
+                error("Document [" + aDocumentParameter + "] does not exist in project ["
+                        + project.getId() + "]");
+            }
+        }
+        
+        // Get current focus unit from parameters
+        int focus = 0;
+        if (aFocusParameter != null) {
+            focus = aFocusParameter.toInt(0);
+        }        
+        
+        // If there is no change in the current document, then there is nothing to do. Mind
+        // that document IDs are globally unique and a change in project does not happen unless
+        // there is also a document change.
+        if (
+                document != null &&
+                document.equals(getModelObject().getDocument()) && 
+                focus == getModelObject().getFocusUnitIndex()
+        ) {
+            return;
+        }
+        
+        // Check access to project
+        if (project != null
+                && !projectService.isCurator(project, getModelObject().getUser())) {
+            error("You have no permission to access project [" + project.getId() + "]");
+            return;
+        }
+        
+        // Update project in state
+        // Mind that this is relevant if the project was specified as a query parameter
+        // i.e. not only in the case that it was a URL fragment parameter. 
+        if (project != null) {
+            getModelObject().setProject(project);
+            if (aLockIfPreset) {
+                getModelObject().setProjectLocked(true);
+            }
+        }
+        
+        if (document != null) {
+            // If we arrive here and the document is not null, then we have a change of document
+            // or a change of focus (or both)
+            if (!document.equals(getModelObject().getDocument())) {
+                getModelObject().setDocument(document, getListOfDocs());
+                actionLoadDocument(aTarget, focus);
+            }
+            else {
+                try {
+                    getModelObject().moveToUnit(getEditorCas(), focus);
+                    actionRefreshDocument(aTarget);
+                }
+                catch (Exception e) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                    LOG.info("Error reading CAS " + e.getMessage());
+                    error("Error reading CAS " + e.getMessage());
+                }
+            }
         }
     }
 }

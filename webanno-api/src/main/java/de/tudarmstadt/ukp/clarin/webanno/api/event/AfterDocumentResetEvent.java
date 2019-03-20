@@ -21,12 +21,14 @@ import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class AfterDocumentResetEvent
     extends ApplicationEvent
+    implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = 686641613168415460L;
-    
+
     private final AnnotationDocument document;
     private final JCas jcas;
 

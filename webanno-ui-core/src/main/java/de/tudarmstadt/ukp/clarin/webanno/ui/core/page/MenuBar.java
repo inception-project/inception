@@ -67,6 +67,7 @@ public class MenuBar
                 }
             }
         });
+        helpLink.setContextRelative(true);
         helpLink.setPopupSettings(new PopupSettings("_blank"));
         
         links = new ListView<ImageLinkDecl>("links", SettingsUtil.getLinks())

@@ -27,12 +27,22 @@ public class FeatureType
     private final String name;
     private final String uiName;
     private final String featureSupportId;
+    private final boolean internal;
 
     public FeatureType(String aName, String aUiName, String aFeatureSupportId)
     {
         name = aName;
         uiName = aUiName;
         featureSupportId = aFeatureSupportId;
+        internal = false;
+    }
+
+    public FeatureType(String aName, String aUiName, String aFeatureSupportId, boolean aInternal)
+    {
+        name = aName;
+        uiName = aUiName;
+        featureSupportId = aFeatureSupportId;
+        internal = aInternal;
     }
 
     public String getName()
@@ -48,6 +58,17 @@ public class FeatureType
     public String getFeatureSupportId()
     {
         return featureSupportId;
+    }
+    
+    /**
+     * Check if the type is reserved for internal use and the user cannot create features of this
+     * type.
+     * 
+     * @return {@code true} if the type is reserved for internal use.
+     */
+    public boolean isInternal()
+    {
+        return internal;
     }
 
     @Override

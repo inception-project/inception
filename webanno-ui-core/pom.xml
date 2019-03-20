@@ -53,7 +53,8 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-fontawesome</artifactId>
+      <artifactId>webanno-remote</artifactId>
+      <optional>true</optional>
     </dependency>
 
     <dependency>
@@ -62,8 +63,8 @@
       <scope>provided</scope>
     </dependency>
 
-    <!-- Spring  dependencies -->
-    
+    <!-- Spring dependencies -->
+
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
@@ -132,13 +133,17 @@
       <exclusions>
         <exclusion>
           <groupId>org.springframework.boot</groupId>
-          <artifactId>spring-boot-starter-tomcat</artifactId>
+          <artifactId>spring-boot-starter-web</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket</groupId>
       <artifactId>wicket-bootstrap-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
     </dependency>
     <dependency>
       <groupId>de.agilecoders.wicket.webjars</groupId>
@@ -149,38 +154,14 @@
       <artifactId>wicket-bootstrap-less</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.danekja</groupId>
+      <artifactId>jdk-serializable-functional</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.github.sommeri</groupId>
       <artifactId>less4j</artifactId>
     </dependency>
   </dependencies>
-  <build>
-    <resources>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/resources</directory>
-        <excludes>
-          <exclude>META-INF/version.properties</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <filtering>true</filtering>
-        <directory>src/main/resources</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-      </resource>
-      <resource>
-        <filtering>false</filtering>
-        <directory>src/main/java</directory>
-        <includes>
-          <include>**</include>
-        </includes>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-  </build>
   <profiles>
     <profile>
       <id>rat-check</id>
@@ -216,4 +197,5 @@
         </plugins>
       </build>
     </profile>
-  </profiles></project>
+  </profiles>
+</project>

@@ -1,0 +1,28 @@
+= Layers Behaviors
+
+Layer behaviors allow to customize the way a layer of a particular span behaves, e.g. whether
+a span is allowed to cross sentence boundaries, whether it anchors to characters or tokens, etc.
+The layer behaviors tie in with the specific `LayerSupport` implementations. The mechanism itself
+consists of the following classes and interfaces:
+
+* The `LayerBehavior` interface provides the API necessary for registering new behaviors. There are
+  abstract classes such as `SpanLayerBehavior` or `RelationLayerBehavior` which provide the APIs for
+  behaviors of specific layer types.
+* The `LayerBehaviorRegistry` and its default implementation `LayerBehaviorRegistryImpl` 
+  serve as an access point to the different supported layer behaviors.
+
+A layer behavior has the following responsibilities:
+
+* Ensure that new annotations that are created conform with the behavior. This is done via the 
+  `onCreate` method. If the annotation to be created does not conform with the behavior, the
+  method can cancel the creation of the annotation by throwing an `AnnotationException`.
+* Highlight annotations not conforming with the behavior. This is relevant when importing 
+  pre-annotated files or when changing the behavior configuration of an existing layer. The
+  relevant method is `onRender`. If an annotation does not conform with the behavior, a error
+  marker should be added for problematic annotation.
+////
+* Ensure that documents being marked as *finished* conform with the behavior. This is done
+  via the `onFinish` method.
+* Provide a UI to configure the behavior in the layer detail configuration in the project settings.
+  This is done via the `createEditor` method.
+////

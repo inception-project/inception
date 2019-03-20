@@ -17,11 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.project;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.io.IOUtils.closeQuietly;
 import static org.apache.commons.io.IOUtils.copyLarge;
 
-import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,30 +34,30 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map.Entry;
-import java.util.Properties;
+import java.util.Objects;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import javax.annotation.Resource;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.BeanWrapper;
-import org.springframework.beans.PropertyAccessorFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEventPublisher;
@@ -61,18 +65,21 @@ import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterProjectCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.ProjectStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -85,19 +92,12 @@ public class ProjectServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-    
-    @Resource(name = "userRepository")
-    private UserDao userRepository;
-
-    private @Resource ApplicationEventPublisher applicationEventPublisher;
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired UserDao userRepository;
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
     @Value(value = "${repository.path}")
     private File dir;
-
-    // The annotation preference properties File name
-    private static final String annotationPreferencePropertiesFileName = "annotation.properties";
 
     private boolean running = false;
 
@@ -136,6 +136,97 @@ public class ProjectServiceImpl
     public void updateProject(Project aProject)
     {
         entityManager.merge(aProject);
+    }
+    
+    @Override
+    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    public void recalculateProjectState(Project aProject)
+    {
+        Project project;
+        try {
+            project = getProject(aProject.getId());
+        }
+        catch (NoResultException e) {
+            // This happens when this method is called as part of deleting an entire project.
+            // In such a case, the project may no longer be available, so there is no point in
+            // updating its state. So then we do nothing here.
+            return;
+        }
+        
+        // This query is better because we do not inject strings into the query string, but it
+        // does not work on HSQLDB (on MySQL it seems to work).
+        // See: https://github.com/webanno/webanno/issues/1011
+//        String query = 
+//                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+//                "COUNT(*) AS num, " +
+//                "SUM(CASE WHEN state = :an  THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN (state = :aip OR state is NULL) THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :af  THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :cip THEN 1 ELSE 0 END), " +
+//                "SUM(CASE WHEN state = :cf  THEN 1 ELSE 0 END)) " +
+//                "FROM SourceDocument " + 
+//                "WHERE project = :project";
+//        
+//        SourceDocumentStateStats stats = entityManager.createQuery(
+//                        query, SourceDocumentStateStats.class)
+//                .setParameter("project", aProject)
+//                .setParameter("an", SourceDocumentState.NEW)
+//                .setParameter("aip", SourceDocumentState.ANNOTATION_IN_PROGRESS)
+//                .setParameter("af", SourceDocumentState.ANNOTATION_FINISHED)
+//                .setParameter("cip", SourceDocumentState.CURATION_IN_PROGRESS)
+//                .setParameter("cf", SourceDocumentState.CURATION_FINISHED)
+//                .getSingleResult();
+        
+        String query = 
+                "SELECT new " + SourceDocumentStateStats.class.getName() + "(" +
+                "COUNT(*), " +
+                "SUM(CASE WHEN state = '" + NEW.getId() + "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN (state = '" + ANNOTATION_IN_PROGRESS.getId() + 
+                        "' OR state is NULL) THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + ANNOTATION_FINISHED.getId() + 
+                        "'  THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_IN_PROGRESS.getId() + 
+                        "' THEN 1 ELSE 0 END), " +
+                "SUM(CASE WHEN state = '" + CURATION_FINISHED.getId() + "'  THEN 1 ELSE 0 END)) " +
+                "FROM SourceDocument " + 
+                "WHERE project = :project";
+        
+        SourceDocumentStateStats stats = entityManager.createQuery(
+                        query, SourceDocumentStateStats.class)
+                .setParameter("project", aProject)
+                .getSingleResult();
+        
+        ProjectState oldState = project.getState();
+
+        // We had some strange reports about being unable to calculate the project state, so to
+        // be better able to debug this, we add some more detailed information to the exception
+        // message here.
+        try {
+            project.setState(stats.getProjectState());
+        }
+        catch (IllegalStateException e) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("\nDetailed document states in project [" + aProject.getName() + "]("
+                    + aProject.getId() + "):\n");
+            String detailQuery = "SELECT id, name, state FROM " + SourceDocument.class.getName()
+                    + " WHERE project = :project";
+            Query q = entityManager.createQuery(detailQuery).setParameter("project", aProject);
+            for (Object res : q.getResultList()) {
+                sb.append("- ");
+                sb.append(Arrays.toString((Object[]) res));
+                sb.append('\n');
+            }
+            IllegalStateException ne = new IllegalStateException(e.getMessage() + sb, e.getCause());
+            ne.setStackTrace(e.getStackTrace());
+            throw ne;
+        }
+        
+        if (!Objects.equals(oldState, project.getState())) {
+            applicationEventPublisher.publishEvent(
+                    new ProjectStateChangedEvent(this, project, oldState));
+        }
+        
+        updateProject(project);
     }
 
     @Override
@@ -264,16 +355,12 @@ public class ProjectServiceImpl
                 + META_INF_FOLDER + "/");
     }
 
+    @Deprecated
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
     public List<Authority> listAuthorities(User aUser)
     {
-        String query =
-                "FROM Authority " + 
-                "WHERE username = :username";
-        return entityManager
-                .createQuery(query, Authority.class)
-                .setParameter("username", aUser).getResultList();
+        return userRepository.listAuthorities(aUser);
     }
 
     @Override
@@ -289,7 +376,8 @@ public class ProjectServiceImpl
     {
         String query = 
                 "FROM ProjectPermission " +
-                "WHERE user =:user AND project =:project";
+                "WHERE user =:user AND project =:project " +
+                "ORDER BY level";
         return entityManager
                 .createQuery(query, ProjectPermission.class)
                 .setParameter("user", aUser.getUsername())
@@ -422,11 +510,19 @@ public class ProjectServiceImpl
     public void createGuideline(Project aProject, File aContent, String aFileName)
         throws IOException
     {
+        try (InputStream is = new FileInputStream(aContent)) {
+            createGuideline(aProject, is, aFileName);
+        }
+    }
+    
+    @Override
+    public void createGuideline(Project aProject, InputStream aIS, String aFileName)
+        throws IOException
+    {
         String guidelinePath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/" + aProject.getId()
                 + "/" + GUIDELINES_FOLDER + "/";
         FileUtils.forceMkdir(new File(guidelinePath));
-        copyLarge(new FileInputStream(aContent), new FileOutputStream(new File(guidelinePath
-                + aFileName)));
+        copyLarge(aIS, new FileOutputStream(new File(guidelinePath + aFileName)));
 
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aProject.getId()))) {
@@ -519,17 +615,6 @@ public class ProjectServiceImpl
     }
 
     @Override
-    public Properties loadUserSettings(String aUsername, Project aProject)
-        throws IOException
-    {
-        Properties property = new Properties();
-        property.load(new FileInputStream(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername + "/"
-                + annotationPreferencePropertiesFileName)));
-        return property;
-    }
-
-    @Override
     @Transactional
     public void removeProject(Project aProject)
         throws IOException
@@ -613,48 +698,6 @@ public class ProjectServiceImpl
             closeQuietly(aIs);
         }
     }
-
-    @Override
-    public <T> void saveUserSettings(String aUsername, Project aProject, Mode aSubject,
-            T aConfigurationObject)
-        throws IOException
-    {
-        BeanWrapper wrapper = PropertyAccessorFactory.forBeanPropertyAccess(aConfigurationObject);
-        Properties props = new Properties();
-        for (PropertyDescriptor value : wrapper.getPropertyDescriptors()) {
-            if (wrapper.getPropertyValue(value.getName()) == null) {
-                continue;
-            }
-            props.setProperty(aSubject + "." + value.getName(),
-                    wrapper.getPropertyValue(value.getName()).toString());
-        }
-        String propertiesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
-        // append existing preferences for the other mode
-        if (new File(propertiesPath, annotationPreferencePropertiesFileName).exists()) {
-            for (Entry<Object, Object> entry : loadUserSettings(aUsername, aProject).entrySet()) {
-                String key = entry.getKey().toString();
-                // Maintain other Modes of annotations confs than this one
-                if (!key.substring(0, key.indexOf(".")).equals(aSubject.toString())) {
-                    props.put(entry.getKey(), entry.getValue());
-                }
-            }
-        }
-        
-//        for (String name : props.stringPropertyNames()) {
-//            log.info("{} = {}", name, props.getProperty(name));
-//        }
-        
-        FileUtils.forceMkdir(new File(propertiesPath));
-        props.store(new FileOutputStream(new File(propertiesPath,
-                annotationPreferencePropertiesFileName)), null);
-
-        try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
-                String.valueOf(aProject.getId()))) {
-            log.info("Saved preferences for user [{}] in project [{}]({})", aUsername,
-                    aProject.getName(), aProject.getId());
-        }
-    }
     
     @Override
     public List<Project> listAccessibleProjects(User user)
@@ -663,15 +706,15 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, list all projects
-        if (SecurityUtil.isSuperAdmin(this, user)) {
+        if (userRepository.isAdministrator(user)) {
             return allProjects;
         }
 
         // else only list projects where she is admin / user / curator
         for (Project project : allProjects) {
-            if (SecurityUtil.isProjectAdmin(project, this, user)
-                    || SecurityUtil.isAnnotator(project, this, user)
-                    || SecurityUtil.isCurator(project, this, user)) {
+            if (this.isManager(project, user)
+                    || this.isAnnotator(project, user)
+                    || this.isCurator(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -685,13 +728,13 @@ public class ProjectServiceImpl
         List<Project> allProjects = listProjects();
 
         // if global admin, show all projects
-        if (SecurityUtil.isSuperAdmin(this, user)) {
+        if (userRepository.isAdministrator(user)) {
             return allProjects;
         }
 
         // else only projects she is admin of
         for (Project project : allProjects) {
-            if (SecurityUtil.isProjectAdmin(project, this, user)) {
+            if (this.isManager(project, user)) {
                 allowedProject.add(project);
             }
         }
@@ -701,7 +744,7 @@ public class ProjectServiceImpl
     @Override
     @Transactional
     public void onProjectImport(ZipFile aZip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception
     {
@@ -725,6 +768,7 @@ public class ProjectServiceImpl
      * @throws IOException if an I/O error occurs.
      */
     @SuppressWarnings("rawtypes")
+    @Deprecated
     private void createProjectLog(ZipFile zip, Project aProject)
         throws IOException
     {
@@ -749,6 +793,7 @@ public class ProjectServiceImpl
      * @param aProject the project.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     private void createProjectGuideline(ZipFile zip, Project aProject)
         throws IOException
@@ -781,6 +826,7 @@ public class ProjectServiceImpl
      * @param aProject the project.
      * @throws IOException if an I/O error occurs.
      */
+    @Deprecated
     @SuppressWarnings("rawtypes")
     private void createProjectMetaInf(ZipFile zip, Project aProject)
         throws IOException
@@ -807,7 +853,7 @@ public class ProjectServiceImpl
 
     /**
      * Create {@link ProjectPermission} from the exported
-     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission}
+     * {@link de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProjectPermission}
      * 
      * @param aImportedProjectSetting
      *            the imported project.
@@ -816,13 +862,14 @@ public class ProjectServiceImpl
      * @throws IOException
      *             if an I/O error occurs.
      */
+    @Deprecated
     private void createProjectPermission(
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aImportedProjectSetting,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aImportedProjectSetting,
             Project aImportedProject)
         throws IOException
     {
-        for (de.tudarmstadt.ukp.clarin.webanno.export.model.ProjectPermission importedPermission :
-            aImportedProjectSetting.getProjectPermissions()) {
+        for (ExportedProjectPermission importedPermission : aImportedProjectSetting
+                .getProjectPermissions()) {
             ProjectPermission permission = new ProjectPermission();
             permission.setLevel(importedPermission.getLevel());
             permission.setProject(aImportedProject);
@@ -902,5 +949,111 @@ public class ProjectServiceImpl
     public List<ProjectType> listProjectTypes()
     {
         return Collections.unmodifiableList(projectTypes);
+    }
+    
+    @Override
+    public boolean managesAnyProject(User user)
+    {
+        if (userRepository.isAdministrator(user)) {
+            return true;
+        }
+
+        if (userRepository.isProjectCreator(user)) {
+            return true;
+        }
+
+        for (Project project : listProjects()) {
+            if (isManager(project, user)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    @Override
+    public boolean isManager(Project aProject, User aUser)
+    {
+        boolean projectAdmin = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.MANAGER.getName())) {
+                    projectAdmin = true;
+                    break;
+                }
+            }
+        }
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return projectAdmin;
+    }
+
+    @Override
+    public boolean isAdmin(Project aProject, User aUser)
+    {
+        boolean user = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.MANAGER.getName())) {
+                    user = true;
+                    break;
+                }
+            }
+        }
+    
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+    
+        return user;
+    }
+
+    @Override
+    public boolean isCurator(Project aProject, User aUser)
+    {
+        boolean curator = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.CURATOR.getName())) {
+                    curator = true;
+                    break;
+                }
+            }
+        }
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return curator;
+    }
+
+    @Override
+    public boolean isAnnotator(Project aProject, User aUser)
+    {
+        boolean user = false;
+        try {
+            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
+            for (ProjectPermission permissionLevel : permissionLevels) {
+                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
+                        PermissionLevel.ANNOTATOR.getName())) {
+                    user = true;
+                    break;
+                }
+            }
+        }
+
+        catch (NoResultException ex) {
+            log.info("No permision is given to this user " + ex);
+        }
+
+        return user;
     }
 }

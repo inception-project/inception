@@ -27,7 +27,6 @@ import java.beans.PropertyChangeEvent;
 import java.io.IOException;
 import java.net.URI;
 
-import javax.annotation.Resource;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -35,6 +34,7 @@ import javax.swing.JOptionPane;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -53,7 +53,7 @@ public class StandaloneShutdownDialog
     private static final String ACTION_OPEN_BROWSER = "Open browser";
     private static final String ACTION_SHUTDOWN = "Shut down";
     
-    @Resource
+    @Autowired
     private ApplicationEventPublisher eventPublisher;
     
     @Value("${running.from.commandline}")

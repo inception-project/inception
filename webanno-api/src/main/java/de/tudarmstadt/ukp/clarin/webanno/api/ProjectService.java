@@ -23,15 +23,14 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Properties;
 import java.util.zip.ZipFile;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Authority;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -174,6 +173,14 @@ public interface ProjectService
     void updateProject(Project project);
 
     /**
+     * Update the project state.
+     * 
+     * @param aProject
+     *            The {@link Project} to be updated.
+     */
+    void recalculateProjectState(Project aProject);
+
+    /**
      * A method that check is a project exists with the same name already. getSingleResult() fails
      * if the project is not created, hence existProject returns false.
      *
@@ -306,45 +313,6 @@ public interface ProjectService
         throws IOException;
     
     // --------------------------------------------------------------------------------------------
-    // Methods related to per-project user preferences
-    // --------------------------------------------------------------------------------------------
-
-    /**
-     * Load annotation preferences such as {@code BratAnnotator#windowSize} from a property file
-     *
-     * @param username
-     *            the username.
-     * @param project
-     *            the project where the user is working on.
-     * @return the properties.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    Properties loadUserSettings(String username, Project project)
-        throws IOException;
-
-    /**
-     * Save annotation references, such as {@code BratAnnotator#windowSize}..., in a properties file
-     * so that they are not required to configure every time they open the document.
-     *
-     * @param <T>
-     *            object type to save
-     * @param username
-     *            the user name
-     * @param subject
-     *            differentiate the setting, either it is for {@code AnnotationPage} or
-     *            {@code CurationPage}
-     * @param configurationObject
-     *            The Object to be saved as preference in the properties file.
-     * @param project
-     *            The project where the user is working on.
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    <T> void saveUserSettings(String username, Project project, Mode subject, T configurationObject)
-        throws IOException;
-
-    // --------------------------------------------------------------------------------------------
     // Methods related to guidelines
     // --------------------------------------------------------------------------------------------
 
@@ -360,8 +328,9 @@ public interface ProjectService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    void createGuideline(Project project, File content, String fileName)
-        throws IOException;
+    void createGuideline(Project project, File content, String fileName) throws IOException;
+
+    void createGuideline(Project project, InputStream content, String fileName) throws IOException;
 
     /**
      * get the annotation guideline document from the file system
@@ -415,15 +384,73 @@ public interface ProjectService
      * @param user
      *            the {@link User} object
      * @return the roles.
+     * @deprecated use {@link UserDao#listAuthorities(User)}
      */
+    @Deprecated
     List<Authority> listAuthorities(User user);
+    
+    /**
+     * Can the given user access the project setting of <b>some</b> project. 
+     */
+    public boolean managesAnyProject(User user);
+    
+    /**
+     * Determine if the user is allowed to update a project.
+     *
+     * @param aProject
+     *            the project
+     * @param aUser
+     *            the user.
+     * @return if the user may update a project.
+     */
+    boolean isManager(Project aProject, User aUser);
+    
+    @Deprecated
+    default boolean isProjectAdmin(Project aProject, User aUser) {
+        return isManager(aProject, aUser);
+    }
+
+    /**
+     * Determine if the User is an admin of a project
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is an admin.
+     */
+    boolean isAdmin(Project aProject, User aUser);
+
+    /**
+     * Determine if the user is a curator or not.
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is a curator.
+     */
+    boolean isCurator(Project aProject, User aUser);
+
+    /**
+     * Determine if the User is member of a project
+     *
+     * @param aProject
+     *            the project.
+     * @param aUser
+     *            the user.
+     * @return if the user is a member.
+     */
+    boolean isAnnotator(Project aProject, User aUser);
+
+    
     
     // --------------------------------------------------------------------------------------------
     // Methods related to other things
     // --------------------------------------------------------------------------------------------
 
     void onProjectImport(ZipFile zip,
-            de.tudarmstadt.ukp.clarin.webanno.export.model.Project aExportedProject,
+            de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject aExportedProject,
             Project aProject)
         throws Exception;
     

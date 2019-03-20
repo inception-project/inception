@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
@@ -59,13 +61,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
-import de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.SettingsService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -89,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
@@ -127,7 +127,7 @@ public class AutomationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean SettingsService settingsService;
+    private @SpringBean BratPropertiesImpl defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -310,9 +310,11 @@ public class AutomationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null && (SecurityUtil.isAdmin(state.getProject(),
-                        projectService, state.getUser()) || !state.getProject().isDisableExport()));
+                setVisible(state.getProject() != null
+                        && (projectService.isAdmin(state.getProject(), state.getUser())
+                                || !state.getProject().isDisableExport()));
             }
         });
         
@@ -353,6 +355,7 @@ public class AutomationPage
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 AnnotatorState state = AutomationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()));
@@ -369,7 +372,7 @@ public class AutomationPage
             User user = userRepository.getCurrentUser();
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
-                if (SecurityUtil.isAnnotator(project, projectService, user)
+                if (projectService.isAnnotator(project, user)
                         && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
@@ -378,9 +381,15 @@ public class AutomationPage
         });
     }
 
+    @Override
+    public NumberTextField<Integer> getGotoPageTextField()
+    {
+        return gotoPageTextField;
+    }
+
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", getModel())
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
         {
             private static final long serialVersionUID = 2857345299480098279L;
 
@@ -515,6 +524,12 @@ public class AutomationPage
                     }
                 }
             }
+            
+            @Override
+            public JCas getEditorCas() throws IOException
+            {
+                return AutomationPage.this.getEditorCas();
+            }
         };
     }
 
@@ -551,13 +566,12 @@ public class AutomationPage
             throw new IllegalStateException("Please open a document first!");
         }
 
-        SourceDocument aDocument = getModelObject().getDocument();
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
 
-        AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
-                state.getUser());
-
-        // If there is no CAS yet for the annotation document, create one.
-        return documentService.readAnnotationCas(annotationDocument);
+        return documentService.readAnnotationCas(getModelObject().getDocument(),
+                state.getUser().getUsername());
     }
     
     private void setCurationSegmentBeginEnd(JCas aEditorCas)
@@ -665,7 +679,7 @@ public class AutomationPage
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            ensureRequiredFeatureValuesSet(aCallbackTarget, getEditorCas());
+            actionValidateDocument(aCallbackTarget, getEditorCas());
             
             AnnotatorState state = getModelObject();
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
@@ -733,12 +747,15 @@ public class AutomationPage
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
 
+            // Initialize timestamp in state
+            updateDocumentTimestampAfterWrite(state, documentService
+                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
 
             // Load user preferences
-            PreferencesUtil.loadPreferences(state.getUser().getUsername(), settingsService,
-                    projectService, annotationService, state, state.getMode());
+            loadPreferences();
 
             // Initialize the visible content
             state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(editorCas));

@@ -31,6 +31,7 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.form.Button;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.FormComponentUpdatingBehavior;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.form.TextField;
@@ -48,15 +49,14 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
+import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.TokenMgrError;
 import de.tudarmstadt.ukp.clarin.webanno.model.ConstraintSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
 /**
  * A Panel used to add Project Constraints Rules in a selected {@link Project}.
  */
-@ProjectSettingsPanel(label = "Constraints", prio = 500)
 public class ProjectConstraintsPanel
     extends ProjectSettingsPanelBase
 {
@@ -117,20 +117,9 @@ public class ProjectConstraintsPanel
                 {
                     setChoiceRenderer(new ChoiceRenderer<>("name"));
                     setNullValid(false);
+                    add(new FormComponentUpdatingBehavior());
                 }
                 
-                @Override
-                protected void onSelectionChanged(ConstraintSet aNewSelection)
-                {
-                    // Nothing to do - model already updated automatically
-                }
-
-                @Override
-                protected boolean wantOnSelectionChangedNotifications()
-                {
-                    return true;
-                }
-
                 @Override
                 protected CharSequence getDefaultChoice(String aSelectedValue)
                 {
@@ -196,8 +185,9 @@ public class ProjectConstraintsPanel
                     }
                 }
             }; 
-            add(new DownloadLink("export", exportFileModel, exportFilenameModel)
-                    .setDeleteAfterDownload(true));
+            // The file that is returned by exportConstraintAsFile is the internal constraints
+            // file - it must NOT be deleted after the export is complete!
+            add(new DownloadLink("export", exportFileModel, exportFilenameModel));
             
             Button deleteButton = new Button("delete") {
 
@@ -214,6 +204,7 @@ public class ProjectConstraintsPanel
                 protected void onConfigure()
                 {
                     super.onConfigure();
+                    
                     setVisible(DetailForm.this.getModelObject().getId() != null);
                 }
             };
@@ -294,12 +285,16 @@ public class ProjectConstraintsPanel
                     try {
                         importAction();
                     }
-                    catch (ParseException e) {
+                    catch (ParseException | TokenMgrError e) {
+                        LOG.error(
+                                "Exception while parsing the constraint rules file. Please check it.",
+                                e);
                         error("Exception while parsing the constraint rules file. Please check it. "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                     catch (IOException e) {
-                        error("Unable to read constraints file "
+                        LOG.error("Unable to read the constraint rules file.", e);
+                        error("Unable to read constraints file: "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -355,7 +350,8 @@ public class ProjectConstraintsPanel
                     }
                     catch (IOException e) {
                         detailForm.setModelObject(null);
-                        error("Unable to write constraints file "
+                        LOG.error("Unable to write the constraint rules file.", e);
+                        error("Unable to write the constraints file "
                                 + ExceptionUtils.getRootCauseMessage(e));
                     }
                 }
@@ -379,7 +375,6 @@ public class ProjectConstraintsPanel
                 else {
                     return betterConstraintName;
                 }
-
             }
         }
     }

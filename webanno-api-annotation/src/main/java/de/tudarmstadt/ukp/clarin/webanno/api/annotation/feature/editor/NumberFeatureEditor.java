@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
@@ -38,8 +37,6 @@ public class NumberFeatureEditor<T extends Number>
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
-        add(new Label("feature", getModelObject().feature.getUiName()));
-
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             field = new NumberTextField<>("value", Integer.class);
@@ -54,12 +51,6 @@ public class NumberFeatureEditor<T extends Number>
             throw new IllegalArgumentException("Type [" + getModelObject().feature.getType()
                     + "] cannot be rendered as a numeric input field");
         }
-        
-        // Ensure that markup IDs of feature editor focus components remain constant across
-        // refreshs of the feature editor panel. This is required to restore the focus.
-        field.setOutputMarkupId(true);
-        field.setMarkupId(ID_PREFIX + getModelObject().feature.getId());
-        setOutputMarkupPlaceholderTag(true);
         
         add(field);
     }

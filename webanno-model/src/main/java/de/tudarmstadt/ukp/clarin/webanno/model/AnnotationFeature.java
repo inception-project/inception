@@ -101,11 +101,11 @@ public class AnnotationFeature
 
     @Column(name = "multi_value_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.MultiValueModeType")
-    private MultiValueMode multiValueMode;
+    private MultiValueMode multiValueMode = MultiValueMode.NONE;
 
     @Column(name = "link_mode")
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.LinkModeType")
-    private LinkMode linkMode;
+    private LinkMode linkMode = LinkMode.NONE;
 
     @Column(name = "link_type_name")
     private String linkTypeName;
@@ -116,11 +116,15 @@ public class AnnotationFeature
     @Column(name = "link_type_target_feature_name")
     private String linkTypeTargetFeatureName;
     
+    @Lob
+    @Column(length = 64000)
+    private String traits;
+    
     public AnnotationFeature()
     {
         // Nothing to do
     }
-    
+
     // Visible for testing
     public AnnotationFeature(String aName, String aType)
     {
@@ -128,8 +132,41 @@ public class AnnotationFeature
         uiName = aName;
         type = aType;
     }
+
+    // Visible for testing
+    public AnnotationFeature(long aId, AnnotationLayer aLayer, String aName, String aType)
+    {
+        id = aId;
+        layer = aLayer;
+        project = aLayer.getProject();
+        name = aName;
+        uiName = aName;
+        type = aType;
+    }
     
     
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+    }
+
+    public AnnotationFeature(Project aProject, AnnotationLayer aLayer, String aName, String aUiName,
+            String aType, String aDescription, TagSet aTagSet)
+    {
+        project = aProject;
+        layer = aLayer;
+        name = aName;
+        uiName = aUiName;
+        type = aType;
+        description = aDescription;
+        tagset = aTagSet;
+    }
+
     public Long getId()
     {
         return id;
@@ -151,7 +188,8 @@ public class AnnotationFeature
     }
 
     /**
-     * The type of feature (string, integer, float, boolean, or a span type used as a label)
+     * The type of feature (string, integer, float, boolean, or a span type used as a label).
+     * Must be a UIMA type name such as {@code uima.cas.String} or the name of a custom type.
      * 
      * @param type the type of feature.
      */
@@ -308,7 +346,11 @@ public class AnnotationFeature
     }
 
     /**
-     * @param tagset the tagset.
+     * The tagset which is used for this layer. If this is null, the label can be freely set (text
+     * input field), otherwise only values from the tagset can be used as labels.
+     * 
+     * @param tagset
+     *            the tagset.
      */
     public void setTagset(TagSet tagset)
     {
@@ -325,6 +367,9 @@ public class AnnotationFeature
         }
     }
 
+    /**
+     * Used to control if a feature can have multiple values and how these are represented.
+     */
     public void setMode(MultiValueMode aMode)
     {
         multiValueMode = aMode;
@@ -340,6 +385,10 @@ public class AnnotationFeature
         }
     }
 
+    /**
+     * If the feature is a link to another feature structure, this indicates what kind of relation
+     * is used, e.g. {@link LinkMode#NONE}, {@link LinkMode#SIMPLE}, {@link LinkMode#WITH_ROLE}.
+     */
     public void setLinkMode(LinkMode aLinkMode)
     {
         linkMode = aLinkMode;
@@ -350,6 +399,10 @@ public class AnnotationFeature
         return linkTypeName;
     }
 
+    /**
+     * If a {@link LinkMode#WITH_ROLE} type is used, then the an additional UIMA type must be
+     * created that bears a role feature and points to the target type.
+     */
     public void setLinkTypeName(String aLinkTypeName)
     {
         linkTypeName = aLinkTypeName;
@@ -360,6 +413,9 @@ public class AnnotationFeature
         return linkTypeRoleFeatureName;
     }
 
+    /**
+     * The name of the feature bearing the role.
+     */
     public void setLinkTypeRoleFeatureName(String aLinkTypeRoleFeatureName)
     {
         linkTypeRoleFeatureName = aLinkTypeRoleFeatureName;
@@ -370,6 +426,9 @@ public class AnnotationFeature
         return linkTypeTargetFeatureName;
     }
 
+    /**
+     * The name of the feature pointing to the target.
+     */
     public void setLinkTypeTargetFeatureName(String aLinkTypeTargetFeatureName)
     {
         linkTypeTargetFeatureName = aLinkTypeTargetFeatureName;
@@ -380,6 +439,11 @@ public class AnnotationFeature
         return remember;
     }
 
+    /**
+     * Whether the annotation detail editor should carry values of this feature over when creating a
+     * new annotation of the same type. This can be useful when creating many annotations of the
+     * same type in a row.
+     */
     public void setRemember(boolean aRemember)
     {
         remember = aRemember;
@@ -390,6 +454,10 @@ public class AnnotationFeature
         return hideUnconstraintFeature;
     }
 
+    /**
+     * Whether the feature should be showed if constraints rules are enabled and based on the
+     * evaluation of constraint rules on a feature.
+     */
     public void setHideUnconstraintFeature(boolean aHideUnconstraintFeature)
     {
         hideUnconstraintFeature = aHideUnconstraintFeature;
@@ -417,6 +485,16 @@ public class AnnotationFeature
         return getType().contains(":");
     }
     
+    public String getTraits()
+    {
+        return traits;
+    }
+
+    public void setTraits(String aTraits)
+    {
+        traits = aTraits;
+    }
+
     @Override
     public String toString()
     {

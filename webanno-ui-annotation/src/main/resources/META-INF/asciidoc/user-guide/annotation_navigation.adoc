@@ -1,0 +1,64 @@
+////
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+////
+
+= Navigation
+
+Sentence  numbers  on  the  left  side  of  the  annotation  page  show  the  exact sentence numbers in the document. 
+
+image::annotation3.jpg[align="center"]
+
+The arrow buttons *first page*, *next page*, *previous page*, *last page*, and *go to page* allow you to navigate accordingly. The *Prev.* and *Next* buttons in the *Document* frame allow you to go to the previous or next document on your project list. You can also use the following keyboard assignments in order to navigate only using your keyboard.
+
+.Navigation key bindings
+|====
+| Key | Action 
+
+| *HOME*
+| jump to first sentence
+
+| *END*
+| jump to last sentence
+
+| *PAGE DOWN*
+| move to the next page, if not in the last page already
+
+| *PAGE UP*
+| move to previous page, if not already in the first page
+
+| *SHIFT+PAGE DOWN*
+| go to next document in project, if available
+
+| *SHIFT+PAGE UP* 
+| go to previous document in project, if available
+|====
+
+A click on the *Help* button displays the Guidelines for the tool and *The Annotator's Guide to NER-Annotation*.
+When you are finished with annotating or curating a document, please click on the *Done*
+button, so that the document may be further processed. If the button above the *Done* is a cross symbol, it means the documents have already been finished. If the symbol has a tick, it is still open.
+
+image::annotation4.jpg[align="center"]
+
+Annotation of spans works by selecting the span, or double-clicking on a word. This activates the *Actions*-box on the right, where you can choose a layer. One can also type in the initial letters and chose the needed layer. After having chosen a layer, the drop-down menu inside the *Features*-box displays the features you can use during the annotation. The tag can be selected out of the drop-down menu inside the *Features*-box which contains the tags of the chosen layer.
+
+image::annotation_edit_version3.png[align="center"]
+
+To change or delete an annotation, double-click on the annotation (span or link annotations). The *Actions*-box is now activated. Changes and Deletions are possible via the respective buttons. 
+
+Link annotations (between POS tags) are created by selecting the starting POS-tag, then dragging the arrow to connect it to its target POS tag. All possible targets are highlighted. 
+
+image::annotation_pos_span.jpg[align="center"]

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
@@ -220,16 +221,22 @@ public class SuggestionViewPanel
             UserAnnotationSegment aCurationUserSegment, JCas aJcas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
-        User user = userRepository.get(aCurationUserSegment.getUsername());
-        SourceDocument sourceDocument = aCurationUserSegment.getAnnotatorState().getDocument();
-        AnnotationDocument clickedAnnotationDocument = documentService
-                .getAnnotationDocument(sourceDocument, user);
-
-        Integer address = aRequest.getParameterValue(PARAM_ID).toInteger();
+        AnnotationDocument clickedAnnotationDocument;
+        AnnotatorState state = aCurationUserSegment.getAnnotatorState();
+        if (state.getMode().equals(Mode.AUTOMATION) || state.getMode().equals(Mode.CORRECTION)) {
+            // createSpan / getJCas do not require an annotation document in this mode
+            clickedAnnotationDocument = null;
+        }
+        else {
+            SourceDocument sourceDocument = aCurationUserSegment.getAnnotatorState().getDocument();
+            clickedAnnotationDocument = documentService.getAnnotationDocument(sourceDocument,
+                    aCurationUserSegment.getUsername());
+        }
+        
+        int address = aRequest.getParameterValue(PARAM_ID).toInt();
         String spanType = removePrefix(aRequest.getParameterValue(PARAM_TYPE).toString());
 
-        createSpan(spanType, aCurationUserSegment.getAnnotatorState(), aJcas,
-                clickedAnnotationDocument, address);
+        createSpan(spanType, state, aJcas, clickedAnnotationDocument, address);
     }
 
     private void createSpan(String spanType, AnnotatorState aBModel, JCas aMergeJCas,
@@ -339,9 +346,15 @@ public class SuggestionViewPanel
         if (aState.getMode().equals(Mode.ANNOTATION) || aState.getMode().equals(Mode.AUTOMATION)
                 || aState.getMode().equals(Mode.CORRECTION)) {
             documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
+
+            updateDocumentTimestampAfterWrite(aState, documentService.getAnnotationCasTimestamp(
+                    aState.getDocument(), aState.getUser().getUsername()));
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
             curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
+
+            updateDocumentTimestampAfterWrite(aState, curationDocumentService
+                    .getCurationCasTimestamp(aState.getDocument()));
         }
     }
 
@@ -375,7 +388,8 @@ public class SuggestionViewPanel
         }
         
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, aBratAnnotatorModel, aJcas, layersToRender);
+        preRenderer.render(vdoc, aBratAnnotatorModel.getWindowBeginOffset(),
+                aBratAnnotatorModel.getWindowEndOffset(), aJcas, layersToRender);
         
         GetDocumentResponse response = new GetDocumentResponse();
         BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,

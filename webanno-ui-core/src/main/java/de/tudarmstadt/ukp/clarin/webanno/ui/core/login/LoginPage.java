@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.login;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -89,7 +90,7 @@ public class LoginPage
             admin.setUsername(ADMIN_DEFAULT_USERNAME);
             admin.setPassword(ADMIN_DEFAULT_PASSWORD);
             admin.setEnabled(true);
-            admin.setRoles(Role.getRoles());
+            admin.setRoles(EnumSet.of(Role.ROLE_ADMIN, Role.ROLE_USER));
             userRepository.create(admin);
 
             String msg = "No user accounts have been found. An admin account has been created: "

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationComment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.AnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
@@ -86,6 +89,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 public class BratRenderer
 {
     private static final Logger LOG = LoggerFactory.getLogger(BratAnnotationEditor.class);
+    
+    private static final boolean DEBUG = false;
     
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
             VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
@@ -117,10 +122,18 @@ public class BratRenderer
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
-        for (AnnotationLayer layer : aVDoc.getAnnotationLayers()) {
+        for (AnnotationLayer layer : aAnnotationService.listAnnotationLayer(aState.getProject())) {
             ColoringStrategy coloringStrategy = aColoringStrategy != null ? aColoringStrategy
                     : ColoringStrategy.getStrategy(aAnnotationService, layer,
                             aState.getPreferences(), colorQueues);
+            
+            // If the layer is not included in the rendering, then we skip here - but only after
+            // we have obtained a coloring strategy for this layer and thus secured the layer
+            // color. This ensures that the layer colors do not change depending on the number
+            // of visible layers.
+            if (!aVDoc.getAnnotationLayers().contains(layer)) {
+                continue;
+            }
 
             TypeAdapter typeAdapter = aAnnotationService.getAdapter(layer);
             
@@ -135,9 +148,13 @@ public class BratRenderer
                 } else {
                     color = vspan.getColorHint();
                 }
-                aResponse.addEntity(
-                        new Entity(vspan.getVid(), vspan.getType(), offsets,
-                                bratLabelText, color, bratHoverText));
+                
+                if (DEBUG) {
+                    bratHoverText = vspan.getOffsets() + "\n" + bratHoverText;
+                }
+                
+                aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
+                        bratLabelText, color, bratHoverText));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -257,6 +274,13 @@ public class BratRenderer
                 continue;
             }
             aResponse.addToken(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin);
+            
+            if (DEBUG) {
+                aResponse.addEntity(new Entity(new VID(fs), "Token",
+                        new Offsets(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin),
+                        fs.getCoveredText(), "#d9d9d9",
+                        "[" + fs.getBegin() + "-" + fs.getEnd() + "]"));
+            }
         }
         
         // Replace newline characters before sending to the client to avoid rendering glitches
@@ -267,9 +291,20 @@ public class BratRenderer
         aResponse.setText(visibleText);
 
         // Render Sentence
+        int sentIdx = aResponse.getSentenceNumberOffset();
         for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, windowBegin, windowEnd)) {
             aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd()
                     - windowBegin);
+            
+            // If there is a sentence ID, then make it accessible to the user via a sentence-level
+            // comment.
+            String sentId = FSUtil.getFeature(fs, "id", String.class);
+            if (isNotBlank(sentId)) {
+                aResponse.addComment(new SentenceComment(sentIdx, Comment.ANNOTATOR_NOTES, 
+                        String.format("Sentence ID: %s", sentId)));
+            }
+
+            sentIdx++;
         }
     }
     
@@ -370,7 +405,7 @@ public class BratRenderer
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
         if (aLayer.getType().equals(CHAIN_TYPE)) {
-            attachingLayerBratTypeName += ChainAdapter.CHAIN;
+            attachingLayerBratTypeName += ChainAdapter.LINK;
         }
 
         // Handle arrow-head styles depending on linkedListBehavior
@@ -406,7 +441,7 @@ public class BratRenderer
         // still use "Link" - this should be cleaned up so that knowledge about "Chain" and
         // "Link" types is local to the ChainAdapter and not known outside it!
         if (aLayer.getType().equals(CHAIN_TYPE)) {
-            bratTypeName += ChainAdapter.CHAIN;
+            bratTypeName += ChainAdapter.LINK;
         }
         return bratTypeName;
     }

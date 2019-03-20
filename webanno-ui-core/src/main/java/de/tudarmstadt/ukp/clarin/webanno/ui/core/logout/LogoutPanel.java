@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.logout;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.SecurityUtil.isProfileSelfServiceAllowed;
+
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.WicketAjaxJQueryResourceReference;
 import org.apache.wicket.authroles.authentication.AuthenticatedWebSession;
 import org.apache.wicket.devutils.stateless.StatelessComponent;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.PriorityHeaderItem;
@@ -34,7 +37,12 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.security.core.context.SecurityContextHolder;
+
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.users.ManageUsersPage;
 /**
  * A wicket panel for logout.
  */
@@ -43,6 +51,8 @@ public class LogoutPanel
     extends Panel
 {
     private static final long serialVersionUID = 3725185820083021070L;
+
+    private @SpringBean UserDao userRepository;
 
     public LogoutPanel(String id)
     {
@@ -59,9 +69,6 @@ public class LogoutPanel
     @SuppressWarnings("serial")
     private void commonInit()
     {
-        add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
-                .getContext().getAuthentication().getName())));
-
         add(new StatelessLink<Void>("logout")
         {
             @Override
@@ -72,13 +79,48 @@ public class LogoutPanel
                 setResponsePage(getApplication().getHomePage());
             }
         });
-        
+
+        add(new StatelessLink<Void>("profile")
+        {
+            {
+                add(new Label("username").setDefaultModel(new Model<>(SecurityContextHolder
+                        .getContext().getAuthentication().getName())));
+            }
+            
+            @Override
+            public void onClick()
+            {
+                PageParameters params = new PageParameters();
+                params.add(ManageUsersPage.PARAM_USER,
+                        userRepository.getCurrentUser().getUsername());
+                setResponsePage(ManageUsersPage.class, params);
+            }
+            
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                setEnabled(isProfileSelfServiceAllowed());
+            }
+            
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                
+                if (!isEnabled()) {
+                    aTag.append("class", "disabled", " ");
+                }
+            }
+        });
+
         add(new MarkupContainer("logoutTimer")
         {
             @Override
             protected void onConfigure()
             {
                 super.onConfigure();
+                
                 setVisible(getAutoLogoutTime() > 0);
             }
         });
@@ -88,6 +130,7 @@ public class LogoutPanel
     protected void onConfigure()
     {
         super.onConfigure();
+        
         setVisible(AuthenticatedWebSession.get().isSignedIn());
     }
     
@@ -106,7 +149,7 @@ public class LogoutPanel
         int timeout = getAutoLogoutTime();
         if (timeout > 0) {
             aResponse.render(JavaScriptHeaderItem.forScript(
-                    "$(document).ready(function() { new LogoutTimer(" + timeout + "); });",
+                    "$(document).ready(function() { new LogoutTimer(" + timeout + "); });",
                     "webAnnoAutoLogout"));
         }
     }

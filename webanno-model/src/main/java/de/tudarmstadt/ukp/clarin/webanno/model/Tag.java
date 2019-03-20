@@ -55,6 +55,23 @@ public class Tag
     @JoinColumn(name = "tagset")
     private TagSet tagSet;
 
+    public Tag()
+    {
+        // Nothing to do
+    }
+
+    public Tag(TagSet aTagSet, String aName)
+    {
+        tagSet = aTagSet;
+        name = aName;
+    }
+    
+    public Tag(String aName, String aDescription)
+    {
+        name = aName;
+        description = aDescription;
+    }
+    
     public Long getId()
     {
         return id;

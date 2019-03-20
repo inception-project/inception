@@ -35,8 +35,8 @@ import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 public class SettingsUtil
 {
-    private static String PROP_APPLICATION_HOME = "webanno.home";
-    private static String APPLICATION_USER_HOME_SUBDIR = ".webanno";
+    private static String propApplicationHome = "webanno.home";
+    private static String applicationUserHomeSubdir = ".webanno";
     
     public static final String PROP_BUILD_NUMBER = "buildNumber";
     public static final String PROP_TIMESTAMP = "timestamp";
@@ -64,8 +64,18 @@ public class SettingsUtil
     
     public static void customizeApplication(String aPropertyName, String aSubdirName)
     {
-        PROP_APPLICATION_HOME = aPropertyName;
-        APPLICATION_USER_HOME_SUBDIR = aSubdirName;
+        propApplicationHome = aPropertyName;
+        applicationUserHomeSubdir = aSubdirName;
+    }
+    
+    public static String getApplicationUserHomeSubdir()
+    {
+        return applicationUserHomeSubdir;
+    }
+    
+    public static String getPropApplicationHome()
+    {
+        return propApplicationHome;
     }
     
     public static Properties getVersionProperties()
@@ -106,7 +116,7 @@ public class SettingsUtil
      */
     public static File getSettingsFile()
     {
-        String appHome = System.getProperty(PROP_APPLICATION_HOME);
+        String appHome = System.getProperty(propApplicationHome);
         String userHome = System.getProperty(PROP_USER_HOME);
 
         // Locate settings, first in application, then in user home
@@ -115,7 +125,7 @@ public class SettingsUtil
             settings = new File(appHome, SETTINGS_FILE);
         }
         else if (userHome != null) {
-            settings = new File(userHome + "/" + APPLICATION_USER_HOME_SUBDIR, SETTINGS_FILE);
+            settings = new File(userHome + "/" + applicationUserHomeSubdir, SETTINGS_FILE);
         }
 
         if (settings.exists()) {

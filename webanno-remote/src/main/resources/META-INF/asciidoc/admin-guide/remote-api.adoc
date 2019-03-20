@@ -1,0 +1,43 @@
+// Copyright 2018
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_remote_api]]
+= Remote API
+
+In order to programmatically manage annotation project, a REST-like remote API is offered. This API
+is disabled by default. In order to enable it, add the setting `remote-api.enabled=true` to the
+`settings.properties` file.
+
+Once the remote API is enabled, it becomes possible to assign the role `ROLE_REMOTE` to a user. Create a new user, e.g. `remote-api` via the user management page and assign at least the roles `ROLE_USER` and `ROLE_REMOTE`. Most of the actions accessible through the remote API require administrator access, so adding the `ROLE_ADMIN` is usually necessary as well.
+
+Once the remote API has been enabled, it offers a convenient and self-explanatory web-based user interface under `<APPLICATION_URL>/swagger-ui.html` which can be accessed by any user with the role `ROLE_REMOTE`. Here, you can browse the different operations, their parameters, and even try them out directly via a web browser. The actual AERO remote API uses `<APPLICATION_URL/api/aero/v1` as the
+base URL for its operations.
+
+The API follows the link:https://openminted.github.io/releases/aero-spec/1.0.0/omtd-aero/[Annotation Editor Remote Operations (AERO) protocol].
+
+.Remote API settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| remote-api.enabled
+| Enable remote API
+| false
+| true
+|===

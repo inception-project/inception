@@ -18,10 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 import java.io.IOException;
@@ -29,6 +31,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -47,14 +50,23 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.form.AjaxFormValidatingBehavior;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.request.Request;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -62,8 +74,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ArcAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -73,12 +85,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ValuesGenerator;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -87,40 +97,245 @@ import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 
 /**
  * Annotation Detail Editor Panel.
  */
-public class AnnotationDetailEditorPanel
+public abstract class AnnotationDetailEditorPanel
     extends Panel
     implements AnnotationActionHandler
 {
     private static final long serialVersionUID = 7324241992353693848L;
-    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
 
+    private static final Logger LOG = LoggerFactory.getLogger(AnnotationDetailEditorPanel.class);
+    
+    private static final String KEY_BACKSPACE = "8";
+    private static final String KEY_ENTER = "13";
+    
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     
+    private AnnotationPageBase page;
     private AnnotationFeatureForm annotationFeatureForm;
 
-    public AnnotationDetailEditorPanel(String id, IModel<AnnotatorState> aModel)
+    private String forwardAnnotationKeySequence = "";
+    private TextField<String> forwardAnnotationTextField;
+    
+    public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
+            IModel<AnnotatorState> aModel)
     {
         super(id, aModel);
+        page = aPage;
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
-        add(createAnnotationFeatureForm());
+        add(annotationFeatureForm = createAnnotationFeatureForm());
+        add(createForwardAnnotationKeySequenceCapturingForm());
+    }
+    
+    private Component createForwardAnnotationKeySequenceCapturingForm()
+    {
+        Form<Void> form = new Form<>("forwardForm");
+        
+        TextField<String> textfield = new TextField<>("forwardAnno");
+        textfield.setModel(Model.of());
+        textfield.setOutputMarkupId(true);
+        // We don't want the form to be submitted when the user pressed ENTER. Instead, we want to
+        // capture the key event and send it as part of the AJAX request. Note that the 
+        // AjaxPreventSubmitBehavior triggers on "keydown" while our 
+        // AjaxFormComponentUpdatingBehavior has to trigger on "keyup", otherwise the pressed key
+        // does not end up in the TextField's model.
+        textfield.add(new AjaxPreventSubmitBehavior());
+        textfield.add(new AjaxFormComponentUpdatingBehavior("keyup")
+        {
+            private static final long serialVersionUID = 4554834769861958396L;
+
+            @Override
+            protected void updateAjaxAttributes(AjaxRequestAttributes attributes)
+            {
+                super.updateAjaxAttributes(attributes);
+
+                attributes.getDynamicExtraParameters()
+                        .add("return { 'keycode': Wicket.Event.keyCode(attrs.event) };");
+            }
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                AnnotatorState state = getModelObject();
+                
+                // Forward annotation mode only works on span layers
+                if (!state.getSelection().isSpan()) {
+                    return;
+                }
+                
+                // If the user has selected an annotation of a different type or no annotation at
+                // all, then the forward-annotation key bindings must not be considered.
+                AnnotationLayer layer = state.getSelectedAnnotationLayer();
+                if (layer == null || !layer.equals(state.getDefaultAnnotationLayer())) {
+                    return;
+                }
+                
+                try {
+                    final Request request = RequestCycle.get().getRequest();
+                    final String jsKeycode = request.getRequestParameters()
+                            .getParameterValue("keycode").toString("");
+                    
+                    if (KEY_ENTER.equals(jsKeycode)) {
+                        JCas jCas = getEditorCas();
+                        actionCreateForward(aTarget, jCas);
+                        setForwardAnnotationKeySequence(null, "complete annotation (space)");
+                        return;
+                    }
+                    else if (KEY_BACKSPACE.equals(jsKeycode)) {
+                        FeatureState featureState = getModelObject().getFeatureStates().get(0);
+                        featureState.value = null;
+                        setForwardAnnotationKeySequence(null, "delete annotation (backspace)");
+                        JCas jCas = getEditorCas();
+                        actionCreateForward(aTarget, jCas);
+                    }
+                    else {
+                        String newTag = (textfield.getModelObject() == null ? ""
+                                : textfield.getModelObject().charAt(0))
+                                + getForwardAnnotationKeySequence();
+                        setForwardAnnotationKeySequence(newTag, "cycle tags");
+                        
+                        Map<String, String> bindTags = buildKeySequenceToTagMap();
+                        if (!bindTags.isEmpty()) {
+                            FeatureState featureState = getModelObject().getFeatureStates().get(0);
+                            featureState.value = getTagForKeySequence(
+                                    getForwardAnnotationKeySequence(), bindTags);
+                        }
+                    }
+                    
+                    aTarget.add(textfield);
+                    
+                    annotationFeatureForm.getFirstFeatureEditor().ifPresent(aTarget::add);
+                }
+                catch (Exception e) {
+                    handleException(textfield, aTarget, e);
+                }
+            }
+        });
+        form.add(textfield);
+        
+        forwardAnnotationTextField = textfield;
+        
+        return form;
+    }
+    
+    /**
+     * Part of <i>forward annotation</i> mode with tagsets: when the forward annotation mode is used
+     * on a string feature with a tagset, the user presses the first letter of a tag repeatedly to
+     * cycle through the tags starting with that letter. Thus e.g. {@code nn} means <i>the second
+     * tag starting with an {@code n}</i>. This class field stores the key sequence. The <i>key</i>
+     * in the method name does not refer to a keyboard key, but rather to being a key in the map
+     * returned by {@link #buildKeySequenceToTagMap()}.
+     * 
+     * @see #getTagForKeySequence(String, Map)
+     */
+    protected void setForwardAnnotationKeySequence(String aSelectedTag, String aReason)
+    {
+        LOG.trace("setForwardAnnotationKeySequence({}) - {}", aSelectedTag, aReason);
+        
+        forwardAnnotationKeySequence = aSelectedTag;
+    }
+    
+    /**
+     * Part of <i>forward annotation</i> mode with tagsets: for details see 
+     * {@link #setForwardAnnotationKeySequence(String, String)}.
+     * 
+     * @see #setForwardAnnotationKeySequence(String, String)
+     */
+    protected String getForwardAnnotationKeySequence()
+    {
+        return forwardAnnotationKeySequence;
+    }
+    
+    /**
+     * Part of <i>forward annotation</i> mode with tagsets: returns a map which assigns key
+     * sequences to tags from the tagset associated with the forward feature, e.g.:
+     * <ul>
+     * <li>{@code a} -> {@code ADJ}</li>
+     * <li>{@code aa} -> {@code ADP}</li>
+     * <li>{@code n} -> {@code NOUN}</li>
+     * <li>{@code nn} -> {@code NUM}</li>
+     * <li>...</li>
+     * </ul>
+     * 
+     * @see #getTagForKeySequence(String, Map)
+     */
+    Map<String, String> buildKeySequenceToTagMap()
+    {
+        AnnotationFeature f = annotationService
+                .listAnnotationFeature(getModelObject().getDefaultAnnotationLayer()).get(0);
+        TagSet tagSet = f.getTagset();
+        Map<Character, String> tagNames = new LinkedHashMap<>();
+        Map<String, String> bindTag2Key = new LinkedHashMap<>();
+        for (Tag tag : annotationService.listTags(tagSet)) {
+            if (tagNames.containsKey(tag.getName().toLowerCase().charAt(0))) {
+                String oldBinding = tagNames.get(tag.getName().toLowerCase().charAt(0));
+                String newBinding = oldBinding + tag.getName().toLowerCase().charAt(0);
+                tagNames.put(tag.getName().toLowerCase().charAt(0), newBinding);
+                bindTag2Key.put(newBinding, tag.getName());
+            }
+            else {
+                tagNames.put(tag.getName().toLowerCase().charAt(0),
+                    tag.getName().toLowerCase().substring(0, 1));
+                bindTag2Key.put(tag.getName().toLowerCase().substring(0, 1), tag.getName());
+            }
+        }
+        return bindTag2Key;
+    }
+    
+    /**
+     * Part of <i>forward annotation</i> mode: returns the tag associated with the given key 
+     * sequence. 
+     * 
+     * This method has a side-effect on {@link #setForwardAnnotationKeySequence(String, String)}:
+     * If the sequence is is too long (e.g. {@code nnn} when there are only two tags
+     * starting with an {@code n}) then the sequence is suitably truncated. If the sequence
+     * consists of different characters, it is truncated to the last character in order to
+     * select tags starting with that character.
+     * 
+     * @see #buildKeySequenceToTagMap()
+     */
+    private String getTagForKeySequence(String aSequence, Map<String, String> aBindTags)
+    {
+        // check if all the key pressed are the same character
+        // if not, just check a Tag for the last char pressed
+        if (aSequence.isEmpty()) {
+            return aBindTags.get(aBindTags.keySet().iterator().next());
+        }
+        char prevC = aSequence.charAt(0);
+        for (char ch : aSequence.toCharArray()) {
+            if (ch != prevC) {
+                break;
+            }
+        }
+
+        if (aBindTags.get(aSequence) != null) {
+            return aBindTags.get(aSequence);
+        }
+        // re-cycle suggestions
+        if (aBindTags.containsKey(aSequence.substring(0, 1))) {
+            setForwardAnnotationKeySequence(aSequence.substring(0, 1), "reset tag cycling");
+            return aBindTags.get(aSequence.substring(0, 1));
+        }
+        // set it to the first in the tag list , when arbitrary key is pressed
+        return aBindTags.get(aBindTags.keySet().iterator().next());
     }
 
-    private Component createAnnotationFeatureForm()
+    private AnnotationFeatureForm createAnnotationFeatureForm()
     {
-        annotationFeatureForm = new AnnotationFeatureForm(this, "annotationFeatureForm",
+        AnnotationFeatureForm form = new AnnotationFeatureForm(this, "annotationFeatureForm",
                 getModel());
-        annotationFeatureForm.setOutputMarkupId(true);
-        annotationFeatureForm.add(new AjaxFormValidatingBehavior("submit") {
+        form.setOutputMarkupId(true);
+        form.add(new AjaxFormValidatingBehavior("submit") {
             private static final long serialVersionUID = -5642108496844056023L;
 
             @Override
@@ -130,11 +345,11 @@ public class AnnotationDetailEditorPanel
                     actionCreateOrUpdate(aTarget, jCas);
                 }
                 catch (Exception e) {
-                    handleException(annotationFeatureForm, aTarget, e);
+                    handleException(form, aTarget, e);
                 }
             }
         });
-        return annotationFeatureForm;
+        return form;
     }
 
     boolean isAnnotationFinished()
@@ -160,8 +375,8 @@ public class AnnotationDetailEditorPanel
                     + "] does not support arc annotation.");
                 aTarget.addChildren(getPage(), IFeedback.class);
             }
-            else if (aAdapter instanceof ArcAdapter) {
-                createNewRelationAnnotation((ArcAdapter) aAdapter, aJCas);
+            else if (aAdapter instanceof RelationAdapter) {
+                createNewRelationAnnotation((RelationAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
                 createNewChainLinkAnnotation((ChainAdapter) aAdapter, aJCas);
@@ -176,7 +391,7 @@ public class AnnotationDetailEditorPanel
                 createNewSpanAnnotation(aTarget, (SpanAdapter) aAdapter, aJCas);
             }
             else if (aAdapter instanceof ChainAdapter) {
-                createNewChainElement((ChainAdapter) aAdapter, aJCas);
+                createNewChainElement(aTarget, (ChainAdapter) aAdapter, aJCas);
             }
             else {
                 throw new IllegalStateException("I don't know how to use ["
@@ -185,7 +400,7 @@ public class AnnotationDetailEditorPanel
         }
     }
 
-    private void createNewRelationAnnotation(ArcAdapter aAdapter,
+    private void createNewRelationAnnotation(RelationAdapter aAdapter,
             JCas aJCas)
         throws AnnotationException
     {
@@ -198,8 +413,9 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
 
         // Creating a relation
-        AnnotationFS arc = aAdapter.add(originFs, targetFs, aJCas, state.getWindowBeginOffset(),
-            state.getWindowEndOffset());
+        AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
+                originFs, targetFs, aJCas, state.getWindowBeginOffset(),
+                state.getWindowEndOffset());
         selection.selectArc(new VID(arc), originFs, targetFs);
     }
 
@@ -207,74 +423,24 @@ public class AnnotationDetailEditorPanel
         JCas aJCas)
         throws IOException, AnnotationException
     {
-        LOG.trace("createNewSpanAnnotation()");
-
         AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-        List<FeatureState> featureStates = state.getFeatureStates();
-
-        if ((aAdapter.isAllowMultipleToken() || aAdapter.isLockToTokenOffsets())
-                && selection.getBegin() == selection.getEnd()) {
-            throw new AnnotationException(
-                    "Cannot create zero-width annotation on layers that lock to token boundaries.");
-        }
         
-        for (FeatureState featureState : featureStates) {
-            Serializable spanValue = aAdapter.getSpan(aJCas, selection.getBegin(),
-                selection.getEnd(), featureState.feature, null);
-            if (spanValue != null) {
-                // allow modification for forward annotation
-                if (state.isForwardAnnotation()) {
-                    featureState.value = spanValue;
-                    featureStates.get(0).value = spanValue;
-                    String selectedTag = annotationFeatureForm.getBindTags()
-                        .entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-                        .map(Map.Entry::getKey).findFirst().orElse(null);
-                    annotationFeatureForm.setSelectedTag(selectedTag);
-                }
-                else {
-                    actionClear(aTarget);
-                    throw new AnnotationException("Cannot create another annotation of layer ["
-                        + state.getSelectedAnnotationLayer().getUiName() + "] at this"
-                        + " location - stacking is not enabled for this layer.");
-                }
-            }
-        }
-        int annoId = aAdapter.add(state, aJCas, selection.getBegin(), selection.getEnd());
-        AnnotationFS annoFs = WebAnnoCasUtil.selectByAddr(aJCas, annoId);
-        selection.selectSpan(new VID(annoId), aJCas, annoFs.getBegin(), annoFs.getEnd());
+        Selection selection = state.getSelection();
+        
+        AnnotationFS annoFs = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
+                aJCas, selection.getBegin(), selection.getEnd());
+        selection.selectSpan(annoFs);
     }
-
-    private void createNewChainElement(ChainAdapter aAdapter,
-            JCas aJCas)
+    
+    private void createNewChainElement(AjaxRequestTarget aTarget, ChainAdapter aAdapter, JCas aJCas)
         throws AnnotationException
     {
-        LOG.trace("createNewChainElement()");
-
         AnnotatorState state = getModelObject();
         Selection selection = state.getSelection();
-        List<FeatureState> featureStates = state.getFeatureStates();
 
-        for (FeatureState featureState : featureStates) {
-            Serializable spanValue = aAdapter.getSpan(aJCas,
-                selection.getBegin(), selection.getEnd(), featureState.feature, null);
-            if (spanValue != null) {
-                // allow modification for forward annotation
-                if (state.isForwardAnnotation()) {
-                    featureState.value = spanValue;
-                    featureStates.get(0).value = spanValue;
-                    String selectedTag = annotationFeatureForm.getBindTags()
-                        .entrySet().stream().filter(e -> e.getValue().equals(spanValue))
-                        .map(Map.Entry::getKey).findFirst().orElse(null);
-                    annotationFeatureForm.setSelectedTag(selectedTag);
-                }
-            }
-        }
-        
-        selection.setAnnotation(new VID(
-            aAdapter.addSpan(aJCas, selection.getBegin(), selection.getEnd())));
-        selection.setText(
-            aJCas.getDocumentText().substring(selection.getBegin(), selection.getEnd()));
+        AnnotationFS annoFs = aAdapter.addSpan(state.getDocument(), state.getUser().getUsername(),
+                aJCas, selection.getBegin(), selection.getEnd());
+        selection.selectSpan(annoFs);
     }
 
     private void createNewChainLinkAnnotation(ChainAdapter aAdapter,
@@ -288,7 +454,8 @@ public class AnnotationDetailEditorPanel
         AnnotationFS targetFs = selectByAddr(aJCas, selection.getTarget());
 
         // Creating a new chain link
-        int addr = aAdapter.addArc(aJCas, originFs, targetFs);
+        int addr = aAdapter.addArc(state.getDocument(), state.getUser().getUsername(), aJCas,
+                originFs, targetFs);
         selection.selectArc(new VID(addr), originFs, targetFs);
     }
 
@@ -318,7 +485,8 @@ public class AnnotationDetailEditorPanel
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
                         .getLayer(state.getArmedFeature().getType(), state.getProject()));
 
-                id = adapter.add(state, aJCas, aBegin, aEnd);
+                id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aJCas,
+                        aBegin, aEnd));
             }
             else {
                 throw new AnnotationException(
@@ -437,17 +605,16 @@ public class AnnotationDetailEditorPanel
         internalCompleteAnnotation(aTarget, aJCas);
     }
     
+    public TextField<String> getForwardAnnotationTextField()
+    {
+        return forwardAnnotationTextField;
+    }
+    
     @Override
     public void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
         throws IOException, AnnotationException
     {
-        actionCreateForward(aTarget, aJCas, false);
-    }
-
-    private void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas, boolean aIsForwarded)
-        throws IOException, AnnotationException 
-    {
-        LOG.trace("actionForward(isForwarded: {})", aIsForwarded);
+        LOG.trace("actionCreateForward()");
 
         if (isAnnotationFinished()) {
             throw new AnnotationException("This document is already closed. Please ask your "
@@ -463,72 +630,116 @@ public class AnnotationDetailEditorPanel
 
         internalCommitAnnotation(aTarget, aJCas);
 
-        if (!aIsForwarded) {
-            if (state.getSelection().getEnd() >= state.getWindowEndOffset()) {
-                autoScroll(aJCas, true);
-            }
-
-            List<FeatureState> featureStates = getModelObject().getFeatureStates();
-            if (featureStates.get(0).value != null) {
-                LOG.info("BEGIN auto-forward annotation for tagset-based annotation");
-
-                AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
-                        state.getSelection().getBegin(), state.getSelection().getEnd());
-                if (nextToken != null) {
-                    if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                        state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
-                                nextToken.getEnd());
-                        actionCreateForward(aTarget, aJCas, true);
-                    }
-                }
-                LOG.info("END auto-forward annotation for tagset-based annotation");
-            }
-            else {
-                LOG.info("BEGIN auto-forward annotation for free-text annotation");
-
-                // If the annotation value was cleared or not filled in by the user, then we
-                // remove the entire annotation.
-                if (featureStates.get(0).value == null) {
-                    TypeAdapter adapter = annotationService
-                            .getAdapter(state.getSelectedAnnotationLayer());
-                    AnnotationFS fs = selectByAddr(aJCas,
-                            state.getSelection().getAnnotation().getId());
-                    deleteAnnotation(aJCas, state, fs, featureStates.get(0).feature.getLayer(),
-                            adapter);
-                }
-
-                AnnotationFS nextToken = WebAnnoCasUtil.getNextToken(aJCas,
-                        state.getSelection().getBegin(), state.getSelection().getEnd());
-                if (nextToken != null) {
-                    if (getModelObject().getWindowEndOffset() > nextToken.getBegin()) {
-                        state.getSelection().selectSpan(aJCas, nextToken.getBegin(),
-                                nextToken.getEnd());
-                        actionCreateForward(aTarget, aJCas, true);
-                    }
-                }
-                
-                LOG.info("END auto-forward annotation for free-text annotation"); 
-            }
-
-            LOG.trace("onAutoForward()");
-            onAutoForward(aTarget);
+        // Forward annotation mode requires that there is exactly a single feature, so we
+        // can simply call `get(0)` here.
+        FeatureState featureState = getModelObject().getFeatureStates().get(0);
+        
+        // If the annotation value was cleared or not filled in by the user, then we
+        // remove the entire annotation.
+        if (featureState.value == null) {
+            TypeAdapter adapter = annotationService
+                    .getAdapter(state.getSelectedAnnotationLayer());
+            AnnotationFS fs = selectByAddr(aJCas,
+                    state.getSelection().getAnnotation().getId());
+            deleteAnnotation(aJCas, state, fs, featureState.feature.getLayer(), adapter);
         }
         
-        aTarget.add(annotationFeatureForm);
+        // Move on to the next token
+        Selection selection = state.getSelection();
+        AnnotationFS nextToken = getNextToken(aJCas, selection.getBegin(), selection.getEnd());
+        if (nextToken != null) {
+            state.getSelection().selectSpan(aJCas, nextToken.getBegin(), nextToken.getEnd());
+
+            // If the new annotation is outside the view window then move forward
+            if (state.getWindowEndOffset() <= nextToken.getBegin()) {
+                state.moveForward(aJCas);
+            }
+            
+            // Re-set the selected layer from the drop-down since it might have changed if we
+            // have previously created a relation annotation
+            state.setSelectedAnnotationLayer(
+                    annotationFeatureForm.getLayerSelector().getModelObject());
+
+            // If there is already an annotation on the next token and if stacking mode is
+            // disabled, then select that annotation and load the feature value of that annotation
+            // into the {@link AnnotationFeatureForm#setSelectedTag(String) selected tag}.
+            SpanAdapter adapter = (SpanAdapter) annotationService
+                    .getAdapter(state.getDefaultAnnotationLayer());
+            Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
+            AnnotationFS annotation = selectSingleFsAt(aJCas, type, nextToken.getBegin(),
+                    nextToken.getEnd());
+            
+            // If there is no existing annotation of if stacking is allowed then we create a new one
+            if (adapter.getLayer().isAllowStacking() || annotation == null) {
+                internalCommitAnnotation(aTarget, aJCas);
+            }
+            // ... if there is an existing annotation, then select it
+            else {
+                state.getSelection().selectSpan(annotation);
+                
+                // If the existing annotation has a feature value, then load it into the hidden
+                // forward annotation text field which we use to cycle through tags
+                Serializable featureValue = adapter.getFeatureValue(featureState.feature,
+                        annotation);
+                if (featureValue != null) {
+                    Map<String, String> bindTags = buildKeySequenceToTagMap();
+                    String newTag = bindTags.entrySet().stream()
+                            .filter(e -> e.getValue().equals(featureValue))
+                            .map(Map.Entry::getKey)
+                            .findFirst()
+                            .orElse(null);
+                    setForwardAnnotationKeySequence(newTag, "hit existing annotation with feature value");
+                }
+                else {
+                    setForwardAnnotationKeySequence(null, "hit existing annotation without feature value");
+                }
+            }
+        }
+
+        LOG.trace("onAutoForward()");
+        onAutoForward(aTarget);
         
         internalCompleteAnnotation(aTarget, aJCas);
+        
+        aTarget.add(annotationFeatureForm);
     }
     
+    /**
+     * Persists the potentially modified CAS, remembers feature values, reloads the feature editors
+     * using the latest info from the CAS, updates the sentence number and focus unit, performs
+     * auto-scrolling.
+     */
     private void internalCompleteAnnotation(AjaxRequestTarget aTarget, JCas aJCas)
+        throws IOException, AnnotationException
     {
         AnnotatorState state = getModelObject();
+
+        // Update progress information
+        LOG.trace("actionAnnotate() updating progress information");
+        int sentenceNumber = getSentenceNumber(aJCas, state.getSelection().getBegin());
+        state.setFocusUnitIndex(sentenceNumber);
+        state.getDocument().setSentenceAccessed(sentenceNumber);
+
+        // persist changes
+        page.writeEditorCas(aJCas);
+
+        // Remember the current feature values independently for spans and relations
+        LOG.trace("actionAnnotate() remembering feature editor values");
+        state.rememberFeatures();
+
+        // Loading feature editor values from CAS
+        loadFeatureEditorModels(aJCas, aTarget);
+
+        // onAnnotate callback
+        LOG.trace("onAnnotate()");
+        onAnnotate(aTarget);
         
         // Perform auto-scroll if it is enabled
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(aJCas, false);
+            autoScroll(aJCas);
         }
 
-        annotationFeatureForm.getForwardAnnotationText().setModelObject(null);
+        getForwardAnnotationTextField().setModelObject(null);
 
         LOG.trace("onChange()");
         onChange(aTarget);
@@ -571,16 +782,14 @@ public class AnnotationDetailEditorPanel
         // annotationFeatureForm.updateRememberLayer();
     }
     
+    /**
+     * Creates or updates an annotation using the information from the feature editors.
+     */
     private void internalCommitAnnotation(AjaxRequestTarget aTarget, JCas aJCas)
         throws AnnotationException, IOException
     {
         AnnotatorState state = getModelObject();
         
-        LOG.trace("actionAnnotate() selectedLayer: {}",
-                state.getSelectedAnnotationLayer().getUiName());
-        LOG.trace("actionAnnotate() defaultLayer: {}",
-                state.getDefaultAnnotationLayer().getUiName());
-
         if (state.getSelectedAnnotationLayer() == null) {
             error("No layer is selected. First select a layer.");
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -592,32 +801,19 @@ public class AnnotationDetailEditorPanel
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
-
-        // Verify if input is valid according to tagset
-        LOG.trace("actionAnnotate() verifying feature values in editors");
-        List<FeatureState> featureStates = getModelObject().getFeatureStates();
-        for (FeatureState featureState : featureStates) {
-            AnnotationFeature feature = featureState.feature;
-            if (CAS.TYPE_NAME_STRING.equals(feature.getType())) {
-                String value = (String) featureState.value;
-
-                // Check if tag is necessary, set, and correct
-                if (
-                    value != null &&
-                        feature.getTagset() != null &&
-                        !feature.getTagset().isCreateTag() &&
-                        !annotationService.existsTag(value, feature.getTagset())
-                    ) {
-                    error("[" + value
-                        + "] is not in the tag list. Please choose from the existing tags");
-                    return;
-                }
-            }
-        }
+        
+        LOG.trace("actionAnnotate() selectedLayer: {}",
+                state.getSelectedAnnotationLayer().getUiName());
+        LOG.trace("actionAnnotate() defaultLayer: {}",
+                state.getDefaultAnnotationLayer().getUiName());
 
         // #186 - After filling a slot, the annotation detail panel is not updated
         aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
 
+        // internalCommitAnnotation is used to update an existing annotation as well as to create
+        // a new one. In either case, the selectedAnnotationLayer indicates the layer type! Do not
+        // use the defaultAnnotationLayer here as e.g. when creating relation annotations, it would
+        // point to the span type to which the relation attaches, not to the relation type!
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
 
         // If this is an annotation creation action, create the annotation
@@ -629,7 +825,34 @@ public class AnnotationDetailEditorPanel
 
         // Update the features of the selected annotation from the values presently in the
         // feature editors
-        writeFeatureEditorModelsToCas(adapter, aJCas);
+        List<FeatureState> featureStates = state.getFeatureStates();
+        
+        List<AnnotationFeature> features = new ArrayList<>();
+        for (FeatureState featureState : featureStates) {
+            features.add(featureState.feature);
+            
+            LOG.trace("actionAnnotate() writing feature editor models to CAS "
+                    + featureState.feature.getUiName() + " = " + featureState.value);
+            try {
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aJCas,
+                        state.getSelection().getAnnotation().getId(), featureState.feature,
+                        featureState.value);
+            }
+            catch (IllegalArgumentException e) {
+                // If any of the feature values could not be set, produce an error message and 
+                // abort
+                error(e.getMessage());
+                aTarget.addChildren(getPage(), IFeedback.class);
+                return;
+            }
+        }
+        
+        // Generate info message
+        if (state.getSelection().getAnnotation().isSet()) {
+            String bratLabelText = TypeUtil.getUiLabelText(adapter,
+                selectByAddr(aJCas, state.getSelection().getAnnotation().getId()), features);
+            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
+        }
 
         // Update progress information
         LOG.trace("actionAnnotate() updating progress information");
@@ -638,7 +861,7 @@ public class AnnotationDetailEditorPanel
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // persist changes
-        writeEditorCas(aJCas);
+        page.writeEditorCas(aJCas);
 
         // Remember the current feature values independently for spans and relations
         LOG.trace("actionAnnotate() remembering feature editor values");
@@ -723,7 +946,7 @@ public class AnnotationDetailEditorPanel
         deleteAnnotation(jCas, state, fs, layer, adapter);
 
         // Store CAS again
-        writeEditorCas(jCas);
+        page.writeEditorCas(jCas);
 
         // Update progress information
         int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
@@ -732,7 +955,7 @@ public class AnnotationDetailEditorPanel
 
         // Auto-scroll
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas, false);
+            autoScroll(jCas);
         }
 
         state.rememberFeatures();
@@ -823,7 +1046,7 @@ public class AnnotationDetailEditorPanel
 
         // If the deleted FS is a relation, we don't have to do anything. Nothing can point to a
         // relation.
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // Do nothing ;)
         }
 
@@ -851,15 +1074,16 @@ public class AnnotationDetailEditorPanel
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
-        if (adapter instanceof ArcAdapter) {
+        if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
-            AnnotationFS arc = ((ArcAdapter) adapter).add(targetFs, originFs, jCas,
+            AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
+                    state.getUser().getUsername(), targetFs, originFs, jCas,
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state, jCas, getAddr(arc), featureState.feature,
-                        featureState.value);
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), jCas,
+                        getAddr(arc), featureState.feature, featureState.value);
             }
         }
         else {
@@ -868,13 +1092,13 @@ public class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        writeEditorCas(jCas);
+        page.writeEditorCas(jCas);
         int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas, false);
+            autoScroll(jCas);
         }
 
         info("The arc has been reversed");
@@ -896,49 +1120,12 @@ public class AnnotationDetailEditorPanel
         onChange(aTarget);
     }
 
-    @Override
-    public JCas getEditorCas()
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-                || state.getMode().equals(Mode.CORRECTION)) {
-
-            return documentService.readAnnotationCas(state.getDocument(), state.getUser());
-        }
-        else {
-            return curationDocumentService.readCurationCas(state.getDocument());
-        }
-    }
-
-    private void writeEditorCas(JCas aJCas)
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-            || state.getMode().equals(Mode.CORRECTION)) {
-            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
-        }
-        else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
-        }
-    }
-
     /**
      * Scroll the window of visible annotations.
-     * @param aForward
-     *            instead of centering on the sentence that had the last editor, just scroll down
-     *            one sentence. This is for forward-annotation mode.
      */
-    private void autoScroll(JCas jCas, boolean aForward)
+    private void autoScroll(JCas jCas)
     {
-        if (aForward) {
-            getModelObject().moveForward(jCas);
-        }
-        else {
-            getModelObject().moveToSelection(jCas);
-        }
+        getModelObject().moveToSelection(jCas);
     }
 
     @SuppressWarnings("unchecked")
@@ -1125,45 +1312,6 @@ public class AnnotationDetailEditorPanel
                             .listTags(featureState.feature.getTagset());
                 }
             }
-        }
-    }
-
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        List<FeatureState> featureStates = state.getFeatureStates();
-
-        LOG.trace("writeFeatureEditorModelsToCas()");
-        List<AnnotationFeature> features = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
-            features.add(featureState.feature);
-            
-            // For string features with extensible tagsets, extend the tagset
-            if (CAS.TYPE_NAME_STRING.equals(featureState.feature.getType())) {
-                String value = (String) featureState.value;
-               
-                if (value != null && featureState.feature.getTagset() != null
-                        && featureState.feature.getTagset().isCreateTag()
-                        && !annotationService.existsTag(value, featureState.feature.getTagset())) {
-                    Tag selectedTag = new Tag();
-                    selectedTag.setName(value);
-                    selectedTag.setTagSet(featureState.feature.getTagset());
-                    annotationService.createTag(selectedTag);
-                }
-            }
-            
-            LOG.trace("writeFeatureEditorModelsToCas() "
-                + featureState.feature.getUiName() + " = " + featureState.value);
-            aAdapter.setFeatureValue(state, aJCas, state.getSelection().getAnnotation().getId(),
-                    featureState.feature, featureState.value);
-        }
-
-        // Generate info message
-        if (state.getSelection().getAnnotation().isSet()) {
-            String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
-                selectByAddr(aJCas, state.getSelection().getAnnotation().getId()), features);
-            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
         }
     }
 
@@ -1394,7 +1542,8 @@ public class AnnotationDetailEditorPanel
         Set<AnnotationFS> toBeDeleted = new HashSet<>();
         for (AnnotationLayer relationLayer : annotationService
             .listAttachedRelationLayers(aLayer)) {
-            ArcAdapter relationAdapter = (ArcAdapter) annotationService.getAdapter(relationLayer);
+            RelationAdapter relationAdapter = (RelationAdapter) annotationService
+                    .getAdapter(relationLayer);
             Type relationType = CasUtil.getType(cas, relationLayer.getName());
             Feature sourceFeature = relationType.getFeatureByBaseName(relationAdapter
                 .getSourceFeatureName());
@@ -1452,16 +1601,15 @@ public class AnnotationDetailEditorPanel
     protected static void handleException(Component aComponent, AjaxRequestTarget aTarget,
             Exception aException)
     {
+        if (aTarget != null) {
+            aTarget.addChildren(aComponent.getPage(), IFeedback.class);
+        }
+        
         try {
             throw aException;
         }
         catch (AnnotationException e) {
-            if (aTarget != null) {
-                aTarget.prependJavaScript("alert('Error: " + e.getMessage() + "')");
-            }
-            else {
-                aComponent.error("Error: " + e.getMessage());
-            }
+            aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + ExceptionUtils.getRootCauseMessage(e), e);
         }
         catch (UIMAException e) {
@@ -1485,12 +1633,9 @@ public class AnnotationDetailEditorPanel
         return msg;
     }
 
-    Logger getLog() {
-        return LOG;
-    }
-
-    AnnotationSchemaService getAnnotationService() {
-        return annotationService;
+    public AnnotationPageBase getEditorPage()
+    {
+        return page;
     }
     
     public static class AttachStatus {

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
@@ -29,14 +30,28 @@ public abstract class FeatureEditor
 {
     private static final long serialVersionUID = -7275181609671919722L;
 
-    protected static final String ID_PREFIX = "featureEditorHead";
-    
+    protected static final String MID_FEATURE = "feature";
+    protected static final String MID_VALUE = "value";
+
     private MarkupContainer owner;
     
+    /**
+     * @param aId
+     *            the component ID.
+     * @param aOwner
+     *            an enclosing component which may contain other feature editors. If actions are
+     *            performed which may affect other feature editors, e.g because of constraints
+     *            rules, then these need to be re-rendered. This is done by requesting a
+     *            re-rendering of the enclosing component.
+     * @param aModel
+     *            provides access to the state of the feature being edited.
+     */
     public FeatureEditor(String aId, MarkupContainer aOwner, IModel<FeatureState> aModel)
     {
         super(aId, aModel);
         owner = aOwner;
+        
+        add(createLabel());
     }
 
     public MarkupContainer getOwner()
@@ -57,6 +72,11 @@ public abstract class FeatureEditor
     public FeatureState getModelObject()
     {
         return (FeatureState) getDefaultModelObject();
+    }
+    
+    private Component createLabel()
+    {
+        return new Label(MID_FEATURE, getModelObject().feature.getUiName());
     }
     
     abstract public Component getFocusComponent();

@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -38,13 +41,15 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogLevel;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -52,19 +57,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 
-@ProjectSettingsPanel(label = "CAS Doctor", prio = 5000)
 public class ProjectCasDoctorPanel
     extends ProjectSettingsPanelBase
 {
-    // private final static Logger LOG = LoggerFactory.getLogger(ProjectCasDoctorPanel.class);
+    private final static Logger LOG = LoggerFactory.getLogger(ProjectCasDoctorPanel.class);
 
     private static final long serialVersionUID = 2116717853865353733L;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean CasStorageService casStorageService;
+    private @SpringBean ImportExportService importExportService;
 
     // Data properties
     private FormModel formModel = new FormModel();
@@ -149,32 +155,102 @@ public class ProjectCasDoctorPanel
         formModel.messageSets = new ArrayList<>();
 
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
+            // Repair INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                JCas initialCas;
-                if (documentService.existsInitialCas(sd)) {
-                    initialCas = documentService.readInitialCas(sd, false);
+                
+                try {
+                    JCas initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
+                    casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
+                    casStorageService.writeCas(sd, initialCas, INITIAL_CAS_PSEUDO_USER);
                 }
-                else {
-                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                            "Created initial CAS for [" + sd.getName() + "]"));
-                    initialCas = documentService.createInitialCas(sd, false);
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error repairing initial CAS for [" + sd.getName() + "]: "
+                                    + e.getMessage()));
+                    LOG.error("Error repairing initial CAS for [{}]",  sd.getName(), e);
                 }
-                casDoctor.repair(project, initialCas.getCas(), messageSet.messages);
-                CasPersistenceUtils.writeSerializedCas(initialCas,
-                        documentService.getCasFile(sd, INITIAL_CAS_PSEUDO_USER));
+                
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
+            
+            // Repair CORRECTION_USER CAS if necessary
+            if (WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
+                LogMessageSet messageSet = new LogMessageSet(
+                        sd.getName() + " [" + CORRECTION_USER + "]");
+                try {
+                    JCas correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false);
+                    casDoctor.repair(project, correctionCas.getCas(), messageSet.messages);
+                    CasPersistenceUtils.writeSerializedCas(correctionCas,
+                            documentService.getCasFile(sd, CORRECTION_USER));
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS for the correction user, then correction has not started
+                    // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
+                    // assumption is correct in curation mode...)
+                    messageSet.messages.add(
+                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                }
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error checking annotations for [" + CORRECTION_USER + "] for ["
+                                    + sd.getName() + "]: " + e.getMessage()));
+                    LOG.error("Error checking annotations for [{}] for [{}]", CORRECTION_USER,
+                            sd.getName(), e);
+                }
 
+                noticeIfThereAreNoMessages(messageSet);
+                formModel.messageSets.add(messageSet);
+            }
+            
+            // Repair CURATION_USER CAS
+            {
+                LogMessageSet messageSet = new LogMessageSet(
+                        sd.getName() + " [" + CURATION_USER + "]");
+                try {
+                    JCas curationCas = casStorageService.readCas(sd, CURATION_USER, false);
+                    casDoctor.repair(project, curationCas.getCas(), messageSet.messages);
+                    CasPersistenceUtils.writeSerializedCas(curationCas,
+                            documentService.getCasFile(sd, CURATION_USER));
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS for the curation user, then curation has not started yet.
+                    // This is not a problem, so we can ignore it.
+                    messageSet.messages.add(
+                            LogMessage.info(getClass(), "Curation seems to have not yet started."));
+                }
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error checking annotations for [" + CURATION_USER + "] for ["
+                                    + sd.getName() + "]: " + e.getMessage()));
+                    LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
+                            sd.getName(), e);
+                }
+
+                noticeIfThereAreNoMessages(messageSet);
+                formModel.messageSets.add(messageSet);
+            }
+            
+            // Repair regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = documentService.readAnnotationCas(ad, false);
-                    casDoctor.repair(project, userCas.getCas(), messageSet.messages);
-                    CasPersistenceUtils.writeSerializedCas(userCas,
-                            documentService.getCasFile(ad.getDocument(), ad.getUser()));
+                    try {
+                        JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
+                                false);
+                        casDoctor.repair(project, userCas.getCas(), messageSet.messages);
+                        CasPersistenceUtils.writeSerializedCas(userCas,
+                                documentService.getCasFile(ad.getDocument(), ad.getUser()));
+                    }
+                    catch (Exception e) {
+                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                                "Error repairing annotations of user [" + ad.getUser() + "] for ["
+                                        + sd.getName() + "]: " + e.getMessage()));
+                        LOG.error("Error repairing annotations of user [{}] for [{}]", ad.getUser(),
+                                sd.getName(), e);
+                    }
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -199,35 +275,96 @@ public class ProjectCasDoctorPanel
         formModel.messageSets = new ArrayList<>();
 
         for (SourceDocument sd : documentService.listSourceDocuments(project)) {
+            // Check INITIAL CAS
             {
                 LogMessageSet messageSet = new LogMessageSet(sd.getName() + " [INITIAL]");
-                JCas initialCas;
+                
                 try {
-                    if (documentService.existsInitialCas(sd)) {
-                        initialCas = documentService.readInitialCas(sd, false);
-                    }
-                    else {
-                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
-                                "No initial CAS for [" + sd.getName() + "]"));
-                        initialCas = documentService.createInitialCas(sd, false);
-                    }
+                    JCas initialCas = createOrReadInitialCasWithoutSaving(sd, messageSet);
                     casDoctor.analyze(project, initialCas.getCas(), messageSet.messages);
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
-                            "Error reading initial CAS for [" + sd.getName() + "]: "
+                            "Error checking initial CAS for [" + sd.getName() + "]: "
                                     + e.getMessage()));
+                    LOG.error("Error checking initial CAS for [{}]", sd.getName(), e);
                 }
+                
                 noticeIfThereAreNoMessages(messageSet);
                 formModel.messageSets.add(messageSet);
             }
 
+            // Check CORRECTION_USER CAS if necessary
+            if (WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
+                LogMessageSet messageSet = new LogMessageSet(
+                        sd.getName() + " [" + CORRECTION_USER + "]");
+                try {
+                    JCas correctionCas = casStorageService.readCas(sd, CORRECTION_USER, false);
+                    casDoctor.analyze(project, correctionCas.getCas(), messageSet.messages);
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS for the correction user, then correction has not started
+                    // yet. This is not a problem, so we can ignore it. (REC: I wonder if this
+                    // assumption is correct in curation mode...)
+                    messageSet.messages.add(
+                            LogMessage.info(getClass(), "Correction seems to have not yet started."));
+                }
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error checking annotations for [" + CORRECTION_USER + "] for ["
+                                    + sd.getName() + "]: " + e.getMessage()));
+                    LOG.error("Error checking annotations for [{}] for [{}]", CORRECTION_USER,
+                            sd.getName(), e);
+                }
+
+                noticeIfThereAreNoMessages(messageSet);
+                formModel.messageSets.add(messageSet);
+            }
+            
+            // Check CURATION_USER CAS
+            {
+                LogMessageSet messageSet = new LogMessageSet(
+                        sd.getName() + " [" + CURATION_USER + "]");
+                try {
+                    JCas curationCas = casStorageService.readCas(sd, CURATION_USER, false);
+                    casDoctor.analyze(project, curationCas.getCas(), messageSet.messages);
+                }
+                catch (FileNotFoundException e) {
+                    // If there is no CAS for the curation user, then curation has not started yet.
+                    // This is not a problem, so we can ignore it.
+                    messageSet.messages.add(
+                            LogMessage.info(getClass(), "Curation seems to have not yet started."));
+                }
+                catch (Exception e) {
+                    messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                            "Error checking annotations for [" + CURATION_USER + "] for ["
+                                    + sd.getName() + "]: " + e.getMessage()));
+                    LOG.error("Error checking annotations for [{}] for [{}]", CURATION_USER,
+                            sd.getName(), e);
+                }
+
+                noticeIfThereAreNoMessages(messageSet);
+                formModel.messageSets.add(messageSet);
+            }
+            
+            // Check regular annotator CASes
             for (AnnotationDocument ad : documentService.listAnnotationDocuments(sd)) {
                 if (documentService.existsAnnotationCas(ad)) {
                     LogMessageSet messageSet = new LogMessageSet(
                             sd.getName() + " [" + ad.getUser() + "]");
-                    JCas userCas = documentService.readAnnotationCas(ad, false);
-                    casDoctor.analyze(project, userCas.getCas(), messageSet.messages);
+                    try {
+                        JCas userCas = casStorageService.readCas(ad.getDocument(), ad.getUser(),
+                                false);
+                        casDoctor.analyze(project, userCas.getCas(), messageSet.messages);
+                    }
+                    catch (Exception e) {
+                        messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,
+                                "Error checking annotations of user [" + ad.getUser() + "] for ["
+                                        + sd.getName() + "]: " + e.getMessage()));
+                        LOG.error("Error checking annotations of user [{}] for [{}]", ad.getUser(),
+                                sd.getName(), e);
+                    }
+                        
                     noticeIfThereAreNoMessages(messageSet);
                     formModel.messageSets.add(messageSet);
                 }
@@ -237,6 +374,24 @@ public class ProjectCasDoctorPanel
         aTarget.add(this);
     }
     
+    private JCas createOrReadInitialCasWithoutSaving(SourceDocument aDocument,
+            LogMessageSet aMessageSet)
+        throws IOException, UIMAException
+    {
+        JCas cas;
+        if (casStorageService.existsCas(aDocument, INITIAL_CAS_PSEUDO_USER)) {
+            cas = casStorageService.readCas(aDocument, INITIAL_CAS_PSEUDO_USER, false);
+        }
+        else {
+            cas = importExportService.importCasFromFile(
+                    documentService.getSourceDocumentFile(aDocument), aDocument.getProject(),
+                    aDocument.getFormat());
+            aMessageSet.messages.add(new LogMessage(getClass(), LogLevel.INFO,
+                    "Created initial CAS for [" + aDocument.getName() + "]"));
+        }
+        return cas;
+    }
+
     private void noticeIfThereAreNoMessages(LogMessageSet aSet)
     {
         if (aSet.messages.isEmpty()) {

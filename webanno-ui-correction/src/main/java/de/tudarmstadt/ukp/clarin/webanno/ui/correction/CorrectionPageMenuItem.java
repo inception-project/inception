@@ -37,6 +37,12 @@ public class CorrectionPageMenuItem implements MenuItem
     private @Autowired ProjectService projectService;
 
     @Override
+    public String getPath()
+    {
+        return "/correction";
+    }
+    
+    @Override
     public String getIcon()
     {
         return "images/check_box.png";

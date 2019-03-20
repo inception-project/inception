@@ -28,11 +28,10 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.context.ApplicationContext;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class SidebarPanel
@@ -67,8 +66,7 @@ public class SidebarPanel
                 makeTabs());
         add(tabsPanel);
         
-        add(new AttributeAppender("class",
-                LambdaModel.of(() -> (tabsPanel.isExpanded() ? "" : "collapsed")), " "));
+        add(new AttributeAppender("class", () -> tabsPanel.isExpanded() ? "" : "collapsed", " "));
     }
     
     @Override

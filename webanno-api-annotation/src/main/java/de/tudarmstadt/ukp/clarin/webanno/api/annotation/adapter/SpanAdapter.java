@@ -17,135 +17,69 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static java.lang.System.currentTimeMillis;
+import static java.util.Collections.emptyList;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 /**
- * A class that is used to create Brat Span to CAS and vice-versa.
+ * Manage interactions with annotations on a span layer.
  */
 public class SpanAdapter
     extends TypeAdapter_ImplBase
-    implements AutomationTypeAdapter
 {
-    /**
-     * The minimum offset of the annotation is on token, and the annotation can't span multiple
-     * tokens too
-     */
-    private boolean lockToTokenOffsets;
-
-    /**
-     * The minimum offset of the annotation is on token, and the annotation can span multiple token
-     * too
-     */
-    private boolean allowMultipleToken;
-
-    /**
-     * Allow multiple annotations of the same layer (only when the type value is different)
-     */
-    private boolean allowStacking;
-
-    private boolean crossMultipleSentence;
-
-    // value NILL for a token when the training file do not have annotations provided
-    private final static String NILL = "__nill__";
-
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
+    private final List<SpanLayerBehavior> behaviors;
+    
     public SpanAdapter(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
-            Collection<AnnotationFeature> aFeatures)
+            Collection<AnnotationFeature> aFeatures, List<SpanLayerBehavior> aBehaviors)
     {
         super(aFeatureSupportRegistry, aEventPublisher, aLayer, aFeatures);
-    }
-
-    /**
-     * Span can only be made on a single token (not multiple tokens), e.g. for POS or Lemma
-     * annotations. If this is set and a span is made across multiple tokens, then one annotation of
-     * the specified type will be created for each token. If this is not set, a single annotation
-     * covering all tokens is created.
-     *
-     * @param aSingleTokenBehavior
-     *            whether to enable the behavior.
-     */
-    public void setLockToTokenOffsets(boolean aSingleTokenBehavior)
-    {
-        lockToTokenOffsets = aSingleTokenBehavior;
-    }
-
-    /**
-     * @return whether the behavior is enabled.
-     * @see #setLockToTokenOffsets(boolean)
-     */
-    public boolean isLockToTokenOffsets()
-    {
-        return lockToTokenOffsets;
-    }
-
-    public boolean isAllowMultipleToken()
-    {
-        return allowMultipleToken;
-    }
-
-    public void setAllowMultipleToken(boolean allowMultipleToken)
-    {
-        this.allowMultipleToken = allowMultipleToken;
-    }
-
-    public boolean isAllowStacking()
-    {
-        return allowStacking;
-    }
-
-    public void setAllowStacking(boolean allowStacking)
-    {
-        this.allowStacking = allowStacking;
-    }
-
-    public boolean isCrossMultipleSentence()
-    {
-        return crossMultipleSentence;
-    }
-
-    public void setCrossMultipleSentence(boolean crossMultipleSentence)
-    {
-        this.crossMultipleSentence = crossMultipleSentence;
+        
+        if (aBehaviors == null) {
+            behaviors = emptyList();
+        }
+        else {
+            List<SpanLayerBehavior> temp = new ArrayList<>(aBehaviors);
+            AnnotationAwareOrderComparator.sort(temp);
+            behaviors = temp;
+        }
     }
 
     /**
      * Add new span annotation into the CAS and return the the id of the span annotation
      *
+     * @param aDocument
+     *            the document to which the CAS belongs
+     * @param aUsername
+     *            the user to which the CAS belongs
      * @param aJCas
      *            the JCas.
      * @param aBegin
@@ -156,95 +90,37 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public Integer add(AnnotatorState aState, JCas aJCas, int aBegin, int aEnd)
+    public AnnotationFS add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+            int aEnd)
         throws AnnotationException
     {
-        // if zero-offset annotation is requested
-        if (aBegin == aEnd) {
-            return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
-        }
-        if (crossMultipleSentence || isSameSentence(aJCas, aBegin, aEnd)) {
-            if (lockToTokenOffsets) {
-                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-
-                if (tokens.isEmpty()) {
-                    throw new AnnotationException("No token is found to annotate");
-                }
-                
-                return createAnnotation(aState, aJCas.getCas(), tokens.get(0).getBegin(),
-                        tokens.get(0).getEnd());
-
-            }
-            else if (allowMultipleToken) {
-                List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-                // update the begin and ends (no sub token selection
-                aBegin = tokens.get(0).getBegin();
-                aEnd = tokens.get(tokens.size() - 1).getEnd();
-                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
-            }
-            else {
-                return createAnnotation(aState, aJCas.getCas(), aBegin, aEnd);
-            }
-        }
-        else {
-            throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
-                    + "limit your annotation to single sentence!");
-        }
+        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
     }
     
-    // get feature Value of existing span annotation 
-    public Serializable getSpan(JCas aJCas, int aBegin, int aEnd, AnnotationFeature aFeature,
-            String aLabelValue)
+    public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
     {
-        if (allowStacking) {
-            return null;
-        }
-        
-        int begin;
-        int end;
-        // update the begin and ends (no sub token selection)
-        if (lockToTokenOffsets) {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-        }
-        else if (allowMultipleToken) {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aBegin, aEnd);
-            begin = tokens.get(0).getBegin();
-            end = tokens.get(tokens.size() - 1).getEnd();
-        }
-        else {
-            begin = aBegin;
-            end = aEnd;
-        }
-        
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, begin, end)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                return getFeatureValue(aFeature, fs);
-            }
-        }
-        
-        return null;
-    }
+        CreateSpanAnnotationRequest request = aRequest;
 
+        for (SpanLayerBehavior behavior : behaviors) {
+            request = behavior.onCreate(this, request);
+        }
+
+        AnnotationFS newAnnotation = createSpanAnnotation(request.getJcas().getCas(),
+                request.getBegin(), request.getEnd());
+
+        publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getUsername(),
+                newAnnotation));
+
+        return newAnnotation;
+    }
+    
     /**
      * A Helper method to add annotation to CAS
      */
-    private Integer createAnnotation(AnnotatorState aState, CAS aCas, int aBegin, int aEnd)
+    private AnnotationFS createSpanAnnotation(CAS aCas, int aBegin, int aEnd)
         throws AnnotationException
     {
-        // If stacking is not allowed and there already is an annotation, then return the address
-        // of the existing annotation.
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (!allowStacking) {
-                    return getAddr(fs);
-                }
-            }
-        }
-        
         AnnotationFS newAnnotation = aCas.createAnnotation(type, aBegin, aEnd);
         
         // If if the layer attaches to a feature, then set the attach-feature to the newly
@@ -262,14 +138,11 @@ public class SpanAdapter
         
         aCas.addFsToIndexes(newAnnotation);
         
-        publishEvent(new SpanCreatedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), newAnnotation));
-        
-        return getAddr(newAnnotation);
+        return newAnnotation;
     }
 
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
     {
         AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
@@ -284,106 +157,19 @@ public class SpanAdapter
             }
         }
         
-        publishEvent(new SpanDeletedEvent(this, aState.getDocument(),
-                aState.getUser().getUsername(), fs));
+        publishEvent(new SpanDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
-
+    
     @Override
-    public void delete(AnnotatorState aState, JCas aJCas, AnnotationFeature aFeature, int aBegin,
-            int aEnd, Object aValue)
+    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
     {
-        Type type = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas.getCas(), type, aBegin, aEnd)) {
-            if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
-                if (ObjectUtils.equals(getFeatureValue(aFeature, fs), aValue)) {
-                    delete(aState, aJCas, new VID(getAddr(fs)));
-                }
-            }
+        List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
+        for (SpanLayerBehavior behavior : behaviors) {
+            long startTime = currentTimeMillis();
+            messages.addAll(behavior.onValidate(this, aJCas));
+            log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
+                    getLayer().getUiName(), currentTimeMillis() - startTime);
         }
-    }
-
-    @Override
-    public long getTypeId()
-    {
-        return getLayer().getId();
-    }
-
-    @Override
-    public Type getAnnotationType(CAS cas)
-    {
-        return CasUtil.getType(cas, getAnnotationTypeName());
-    }
-
-    /**
-     * The UIMA type name.
-     */
-    @Override
-    public String getAnnotationTypeName()
-    {
-        return getLayer().getName();
-    }
-
-    @Override
-    public String getAttachFeatureName()
-    {
-        return getLayer().getAttachFeature() == null ? null
-                : getLayer().getAttachFeature().getName();
-    }
-
-    @Override
-    public List<String> getAnnotation(Sentence aSentence, AnnotationFeature aFeature)
-    {
-        CAS cas = aSentence.getCAS();
-        
-        Type type = getType(cas, getAnnotationTypeName());
-        List<String> annotations = new ArrayList<>();
-
-        for (Token token : selectCovered(Token.class, aSentence)) {
-            List<AnnotationFS> tokenLevelAnnotations = selectCovered(type, token);
-            if (tokenLevelAnnotations.size() > 0) {
-                AnnotationFS anno = tokenLevelAnnotations.get(0);
-                Feature labelFeature = anno.getType().getFeatureByBaseName(aFeature.getName());
-                annotations.add(anno.getFeatureValueAsString(labelFeature));
-            }
-            else {
-                annotations.add(NILL);
-            }
-        }
-        return annotations;
-    }
-
-    public Map<Integer, String> getMultipleAnnotation(Sentence sentence, AnnotationFeature aFeature)
-        throws CASException
-    {
-        Map<Integer, String> multAnno = new HashMap<>();
-        Type type = getType(sentence.getCAS(), getAnnotationTypeName());
-        for (AnnotationFS fs : selectCovered(type, sentence)) {
-            boolean isBegin = true;
-            Feature labelFeature = fs.getType().getFeatureByBaseName(aFeature.getName());
-            for (Token token : selectCovered(Token.class, fs)) {
-                if (multAnno.get(getAddr(token)) == null) {
-                    if (isBegin) {
-                        multAnno.put(getAddr(token),
-                                "B-" + fs.getFeatureValueAsString(labelFeature));
-                        isBegin = false;
-                    }
-                    else {
-                        multAnno.put(getAddr(token),
-                                "I-" + fs.getFeatureValueAsString(labelFeature));
-                    }
-                }
-            }
-        }
-        return multAnno;
-    }
-
-    /**
-     * A field that takes the name of the annotation to attach to, e.g.
-     * "de.tudarmstadt...type.Token" (Token.class.getName())
-     */
-    @Override
-    public String getAttachTypeName()
-    {
-        return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
+        return messages;
     }
 }

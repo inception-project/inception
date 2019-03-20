@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api;
 
 import java.io.IOException;
+import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -60,4 +61,6 @@ public interface CorrectionDocumentService
      */
     boolean existsCorrectionCas(SourceDocument sourceDocument)
         throws IOException;
+
+    Optional<Long> getCorrectionCasTimestamp(SourceDocument aDocument) throws IOException;
 }

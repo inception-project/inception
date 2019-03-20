@@ -1,12 +1,12 @@
 #FORMAT=WebAnno TSV 3.2
-#T_SP=de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity|value|identifier
+#T_SP=webanno.custom.Span|value
 
 
 #Text=This is a test .
-1-1	0-4	This	_	_	
-1-1.1	0-0		*	*	
-1-2	5-7	is	_	_	
-1-3	8-9	a	_	_	
-1-4	10-14	test	_	_	
-1-5	15-16	.	_	_	
-1-5.1	16-16		*	*	
+1-1	0-4	This	_	
+1-1.1	0-0		*	
+1-2	5-7	is	_	
+1-3	8-9	a	_	
+1-4	10-14	test	_	
+1-5	15-16	.	_	
+1-5.1	16-16		*	

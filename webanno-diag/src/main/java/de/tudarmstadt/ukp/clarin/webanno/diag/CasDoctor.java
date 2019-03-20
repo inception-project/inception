@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag;
 
-import java.io.Serializable;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -41,6 +40,8 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
+import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 @Component("casDoctor")
 public class CasDoctor
@@ -322,46 +323,6 @@ public class CasDoctor
                 .filter(c -> !Modifier.isAbstract(c.getModifiers()))
                 .sorted(Comparator.comparing(Class::getName))
                 .collect(Collectors.toList());
-    }
-
-    public enum LogLevel
-    {
-        INFO, ERROR
-    }
-
-    public static class LogMessage
-        implements Serializable
-    {
-        private static final long serialVersionUID = 2002139781814027105L;
-        
-        public final LogLevel level;
-        public final Class<?> source;
-        public final String message;
-
-        public LogMessage(Object aSource, LogLevel aLevel, String aMessage)
-        {
-            this(aSource, aLevel, "%s", aMessage);
-        }
-
-        public LogMessage(Object aSource, LogLevel aLevel, String aFormat, Object... aValues)
-        {
-            super();
-            if (aSource instanceof Class) {
-                source = (Class) aSource;
-            }
-            else {
-                source = aSource != null ? aSource.getClass() : null;
-            }
-            level = aLevel;
-            message = String.format(aFormat, aValues);
-        }
-        
-        @Override
-        public String toString()
-        {
-            return String.format("[%s] %s", source != null ? source.getSimpleName() : "<unknown>",
-                    message);
-        }
     }
 
     @Override

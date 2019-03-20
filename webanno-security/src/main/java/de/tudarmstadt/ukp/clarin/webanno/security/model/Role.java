@@ -17,26 +17,28 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.security.model;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 /**
- * Global User roles (ROLE_ADMIN- system-wide administrator privilege, ROLE_USER - project level
- * privilege such as project admin, annotator or curator ROLE_REMORE - Privilege for web-service
- * based user access
- *
+ * Global user roles.
  */
 public enum Role
 {
-    ROLE_ADMIN, ROLE_USER, ROLE_REMOTE, ROLE_PROJECT_CREATOR;
+    /**
+     * System-wide administrator privilege.
+     */
+    ROLE_ADMIN,
+    
+    /**
+     * Project user such as manager, annotator or curator.
+     */
+    ROLE_USER, 
+    
+    /**
+     * Privilege for web-service based user access
+     */
+    ROLE_REMOTE,
 
-    public static Set<Role> getRoles()
-    {
-        Set<Role> roles = new HashSet<>(Arrays.asList(values()));
-        if (!"true".equals(System.getProperty("webanno.remote-api.enable"))) {
-            roles.remove(ROLE_REMOTE);
-        }
-        return roles;
-    }
+    /**
+     * Project user with the right to create new projects.
+     */
+    ROLE_PROJECT_CREATOR;
 }

@@ -17,8 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.automation.service;
 
-import javax.annotation.Resource;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -32,7 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 @Component
 public class AutomationServiceEventAdapter
 {
-    private @Resource AutomationService service;
+    private @Autowired AutomationService service;
     
     @EventListener
     public void onBeforeProjectRemove(BeforeProjectRemovedEvent aEvent)

@@ -26,7 +26,6 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.Restriction;
-import de.tudarmstadt.ukp.clarin.webanno.constraints.visitor.RestrictionVisitor;
 
 public class RestrictionVisitorTest
 {

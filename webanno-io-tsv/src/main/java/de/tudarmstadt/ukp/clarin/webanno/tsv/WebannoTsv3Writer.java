@@ -311,7 +311,10 @@ public class WebannoTsv3Writer
         // store slot targets for each slot features
         for (String l : spanLayers) {
             Type type = getType(aJCas.getCas(), l);
-            for (Feature f : type.getFeatures()) {
+            List<Feature> features = type.getFeatures();
+            Collections.sort(features, (a, b) -> 
+                    StringUtils.compare(a.getShortName(), b.getShortName()));
+            for (Feature f : features) {
                 if (slotFeatures != null && slotFeatures.contains(f.getName())) {
                     slotFeatureTypes.put(f, getType(aJCas.getCas(), slotTargets.get(i)));
                     i++;
@@ -431,7 +434,10 @@ public class WebannoTsv3Writer
             Feature dependentFeature = null;
             Feature governorFeature = null;
 
-            for (Feature feature : type.getFeatures()) {
+            List<Feature> features = type.getFeatures();
+            Collections.sort(features, (a, b) -> 
+                    StringUtils.compare(a.getShortName(), b.getShortName()));
+            for (Feature feature : features) {
                 if (feature.getShortName().equals(DEPENDENT)) {
 
                     // check if the dependent is
@@ -648,7 +654,10 @@ public class WebannoTsv3Writer
                 && ambigUnits.get(aType.getName()).get(aUnit).equals(false)) {
             ref = 0;
         }
-        for (Feature feature : aType.getFeatures()) {
+        List<Feature> features = aType.getFeatures();
+        Collections.sort(features, (a, b) -> 
+                StringUtils.compare(a.getShortName(), b.getShortName()));
+        for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
@@ -799,7 +808,10 @@ public class WebannoTsv3Writer
             boolean aMultiUnit, boolean aFirst)
     {
         List<String> annoPerFeatures = new ArrayList<>();
-        for (Feature feature : aType.getFeatures()) {
+        List<Feature> features = aType.getFeatures();
+        Collections.sort(features, (a, b) -> 
+                StringUtils.compare(a.getShortName(), b.getShortName()));
+        for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
@@ -847,7 +859,10 @@ public class WebannoTsv3Writer
     {
         List<String> annoPerFeatures = new ArrayList<>();
         featurePerLayer.putIfAbsent(type.getName(), new LinkedHashSet<>());
-        for (Feature feature : type.getFeatures()) {
+        List<Feature> features = type.getFeatures();
+        Collections.sort(features, (a, b) -> 
+                StringUtils.compare(a.getShortName(), b.getShortName()));
+        for (Feature feature : features) {
             if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
                     || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
