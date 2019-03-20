@@ -49,8 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
-public class PredictionUtil
-{
+public class PredictionUtil {
     private static final Logger log = LoggerFactory.getLogger(PredictionUtil.class);
     private static final double NO_SCORE = 0.0;
 
