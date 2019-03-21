@@ -33,7 +33,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -155,16 +154,15 @@ public class PdfAnnoRendererTest
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
             TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, cas.getDocumentText().length(),
-            jCas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
+                schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
@@ -186,11 +184,10 @@ public class PdfAnnoRendererTest
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
             TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         Offset docOffsetKarin = PdfAnnoRenderer

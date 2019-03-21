@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -26,8 +27,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -299,8 +300,8 @@ public class SubjectObjectFeatureEditor
         
         if (roleLabelIsFilled()) {
             try {
-                JCas jCas = actionHandler.getEditorCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                CAS cas = actionHandler.getEditorCas();
+                FeatureStructure selectedFS = selectByAddr(cas, roleModel.targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
             }
@@ -318,8 +319,8 @@ public class SubjectObjectFeatureEditor
             String selectedKBItemIdentifier;
             
             try {
-                JCas jCas = actionHandler.getEditorCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(jCas, roleModel.targetAddr);
+                CAS cas = actionHandler.getEditorCas();
+                FeatureStructure selectedFS = selectByAddr(cas, roleModel.targetAddr);
                 selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
                         linkedAnnotationFeature.getName());
             }
@@ -396,7 +397,7 @@ public class SubjectObjectFeatureEditor
         return traits;
     }
 
-    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    private CAS getEditorCas(AnnotationActionHandler aHandler) throws IOException
     {
         return aHandler.getEditorCas();
     }

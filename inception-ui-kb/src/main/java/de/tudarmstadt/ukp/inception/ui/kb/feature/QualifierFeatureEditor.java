@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -27,8 +28,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -326,9 +327,9 @@ public class QualifierFeatureEditor
         if (aItem.getModelObject().targetAddr != -1) {
             try {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-                JCas jCas = actionHandler.getEditorCas();
+                CAS cas = actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
-                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(jCas, targetAddr,
+                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(cas, targetAddr,
                     project, traits);
             } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -343,9 +344,9 @@ public class QualifierFeatureEditor
     {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                JCas jCas = actionHandler.getEditorCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil
-                    .selectByAddr(jCas, aItem.getModelObject().targetAddr);
+                CAS cas = actionHandler.getEditorCas();
+                AnnotationFS selectedFS = (AnnotationFS) selectByAddr(cas,
+                        aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
@@ -357,7 +358,7 @@ public class QualifierFeatureEditor
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
                 actionHandler.actionCreateOrUpdate(
-                        RequestCycle.get().find(AjaxRequestTarget.class).get(), jCas);
+                        RequestCycle.get().find(AjaxRequestTarget.class).get(), cas);
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -406,7 +407,7 @@ public class QualifierFeatureEditor
         return traits;
     }
 
-    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    private CAS getEditorCas(AnnotationActionHandler aHandler) throws IOException
     {
         return aHandler.getEditorCas();
     }

@@ -24,9 +24,9 @@ import java.io.IOException;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -38,8 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -66,9 +66,9 @@ public class PdfAnnotationEditor
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     public PdfAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider);
 
         add(new PdfAnnoPanel("vis", aModel, this));
     }
@@ -121,10 +121,10 @@ public class PdfAnnotationEditor
         {
             try
             {
-                JCas jCas = getJCasProvider().get();
-                VDocument vdoc = render(jCas, 0, jCas.getDocumentText().length());
+                CAS cas = getCasProvider().get();
+                VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
                 PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
-                    vdoc, jCas.getDocumentText(), annotationService, aPdfExtractFile);
+                    vdoc, cas.getDocumentText(), annotationService, aPdfExtractFile);
                 // show unmatched spans to user
                 if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                     String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
@@ -153,17 +153,17 @@ public class PdfAnnotationEditor
     }
 
     public void createSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                     JCas aJCas, PdfExtractFile aPdfExtractFile)
+            CAS aCas, PdfExtractFile aPdfExtractFile)
     {
         try
         {
             Offset offset = new Offset(aParams);
             Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                .convertToDocumentOffset(aCas.getDocumentText(), aPdfExtractFile, offset);
             if (docOffset != null) {
                 getModelObject().getSelection()
-                    .selectSpan(aJCas, docOffset.getBegin(), docOffset.getEnd());
-                getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+                    .selectSpan(aCas, docOffset.getBegin(), docOffset.getEnd());
+                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
                 renderPdfAnnoModel(aTarget, aPdfExtractFile.getPdftxt());
             } else {
                 handleError("Unable to create span annotation: No match was found", aTarget);
@@ -176,23 +176,23 @@ public class PdfAnnotationEditor
     }
 
     private void selectSpanAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+            CAS aCas, PdfExtractFile aPdfExtractFile)
     {
         try
         {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             Offset offset = new Offset(aParams);
             Offset docOffset = PdfAnnoRenderer
-                .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                .convertToDocumentOffset(aCas.getDocumentText(), aPdfExtractFile, offset);
             if (docOffset != null) {
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                        aTarget, aJCas, paramId, "spanOpenDialog", docOffset.getBegin(),
+                        aTarget, aCas, paramId, "spanOpenDialog", docOffset.getBegin(),
                         docOffset.getEnd());
                 } else {
-                    getModelObject().getSelection().selectSpan(paramId, aJCas.getCas(),
-                            docOffset.getBegin(), docOffset.getEnd());
-                    getActionHandler().actionSelect(aTarget, aJCas);
+                    getModelObject().getSelection().selectSpan(paramId, aCas, docOffset.getBegin(),
+                            docOffset.getEnd());
+                    getActionHandler().actionSelect(aTarget, aCas);
                 }
             } else {
                 handleError("Unable to select span annotation: No match was found", aTarget);
@@ -205,26 +205,25 @@ public class PdfAnnotationEditor
     }
 
     private void createRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                          JCas aJCas, PdfExtractFile aPdfExtractFile)
+                                          CAS aCas, PdfExtractFile aPdfExtractFile)
         throws IOException
     {
         try {
-            AnnotationFS originFs = selectByAddr(aJCas,
-                aParams.getParameterValue("origin").toInt());
+            AnnotationFS originFs = (AnnotationFS) selectByAddr(aCas,
+                    aParams.getParameterValue("origin").toInt());
             int target = aParams.getParameterValue("target").toInt();
             if (target == -1) {
                 // if -1 return, relation drawing was not stopped over a target
                 return;
             }
-            AnnotationFS targetFs = selectByAddr(aJCas,
-                target);
+            AnnotationFS targetFs = (AnnotationFS) selectByAddr(aCas, target);
 
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
             selection.selectArc(VID.NONE_ID, originFs, targetFs);
 
             if (selection.getAnnotation().isNotSet()) {
-                getActionHandler().actionCreateOrUpdate(aTarget, aJCas);
+                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
             }
         }
         catch (AnnotationException | CASRuntimeException e)
@@ -245,14 +244,14 @@ public class PdfAnnotationEditor
     }
 
     private void selectRelationAnnotation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                          JCas aJCas)
+            CAS aCas)
         throws IOException
     {
         try {
-            AnnotationFS originFs = selectByAddr(aJCas,
-                aParams.getParameterValue("origin").toInt());
-            AnnotationFS targetFs = selectByAddr(aJCas,
-                aParams.getParameterValue("target").toInt());
+            AnnotationFS originFs = (AnnotationFS) selectByAddr(aCas,
+                    aParams.getParameterValue("origin").toInt());
+            AnnotationFS targetFs = (AnnotationFS) selectByAddr(aCas,
+                    aParams.getParameterValue("target").toInt());
 
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
@@ -260,7 +259,7 @@ public class PdfAnnotationEditor
                 originFs, targetFs);
 
             if (selection.getAnnotation().isSet()) {
-                getActionHandler().actionSelect(aTarget, aJCas);
+                getActionHandler().actionSelect(aTarget, aCas);
             }
         }
         catch (AnnotationException e)
@@ -270,17 +269,17 @@ public class PdfAnnotationEditor
     }
 
     private void deleteRecommendation(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                      JCas aJCas, PdfExtractFile aPdfExtractFile)
+            CAS aCas, PdfExtractFile aPdfExtractFile)
     {
         try {
             VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
             if (paramId.isSynthetic()) {
                 Offset offset = new Offset(aParams);
                 Offset docOffset = PdfAnnoRenderer
-                    .convertToDocumentOffset(aJCas.getDocumentText(), aPdfExtractFile, offset);
+                    .convertToDocumentOffset(aCas.getDocumentText(), aPdfExtractFile, offset);
                 if (docOffset != null) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(), aTarget,
-                        aJCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
+                        aCas, paramId, "doAction", docOffset.getBegin(), docOffset.getEnd());
                 } else {
                     handleError("Unable to delete recommendation: No match was found", aTarget);
                 }
@@ -293,11 +292,10 @@ public class PdfAnnotationEditor
     }
 
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams,
-                                 String aPdftxt)
+            String aPdftxt)
     {
-        try
-        {
-            JCas jCas = getJCasProvider().get();
+        try {
+            CAS jCas = getCasProvider().get();
             PdfExtractFile pdfExtractFile = new PdfExtractFile(aPdftxt);
             String action = aParams.getParameterValue("action").toString();
 

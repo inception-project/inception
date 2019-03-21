@@ -18,12 +18,15 @@
 
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,12 +76,11 @@ public class FactLinkingServiceImpl implements FactLinkingService
     }
 
     @Override
-    public KBHandle getKBHandleFromCasByAddr(JCas aJcas, int targetAddr, Project aProject,
+    public KBHandle getKBHandleFromCasByAddr(CAS aCas, int targetAddr, Project aProject,
         ConceptFeatureTraits traits)
     {
-        AnnotationFS selectedFS = WebAnnoCasUtil.selectByAddr(aJcas, targetAddr);
-        String kbHandleIdentifier = WebAnnoCasUtil
-            .getFeature(selectedFS, FactLinkingConstants.LINKED_LAYER_FEATURE);
+        FeatureStructure selectedFS = selectByAddr(aCas, targetAddr);
+        String kbHandleIdentifier = WebAnnoCasUtil.getFeature(selectedFS, LINKED_LAYER_FEATURE);
         KBHandle kbHandle = null;
         try {
             kbHandle = getKBInstancesByIdentifierAndTraits(kbHandleIdentifier, aProject,
