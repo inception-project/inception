@@ -37,7 +37,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -66,14 +65,14 @@ public class RelationStackingBehavior
         }
         
         final AnnotationLayer layer = aAdapter.getLayer();
-        final JCas jcas = aRequest.getJcas();
-        final Type type = getType(jcas.getCas(), aAdapter.getLayer().getName());
+        final CAS jcas = aRequest.getCas();
+        final Type type = getType(jcas, aAdapter.getLayer().getName());
         final Feature dependentFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         final Feature governorFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
         
         // Locate the governor and dependent annotations - looking at the annotations that are
         // presently visible on screen is sufficient - we don't have to scan the whole CAS.
-        for (AnnotationFS fs : selectCovered(jcas.getCas(), type, aRequest.getWindowBegin(),
+        for (AnnotationFS fs : selectCovered(jcas, type, aRequest.getWindowBegin(),
                 aRequest.getWindowEnd())) {
             AnnotationFS existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature);
             AnnotationFS existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature);
@@ -165,7 +164,7 @@ public class RelationStackingBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aJCas)
     {
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
@@ -173,8 +172,7 @@ public class RelationStackingBehavior
         
         RelationAdapter adapter = (RelationAdapter) aAdapter;
         
-        CAS cas = aJCas.getCas();
-        Type type = getType(cas, adapter.getAnnotationTypeName());
+        Type type = getType(aJCas, adapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         
@@ -186,7 +184,7 @@ public class RelationStackingBehavior
         // be multiple relations going out from the same sourceFS, we need to consider all of them
         // for potential stacking.
         List<AnnotationFS> candidates = new ArrayList<>();
-        for (AnnotationFS fs : select(cas, type)) {
+        for (AnnotationFS fs : select(aJCas, type)) {
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
             

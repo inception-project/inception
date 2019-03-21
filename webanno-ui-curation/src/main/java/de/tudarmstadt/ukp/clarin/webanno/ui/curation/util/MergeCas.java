@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
@@ -38,8 +38,8 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.fit.util.CasUtil;
+import org.apache.uima.fit.util.FSUtil;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -89,7 +89,7 @@ public class MergeCas
      *            a map of{@code JCas}s for each users and the random merge
      * @return the actual merge {@code JCas}
      */
-    public static JCas reMergeCas(DiffResult aDiff, Map<String, JCas> aJCases)
+    public static CAS reMergeCas(DiffResult aDiff, Map<String, CAS> aJCases)
     {
         Set<FeatureStructure> slotFeaturesToReset = new HashSet<>();
         Set<FeatureStructure> annotationsToDelete = new HashSet<>();
@@ -164,26 +164,27 @@ public class MergeCas
         // remove annotations that do not agree or are a stacked ones
         for (FeatureStructure fs : annotationsToDelete) {
             if (!slotFeaturesToReset.contains(fs)) {
-                JCas mergeCas = aJCases.get(WebAnnoConst.CURATION_USER);
+                CAS mergeCas = aJCases.get(WebAnnoConst.CURATION_USER);
                 // Check if this difference is on POS, STEM and LEMMA (so remove from the token too)
+                Type tokenType = CasUtil.getType(mergeCas, Token.class);
                 Type type = fs.getType();
                 int fsBegin = ((AnnotationFS) fs).getBegin();
                 int fsEnd = ((AnnotationFS) fs).getEnd();
                 if (type.getName().equals(POS.class.getName())) {
-                    Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
-                    t.setPos(null);
+                    AnnotationFS t = selectCovered(mergeCas, tokenType, fsBegin, fsEnd).get(0);
+                    FSUtil.setFeature(t, "pos", (FeatureStructure) null);
                 }
                 if (type.getName().equals(Stem.class.getName())) {
-                    Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
-                    t.setStem(null);
+                    AnnotationFS t = selectCovered(mergeCas, tokenType, fsBegin, fsEnd).get(0);
+                    FSUtil.setFeature(t, "stem", (FeatureStructure) null);
                 }
                 if (type.getName().equals(Lemma.class.getName())) {
-                    Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
-                    t.setLemma(null);
+                    AnnotationFS t = selectCovered(mergeCas, tokenType, fsBegin, fsEnd).get(0);
+                    FSUtil.setFeature(t, "lemma", (FeatureStructure) null);
                 }
                 if (type.getName().equals(MorphologicalFeatures.class.getName())) {
-                    Token t = JCasUtil.selectCovered(mergeCas, Token.class, fsBegin, fsEnd).get(0);
-                    t.setMorph(null);
+                    AnnotationFS t = selectCovered(mergeCas, tokenType, fsBegin, fsEnd).get(0);
+                    FSUtil.setFeature(t, "morph", (FeatureStructure) null);
                 }
                 mergeCas.removeFsFromIndexes(fs);
             }
@@ -257,12 +258,12 @@ public class MergeCas
                 || aFeature.toString().equals("uima.cas.AnnotationBase:sofa");
     }
 
-    private static void getAllAnnosOnPosition(Map<String, JCas> aJCases,
+    private static void getAllAnnosOnPosition(Map<String, CAS> aCases,
             Map<String, List<FeatureStructure>> aAnnosPerUser, Set<String> aUsers,
             AnnotationFS aMergeAnno)
     {
         for (String user : aUsers) {
-            List<AnnotationFS> fssAtThisPosition = selectCovered(aJCases.get(user).getCas(),
+            List<AnnotationFS> fssAtThisPosition = selectCovered(aCases.get(user),
                     aMergeAnno.getType(), aMergeAnno.getBegin(), aMergeAnno.getEnd());
             if (!aAnnosPerUser.containsKey(user)) {
                 aAnnosPerUser.put(user, (List) fssAtThisPosition);
@@ -273,7 +274,7 @@ public class MergeCas
         }
     }
 
-    private static void setAllRoleAnnosOnPosition(Map<String, JCas> aJCases,
+    private static void setAllRoleAnnosOnPosition(Map<String, CAS> aCases,
             Map<String, ArrayFS> slotAnnosPerUser, Set<String> aUsers, FeatureStructure aBaseAnno,
             Feature aFeature)
     {
@@ -282,7 +283,7 @@ public class MergeCas
         int end = ((AnnotationFS) aBaseAnno).getEnd();
 
         for (String user : aUsers) {
-            for (AnnotationFS baseFS : selectCovered(aJCases.get(user).getCas(), t,
+            for (AnnotationFS baseFS : selectCovered(aCases.get(user), t,
                     begin, end)) {
                 // if non-equal stacked annotations with slot feature exists, get the right one
                 if (isSameAnno(aBaseAnno, baseFS)) {
@@ -474,7 +475,7 @@ public class MergeCas
         }
     }
 
-    private static boolean existsSameAnnoOnPosition(AnnotationFS aFs, JCas aJcas)
+    private static boolean existsSameAnnoOnPosition(AnnotationFS aFs, CAS aJcas)
     {
         for (AnnotationFS annotationFS : getAnnosOnPosition(aFs, aJcas)) {
             if (isSameAnno(aFs, annotationFS)) {
@@ -484,18 +485,18 @@ public class MergeCas
         return false;
     }
 
-    private static List<AnnotationFS> getAnnosOnPosition(AnnotationFS aFs, JCas aJcas)
+    private static List<AnnotationFS> getAnnosOnPosition(AnnotationFS aFs, CAS aJcas)
     {
-        return selectCovered(aJcas.getCas(), aFs.getType(), aFs.getBegin(), aFs.getEnd());
+        return selectCovered(aJcas, aFs.getType(), aFs.getBegin(), aFs.getEnd());
     }
 
     private static List<AnnotationFS> getRelAnnosOnPosition(AnnotationFS aFs,
-            AnnotationFS aOriginFs, AnnotationFS aTargetFs, JCas aJcas)
+            AnnotationFS aOriginFs, AnnotationFS aTargetFs, CAS aJcas)
     {
         Type type = aFs.getType();
         Feature sourceFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
         Feature targetFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
-        return selectCovered(aJcas.getCas(), type, aFs.getBegin(), aFs.getEnd()).stream()
+        return selectCovered(aJcas, type, aFs.getBegin(), aFs.getEnd()).stream()
                 .filter(fs -> fs.getFeatureValue(sourceFeat).equals(aOriginFs)
                         && fs.getFeatureValue(targetFeat).equals(aTargetFs))
                 .collect(Collectors.toList());
@@ -506,7 +507,7 @@ public class MergeCas
      */
     private static void copySpanAnnotation(AnnotatorState aState,
             AnnotationSchemaService aAnnotationService, AnnotationLayer aAnnotationLayer,
-            AnnotationFS aOldFs, JCas aJCas)
+            AnnotationFS aOldFs, CAS aJCas)
         throws AnnotationException
     {
         SpanAdapter adapter = (SpanAdapter) aAnnotationService.getAdapter(aAnnotationLayer);
@@ -532,13 +533,13 @@ public class MergeCas
     }
 
     private static void copyRelationAnnotation(AnnotationFS aOldFs, AnnotationFS asourceFS,
-            AnnotationFS aTargetFs, JCas aJCas)
+            AnnotationFS aTargetFs, CAS aJCas)
     {
         Feature[] features = getAllFeatures(aOldFs);
         Type type = aOldFs.getType();
         Feature sourceFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
         Feature targetFeat = type.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
-        AnnotationFS newFs = aJCas.getCas().createAnnotation(type, aOldFs.getBegin(),
+        AnnotationFS newFs = aJCas.createAnnotation(type, aOldFs.getBegin(),
                 aOldFs.getEnd());
         for (Feature f : features) {
             if (isLinkOrBasicFeatures(aOldFs, f)) {
@@ -560,7 +561,7 @@ public class MergeCas
     /**
      * Modify existing non-stackable annotations from one of the users annotation
      */
-    private static void modifySpanAnnotation(AnnotationFS aOldFs, AnnotationFS aNewFs, JCas aJCas)
+    private static void modifySpanAnnotation(AnnotationFS aOldFs, AnnotationFS aNewFs, CAS aJCas)
     {
         Feature[] features = getAllFeatures(aOldFs);
         for (Feature f : features) {
@@ -573,7 +574,7 @@ public class MergeCas
     }
 
     private static void modifyRelationAnnotation(AnnotationFS aOldFs, AnnotationFS aNewFs,
-            JCas aJCas)
+            CAS aJCas)
     {
         Feature[] features = getAllFeatures(aOldFs);
         Type type = aOldFs.getType();
@@ -596,9 +597,9 @@ public class MergeCas
         aJCas.addFsToIndexes(aNewFs);
     }
 
-    private static Stream<AnnotationFS> getMergeFS(AnnotationFS aOldFs, JCas aJCas)
+    private static Stream<AnnotationFS> getMergeFS(AnnotationFS aOldFs, CAS aJCas)
     {
-        return selectCovered(aJCas.getCas(), aOldFs.getType(), aOldFs.getBegin(), aOldFs.getEnd())
+        return selectCovered(aJCas, aOldFs.getType(), aOldFs.getBegin(), aOldFs.getEnd())
                 .stream().filter(fs -> isSameAnno(fs, aOldFs));
     }
 
@@ -611,7 +612,7 @@ public class MergeCas
 
     public static void addSpanAnnotation(AnnotatorState aState,
             AnnotationSchemaService aAnnotationService, AnnotationLayer aAnnotationLayer,
-            JCas aMergeJCas, AnnotationFS aFSClicked, boolean aAllowStacking)
+            CAS aMergeJCas, AnnotationFS aFSClicked, boolean aAllowStacking)
         throws AnnotationException
     {
         if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
@@ -632,13 +633,13 @@ public class MergeCas
         }
     }
 
-    public static void addArcAnnotation(TypeAdapter aAdapter, JCas aJcas,
+    public static void addArcAnnotation(TypeAdapter aAdapter, CAS aJcas,
             int aAddressOriginClicked, int aAddressTargetClicked, String aFSArcaddress,
-            JCas aClickedJCas, AnnotationFS aClickedFS)
+            CAS aClickedJCas, AnnotationFS aClickedFS)
         throws AnnotationException
     {
-        AnnotationFS originFsClicked = selectByAddr(aClickedJCas, aAddressOriginClicked);
-        AnnotationFS targetFsClicked = selectByAddr(aClickedJCas, aAddressTargetClicked);
+        AnnotationFS originFsClicked = selectAnnotationByAddr(aClickedJCas, aAddressOriginClicked);
+        AnnotationFS targetFsClicked = selectAnnotationByAddr(aClickedJCas, aAddressTargetClicked);
 
         // this is a slot arc
         if (aFSArcaddress.contains(".")) {
@@ -653,7 +654,7 @@ public class MergeCas
         }
     }
 
-    static void addRelationArcAnnotation(JCas aJcas, AnnotationFS aClickedFS,
+    static void addRelationArcAnnotation(CAS aJcas, AnnotationFS aClickedFS,
             boolean aIsAttachType, boolean aIsAllowStacking, AnnotationFS originFsClicked,
             AnnotationFS targetFsClicked)
         throws AnnotationException
@@ -715,8 +716,8 @@ public class MergeCas
         }
     }
 
-    private static void addSlotArcAnnotation(SpanAdapter aAdapter, JCas aJcas, String aFSArcaddress,
-            JCas aClickedJCas, AnnotationFS aClickedFS)
+    private static void addSlotArcAnnotation(SpanAdapter aAdapter, CAS aJcas, String aFSArcaddress,
+            CAS aClickedJCas, AnnotationFS aClickedFS)
         throws AnnotationException
     {
         List<AnnotationFS> merges = MergeCas.getMergeFS(aClickedFS, aJcas)
@@ -744,7 +745,7 @@ public class MergeCas
                         slotFeature = feat;
 
                         List<AnnotationFS> targets = checkAndGetTargets(aJcas, aClickedJCas,
-                                selectByAddr(aClickedJCas, link.targetAddr));
+                                selectAnnotationByAddr(aClickedJCas, link.targetAddr));
                         targetFs = targets.get(0);
                         link.targetAddr = getAddr(targetFs);
                         linkRole = link;
@@ -769,7 +770,7 @@ public class MergeCas
         setFeature(mergeFs, slotFeature, links);
     }
 
-    private static List<AnnotationFS> checkAndGetTargets(JCas aJcas, JCas aClickedJCas,
+    private static List<AnnotationFS> checkAndGetTargets(CAS aJcas, CAS aClickedJCas,
             AnnotationFS aOldTraget)
         throws AnnotationException
     {

@@ -33,7 +33,7 @@ import java.util.TreeMap;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -180,12 +180,12 @@ public class AgreementPage
     // as we do not access the field directly but via getJCases() which will re-load them if
     // necessary, e.g. if the transient field is empty after a session is restored from a
     // persisted state.
-    private transient Map<String, List<JCas>> cachedCASes;
+    private transient Map<String, List<CAS>> cachedCASes;
 
     /**
      * Get the finished CASes used to compute agreement.
      */
-    private Map<String, List<JCas>> getJCases()
+    private Map<String, List<CAS>> getJCases()
     {
         // Avoid reloading the CASes when switching features.
         if (cachedCASes != null) {
@@ -201,10 +201,10 @@ public class AgreementPage
 
         cachedCASes = new LinkedHashMap<>();
         for (User user : users) {
-            List<JCas> cases = new ArrayList<>();
+            List<CAS> cases = new ArrayList<>();
 
             for (SourceDocument document : sourceDocuments) {
-                JCas jCas = null;
+                CAS jCas = null;
 
                 // Load the CAS if there is a finished one.
                 if (documentService.existsAnnotationDocument(document, user)) {
@@ -213,8 +213,7 @@ public class AgreementPage
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
                             jCas = documentService.readAnnotationCas(annotationDocument);
-                            annotationService.upgradeCasIfRequired(jCas.getCas(),
-                                    annotationDocument);
+                            annotationService.upgradeCasIfRequired(jCas, annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
 
@@ -404,7 +403,7 @@ public class AgreementPage
                                 return null;
                             }
 
-                            Map<String, List<JCas>> casMap = getJCases();
+                            Map<String, List<CAS>> casMap = getJCases();
 
                             Project project = projectSelectionForm.getModelObject().project;
                             List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
@@ -450,7 +449,7 @@ public class AgreementPage
                                         return null;
                                     }
 
-                                    Map<String, List<JCas>> casMap = getJCases();
+                                    Map<String, List<CAS>> casMap = getJCases();
 
                                     Project project = projectSelectionForm.getModelObject().project;
                                     List<DiffAdapter> adapters = CasDiff2

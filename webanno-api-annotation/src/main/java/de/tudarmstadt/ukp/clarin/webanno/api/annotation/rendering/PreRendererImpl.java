@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +44,7 @@ public class PreRendererImpl implements PreRenderer
     }
     
     @Override
-    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, JCas aJCas,
+    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aJCas,
             List<AnnotationLayer> aLayers)
     {
         // Render (custom) layers

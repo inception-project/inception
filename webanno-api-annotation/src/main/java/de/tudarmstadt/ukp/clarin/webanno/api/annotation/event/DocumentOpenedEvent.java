@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -27,11 +27,11 @@ public class DocumentOpenedEvent
 {
     private static final long serialVersionUID = -2739175937794842083L;
     
-    private final JCas jcas;
+    private final CAS jcas;
     private final SourceDocument document;
     private final String user;
     
-    public DocumentOpenedEvent(Object aSource, JCas aJCas, SourceDocument aDocument, String aUser)
+    public DocumentOpenedEvent(Object aSource, CAS aJCas, SourceDocument aDocument, String aUser)
     {
         super(aSource);
         jcas = aJCas;
@@ -39,7 +39,7 @@ public class DocumentOpenedEvent
         user = aUser;
     }
     
-    public JCas getJCas()
+    public CAS getJCas()
     {
         return jcas;
     }

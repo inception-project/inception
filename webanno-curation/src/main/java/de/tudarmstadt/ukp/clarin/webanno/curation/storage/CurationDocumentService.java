@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -48,7 +47,7 @@ public interface CurationDocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCurationCas(JCas jCas, SourceDocument document, boolean aUpdateTimestamp)
+    void writeCurationCas(CAS jCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
     void upgradeCurationCas(CAS aCurCas, SourceDocument document)
@@ -63,7 +62,7 @@ public interface CurationDocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    JCas readCurationCas(SourceDocument document)
+    CAS readCurationCas(SourceDocument document)
         throws IOException;
 
     void deleteCurationCas(SourceDocument document)

@@ -52,7 +52,6 @@ import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -116,10 +115,10 @@ public class CasDiff2
      */
     public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap)
+            Map<String, CAS> aCasMap)
     {
-        Map<String, List<JCas>> map2 = new LinkedHashMap<>();
-        for (Entry<String, JCas> e : aCasMap.entrySet()) {
+        Map<String, List<CAS>> map2 = new LinkedHashMap<>();
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
             map2.put(e.getKey(), asList(e.getValue()));
         }
         return doDiff(asList(aEntryType.getName()), aAdapters, aLinkCompareBehavior, map2);
@@ -139,7 +138,7 @@ public class CasDiff2
      * @return a diff result.
      */
     public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType, DiffAdapter aAdapter,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<JCas>> aCasMap)
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
     {
         return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior,
                 aCasMap);
@@ -158,13 +157,13 @@ public class CasDiff2
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, List<JCas>> aCasMap)
+            Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
             return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
         
-        List<JCas> casList = aCasMap.values().iterator().next();
+        List<CAS> casList = aCasMap.values().iterator().next();
         if (casList.isEmpty()) {
             return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
@@ -192,7 +191,7 @@ public class CasDiff2
      */
     public static DiffResult doDiffSingle(AnnotationSchemaService aService, Project aProject,
             List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd)
+            Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
         List<DiffAdapter> adapters = CasDiff2.getAdapters(aService, aProject);
         
@@ -218,15 +217,15 @@ public class CasDiff2
      */
     public static DiffResult doDiffSingle(List<Type> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd)
+            Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
         List<String> entryTypes = new ArrayList<>();
         for (Type t : aEntryTypes) {
             entryTypes.add(t.getName());
         }
         
-        Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-        for (Entry<String, JCas> e : aCasMap.entrySet()) {
+        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
             casMap.put(e.getKey(), asList(e.getValue()));
         }
         
@@ -251,7 +250,7 @@ public class CasDiff2
      * @return a diff result.
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap,
+            Collection<? extends DiffAdapter> aAdapters, Map<String, List<CAS>> aCasMap,
             int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         long startTime = System.currentTimeMillis();
@@ -260,12 +259,12 @@ public class CasDiff2
         
         CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
         
-        for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
+        for (Entry<String, List<CAS>> e : aCasMap.entrySet()) {
             int casId = 0;
-            for (JCas jcas : e.getValue()) {
+            for (CAS cas : e.getValue()) {
                 for (String type : aEntryTypes) {
                     // null elements in the list can occur if a user has never worked on a CAS
-                    diff.addCas(e.getKey(), casId, jcas != null ? jcas.getCas() : null, type);
+                    diff.addCas(e.getKey(), casId, cas != null ? cas : null, type);
                 }
                 casId++;
             }
@@ -279,7 +278,7 @@ public class CasDiff2
     /**
      * Sanity check - all CASes should have the same text.
      */
-    private static void sanityCheck(Map<String, List<JCas>> aCasMap)
+    private static void sanityCheck(Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
             return;
@@ -289,15 +288,15 @@ public class CasDiff2
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!
         if (assertsEnabled) {
-            Iterator<List<JCas>> i = aCasMap.values().iterator();
+            Iterator<List<CAS>> i = aCasMap.values().iterator();
             
-            List<JCas> ref = i.next();
+            List<CAS> ref = i.next();
             while (i.hasNext()) {
-                List<JCas> cur = i.next();
+                List<CAS> cur = i.next();
                 assert ref.size() == cur.size();
                 for (int n = 0; n < ref.size(); n++) {
-                    JCas refCas = ref.get(n);
-                    JCas curCas = cur.get(n);
+                    CAS refCas = ref.get(n);
+                    CAS curCas = cur.get(n);
                     // null elements in the list can occur if a user has never worked on a CAS
                     assert !(refCas != null && curCas != null)
                             || StringUtils.equals(refCas.getDocumentText(),
@@ -1294,19 +1293,19 @@ public class CasDiff2
         }
 
         public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
-                Class<T> aClass, Map<String, List<JCas>> aCasMap)
+                Class<T> aClass, Map<String, List<CAS>> aCasMap)
         {
             AID aid = fsAddresses.get(aCasGroupId);
             if (aid == null) {
                 return null;
             }
             
-            List<JCas> cases = aCasMap.get(aCasGroupId);
+            List<CAS> cases = aCasMap.get(aCasGroupId);
             if (cases == null) {
                 return null;
             }
             
-            JCas cas = cases.get(aCasId);
+            CAS cas = cases.get(aCasId);
             if (cas == null) {
                 return null;
             }
@@ -1316,15 +1315,15 @@ public class CasDiff2
 
         // FIXME aCasId parameter should not be required as we can get it from the position
         public FeatureStructure getFs(String aCasGroupId, int aCasId,
-                Map<String, List<JCas>> aCasMap)
+                Map<String, List<CAS>> aCasMap)
         {
             return getFs(aCasGroupId, aCasId, FeatureStructure.class, aCasMap);
         }
 
-        public FeatureStructure getFs(String aCasGroupId, Map<String, JCas> aCasMap)
+        public FeatureStructure getFs(String aCasGroupId, Map<String, CAS> aCasMap)
         {
-            Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-            for (Entry<String, JCas> e : aCasMap.entrySet()) {
+            Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+            for (Entry<String, CAS> e : aCasMap.entrySet()) {
                 casMap.put(e.getKey(), asList(e.getValue()));
             }
             return getFs(aCasGroupId, 0, FeatureStructure.class, casMap);

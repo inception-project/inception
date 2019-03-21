@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -389,8 +388,9 @@ public class AnnotationFeatureForm
         AnnotationLayer layer = state.getSelectedAnnotationLayer();
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
-        JCas jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        CAS jCas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(jCas,
+                state.getSelection().getAnnotation().getId());
         
         if (layer.isReadonly()) {
             error("Cannot replace an annotation on a read-only layer.");
@@ -425,8 +425,9 @@ public class AnnotationFeatureForm
 
         AnnotationLayer newLayer = layerSelector.getModelObject();
 
-        JCas jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        CAS jCas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(jCas,
+                state.getSelection().getAnnotation().getId());
         AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
         
         if (currentLayer.isReadonly()) {
@@ -853,7 +854,7 @@ public class AnnotationFeatureForm
                         // re-focus after rendering
                         getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
                         
-                        JCas jCas = editorPanel.getEditorCas();
+                        CAS jCas = editorPanel.getEditorCas();
                         AnnotationLayer layer = state.getSelectedAnnotationLayer();
                         if (
                                 state.isForwardAnnotation() &&

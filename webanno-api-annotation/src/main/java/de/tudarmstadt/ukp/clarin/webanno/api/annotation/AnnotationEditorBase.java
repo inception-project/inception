@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
@@ -126,7 +126,7 @@ public abstract class AnnotationEditorBase
      */
     protected abstract void render(AjaxRequestTarget aTarget);
 
-    protected VDocument render(JCas aJCas, int windowBeginOffset, int windowEndOffset)
+    protected VDocument render(CAS aJCas, int windowBeginOffset, int windowEndOffset)
     {
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, windowBeginOffset, windowEndOffset,

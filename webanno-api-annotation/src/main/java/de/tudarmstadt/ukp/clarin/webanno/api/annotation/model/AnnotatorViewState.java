@@ -21,13 +21,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -49,7 +51,7 @@ public interface AnnotatorViewState
      * @param aUnit
      *            the first unit in the display window.
      */
-    void setFirstVisibleUnit(Sentence aUnit);
+    void setFirstVisibleUnit(AnnotationFS aUnit);
 
     /**
      * @param aIndex
@@ -116,7 +118,7 @@ public interface AnnotatorViewState
     // ---------------------------------------------------------------------------------------------
     // Navigation within a document
     // ---------------------------------------------------------------------------------------------
-    default void moveToPreviousPage(JCas aJCas)
+    default void moveToPreviousPage(CAS aJCas)
     {
         int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
 
@@ -140,7 +142,7 @@ public interface AnnotatorViewState
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    default void moveToNextPage(JCas aJCas)
+    default void moveToNextPage(CAS aJCas)
     {
         int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(aJCas,
                 getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
@@ -154,7 +156,7 @@ public interface AnnotatorViewState
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    default void moveToFirstPage(JCas aJCas)
+    default void moveToFirstPage(CAS aJCas)
     {
         int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aJCas);
 
@@ -167,7 +169,7 @@ public interface AnnotatorViewState
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    default void moveToLastPage(JCas aJCas)
+    default void moveToLastPage(CAS aJCas)
     {
         int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
                 .getLastDisplayWindowFirstSentenceAddress(aJCas, getPreferences().getWindowSize());
@@ -181,9 +183,9 @@ public interface AnnotatorViewState
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
     }
 
-    default void moveToUnit(JCas aJCas, int aIndex)
+    default void moveToUnit(CAS aJCas, int aIndex)
     {
-        List<Sentence> units = new ArrayList<>(select(aJCas, Sentence.class));
+        List<AnnotationFS> units = new ArrayList<>(select(aJCas, getType(aJCas, Sentence.class)));
         
         // Index is 1-based!
         // The code below sets the focus unit index explicitly - see comment on getSentenceNumber
@@ -203,10 +205,10 @@ public interface AnnotatorViewState
         }
     }
     
-    default void moveToOffset(JCas aJCas, int aOffset)
+    default void moveToOffset(CAS aJCas, int aOffset)
     {
         // Fetch the first sentence on screen or first sentence
-        Sentence sentence;
+        AnnotationFS sentence;
         if (getFirstVisibleUnitAddress() > -1) {
             sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());
         }
@@ -229,12 +231,12 @@ public interface AnnotatorViewState
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, aOffset));
     }
 
-    default void moveToSelection(JCas aJCas)
+    default void moveToSelection(CAS aJCas)
     {
         moveToOffset(aJCas, getSelection().getBegin());
     }
 
-    default void moveForward(JCas aJCas)
+    default void moveForward(CAS aJCas)
     {
         // Fetch the first sentence on screen
         Sentence sentence = selectByAddr(aJCas, Sentence.class, getFirstVisibleUnitAddress());

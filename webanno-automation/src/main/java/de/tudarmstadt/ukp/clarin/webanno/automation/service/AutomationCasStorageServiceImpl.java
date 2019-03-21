@@ -28,7 +28,6 @@ import java.io.IOException;
 import org.apache.commons.io.FileUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
@@ -39,12 +38,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 
 @Component(AutomationCasStorageService.SERVICE_NAME)
 public class AutomationCasStorageServiceImpl
@@ -73,7 +72,7 @@ public class AutomationCasStorageServiceImpl
      *            The annotated CAS object
      */
     @Override
-    public void writeCas(TrainingDocument aDocument, JCas aJcas)
+    public void writeCas(TrainingDocument aDocument, CAS aJcas)
         throws IOException
     {
         File annotationFolder = getAutomationFolder(aDocument);
@@ -82,7 +81,7 @@ public class AutomationCasStorageServiceImpl
                 annotationFolder, targetPath);
     }
     
-    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, JCas aJcas,
+    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, CAS aJcas,
             File aAnnotationFolder, File aTargetPath)
         throws IOException
     {
@@ -90,7 +89,7 @@ public class AutomationCasStorageServiceImpl
                 aDocumentName, aDocumentId, aProject.getName(), aProject.getId());
 
         try {
-            casDoctor.analyze(aProject, aJcas.getCas());
+            casDoctor.analyze(aProject, aJcas);
         }
         catch (CasDoctorException e) {
             StringBuilder detailMsg = new StringBuilder();
@@ -112,14 +111,7 @@ public class AutomationCasStorageServiceImpl
             FileUtils.forceMkdir(aAnnotationFolder);
             // Save CAS of the training document
             {
-                DocumentMetaData md;
-                try {
-                    md = DocumentMetaData.get(aJcas);
-                }
-                catch (IllegalArgumentException e) {
-                    md = DocumentMetaData.create(aJcas);
-                }
-                md.setDocumentId(aDocumentName);
+                WebAnnoCasUtil.setDocumentId(aJcas, aDocumentName);
                 CasPersistenceUtils.writeSerializedCas(aJcas,
                         new File(aTargetPath, aDocumentName + ".ser"));
 
@@ -133,7 +125,7 @@ public class AutomationCasStorageServiceImpl
     }
     
     @Override
-    public JCas readCas(TrainingDocument aDocument)
+    public CAS readCas(TrainingDocument aDocument)
         throws IOException
     {
         log.debug("Reading CAs for Automation document [{}] ({}) in project [{}] ({})",
@@ -157,11 +149,11 @@ public class AutomationCasStorageServiceImpl
                 }
 
                 CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-                CasPersistenceUtils.readSerializedCas(cas.getJCas(), serializedCasFile);
+                CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
 
                 analyzeAndRepair(aDocument, cas);
 
-                return cas.getJCas();
+                return cas;
             }
             catch (UIMAException e) {
                 throw new DataRetrievalFailureException("Unable to parse annotation", e);

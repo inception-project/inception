@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -28,7 +28,7 @@ public class CreateRelationAnnotationRequest
 {
     private final SourceDocument document;
     private final String username;
-    private final JCas jcas;
+    private final CAS jcas;
     private final AnnotationFS originFs;
     private final AnnotationFS targetFs;
     private final CreateRelationAnnotationRequest originalRequest;
@@ -36,14 +36,14 @@ public class CreateRelationAnnotationRequest
     private final int windowBegin;
     private final int windowEnd;
 
-    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, JCas aJCas,
+    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aJCas,
             AnnotationFS aOriginFs, AnnotationFS aTargetF, int aWindowBegin, int aWindowEnd)
     {
         this(null, aDocument, aUsername, aJCas, aOriginFs, aTargetF, aWindowBegin, aWindowEnd);
     }
 
     public CreateRelationAnnotationRequest(CreateRelationAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, JCas aJCas, AnnotationFS aOriginFs,
+            SourceDocument aDocument, String aUsername, CAS aJCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, int aWindowBegin, int aWindowEnd)
     {
         originalRequest = aOriginal;
@@ -67,7 +67,7 @@ public class CreateRelationAnnotationRequest
         return username;
     }
 
-    public JCas getJcas()
+    public CAS getCas()
     {
         return jcas;
     }

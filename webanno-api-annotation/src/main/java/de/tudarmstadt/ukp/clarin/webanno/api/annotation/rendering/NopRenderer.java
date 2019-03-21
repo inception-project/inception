@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -35,7 +35,7 @@ public class NopRenderer
     }
     
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
+    public void render(CAS aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do

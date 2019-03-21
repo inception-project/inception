@@ -111,14 +111,14 @@ public interface TypeAdapter
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid);
+    void delete(SourceDocument aDocument, String aUsername, CAS aJCas, VID aVid);
 
     /**
      * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
      *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
      */
     @Deprecated
-    default void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    default void delete(AnnotatorState aState, CAS aJCas, VID aVid)
     {
         delete(aState.getDocument(), aState.getUser().getUsername(), aJCas, aVid);
     }
@@ -151,7 +151,7 @@ public interface TypeAdapter
      * @param aValue
      *            the value.
      */
-    void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas, int aAddress,
+    void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aJcas, int aAddress,
             AnnotationFeature aFeature, Object aValue);
 
     /**
@@ -159,7 +159,7 @@ public interface TypeAdapter
      *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
      */
     @Deprecated
-    default void setFeatureValue(AnnotatorState aState, JCas aJCas, int aAddress,
+    default void setFeatureValue(AnnotatorState aState, CAS aJCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
     {
         setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
@@ -189,5 +189,5 @@ public interface TypeAdapter
      * called when a document is marked as finished to prevent invalid annotations ending up in the
      * finished document.
      */
-    List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas);
+    List<Pair<LogMessage, AnnotationFS>> validate(CAS aJCas);
 }

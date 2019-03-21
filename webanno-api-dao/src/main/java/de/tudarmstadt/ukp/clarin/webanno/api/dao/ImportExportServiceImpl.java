@@ -20,10 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.pipeline.SimplePipeline.runPipeline;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -44,13 +48,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
@@ -240,7 +243,7 @@ public class ImportExportServiceImpl
     }
     
     @Override
-    public JCas importCasFromFile(File aFile, Project aProject, String aFormatId)
+    public CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException
     {
         // Prepare a CAS with the project type system
@@ -264,11 +267,11 @@ public class ImportExportServiceImpl
                     "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
         }
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
+        CAS jCas = cas;
 
         // Create sentence / token annotations if they are missing
-        boolean hasTokens = JCasUtil.exists(jCas, Token.class);
-        boolean hasSentences = JCasUtil.exists(jCas, Sentence.class);
+        boolean hasTokens = exists(jCas, getType(jCas, Token.class));
+        boolean hasSentences = exists(jCas, getType(jCas, Sentence.class));
 
 //        if (!hasTokens || !hasSentences) {
 //            AnalysisEngine pipeline = createEngine(createEngineDescription(
@@ -286,7 +289,8 @@ public class ImportExportServiceImpl
             tokenize(jCas);
         }
         
-        if (!JCasUtil.exists(jCas, Token.class) || !JCasUtil.exists(jCas, Sentence.class)) {
+        if (!exists(jCas, getType(jCas, Token.class))
+                || !exists(jCas, getType(jCas, Sentence.class))) {
             throw new IOException("The document appears to be empty. Unable to detect any "
                     + "tokens or sentences. Empty documents cannot be imported.");
         }
@@ -294,7 +298,7 @@ public class ImportExportServiceImpl
         return jCas;
     }
     
-    public static void splitSentences(JCas aJCas)
+    public static void splitSentences(CAS aJCas)
     {
         BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
         bi.setText(aJCas.getDocumentText());
@@ -304,18 +308,17 @@ public class ImportExportServiceImpl
             int[] span = new int[] { last, cur };
             trim(aJCas.getDocumentText(), span);
             if (!isEmpty(span[0], span[1])) {
-                Sentence seg = new Sentence(aJCas, span[0], span[1]);
-                seg.addToIndexes(aJCas);
+                aJCas.addFsToIndexes(createSentence(aJCas, span[0], span[1]));
             }
             last = cur;
             cur = bi.next();
         }
     }
     
-    public static void tokenize(JCas aJCas)
+    public static void tokenize(CAS aJCas)
     {
         BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
-        for (Sentence s : select(aJCas, Sentence.class)) {
+        for (AnnotationFS s : selectSentences(aJCas)) {
             bi.setText(s.getCoveredText());
             int last = bi.first();
             int cur = bi.next();
@@ -323,8 +326,8 @@ public class ImportExportServiceImpl
                 int[] span = new int[] { last, cur };
                 trim(s.getCoveredText(), span);
                 if (!isEmpty(span[0], span[1])) {
-                    Token seg = new Token(aJCas, span[0] + s.getBegin(), span[1] + s.getBegin());
-                    seg.addToIndexes(aJCas);
+                    aJCas.addFsToIndexes(
+                            createToken(aJCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
                 }
                 last = cur;
                 cur = bi.next();

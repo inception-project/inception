@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -28,8 +28,8 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.time.StopWatch;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
@@ -173,7 +173,7 @@ public class BratAnnotationEditor
                 boolean requiresCasLoading = SpanAnnotationResponse.is(action)
                         || ArcAnnotationResponse.is(action) || GetDocumentResponse.is(action)
                         || DoActionResponse.is(action);
-                JCas jCas = null;
+                CAS jCas = null;
                 if (requiresCasLoading) {
                     try {
                         jCas = getJCasProvider().get();
@@ -273,7 +273,7 @@ public class BratAnnotationEditor
         add(requestHandler);
     }
 
-    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, JCas jCas,
+    private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, CAS jCas,
             VID paramId)
         throws IOException
     {
@@ -284,7 +284,7 @@ public class BratAnnotationEditor
             if (!StringUtils.isEmpty(layer.getOnClickJavascriptAction())) {
                 // parse the action
                 List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
-                AnnotationFS anno = WebAnnoCasUtil.selectByAddr(jCas, paramId.getId());
+                AnnotationFS anno = selectAnnotationByAddr(jCas, paramId.getId());
                 Map<String, Object> functionParams = OnClickActionParser.parse(layer, features,
                         getModelObject().getDocument(), anno);
                 // define anonymous function, fill the body and immediately execute
@@ -298,7 +298,7 @@ public class BratAnnotationEditor
     }
     
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
-            JCas jCas, VID paramId)
+            CAS jCas, VID paramId)
         throws IOException, AnnotationException
     {
         Offsets offsets = getOffsetsFromRequest(request, jCas, paramId);
@@ -315,7 +315,7 @@ public class BratAnnotationEditor
         }
         else {
             if (!paramId.isSynthetic()) {
-                selection.selectSpan(paramId, jCas.getCas(), offsets.getBegin(), offsets.getEnd());
+                selection.selectSpan(paramId, jCas, offsets.getBegin(), offsets.getEnd());
 
                 if (selection.getAnnotation().isNotSet()) {
                     // Create new annotation
@@ -331,12 +331,12 @@ public class BratAnnotationEditor
     }
     
     private ArcAnnotationResponse actionArc(AjaxRequestTarget aTarget, IRequestParameters request,
-            JCas jCas, VID paramId)
+            CAS jCas, VID paramId)
         throws IOException, AnnotationException
     {
-        AnnotationFS originFs = selectByAddr(jCas,
+        AnnotationFS originFs = selectAnnotationByAddr(jCas,
                 request.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt());
-        AnnotationFS targetFs = selectByAddr(jCas,
+        AnnotationFS targetFs = selectAnnotationByAddr(jCas,
                 request.getParameterValue(PARAM_TARGET_SPAN_ID).toInt());
 
         AnnotatorState state = getModelObject();
@@ -364,7 +364,7 @@ public class BratAnnotationEditor
         return info;
     }
     
-    private String actionGetDocument(JCas jCas)
+    private String actionGetDocument(CAS jCas)
     {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -391,7 +391,7 @@ public class BratAnnotationEditor
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private Offsets getOffsetsFromRequest(IRequestParameters request, JCas jCas, VID aVid)
+    private Offsets getOffsetsFromRequest(IRequestParameters request, CAS jCas, VID aVid)
         throws  IOException
     {
         if (aVid.isNotSet() || aVid.isSynthetic()) {
@@ -410,7 +410,7 @@ public class BratAnnotationEditor
         else {
             // Edit existing span annotation - in this case we look up the offsets in the CAS
             // Let's not trust the client in this case.
-            AnnotationFS fs = WebAnnoCasUtil.selectByAddr(jCas, aVid.getId());
+            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(jCas, aVid.getId());
             return new Offsets(fs.getBegin(), fs.getEnd());
         }
     }
@@ -508,7 +508,7 @@ public class BratAnnotationEditor
         });
     }
 
-    private String bratRenderCommand(JCas aJCas)
+    private String bratRenderCommand(CAS aJCas)
     {
         StopWatch timer = new StopWatch();
         timer.start();
@@ -562,7 +562,7 @@ public class BratAnnotationEditor
                 + "]);";
     }
 
-    private void render(GetDocumentResponse response, JCas aJCas)
+    private void render(GetDocumentResponse response, CAS aJCas)
     {
         AnnotatorState aState = getModelObject();
         VDocument vdoc = render(aJCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());

@@ -27,7 +27,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -245,7 +244,7 @@ public interface FeatureSupport<T>
      * @param aValue
      *            the value.
      */
-    default void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress,
+    default void setFeatureValue(CAS aJcas, AnnotationFeature aFeature, int aAddress,
             Object aValue)
     {
         FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);

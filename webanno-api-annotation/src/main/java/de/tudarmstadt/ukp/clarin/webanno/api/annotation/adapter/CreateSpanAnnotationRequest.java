@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -27,19 +27,19 @@ public class CreateSpanAnnotationRequest
 {
     private final SourceDocument document;
     private final String username;
-    private final JCas jcas;
+    private final CAS jcas;
     private final int begin;
     private final int end;
     private final CreateSpanAnnotationRequest originalRequest;
 
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, JCas aJCas,
+    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aJCas,
             int aBegin, int aEnd)
     {
         this(null, aDocument, aUsername, aJCas, aBegin, aEnd);
     }
 
     private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin, int aEnd)
+            SourceDocument aDocument, String aUsername, CAS aJCas, int aBegin, int aEnd)
     {
         originalRequest = aOriginal;
         document = aDocument;
@@ -59,7 +59,7 @@ public class CreateSpanAnnotationRequest
         return username;
     }
 
-    public JCas getJcas()
+    public CAS getCas()
     {
         return jcas;
     }

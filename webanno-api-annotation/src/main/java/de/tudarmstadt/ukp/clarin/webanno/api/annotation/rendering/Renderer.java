@@ -25,9 +25,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -57,7 +57,7 @@ public interface Renderer
      * @param windowEndOffset
      *            The end position of the window offset.
      */
-    void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
+    void render(CAS aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
     
     FeatureSupportRegistry getFeatureSupportRegistry();

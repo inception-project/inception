@@ -57,13 +57,13 @@ public class DiffUtils
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
-    public static Map<String, List<JCas>> load(String... aPaths)
+    public static Map<String, List<CAS>> load(String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            JCas cas = read(path);
+            CAS cas = read(path);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
@@ -97,17 +97,17 @@ public class DiffUtils
         return casByUser;
     }
 
-    public static JCas read(String aPath)
+    public static CAS read(String aPath)
         throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 
-        JCas jcas = JCasFactory.createJCas();
+        CAS cas = JCasFactory.createJCas().getCas();
 
-        reader.getNext(jcas.getCas());
+        reader.getNext(cas);
 
-        return jcas;
+        return cas;
     }
 
     public static JCas readWebAnnoTSV(String aPath, TypeSystemDescription aType)

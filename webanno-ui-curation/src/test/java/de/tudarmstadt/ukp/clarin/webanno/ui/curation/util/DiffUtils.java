@@ -57,101 +57,101 @@ public class DiffUtils
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
-    public static Map<String, List<JCas>> load(String... aPaths)
+    public static Map<String, List<CAS>> load(String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            JCas cas = read(path);
+            CAS cas = read(path);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
         return casByUser;
     }
 
-    public static Map<String, List<JCas>> loadWebAnnoTSV(TypeSystemDescription aTypes,
+    public static Map<String, List<CAS>> loadWebAnnoTSV(TypeSystemDescription aTypes,
             String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            JCas cas = readWebAnnoTSV(path, aTypes);
+            CAS cas = readWebAnnoTSV(path, aTypes);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
         return casByUser;
     }
 
-    public static Map<String, List<JCas>> loadXMI(TypeSystemDescription aTypes, String... aPaths)
+    public static Map<String, List<CAS>> loadXMI(TypeSystemDescription aTypes, String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            JCas cas = readXMI(path, aTypes);
+            CAS cas = readXMI(path, aTypes);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
         return casByUser;
     }
 
-    public static JCas read(String aPath)
+    public static CAS read(String aPath)
         throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 
-        JCas jcas = JCasFactory.createJCas();
+        CAS jcas = JCasFactory.createJCas().getCas();
 
-        reader.getNext(jcas.getCas());
+        reader.getNext(jcas);
 
         return jcas;
     }
 
-    public static JCas readWebAnnoTSV(String aPath, TypeSystemDescription aType)
+    public static CAS readWebAnnoTSV(String aPath, TypeSystemDescription aType)
         throws UIMAException, IOException
     {
         CollectionReader reader = createReader(WebannoTsv2Reader.class,
                 WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
-        JCas jcas;
+        CAS cas;
         if (aType != null) {
             TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                     .createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
-            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes));
+            cas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
         }
         else {
-            jcas = JCasFactory.createJCas();
+            cas = JCasFactory.createJCas().getCas();
         }
 
-        reader.getNext(jcas.getCas());
+        reader.getNext(cas);
 
-        return jcas;
+        return cas;
     }
 
-    public static JCas readXMI(String aPath, TypeSystemDescription aType)
+    public static CAS readXMI(String aPath, TypeSystemDescription aType)
         throws UIMAException, IOException
     {
         CollectionReader reader = createReader(XmiReader.class, XmiReader.PARAM_SOURCE_LOCATION,
                 "src/test/resources/" + aPath);
-        JCas jcas;
+        CAS jcas;
         if (aType != null) {
             TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                     .createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
-            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes));
+            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
         }
         else {
-            jcas = JCasFactory.createJCas();
+            jcas = JCasFactory.createJCas().getCas();
         }
 
-        reader.getNext(jcas.getCas());
+        reader.getNext(jcas);
 
         return jcas;
     }

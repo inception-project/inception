@@ -18,10 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +61,7 @@ public class SpanAnchoringModeBehavior
         }
         
         int[] originalRange = new int[] { aRequest.getBegin(), aRequest.getEnd() };
-        int[] adjustedRange = adjust(aRequest.getJcas(), aAdapter.getLayer().getAnchoringMode(),
+        int[] adjustedRange = adjust(aRequest.getCas(), aAdapter.getLayer().getAnchoringMode(),
                 originalRange);
         
         if (adjustedRange.equals(originalRange)) {
@@ -69,7 +72,7 @@ public class SpanAnchoringModeBehavior
         }
     }
     
-    public static int[] adjust(JCas aJCas, AnchoringMode aMode, int[] aRange)
+    public static int[] adjust(CAS aJCas, AnchoringMode aMode, int[] aRange)
         throws AnnotationException
     {
         switch (aMode) {
@@ -77,7 +80,8 @@ public class SpanAnchoringModeBehavior
             return aRange;
         }
         case SINGLE_TOKEN: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
+            Type tokenType = getType(aJCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aJCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new AnnotationException(
@@ -87,7 +91,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
-            List<Token> tokens = selectOverlapping(aJCas, Token.class, aRange[0], aRange[1]);
+            Type tokenType = getType(aJCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aJCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new AnnotationException(
@@ -101,7 +106,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { begin, end };
         }
         case SENTENCES: {
-            List<Sentence> sentences = selectOverlapping(aJCas, Sentence.class, aRange[0],
+            Type sentenceType = getType(aJCas, Sentence.class);
+            List<AnnotationFS> sentences = selectOverlapping(aJCas, sentenceType, aRange[0],
                     aRange[1]);
             
             if (sentences.isEmpty()) {

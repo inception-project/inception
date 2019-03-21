@@ -28,40 +28,36 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.impl.CASImpl;
 
 public final class CasPersistenceUtils
 {
-
     private CasPersistenceUtils()
     {
         // No instances
     }
 
-    public static void writeSerializedCas(JCas aJCas, File aFile)
+    public static void writeSerializedCas(CAS aJCas, File aFile)
         throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
 
         try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-            CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
+            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aJCas);
             os.writeObject(serializer);
         }
     }
 
-    public static void readSerializedCas(JCas aJCas, File aFile)
+    public static void readSerializedCas(CAS aJCas, File aFile)
         throws IOException
     {
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-            deserializeCASComplete(serializer, aJCas.getCasImpl());
-            // Initialize the JCas sub-system which is the most often used API in DKPro Core
-            // components
-            aJCas.getCas().getJCas();
+            deserializeCASComplete(serializer, (CASImpl) aJCas);
         }
-        catch (CASException | ClassNotFoundException e) {
+        catch (ClassNotFoundException e) {
             throw new IOException(e);
         }
     }

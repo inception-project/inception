@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
 import static java.util.Collections.unmodifiableList;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,8 +32,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.uima.cas.CASException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
@@ -289,26 +290,20 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setFirstVisibleUnit(Sentence aFirstVisibleUnit)
+    public void setFirstVisibleUnit(AnnotationFS aFirstVisibleUnit)
     {
-        JCas jcas;
-        try {
-            jcas = aFirstVisibleUnit.getCAS().getJCas();
-        }
-        catch (CASException e) {
-            throw new IllegalStateException("Unable to fetch JCas from CAS", e);
-        }
+        CAS cas = aFirstVisibleUnit.getCAS();
 
         firstVisibleUnitAddress = WebAnnoCasUtil.getAddr(aFirstVisibleUnit);
         firstVisibleUnitBegin = aFirstVisibleUnit.getBegin();
         firstVisibleUnitEnd = aFirstVisibleUnit.getEnd();
 
-        Sentence lastVisibleUnit = getLastSentenceInDisplayWindow(jcas, getAddr(aFirstVisibleUnit),
-                getPreferences().getWindowSize());
-        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas,
+        AnnotationFS lastVisibleUnit = getLastSentenceInDisplayWindow(cas,
+                getAddr(aFirstVisibleUnit), getPreferences().getWindowSize());
+        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas,
                 aFirstVisibleUnit.getBegin());
-        lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(jcas, lastVisibleUnit.getBegin());
-        unitCount = select(jcas, Sentence.class).size();
+        lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas, lastVisibleUnit.getBegin());
+        unitCount = select(cas, getType(cas, Sentence.class)).size();
         
         windowBeginOffset = aFirstVisibleUnit.getBegin();
         windowEndOffset = lastVisibleUnit.getEnd();

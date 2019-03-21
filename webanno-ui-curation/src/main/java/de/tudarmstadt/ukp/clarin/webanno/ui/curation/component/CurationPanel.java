@@ -19,8 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
-import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +32,9 @@ import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -216,7 +219,7 @@ public class CurationPanel
             }
             
             @Override
-            public JCas getEditorCas() throws IOException
+            public CAS getEditorCas() throws IOException
             {
                 return CurationPanel.this.getEditorCas();
             }
@@ -377,7 +380,7 @@ public class CurationPanel
             curationView = curationViewItem;
             fSn = 0;
             try {
-                JCas jCas = curationDocumentService.readCurationCas(state.getDocument());
+                CAS jCas = curationDocumentService.readCurationCas(state.getDocument());
                 updateCurationView(CurationPanel.this.getModelObject(), curationViewItem, aTarget,
                         jCas);
                 updatePanel(aTarget, CurationPanel.this.getModelObject());
@@ -414,10 +417,10 @@ public class CurationPanel
     }
 
     private void updateCurationView(final CurationContainer curationContainer,
-            final SourceListView curationViewItem, AjaxRequestTarget aTarget, JCas jCas)
+            final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS jCas)
     {
-        Sentence currentSent = WebAnnoCasUtil.getCurrentSentence(jCas, curationViewItem.getBegin(),
-                curationViewItem.getEnd());
+        AnnotationFS currentSent = WebAnnoCasUtil.getCurrentSentence(jCas,
+                curationViewItem.getBegin(), curationViewItem.getEnd());
         state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
                 currentSent, curationViewItem.getBegin(), state.getProject(), state.getDocument(),
                 state.getPreferences().getWindowSize()));
@@ -430,7 +433,7 @@ public class CurationPanel
         // Nothing done by default
     }
 
-    protected JCas getEditorCas()
+    protected CAS getEditorCas()
         throws IOException
     {
         if (state.getDocument() == null) {
@@ -471,19 +474,20 @@ public class CurationPanel
     
     private void commonUpdate() throws IOException
     {
-        JCas jCas = curationDocumentService.readCurationCas(state.getDocument());
+        CAS jCas = curationDocumentService.readCurationCas(state.getDocument());
 
         // Determine the FIRST visible unit
-        final Sentence firstVisibleUnit = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
-                state.getFirstVisibleUnitEnd());
+        final AnnotationFS firstVisibleUnit = selectSentenceAt(jCas,
+                state.getFirstVisibleUnitBegin(), state.getFirstVisibleUnitEnd());
         state.setFirstVisibleUnit(firstVisibleUnit);
 
         // Determine the LAST visible unit
-        List<Sentence> followingUnits = selectFollowing(jCas, Sentence.class, firstVisibleUnit,
+        List<AnnotationFS> followingUnits = CasUtil.selectFollowing(jCas,
+                getType(jCas, Sentence.class), firstVisibleUnit,
                 state.getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
-        Sentence lastVisibleUnit = followingUnits.size() == 0 ? firstVisibleUnit
+        AnnotationFS lastVisibleUnit = followingUnits.size() == 0 ? firstVisibleUnit
                 : followingUnits.get(followingUnits.size() - 1);
         
         curationView.setCurationBegin(firstVisibleUnit.getBegin());
@@ -491,9 +495,9 @@ public class CurationPanel
 
         // Determine the number of the first and last visible unit
         int ws = state.getPreferences().getWindowSize();
-        Sentence fs = WebAnnoCasUtil.selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
+        AnnotationFS fs = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
                 state.getFirstVisibleUnitEnd());
-        Sentence ls = WebAnnoCasUtil.getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
+        AnnotationFS ls = getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
         fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
         lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
     }

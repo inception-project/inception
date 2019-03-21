@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.util;
 
+import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_BEGIN;
+import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_END;
+import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
+import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
+import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovering;
 import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
 
 import java.util.ArrayList;
@@ -43,7 +48,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
@@ -54,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -101,9 +106,9 @@ public class WebAnnoCasUtil
      *            the comparison offset.
      * @return if the two offsets are within the same sentence.
      */
-    public static boolean isBeginInSameSentence(JCas aJcas, int aBegin1, int aBegin2)
+    public static boolean isBeginInSameSentence(CAS aJcas, int aBegin1, int aBegin2)
     {
-        return selectCovering(aJcas, Sentence.class, aBegin1, aBegin1).stream()
+        return selectCovering(aJcas, getType(aJcas, Sentence.class), aBegin1, aBegin1).stream()
             .filter(s -> s.getBegin() <= aBegin1 && aBegin1 < s.getEnd())
             .filter(s -> s.getBegin() <= aBegin2 && aBegin2 < s.getEnd())
             .findFirst()
@@ -124,9 +129,9 @@ public class WebAnnoCasUtil
      *            the comparison offset.
      * @return if the two offsets are within the same sentence.
      */
-    public static boolean isBeginEndInSameSentence(JCas aJcas, int aBegin, int aEnd)
+    public static boolean isBeginEndInSameSentence(CAS aJcas, int aBegin, int aEnd)
     {
-        return selectCovering(aJcas, Sentence.class, aBegin, aBegin).stream()
+        return selectCovering(aJcas, getType(aJcas, Sentence.class), aBegin, aBegin).stream()
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
                 .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
                 .findFirst()
@@ -141,6 +146,11 @@ public class WebAnnoCasUtil
     public static AnnotationFS selectByAddr(JCas aJCas, int aAddress)
     {
         return selectByAddr(aJCas, AnnotationFS.class, aAddress);
+    }
+
+    public static AnnotationFS selectAnnotationByAddr(CAS aCas, int aAddress)
+    {
+        return selectByAddr(aCas, AnnotationFS.class, aAddress);
     }
 
     public static FeatureStructure selectByAddr(CAS aCas, int aAddress)
@@ -160,15 +170,15 @@ public class WebAnnoCasUtil
         return aType.cast(aJCas.getLowLevelCas().ll_getFSForRef(aAddress));
     }
 
-    private static <T extends Annotation> T selectSingleAt(JCas aJcas, final Class<T> type,
+    private static AnnotationFS selectSingleAt(CAS aJcas, Type type,
             int aBegin, int aEnd)
     {
-        List<T> covered = selectCovered(aJcas, type, aBegin, aEnd);
+        List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
         if (covered.isEmpty()) {
             return null;
         }
         else {
-            T first = covered.get(0);
+            AnnotationFS first = covered.get(0);
             if (first.getBegin() == aBegin && first.getEnd() == aEnd) {
                 return first;
             }
@@ -202,9 +212,9 @@ public class WebAnnoCasUtil
      *            the end offset.
      * @return the annotation FS.
      */
-    public static AnnotationFS selectSingleFsAt(JCas aJcas, Type aType, int aBegin, int aEnd)
+    public static AnnotationFS selectSingleFsAt(CAS aJcas, Type aType, int aBegin, int aEnd)
     {
-        for (AnnotationFS anFS : selectCovered(aJcas.getCas(), aType, aBegin, aEnd)) {
+        for (AnnotationFS anFS : selectCovered(aJcas, aType, aBegin, aEnd)) {
             if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
                 return anFS;
             }
@@ -224,9 +234,24 @@ public class WebAnnoCasUtil
      *            the end offset.
      * @return the sentence.
      */
-    public static Sentence selectSentenceAt(JCas aJcas, int aBegin, int aEnd)
+    public static AnnotationFS selectSentenceAt(CAS aJcas, int aBegin, int aEnd)
     {
-        return selectSingleAt(aJcas, Sentence.class, aBegin, aEnd);
+        return selectSingleAt(aJcas, getType(aJcas, Sentence.class), aBegin, aEnd);
+    }
+    
+    public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
+    {
+        return aCas.createAnnotation(getType(aCas, Token.class), aBegin, aEnd);
+    }
+
+    public static AnnotationFS createSentence(CAS aCas, int aBegin, int aEnd)
+    {
+        return aCas.createAnnotation(getType(aCas, Sentence.class), aBegin, aEnd);
+    }
+    
+    public static boolean exists(CAS aCas, Type aType)
+    {
+        return aCas.getAnnotationIndex(aType).iterator().hasNext();
     }
 
     /**
@@ -236,8 +261,6 @@ public class WebAnnoCasUtil
      * If multiple annotations are [(3, 8), (9, 15), (16, 21)] and selection covered was from (10,
      * 18), overlapped annotation [(9, 15), (16, 21)] should be returned
      *
-     * @param <T>
-     *            the JCas type.
      * @param aJCas
      *            a JCas containing the annotation.
      * @param aType
@@ -248,12 +271,12 @@ public class WebAnnoCasUtil
      *            end offset.
      * @return a return value.
      */
-    public static <T extends Annotation> List<T> selectOverlapping(JCas aJCas,
-            final Class<T> aType, int aBegin, int aEnd)
+    public static List<AnnotationFS> selectOverlapping(CAS aJCas,
+            Type aType, int aBegin, int aEnd)
     {
 
-        List<T> annotations = new ArrayList<>();
-        for (T t : select(aJCas, aType)) {
+        List<AnnotationFS> annotations = new ArrayList<>();
+        for (AnnotationFS t : select(aJCas, aType)) {
             if (t.getBegin() >= aEnd) {
                 break;
             }
@@ -275,11 +298,11 @@ public class WebAnnoCasUtil
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
      */
-    public static int getFirstSentenceAddress(JCas aJcas)
+    public static int getFirstSentenceAddress(CAS aJcas)
     {
         int firstSentenceAddress = -1;
 
-        for (Sentence selectedSentence : select(aJcas, Sentence.class)) {
+        for (AnnotationFS selectedSentence : select(aJcas, getType(aJcas, Sentence.class))) {
             firstSentenceAddress = getAddr(selectedSentence);
             break;
         }
@@ -294,10 +317,10 @@ public class WebAnnoCasUtil
      *            The CAS object assumed to contains some sentence annotations
      * @return the sentence number or -1 if aJcas don't have sentence annotation
      */
-    public static Sentence getFirstSentence(JCas aJcas)
+    public static AnnotationFS getFirstSentence(CAS aJcas)
     {
-        Sentence firstSentence = null;
-        for (Sentence s : select(aJcas, Sentence.class)) {
+        AnnotationFS firstSentence = null;
+        for (AnnotationFS s : select(aJcas, getType(aJcas, Sentence.class))) {
             firstSentence = s;
             break;
         }
@@ -315,10 +338,10 @@ public class WebAnnoCasUtil
      *            the end offset.
      * @return the sentence.
      */
-    public static Sentence getCurrentSentence(JCas aJCas, int aBegin, int aEnd)
+    public static AnnotationFS getCurrentSentence(CAS aJCas, int aBegin, int aEnd)
     {
-        Sentence currentSentence = null;
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
+        AnnotationFS currentSentence = null;
+        for (AnnotationFS sentence : selectSentences(aJCas)) {
             if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin
                     && sentence.getEnd() <= aEnd) {
                 currentSentence = sentence;
@@ -337,10 +360,10 @@ public class WebAnnoCasUtil
      *            the begin offset.
      * @return the sentence.
      */
-    public static Sentence getSentence(JCas aJCas, int aBegin)
+    public static AnnotationFS getSentence(CAS aJCas, int aBegin)
     {
-        Sentence currentSentence = null;
-        for (Sentence sentence : select(aJCas, Sentence.class)) {
+        AnnotationFS currentSentence = null;
+        for (AnnotationFS sentence : select(aJCas, getType(aJCas, Sentence.class))) {
             if (sentence.getBegin() <= aBegin && sentence.getEnd() > aBegin) {
                 currentSentence = sentence;
                 break;
@@ -349,17 +372,19 @@ public class WebAnnoCasUtil
         return currentSentence;
     }
 
-    public static Token getNextToken(JCas aJCas, int aBegin, int aEnd)
+    public static AnnotationFS getNextToken(CAS aJCas, int aBegin, int aEnd)
     {
-        AnnotationFS currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd);
+        Type tokenType = getType(aJCas, Token.class);
+        
+        AnnotationFS currentToken = CasUtil.selectSingleAt(aJCas, tokenType, aBegin, aEnd);
         // thid happens when tokens such as Dr. OR Ms. selected with double
         // click, which make seletected text as Dr OR Ms
         if (currentToken == null) {
-            currentToken = selectSingleAt(aJCas, Token.class, aBegin, aEnd + 1);
+            currentToken = CasUtil.selectSingleAt(aJCas, tokenType, aBegin, aEnd + 1);
         }
-        Token nextToken = null;
+        AnnotationFS nextToken = null;
 
-        for (Token token : selectFollowing(Token.class, currentToken, 1)) {
+        for (AnnotationFS token : CasUtil.selectFollowing(aJCas, tokenType, currentToken, 1)) {
             nextToken = token;
         }
 
@@ -377,12 +402,12 @@ public class WebAnnoCasUtil
      *            the window size
      * @return The address of the last sentence address in the current display window.
      */
-    public static Sentence getLastSentenceInDisplayWindow(JCas aJcas, int aFirstSentenceAddress,
+    public static AnnotationFS getLastSentenceInDisplayWindow(CAS aJcas, int aFirstSentenceAddress,
             int aWindowSize)
     {
         int count = 0;
-        FSIterator<Sentence> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
-        Sentence s = si.get();
+        FSIterator<AnnotationFS> si = seekByAddress(aJcas, Sentence.class, aFirstSentenceAddress);
+        AnnotationFS s = si.get();
         while (count < aWindowSize - 1) {
             si.moveToNext();
             if (si.isValid()) {
@@ -409,11 +434,11 @@ public class WebAnnoCasUtil
      * @return the iterator.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T extends Annotation> FSIterator<T> seekByAddress(JCas aJcas, Class<T> aType,
-            int aAddr)
+    private static FSIterator<AnnotationFS> seekByAddress(CAS aJcas,
+            Class<? extends Annotation> aType, int aAddr)
     {
-        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
-                .getAnnotationType(aJcas, aType));
+        AnnotationIndex<AnnotationFS> idx = aJcas
+                .getAnnotationIndex(getAnnotationType(aJcas, aType));
         return idx.iterator(selectByAddr(aJcas, aAddr));
     }
 
@@ -429,11 +454,11 @@ public class WebAnnoCasUtil
      * @return the iterator.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static <T extends Annotation> FSIterator<T> seekByFs(JCas aJcas, Class<T> aType,
+    private static FSIterator<AnnotationFS> seekByFs(CAS aJcas, Class<? extends Annotation> aType,
             AnnotationFS aFS)
     {
-        AnnotationIndex<T> idx = aJcas.getAnnotationIndex(JCasUtil
-                .getAnnotationType(aJcas, aType));
+        AnnotationIndex<AnnotationFS> idx = aJcas
+                .getAnnotationIndex(CasUtil.getAnnotationType(aJcas, aType));
         return idx.iterator(aFS);
     }
     /**
@@ -454,15 +479,16 @@ public class WebAnnoCasUtil
      *            the window size.
      * @return the ID of the first sentence.
      */
-    public static Sentence findWindowStartCenteringOnSelection(JCas aJcas, Sentence aSentence,
-            int aFocusOffset, Project aProject, SourceDocument aDocument, int aWindowSize)
+    public static AnnotationFS findWindowStartCenteringOnSelection(CAS aJcas,
+            AnnotationFS aSentence, int aFocusOffset, Project aProject, SourceDocument aDocument,
+            int aWindowSize)
     {
         if (aWindowSize == 1) {
             return aSentence;
         }
 
         // Seek the sentence that contains the current focus
-        Sentence s = getSentence(aJcas, aFocusOffset);
+        AnnotationFS s = getSentence(aJcas, aFocusOffset);
         
         // If the focus is outside any sentence, then we just return the reference sentence.
         // This should actually never happen, but in case it does, we log a warning and try to
@@ -473,7 +499,7 @@ public class WebAnnoCasUtil
         }
 
         // Center sentence
-        FSIterator<Sentence> si = seekByFs(aJcas, Sentence.class, s);
+        FSIterator<AnnotationFS> si = seekByFs(aJcas, Sentence.class, s);
         if (aWindowSize == 2 && s.getBegin() > aSentence.getBegin()) {
             return s;
         }
@@ -490,7 +516,7 @@ public class WebAnnoCasUtil
         return s;
     }
 
-    public static int getNextSentenceAddress(JCas aJcas, Sentence aSentence)
+    public static int getNextSentenceAddress(CAS aJcas, Sentence aSentence)
     {
         try {
             return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
@@ -511,7 +537,7 @@ public class WebAnnoCasUtil
      *            the window size.
      * @return the Beginning address of the next window
      */
-    public static int getNextPageFirstSentenceAddress(JCas aJcas, int aCurrenSentenceBeginAddress,
+    public static int getNextPageFirstSentenceAddress(CAS aJcas, int aCurrenSentenceBeginAddress,
             int aWindowSize)
     {
         List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aJcas,
@@ -551,7 +577,7 @@ public class WebAnnoCasUtil
      *            the window size.
      * @return hum?
      */
-    public static int getPreviousDisplayWindowSentenceBeginAddress(JCas aJcas,
+    public static int getPreviousDisplayWindowSentenceBeginAddress(CAS aJcas,
             int aCurrenSentenceBeginAddress, int aWindowSize)
     {
         List<Integer> beginningAddresses = getDisplayWindowBeginningSentenceAddresses(aJcas,
@@ -574,7 +600,7 @@ public class WebAnnoCasUtil
         return beginningAddress;
     }
 
-    public static int getLastDisplayWindowFirstSentenceAddress(JCas aJcas, int aWindowSize)
+    public static int getLastDisplayWindowFirstSentenceAddress(CAS aJcas, int aWindowSize)
     {
         List<Integer> displayWindowBeginingSentenceAddresses = 
                 getDisplayWindowBeginningSentenceAddresses(aJcas, aWindowSize);
@@ -603,12 +629,12 @@ public class WebAnnoCasUtil
      *            the window size.
      * @return hum?
      */
-    public static List<Integer> getDisplayWindowBeginningSentenceAddresses(JCas aJcas,
+    public static List<Integer> getDisplayWindowBeginningSentenceAddresses(CAS aJcas,
             int aWindowSize)
     {
         List<Integer> beginningAddresses = new ArrayList<>();
         int j = 0;
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
+        for (AnnotationFS sentence : select(aJcas, getType(aJcas, Sentence.class))) {
             if (j % aWindowSize == 0) {
                 beginningAddresses.add(getAddr(sentence));
             }
@@ -652,16 +678,17 @@ public class WebAnnoCasUtil
      *            the begin offset.
      * @return the sentence number.
      */
-    public static int getSentenceNumber(JCas aJcas, int aBeginOffset)
+    public static int getSentenceNumber(CAS aJcas, int aBeginOffset)
     {
         int sentenceNumber = 0;
         
-        Collection<Sentence> sentences = select(aJcas, Sentence.class);
+        Type sentenceType = getType(aJcas, Sentence.class);
+        Collection<AnnotationFS> sentences = select(aJcas, sentenceType);
         if (sentences.isEmpty()) {
             throw new IndexOutOfBoundsException("No sentences");
         }
         
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
+        for (AnnotationFS sentence : select(aJcas, sentenceType)) {
             if (sentence.getBegin() <= aBeginOffset && aBeginOffset <= sentence.getEnd()) {
                 sentenceNumber++;
                 break;
@@ -671,9 +698,24 @@ public class WebAnnoCasUtil
         return sentenceNumber;
     }
 
-    public static int getSentenceCount(JCas aJcas)
+    public static int getSentenceCount(CAS aJcas)
     {
-        return select(aJcas, Sentence.class).size();
+        return selectSentences(aJcas).size();
+    }
+
+    public static Collection<AnnotationFS> selectSentences(CAS aCas)
+    {
+        return CasUtil.select(aCas, getType(aCas, Sentence.class));
+    }
+
+    public static Collection<AnnotationFS> selectTokens(CAS aCas)
+    {
+        return CasUtil.select(aCas, getType(aCas, Token.class));
+    }
+
+    public static Collection<AnnotationFS> selectTokensCovered(CAS aCas, int aBegin, int aEnd)
+    {
+        return CasUtil.selectCovered(aCas, getType(aCas, Token.class), aBegin, aEnd);
     }
 
     /**
@@ -685,14 +727,14 @@ public class WebAnnoCasUtil
      *            the sentence number.
      * @return the ID.
      */
-    public static int getSentenceAddress(JCas aJcas, int aSentenceNumber)
+    public static int getSentenceAddress(CAS aJcas, int aSentenceNumber)
     {
         int i = 1;
         int address = 0;
         if (aSentenceNumber < 1) {
             return 0;
         }
-        for (Sentence sentence : select(aJcas, Sentence.class)) {
+        for (AnnotationFS sentence : selectSentences(aJcas)) {
             if (i == aSentenceNumber) {
                 address = getAddr(sentence);
                 break;
@@ -720,12 +762,12 @@ public class WebAnnoCasUtil
      *            the end offset.
      * @return the selected text.
      */
-    public static String getSelectedText(JCas aJcas, int aBeginOffset, int aEndOffset)
+    public static String getSelectedText(CAS aJcas, int aBeginOffset, int aEndOffset)
     {
-        List<Token> tokens = WebAnnoCasUtil.selectOverlapping(aJcas, Token.class, aBeginOffset,
-                aEndOffset);
+        List<AnnotationFS> tokens = selectOverlapping(aJcas, getType(aJcas, Token.class),
+                aBeginOffset, aEndOffset);
         StringBuilder seletedTextSb = new StringBuilder();
-        for (Token token : tokens) {
+        for (AnnotationFS token : tokens) {
             seletedTextSb.append(token.getCoveredText()).append(" ");
         }
         return seletedTextSb.toString();
@@ -979,5 +1021,75 @@ public class WebAnnoCasUtil
     {
         return aFeature.isRequired() && CAS.TYPE_NAME_STRING.equals(aFeature.getType())
                 && StringUtils.isBlank(FSUtil.getFeature(aFS, aFeature.getName(), String.class));
+    }
+    
+    public static FeatureStructure createDocumentMetadata(CAS aCas)
+    {
+        Type type = getType(aCas, DocumentMetaData.class);
+        FeatureStructure dmd;
+        if (aCas.getDocumentText() != null) {
+            dmd = aCas.createAnnotation(type, 0, aCas.getDocumentText().length());
+        }
+        else {
+            dmd = aCas.createAnnotation(type, 0, 0);
+        }
+        
+        // If there is already a DocumentAnnotation copy it's information and delete it
+        FeatureStructure da = aCas.getDocumentAnnotation();
+        if (da != null) {
+            FSUtil.setFeature(dmd, FEATURE_BASE_NAME_LANGUAGE,
+                    FSUtil.getFeature(da, FEATURE_BASE_NAME_LANGUAGE, String.class));
+            FSUtil.setFeature(dmd, FEATURE_BASE_NAME_BEGIN,
+                    FSUtil.getFeature(da, FEATURE_BASE_NAME_BEGIN, Integer.class));
+            FSUtil.setFeature(dmd, FEATURE_BASE_NAME_END,
+                    FSUtil.getFeature(da, FEATURE_BASE_NAME_END, Integer.class));
+            aCas.removeFsFromIndexes(da);
+        }
+        else if (aCas.getDocumentText() != null) {
+            FSUtil.setFeature(dmd, FEATURE_BASE_NAME_BEGIN, 0);
+            FSUtil.setFeature(dmd, FEATURE_BASE_NAME_END, aCas.getDocumentText().length());
+        }
+        return dmd;
+    }
+    
+    public static FeatureStructure getDocumentMetadata(CAS aCas)
+    {
+        Type type = getType(aCas, DocumentMetaData.class);
+        FeatureStructure dmd;
+        try {
+            dmd = CasUtil.selectSingle(aCas, type);
+        }
+        catch (IllegalArgumentException e) {
+            dmd = createDocumentMetadata(aCas);
+        }
+        
+        return dmd;
+    }
+    
+    public static void copyDocumentMetadata(CAS aSourceView, CAS aTargetView)
+    {
+        // First get the DMD then create. In case the get fails, we do not create.
+        FeatureStructure dmd = getDocumentMetadata(aSourceView);
+        FeatureStructure docMetaData = createDocumentMetadata(aTargetView);
+        FSUtil.setFeature(docMetaData, "collectionId",
+                FSUtil.getFeature(dmd, "collectionId", String.class));
+        FSUtil.setFeature(docMetaData, "documentBaseUri",
+                FSUtil.getFeature(dmd, "documentBaseUri", String.class));
+        FSUtil.setFeature(docMetaData, "documentId",
+                FSUtil.getFeature(dmd, "documentId", String.class));
+        FSUtil.setFeature(docMetaData, "documentTitle",
+                FSUtil.getFeature(dmd, "documentTitle", String.class));
+        FSUtil.setFeature(docMetaData, "documentUri",
+                FSUtil.getFeature(dmd, "documentUri", String.class));
+        FSUtil.setFeature(docMetaData, "isLastSegment",
+                FSUtil.getFeature(dmd, "isLastSegment", Boolean.class));
+        FSUtil.setFeature(docMetaData, CAS.FEATURE_BASE_NAME_LANGUAGE,
+                FSUtil.getFeature(dmd, CAS.FEATURE_BASE_NAME_LANGUAGE, String.class));
+    }
+    
+    public static void setDocumentId(CAS aCas, String aID)
+    {
+        FeatureStructure dmd = getDocumentMetadata(aCas);
+        FSUtil.setFeature(dmd, "documentId", aID);
     }
 }

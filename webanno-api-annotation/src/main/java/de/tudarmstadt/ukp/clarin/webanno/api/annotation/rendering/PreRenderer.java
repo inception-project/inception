@@ -19,13 +19,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
 {
-    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, JCas aJCas,
+    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aJCas,
             List<AnnotationLayer> aLayers);
 }

@@ -22,7 +22,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,10 +29,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.fit.util.CasUtil;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -75,7 +75,7 @@ public class SpanRenderer
     }
     
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures,
+    public void render(CAS aJcas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
@@ -86,15 +86,15 @@ public class SpanRenderer
 
         // Collect the visible sentences. The sentence boundary information is used to generate
         // multiple ranges for annotations crossing sentence boundaries
-        List<Sentence> visibleSentences = selectCovered(aJcas, Sentence.class, aWindowBegin,
-                aWindowEnd);
+        List<AnnotationFS> visibleSentences = selectCovered(aJcas,
+                CasUtil.getType(aJcas, Sentence.class), aWindowBegin, aWindowEnd);
         
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
         
         // Iterate over the span annotations of the current type and render each of them
-        Type type = getType(aJcas.getCas(), typeAdapter.getAnnotationTypeName());
-        List<AnnotationFS> annotations = selectCovered(aJcas.getCas(), type, aWindowBegin,
+        Type type = getType(aJcas, typeAdapter.getAnnotationTypeName());
+        List<AnnotationFS> annotations = selectCovered(aJcas, type, aWindowBegin,
                 aWindowEnd);
         for (AnnotationFS fs : annotations) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
@@ -135,15 +135,15 @@ public class SpanRenderer
         }
     }
     
-    private List<VRange> calculateRanges(JCas aJcas, List<Sentence> aVisibleSentences,
+    private List<VRange> calculateRanges(CAS aJcas, List<AnnotationFS> aVisibleSentences,
             VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
     {
-        Sentence beginSent = null;
-        Sentence endSent = null;
+        AnnotationFS beginSent = null;
+        AnnotationFS endSent = null;
 
         // check if annotation extends beyond viewable window - if yes, then constrain it to
         // the visible window
-        for (Sentence sent : aVisibleSentences) {
+        for (AnnotationFS sent : aVisibleSentences) {
             if (beginSent == null) {
                 // Here we catch the first sentence in document order which covers the begin
                 // offset of the current annotation. Note that in UIMA annotations are
@@ -181,11 +181,11 @@ public class SpanRenderer
 
         // If the annotation extends across sentence boundaries, create multiple ranges for the
         // annotation, one for every sentence.
-        List<Sentence> sentences = selectCovered(aJcas, Sentence.class, beginSent.getBegin(),
-                endSent.getEnd());
+        List<AnnotationFS> sentences = selectCovered(aJcas, getType(aJcas, Sentence.class),
+                beginSent.getBegin(), endSent.getEnd());
         List<VRange> ranges = new ArrayList<>();
         if (sentences.size() > 1) {
-            for (Sentence sentence : sentences) {
+            for (AnnotationFS sentence : sentences) {
                 if (sentence.getBegin() <= aFS.getBegin() && aFS.getBegin() < sentence.getEnd()) {
                     ranges.add(new VRange(aFS.getBegin() - aWindowBegin,
                             sentence.getEnd() - aWindowBegin));

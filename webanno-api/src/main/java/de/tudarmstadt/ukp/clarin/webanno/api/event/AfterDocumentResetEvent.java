@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -30,9 +30,9 @@ public class AfterDocumentResetEvent
     private static final long serialVersionUID = 686641613168415460L;
 
     private final AnnotationDocument document;
-    private final JCas jcas;
+    private final CAS jcas;
 
-    public AfterDocumentResetEvent(Object aSource, AnnotationDocument aDocument, JCas aJCas)
+    public AfterDocumentResetEvent(Object aSource, AnnotationDocument aDocument, CAS aJCas)
     {
         super(aSource);
         document = aDocument;
@@ -44,7 +44,7 @@ public class AfterDocumentResetEvent
         return document;
     }
 
-    public JCas getJCas()
+    public CAS getJCas()
     {
         return jcas;
     }

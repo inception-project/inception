@@ -89,7 +89,7 @@ public class SpanRendererTest
                 asList(new SpanCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
-        sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
@@ -117,7 +117,7 @@ public class SpanRendererTest
                 asList(new SpanStackingBehavior()));
         
         VDocument vdoc = new VDocument();
-        sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()

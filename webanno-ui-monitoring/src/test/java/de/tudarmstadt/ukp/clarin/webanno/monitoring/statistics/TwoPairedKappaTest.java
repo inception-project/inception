@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -108,11 +107,11 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappatestCas.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappatestCas);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
@@ -131,9 +130,9 @@ public class TwoPairedKappaTest
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
     }
 
-    private Map<String, List<JCas>> convert(Map<User, JCas> aMap) {
-        Map<String, List<JCas>> map = new LinkedHashMap<>();
-        for (Entry<User, JCas> e : aMap.entrySet()) {
+    private Map<String, List<CAS>> convert(Map<User, CAS> aMap) {
+        Map<String, List<CAS>> map = new LinkedHashMap<>();
+        for (Entry<User, CAS> e : aMap.entrySet()) {
             map.put(e.getKey().getUsername(), asList(e.getValue()));
         }
         return map;
@@ -147,11 +146,11 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaarcdiff);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
@@ -179,11 +178,11 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspandiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspandiff);
 
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
@@ -210,11 +209,11 @@ public class TwoPairedKappaTest
         userDocs.put(user1, asList(document));
         userDocs.put(user2, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspanarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspanarcdiff);
 
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
         
         // Check against new impl
@@ -244,12 +243,12 @@ public class TwoPairedKappaTest
         userDocs.put(user2, asList(document));
         userDocs.put(user3, asList(document));
         
-        Map<User, JCas> userCases = new HashMap<>();
-        userCases.put(user1, kappatestCas.getJCas());
-        userCases.put(user2, kappaspandiff.getJCas());
-        userCases.put(user3, kappaspanarcdiff.getJCas());
+        Map<User, CAS> userCases = new HashMap<>();
+        userCases.put(user1, kappatestCas);
+        userCases.put(user2, kappaspandiff);
+        userCases.put(user3, kappaspanarcdiff);
         
-        Map<SourceDocument, Map<User, JCas>> documentJCases = new HashMap<>();
+        Map<SourceDocument, Map<User, CAS>> documentJCases = new HashMap<>();
         documentJCases.put(document, userCases);
 
         // Check against new impl
@@ -258,17 +257,17 @@ public class TwoPairedKappaTest
                 asList(SpanDiffAdapter.POS, ArcDiffAdapter.DEPENDENCY), 
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
         
-        Map<String, List<JCas>> user1and2 = convert(userCases);
+        Map<String, List<CAS>> user1and2 = convert(userCases);
         user1and2.remove("user3");
         AgreementResult agreement12 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and2);
 
-        Map<String, List<JCas>> user2and3 = convert(userCases);
+        Map<String, List<CAS>> user2and3 = convert(userCases);
         user2and3.remove("user1");
         AgreementResult agreement23 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user2and3);
 
-        Map<String, List<JCas>> user1and3 = convert(userCases);
+        Map<String, List<CAS>> user1and3 = convert(userCases);
         user1and3.remove("user2");
         AgreementResult agreement13 = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", user1and3);

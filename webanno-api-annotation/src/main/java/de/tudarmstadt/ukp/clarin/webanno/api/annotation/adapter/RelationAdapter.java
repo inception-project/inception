@@ -32,7 +32,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -128,7 +127,7 @@ public class RelationAdapter
      *             if the annotation could not be created/updated.
      */
     public AnnotationFS add(SourceDocument aDocument, String aUsername, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin, int aWindowEnd)
+            AnnotationFS aTargetFs, CAS aJCas, int aWindowBegin, int aWindowEnd)
         throws AnnotationException
     {
         return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aJCas, aOriginFs,
@@ -144,7 +143,7 @@ public class RelationAdapter
             request = behavior.onCreate(this, request);
         }
         
-        return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
+        return createRelationAnnotation(request.getCas(), request.getOriginFs(),
                 request.getTargetFs());
     }
 
@@ -174,7 +173,7 @@ public class RelationAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aJCas, VID aVid)
     {
         FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
         aJCas.removeFsFromIndexes(fs);
@@ -191,7 +190,7 @@ public class RelationAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aJCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (RelationLayerBehavior behavior : behaviors) {

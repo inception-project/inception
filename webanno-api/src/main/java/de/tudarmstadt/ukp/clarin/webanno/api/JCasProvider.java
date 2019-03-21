@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 @FunctionalInterface
 public interface JCasProvider
     extends Serializable
 {
-    JCas get()
+    CAS get()
         throws IOException;
 }

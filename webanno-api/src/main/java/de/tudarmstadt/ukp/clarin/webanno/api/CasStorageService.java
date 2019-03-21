@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -43,7 +42,7 @@ public interface CasStorageService
      *            the user who annotates the document if it is user's annotation document OR the
      *            CURATION_USER
      */
-    void writeCas(SourceDocument aDocument, JCas aJcas, String aUserName) throws IOException;
+    void writeCas(SourceDocument aDocument, CAS aJcas, String aUserName) throws IOException;
     
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
@@ -57,7 +56,7 @@ public interface CasStorageService
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    JCas readCas(SourceDocument aDocument, String aUsername) throws IOException;        
+    CAS readCas(SourceDocument aDocument, String aUsername) throws IOException;        
 
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}.
@@ -72,7 +71,7 @@ public interface CasStorageService
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    JCas readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
+    CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException;
 
     /**
@@ -90,7 +89,7 @@ public interface CasStorageService
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    JCas readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
+    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
         throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;

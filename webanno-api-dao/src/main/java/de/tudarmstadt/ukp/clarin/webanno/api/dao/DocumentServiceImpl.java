@@ -50,7 +50,7 @@ import javax.persistence.PersistenceContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -524,7 +524,7 @@ public class DocumentServiceImpl
         
         // Import the actual content
         File targetFile = getSourceDocumentFile(aDocument);
-        JCas jcas;
+        CAS jcas;
         try {
             FileUtils.forceMkdir(targetFile.getParentFile());
             
@@ -560,7 +560,7 @@ public class DocumentServiceImpl
     }
     
     @Override
-    public JCas createOrReadInitialCas(SourceDocument aDocument)
+    public CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");
@@ -587,7 +587,7 @@ public class DocumentServiceImpl
     @Override
     @Transactional
     @Deprecated
-    public JCas readAnnotationCas(SourceDocument aDocument, User aUser)
+    public CAS readAnnotationCas(SourceDocument aDocument, User aUser)
         throws IOException
     {
         // Check if there is an annotation document entry in the database. If there is none,
@@ -602,11 +602,11 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public JCas readAnnotationCas(SourceDocument aDocument, String aUserName)
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        JCas jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
+        CAS jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
             // Convert the source file into an annotation CAS
             return createOrReadInitialCas(aDocument);
         });
@@ -618,7 +618,7 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public JCas readAnnotationCas(AnnotationDocument aAnnotationDocument)
+    public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
@@ -641,7 +641,7 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void writeAnnotationCas(JCas aJCas, AnnotationDocument aAnnotationDocument,
+    public void writeAnnotationCas(CAS aJCas, AnnotationDocument aAnnotationDocument,
             boolean aUpdateTimestamp)
         throws IOException
     {
@@ -671,7 +671,7 @@ public class DocumentServiceImpl
     
     @Override
     @Transactional
-    public void writeAnnotationCas(JCas aJcas, SourceDocument aDocument, User aUser,
+    public void writeAnnotationCas(CAS aJcas, SourceDocument aDocument, User aUser,
             boolean aUpdateTimestamp)
         throws IOException
     {
@@ -684,7 +684,7 @@ public class DocumentServiceImpl
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
-        JCas jcas = createOrReadInitialCas(aDocument);
+        CAS jcas = createOrReadInitialCas(aDocument);
         writeAnnotationCas(jcas, aDocument, aUser, false);
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
     }

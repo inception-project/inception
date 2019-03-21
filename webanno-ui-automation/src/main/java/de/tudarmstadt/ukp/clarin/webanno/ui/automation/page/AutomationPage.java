@@ -19,10 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,11 +33,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -202,7 +203,7 @@ public class AutomationPage
                     aTarget.addChildren(getPage(), IFeedback.class);
                     AnnotatorState state = AutomationPage.this.getModelObject();
                     curationContainer.setBratAnnotatorModel(state);
-                    JCas editorCas = getEditorCas();
+                    CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
                     suggestionView.updatePanel(aTarget, curationContainer,
@@ -437,8 +438,8 @@ public class AutomationPage
                 AnnotationLayer layer = state.getSelectedAnnotationLayer();
                 int address = state.getSelection().getAnnotation().getId();
                 try {
-                    JCas jCas = getEditorCas();
-                    AnnotationFS fs = selectByAddr(jCas, address);
+                    CAS jCas = getEditorCas();
+                    AnnotationFS fs = selectAnnotationByAddr(jCas, address);
 
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         Type type = CasUtil.getType(fs.getCAS(), layer.getName());
@@ -526,7 +527,7 @@ public class AutomationPage
             }
             
             @Override
-            public JCas getEditorCas() throws IOException
+            public CAS getEditorCas() throws IOException
             {
                 return AutomationPage.this.getEditorCas();
             }
@@ -557,7 +558,7 @@ public class AutomationPage
     }
     
     @Override
-    protected JCas getEditorCas()
+    protected CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -574,7 +575,7 @@ public class AutomationPage
                 state.getUser().getUsername());
     }
     
-    private void setCurationSegmentBeginEnd(JCas aEditorCas)
+    private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
         AnnotatorState state = getModelObject();
@@ -612,8 +613,8 @@ public class AutomationPage
     {
         AnnotatorState state = getModelObject();
         
-        JCas editorCas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(editorCas, Sentence.class));
+        CAS editorCas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(editorCas));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -649,7 +650,7 @@ public class AutomationPage
         try {
             AnnotatorState state = getModelObject();
 
-            JCas editorCas = getEditorCas();
+            CAS editorCas = getEditorCas();
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
@@ -713,7 +714,7 @@ public class AutomationPage
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
-            JCas correctionCas;
+            CAS correctionCas;
             if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
                 correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
@@ -723,7 +724,7 @@ public class AutomationPage
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
-            JCas editorCas;
+            CAS editorCas;
             if (documentService.existsCas(state.getDocument(), state.getUser().getUsername())) {
                 editorCas = documentService.readAnnotationCas(annotationDocument);
             }
@@ -735,13 +736,12 @@ public class AutomationPage
             }
 
             // Update the CASes
-            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
-                    state.getDocument());
+            annotationService.upgradeCas(editorCas, annotationDocument);
+            correctionDocumentService.upgradeCorrectionCas(correctionCas, state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
-                    annotationDocument.getDocument(), state.getUser(), false);
+            documentService.writeAnnotationCas(editorCas, annotationDocument.getDocument(),
+                    state.getUser(), false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 
             // (Re)initialize brat model after potential creating / upgrading CAS

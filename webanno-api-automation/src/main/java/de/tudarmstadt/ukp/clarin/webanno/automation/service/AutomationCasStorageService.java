@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
 
@@ -38,7 +37,7 @@ public interface AutomationCasStorageService
      * @param aJcas
      *            The annotated CAS object
      */
-    void writeCas(TrainingDocument aDocument, JCas aJcas)
+    void writeCas(TrainingDocument aDocument, CAS aJcas)
             throws IOException;
     
     /**
@@ -47,7 +46,7 @@ public interface AutomationCasStorageService
      * @param aDocument
      *            the {@link TrainingDocument}
      */
-    JCas readCas(TrainingDocument aDocument)
+    CAS readCas(TrainingDocument aDocument)
             throws IOException;
         
     File getAutomationFolder(TrainingDocument aDocument)

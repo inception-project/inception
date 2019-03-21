@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -128,7 +127,7 @@ public class PrimitiveUimaFeatureSupport
     }
 
     @Override
-    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    public void setFeatureValue(CAS aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         if (
                 aValue != null &&

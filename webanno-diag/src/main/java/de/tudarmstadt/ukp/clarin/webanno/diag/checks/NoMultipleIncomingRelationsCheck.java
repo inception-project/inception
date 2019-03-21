@@ -27,10 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -95,13 +93,10 @@ public class NoMultipleIncomingRelationsCheck
                         // easier
                         Optional<Integer> sentenceNumber = Optional.empty();
                         try {
-                            JCas jcas;
-                            jcas = target.getCAS().getJCas();
-
-                            sentenceNumber = Optional
-                                    .of(WebAnnoCasUtil.getSentenceNumber(jcas, target.getBegin()));
+                            sentenceNumber = Optional.of(WebAnnoCasUtil
+                                    .getSentenceNumber(target.getCAS(), target.getBegin()));
                         }
-                        catch (CASException | IndexOutOfBoundsException e) {
+                        catch (IndexOutOfBoundsException e) {
                             // ignore this error and don't output sentence number
                             sentenceNumber = Optional.empty();
                         }

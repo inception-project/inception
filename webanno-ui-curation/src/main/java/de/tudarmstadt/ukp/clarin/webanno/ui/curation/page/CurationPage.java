@@ -22,10 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -475,7 +475,7 @@ public class CurationPage
     }
 
     @Override
-    protected JCas getEditorCas()
+    protected CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -487,7 +487,7 @@ public class CurationPage
         return curationDocumentService.readCurationCas(state.getDocument());
     }
 
-    private void updateSentenceNumber(JCas aJCas, int aAddress)
+    private void updateSentenceNumber(CAS aJCas, int aAddress)
     {
         AnnotatorState state = getModelObject();
         Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
@@ -512,8 +512,8 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
         
-        JCas jcas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(jcas, Sentence.class));
+        CAS jcas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(jcas));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -541,7 +541,7 @@ public class CurationPage
         aTarget.add(CurationPage.this);
         
         aTarget.add(getOrCreatePositionInfoLabel());
-        JCas mergeCas = null;
+        CAS mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
             mergeCas = curationDocumentService.readCurationCas(state.getDocument());
@@ -604,9 +604,9 @@ public class CurationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
                     user);
             try {
-                CAS cas = documentService.readAnnotationCas(annotationDocument).getCas();
+                CAS cas = documentService.readAnnotationCas(annotationDocument);
                 annotationService.upgradeCas(cas, annotationDocument);
-                documentService.writeAnnotationCas(cas.getJCas(), annotationDocument, false);
+                documentService.writeAnnotationCas(cas, annotationDocument, false);
             }
             catch (Exception e) {
                 // no need to catch, it is acceptable that no curation document
@@ -672,9 +672,9 @@ public class CurationPage
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
                 upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
-            Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
+            Map<String, CAS> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
-            JCas mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
+            CAS mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
                     randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS

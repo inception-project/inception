@@ -33,7 +33,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -81,7 +80,7 @@ public class ChainAdapter
         }
     }
 
-    public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+    public AnnotationFS addSpan(SourceDocument aDocument, String aUsername, CAS aJCas, int aBegin,
             int aEnd)
         throws AnnotationException
     {
@@ -103,15 +102,15 @@ public class ChainAdapter
     private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
     {
         // Add the link annotation on the span
-        AnnotationFS newLink = newLink(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd());
+        AnnotationFS newLink = newLink(aRequest.getCas(), aRequest.getBegin(), aRequest.getEnd());
 
         // The added link is a new chain on its own - add the chain head FS
-        newChain(aRequest.getJcas(), newLink);
+        newChain(aRequest.getCas(), newLink);
 
         return newLink;
     }
     
-    public int addArc(SourceDocument aDocument, String aUsername, JCas aJCas,
+    public int addArc(SourceDocument aDocument, String aUsername, CAS aJCas,
             AnnotationFS aOriginFs, AnnotationFS aTargetFs)
     {
         // Determine if the links are adjacent. If so, just update the arc label
@@ -209,7 +208,7 @@ public class ChainAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aJCas, VID aVid)
     {
         if (aVid.getSubId() == VID.NONE) {
             deleteSpan(aJCas, aVid.getId());
@@ -219,7 +218,7 @@ public class ChainAdapter
         }
     }
 
-    private void deleteArc(JCas aJCas, int aAddress)
+    private void deleteArc(CAS aJCas, int aAddress)
     {
         AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
@@ -232,9 +231,9 @@ public class ChainAdapter
         setNextLink(linkToDelete, null);
     }
 
-    private void deleteSpan(JCas aJCas, int aAddress)
+    private void deleteSpan(CAS aJCas, int aAddress)
     {
-        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
+        Type chainType = CasUtil.getType(aJCas, getChainTypeName());
 
         AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class,
                 aAddress);
@@ -252,7 +251,7 @@ public class ChainAdapter
         // be deleted.
         FeatureStructure oldChainFs = null;
         AnnotationFS prevLinkFs = null;
-        chainLoop: for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
+        chainLoop: for (FeatureStructure chainFs : selectFS(aJCas, chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
             prevLinkFs = null; // Reset when entering new chain!
 
@@ -326,11 +325,11 @@ public class ChainAdapter
      * @param aLink the link to search the chain for.
      * @return the chain.
      */
-    private FeatureStructure getChainForLink(JCas aJCas, AnnotationFS aLink)
+    private FeatureStructure getChainForLink(CAS aJCas, AnnotationFS aLink)
     {
-        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
+        Type chainType = CasUtil.getType(aJCas, getChainTypeName());
 
-        for (FeatureStructure chainFs : selectFS(aJCas.getCas(), chainType)) {
+        for (FeatureStructure chainFs : selectFS(aJCas, chainType)) {
             AnnotationFS linkFs = getFirstLink(chainFs);
 
             // Now we seek the link within the current chain
@@ -365,10 +364,10 @@ public class ChainAdapter
     /**
      * Create a new chain head feature structure. Already adds the chain to the CAS.
      */
-    private FeatureStructure newChain(JCas aJCas, AnnotationFS aFirstLink)
+    private FeatureStructure newChain(CAS aJCas, AnnotationFS aFirstLink)
     {
-        Type chainType = CasUtil.getType(aJCas.getCas(), getChainTypeName());
-        FeatureStructure newChain = aJCas.getCas().createFS(chainType);
+        Type chainType = CasUtil.getType(aJCas, getChainTypeName());
+        FeatureStructure newChain = aJCas.createFS(chainType);
         newChain.setFeatureValue(chainType.getFeatureByBaseName(getChainFirstFeatureName()),
                 aFirstLink);
         aJCas.addFsToIndexes(newChain);
@@ -378,11 +377,11 @@ public class ChainAdapter
     /**
      * Create a new link annotation. Already adds the chain to the CAS.
      */
-    private AnnotationFS newLink(JCas aJCas, int aBegin, int aEnd)
+    private AnnotationFS newLink(CAS aJCas, int aBegin, int aEnd)
     {
-        Type linkType = CasUtil.getType(aJCas.getCas(), getAnnotationTypeName());
-        AnnotationFS newLink = aJCas.getCas().createAnnotation(linkType, aBegin, aEnd);
-        aJCas.getCas().addFsToIndexes(newLink);
+        Type linkType = CasUtil.getType(aJCas, getAnnotationTypeName());
+        AnnotationFS newLink = aJCas.createAnnotation(linkType, aBegin, aEnd);
+        aJCas.addFsToIndexes(newLink);
         return newLink;
     }
 
@@ -487,7 +486,7 @@ public class ChainAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aJCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (SpanLayerBehavior behavior : behaviors) {

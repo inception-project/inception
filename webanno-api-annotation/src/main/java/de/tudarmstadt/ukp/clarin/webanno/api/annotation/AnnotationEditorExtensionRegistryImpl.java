@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,7 +99,7 @@ public class AnnotationEditorExtensionRegistryImpl
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, String aAction, int aBegin,
+            AjaxRequestTarget aTarget, CAS aJCas, VID aParamId, String aAction, int aBegin,
             int aEnd)
         throws IOException, AnnotationException
     {
@@ -110,7 +110,7 @@ public class AnnotationEditorExtensionRegistryImpl
     }
     
     @Override
-    public void fireRender(JCas aJCas, AnnotatorState aModelObject, VDocument aVdoc)
+    public void fireRender(CAS aJCas, AnnotatorState aModelObject, VDocument aVdoc)
     {
         for (AnnotationEditorExtension ext: getExtensions()) {
             ext.render(aJCas, aModelObject, aVdoc);

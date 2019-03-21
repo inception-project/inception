@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -101,7 +100,7 @@ public interface ImportExportService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    JCas importCasFromFile(File aFile, Project aProject, String aFormatId)
+    CAS importCasFromFile(File aFile, Project aProject, String aFormatId)
         throws UIMAException, IOException;
 
     /**

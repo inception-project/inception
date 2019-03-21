@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.IOException;
@@ -33,11 +33,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -166,7 +166,7 @@ public class SuggestionViewPanel
 
                         SourceDocument sourceDocument = curationUserSegment.getAnnotatorState()
                                 .getDocument();
-                        JCas annotationJCas = (curationUserSegment.getAnnotatorState().getMode()
+                        CAS annotationJCas = (curationUserSegment.getAnnotatorState().getMode()
                                 .equals(Mode.AUTOMATION)
                                 || curationUserSegment.getAnnotatorState().getMode()
                                         .equals(Mode.CORRECTION))
@@ -218,7 +218,7 @@ public class SuggestionViewPanel
     }
 
     private void mergeSpan(IRequestParameters aRequest,
-            UserAnnotationSegment aCurationUserSegment, JCas aJcas)
+            UserAnnotationSegment aCurationUserSegment, CAS aJcas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         AnnotationDocument clickedAnnotationDocument;
@@ -239,13 +239,13 @@ public class SuggestionViewPanel
         createSpan(spanType, state, aJcas, clickedAnnotationDocument, address);
     }
 
-    private void createSpan(String spanType, AnnotatorState aBModel, JCas aMergeJCas,
+    private void createSpan(String spanType, AnnotatorState aBModel, CAS aMergeJCas,
             AnnotationDocument aAnnotationDocument, int aAddress)
             throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
-        JCas clickedJCas = getJCas(aBModel, aAnnotationDocument);
+        CAS clickedJCas = getJCas(aBModel, aAnnotationDocument);
 
-        AnnotationFS fsClicked = selectByAddr(clickedJCas, aAddress);
+        AnnotationFS fsClicked = selectAnnotationByAddr(clickedJCas, aAddress);
 
         if (isCorefType(fsClicked)) {
             throw new AnnotationException("Coreference Annotation not supported in curation");
@@ -264,7 +264,7 @@ public class SuggestionViewPanel
         aBModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (aBModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(aMergeJCas, aBModel.getFirstVisibleUnitBegin(),
+            AnnotationFS sentence = selectSentenceAt(aMergeJCas, aBModel.getFirstVisibleUnitBegin(),
                     aBModel.getFirstVisibleUnitEnd());
             sentence = findWindowStartCenteringOnSelection(aMergeJCas, sentence,
                     fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
@@ -274,7 +274,7 @@ public class SuggestionViewPanel
     }
 
     private void mergeArc(IRequestParameters aRequest,
-            UserAnnotationSegment aCurationUserSegment, JCas aJcas)
+            UserAnnotationSegment aCurationUserSegment, CAS aJcas)
             throws AnnotationException, IOException, UIMAException, ClassNotFoundException
     {
         int addressOriginClicked = aRequest.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
@@ -287,7 +287,7 @@ public class SuggestionViewPanel
         SourceDocument sourceDocument = bModel.getDocument();
         
         // for correction and automation, the lower panel is the clickedJcase, from the suggestions
-        JCas clickedJCas;
+        CAS clickedJCas;
         if (!aCurationUserSegment.getAnnotatorState().getMode().equals(Mode.CURATION)) {
             clickedJCas = correctionDocumentService.readCorrectionCas(sourceDocument);
         }
@@ -303,7 +303,7 @@ public class SuggestionViewPanel
         AnnotationLayer layer = annotationService.getLayer(layerId);
         TypeAdapter adapter = annotationService.getAdapter(layer);
         int address = Integer.parseInt(fsArcaddress.split("\\.")[0]);
-        AnnotationFS clickedFS = selectByAddr(clickedJCas, address);
+        AnnotationFS clickedFS = selectAnnotationByAddr(clickedJCas, address);
 
         if (isCorefType(clickedFS)) {
             throw new AnnotationException(" Coreference Annotation not supported in curation");
@@ -320,7 +320,7 @@ public class SuggestionViewPanel
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            Sentence sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleUnitBegin(),
+            AnnotationFS sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleUnitBegin(),
                     bModel.getFirstVisibleUnitEnd());
             sentence = findWindowStartCenteringOnSelection(aJcas, sentence,
                     clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
@@ -329,7 +329,7 @@ public class SuggestionViewPanel
         }
     }
 
-    private JCas getJCas(AnnotatorState aState, AnnotationDocument aDocument)
+    private CAS getJCas(AnnotatorState aState, AnnotationDocument aDocument)
         throws IOException
     {
         if (aState.getMode().equals(Mode.AUTOMATION) || aState.getMode().equals(Mode.CORRECTION)) {
@@ -340,7 +340,7 @@ public class SuggestionViewPanel
         }
     }
     
-    private void writeEditorCas(AnnotatorState aState, JCas aJCas)
+    private void writeEditorCas(AnnotatorState aState, CAS aJCas)
         throws IOException
     {
         if (aState.getMode().equals(Mode.ANNOTATION) || aState.getMode().equals(Mode.AUTOMATION)
@@ -372,7 +372,7 @@ public class SuggestionViewPanel
     
     public final static String CURATION_USER = "CURATION_USER";
 
-    private String render(JCas aJcas, AnnotatorState aBratAnnotatorModel,
+    private String render(CAS aJcas, AnnotatorState aBratAnnotatorModel,
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
@@ -419,9 +419,9 @@ public class SuggestionViewPanel
         AnnotatorState state = aCurationContainer.getAnnotatorState();
         SourceDocument sourceDocument = state.getDocument();
         
-        Map<String, JCas> jCases = new HashMap<>();
+        Map<String, CAS> jCases = new HashMap<>();
         // This is the CAS that the user can actively edit
-        JCas annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
+        CAS annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
                 sourceDocument, jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
@@ -444,7 +444,7 @@ public class SuggestionViewPanel
             if ((!username.equals(CURATION_USER) && isCurationMode)
                     || (username.equals(CURATION_USER) && (isAutomationMode || isCorrectionMode))) {
                 
-                JCas jCas = jCases.get(username);
+                CAS jCas = jCases.get(username);
                 
                 // Set up coloring strategy
                 ColoringStrategy curationColoringStrategy = makeColoringStrategy(
@@ -497,10 +497,10 @@ public class SuggestionViewPanel
     {
         AnnotatorState state = aCurationContainer.getAnnotatorState();
         SourceDocument sourceDocument = state.getDocument();
-        Map<String, JCas> jCases = new HashMap<>();
+        Map<String, CAS> jCases = new HashMap<>();
 
         // This is the CAS that the user can actively edit
-        JCas annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
+        CAS annotatorCas = getAnnotatorCas(state, aAnnotationSelectionByUsernameAndAddress,
                 sourceDocument, jCases);
 
         // We store the CAS that the user will edit as the "CURATION USER"
@@ -514,7 +514,7 @@ public class SuggestionViewPanel
             BratSuggestionVisualizer vis = (BratSuggestionVisualizer) v;
             UserAnnotationSegment seg = vis.getModelObject();
             
-            JCas jCas = jCases.get(seg.getUsername());
+            CAS jCas = jCases.get(seg.getUsername());
             
             // Set up coloring strategy
             ColoringStrategy curationColoringStrategy = makeColoringStrategy(
@@ -540,7 +540,7 @@ public class SuggestionViewPanel
     }
     
     private Map<String, Map<VID, AnnotationState>> calcColors(AnnotatorState state,
-            SourceListView aCurationSegment, JCas annotatorCas, Map<String, JCas> jCases)
+            SourceListView aCurationSegment, CAS annotatorCas, Map<String, CAS> jCases)
     {
         // get differing feature structures
         List<Type> entryTypes = SuggestionBuilder.getEntryTypes(annotatorCas,
@@ -602,7 +602,7 @@ public class SuggestionViewPanel
      * For each {@link ConfigurationSet}, where there are some differences in users annotation and
      * the curation annotation.
      */
-    private void addSuggestionColor(Project aProject, Mode aMode, Map<String, JCas> aCasMap,
+    private void addSuggestionColor(Project aProject, Mode aMode, Map<String, CAS> aCasMap,
             Map<String, Map<VID, AnnotationState>> aSuggestionColors,
             Collection<ConfigurationSet> aCfgSet, boolean aI, boolean aAgree)
     {
@@ -687,14 +687,14 @@ public class SuggestionViewPanel
         }
     }
 
-    private JCas getAnnotatorCas(
+    private CAS getAnnotatorCas(
             AnnotatorState aBModel,
             Map<String, Map<Integer, AnnotationSelection>> aAnnotationSelectionByUsernameAndAddress,
             SourceDocument sourceDocument,
-            Map<String, JCas> jCases)
+            Map<String, CAS> jCases)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        JCas annotatorCas;
+        CAS annotatorCas;
         if (aBModel.getMode().equals(Mode.AUTOMATION)
                 || aBModel.getMode().equals(Mode.CORRECTION)) {
             // If this is a CORRECTION or AUTOMATION project, then we get the CORRECTION document
@@ -725,7 +725,7 @@ public class SuggestionViewPanel
                 String username = annotationDocument.getUser();
                 if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)
                         || username.equals(CURATION_USER)) {
-                    JCas jCas = documentService.readAnnotationCas(annotationDocument);
+                    CAS jCas = documentService.readAnnotationCas(annotationDocument);
                     jCases.put(username, jCas);
 
                     // cleanup annotationSelections

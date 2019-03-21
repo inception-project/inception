@@ -27,7 +27,7 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -203,7 +203,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, AnnotationDocument annotationDocument,
+    void writeAnnotationCas(CAS jCas, AnnotationDocument annotationDocument,
             boolean aUpdateTimestamp)
         throws IOException;
     
@@ -222,7 +222,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
+    void writeAnnotationCas(CAS jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**
@@ -333,7 +333,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    JCas readAnnotationCas(AnnotationDocument annotationDocument)
+    CAS readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
@@ -357,7 +357,7 @@ public interface DocumentService
      *             {@link #readAnnotationCas(SourceDocument, String)}
      */
     @Deprecated
-    JCas readAnnotationCas(SourceDocument document, User user)
+    CAS readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
     /**
@@ -372,7 +372,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    JCas readAnnotationCas(SourceDocument document, String userName)
+    CAS readAnnotationCas(SourceDocument document, String userName)
         throws IOException;
 
     /**
@@ -384,7 +384,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was a problem loading the CAS.
      */
-    JCas createOrReadInitialCas(SourceDocument aDocument)
+    CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException;
 
     /**
