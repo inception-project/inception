@@ -88,7 +88,6 @@ import de.tudarmstadt.ukp.inception.ui.core.dashboard.project.ProjectDashboardPa
 public class ProjectsOverviewPage
     extends ApplicationPageBase
 {
-    private static final String MID_LEAVE_PROJECT_ICON = "leaveProjectIcon";
     private static final String MID_CREATED = "created";
     private static final String MID_NAME = "name";
     private static final String MID_PROJECT_LINK = "projectLink";
