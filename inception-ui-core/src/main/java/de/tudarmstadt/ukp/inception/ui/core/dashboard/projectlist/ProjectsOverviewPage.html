@@ -60,14 +60,17 @@
                 <i wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></i>
               </div>
 	        </div>
-            <div class="dropdown" wicket:enclosure>
-              <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown"  >
-                <span class="fa fa-ellipsis-v"></span>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-right">
-                <li><a wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
-              </ul>
-            </div> 
+	        <div class="list group">
+	            <div class="dropdown" wicket:enclosure>
+	              <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
+	                <span class="fa fa-ellipsis-v"></span>
+	              </button>
+	              <ul class="dropdown-menu dropdown-menu-right">
+	                <li><a wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
+	              </ul>
+	            </div> 
+	            <div>&nbsp;&nbsp;&nbsp;&nbsp;</div>
+            </div>
           </div>
         </div>
         <div wicket:id="confirmLeave"></div>
