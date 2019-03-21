@@ -42,7 +42,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -64,10 +63,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesomeIconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportService;
@@ -81,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
@@ -117,6 +115,7 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
+    private ConfirmationDialog confirmLeaveDialog;
     
     public ProjectsOverviewPage()
     {
@@ -124,7 +123,9 @@ public class ProjectsOverviewPage
         add(createNewProjectLink());
         add(createImportProjectForm());
         add(roleFilters = createRoleFilters());
-        
+        add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
+                new StringResourceModel("leaveDialog.title", this),
+                new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
     }
     
@@ -186,7 +187,7 @@ public class ProjectsOverviewPage
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
                     () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
-                addLeaveProjectOption(aItem);
+                addOptions(aItem);
                 aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
@@ -211,54 +212,34 @@ public class ProjectsOverviewPage
         return projectList;
     }
     
-    private void addLeaveProjectOption(ListItem<Project> aItem)
+    private void addOptions(ListItem<Project> aItem)
     {
         User user = userRepository.getCurrentUser();
         Project currentProject = aItem.getModelObject();
-        ConfirmationDialog confirmLeaveDialog = createLeaveProjectDialog(user, currentProject);
-        AjaxLink<Void> leaveProjectLink = createLeaveProjectButton(user, currentProject,
-                confirmLeaveDialog);
+
+        
+        LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
+            _target -> actionConfirmLeaveProject(_target, aItem));
+        boolean hasProjectPermissions = !projectService
+                .listProjectPermissionLevel(user, currentProject).isEmpty();
+
+        leaveProjectLink.add(LambdaBehavior.visibleWhen(
+            () -> hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
+
         aItem.add(leaveProjectLink);
-        aItem.add(confirmLeaveDialog);
     }
 
-    private ConfirmationDialog createLeaveProjectDialog(User aUser, Project aCurrentProject)
+
+    private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, ListItem<Project> aItem)
     {
-        ConfirmationDialog confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
-                new StringResourceModel("leaveDialog.title", this),
-                new StringResourceModel("leaveDialog.text", this));
+        User user = userRepository.getCurrentUser();
+        Project currentProject = aItem.getModelObject();
         confirmLeaveDialog.setConfirmAction((target) -> {
-            projectService.listProjectPermissionLevel(aUser, aCurrentProject).stream()
+            projectService.listProjectPermissionLevel(user, currentProject).stream()
                     .forEach(projectService::removeProjectPermission);
             setResponsePage(getPage());
         });
-        return confirmLeaveDialog;
-    }
-
-    private AjaxLink<Void> createLeaveProjectButton(User aUser, Project aCurrentProject,
-            ConfirmationDialog confirmLeaveDialog)
-    {
-        Icon leaveProjectIcon = new Icon(MID_LEAVE_PROJECT_ICON, FontAwesomeIconType.times_circle);
-        AjaxLink<Void> leaveProjectLink = new AjaxLink<Void>(MID_LEAVE_PROJECT)
-        {
-
-            private static final long serialVersionUID = -6496680664449646359L;
-
-            @Override
-            public void onClick(AjaxRequestTarget target)
-            {
-                confirmLeaveDialog.show(target);
-            }
-
-        };
-        
-        leaveProjectLink.add(leaveProjectIcon);
-        boolean hasNoProjectPermissions = projectService
-                .listProjectPermissionLevel(aUser, aCurrentProject).isEmpty();
-        if (hasNoProjectPermissions || projectService.isAdmin(aCurrentProject, aUser)) {
-            leaveProjectLink.setVisible(false);
-        }
-        return leaveProjectLink;
+        confirmLeaveDialog.show(aTarget);
     }
 
     private WebMarkupContainer createRoleFilters()
