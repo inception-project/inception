@@ -1086,6 +1086,18 @@ public class WebAnnoCasUtil
         }
     }
 
+    public static String getDocumentTitle(CAS aCas)
+    {
+        try {
+            Type type = getType(aCas, DocumentMetaData.class);
+            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            return FSUtil.getFeature(dmd, "documentTitle", String.class);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     public static CAS createCas() throws ResourceInitializationException
     {
         return createCas(null);
