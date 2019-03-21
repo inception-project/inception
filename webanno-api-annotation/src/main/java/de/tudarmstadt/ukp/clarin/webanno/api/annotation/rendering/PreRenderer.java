@@ -26,6 +26,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 public interface PreRenderer
 {
-    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aJCas,
+    void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers);
 }

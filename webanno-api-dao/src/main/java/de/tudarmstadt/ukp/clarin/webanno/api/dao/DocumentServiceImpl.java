@@ -641,11 +641,11 @@ public class DocumentServiceImpl
 
     @Override
     @Transactional
-    public void writeAnnotationCas(CAS aJCas, AnnotationDocument aAnnotationDocument,
+    public void writeAnnotationCas(CAS aCas, AnnotationDocument aAnnotationDocument,
             boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aAnnotationDocument.getDocument(), aJCas,
+        casStorageService.writeCas(aAnnotationDocument.getDocument(), aCas,
                 aAnnotationDocument.getUser());
         
         if (aUpdateTimestamp) {
@@ -658,7 +658,7 @@ public class DocumentServiceImpl
         }
         
         applicationEventPublisher
-                .publishEvent(new AfterAnnotationUpdateEvent(this, aAnnotationDocument, aJCas));
+                .publishEvent(new AfterAnnotationUpdateEvent(this, aAnnotationDocument, aCas));
     }
     
     
@@ -671,12 +671,12 @@ public class DocumentServiceImpl
     
     @Override
     @Transactional
-    public void writeAnnotationCas(CAS aJcas, SourceDocument aDocument, User aUser,
+    public void writeAnnotationCas(CAS aCas, SourceDocument aDocument, User aUser,
             boolean aUpdateTimestamp)
         throws IOException
     {
         AnnotationDocument annotationDocument = getAnnotationDocument(aDocument, aUser);
-        writeAnnotationCas(aJcas, annotationDocument, aUpdateTimestamp);
+        writeAnnotationCas(aCas, annotationDocument, aUpdateTimestamp);
     }
 
     @Override

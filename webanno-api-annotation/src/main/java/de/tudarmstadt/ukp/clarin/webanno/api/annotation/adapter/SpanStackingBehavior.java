@@ -123,19 +123,19 @@ public class SpanStackingBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         if (aAdapter.getLayer().isAllowStacking()) {
             return emptyList();
         }
 
-        Type type = getType(aJCas, aAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         AnnotationFS prevFS = null;
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         
         // Since the annotations are sorted, we can easily find stacked annotation by scanning
         // through the entire list and checking if two adjacent annotations have the same offsets
-        for (AnnotationFS fs : select(aJCas, type)) {
+        for (AnnotationFS fs : select(aCas, type)) {
             if (prevFS != null && prevFS.getBegin() == fs.getBegin()
                     && prevFS.getEnd() == fs.getEnd()) {
                 messages.add(Pair.of(LogMessage.error(this, "Stacked annotation at [%d-%d]",

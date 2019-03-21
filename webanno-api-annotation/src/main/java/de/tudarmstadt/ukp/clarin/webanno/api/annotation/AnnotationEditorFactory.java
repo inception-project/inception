@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
@@ -33,5 +33,5 @@ public interface AnnotationEditorFactory
     String getDisplayName();
     
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider);
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
 }

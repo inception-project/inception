@@ -298,27 +298,27 @@ public class ImportExportServiceImpl
         return jCas;
     }
     
-    public static void splitSentences(CAS aJCas)
+    public static void splitSentences(CAS aCas)
     {
         BreakIterator bi = BreakIterator.getSentenceInstance(Locale.US);
-        bi.setText(aJCas.getDocumentText());
+        bi.setText(aCas.getDocumentText());
         int last = bi.first();
         int cur = bi.next();
         while (cur != BreakIterator.DONE) {
             int[] span = new int[] { last, cur };
-            trim(aJCas.getDocumentText(), span);
+            trim(aCas.getDocumentText(), span);
             if (!isEmpty(span[0], span[1])) {
-                aJCas.addFsToIndexes(createSentence(aJCas, span[0], span[1]));
+                aCas.addFsToIndexes(createSentence(aCas, span[0], span[1]));
             }
             last = cur;
             cur = bi.next();
         }
     }
     
-    public static void tokenize(CAS aJCas)
+    public static void tokenize(CAS aCas)
     {
         BreakIterator bi = BreakIterator.getWordInstance(Locale.US);
-        for (AnnotationFS s : selectSentences(aJCas)) {
+        for (AnnotationFS s : selectSentences(aCas)) {
             bi.setText(s.getCoveredText());
             int last = bi.first();
             int cur = bi.next();
@@ -326,8 +326,8 @@ public class ImportExportServiceImpl
                 int[] span = new int[] { last, cur };
                 trim(s.getCoveredText(), span);
                 if (!isEmpty(span[0], span[1])) {
-                    aJCas.addFsToIndexes(
-                            createToken(aJCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
+                    aCas.addFsToIndexes(
+                            createToken(aCas, span[0] + s.getBegin(), span[1] + s.getBegin()));
                 }
                 last = cur;
                 cur = bi.next();

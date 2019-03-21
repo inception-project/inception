@@ -96,9 +96,9 @@ public class BratRenderer
     private static final boolean DEBUG = false;
     
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, CAS aJCas, AnnotationSchemaService aAnnotationService)
+            VDocument aVDoc, CAS aCas, AnnotationSchemaService aAnnotationService)
     {
-        render(aResponse, aState, aVDoc, aJCas, aAnnotationService, null);
+        render(aResponse, aState, aVDoc, aCas, aAnnotationService, null);
     }
     
     /**
@@ -108,20 +108,20 @@ public class BratRenderer
      *            the response.
      * @param aState
      *            the annotator model.
-     * @param aJCas
+     * @param aCas
      *            the JCas.
      * @param aAnnotationService
      *            the annotation service.s
      */
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            CAS aJCas, AnnotationSchemaService aAnnotationService,
+            CAS aCas, AnnotationSchemaService aAnnotationService,
             ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
         // Render invisible baseline annotations (sentence, tokens)
-        renderTokenAndSentence(aJCas, aResponse, aState);
+        renderTokenAndSentence(aCas, aResponse, aState);
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
@@ -181,7 +181,7 @@ public class BratRenderer
         }
         
         List<AnnotationFS> sentences = new ArrayList<>(
-                select(aJCas, getType(aJCas, Sentence.class)));
+                select(aCas, getType(aCas, Sentence.class)));
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -202,7 +202,7 @@ public class BratRenderer
             AnnotationFS fs;
             if (
                     !vcomment.getVid().isSynthetic() && 
-                    ((fs = selectAnnotationByAddr(aJCas, vcomment.getVid().getId())) != null && 
+                    ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null && 
                             fs.getType().getName().equals(Sentence.class.getName()))
             ) {
                 int index = sentences.indexOf(fs) + 1;
@@ -264,7 +264,7 @@ public class BratRenderer
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
     
-    public static void renderTokenAndSentence(CAS aJcas, GetDocumentResponse aResponse,
+    public static void renderTokenAndSentence(CAS aCas, GetDocumentResponse aResponse,
             AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
@@ -272,11 +272,11 @@ public class BratRenderer
         
         aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
-        Type tokenType = CasUtil.getType(aJcas, Token.class);
-        Type sentenceType = CasUtil.getType(aJcas, Sentence.class);
+        Type tokenType = CasUtil.getType(aCas, Token.class);
+        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
         
         // Render token + texts
-        for (AnnotationFS fs : selectCovered(aJcas, tokenType, windowBegin, windowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, tokenType, windowBegin, windowEnd)) {
             // attache type such as POS adds non existing token element for ellipsis annotation
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
@@ -293,14 +293,14 @@ public class BratRenderer
         
         // Replace newline characters before sending to the client to avoid rendering glitches
         // in the client-side brat rendering code
-        String visibleText = aJcas.getDocumentText().substring(windowBegin, windowEnd);
+        String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
         visibleText = StringUtils.replaceEachRepeatedly(visibleText, 
                 new String[] { "\n", "\r" }, new String[] { " ", " " });
         aResponse.setText(visibleText);
 
         // Render Sentence
         int sentIdx = aResponse.getSentenceNumberOffset();
-        for (AnnotationFS fs : selectCovered(aJcas, sentenceType, windowBegin, windowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, sentenceType, windowBegin, windowEnd)) {
             aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd()
                     - windowBegin);
             

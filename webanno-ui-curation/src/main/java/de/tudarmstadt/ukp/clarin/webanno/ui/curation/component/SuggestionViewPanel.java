@@ -218,7 +218,7 @@ public class SuggestionViewPanel
     }
 
     private void mergeSpan(IRequestParameters aRequest,
-            UserAnnotationSegment aCurationUserSegment, CAS aJcas)
+            UserAnnotationSegment aCurationUserSegment, CAS aCas)
             throws AnnotationException, UIMAException, ClassNotFoundException, IOException
     {
         AnnotationDocument clickedAnnotationDocument;
@@ -236,7 +236,7 @@ public class SuggestionViewPanel
         int address = aRequest.getParameterValue(PARAM_ID).toInt();
         String spanType = removePrefix(aRequest.getParameterValue(PARAM_TYPE).toString());
 
-        createSpan(spanType, state, aJcas, clickedAnnotationDocument, address);
+        createSpan(spanType, state, aCas, clickedAnnotationDocument, address);
     }
 
     private void createSpan(String spanType, AnnotatorState aBModel, CAS aMergeJCas,
@@ -274,7 +274,7 @@ public class SuggestionViewPanel
     }
 
     private void mergeArc(IRequestParameters aRequest,
-            UserAnnotationSegment aCurationUserSegment, CAS aJcas)
+            UserAnnotationSegment aCurationUserSegment, CAS aCas)
             throws AnnotationException, IOException, UIMAException, ClassNotFoundException
     {
         int addressOriginClicked = aRequest.getParameterValue(PARAM_ORIGIN_SPAN_ID).toInt();
@@ -309,9 +309,9 @@ public class SuggestionViewPanel
             throw new AnnotationException(" Coreference Annotation not supported in curation");
         }
 
-        MergeCas.addArcAnnotation(adapter, aJcas, addressOriginClicked, addressTargetClicked,
+        MergeCas.addArcAnnotation(adapter, aCas, addressOriginClicked, addressTargetClicked,
                 fsArcaddress, clickedJCas, clickedFS);
-        writeEditorCas(bModel, aJcas);
+        writeEditorCas(bModel, aCas);
 
         int sentenceNumber = getSentenceNumber(clickedJCas, clickedFS.getBegin());
         bModel.setFocusUnitIndex(sentenceNumber);
@@ -320,9 +320,9 @@ public class SuggestionViewPanel
         bModel.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (bModel.getPreferences().isScrollPage()) {
-            AnnotationFS sentence = selectSentenceAt(aJcas, bModel.getFirstVisibleUnitBegin(),
+            AnnotationFS sentence = selectSentenceAt(aCas, bModel.getFirstVisibleUnitBegin(),
                     bModel.getFirstVisibleUnitEnd());
-            sentence = findWindowStartCenteringOnSelection(aJcas, sentence,
+            sentence = findWindowStartCenteringOnSelection(aCas, sentence,
                     clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
                     bModel.getPreferences().getWindowSize());
             bModel.setFirstVisibleUnit(sentence);
@@ -340,18 +340,18 @@ public class SuggestionViewPanel
         }
     }
     
-    private void writeEditorCas(AnnotatorState aState, CAS aJCas)
+    private void writeEditorCas(AnnotatorState aState, CAS aCas)
         throws IOException
     {
         if (aState.getMode().equals(Mode.ANNOTATION) || aState.getMode().equals(Mode.AUTOMATION)
                 || aState.getMode().equals(Mode.CORRECTION)) {
-            documentService.writeAnnotationCas(aJCas, aState.getDocument(), aState.getUser(), true);
+            documentService.writeAnnotationCas(aCas, aState.getDocument(), aState.getUser(), true);
 
             updateDocumentTimestampAfterWrite(aState, documentService.getAnnotationCasTimestamp(
                     aState.getDocument(), aState.getUser().getUsername()));
         }
         else if (aState.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, aState.getDocument(), true);
+            curationDocumentService.writeCurationCas(aCas, aState.getDocument(), true);
 
             updateDocumentTimestampAfterWrite(aState, curationDocumentService
                     .getCurationCasTimestamp(aState.getDocument()));
@@ -372,7 +372,7 @@ public class SuggestionViewPanel
     
     public final static String CURATION_USER = "CURATION_USER";
 
-    private String render(CAS aJcas, AnnotatorState aBratAnnotatorModel,
+    private String render(CAS aCas, AnnotatorState aBratAnnotatorModel,
             ColoringStrategy aCurationColoringStrategy)
         throws IOException
     {
@@ -389,10 +389,10 @@ public class SuggestionViewPanel
         
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, aBratAnnotatorModel.getWindowBeginOffset(),
-                aBratAnnotatorModel.getWindowEndOffset(), aJcas, layersToRender);
+                aBratAnnotatorModel.getWindowEndOffset(), aCas, layersToRender);
         
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aJcas, annotationService,
+        BratRenderer.render(response, aBratAnnotatorModel, vdoc, aCas, annotationService,
                 aCurationColoringStrategy);
         return JSONUtil.toInterpretableJsonString(response);
     }

@@ -164,7 +164,7 @@ public class RelationStackingBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
@@ -172,7 +172,7 @@ public class RelationStackingBehavior
         
         RelationAdapter adapter = (RelationAdapter) aAdapter;
         
-        Type type = getType(aJCas, adapter.getAnnotationTypeName());
+        Type type = getType(aCas, adapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         
@@ -184,7 +184,7 @@ public class RelationStackingBehavior
         // be multiple relations going out from the same sourceFS, we need to consider all of them
         // for potential stacking.
         List<AnnotationFS> candidates = new ArrayList<>();
-        for (AnnotationFS fs : select(aJCas, type)) {
+        for (AnnotationFS fs : select(aCas, type)) {
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
             

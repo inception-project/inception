@@ -232,9 +232,9 @@ public class AutomationUtil
         }
     }
 
-    private static Collection<AnnotationFS> getAllAnnoFss(CAS aJcas, Type aType)
+    private static Collection<AnnotationFS> getAllAnnoFss(CAS aCas, Type aType)
     {
-        Collection<AnnotationFS> spanAnnos = select(aJcas, aType);
+        Collection<AnnotationFS> spanAnnos = select(aCas, aType);
         new ArrayList<>(spanAnnos).sort(Comparator.comparingInt(AnnotationFS::getBegin));
         return spanAnnos;
     }
@@ -339,13 +339,13 @@ public class AutomationUtil
 
     @Deprecated
     private static void deleteSpanAnnotation(TypeAdapter aAdapter, AnnotatorState aState,
-            CAS aJCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
+            CAS aCas, AnnotationFeature aFeature, int aBegin, int aEnd, Object aValue)
     {
-        Type type = CasUtil.getType(aJCas, aAdapter.getAnnotationTypeName());
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas, type, aBegin, aEnd)) {
+        Type type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
+        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (fs.getBegin() == aBegin && fs.getEnd() == aEnd) {
                 if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
-                    aAdapter.delete(aState.getDocument(), aState.getUser().getUsername(), aJCas,
+                    aAdapter.delete(aState.getDocument(), aState.getUser().getUsername(), aCas,
                             new VID(getAddr(fs)));
                 }
             }
@@ -403,22 +403,22 @@ public class AutomationUtil
     }
 
     private static void deleteRelationAnnotation(RelationAdapter aAdapter, SourceDocument aDocument,
-            String aUsername, CAS aJCas, AnnotationFeature aFeature, int aBegin, int aEnd,
+            String aUsername, CAS aCas, AnnotationFeature aFeature, int aBegin, int aEnd,
             String aDepCoveredText, String aGovCoveredText, Object aValue)
     {
-        Feature dependentFeature = aAdapter.getAnnotationType(aJCas)
+        Feature dependentFeature = aAdapter.getAnnotationType(aCas)
                 .getFeatureByBaseName(aAdapter.getTargetFeatureName());
-        Feature governorFeature = aAdapter.getAnnotationType(aJCas)
+        Feature governorFeature = aAdapter.getAnnotationType(aCas)
                 .getFeatureByBaseName(aAdapter.getSourceFeatureName());
 
         AnnotationFS dependentFs = null;
         AnnotationFS governorFs = null;
 
-        Type type = CasUtil.getType(aJCas, aAdapter.getAnnotationTypeName());
-        Type spanType = getType(aJCas, aAdapter.getAttachTypeName());
+        Type type = CasUtil.getType(aCas, aAdapter.getAnnotationTypeName());
+        Type spanType = getType(aCas, aAdapter.getAttachTypeName());
         Feature arcSpanFeature = spanType.getFeatureByBaseName(aAdapter.getAttachFeatureName());
 
-        for (AnnotationFS fs : CasUtil.selectCovered(aJCas, type, aBegin, aEnd)) {
+        for (AnnotationFS fs : CasUtil.selectCovered(aCas, type, aBegin, aEnd)) {
             if (aAdapter.getAttachFeatureName() != null) {
                 dependentFs = (AnnotationFS) fs.getFeatureValue(dependentFeature)
                         .getFeatureValue(arcSpanFeature);
@@ -434,7 +434,7 @@ public class AutomationUtil
             if (aDepCoveredText.equals(dependentFs.getCoveredText())
                     && aGovCoveredText.equals(governorFs.getCoveredText())) {
                 if (ObjectUtils.equals(aAdapter.getFeatureValue(aFeature, fs), aValue)) {
-                    aAdapter.delete(aDocument, aUsername, aJCas, new VID(getAddr(fs)));
+                    aAdapter.delete(aDocument, aUsername, aCas, new VID(getAddr(fs)));
                 }
             }
         }
@@ -1627,7 +1627,7 @@ public class AutomationUtil
      * methods in the {@link TypeAdapter}s in such a way that the begin and end offsets are always
      * exact so that no need to re-compute
      *
-     * @param aJcas
+     * @param aCas
      *            the JCas.
      * @param aFeature
      *            the feature.
@@ -1638,14 +1638,14 @@ public class AutomationUtil
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public static void automate(CAS aJcas, AnnotationFeature aFeature, List<String> aLabelValues)
+    public static void automate(CAS aCas, AnnotationFeature aFeature, List<String> aLabelValues)
         throws AnnotationException, IOException
     {
 
         String typeName = aFeature.getLayer().getName();
         String attachTypeName = aFeature.getLayer().getAttachType() == null ? null : aFeature
                 .getLayer().getAttachType().getName();
-        Type type = CasUtil.getType(aJcas, typeName);
+        Type type = CasUtil.getType(aCas, typeName);
         Feature feature = type.getFeatureByBaseName(aFeature.getName());
 
         int i = 0;
@@ -1654,11 +1654,11 @@ public class AutomationUtil
         int end = 0;
         // remove existing annotations of this type, after all it is an
         // automation, no care
-        clearAnnotations(aJcas, type);
+        clearAnnotations(aCas, type);
 
         switch (aFeature.getLayer().getAnchoringMode()) {
         case TOKENS:
-            for (AnnotationFS token : selectTokens(aJcas)) {
+            for (AnnotationFS token : selectTokens(aCas)) {
                 String value = aLabelValues.get(i);
                 AnnotationFS newAnnotation;
                 if (value.equals("O") && prevNe.equals("O")) {
@@ -1666,10 +1666,10 @@ public class AutomationUtil
                     continue;
                 }
                 else if (value.equals("O") && !prevNe.equals("O")) {
-                    newAnnotation = aJcas.createAnnotation(type, begin, end);
+                    newAnnotation = aCas.createAnnotation(type, begin, end);
                     newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", ""));
                     prevNe = "O";
-                    aJcas.addFsToIndexes(newAnnotation);
+                    aCas.addFsToIndexes(newAnnotation);
                 }
                 else if (!value.equals("O") && prevNe.equals("O")) {
                     begin = token.getBegin();
@@ -1680,13 +1680,13 @@ public class AutomationUtil
                 else if (!value.equals("O") && !prevNe.equals("O")) {
                     if (value.replace("B-", "").replace("I-", "").equals(
                             prevNe.replace("B-", "").replace("I-", "")) && value.startsWith("B-")) {
-                        newAnnotation = aJcas.createAnnotation(type, begin, end);
+                        newAnnotation = aCas.createAnnotation(type, begin, end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
-                        aJcas.addFsToIndexes(newAnnotation);
+                        aCas.addFsToIndexes(newAnnotation);
 
                     }
                     else if (value.replace("B-", "").replace("I-", "")
@@ -1697,13 +1697,13 @@ public class AutomationUtil
 
                     }
                     else {
-                        newAnnotation = aJcas.createAnnotation(type, begin, end);
+                        newAnnotation = aCas.createAnnotation(type, begin, end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
-                        aJcas.addFsToIndexes(newAnnotation);
+                        aCas.addFsToIndexes(newAnnotation);
 
                     }
                 }
@@ -1715,19 +1715,19 @@ public class AutomationUtil
             Feature attachFeature = null;
             Type attachType;
             if (attachTypeName != null) {
-                attachType = CasUtil.getType(aJcas, attachTypeName);
+                attachType = CasUtil.getType(aCas, attachTypeName);
                 attachFeature = attachType.getFeatureByBaseName(attachTypeName);
             }
 
-            for (AnnotationFS token : selectTokens(aJcas)) {
-                AnnotationFS newAnnotation = aJcas.createAnnotation(type, token.getBegin(),
+            for (AnnotationFS token : selectTokens(aCas)) {
+                AnnotationFS newAnnotation = aCas.createAnnotation(type, token.getBegin(),
                         token.getEnd());
                 newAnnotation.setFeatureValueFromString(feature, aLabelValues.get(i));
                 i++;
                 if (attachFeature != null) {
                     token.setFeatureValue(attachFeature, newAnnotation);
                 }
-                aJcas.addFsToIndexes(newAnnotation);
+                aCas.addFsToIndexes(newAnnotation);
             }
             break;
         }
@@ -1809,13 +1809,13 @@ public class AutomationUtil
         }
     }
     
-    public static void clearAnnotations(CAS aJCas, Type aType)
+    public static void clearAnnotations(CAS aCas, Type aType)
         throws IOException
     {
         List<AnnotationFS> annotationsToRemove = new ArrayList<>();
-        annotationsToRemove.addAll(select(aJCas, aType));
+        annotationsToRemove.addAll(select(aCas, aType));
         for (AnnotationFS annotation : annotationsToRemove) {
-            aJCas.removeFsFromIndexes(annotation);
+            aCas.removeFsFromIndexes(annotation);
         }
     }
     

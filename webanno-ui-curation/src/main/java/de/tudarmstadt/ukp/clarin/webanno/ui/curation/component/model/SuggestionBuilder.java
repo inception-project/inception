@@ -244,14 +244,14 @@ public class SuggestionBuilder
     }
 
     private void updateCrossSentAnnoList(Map<Integer, Integer> aSegmentBeginEnd,
-            Map<Integer, Integer> aSegmentNumber, Map<String, CAS> aJCases, List<Type> aEntryTypes)
+            Map<Integer, Integer> aSegmentNumber, Map<String, CAS> aCases, List<Type> aEntryTypes)
     {
         // FIXME Remove this side-effect and instead return this hashmap
         crossSentenceLists = new HashMap<>();
 
         // Extract the sentences for all the CASes
         Map<CAS, List<AnnotationFS>> idxSentences = new HashMap<>();
-        for (CAS c : aJCases.values()) {
+        for (CAS c : aCases.values()) {
             Type sentenceType = getType(c, Sentence.class);
             idxSentences.put(c, new ArrayList<>(select(c, sentenceType)));
         }
@@ -272,7 +272,7 @@ public class SuggestionBuilder
             Set<Integer> crossSents = new HashSet<>();
 
             for (Type t : aEntryTypes) {
-                for (CAS c : aJCases.values()) {
+                for (CAS c : aCases.values()) {
                     // Determine sentence number for the current segment begin. This takes quite
                     // a while, so we only do it for the first CAS in the batch. Will be the
                     // same for all others anyway.
@@ -458,7 +458,7 @@ public class SuggestionBuilder
     private void updateSegment(AnnotatorState aBratAnnotatorModel,
             Map<Integer, Integer> aIdxSentenceBeginEnd,
             Map<Integer, Integer> aIdxSentenceBeginNumber,
-            Map<String, Map<Integer, Integer>> aSegmentAdress, CAS aJCas, String aUsername,
+            Map<String, Map<Integer, Integer>> aSegmentAdress, CAS aCas, String aUsername,
             int aWindowStart, int aWindowEnd)
     {
         diffRangeBegin = aWindowStart;
@@ -466,11 +466,11 @@ public class SuggestionBuilder
 
         // Get the number of the first sentence - instead of fetching the number over and over
         // we can just increment this one.
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aJCas, diffRangeBegin);
+        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(aCas, diffRangeBegin);
 
         aSegmentAdress.put(aUsername, new HashMap<>());
-        Type sentenceType = CasUtil.getType(aJCas, Sentence.class);
-        for (AnnotationFS sentence : selectCovered(aJCas, sentenceType, diffRangeBegin,
+        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
+        for (AnnotationFS sentence : selectCovered(aCas, sentenceType, diffRangeBegin,
                 diffRangeEnd)) {
             aIdxSentenceBeginEnd.put(sentence.getBegin(), sentence.getEnd());
             aIdxSentenceBeginNumber.put(sentence.getBegin(), sentenceNumber);

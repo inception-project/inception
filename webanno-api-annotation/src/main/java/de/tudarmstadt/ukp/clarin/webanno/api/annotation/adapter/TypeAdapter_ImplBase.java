@@ -78,14 +78,14 @@ public abstract class TypeAdapter_ImplBase
     }
     
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aJcas,
+    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectByAddr(aCas, FeatureStructure.class, aAddress);
 
         Object oldValue = getValue(fs, aFeature);
         
-        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
+        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aCas, aFeature,
                 aAddress, aValue);
 
         Object newValue = getValue(fs, aFeature);

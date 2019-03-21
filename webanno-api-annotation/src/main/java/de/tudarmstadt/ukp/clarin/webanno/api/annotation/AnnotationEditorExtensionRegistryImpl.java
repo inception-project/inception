@@ -99,21 +99,21 @@ public class AnnotationEditorExtensionRegistryImpl
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aJCas, VID aParamId, String aAction, int aBegin,
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
             int aEnd)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aJCas, aParamId, aAction,
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
                     aBegin, aEnd);
         }
     }
     
     @Override
-    public void fireRender(CAS aJCas, AnnotatorState aModelObject, VDocument aVdoc)
+    public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc)
     {
         for (AnnotationEditorExtension ext: getExtensions()) {
-            ext.render(aJCas, aModelObject, aVdoc);
+            ext.render(aCas, aModelObject, aVdoc);
         }
     }
 }

@@ -134,7 +134,7 @@ public class CopyAnnotationTest
         neFeature.setProject(project);
         neFeature.setVisible(true);
         
-        slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE, SPAN_TYPE,
+        slotLayer = new AnnotationLayer(DiffTestUtils.HOST_TYPE, DiffTestUtils.HOST_TYPE, SPAN_TYPE,
                 project, false, SINGLE_TOKEN);
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
@@ -165,7 +165,7 @@ public class CopyAnnotationTest
                 if (type.getName().equals(NamedEntity.class.getName())) {
                     return asList(neFeature);
                 }
-                if (type.getName().equals(DiffUtils.HOST_TYPE)) {
+                if (type.getName().equals(DiffTestUtils.HOST_TYPE)) {
                     return asList(slotFeature, stringFeature);
                 }
                 throw new IllegalStateException("Unknown layer type: " + type.getName());
@@ -216,32 +216,32 @@ public class CopyAnnotationTest
         assertEquals(1, selectCovered(mergeCas, getType(mergeCas, NamedEntity.class), 0, 0).size());
     }
 
-    private AnnotationFS createNEAnno(CAS aJCas, String aValue, int aBegin, int aEnd)
+    private AnnotationFS createNEAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
-        AnnotationFS clickedFs = aJCas.createAnnotation(type, aBegin, aEnd);
+        Type type = aCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
         Feature value = type.getFeatureByBaseName("value");
         clickedFs.setStringValue(value, aValue);
-        aJCas.addFsToIndexes(clickedFs);
+        aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
 
-    private AnnotationFS createPOSAnno(CAS aJCas, String aValue, int aBegin, int aEnd)
+    private AnnotationFS createPOSAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(POS.class.getTypeName());
+        Type type = aCas.getTypeSystem().getType(POS.class.getTypeName());
         
-        AnnotationFS clickedFs = aJCas.createAnnotation(type, aBegin, aEnd);
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         clickedFs.setStringValue(posValue, aValue);
-        aJCas.addFsToIndexes(clickedFs);
+        aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
 
-    private AnnotationFS createTokenAnno(CAS aJCas, int aBegin, int aEnd)
+    private AnnotationFS createTokenAnno(CAS aCas, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(Token.class.getTypeName());
-        AnnotationFS token = aJCas.createAnnotation(type, aBegin, aEnd);
-        aJCas.addFsToIndexes(token);
+        Type type = aCas.getTypeSystem().getType(Token.class.getTypeName());
+        AnnotationFS token = aCas.createAnnotation(type, aBegin, aEnd);
+        aCas.addFsToIndexes(token);
         return token;
     }
 
@@ -317,18 +317,18 @@ public class CopyAnnotationTest
     {
         slotLayer.setAllowStacking(false);
         
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
 
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
-                DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
+                DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
         MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
                 slotLayer, mergeCAs.getCas(), clickedFs, false);
@@ -346,18 +346,18 @@ public class CopyAnnotationTest
         slotLayer.setAnchoringMode(TOKENS);
         slotLayer.setAllowStacking(true);
         
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
 
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
-                DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
+                DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
         MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs.getCas(),
                 clickedFs, true);
@@ -369,30 +369,30 @@ public class CopyAnnotationTest
     public void copyLinkToEmptyTest()
         throws Exception
     {
-        JCas mergeCas = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas mergeCas = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS mergeFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
+        AnnotationFS mergeFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
                 "A");
 
-        FeatureStructure copyFS = DiffUtils.makeLinkFS(mergeCas, "slot1", 0, 0);
+        FeatureStructure copyFS = DiffTestUtils.makeLinkFS(mergeCas, "slot1", 0, 0);
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(mergeCas.getCas()));
         casByUser.put("user2", asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends CasDiff2.DiffAdapter> diffAdapters = asList(adapter);
 
@@ -409,30 +409,30 @@ public class CopyAnnotationTest
     {
 
         JCas mergeCas = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS mergeFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
-                "A", DiffUtils.makeLinkFS(mergeCas, "slot1", 0, 0));
+        AnnotationFS mergeFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
+                "A", DiffTestUtils.makeLinkFS(mergeCas, "slot1", 0, 0));
 
-        FeatureStructure copyFS = DiffUtils.makeLinkFS(mergeCas, "slot2", 0, 0);
+        FeatureStructure copyFS = DiffTestUtils.makeLinkFS(mergeCas, "slot2", 0, 0);
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(mergeCas.getCas()));
         casByUser.put("user2", asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends CasDiff2.DiffAdapter> diffAdapters = asList(adapter);
 

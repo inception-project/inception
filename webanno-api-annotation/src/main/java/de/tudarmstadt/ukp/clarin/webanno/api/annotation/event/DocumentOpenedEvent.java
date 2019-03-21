@@ -27,21 +27,21 @@ public class DocumentOpenedEvent
 {
     private static final long serialVersionUID = -2739175937794842083L;
     
-    private final CAS jcas;
+    private final CAS cas;
     private final SourceDocument document;
     private final String user;
     
-    public DocumentOpenedEvent(Object aSource, CAS aJCas, SourceDocument aDocument, String aUser)
+    public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument, String aUser)
     {
         super(aSource);
-        jcas = aJCas;
+        cas = aCas;
         document = aDocument;
         user = aUser;
     }
     
     public CAS getJCas()
     {
-        return jcas;
+        return cas;
     }
     
     public SourceDocument getDocument()

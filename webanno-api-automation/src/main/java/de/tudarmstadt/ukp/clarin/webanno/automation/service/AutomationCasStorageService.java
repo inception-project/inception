@@ -34,10 +34,10 @@ public interface AutomationCasStorageService
      *
      * @param aDocument
      *            the {@link TrainingDocument}
-     * @param aJcas
+     * @param aCas
      *            The annotated CAS object
      */
-    void writeCas(TrainingDocument aDocument, CAS aJcas)
+    void writeCas(TrainingDocument aDocument, CAS aCas)
             throws IOException;
     
     /**

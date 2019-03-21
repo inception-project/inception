@@ -30,13 +30,13 @@ public class AfterDocumentResetEvent
     private static final long serialVersionUID = 686641613168415460L;
 
     private final AnnotationDocument document;
-    private final CAS jcas;
+    private final CAS cas;
 
-    public AfterDocumentResetEvent(Object aSource, AnnotationDocument aDocument, CAS aJCas)
+    public AfterDocumentResetEvent(Object aSource, AnnotationDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
-        jcas = aJCas;
+        cas = aCas;
     }
 
     public AnnotationDocument getDocument()
@@ -44,8 +44,8 @@ public class AfterDocumentResetEvent
         return document;
     }
 
-    public CAS getJCas()
+    public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 }

@@ -61,7 +61,7 @@ public class MergeCasTest
     public void simpleSpanNoDiffNoLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentence.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
@@ -76,7 +76,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentence.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentence.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -92,7 +92,7 @@ public class MergeCasTest
     public void simpleSpanDiffNoLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentenceempty.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
@@ -107,7 +107,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -123,7 +123,7 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelAndEmptyTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentenceempty.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
@@ -138,7 +138,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -154,7 +154,7 @@ public class MergeCasTest
     public void simpleSpanNoDiffWithLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceposlabel.tsv",
                 "mergecas/simplespan/1sentenceposlabel.tsv");
 
@@ -170,7 +170,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceposlabel.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceposlabel.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -186,7 +186,7 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceposlabel.tsv",
                 "mergecas/simplespan/1sentenceposlabel2.tsv");
 
@@ -202,7 +202,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -218,7 +218,7 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelStackingTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceNEstacked.tsv",
                 "mergecas/simplespan/1sentenceNEstacked.tsv");
 
@@ -234,7 +234,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -250,7 +250,7 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelStacking2Test()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceNE.tsv",
                 "mergecas/simplespan/1sentenceNEstacked.tsv");
 
@@ -266,7 +266,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -282,7 +282,7 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelStacking3Test()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceNE.tsv",
                 "mergecas/simplespan/1sentenceNEstacked2.tsv");
 
@@ -298,7 +298,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEstacked2merge.tsv",
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceNEstacked2merge.tsv",
                 null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
@@ -315,10 +315,10 @@ public class MergeCasTest
     public void simpleSpanNoDiffMultiFeatureTest()
         throws Exception
     {
-        TypeSystemDescription customeTypes = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
+        TypeSystemDescription customeTypes = DiffTestUtils.createCustomTypeSystem(SPAN_TYPE,
                 "webanno.custom.Opinion", asList("aspect", "opinion"), null);
 
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(customeTypes,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(customeTypes,
                 "mergecas/spanmultifeature/1sentenceNENoFeature.tsv",
                 "mergecas/spanmultifeature/1sentenceNENoFeature.tsv");
 
@@ -336,7 +336,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/spanmultifeature/1sentenceNENoFeature.tsv",
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/spanmultifeature/1sentenceNENoFeature.tsv",
                 customeTypes);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
@@ -353,10 +353,10 @@ public class MergeCasTest
     public void simpleSpanDiffMultiFeatureTest()
         throws Exception
     {
-        TypeSystemDescription customeTypes = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
+        TypeSystemDescription customeTypes = DiffTestUtils.createCustomTypeSystem(SPAN_TYPE,
                 "webanno.custom.Opinion", asList("aspect", "opinion"), null);
 
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(customeTypes,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(customeTypes,
                 "mergecas/spanmultifeature/1sentenceNEFeatureA.tsv",
                 "mergecas/spanmultifeature/1sentenceNEFeatureB.tsv");
 
@@ -374,7 +374,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV(
+        CAS actual = DiffTestUtils.readWebAnnoTSV(
                 "mergecas/spanmultifeature/1sentenceNEFeatureempty.tsv", customeTypes);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
@@ -391,7 +391,7 @@ public class MergeCasTest
     public void simpleRelNoDiffTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/rels/1sentencesamerel.tsv", "mergecas/rels/1sentencesamerel.tsv");
 
         List<String> entryTypes = asList(Dependency.class.getName(), POS.class.getName());
@@ -409,7 +409,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -425,7 +425,7 @@ public class MergeCasTest
     public void simpleRelGovDiffTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/rels/1sentencesamerel.tsv", "mergecas/rels/1sentencesamerel2.tsv");
 
         List<String> entryTypes = asList(Dependency.class.getName(), POS.class.getName());
@@ -443,7 +443,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel3.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel3.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -459,7 +459,7 @@ public class MergeCasTest
     public void simpleRelTypeDiffTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
                 "mergecas/rels/1sentencesamerel.tsv", "mergecas/rels/1sentencesamerel4.tsv");
 
         List<String> entryTypes = asList(Dependency.class.getName(), POS.class.getName());
@@ -477,7 +477,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel5.tsv", null);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/rels/1sentencesamerel5.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -493,10 +493,10 @@ public class MergeCasTest
     public void simpleRelGovStackedTest()
         throws Exception
     {
-        TypeSystemDescription customeTypesSpan = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
+        TypeSystemDescription customeTypesSpan = DiffTestUtils.createCustomTypeSystem(SPAN_TYPE,
                 "webanno.custom.Multivalspan", asList("f1", "f2"), null);
 
-        TypeSystemDescription customeTypesRel = DiffUtils.createCustomTypeSystem(RELATION_TYPE,
+        TypeSystemDescription customeTypesRel = DiffTestUtils.createCustomTypeSystem(RELATION_TYPE,
                 "webanno.custom.Multivalrel", asList("rel1", "rel2"),
                 "webanno.custom.Multivalspan");
 
@@ -505,7 +505,7 @@ public class MergeCasTest
         customTypes.add(customeTypesRel);
         TypeSystemDescription customType = CasCreationUtils.mergeTypeSystems(customTypes);
 
-        Map<String, List<CAS>> casByUser = DiffUtils.loadWebAnnoTSV(customType,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(customType,
                 "mergecas/multivalspanrel/tale.tsv", "mergecas/multivalspanrel/tale.tsv");
 
         List<String> entryTypes = asList("webanno.custom.Multivalspan",
@@ -524,7 +524,7 @@ public class MergeCasTest
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffUtils.readWebAnnoTSV("mergecas/multivalspanrel/tale2.tsv", customType);
+        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/multivalspanrel/tale2.tsv", customType);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
@@ -540,10 +540,10 @@ public class MergeCasTest
     public void relStackedTest()
         throws Exception
     {
-        TypeSystemDescription customeTypesSpan = DiffUtils.createCustomTypeSystem(SPAN_TYPE,
+        TypeSystemDescription customeTypesSpan = DiffTestUtils.createCustomTypeSystem(SPAN_TYPE,
                 "webanno.custom.Multivalspan", asList("f1", "f2"), null);
 
-        TypeSystemDescription customeTypesRel = DiffUtils.createCustomTypeSystem(RELATION_TYPE,
+        TypeSystemDescription customeTypesRel = DiffTestUtils.createCustomTypeSystem(RELATION_TYPE,
                 "webanno.custom.Multivalrel", asList("rel1", "rel2"),
                 "webanno.custom.Multivalspan");
 
@@ -552,7 +552,7 @@ public class MergeCasTest
         customTypes.add(customeTypesRel);
         TypeSystemDescription customType = CasCreationUtils.mergeTypeSystems(customTypes);
 
-        Map<String, List<CAS>> casByUser = DiffUtils.loadXMI(customType,
+        Map<String, List<CAS>> casByUser = DiffTestUtils.loadXMI(customType,
                 "mergecas/multivalspanrel/stackedrel1.xmi",
                 "mergecas/multivalspanrel/stackedrel2.xmi");
 
@@ -570,7 +570,7 @@ public class MergeCasTest
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
-        CAS actual = DiffUtils.readXMI("mergecas/multivalspanrel/stackedmerge.xmi", customType);
+        CAS actual = DiffTestUtils.readXMI("mergecas/multivalspanrel/stackedmerge.xmi", customType);
 
         Type relType = mergeCas.getTypeSystem().getType("webanno.custom.Multivalrel");
         int numRelMerge = CasUtil.select(mergeCas, relType).size();
@@ -592,7 +592,7 @@ public class MergeCasTest
     public void relationLabelTestTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffUtils.load("casdiff/relationLabel/user1.conll",
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load("casdiff/relationLabel/user1.conll",
                 "casdiff/relationLabel/user2.conll");
 
         List<String> entryTypes = asList(Dependency.class.getName());
@@ -608,7 +608,7 @@ public class MergeCasTest
         result.print(System.out);
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
-        CAS actual = DiffUtils.read("casdiff/relationLabel/merge.conll");
+        CAS actual = DiffTestUtils.read("casdiff/relationLabel/merge.conll");
 
         casByUser = new HashMap<>();
 
@@ -626,13 +626,13 @@ public class MergeCasTest
     public void multiLinkWithRoleNoDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
-        DiffUtils.makeLinkHostFS(jcasA, 10, 10, DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostFS(jcasA, 10, 10, DiffTestUtils.makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 0, 0));
-        DiffUtils.makeLinkHostFS(jcasB, 10, 10, DiffUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostFS(jcasB, 10, 10, DiffTestUtils.makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -640,9 +640,9 @@ public class MergeCasTest
 
         casByUser.put(CURATION_USER, asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -668,20 +668,20 @@ public class MergeCasTest
     public void multiLinkWithRoleLabelDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot2", 0, 0));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
         casByUser.put(CURATION_USER, asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -692,7 +692,7 @@ public class MergeCasTest
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
-        Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        Type hostType = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas, hostType).size();
 
         assertEquals(1, numHost);
@@ -707,11 +707,11 @@ public class MergeCasTest
     public void multiLinkWithRoleTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -719,9 +719,9 @@ public class MergeCasTest
 
         casByUser.put(CURATION_USER, asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -732,7 +732,7 @@ public class MergeCasTest
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
-        Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        Type hostType = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas, hostType).size();
 
         assertEquals(1, numHost);
@@ -746,12 +746,12 @@ public class MergeCasTest
     public void multiLinkMultiHostTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 0, 0));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -759,9 +759,9 @@ public class MergeCasTest
 
         casByUser.put(CURATION_USER, asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -772,7 +772,7 @@ public class MergeCasTest
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
-        Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        Type hostType = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas, hostType).size();
 
         assertEquals(0, numHost);
@@ -783,16 +783,16 @@ public class MergeCasTest
         throws Exception
     {
 
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasB, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasB, "slot2", 0, 0));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasB, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -800,9 +800,9 @@ public class MergeCasTest
 
         casByUser.put(CURATION_USER, asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -813,7 +813,7 @@ public class MergeCasTest
 
         CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
 
-        Type hostType = mergeCas.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        Type hostType = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         int numHost = CasUtil.select(mergeCas, hostType).size();
 
         assertEquals(1, numHost);

@@ -79,8 +79,8 @@ public class SpanAdapter
      *            the document to which the CAS belongs
      * @param aUsername
      *            the user to which the CAS belongs
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aBegin
      *            the begin offset.
      * @param aEnd
@@ -89,11 +89,11 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationFS add(SourceDocument aDocument, String aUsername, CAS aJCas, int aBegin,
+    public AnnotationFS add(SourceDocument aDocument, String aUsername, CAS aCas, int aBegin,
             int aEnd)
         throws AnnotationException
     {
-        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
+        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
     }
     
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
@@ -141,17 +141,17 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, CAS aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
-        aJCas.removeFsFromIndexes(fs);
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        aCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            Type theType = CasUtil.getType(aJCas, getAttachTypeName());
+            Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             if (attachFeature != null) {
-                CasUtil.selectCovered(aJCas, theType, fs.getBegin(), fs.getEnd()).get(0)
+                CasUtil.selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
                         .setFeatureValue(attachFeature, null);
             }
         }
@@ -160,12 +160,12 @@ public class SpanAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (SpanLayerBehavior behavior : behaviors) {
             long startTime = currentTimeMillis();
-            messages.addAll(behavior.onValidate(this, aJCas));
+            messages.addAll(behavior.onValidate(this, aCas));
             log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }

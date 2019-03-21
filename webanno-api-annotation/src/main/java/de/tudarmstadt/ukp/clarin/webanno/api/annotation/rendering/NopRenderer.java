@@ -35,7 +35,7 @@ public class NopRenderer
     }
     
     @Override
-    public void render(CAS aJcas, List<AnnotationFeature> aFeatures,
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int windowBeginOffset, int windowEndOffset)
     {
         // Nothing to do

@@ -44,14 +44,14 @@ public class PreRendererImpl implements PreRenderer
     }
     
     @Override
-    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aJCas,
+    public void render(VDocument aResponse, int windowBeginOffset, int windowEndOffset, CAS aCas,
             List<AnnotationLayer> aLayers)
     {
         // Render (custom) layers
         for (AnnotationLayer layer : aLayers) {
             List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
-            renderer.render(aJCas, features, aResponse, windowBeginOffset, windowEndOffset);
+            renderer.render(aCas, features, aResponse, windowBeginOffset, windowEndOffset);
         }
     }
 }

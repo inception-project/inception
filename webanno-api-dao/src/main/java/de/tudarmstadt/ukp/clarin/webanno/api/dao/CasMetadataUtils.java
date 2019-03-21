@@ -48,13 +48,13 @@ public class CasMetadataUtils
                 "de/tudarmstadt/ukp/clarin/webanno/api/type/webanno-internal");
     }
     
-    public static void failOnConcurrentModification(CAS aJcas, File aCasFile,
+    public static void failOnConcurrentModification(CAS aCas, File aCasFile,
             SourceDocument aDocument, String aUsername)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
-        if (aJcas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
                     + "does not support CASMetadata yet - unable to detect concurrent modifications",
                     aCasFile.getName(), aUsername, aDocument.getName(),
@@ -64,7 +64,7 @@ public class CasMetadataUtils
         }
         
         List<AnnotationFS> cmds = new ArrayList<>(
-                CasUtil.select(aJcas, getType(aJcas, CASMetadata.class)));
+                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
         if (cmds.size() > 1) {
             throw new IOException("CAS contains more than one CASMetadata instance");
         }
@@ -89,13 +89,13 @@ public class CasMetadataUtils
         }
     }
     
-    public static void addOrUpdateCasMetadata(CAS aJCas, File aCasFile, SourceDocument aDocument,
+    public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
             String aUsername)
         throws IOException
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
         // and wait for the next regular CAS upgrade before we include this data.
-        if (aJCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
             LOG.info("Annotation file [{}] of user [{}] for document [{}]({}) in project [{}]({}) "
                     + "does not support CASMetadata yet - not adding",
                     aCasFile.getName(), aUsername, aDocument.getName(),
@@ -104,9 +104,9 @@ public class CasMetadataUtils
             return;
         }
         
-        Type casMetadataType = getType(aJCas, CASMetadata.class);
+        Type casMetadataType = getType(aCas, CASMetadata.class);
         FeatureStructure cmd;
-        List<AnnotationFS> cmds = new ArrayList<>(CasUtil.select(aJCas, casMetadataType));
+        List<AnnotationFS> cmds = new ArrayList<>(CasUtil.select(aCas, casMetadataType));
         if (cmds.size() > 1) {
             throw new IOException("CAS contains more than one CASMetadata instance!");
         }
@@ -114,12 +114,12 @@ public class CasMetadataUtils
             cmd = cmds.get(0);
         }
         else {
-            cmd = aJCas.createAnnotation(casMetadataType, 0, 0);
+            cmd = aCas.createAnnotation(casMetadataType, 0, 0);
         }
         FSUtil.setFeature(cmd, "username", aUsername);
         FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
         FSUtil.setFeature(cmd, "projectId", aDocument.getProject().getId());
         FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
-        aJCas.addFsToIndexes(cmd);
+        aCas.addFsToIndexes(cmd);
     }
 }

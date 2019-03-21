@@ -36,7 +36,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
@@ -60,15 +60,15 @@ public abstract class AnnotationEditorBase
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
 
     private AnnotationActionHandler actionHandler;
-    private JCasProvider jcasProvider;
+    private CasProvider casProvider;
     private boolean enableHighlight = true;
     
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
         super(aId, aModel);
         actionHandler = aActionHandler;
-        jcasProvider = aJCasProvider;
+        casProvider = aCasProvider;
         
         // Allow AJAX updates.
         setOutputMarkupId(true);
@@ -104,9 +104,9 @@ public abstract class AnnotationEditorBase
         return actionHandler;
     }
     
-    public JCasProvider getJCasProvider()
+    public CasProvider getJCasProvider()
     {
-        return jcasProvider;
+        return casProvider;
     }
     
     /**
@@ -126,14 +126,14 @@ public abstract class AnnotationEditorBase
      */
     protected abstract void render(AjaxRequestTarget aTarget);
 
-    protected VDocument render(CAS aJCas, int windowBeginOffset, int windowEndOffset)
+    protected VDocument render(CAS aCas, int windowBeginOffset, int windowEndOffset)
     {
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, windowBeginOffset, windowEndOffset,
-                aJCas, getLayersToRender());
+                aCas, getLayersToRender());
 
         // Fire render event into backend
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
+        extensionRegistry.fireRender(aCas, getModelObject(), vdoc);
 
         // Fire render event into UI
         Page page = null;
@@ -147,7 +147,7 @@ public abstract class AnnotationEditorBase
         }
         send(page, Broadcast.BREADTH,
                 new RenderAnnotationsEvent(
-                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aJCas,
+                        RequestCycle.get().find(IPartialPageRequestHandler.class).get(), aCas,
                         getModelObject(), vdoc));
 
         if (isHighlightEnabled()) {

@@ -487,12 +487,12 @@ public class CurationPage
         return curationDocumentService.readCurationCas(state.getDocument());
     }
 
-    private void updateSentenceNumber(CAS aJCas, int aAddress)
+    private void updateSentenceNumber(CAS aCas, int aAddress)
     {
         AnnotatorState state = getModelObject();
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
+        Sentence sentence = selectByAddr(aCas, Sentence.class, aAddress);
         state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)

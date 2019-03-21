@@ -44,7 +44,7 @@ public interface LayerBehavior
      * usually called when a document is marked as finished to prevent invalid annotations ending up
      * in the finished document.
      */
-    default List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aJCas)
+    default List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         return emptyList();
     }

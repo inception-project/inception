@@ -27,24 +27,24 @@ public class CreateSpanAnnotationRequest
 {
     private final SourceDocument document;
     private final String username;
-    private final CAS jcas;
+    private final CAS cas;
     private final int begin;
     private final int end;
     private final CreateSpanAnnotationRequest originalRequest;
 
-    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aJCas,
+    public CreateSpanAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
             int aBegin, int aEnd)
     {
-        this(null, aDocument, aUsername, aJCas, aBegin, aEnd);
+        this(null, aDocument, aUsername, aCas, aBegin, aEnd);
     }
 
     private CreateSpanAnnotationRequest(CreateSpanAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, CAS aJCas, int aBegin, int aEnd)
+            SourceDocument aDocument, String aUsername, CAS aCas, int aBegin, int aEnd)
     {
         originalRequest = aOriginal;
         document = aDocument;
         username = aUsername;
-        jcas = aJCas;
+        cas = aCas;
         begin = aBegin;
         end = aEnd;
     }
@@ -61,7 +61,7 @@ public class CreateSpanAnnotationRequest
 
     public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 
     public int getBegin()
@@ -81,6 +81,6 @@ public class CreateSpanAnnotationRequest
     
     public CreateSpanAnnotationRequest changeSpan(int aBegin, int aEnd)
     {
-        return new CreateSpanAnnotationRequest(this, document, username, jcas, aBegin, aEnd);
+        return new CreateSpanAnnotationRequest(this, document, username, cas, aBegin, aEnd);
     }
 }

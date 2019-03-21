@@ -97,7 +97,7 @@ public class RelationCrossSentenceBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         // If crossing sentence boundaries is permitted, then there is nothing to validate here
         if (aAdapter.getLayer().isCrossSentence()) {
@@ -105,12 +105,12 @@ public class RelationCrossSentenceBehavior
         }
         
         RelationAdapter adapter = (RelationAdapter) aAdapter;
-        Type type = getType(aJCas, aAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         
         // If there are no annotations on this layer, nothing to do
-        Collection<AnnotationFS> annotations = select(aJCas, type);
+        Collection<AnnotationFS> annotations = select(aCas, type);
         if (annotations.isEmpty()) {
             return emptyList();
         }
@@ -123,7 +123,7 @@ public class RelationCrossSentenceBehavior
         // particular offset, even if it is not the start/end offset of a sentence.
         NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
         NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
-        for (AnnotationFS sent : select(aJCas, getType(aJCas, Sentence.class))) {
+        for (AnnotationFS sent : select(aCas, getType(aCas, Sentence.class))) {
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }

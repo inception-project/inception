@@ -90,9 +90,9 @@ public class Selection
         LOG.debug("Span: {}", this);
     }
 
-    public void selectSpan(CAS aJCas, int aBegin, int aEnd)
+    public void selectSpan(CAS aCas, int aBegin, int aEnd)
     {
-        selectSpan(VID.NONE_ID, aJCas, aBegin, aEnd);
+        selectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
     }
     
     public void clear()

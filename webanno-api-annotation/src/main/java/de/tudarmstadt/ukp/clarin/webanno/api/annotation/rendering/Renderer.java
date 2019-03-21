@@ -46,8 +46,8 @@ public interface Renderer
     /**
      * Render annotations.
      *
-     * @param aJcas
-     *            The JCAS object containing annotations
+     * @param aCas
+     *            The CAS containing annotations
      * @param aFeatures
      *            the features.
      * @param aBuffer
@@ -57,7 +57,7 @@ public interface Renderer
      * @param windowEndOffset
      *            The end position of the window offset.
      */
-    void render(CAS aJcas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
+    void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aBuffer,
             int windowBeginOffset, int windowEndOffset);
     
     FeatureSupportRegistry getFeatureSupportRegistry();

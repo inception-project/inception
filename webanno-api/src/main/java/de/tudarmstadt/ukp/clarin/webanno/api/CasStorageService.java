@@ -36,13 +36,13 @@ public interface CasStorageService
      *
      * @param aDocument
      *            the {@link SourceDocument}
-     * @param aJcas
+     * @param aCas
      *            The annotated CAS object
      * @param aUserName
      *            the user who annotates the document if it is user's annotation document OR the
      *            CURATION_USER
      */
-    void writeCas(SourceDocument aDocument, CAS aJcas, String aUserName) throws IOException;
+    void writeCas(SourceDocument aDocument, CAS aCas, String aUserName) throws IOException;
     
     /**
      * Retrieve the annotation CAS of a given user for a given {@link SourceDocument}. By default
@@ -89,7 +89,7 @@ public interface CasStorageService
      * @throws IOException
      *             if there was a problem loading or creating the CAS.
      */
-    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
+    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
         throws IOException;
 
     boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;

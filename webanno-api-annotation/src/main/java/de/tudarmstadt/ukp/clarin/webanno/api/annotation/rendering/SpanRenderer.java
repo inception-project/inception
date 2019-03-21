@@ -75,7 +75,7 @@ public class SpanRenderer
     }
     
     @Override
-    public void render(CAS aJcas, List<AnnotationFeature> aFeatures,
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures,
             VDocument aResponse, int aWindowBegin, int aWindowEnd)
     {
         SpanAdapter typeAdapter = getTypeAdapter();
@@ -86,21 +86,21 @@ public class SpanRenderer
 
         // Collect the visible sentences. The sentence boundary information is used to generate
         // multiple ranges for annotations crossing sentence boundaries
-        List<AnnotationFS> visibleSentences = selectCovered(aJcas,
-                CasUtil.getType(aJcas, Sentence.class), aWindowBegin, aWindowEnd);
+        List<AnnotationFS> visibleSentences = selectCovered(aCas,
+                CasUtil.getType(aCas, Sentence.class), aWindowBegin, aWindowEnd);
         
         // Index mapping annotations to the corresponding rendered spans
         Map<AnnotationFS, VSpan> annoToSpanIdx = new HashMap<>();
         
         // Iterate over the span annotations of the current type and render each of them
-        Type type = getType(aJcas, typeAdapter.getAnnotationTypeName());
-        List<AnnotationFS> annotations = selectCovered(aJcas, type, aWindowBegin,
+        Type type = getType(aCas, typeAdapter.getAnnotationTypeName());
+        List<AnnotationFS> annotations = selectCovered(aCas, type, aWindowBegin,
                 aWindowEnd);
         for (AnnotationFS fs : annotations) {
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
-            List<VRange> ranges = calculateRanges(aJcas, visibleSentences, aResponse,
+            List<VRange> ranges = calculateRanges(aCas, visibleSentences, aResponse,
                     aWindowBegin, aWindowEnd, fs);
 
             VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
@@ -135,7 +135,7 @@ public class SpanRenderer
         }
     }
     
-    private List<VRange> calculateRanges(CAS aJcas, List<AnnotationFS> aVisibleSentences,
+    private List<VRange> calculateRanges(CAS aCas, List<AnnotationFS> aVisibleSentences,
             VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
     {
         AnnotationFS beginSent = null;
@@ -181,7 +181,7 @@ public class SpanRenderer
 
         // If the annotation extends across sentence boundaries, create multiple ranges for the
         // annotation, one for every sentence.
-        List<AnnotationFS> sentences = selectCovered(aJcas, getType(aJcas, Sentence.class),
+        List<AnnotationFS> sentences = selectCovered(aCas, getType(aCas, Sentence.class),
                 beginSent.getBegin(), endSent.getEnd());
         List<VRange> ranges = new ArrayList<>();
         if (sentences.size() > 1) {

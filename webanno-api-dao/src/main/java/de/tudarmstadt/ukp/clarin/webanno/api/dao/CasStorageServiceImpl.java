@@ -51,7 +51,7 @@ import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -161,7 +161,7 @@ public class CasStorageServiceImpl
         }
     }
     
-    private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aJcas)
+    private void realWriteCas(SourceDocument aDocument, String aUserName, CAS aCas)
         throws IOException
     {
         log.debug("Preparing to update annotations for user [{}] on document [{}]({}) in project [{}]({})",
@@ -181,7 +181,7 @@ public class CasStorageServiceImpl
         try {
             // Check if there was a concurrent change to the file on disk
             if (currentVersion.exists()) {
-                CasMetadataUtils.failOnConcurrentModification(aJcas, currentVersion, aDocument,
+                CasMetadataUtils.failOnConcurrentModification(aCas, currentVersion, aDocument,
                         username);
             }
             
@@ -191,8 +191,8 @@ public class CasStorageServiceImpl
             }
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
-            WebAnnoCasUtil.setDocumentId(aJcas, aUserName);
-            CasPersistenceUtils.writeSerializedCas(aJcas,
+            WebAnnoCasUtil.setDocumentId(aCas, aUserName);
+            CasPersistenceUtils.writeSerializedCas(aCas,
                     new File(annotationFolder, aUserName + ".ser"));
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
@@ -217,7 +217,7 @@ public class CasStorageServiceImpl
             // happens for example in an annotation replacement operation (change layer of existing
             // annotation) which is implemented as a delete/create operation with an intermediate
             // save.
-            CasMetadataUtils.addOrUpdateCasMetadata(aJcas, currentVersion, aDocument, aUserName);
+            CasMetadataUtils.addOrUpdateCasMetadata(aCas, currentVersion, aDocument, aUserName);
             
             // If the saving was successful, we delete the old version
             if (oldVersion.exists()) {
@@ -347,14 +347,14 @@ public class CasStorageServiceImpl
     }
 
     @Override
-    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername, JCasProvider aSupplier)
+    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
         throws IOException
     {
         return readOrCreateCas(aDocument, aUsername, true, aSupplier);
     }
 
     private CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
-            boolean aAnalyzeAndRepair, JCasProvider aSupplier)
+            boolean aAnalyzeAndRepair, CasProvider aSupplier)
         throws IOException
     {
         synchronized (lock) {

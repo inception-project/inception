@@ -88,10 +88,10 @@ public class CurationDocumentServiceImpl
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     @Transactional
-    public void writeCurationCas(CAS aJcas, SourceDocument aDocument, boolean aUpdateTimestamp)
+    public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, CURATION_USER);
+        casStorageService.writeCas(aDocument, aCas, CURATION_USER);
         if (aUpdateTimestamp) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);

@@ -69,7 +69,7 @@ public class ChainRenderer
     }
 
     @Override
-    public void render(CAS aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
@@ -92,7 +92,7 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aJcas, typeAdapter.getChainTypeName());
+        Type chainType = CasUtil.getType(aCas, typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
@@ -100,7 +100,7 @@ public class ChainRenderer
         
         int colorIndex = 0;
         // Iterate over the chains
-        for (FeatureStructure chainFs : selectFS(aJcas, chainType)) {
+        for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 

@@ -53,7 +53,7 @@ import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -123,9 +123,9 @@ public class BratAnnotationEditor
     private String lastRenderedJson;
 
     public BratAnnotationEditor(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider)
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
     {
-        super(id, aModel, aActionHandler, aJCasProvider);
+        super(id, aModel, aActionHandler, aCasProvider);
         
         vis = new WebMarkupContainer("vis");
         vis.setOutputMarkupId(true);
@@ -508,13 +508,13 @@ public class BratAnnotationEditor
         });
     }
 
-    private String bratRenderCommand(CAS aJCas)
+    private String bratRenderCommand(CAS aCas)
     {
         StopWatch timer = new StopWatch();
         timer.start();
         
         GetDocumentResponse response = new GetDocumentResponse();
-        render(response, aJCas);
+        render(response, aCas);
         String json = toJson(response);
         
         // By default, we do a full rendering...
@@ -562,11 +562,11 @@ public class BratAnnotationEditor
                 + "]);";
     }
 
-    private void render(GetDocumentResponse response, CAS aJCas)
+    private void render(GetDocumentResponse response, CAS aCas)
     {
         AnnotatorState aState = getModelObject();
-        VDocument vdoc = render(aJCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
-        BratRenderer.render(response, aState, vdoc, aJCas, annotationService);
+        VDocument vdoc = render(aCas, aState.getWindowBeginOffset(), aState.getWindowEndOffset());
+        BratRenderer.render(response, aState, vdoc, aCas, annotationService);
     }
     
     private String bratInitCommand()

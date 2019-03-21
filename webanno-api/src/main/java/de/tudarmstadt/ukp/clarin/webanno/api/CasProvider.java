@@ -23,7 +23,7 @@ import java.io.Serializable;
 import org.apache.uima.cas.CAS;
 
 @FunctionalInterface
-public interface JCasProvider
+public interface CasProvider
     extends Serializable
 {
     CAS get()

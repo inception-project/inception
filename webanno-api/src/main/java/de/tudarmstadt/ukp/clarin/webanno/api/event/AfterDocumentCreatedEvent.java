@@ -28,13 +28,13 @@ public class AfterDocumentCreatedEvent
     private static final long serialVersionUID = 2367163371168212003L;
     
     private final SourceDocument document;
-    private final CAS jcas;
+    private final CAS cas;
 
-    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, CAS aJCas)
+    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
-        jcas = aJCas;
+        cas = aCas;
     }
 
     public SourceDocument getDocument()
@@ -42,8 +42,8 @@ public class AfterDocumentCreatedEvent
         return document;
     }
 
-    public CAS getJcas()
+    public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 }

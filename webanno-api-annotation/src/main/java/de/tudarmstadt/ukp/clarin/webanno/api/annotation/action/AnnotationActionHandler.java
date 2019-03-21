@@ -28,19 +28,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aJCas)
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Create annotation on the next token for forward annotation
      */
-    void actionCreateForward(AjaxRequestTarget aTarget, CAS aJCas)
+    void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
-    void actionSelect(AjaxRequestTarget aTarget, CAS aJCas)
+    void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException;
 
     /**
@@ -64,7 +64,7 @@ public interface AnnotationActionHandler
     /**
      * Fill the currently armed slot with the given annotation.
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, CAS aJCas, int aBegin, int aEnd,
+    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aBegin, int aEnd,
             VID paramId)
         throws IOException, AnnotationException;
     

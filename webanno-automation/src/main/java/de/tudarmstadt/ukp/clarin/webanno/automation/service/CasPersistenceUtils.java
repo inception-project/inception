@@ -39,23 +39,23 @@ public final class CasPersistenceUtils
         // No instances
     }
 
-    public static void writeSerializedCas(CAS aJCas, File aFile)
+    public static void writeSerializedCas(CAS aCas, File aFile)
         throws IOException
     {
         FileUtils.forceMkdir(aFile.getParentFile());
 
         try (ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream(aFile))) {
-            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aJCas);
+            CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
             os.writeObject(serializer);
         }
     }
 
-    public static void readSerializedCas(CAS aJCas, File aFile)
+    public static void readSerializedCas(CAS aCas, File aFile)
         throws IOException
     {
         try (ObjectInputStream is = new ObjectInputStream(new FileInputStream(aFile))) {
             CASCompleteSerializer serializer = (CASCompleteSerializer) is.readObject();
-            deserializeCASComplete(serializer, (CASImpl) aJCas);
+            deserializeCASComplete(serializer, (CASImpl) aCas);
         }
         catch (ClassNotFoundException e) {
             throw new IOException(e);

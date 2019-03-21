@@ -127,7 +127,7 @@ public class PrimitiveUimaFeatureSupport
     }
 
     @Override
-    public void setFeatureValue(CAS aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         if (
                 aValue != null &&
@@ -148,7 +148,7 @@ public class PrimitiveUimaFeatureSupport
             }
         }
         
-        FeatureSupport.super.setFeatureValue(aJcas, aFeature, aAddress, aValue);
+        FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
     
     @Override

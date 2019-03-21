@@ -68,10 +68,10 @@ public class CorrectionDocumentServiceImpl
 
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    public void writeCorrectionCas(CAS aJcas, SourceDocument aDocument)
+    public void writeCorrectionCas(CAS aCas, SourceDocument aDocument)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, CORRECTION_USER);
+        casStorageService.writeCas(aDocument, aCas, CORRECTION_USER);
     }
 
     @Override

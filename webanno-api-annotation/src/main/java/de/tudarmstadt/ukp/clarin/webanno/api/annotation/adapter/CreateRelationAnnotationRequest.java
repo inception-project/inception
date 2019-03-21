@@ -28,7 +28,7 @@ public class CreateRelationAnnotationRequest
 {
     private final SourceDocument document;
     private final String username;
-    private final CAS jcas;
+    private final CAS cas;
     private final AnnotationFS originFs;
     private final AnnotationFS targetFs;
     private final CreateRelationAnnotationRequest originalRequest;
@@ -36,20 +36,20 @@ public class CreateRelationAnnotationRequest
     private final int windowBegin;
     private final int windowEnd;
 
-    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aJCas,
+    public CreateRelationAnnotationRequest(SourceDocument aDocument, String aUsername, CAS aCas,
             AnnotationFS aOriginFs, AnnotationFS aTargetF, int aWindowBegin, int aWindowEnd)
     {
-        this(null, aDocument, aUsername, aJCas, aOriginFs, aTargetF, aWindowBegin, aWindowEnd);
+        this(null, aDocument, aUsername, aCas, aOriginFs, aTargetF, aWindowBegin, aWindowEnd);
     }
 
     public CreateRelationAnnotationRequest(CreateRelationAnnotationRequest aOriginal,
-            SourceDocument aDocument, String aUsername, CAS aJCas, AnnotationFS aOriginFs,
+            SourceDocument aDocument, String aUsername, CAS aCas, AnnotationFS aOriginFs,
             AnnotationFS aTargetFs, int aWindowBegin, int aWindowEnd)
     {
         originalRequest = aOriginal;
         document = aDocument;
         username = aUsername;
-        jcas = aJCas;
+        cas = aCas;
         originFs = aOriginFs;
         targetFs = aTargetFs;
 
@@ -69,7 +69,7 @@ public class CreateRelationAnnotationRequest
 
     public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 
     public AnnotationFS getOriginFs()
@@ -100,7 +100,7 @@ public class CreateRelationAnnotationRequest
     public CreateRelationAnnotationRequest changeRelation(AnnotationFS aOrigin,
             AnnotationFS aTarget)
     {
-        return new CreateRelationAnnotationRequest(this, document, username, jcas, aOrigin, aTarget,
+        return new CreateRelationAnnotationRequest(this, document, username, cas, aOrigin, aTarget,
                 windowBegin, windowEnd);
     }
 }

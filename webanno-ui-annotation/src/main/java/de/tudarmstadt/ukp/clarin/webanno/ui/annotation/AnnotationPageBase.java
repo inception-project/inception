@@ -313,12 +313,12 @@ public abstract class AnnotationPageBase
 
     protected abstract CAS getEditorCas() throws IOException;
     
-    public void writeEditorCas(CAS aJCas) throws IOException
+    public void writeEditorCas(CAS aCas) throws IOException
     {
         AnnotatorState state = getModelObject();
         if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
                 || state.getMode().equals(Mode.CORRECTION)) {
-            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
+            documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
             // Update timestamp in state
             Optional<Long> diskTimestamp = documentService
@@ -328,7 +328,7 @@ public abstract class AnnotationPageBase
             }
         }
         else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
+            curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
             // Update timestamp in state
             Optional<Long> diskTimestamp = curationDocumentService
@@ -358,12 +358,12 @@ public abstract class AnnotationPageBase
      * missing, then the method scrolls to that location and schedules a re-rendering. In such
      * a case, an {@link IllegalStateException} is thrown.
      */
-    protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aJcas,
+    protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
         
-        CAS editorCas = aJcas;
+        CAS editorCas = aCas;
         AnnotationLayer layer = aAdapter.getLayer();
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
         
@@ -378,7 +378,7 @@ public abstract class AnnotationPageBase
                 if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
                     // Find the sentence that contains the annotation with the missing
                     // required feature value
-                    AnnotationFS s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
+                    AnnotationFS s = WebAnnoCasUtil.getSentence(aCas, fs.getBegin());
                     // Put this sentence into the focus
                     state.setFirstVisibleUnit(s);
                     actionRefreshDocument(aTarget);
@@ -393,7 +393,7 @@ public abstract class AnnotationPageBase
         }
     }
     
-    protected void actionValidateDocument(AjaxRequestTarget aTarget, CAS aJCas)
+    protected void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
@@ -410,16 +410,16 @@ public abstract class AnnotationPageBase
             
             TypeAdapter adapter = annotationService.getAdapter(layer);
             
-            validateRequiredFeatures(aTarget, aJCas, adapter);
+            validateRequiredFeatures(aTarget, aCas, adapter);
             
-            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aJCas);
+            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aCas);
             if (!messages.isEmpty()) {
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
                 
                 // Find the sentence that contains the annotation with the missing
                 // required feature value and put this sentence into the focus
-                AnnotationFS s = WebAnnoCasUtil.getSentence(aJCas, fs.getBegin());
+                AnnotationFS s = WebAnnoCasUtil.getSentence(aCas, fs.getBegin());
                 state.setFirstVisibleUnit(s);
                 actionRefreshDocument(aTarget);
                 

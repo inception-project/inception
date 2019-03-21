@@ -68,20 +68,20 @@ public class AutomationCasStorageServiceImpl
      *
      * @param aDocument
      *            the {@link TrainingDocument}
-     * @param aJcas
+     * @param aCas
      *            The annotated CAS object
      */
     @Override
-    public void writeCas(TrainingDocument aDocument, CAS aJcas)
+    public void writeCas(TrainingDocument aDocument, CAS aCas)
         throws IOException
     {
         File annotationFolder = getAutomationFolder(aDocument);
         File targetPath = getAutomationFolder(aDocument);
-        writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aJcas,
+        writeCas(aDocument.getProject(), aDocument.getName(), aDocument.getId(), aCas,
                 annotationFolder, targetPath);
     }
     
-    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, CAS aJcas,
+    private void writeCas(Project aProject, String aDocumentName, long aDocumentId, CAS aCas,
             File aAnnotationFolder, File aTargetPath)
         throws IOException
     {
@@ -89,7 +89,7 @@ public class AutomationCasStorageServiceImpl
                 aDocumentName, aDocumentId, aProject.getName(), aProject.getId());
 
         try {
-            casDoctor.analyze(aProject, aJcas);
+            casDoctor.analyze(aProject, aCas);
         }
         catch (CasDoctorException e) {
             StringBuilder detailMsg = new StringBuilder();
@@ -111,8 +111,8 @@ public class AutomationCasStorageServiceImpl
             FileUtils.forceMkdir(aAnnotationFolder);
             // Save CAS of the training document
             {
-                WebAnnoCasUtil.setDocumentId(aJcas, aDocumentName);
-                CasPersistenceUtils.writeSerializedCas(aJcas,
+                WebAnnoCasUtil.setDocumentId(aCas, aDocumentName);
+                CasPersistenceUtils.writeSerializedCas(aCas,
                         new File(aTargetPath, aDocumentName + ".ser"));
 
                 try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,

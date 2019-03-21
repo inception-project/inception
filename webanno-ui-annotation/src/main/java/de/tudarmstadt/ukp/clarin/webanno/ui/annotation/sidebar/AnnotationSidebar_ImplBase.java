@@ -25,7 +25,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -37,17 +37,17 @@ public abstract class AnnotationSidebar_ImplBase
     private static final long serialVersionUID = 8637373389151630602L;
 
     private AnnotationActionHandler actionHandler;
-    private JCasProvider jcasProvider;
+    private CasProvider casProvider;
     private AnnotationPage annotationPage;
     private @SpringBean DocumentService documentService;
 
     public AnnotationSidebar_ImplBase(final String aId, final IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider,
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel);
         actionHandler = aActionHandler;
-        jcasProvider = aJCasProvider;
+        casProvider = aCasProvider;
 
         annotationPage = aAnnotationPage;
 
@@ -85,9 +85,9 @@ public abstract class AnnotationSidebar_ImplBase
         return actionHandler;
     }
 
-    public JCasProvider getJCasProvider()
+    public CasProvider getJCasProvider()
     {
-        return jcasProvider;
+        return casProvider;
     }
 
     public AnnotationPage getAnnotationPage()

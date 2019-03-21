@@ -36,9 +36,9 @@ public interface AnnotationEditorExtensionRegistry
     AnnotationEditorExtension getExtension(String aName);
 
     void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aJCas, VID aParamId, String aAction, int aBegin,
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
             int aEnd)
         throws IOException, AnnotationException;
 
-    void fireRender(CAS aJCas, AnnotatorState aModelObject, VDocument aVdoc);
+    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc);
 }

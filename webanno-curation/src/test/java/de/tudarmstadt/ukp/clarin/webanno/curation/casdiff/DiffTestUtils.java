@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
+package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
@@ -51,7 +51,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
 import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
 
-public class DiffUtils
+public class DiffTestUtils
 {
 
     public static final String HOST_TYPE = "LinkHost";
@@ -70,27 +70,27 @@ public class DiffUtils
         return casByUser;
     }
 
-    public static Map<String, List<CAS>> loadWebAnnoTSV(TypeSystemDescription aTypes,
+    public static Map<String, List<JCas>> loadWebAnnoTSV(TypeSystemDescription aTypes,
             String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            CAS cas = readWebAnnoTSV(path, aTypes);
+            JCas cas = readWebAnnoTSV(path, aTypes);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
         return casByUser;
     }
 
-    public static Map<String, List<CAS>> loadXMI(TypeSystemDescription aTypes, String... aPaths)
+    public static Map<String, List<JCas>> loadXMI(TypeSystemDescription aTypes, String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            CAS cas = readXMI(path, aTypes);
+            JCas cas = readXMI(path, aTypes);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
@@ -103,55 +103,55 @@ public class DiffUtils
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 
-        CAS jcas = JCasFactory.createJCas().getCas();
-
-        reader.getNext(jcas);
-
-        return jcas;
-    }
-
-    public static CAS readWebAnnoTSV(String aPath, TypeSystemDescription aType)
-        throws UIMAException, IOException
-    {
-        CollectionReader reader = createReader(WebannoTsv2Reader.class,
-                WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
-        CAS cas;
-        if (aType != null) {
-            TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
-                    .createTypeSystemDescription();
-            List<TypeSystemDescription> allTypes = new ArrayList<>();
-            allTypes.add(builtInTypes);
-            allTypes.add(aType);
-            cas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
-        }
-        else {
-            cas = JCasFactory.createJCas().getCas();
-        }
+        CAS cas = JCasFactory.createJCas().getCas();
 
         reader.getNext(cas);
 
         return cas;
     }
 
-    public static CAS readXMI(String aPath, TypeSystemDescription aType)
+    public static JCas readWebAnnoTSV(String aPath, TypeSystemDescription aType)
         throws UIMAException, IOException
     {
-        CollectionReader reader = createReader(XmiReader.class, XmiReader.PARAM_SOURCE_LOCATION,
-                "src/test/resources/" + aPath);
-        CAS jcas;
+        CollectionReader reader = createReader(WebannoTsv2Reader.class,
+                WebannoTsv2Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
+        JCas jcas;
         if (aType != null) {
             TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
                     .createTypeSystemDescription();
             List<TypeSystemDescription> allTypes = new ArrayList<>();
             allTypes.add(builtInTypes);
             allTypes.add(aType);
-            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes)).getCas();
+            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes));
         }
         else {
-            jcas = JCasFactory.createJCas().getCas();
+            jcas = JCasFactory.createJCas();
         }
 
-        reader.getNext(jcas);
+        reader.getNext(jcas.getCas());
+
+        return jcas;
+    }
+
+    public static JCas readXMI(String aPath, TypeSystemDescription aType)
+        throws UIMAException, IOException
+    {
+        CollectionReader reader = createReader(XmiReader.class, XmiReader.PARAM_SOURCE_LOCATION,
+                "src/test/resources/" + aPath);
+        JCas jcas;
+        if (aType != null) {
+            TypeSystemDescription builtInTypes = TypeSystemDescriptionFactory
+                    .createTypeSystemDescription();
+            List<TypeSystemDescription> allTypes = new ArrayList<>();
+            allTypes.add(builtInTypes);
+            allTypes.add(aType);
+            jcas = JCasFactory.createJCas(CasCreationUtils.mergeTypeSystems(allTypes));
+        }
+        else {
+            jcas = JCasFactory.createJCas();
+        }
+
+        reader.getNext(jcas.getCas());
 
         return jcas;
     }
@@ -229,38 +229,38 @@ public class DiffUtils
         return type;
     }
 
-    public static void makeLinkHostFS(JCas aJCas, int aBegin, int aEnd, FeatureStructure... aLinks)
+    public static void makeLinkHostFS(JCas aCas, int aBegin, int aEnd, FeatureStructure... aLinks)
     {
-        Type hostType = aJCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
-        aJCas.getCas().addFsToIndexes(hostA1);
+                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
+        aCas.getCas().addFsToIndexes(hostA1);
     }
 
-    public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aJCas, int aBegin, int aEnd,
+    public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aCas, int aBegin, int aEnd,
             Feature aSpanFeature, String aValue, FeatureStructure... aLinks)
     {
-        Type hostType = aJCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
         hostA1.setStringValue(aSpanFeature, aValue);
-        aJCas.getCas().addFsToIndexes(hostA1);
+        aCas.getCas().addFsToIndexes(hostA1);
         return hostA1;
     }
 
-    public static FeatureStructure makeLinkFS(JCas aJCas, String aSlotLabel, int aTargetBegin,
+    public static FeatureStructure makeLinkFS(JCas aCas, String aSlotLabel, int aTargetBegin,
             int aTargetEnd)
     {
-        Token token1 = new Token(aJCas, aTargetBegin, aTargetEnd);
+        Token token1 = new Token(aCas, aTargetBegin, aTargetEnd);
         token1.addToIndexes();
 
-        Type linkType = aJCas.getTypeSystem().getType(LINK_TYPE);
-        FeatureStructure linkA1 = aJCas.getCas().createFS(linkType);
+        Type linkType = aCas.getTypeSystem().getType(LINK_TYPE);
+        FeatureStructure linkA1 = aCas.getCas().createFS(linkType);
         linkA1.setStringValue(linkType.getFeatureByBaseName("role"), aSlotLabel);
         linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), token1);
-        aJCas.getCas().addFsToIndexes(linkA1);
+        aCas.getCas().addFsToIndexes(linkA1);
 
         return linkA1;
     }

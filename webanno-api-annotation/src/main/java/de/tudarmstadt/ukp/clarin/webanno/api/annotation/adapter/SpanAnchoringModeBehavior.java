@@ -72,7 +72,7 @@ public class SpanAnchoringModeBehavior
         }
     }
     
-    public static int[] adjust(CAS aJCas, AnchoringMode aMode, int[] aRange)
+    public static int[] adjust(CAS aCas, AnchoringMode aMode, int[] aRange)
         throws AnnotationException
     {
         switch (aMode) {
@@ -80,8 +80,8 @@ public class SpanAnchoringModeBehavior
             return aRange;
         }
         case SINGLE_TOKEN: {
-            Type tokenType = getType(aJCas, Token.class);
-            List<AnnotationFS> tokens = selectOverlapping(aJCas, tokenType, aRange[0], aRange[1]);
+            Type tokenType = getType(aCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new AnnotationException(
@@ -91,8 +91,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { tokens.get(0).getBegin(), tokens.get(0).getEnd() };
         }
         case TOKENS: {
-            Type tokenType = getType(aJCas, Token.class);
-            List<AnnotationFS> tokens = selectOverlapping(aJCas, tokenType, aRange[0], aRange[1]);
+            Type tokenType = getType(aCas, Token.class);
+            List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
                 throw new AnnotationException(
@@ -106,8 +106,8 @@ public class SpanAnchoringModeBehavior
             return new int[] { begin, end };
         }
         case SENTENCES: {
-            Type sentenceType = getType(aJCas, Sentence.class);
-            List<AnnotationFS> sentences = selectOverlapping(aJCas, sentenceType, aRange[0],
+            Type sentenceType = getType(aCas, Sentence.class);
+            List<AnnotationFS> sentences = selectOverlapping(aCas, sentenceType, aRange[0],
                     aRange[1]);
             
             if (sentences.isEmpty()) {
