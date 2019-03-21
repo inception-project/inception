@@ -1017,6 +1017,7 @@ public class WebAnnoCasUtil
             FSUtil.setFeature(dmd, FEATURE_BASE_NAME_BEGIN, 0);
             FSUtil.setFeature(dmd, FEATURE_BASE_NAME_END, aCas.getDocumentText().length());
         }
+        aCas.addFsToIndexes(dmd);
         return dmd;
     }
     
@@ -1059,6 +1060,30 @@ public class WebAnnoCasUtil
     {
         FeatureStructure dmd = getDocumentMetadata(aCas);
         FSUtil.setFeature(dmd, "documentId", aID);
+    }
+
+    public static String getDocumentId(CAS aCas)
+    {
+        try {
+            Type type = getType(aCas, DocumentMetaData.class);
+            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            return FSUtil.getFeature(dmd, "documentId", String.class);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public static String getDocumentUri(CAS aCas)
+    {
+        try {
+            Type type = getType(aCas, DocumentMetaData.class);
+            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            return FSUtil.getFeature(dmd, "documentUri", String.class);
+        }
+        catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     public static CAS createCas() throws ResourceInitializationException

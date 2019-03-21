@@ -137,7 +137,7 @@ public interface AnnotatorViewState
             throw new IllegalStateException("This is First Page!");
         }
 
-        Sentence sentence = selectByAddr(aCas, Sentence.class, previousSentenceAddress);
+        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, previousSentenceAddress);
         setFirstVisibleUnit(sentence);
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }
@@ -151,7 +151,7 @@ public interface AnnotatorViewState
             throw new IllegalStateException("This is last page!");
         }
 
-        Sentence sentence = selectByAddr(aCas, Sentence.class, nextSentenceAddress);
+        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, nextSentenceAddress);
         setFirstVisibleUnit(sentence);
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }

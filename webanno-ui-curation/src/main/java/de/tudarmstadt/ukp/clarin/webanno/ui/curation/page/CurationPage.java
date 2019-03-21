@@ -97,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -490,7 +489,7 @@ public class CurationPage
     private void updateSentenceNumber(CAS aCas, int aAddress)
     {
         AnnotatorState state = getModelObject();
-        Sentence sentence = selectByAddr(aCas, Sentence.class, aAddress);
+        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, aAddress);
         state.setFirstVisibleUnit(sentence);
         state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }
@@ -548,7 +547,7 @@ public class CurationPage
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(mergeCas, Sentence.class,
+            AnnotationFS sentence = selectByAddr(mergeCas, AnnotationFS.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             

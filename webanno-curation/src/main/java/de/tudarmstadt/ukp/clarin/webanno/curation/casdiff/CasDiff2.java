@@ -52,18 +52,19 @@ import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -362,10 +363,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aCas);
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
-                
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
                 LOG.debug("User [" + collectionId + "] - Document [" + documentId + "]");
             }
             catch (IllegalArgumentException e) {
@@ -1709,9 +1709,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
             }
             catch (IllegalArgumentException e) {
                 // We use this information only for debugging - so we can ignore if the information
@@ -1783,9 +1783,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
             }
             catch (IllegalArgumentException e) {
                 // We use this information only for debugging - so we can ignore if the information

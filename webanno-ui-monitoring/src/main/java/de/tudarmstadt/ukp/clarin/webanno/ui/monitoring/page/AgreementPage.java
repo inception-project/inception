@@ -34,6 +34,8 @@ import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
@@ -71,6 +73,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
@@ -94,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelec
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 @MountPath("/agreement.html")
@@ -219,11 +221,11 @@ public class AgreementPage
 
                             // Set the CAS name in the DocumentMetaData so that we can pick it
                             // up in the Diff position for the purpose of debugging / transparency.
-                            DocumentMetaData documentMetadata = DocumentMetaData.get(cas);
-                            documentMetadata
-                                    .setDocumentId(annotationDocument.getDocument().getName());
-                            documentMetadata
-                                    .setCollectionId(annotationDocument.getProject().getName());
+                            FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
+                            FSUtil.setFeature(dmd, "documentId",
+                                    annotationDocument.getDocument().getName());
+                            FSUtil.setFeature(dmd, "collectionId",
+                                    annotationDocument.getProject().getName());
                         }
                         catch (Exception e) {
                             LOG.error("Unable to load data", e);
