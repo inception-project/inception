@@ -26,7 +26,9 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 import org.apache.uima.cas.CAS;
@@ -60,10 +62,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.tcf.TcfReader;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoRenderer;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
 
 public class PdfAnnoRendererTest
 {
@@ -172,6 +175,9 @@ public class PdfAnnoRendererTest
             "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
     }
 
+    /**
+     * Tests if given offsets for PDFAnno can be converted to offsets for the document in INCEpTION
+     */
     @Test
     public void tetsConvertToDocumentOffset() throws Exception
     {
@@ -190,17 +196,22 @@ public class PdfAnnoRendererTest
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
-        Offset docOffsetKarin = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(3, 7));
-        assertThat(docOffsetKarin).isEqualTo(new Offset(0, 5));
-        Offset docOffsetFliegt = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(8, 13));
-        assertThat(docOffsetFliegt).isEqualTo(new Offset(6, 12));
-        Offset docOffsetSie = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(28, 30));
-        assertThat(docOffsetSie).isEqualTo(new Offset(29, 32));
-        Offset docOffsetDort = PdfAnnoRenderer
-            .convertToDocumentOffset(cas.getDocumentText(), pdfExtractFile, new Offset(35, 38));
-        assertThat(docOffsetDort).isEqualTo(new Offset(38, 42));
+        DocumentModel documentModel = new DocumentModel(cas.getDocumentText());
+        // List of PDFAnno offsets
+        // indices represent line numbers in the PDFExtractFile for the according character
+        List<Offset> offsets = new ArrayList<>();
+        offsets.add(new Offset(3, 7));
+        offsets.add(new Offset(8, 13));
+        offsets.add(new Offset(28, 30));
+        offsets.add(new Offset(35, 38));
+        // convert to offests for document in INCEpTION
+        List<Offset> docOffsets =
+            PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+        List<Offset> expectedOffsets = new ArrayList<>();
+        expectedOffsets.add(new Offset(0, 5));
+        expectedOffsets.add(new Offset(6, 12));
+        expectedOffsets.add(new Offset(29, 32));
+        expectedOffsets.add(new Offset(38, 42));
+        assertThat(docOffsets).isEqualTo(expectedOffsets);
     }
 }
