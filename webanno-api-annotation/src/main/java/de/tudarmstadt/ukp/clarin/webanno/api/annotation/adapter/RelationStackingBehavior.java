@@ -65,14 +65,14 @@ public class RelationStackingBehavior
         }
         
         final AnnotationLayer layer = aAdapter.getLayer();
-        final CAS jcas = aRequest.getCas();
-        final Type type = getType(jcas, aAdapter.getLayer().getName());
+        final CAS cas = aRequest.getCas();
+        final Type type = getType(cas, aAdapter.getLayer().getName());
         final Feature dependentFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         final Feature governorFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
         
         // Locate the governor and dependent annotations - looking at the annotations that are
         // presently visible on screen is sufficient - we don't have to scan the whole CAS.
-        for (AnnotationFS fs : selectCovered(jcas, type, aRequest.getWindowBegin(),
+        for (AnnotationFS fs : selectCovered(cas, type, aRequest.getWindowBegin(),
                 aRequest.getWindowEnd())) {
             AnnotationFS existingTargetFS = (AnnotationFS) fs.getFeatureValue(dependentFeature);
             AnnotationFS existingOriginFS = (AnnotationFS) fs.getFeatureValue(governorFeature);

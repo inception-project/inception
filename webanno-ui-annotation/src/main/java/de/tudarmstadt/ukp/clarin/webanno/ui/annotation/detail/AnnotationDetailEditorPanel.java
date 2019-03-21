@@ -186,8 +186,8 @@ public abstract class AnnotationDetailEditorPanel
                             .getParameterValue("keycode").toString("");
                     
                     if (KEY_ENTER.equals(jsKeycode)) {
-                        CAS jCas = getEditorCas();
-                        actionCreateForward(aTarget, jCas);
+                        CAS cas = getEditorCas();
+                        actionCreateForward(aTarget, cas);
                         setForwardAnnotationKeySequence(null, "complete annotation (space)");
                         return;
                     }
@@ -195,8 +195,8 @@ public abstract class AnnotationDetailEditorPanel
                         FeatureState featureState = getModelObject().getFeatureStates().get(0);
                         featureState.value = null;
                         setForwardAnnotationKeySequence(null, "delete annotation (backspace)");
-                        CAS jCas = getEditorCas();
-                        actionCreateForward(aTarget, jCas);
+                        CAS cas = getEditorCas();
+                        actionCreateForward(aTarget, cas);
                     }
                     else {
                         String newTag = (textfield.getModelObject() == null ? ""
@@ -341,8 +341,8 @@ public abstract class AnnotationDetailEditorPanel
             @Override
             protected void onSubmit(AjaxRequestTarget aTarget) {
                 try {
-                    CAS jCas = getEditorCas();
-                    actionCreateOrUpdate(aTarget, jCas);
+                    CAS cas = getEditorCas();
+                    actionCreateOrUpdate(aTarget, cas);
                 }
                 catch (Exception e) {
                     handleException(form, aTarget, e);
@@ -922,11 +922,11 @@ public abstract class AnnotationDetailEditorPanel
     public void actionDelete(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        CAS jCas = getEditorCas();
+        CAS cas = getEditorCas();
 
         AnnotatorState state = getModelObject();
 
-        AnnotationFS fs = selectAnnotationByAddr(jCas,
+        AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
         AnnotationLayer layer = annotationService.getLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
@@ -943,19 +943,19 @@ public abstract class AnnotationDetailEditorPanel
             return;
         }
         
-        deleteAnnotation(jCas, state, fs, layer, adapter);
+        deleteAnnotation(cas, state, fs, layer, adapter);
 
         // Store CAS again
-        page.writeEditorCas(jCas);
+        page.writeEditorCas(cas);
 
         // Update progress information
-        int sentenceNumber = getSentenceNumber(jCas, state.getSelection().getBegin());
+        int sentenceNumber = getSentenceNumber(cas, state.getSelection().getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         // Auto-scroll
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas);
+            autoScroll(cas);
         }
 
         state.rememberFeatures();
@@ -971,7 +971,7 @@ public abstract class AnnotationDetailEditorPanel
         onDelete(aTarget, fs);
     }
 
-    private void deleteAnnotation(CAS jCas, AnnotatorState state, AnnotationFS fs,
+    private void deleteAnnotation(CAS aCas, AnnotatorState state, AnnotationFS fs,
             AnnotationLayer layer, TypeAdapter adapter) {
         // == DELETE ATTACHED RELATIONS ==
         // If the deleted FS is a span, we must delete all relations that
@@ -981,7 +981,7 @@ public abstract class AnnotationDetailEditorPanel
         // is no longer set after UNATTACH SPANS!
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
-                jCas.removeFsFromIndexes(attachedFs);
+                aCas.removeFsFromIndexes(attachedFs);
                 info("The attached annotation for relation type [" + annotationService
                     .getLayer(attachedFs.getType().getName(), state.getProject()).getUiName()
                     + "] is deleted");
@@ -1003,7 +1003,7 @@ public abstract class AnnotationDetailEditorPanel
                 layer.getAttachType() != null && 
                 layer.getAttachFeature() != null
         ) {
-            Type spanType = CasUtil.getType(jCas, layer.getAttachType().getName());
+            Type spanType = CasUtil.getType(aCas, layer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(layer.getAttachFeature()
                 .getName());
             for (AnnotationFS attachedFs : getAttachedSpans(fs, layer)) {
@@ -1021,9 +1021,9 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
                     .listAttachedLinkFeatures(layer)) {
-                Type linkType = CasUtil.getType(jCas, linkFeature.getLayer().getName());
+                Type linkType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
 
-                for (AnnotationFS linkFS : CasUtil.select(jCas, linkType)) {
+                for (AnnotationFS linkFS : CasUtil.select(aCas, linkType)) {
                     List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature, linkFS);
                     Iterator<LinkWithRoleModel> i = links.iterator();
                     boolean modified = false;
@@ -1051,7 +1051,7 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(state, jCas, state.getSelection().getAnnotation());
+        adapter.delete(state, aCas, state.getSelection().getAnnotation());
     }
 
     @Override
@@ -1060,17 +1060,17 @@ public abstract class AnnotationDetailEditorPanel
     {
         aTarget.addChildren(getPage(), IFeedback.class);
         
-        CAS jCas = getEditorCas();
+        CAS cas = getEditorCas();
 
         AnnotatorState state = getModelObject();
 
-        AnnotationFS idFs = selectAnnotationByAddr(jCas,
+        AnnotationFS idFs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
 
-        jCas.removeFsFromIndexes(idFs);
+        cas.removeFsFromIndexes(idFs);
 
-        AnnotationFS originFs = selectAnnotationByAddr(jCas, state.getSelection().getOrigin());
-        AnnotationFS targetFs = selectAnnotationByAddr(jCas, state.getSelection().getTarget());
+        AnnotationFS originFs = selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+        AnnotationFS targetFs = selectAnnotationByAddr(cas, state.getSelection().getTarget());
 
         List<FeatureState> featureStates = getModelObject().getFeatureStates();
 
@@ -1078,12 +1078,12 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
             AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
-                    state.getUser().getUsername(), targetFs, originFs, jCas,
+                    state.getUser().getUsername(), targetFs, originFs, cas,
                     state.getWindowBeginOffset(), state.getWindowEndOffset());
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {
-                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), jCas,
+                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), cas,
                         getAddr(arc), featureState.feature, featureState.value);
             }
         }
@@ -1093,13 +1093,13 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // persist changes
-        page.writeEditorCas(jCas);
-        int sentenceNumber = getSentenceNumber(jCas, originFs.getBegin());
+        page.writeEditorCas(cas);
+        int sentenceNumber = getSentenceNumber(cas, originFs.getBegin());
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
         if (state.getPreferences().isScrollPage()) {
-            autoScroll(jCas);
+            autoScroll(cas);
         }
 
         info("The arc has been reversed");
@@ -1124,9 +1124,9 @@ public abstract class AnnotationDetailEditorPanel
     /**
      * Scroll the window of visible annotations.
      */
-    private void autoScroll(CAS jCas)
+    private void autoScroll(CAS aCas)
     {
-        getModelObject().moveToSelection(jCas);
+        getModelObject().moveToSelection(aCas);
     }
 
     @SuppressWarnings("unchecked")

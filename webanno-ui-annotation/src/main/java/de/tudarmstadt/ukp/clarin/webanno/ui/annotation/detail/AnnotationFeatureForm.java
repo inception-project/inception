@@ -388,8 +388,8 @@ public class AnnotationFeatureForm
         AnnotationLayer layer = state.getSelectedAnnotationLayer();
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
-        CAS jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectAnnotationByAddr(jCas,
+        CAS cas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
         
         if (layer.isReadonly()) {
@@ -425,8 +425,8 @@ public class AnnotationFeatureForm
 
         AnnotationLayer newLayer = layerSelector.getModelObject();
 
-        CAS jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectAnnotationByAddr(jCas,
+        CAS cas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
         AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
         
@@ -854,16 +854,16 @@ public class AnnotationFeatureForm
                         // re-focus after rendering
                         getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
                         
-                        CAS jCas = editorPanel.getEditorCas();
+                        CAS cas = editorPanel.getEditorCas();
                         AnnotationLayer layer = state.getSelectedAnnotationLayer();
                         if (
                                 state.isForwardAnnotation() &&
                                 layer != null &&
                                 layer.equals(state.getDefaultAnnotationLayer())
                         ) {
-                            editorPanel.actionCreateForward(aTarget, jCas);
+                            editorPanel.actionCreateForward(aTarget, cas);
                         } else {
-                            editorPanel.actionCreateOrUpdate(aTarget, jCas);
+                            editorPanel.actionCreateOrUpdate(aTarget, cas);
                         }
                     }
                     catch (Exception e) {

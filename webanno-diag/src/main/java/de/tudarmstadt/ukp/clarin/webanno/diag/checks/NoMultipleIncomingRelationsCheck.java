@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -81,10 +83,8 @@ public class NoMultipleIncomingRelationsCheck
 
                 for (AnnotationFS rel : select(aCas, type)) {
 
-                    AnnotationFS source = getFeature(rel, WebAnnoConst.FEAT_REL_SOURCE,
-                            AnnotationFS.class);
-                    AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
-                            AnnotationFS.class);
+                    AnnotationFS source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
+                    AnnotationFS target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
 
                     AnnotationFS existingSource = incoming.get(target);
                     if (existingSource != null) {

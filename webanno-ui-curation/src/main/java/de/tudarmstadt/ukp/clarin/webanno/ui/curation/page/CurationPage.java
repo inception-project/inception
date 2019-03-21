@@ -512,8 +512,8 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
         
-        CAS jcas = getEditorCas();
-        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(jcas));
+        CAS cas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(cas));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -672,22 +672,22 @@ public class CurationPage
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
                 upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
-            Map<String, CAS> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
+            Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
-            CAS mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
+            CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
                     randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
             state.getPreferences()
-                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
+                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeCas));
             
             // Initialize timestamp in state
             updateDocumentTimestampAfterWrite(state, curationDocumentService
                     .getCurationCasTimestamp(state.getDocument()));
                         
             // Initialize the visible content
-            state.moveToUnit(mergeJCas, aFocus);
+            state.moveToUnit(mergeCas, aFocus);
             gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
     
             // if project is changed, reset some project specific settings
@@ -704,7 +704,7 @@ public class CurationPage
             curationContainer.setBratAnnotatorModel(state);
             curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
+            updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);
             //curationPanel.updatePanel(aTarget, curationContainer);
             

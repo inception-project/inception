@@ -189,9 +189,9 @@ public class AgreementUtils
     {
         for (List<CAS> l : aCasMap.values()) {
             if (l != null) {
-                for (CAS jcas : l) {
-                    if (jcas != null) {
-                        return jcas;
+                for (CAS cas : l) {
+                    if (cas != null) {
+                        return cas;
                     }
                 }
             }

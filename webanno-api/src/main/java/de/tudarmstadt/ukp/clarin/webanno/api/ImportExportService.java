@@ -94,7 +94,7 @@ public interface ImportExportService
      *            the project to which this file belongs (required to get the type system).
      * @param aFormatId
      *            ID of a supported file format
-     * @return the JCas.
+     * @return the CAS.
      * @throws UIMAException
      *             if a conversion error occurs.
      * @throws IOException

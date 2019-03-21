@@ -129,54 +129,54 @@ public class SuggestionBuilder
             }
         }
 
-        Map<String, CAS> jCases = new HashMap<>();
+        Map<String, CAS> casses = new HashMap<>();
 
         AnnotationDocument randomAnnotationDocument = null;
-        CAS mergeJCas;
+        CAS mergeCas;
 
-        // get the correction/automation JCas for the logged in user
+        // get the correction/automation CAS for the logged in user
         if (aBModel.getMode().equals(Mode.AUTOMATION)
                 || aBModel.getMode().equals(Mode.CORRECTION)) {
-            jCases = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
+            casses = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
-            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument,
+            mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
                     false);
-            String username = jCases.keySet().iterator().next();
+            String username = casses.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
-                    jCases.get(username), username, aBModel.getWindowBeginOffset(),
+                    casses.get(username), username, aBModel.getWindowBeginOffset(),
                     aBModel.getWindowEndOffset());
         }
         else {
-            jCases = listJcasesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
+            casses = listCassesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
-            mergeJCas = getMergeCas(aBModel, sourceDocument, jCases, randomAnnotationDocument,
+            mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
                     false);
-            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeJCas,
+            updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
                     WebAnnoConst.CURATION_USER,
-                    WebAnnoCasUtil.getFirstSentence(mergeJCas).getBegin(),
-                    mergeJCas.getDocumentText().length());
+                    WebAnnoCasUtil.getFirstSentence(mergeCas).getBegin(),
+                    mergeCas.getDocumentText().length());
 
         }
 
         List<Type> entryTypes = null;
 
         segmentAdress.put(WebAnnoConst.CURATION_USER, new HashMap<>());
-        Type sentenceType = getType(mergeJCas, Sentence.class);
-        for (AnnotationFS sentence : selectCovered(mergeJCas, sentenceType, diffRangeBegin,
+        Type sentenceType = getType(mergeCas, Sentence.class);
+        for (AnnotationFS sentence : selectCovered(mergeCas, sentenceType, diffRangeBegin,
                 diffRangeEnd)) {
             segmentAdress.get(WebAnnoConst.CURATION_USER).put(sentence.getBegin(),
                     getAddr(sentence));
         }
 
         if (entryTypes == null) {
-            entryTypes = getEntryTypes(mergeJCas, aBModel.getAnnotationLayers(), annotationService);
+            entryTypes = getEntryTypes(mergeCas, aBModel.getAnnotationLayers(), annotationService);
         }
 
         // for cross-sentences annotation, update the end of the segment
         if (firstload) {
             long start = System.currentTimeMillis();
             log.debug("Updating cross sentence annotation list...");
-            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, jCases, entryTypes);
+            updateCrossSentAnnoList(segmentBeginEnd, segmentNumber, casses, entryTypes);
             firstload = false;
             log.debug("Cross sentence annotation list complete in {}ms",
                     (System.currentTimeMillis() - start));
@@ -197,7 +197,7 @@ public class SuggestionBuilder
             }
 
             DiffResult diff = CasDiff2.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
-                    jCases, begin, end);
+                    casses, begin, end);
 
             SourceListView curationSegment = new SourceListView();
             curationSegment.setBegin(begin);
@@ -333,7 +333,7 @@ public class SuggestionBuilder
             SourceDocument aDocument, Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        Map<String, CAS> jCases = new HashMap<>();
+        Map<String, CAS> casses = new HashMap<>();
         User user = userRepository
                 .get(SecurityContextHolder.getContext().getAuthentication().getName());
         randomAnnotationDocument = documentService.getAnnotationDocument(aDocument, user);
@@ -342,16 +342,16 @@ public class SuggestionBuilder
         // of the open dialog - it must not happen during editing because the CAS addresses
         // are used as IDs in the UI
         // repository.upgradeCasAndSave(aDocument, aMode, user.getUsername());
-        CAS jCas = documentService.readAnnotationCas(randomAnnotationDocument);
-        jCases.put(user.getUsername(), jCas);
-        return jCases;
+        CAS cas = documentService.readAnnotationCas(randomAnnotationDocument);
+        casses.put(user.getUsername(), cas);
+        return casses;
     }
 
-    public Map<String, CAS> listJcasesforCuration(List<AnnotationDocument> annotationDocuments,
+    public Map<String, CAS> listCassesforCuration(List<AnnotationDocument> annotationDocuments,
             AnnotationDocument randomAnnotationDocument, Mode aMode)
         throws UIMAException, ClassNotFoundException, IOException
     {
-        Map<String, CAS> jCases = new HashMap<>();
+        Map<String, CAS> casses = new HashMap<>();
         for (AnnotationDocument annotationDocument : annotationDocuments) {
             String username = annotationDocument.getUser();
 
@@ -367,10 +367,10 @@ public class SuggestionBuilder
             // of the open dialog - it must not happen during editing because the CAS addresses
             // are used as IDs in the UI
             // repository.upgradeCasAndSave(annotationDocument.getDocument(), aMode, username);
-            CAS jCas = documentService.readAnnotationCas(annotationDocument);
-            jCases.put(username, jCas);
+            CAS cas = documentService.readAnnotationCas(annotationDocument);
+            casses.put(username, cas);
         }
-        return jCases;
+        return casses;
     }
 
     /**
@@ -381,11 +381,11 @@ public class SuggestionBuilder
      *            the model.
      * @param aDocument
      *            the source document.
-     * @param jCases
-     *            the JCases.
+     * @param aCasses
+     *            the CASes.
      * @param randomAnnotationDocument
      *            an annotation document.
-     * @return the JCas.
+     * @return the CAS.
      * @throws UIMAException
      *             hum?
      * @throws ClassNotFoundException
@@ -396,7 +396,7 @@ public class SuggestionBuilder
      *             hum?
      */
     public CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> jCases, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
+            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CAS mergeCas = null;
@@ -442,7 +442,7 @@ public class SuggestionBuilder
             }
             else {
                 mergeCas = createCurationCas(aState.getProject(),
-                        randomAnnotationDocument, jCases,
+                        randomAnnotationDocument, aCasses,
                         aState.getAnnotationLayers());
                 updateDocumentTimestampAfterWrite(aState, curationDocumentService
                         .getCurationCasTimestamp(aState.getDocument()));
@@ -452,7 +452,7 @@ public class SuggestionBuilder
     }
 
     /**
-     * Puts JCases into a list and get a random annotation document that will be used as a base for
+     * Puts CASes into a list and get a random annotation document that will be used as a base for
      * the diff.
      */
     private void updateSegment(AnnotatorState aBratAnnotatorModel,
@@ -505,16 +505,16 @@ public class SuggestionBuilder
      *            the project
      * @param randomAnnotationDocument
      *            an annotation document.
-     * @param jCases
-     *            the JCases
+     * @param aCasses
+     *            the CASes
      * @param aAnnotationLayers
      *            the layers.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if an I/O error occurs.
      */
     public CAS createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
-            Map<String, CAS> jCases, List<AnnotationLayer> aAnnotationLayers)
+            Map<String, CAS> aCasses, List<AnnotationLayer> aAnnotationLayers)
         throws IOException
     {
         CAS mergeCas;
@@ -529,15 +529,15 @@ public class SuggestionBuilder
                 casStorageService.enableCache();
             }
         }
-        jCases.put(WebAnnoConst.CURATION_USER, mergeCas);
+        aCasses.put(WebAnnoConst.CURATION_USER, mergeCas);
 
         List<Type> entryTypes = getEntryTypes(mergeCas, aAnnotationLayers, annotationService);
 
         DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes,
-                LinkCompareBehavior.LINK_ROLE_AS_LABEL, jCases, 0,
+                LinkCompareBehavior.LINK_ROLE_AS_LABEL, aCasses, 0,
                 mergeCas.getDocumentText().length());
 
-        mergeCas = MergeCas.reMergeCas(diff, jCases);
+        mergeCas = MergeCas.reMergeCas(diff, aCasses);
 
         curationDocumentService.writeCurationCas(mergeCas, randomAnnotationDocument.getDocument(),
                 false);
@@ -545,16 +545,16 @@ public class SuggestionBuilder
         return mergeCas;
     }
 
-    private CAS createCorrectionCas(CAS mergeJCas, AnnotatorState aState,
+    private CAS createCorrectionCas(CAS aMergeCas, AnnotatorState aState,
             AnnotationDocument aRandomAnnotationDocument)
         throws UIMAException, ClassNotFoundException, IOException
     {
         User user = userRepository.getCurrentUser();
-        mergeJCas = documentService.readAnnotationCas(aState.getDocument(), user);
-        correctionDocumentService.writeCorrectionCas(mergeJCas,
+        aMergeCas = documentService.readAnnotationCas(aState.getDocument(), user);
+        correctionDocumentService.writeCorrectionCas(aMergeCas,
                 aRandomAnnotationDocument.getDocument());
         updateDocumentTimestampAfterWrite(aState, correctionDocumentService
                 .getCorrectionCasTimestamp(aState.getDocument()));
-        return mergeJCas;
+        return aMergeCas;
     }
 }

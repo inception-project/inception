@@ -195,15 +195,15 @@ public interface DocumentService
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param annotationDocument
      *            the annotation document.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(CAS jCas, AnnotationDocument annotationDocument,
+    void writeAnnotationCas(CAS aCas, AnnotationDocument annotationDocument,
             boolean aUpdateTimestamp)
         throws IOException;
     
@@ -212,8 +212,8 @@ public interface DocumentService
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param document
      *            the source document.
      * @param user
@@ -222,7 +222,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(CAS jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
+    void writeAnnotationCas(CAS aCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**
@@ -267,7 +267,7 @@ public interface DocumentService
     boolean existsAnnotationDocument(SourceDocument document, String aUsername);
 
     /**
-     * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project}
+     * check if the CAS for the {@link User} and {@link SourceDocument} in this {@link Project}
      * exists It is important as {@link AnnotationDocument} entry can be populated as
      * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the
      * document for annotation.
@@ -329,7 +329,7 @@ public interface DocumentService
      *
      * @param annotationDocument
      *            the annotation document.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
@@ -348,7 +348,7 @@ public interface DocumentService
      *            the source document.
      * @param user
      *            the user.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
@@ -368,7 +368,7 @@ public interface DocumentService
      *            the source document.
      * @param userName
      *            the username.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */

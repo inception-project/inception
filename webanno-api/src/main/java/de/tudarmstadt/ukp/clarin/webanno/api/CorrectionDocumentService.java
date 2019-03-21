@@ -33,15 +33,15 @@ public interface CorrectionDocumentService
     /**
      * Create an annotation document under a special user named "CORRECTION_USER"
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param document
      *            the source document.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCorrectionCas(CAS jCas, SourceDocument document)
+    void writeCorrectionCas(CAS aCas, SourceDocument document)
         throws IOException;
 
     CAS readCorrectionCas(SourceDocument document)

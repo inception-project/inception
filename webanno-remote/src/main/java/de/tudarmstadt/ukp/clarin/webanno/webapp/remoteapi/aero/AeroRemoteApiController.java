@@ -624,12 +624,12 @@ public class AeroRemoteApiController
                                     .collect(Collectors.toList()).toString()));
             
             // Create a temporary export file from the annotations
-            CAS jcas = documentService.createOrReadInitialCas(doc);
+            CAS cas = documentService.createOrReadInitialCas(doc);
             
             File exportedFile = null;
             try {
                 // Load the converted file into memory
-                exportedFile = importExportService.exportCasToFile(jcas, doc,
+                exportedFile = importExportService.exportCasToFile(cas, doc,
                         doc.getName(), format, true);
                 byte[] resource = FileUtils.readFileToByteArray(exportedFile);
                 

@@ -52,7 +52,6 @@ import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.cas.TOP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -113,7 +112,7 @@ public class CasDiff2
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType,
+    public static DiffResult doDiff(Type aEntryType,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
             Map<String, CAS> aCasMap)
     {
@@ -137,11 +136,10 @@ public class CasDiff2
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType, DiffAdapter aAdapter,
+    public static DiffResult doDiff(String aEntryType, DiffAdapter aAdapter,
             LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
     {
-        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior,
-                aCasMap);
+        return doDiff(asList(aEntryType), asList(aAdapter), aLinkCompareBehavior, aCasMap);
     }
 
     /**
@@ -1687,7 +1685,7 @@ public class CasDiff2
         public static final SpanDiffAdapter NER = new SpanDiffAdapter(NamedEntity.class.getName(),
                 "value");
         
-        public <T extends TOP> SpanDiffAdapter(Class<T> aType, String... aLabelFeatures)
+        public SpanDiffAdapter(Type aType, String... aLabelFeatures)
         {
             this(aType.getName(), new HashSet<>(asList(aLabelFeatures)));
         }
@@ -1741,7 +1739,7 @@ public class CasDiff2
         private String sourceFeature;
         private String targetFeature;
         
-        public <T extends TOP> ArcDiffAdapter(Class<T> aType, String aSourceFeature,
+        public ArcDiffAdapter(Type aType, String aSourceFeature,
                 String aTargetFeature, String... aLabelFeatures)
         {
             this(aType.getName(), aSourceFeature, aTargetFeature,

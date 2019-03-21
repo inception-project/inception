@@ -612,38 +612,38 @@ public class MergeCas
 
     public static void addSpanAnnotation(AnnotatorState aState,
             AnnotationSchemaService aAnnotationService, AnnotationLayer aAnnotationLayer,
-            CAS aMergeJCas, AnnotationFS aFSClicked, boolean aAllowStacking)
+            CAS aMergeCas, AnnotationFS aFSClicked, boolean aAllowStacking)
         throws AnnotationException
     {
-        if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeJCas)) {
+        if (MergeCas.existsSameAnnoOnPosition(aFSClicked, aMergeCas)) {
             throw new AnnotationException(
                     "Same annotation already exists on the mergeview. Please add it manually.");
         }
 
         // a) if stacking allowed add this new annotation to the mergeview
-        List<AnnotationFS> existingAnnos = MergeCas.getAnnosOnPosition(aFSClicked, aMergeJCas);
+        List<AnnotationFS> existingAnnos = MergeCas.getAnnosOnPosition(aFSClicked, aMergeCas);
         if (existingAnnos.size() == 0 || aAllowStacking) {
             MergeCas.copySpanAnnotation(aState, aAnnotationService, aAnnotationLayer, aFSClicked,
-                    aMergeJCas);
+                    aMergeCas);
         }
 
         // b) if stacking is not allowed, modify the existing annotation with this one
         else {
-            MergeCas.modifySpanAnnotation(aFSClicked, existingAnnos.get(0), aMergeJCas);
+            MergeCas.modifySpanAnnotation(aFSClicked, existingAnnos.get(0), aMergeCas);
         }
     }
 
     public static void addArcAnnotation(TypeAdapter aAdapter, CAS aCas,
             int aAddressOriginClicked, int aAddressTargetClicked, String aFSArcaddress,
-            CAS aClickedJCas, AnnotationFS aClickedFS)
+            CAS aClickedCas, AnnotationFS aClickedFS)
         throws AnnotationException
     {
-        AnnotationFS originFsClicked = selectAnnotationByAddr(aClickedJCas, aAddressOriginClicked);
-        AnnotationFS targetFsClicked = selectAnnotationByAddr(aClickedJCas, aAddressTargetClicked);
+        AnnotationFS originFsClicked = selectAnnotationByAddr(aClickedCas, aAddressOriginClicked);
+        AnnotationFS targetFsClicked = selectAnnotationByAddr(aClickedCas, aAddressTargetClicked);
 
         // this is a slot arc
         if (aFSArcaddress.contains(".")) {
-            addSlotArcAnnotation((SpanAdapter) aAdapter, aCas, aFSArcaddress, aClickedJCas,
+            addSlotArcAnnotation((SpanAdapter) aAdapter, aCas, aFSArcaddress, aClickedCas,
                     aClickedFS);
         }
         // normal relation annotation arc is clicked
@@ -717,7 +717,7 @@ public class MergeCas
     }
 
     private static void addSlotArcAnnotation(SpanAdapter aAdapter, CAS aCas, String aFSArcaddress,
-            CAS aClickedJCas, AnnotationFS aClickedFS)
+            CAS aClickedCas, AnnotationFS aClickedFS)
         throws AnnotationException
     {
         List<AnnotationFS> merges = MergeCas.getMergeFS(aClickedFS, aCas)
@@ -744,8 +744,8 @@ public class MergeCas
                     if (fi == fiIndex && li == liIndex) {
                         slotFeature = feat;
 
-                        List<AnnotationFS> targets = checkAndGetTargets(aCas, aClickedJCas,
-                                selectAnnotationByAddr(aClickedJCas, link.targetAddr));
+                        List<AnnotationFS> targets = checkAndGetTargets(aCas,
+                                selectAnnotationByAddr(aClickedCas, link.targetAddr));
                         targetFs = targets.get(0);
                         link.targetAddr = getAddr(targetFs);
                         linkRole = link;
@@ -770,8 +770,7 @@ public class MergeCas
         setFeature(mergeFs, slotFeature, links);
     }
 
-    private static List<AnnotationFS> checkAndGetTargets(CAS aCas, CAS aClickedJCas,
-            AnnotationFS aOldTraget)
+    private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)
         throws AnnotationException
     {
         List<AnnotationFS> targets = MergeCas.getMergeFS(aOldTraget, aCas)

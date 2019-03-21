@@ -461,8 +461,8 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
         
-        CAS jcas = getEditorCas();
-        List<AnnotationFS> sentences = new ArrayList<>(select(jcas, getType(jcas, Sentence.class)));
+        CAS cas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(select(cas, getType(cas, Sentence.class)));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -485,11 +485,11 @@ public class AnnotationPage
         try {
             AnnotatorState state = getModelObject();
             
-            CAS jCas = getEditorCas();
+            CAS cas = getEditorCas();
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
+            Sentence sentence = selectByAddr(cas, Sentence.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             

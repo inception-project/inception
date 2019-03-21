@@ -84,11 +84,11 @@ public class RelationCrossSentenceBehavior
         }
         
         for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
-            CAS jcas = e.getKey().getCAS();
+            CAS cas = e.getKey().getCAS();
             
-            if (!isBeginInSameSentence(jcas, 
-                    selectAnnotationByAddr(jcas, e.getValue().getSource().getId()).getBegin(),
-                    selectAnnotationByAddr(jcas, e.getValue().getTarget().getId()).getBegin()))
+            if (!isBeginInSameSentence(cas, 
+                    selectAnnotationByAddr(cas, e.getValue().getSource().getId()).getBegin(),
+                    selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin()))
             {
                 aResponse.add(new VComment(new VID(e.getKey()), ERROR,
                         "Crossing sentence bounardies is not permitted."));

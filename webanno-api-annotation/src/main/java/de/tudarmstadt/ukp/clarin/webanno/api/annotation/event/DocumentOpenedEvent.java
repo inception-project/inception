@@ -39,7 +39,7 @@ public class DocumentOpenedEvent
         user = aUser;
     }
     
-    public CAS getJCas()
+    public CAS getCas()
     {
         return cas;
     }

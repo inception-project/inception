@@ -104,7 +104,7 @@ public abstract class AnnotationEditorBase
         return actionHandler;
     }
     
-    public CasProvider getJCasProvider()
+    public CasProvider getCasProvider()
     {
         return casProvider;
     }

@@ -39,11 +39,11 @@ public interface AnnotationEditorExtension
      * Handle an action.
      */
     void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS jCas, VID paramId, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction, int aBegin, int aEnd)
         throws AnnotationException, IOException;
 
     /**
      * Post-process the output during rendering.
      */
-    void render(CAS jCas, AnnotatorState aState, VDocument vdoc);
+    void render(CAS aCas, AnnotatorState aState, VDocument vdoc);
 }

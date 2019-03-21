@@ -524,7 +524,7 @@ public class DocumentServiceImpl
         
         // Import the actual content
         File targetFile = getSourceDocumentFile(aDocument);
-        CAS jcas;
+        CAS cas;
         try {
             FileUtils.forceMkdir(targetFile.getParentFile());
             
@@ -534,7 +534,7 @@ public class DocumentServiceImpl
             
             // Check if the file has a valid format / can be converted without error
             // This requires that the document ID has already been assigned
-            jcas = createOrReadInitialCas(aDocument);
+            cas = createOrReadInitialCas(aDocument);
         }
         catch (IOException e) {
             FileUtils.forceDelete(targetFile);
@@ -549,7 +549,7 @@ public class DocumentServiceImpl
 
         log.trace("Sending AfterDocumentCreatedEvent for {}", aDocument);
         applicationEventPublisher
-                .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, jcas));
+                .publishEvent(new AfterDocumentCreatedEvent(this, aDocument, cas));
         
         try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                 String.valueOf(aDocument.getProject().getId()))) {
@@ -606,14 +606,14 @@ public class DocumentServiceImpl
             throws IOException
     {
         // If there is no CAS yet for the source document, create one.
-        CAS jcas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
+        CAS cas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
             // Convert the source file into an annotation CAS
             return createOrReadInitialCas(aDocument);
         });
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it
-        return jcas;
+        return cas;
     }
 
     @Override
@@ -684,9 +684,9 @@ public class DocumentServiceImpl
         throws UIMAException, IOException
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
-        CAS jcas = createOrReadInitialCas(aDocument);
-        writeAnnotationCas(jcas, aDocument, aUser, false);
-        applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
+        CAS cas = createOrReadInitialCas(aDocument);
+        writeAnnotationCas(cas, aDocument, aUser, false);
+        applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
     }
     
     @Override

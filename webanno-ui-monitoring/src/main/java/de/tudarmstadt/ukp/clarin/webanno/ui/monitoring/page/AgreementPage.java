@@ -177,7 +177,7 @@ public class AgreementPage
     }
 
     // The CASes cannot be serialized, so we make them transient here. However, it does not matter
-    // as we do not access the field directly but via getJCases() which will re-load them if
+    // as we do not access the field directly but via getCases() which will re-load them if
     // necessary, e.g. if the transient field is empty after a session is restored from a
     // persisted state.
     private transient Map<String, List<CAS>> cachedCASes;
@@ -185,7 +185,7 @@ public class AgreementPage
     /**
      * Get the finished CASes used to compute agreement.
      */
-    private Map<String, List<CAS>> getJCases()
+    private Map<String, List<CAS>> getCases()
     {
         // Avoid reloading the CASes when switching features.
         if (cachedCASes != null) {
@@ -204,7 +204,7 @@ public class AgreementPage
             List<CAS> cases = new ArrayList<>();
 
             for (SourceDocument document : sourceDocuments) {
-                CAS jCas = null;
+                CAS cas = null;
 
                 // Load the CAS if there is a finished one.
                 if (documentService.existsAnnotationDocument(document, user)) {
@@ -212,14 +212,14 @@ public class AgreementPage
                             .getAnnotationDocument(document, user);
                     if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
                         try {
-                            jCas = documentService.readAnnotationCas(annotationDocument);
-                            annotationService.upgradeCasIfRequired(jCas, annotationDocument);
+                            cas = documentService.readAnnotationCas(annotationDocument);
+                            annotationService.upgradeCasIfRequired(cas, annotationDocument);
                             // REC: I think there is no need to write the CASes here. We would not
                             // want to interfere with currently active annotator users
 
                             // Set the CAS name in the DocumentMetaData so that we can pick it
                             // up in the Diff position for the purpose of debugging / transparency.
-                            DocumentMetaData documentMetadata = DocumentMetaData.get(jCas);
+                            DocumentMetaData documentMetadata = DocumentMetaData.get(cas);
                             documentMetadata
                                     .setDocumentId(annotationDocument.getDocument().getName());
                             documentMetadata
@@ -234,7 +234,7 @@ public class AgreementPage
 
                 // The next line can enter null values into the list if a user didn't work on this
                 // source document yet.
-                cases.add(jCas);
+                cases.add(cas);
             }
 
             cachedCASes.put(user.getUsername(), cases);
@@ -403,7 +403,7 @@ public class AgreementPage
                                 return null;
                             }
 
-                            Map<String, List<CAS>> casMap = getJCases();
+                            Map<String, List<CAS>> casMap = getCases();
 
                             Project project = projectSelectionForm.getModelObject().project;
                             List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
@@ -449,7 +449,7 @@ public class AgreementPage
                                         return null;
                                     }
 
-                                    Map<String, List<CAS>> casMap = getJCases();
+                                    Map<String, List<CAS>> casMap = getCases();
 
                                     Project project = projectSelectionForm.getModelObject().project;
                                     List<DiffAdapter> adapters = CasDiff2
@@ -524,7 +524,7 @@ public class AgreementPage
                 @Override
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
-                    // We may get errors when loading the JCases but at that time we can no longer
+                    // We may get errors when loading the CASes but at that time we can no longer
                     // add the feedback panel to the cycle, so let's do it here.
                     aTarget.add(getFeedbackPanel());
 

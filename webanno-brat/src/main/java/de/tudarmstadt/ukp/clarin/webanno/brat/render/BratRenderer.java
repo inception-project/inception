@@ -109,7 +109,7 @@ public class BratRenderer
      * @param aState
      *            the annotator model.
      * @param aCas
-     *            the JCas.
+     *            the CAS.
      * @param aAnnotationService
      *            the annotation service.s
      */

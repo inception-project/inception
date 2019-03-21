@@ -362,18 +362,18 @@ public class MiraAutomationServiceImpl
         throws IOException
     {
         // If there is no CAS yet for the annotation document, create one.
-        CAS jcas = null;
+        CAS cas = null;
         if (!existsCas(aTrainingAnnotationDocument)) {
             // Convert the source file into an annotation CAS
             try {
                 if (!existsInitialCas(aTrainingAnnotationDocument)) {
-                    jcas = createInitialCas(aTrainingAnnotationDocument);
+                    cas = createInitialCas(aTrainingAnnotationDocument);
                 }
 
                 // Ok, so at this point, we either have the lazily converted CAS already loaded
                 // or we know that we can load the existing initial CAS.
-                if (jcas == null) {
-                    jcas = readInitialCas(aTrainingAnnotationDocument);
+                if (cas == null) {
+                    cas = readInitialCas(aTrainingAnnotationDocument);
                 }
             }
             catch (Exception e) {
@@ -383,16 +383,16 @@ public class MiraAutomationServiceImpl
                         "The reader for format [" + aTrainingAnnotationDocument.getFormat()
                                 + "] is unable to digest data: " + e.getMessage());
             }
-            automationCasStorageService.writeCas(aTrainingAnnotationDocument, jcas);
+            automationCasStorageService.writeCas(aTrainingAnnotationDocument, cas);
         }
         else {
             // Read existing CAS
             // We intentionally do not upgrade the CAS here because in general the IDs
             // must remain stable. If an upgrade is required the caller should do it
-            jcas = automationCasStorageService.readCas(aTrainingAnnotationDocument);
+            cas = automationCasStorageService.readCas(aTrainingAnnotationDocument);
         }
 
-        return jcas;
+        return cas;
     }
     
     
@@ -430,12 +430,12 @@ public class MiraAutomationServiceImpl
     public CAS createInitialCas(TrainingDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException
     {
-        CAS jcas = importExportService.importCasFromFile(getTrainingDocumentFile(aDocument),
+        CAS cas = importExportService.importCasFromFile(getTrainingDocumentFile(aDocument),
                 aDocument.getProject(), aDocument.getFormat());
-        automationCasStorageService.analyzeAndRepair(aDocument, jcas);
-        CasPersistenceUtils.writeSerializedCas(jcas, getCasFile(aDocument));
+        automationCasStorageService.analyzeAndRepair(aDocument, cas);
+        CasPersistenceUtils.writeSerializedCas(cas, getCasFile(aDocument));
 
-        return jcas;
+        return cas;
     }
 
     @Override
@@ -450,13 +450,13 @@ public class MiraAutomationServiceImpl
     public CAS readInitialCas(TrainingDocument aDocument)
         throws CASException, ResourceInitializationException, IOException
     {
-        CAS jcas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
 
-        CasPersistenceUtils.readSerializedCas(jcas, getCasFile(aDocument));
+        CasPersistenceUtils.readSerializedCas(cas, getCasFile(aDocument));
 
-        automationCasStorageService.analyzeAndRepair(aDocument, jcas);
+        automationCasStorageService.analyzeAndRepair(aDocument, cas);
 
-        return jcas;
+        return cas;
     }
 
     @Override

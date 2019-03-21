@@ -25,7 +25,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
-import static org.apache.uima.fit.util.JCasUtil.selectFollowing;
+import static org.apache.uima.fit.util.CasUtil.selectFollowing;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +47,9 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.cas.text.AnnotationIndex;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.tcas.Annotation;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -392,7 +394,8 @@ public class WebAnnoCasUtil
             int aWindowSize)
     {
         int count = 0;
-        FSIterator<AnnotationFS> si = seekByAddress(aCas, Sentence.class, aFirstSentenceAddress);
+        FSIterator<AnnotationFS> si = seekByAddress(aCas, getAnnotationType(aCas, Sentence.class),
+                aFirstSentenceAddress);
         AnnotationFS s = si.get();
         while (count < aWindowSize - 1) {
             si.moveToNext();
@@ -416,15 +419,13 @@ public class WebAnnoCasUtil
      * @param aType
      *            the expected annotation type
      * @param aAddr
-     *            the annotationa address
+     *            the annotation address
      * @return the iterator.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static FSIterator<AnnotationFS> seekByAddress(CAS aCas,
-            Class<? extends Annotation> aType, int aAddr)
+    private static FSIterator<AnnotationFS> seekByAddress(CAS aCas, Type aType, int aAddr)
     {
-        AnnotationIndex<AnnotationFS> idx = aCas
-                .getAnnotationIndex(getAnnotationType(aCas, aType));
+        AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
         return idx.iterator(selectByAddr(aCas, aAddr));
     }
 
@@ -440,11 +441,9 @@ public class WebAnnoCasUtil
      * @return the iterator.
      */
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static FSIterator<AnnotationFS> seekByFs(CAS aCas, Class<? extends Annotation> aType,
-            AnnotationFS aFS)
+    private static FSIterator<AnnotationFS> seekByFs(CAS aCas, Type aType, AnnotationFS aFS)
     {
-        AnnotationIndex<AnnotationFS> idx = aCas
-                .getAnnotationIndex(CasUtil.getAnnotationType(aCas, aType));
+        AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
         return idx.iterator(aFS);
     }
     /**
@@ -485,7 +484,7 @@ public class WebAnnoCasUtil
         }
 
         // Center sentence
-        FSIterator<AnnotationFS> si = seekByFs(aCas, Sentence.class, s);
+        FSIterator<AnnotationFS> si = seekByFs(aCas, getAnnotationType(aCas, Sentence.class), s);
         if (aWindowSize == 2 && s.getBegin() > aSentence.getBegin()) {
             return s;
         }
@@ -505,7 +504,9 @@ public class WebAnnoCasUtil
     public static int getNextSentenceAddress(CAS aCas, Sentence aSentence)
     {
         try {
-            return WebAnnoCasUtil.getAddr(selectFollowing(Sentence.class, aSentence, 1).get(0));
+            return getAddr(
+                    selectFollowing(aCas, getAnnotationType(aCas, Sentence.class), aSentence, 1)
+                            .get(0));
         }
         catch (Exception e) { // end of the document reached
             return WebAnnoCasUtil.getAddr(aSentence);
@@ -677,6 +678,12 @@ public class WebAnnoCasUtil
     public static Collection<AnnotationFS> selectTokensCovered(CAS aCas, int aBegin, int aEnd)
     {
         return CasUtil.selectCovered(aCas, getType(aCas, Token.class), aBegin, aEnd);
+    }
+
+    public static Collection<AnnotationFS> selectTokensCovered(AnnotationFS aCover)
+    {
+        return CasUtil.selectCovered(aCover.getCAS(), getType(aCover.getCAS(), Token.class),
+                aCover);
     }
 
     /**
@@ -1052,5 +1059,15 @@ public class WebAnnoCasUtil
     {
         FeatureStructure dmd = getDocumentMetadata(aCas);
         FSUtil.setFeature(dmd, "documentId", aID);
+    }
+
+    public static CAS createCas() throws ResourceInitializationException
+    {
+        return createCas(null);
+    }
+
+    public static CAS createCas(TypeSystemDescription aTSD) throws ResourceInitializationException
+    {
+        return CasCreationUtils.createCas(aTSD, null, null);
     }
 }

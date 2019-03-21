@@ -27,6 +27,6 @@ public class BratAnnotatorUtilityTest
     public void testClearJCasWithoutDocumentMetadata() throws Exception
     {
         CAS jcas = JCasFactory.createJCas().getCas();
-        BratAnnotatorUtility.clearJcasAnnotations(jcas);
+        BratAnnotatorUtility.clearAnnotations(jcas);
     }
 }

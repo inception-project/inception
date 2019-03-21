@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
@@ -52,7 +53,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.fit.factory.ConfigurationParameterFactory;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
@@ -248,7 +248,7 @@ public class ImportExportServiceImpl
     {
         // Prepare a CAS with the project type system
         TypeSystemDescription allTypes = annotationService.getFullProjectTypeSystem(aProject);
-        CAS cas = JCasFactory.createJCas(allTypes).getCas();
+        CAS cas = createCas(allTypes);
 
         // Convert the source document to CAS
         FormatSupport format = getReadableFormatById(aFormatId).orElseThrow(() -> 
@@ -267,11 +267,9 @@ public class ImportExportServiceImpl
                     "Source file [" + aFile.getName() + "] not found in [" + aFile.getPath() + "]");
         }
         reader.getNext(cas);
-        CAS jCas = cas;
-
         // Create sentence / token annotations if they are missing
-        boolean hasTokens = exists(jCas, getType(jCas, Token.class));
-        boolean hasSentences = exists(jCas, getType(jCas, Sentence.class));
+        boolean hasTokens = exists(cas, getType(cas, Token.class));
+        boolean hasSentences = exists(cas, getType(cas, Sentence.class));
 
 //        if (!hasTokens || !hasSentences) {
 //            AnalysisEngine pipeline = createEngine(createEngineDescription(
@@ -282,20 +280,20 @@ public class ImportExportServiceImpl
 //        }
         
         if (!hasSentences) {
-            splitSentences(jCas);
+            splitSentences(cas);
         }
 
         if (!hasTokens) {
-            tokenize(jCas);
+            tokenize(cas);
         }
         
-        if (!exists(jCas, getType(jCas, Token.class))
-                || !exists(jCas, getType(jCas, Sentence.class))) {
+        if (!exists(cas, getType(cas, Token.class))
+                || !exists(cas, getType(cas, Sentence.class))) {
             throw new IOException("The document appears to be empty. Unable to detect any "
                     + "tokens or sentences. Empty documents cannot be imported.");
         }
         
-        return jCas;
+        return cas;
     }
     
     public static void splitSentences(CAS aCas)

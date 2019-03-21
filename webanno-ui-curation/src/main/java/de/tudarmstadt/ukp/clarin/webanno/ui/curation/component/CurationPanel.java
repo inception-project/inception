@@ -380,9 +380,9 @@ public class CurationPanel
             curationView = curationViewItem;
             fSn = 0;
             try {
-                CAS jCas = curationDocumentService.readCurationCas(state.getDocument());
+                CAS cas = curationDocumentService.readCurationCas(state.getDocument());
                 updateCurationView(CurationPanel.this.getModelObject(), curationViewItem, aTarget,
-                        jCas);
+                        cas);
                 updatePanel(aTarget, CurationPanel.this.getModelObject());
                 state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
             }
@@ -417,11 +417,11 @@ public class CurationPanel
     }
 
     private void updateCurationView(final CurationContainer curationContainer,
-            final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS jCas)
+            final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
-        AnnotationFS currentSent = WebAnnoCasUtil.getCurrentSentence(jCas,
+        AnnotationFS currentSent = WebAnnoCasUtil.getCurrentSentence(aCas,
                 curationViewItem.getBegin(), curationViewItem.getEnd());
-        state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(jCas,
+        state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(aCas,
                 currentSent, curationViewItem.getBegin(), state.getProject(), state.getDocument(),
                 state.getPreferences().getWindowSize()));
         curationContainer.setBratAnnotatorModel(state);
@@ -474,16 +474,16 @@ public class CurationPanel
     
     private void commonUpdate() throws IOException
     {
-        CAS jCas = curationDocumentService.readCurationCas(state.getDocument());
+        CAS cas = curationDocumentService.readCurationCas(state.getDocument());
 
         // Determine the FIRST visible unit
-        final AnnotationFS firstVisibleUnit = selectSentenceAt(jCas,
+        final AnnotationFS firstVisibleUnit = selectSentenceAt(cas,
                 state.getFirstVisibleUnitBegin(), state.getFirstVisibleUnitEnd());
         state.setFirstVisibleUnit(firstVisibleUnit);
 
         // Determine the LAST visible unit
-        List<AnnotationFS> followingUnits = CasUtil.selectFollowing(jCas,
-                getType(jCas, Sentence.class), firstVisibleUnit,
+        List<AnnotationFS> followingUnits = CasUtil.selectFollowing(cas,
+                getType(cas, Sentence.class), firstVisibleUnit,
                 state.getPreferences().getWindowSize());
         // Check also, when getting the last sentence address in the display window, if this is the
         // last sentence or the ONLY sentence in the document
@@ -495,11 +495,11 @@ public class CurationPanel
 
         // Determine the number of the first and last visible unit
         int ws = state.getPreferences().getWindowSize();
-        AnnotationFS fs = selectSentenceAt(jCas, state.getFirstVisibleUnitBegin(),
+        AnnotationFS fs = selectSentenceAt(cas, state.getFirstVisibleUnitBegin(),
                 state.getFirstVisibleUnitEnd());
-        AnnotationFS ls = getLastSentenceInDisplayWindow(jCas, getAddr(fs), ws);
-        fSn = WebAnnoCasUtil.getSentenceNumber(jCas, fs.getBegin());
-        lSn = WebAnnoCasUtil.getSentenceNumber(jCas, ls.getBegin());
+        AnnotationFS ls = getLastSentenceInDisplayWindow(cas, getAddr(fs), ws);
+        fSn = WebAnnoCasUtil.getSentenceNumber(cas, fs.getBegin());
+        lSn = WebAnnoCasUtil.getSentenceNumber(cas, ls.getBegin());
     }
 
     /**

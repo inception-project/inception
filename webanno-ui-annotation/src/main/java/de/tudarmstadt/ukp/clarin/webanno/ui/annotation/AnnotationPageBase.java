@@ -188,32 +188,32 @@ public abstract class AnnotationPageBase
     protected void actionShowPreviousPage(AjaxRequestTarget aTarget)
         throws Exception
     {
-        CAS jcas = getEditorCas();
-        getModelObject().moveToPreviousPage(jcas);
+        CAS cas = getEditorCas();
+        getModelObject().moveToPreviousPage(cas);
         actionRefreshDocument(aTarget);
     }
 
     protected void actionShowNextPage(AjaxRequestTarget aTarget)
         throws Exception
     {
-        CAS jcas = getEditorCas();
-        getModelObject().moveToNextPage(jcas);
+        CAS cas = getEditorCas();
+        getModelObject().moveToNextPage(cas);
         actionRefreshDocument(aTarget);
     }
 
     protected void actionShowFirstPage(AjaxRequestTarget aTarget)
         throws Exception
     {
-        CAS jcas = getEditorCas();
-        getModelObject().moveToFirstPage(jcas);
+        CAS cas = getEditorCas();
+        getModelObject().moveToFirstPage(cas);
         actionRefreshDocument(aTarget);
     }
 
     protected void actionShowLastPage(AjaxRequestTarget aTarget)
         throws Exception
     {
-        CAS jcas = getEditorCas();
-        getModelObject().moveToLastPage(jcas);
+        CAS cas = getEditorCas();
+        getModelObject().moveToLastPage(cas);
         actionRefreshDocument(aTarget);
     }
     
@@ -254,13 +254,13 @@ public abstract class AnnotationPageBase
 
         AnnotatorState state = getModelObject();
 
-        CAS jCas = getEditorCas();
+        CAS cas = getEditorCas();
 
-        Collection<AnnotationFS> tokenCollection = select(jCas, getType(jCas, Token.class));
+        Collection<AnnotationFS> tokenCollection = select(cas, getType(cas, Token.class));
         Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
 
-        int sentenceNumber = getSentenceNumber(jCas, tokens[aTokenNumber].getBegin());
-        AnnotationFS sentence = getSentence(jCas, tokens[aTokenNumber].getBegin());
+        int sentenceNumber = getSentenceNumber(cas, tokens[aTokenNumber].getBegin());
+        AnnotationFS sentence = getSentence(cas, tokens[aTokenNumber].getBegin());
 
         getGotoPageTextField().setModelObject(sentenceNumber);
 
@@ -285,9 +285,9 @@ public abstract class AnnotationPageBase
         // then there is no need to change the screen contents
         if (switched || !(state.getWindowBeginOffset() <= aBegin
                 && aEnd <= state.getWindowEndOffset())) {
-            CAS jCas = getEditorCas();
-            int sentenceNumber = getSentenceNumber(jCas, aBegin);
-            AnnotationFS sentence = getSentence(jCas, aBegin);
+            CAS cas = getEditorCas();
+            int sentenceNumber = getSentenceNumber(cas, aBegin);
+            AnnotationFS sentence = getSentence(cas, aBegin);
 
             getGotoPageTextField().setModelObject(sentenceNumber);
 

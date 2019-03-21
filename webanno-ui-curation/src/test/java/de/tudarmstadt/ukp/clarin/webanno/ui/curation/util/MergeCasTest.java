@@ -20,6 +20,14 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.util;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.createMultiLinkWithRoleTestTypeSytem;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.loadWebAnnoTSV;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.makeLinkFS;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.makeLinkHostFS;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.readWebAnnoTSV;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.MergeCas.reMergeCas;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 
@@ -61,8 +69,8 @@ public class MergeCasTest
     public void simpleSpanNoDiffNoLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
-                "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentence.tsv");
+        Map<String, List<CAS>> casByUser = loadWebAnnoTSV(null, "mergecas/simplespan/1sentence.tsv",
+                "mergecas/simplespan/1sentence.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -70,17 +78,16 @@ public class MergeCasTest
 
         addRandomMergeCas(casByUser);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
-        CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
+        CAS mergeCas = reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentence.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
-        result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
+        result = doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
                 casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
@@ -92,8 +99,8 @@ public class MergeCasTest
     public void simpleSpanDiffNoLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
-                "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentenceempty.tsv");
+        Map<String, List<CAS>> casByUser = loadWebAnnoTSV(null, "mergecas/simplespan/1sentence.tsv",
+                "mergecas/simplespan/1sentenceempty.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -101,18 +108,16 @@ public class MergeCasTest
 
         addRandomMergeCas(casByUser);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
-        CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
+        CAS mergeCas = reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
+        CAS actual = readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
-        result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
-                casByUser);
+        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
@@ -123,8 +128,8 @@ public class MergeCasTest
     public void simpleSpanDiffWithLabelAndEmptyTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
-                "mergecas/simplespan/1sentence.tsv", "mergecas/simplespan/1sentenceempty.tsv");
+        Map<String, List<CAS>> casByUser = loadWebAnnoTSV(null, "mergecas/simplespan/1sentence.tsv",
+                "mergecas/simplespan/1sentenceempty.tsv");
 
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -132,18 +137,16 @@ public class MergeCasTest
 
         addRandomMergeCas(casByUser);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
-        CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
+        CAS mergeCas = reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
+        CAS actual = readWebAnnoTSV("mergecas/simplespan/1sentenceempty.tsv", null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
-        result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
-                casByUser);
+        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
@@ -154,7 +157,7 @@ public class MergeCasTest
     public void simpleSpanNoDiffWithLabelTest()
         throws Exception
     {
-        Map<String, List<CAS>> casByUser = DiffTestUtils.loadWebAnnoTSV(null,
+        Map<String, List<CAS>> casByUser = loadWebAnnoTSV(null,
                 "mergecas/simplespan/1sentenceposlabel.tsv",
                 "mergecas/simplespan/1sentenceposlabel.tsv");
 
@@ -164,18 +167,17 @@ public class MergeCasTest
 
         addRandomMergeCas(casByUser);
 
-        DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
-        CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
+        CAS mergeCas = reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
-        CAS actual = DiffTestUtils.readWebAnnoTSV("mergecas/simplespan/1sentenceposlabel.tsv", null);
+        CAS actual = readWebAnnoTSV("mergecas/simplespan/1sentenceposlabel.tsv",
+                null);
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
-        result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
-                casByUser);
+        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
@@ -627,12 +629,12 @@ public class MergeCasTest
         throws Exception
     {
         JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
-        DiffTestUtils.makeLinkHostFS(jcasA, 10, 10, DiffTestUtils.makeLinkFS(jcasA, "slot1", 10, 10));
+        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
+        makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot1", 0, 0));
-        DiffTestUtils.makeLinkHostFS(jcasB, 10, 10, DiffTestUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
+        makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
@@ -651,13 +653,13 @@ public class MergeCasTest
 
         result.print(System.out);
 
-        CAS mergeCas = MergeCas.reMergeCas(result, getSingleCasByUser(casByUser));
+        CAS mergeCas = reMergeCas(result, getSingleCasByUser(casByUser));
 
         casByUser = new HashMap<>();
         casByUser.put("actual", asList(jcasA.getCas()));
         casByUser.put("merge", asList(mergeCas));
 
-        result = CasDiff2.doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
+        result = doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
                 casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());

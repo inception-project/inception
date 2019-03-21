@@ -50,8 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -67,8 +67,8 @@ public class CasStorageServiceImpl
 
     private final Object lock = new Object();
 
-    public static final MetaDataKey<Map<JCasCacheKey, JCasCacheEntry>> CACHE = 
-            new MetaDataKey<Map<JCasCacheKey, JCasCacheEntry>>()
+    public static final MetaDataKey<Map<CasCacheKey, CasCacheEntry>> CACHE = 
+            new MetaDataKey<Map<CasCacheKey, CasCacheEntry>>()
     {
         private static final long serialVersionUID = -5690189241875643945L;
     };
@@ -149,11 +149,11 @@ public class CasStorageServiceImpl
     
             // Update the CAS in the cache
             if (isCacheEnabled()) {
-                JCasCacheKey key = JCasCacheKey.of(aDocument, aUserName);
-                JCasCacheEntry entry = getCache().get(key);
+                CasCacheKey key = CasCacheKey.of(aDocument, aUserName);
+                CasCacheEntry entry = getCache().get(key);
                 if (entry == null) {
-                    entry = new JCasCacheEntry();
-                    entry.jcas = aCas;
+                    entry = new CasCacheEntry();
+                    entry.cas = aCas;
                 }
                 entry.writes++;
                 getCache().put(key, entry);
@@ -360,26 +360,26 @@ public class CasStorageServiceImpl
         synchronized (lock) {
             // Check if we have the CAS in the cache
             if (isCacheEnabled()) {
-                JCasCacheEntry entry = getCache().get(JCasCacheKey.of(aDocument, aUsername));
+                CasCacheEntry entry = getCache().get(CasCacheKey.of(aDocument, aUsername));
                 if (entry != null) {
                     log.debug("Fetched CAS [{},{}] from cache", aDocument.getId(), aUsername);
                     entry.reads++;
-                    return entry.jcas;
+                    return entry.cas;
                 }
             }
             
             // If the CAS is not in the cache, load it from disk
-            CAS jcas;
+            CAS cas;
             String source;
             File casFile = getCasFile(aDocument, aUsername);
             if (casFile.exists()) {
-                jcas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
+                cas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
                 source = "disk";
             }
             else if (aSupplier != null) {
-                jcas = aSupplier.get();
+                cas = aSupplier.get();
                 source = "importer";
-                realWriteCas(aDocument, aUsername, jcas);
+                realWriteCas(aDocument, aUsername, cas);
             }
             else {
                 throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
@@ -387,14 +387,14 @@ public class CasStorageServiceImpl
             }
             
             // Add/update the CAS metadata
-            CasMetadataUtils.addOrUpdateCasMetadata(jcas, casFile, aDocument, aUsername);
+            CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile, aDocument, aUsername);
             
             // Update the cache
             if (isCacheEnabled()) {
-                JCasCacheEntry entry = new JCasCacheEntry();
-                entry.jcas = jcas;
+                CasCacheEntry entry = new CasCacheEntry();
+                entry.cas = cas;
                 entry.writes++;
-                getCache().put(JCasCacheKey.of(aDocument, aUsername), entry);
+                getCache().put(CasCacheKey.of(aDocument, aUsername), entry);
                 log.debug("Loaded CAS [{},{}] from {} and stored in cache", aDocument.getId(),
                         aUsername, source);
             }
@@ -402,7 +402,7 @@ public class CasStorageServiceImpl
                 log.debug("Loaded CAS [{},{}] from {}", aDocument.getId(), aUsername, source);
             }
             
-            return jcas;
+            return cas;
         }
     }
     
@@ -416,9 +416,9 @@ public class CasStorageServiceImpl
         
         File serializedCasFile = getCasFile(aDocument, aUsername);
         
-        CAS jcas;
+        CAS cas;
         try {
-            CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+            cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
             if (!serializedCasFile.exists()) {
                 throw new FileNotFoundException("Annotation document of user [" + aUsername
                         + "] for source document [" + aDocument.getName() + "] ("
@@ -432,14 +432,12 @@ public class CasStorageServiceImpl
             if (aAnalyzeAndRepair) {
                 analyzeAndRepair(aDocument, aUsername, cas);
             }
-
-            jcas = cas;
         }
         catch (UIMAException e) {
             throw new DataRetrievalFailureException("Unable to parse annotation", e);
         }
         
-        return jcas;
+        return cas;
     }
     
     @Override
@@ -448,7 +446,7 @@ public class CasStorageServiceImpl
         synchronized (lock) {
 
             if (isCacheEnabled()) {
-                getCache().remove(JCasCacheKey.of(aDocument, aUsername));
+                getCache().remove(CasCacheKey.of(aDocument, aUsername));
             }
 
             return new File(getAnnotationFolder(aDocument), aUsername + ".ser").delete();
@@ -630,10 +628,10 @@ public class CasStorageServiceImpl
         }
     }
      
-    private Map<JCasCacheKey, JCasCacheEntry> getCache()
+    private Map<CasCacheKey, CasCacheEntry> getCache()
     {
         RequestCycle requestCycle = RequestCycle.get();
-        Map<JCasCacheKey, JCasCacheEntry> cache = requestCycle.getMetaData(CACHE);
+        Map<CasCacheKey, CasCacheEntry> cache = requestCycle.getMetaData(CACHE);
         if (cache == null) {
             cache = new HashMap<>();
             requestCycle.setMetaData(CACHE, cache);
@@ -641,9 +639,9 @@ public class CasStorageServiceImpl
                 @Override
                 public void onEndRequest(RequestCycle aCycle)
                 {
-                    Map<JCasCacheKey, JCasCacheEntry> _cache = aCycle.getMetaData(CACHE);
+                    Map<CasCacheKey, CasCacheEntry> _cache = aCycle.getMetaData(CACHE);
                     if (_cache != null) {
-                        for (Entry<JCasCacheKey, JCasCacheEntry> entry : _cache.entrySet()) {
+                        for (Entry<CasCacheKey, CasCacheEntry> entry : _cache.entrySet()) {
                             log.debug("{} - reads: {}  writes: {}", entry.getKey(),
                                     entry.getValue().reads, entry.getValue().writes);
                         }
@@ -654,28 +652,28 @@ public class CasStorageServiceImpl
         return cache;
     }
     
-    private static class JCasCacheEntry
+    private static class CasCacheEntry
     {
         int reads;
         int writes;
-        CAS jcas;
+        CAS cas;
     }
     
-    private static class JCasCacheKey
+    private static class CasCacheKey
     {
         long sourceDocumentId;
         String userId;
         
-        public JCasCacheKey(long aSourceDocumentId, String aUserId)
+        public CasCacheKey(long aSourceDocumentId, String aUserId)
         {
             super();
             sourceDocumentId = aSourceDocumentId;
             userId = aUserId;
         }
         
-        public static JCasCacheKey of(SourceDocument aSourceDocument, String aUserId)
+        public static CasCacheKey of(SourceDocument aSourceDocument, String aUserId)
         {
-            return new JCasCacheKey(aSourceDocument.getId(), aUserId);
+            return new CasCacheKey(aSourceDocument.getId(), aUserId);
         }
 
         @Override
@@ -712,7 +710,7 @@ public class CasStorageServiceImpl
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            JCasCacheKey other = (JCasCacheKey) obj;
+            CasCacheKey other = (CasCacheKey) obj;
             if (sourceDocumentId != other.sourceDocumentId) {
                 return false;
             }

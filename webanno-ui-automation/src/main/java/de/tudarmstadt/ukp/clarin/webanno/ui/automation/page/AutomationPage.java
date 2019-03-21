@@ -438,8 +438,8 @@ public class AutomationPage
                 AnnotationLayer layer = state.getSelectedAnnotationLayer();
                 int address = state.getSelection().getAnnotation().getId();
                 try {
-                    CAS jCas = getEditorCas();
-                    AnnotationFS fs = selectAnnotationByAddr(jCas, address);
+                    CAS cas = getEditorCas();
+                    AnnotationFS fs = selectAnnotationByAddr(cas, address);
 
                     for (AnnotationFeature f : annotationService.listAnnotationFeature(layer)) {
                         Type type = CasUtil.getType(fs.getCAS(), layer.getName());
@@ -731,8 +731,6 @@ public class AutomationPage
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
                 // In automation mode, we do not remove the existing annotations from the documents
-                // annotationCas = BratAnnotatorUtility.clearJcasAnnotations(annotationCas,
-                //        state.getDocument(), user, repository);
             }
 
             // Update the CASes
