@@ -126,14 +126,15 @@ public abstract class AnnotationEditorBase
      */
     protected abstract void render(AjaxRequestTarget aTarget);
 
-    protected VDocument render(JCas aJCas, int windowBeginOffset, int windowEndOffset)
+    protected VDocument render(JCas aJCas, int aWindowBeginOffset, int aWindowEndOffset)
     {
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, windowBeginOffset, windowEndOffset,
+        preRenderer.render(vdoc, aWindowBeginOffset, aWindowEndOffset,
                 aJCas, getLayersToRender());
 
         // Fire render event into backend
-        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc);
+        extensionRegistry.fireRender(aJCas, getModelObject(), vdoc,
+                aWindowBeginOffset, aWindowEndOffset);
 
         // Fire render event into UI
         Page page = null;
