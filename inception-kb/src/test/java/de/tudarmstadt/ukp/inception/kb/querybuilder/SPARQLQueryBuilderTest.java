@@ -517,6 +517,36 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
+    public void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forInstances(kb)
+                .childrenOf("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#1-instance-1");
+    }
+
+    @Test
+    public void thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .childrenOf("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#1-instance-1", 
+                        "http://example.org/#subclass1-1");
+    }
+    @Test
     public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
         throws Exception
     {
@@ -1014,6 +1044,27 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> label.toLowerCase().contains("work"));
     }
+    
+    @Test
+    public void testWithLabelStartingWith_OLIA_FTS() throws Exception
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        
+        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        kb.setLabelIri(vf.createIRI("http://purl.org/olia/system.owl#hasTag"));
+        
+        importDataFromFile("src/test/resources/data/penn.owl");
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forInstances(kb)
+                .withLabelStartingWith("N"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .containsExactlyInAnyOrder("NN", "NNP", "NNPS", "NNS");
+    }
+    
 
     @Test
     public void thatRootsCanBeRetrieved_BritishMuseum()
