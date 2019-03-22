@@ -45,5 +45,6 @@ public interface AnnotationEditorExtension
     /**
      * Post-process the output during rendering.
      */
-    void render(CAS aCas, AnnotatorState aState, VDocument vdoc);
+    void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
+            int aWindowEndOffset);
 }

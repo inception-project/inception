@@ -110,10 +110,11 @@ public class AnnotationEditorExtensionRegistryImpl
     }
     
     @Override
-    public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc)
+    public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
+            int aWindowBeginOffset, int aWindowEndOffset)
     {
-        for (AnnotationEditorExtension ext: getExtensions()) {
-            ext.render(aCas, aModelObject, aVdoc);
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
         }
     }
 }

@@ -40,5 +40,6 @@ public interface AnnotationEditorExtensionRegistry
             int aEnd)
         throws IOException, AnnotationException;
 
-    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc);
+    void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
+            int aWindowBeginOffset, int aWindowEndOffset);
 }
