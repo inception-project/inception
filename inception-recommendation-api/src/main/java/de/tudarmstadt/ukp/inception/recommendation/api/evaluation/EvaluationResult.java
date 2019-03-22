@@ -17,20 +17,170 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class EvaluationResult
 {
-    private double defaultScore;
     private int trainingSetSize;
     private int testSetSize;
     private boolean skippedEvaluation;
 
+    private String ignoreLabel;
+    private List<AnnotatedTokenPair> annotatedPairs;
+
     /**
-     * Get the specific score which the recommender evaluation uses e.g. accuracy or f-score as a
-     * default.
+     * Stores number of predicted labels for each gold label
      */
-    public double getDefaultScore()
+    private Map<String, Map<String, Integer>> confusionMatrix;
+    private List<String> labels;
+
+    private int total;
+    private int numOfLabels;
+
+    // TODO replace or delete
+    private double defaultScore;
+
+    /**
+     * Calculate macro-averaged scores on per-token basis over all labels contained in the given
+     * annotated pairs except for those matching the given ignore-label.
+     * 
+     * @param aIgnoreLabel
+     *            this label will be ignored during evaluation
+     * @param aAnnotatedPairs
+     *            pairs of gold and predicted labels for the same token
+     */
+    // TODO: use a stream for the annotation pairs
+    public EvaluationResult(String aIgnoreLabel, List<AnnotatedTokenPair> aAnnotatedPairs)
     {
-        return defaultScore;
+        super();
+        labels = new ArrayList<>();
+        ignoreLabel = aIgnoreLabel;
+        annotatedPairs = aAnnotatedPairs;
+        confusionMatrix = countMatches(aAnnotatedPairs);
+    }
+
+    //FIXME: wrong matrix values
+    private Map<String, Map<String, Integer>> countMatches(List<AnnotatedTokenPair> aAnnotatedPairs)
+    {
+        confusionMatrix = new HashMap<>();
+
+        String goldLabel;
+        String predictedLabel;
+        for (AnnotatedTokenPair pair : aAnnotatedPairs) {
+            goldLabel = pair.getGoldLabel();
+            predictedLabel = pair.getPredictedLabel();
+
+            // do not consider annotations that labeled with the ignore label
+            if (!goldLabel.equals(ignoreLabel) && !predictedLabel.equals(ignoreLabel)) {
+
+                // annotated pair is true positive
+                if (goldLabel.equals(predictedLabel)) {
+                    incCounter(goldLabel, goldLabel);
+                }
+                else {
+                    // annotated pair is false negative for gold class
+                    incCounter(goldLabel, predictedLabel);
+                    // annotate pair is false positive for predicted class
+                    incCounter(predictedLabel, goldLabel);
+                }
+
+                total += 1;
+            }
+        }
+        return confusionMatrix;
+    }
+
+    private void incCounter(String aGoldLabel, String aPredictedLabel)
+    {
+        if (!confusionMatrix.containsKey(aGoldLabel)) {
+            Map<String, Integer> initMap = new HashMap<>();
+            initMap.put(aGoldLabel, 0);
+            confusionMatrix.put(aGoldLabel, initMap);
+
+            labels.add(aGoldLabel);
+            numOfLabels++;
+        }
+        if (!confusionMatrix.get(aGoldLabel).containsKey(aPredictedLabel)) {
+            confusionMatrix.get(aGoldLabel).put(aPredictedLabel, 0);
+        }
+        int count = confusionMatrix.get(aGoldLabel).get(aPredictedLabel) + 1;
+        confusionMatrix.get(aGoldLabel).put(aPredictedLabel, count);
+    }
+
+    /**
+     * Calculate accuracy
+     * 
+     * @return accuracy score
+     */
+    public double getAccuracyScore()
+    {
+        double tp = 0.0;
+        for (String label : labels) {
+            tp += confusionMatrix.get(label).get(label);
+        }
+        return (total > 0) ? tp / (double) total : 0.0;
+    }
+
+    /**
+     * Calculate macro-averaged precision score
+     * 
+     * @return precision score
+     */
+    public double getPrecisionScore()
+    {
+        double precision = 0.0;
+        if (numOfLabels > 0) {
+            for (String label : labels) {
+                double tp = confusionMatrix.get(label).get(label);
+                double numPredictedAsLabel = 0.0;
+                for (String predictedLabel : labels) {
+                    numPredictedAsLabel += confusionMatrix.get(predictedLabel).get(label);
+                }
+                precision += tp / numPredictedAsLabel;
+
+            }
+            precision = precision / numOfLabels;
+        }
+        return precision;
+    }
+
+    /**
+     * Calculate macro-averaged recall score
+     * 
+     * @return recall score
+     */
+    public double getRecallScore()
+    {
+        double recall = 0.0;
+        if (numOfLabels > 0) {
+            for (String label : labels) {
+                double tp = confusionMatrix.get(label).get(label);
+                double numIsLabel = 0.0;
+                for (String predictedLabel : labels) {
+                    numIsLabel += confusionMatrix.get(label).get(predictedLabel);
+
+                }
+                recall += (numIsLabel > 0) ? tp / numIsLabel : 0;
+
+            }
+            recall = recall / numOfLabels;
+        }
+        return recall;
+    }
+
+    /**
+     * Calculate macro-averaged f1-score
+     * 
+     * @return f1 score
+     */
+    public double getF1Score()
+    {
+        double precision = getPrecisionScore();
+        double recall = getRecallScore();
+        return (precision > 0 || recall > 0) ? 2 * precision * recall / (precision + recall) : 0;
     }
 
     /**
@@ -39,6 +189,11 @@ public class EvaluationResult
     public void setDefaultScore(double aDefaultScore)
     {
         defaultScore = aDefaultScore;
+    }
+
+    public double getDefaultScore()
+    {
+        return defaultScore;
     }
 
     /**
@@ -90,6 +245,11 @@ public class EvaluationResult
     public boolean isEvaluationSkipped()
     {
         return skippedEvaluation;
+    }
+
+    public List<AnnotatedTokenPair> getAnnotatedPairs()
+    {
+        return annotatedPairs;
     }
 
 }
