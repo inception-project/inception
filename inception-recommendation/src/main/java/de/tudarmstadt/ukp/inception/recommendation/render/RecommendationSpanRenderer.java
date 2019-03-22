@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.util.PredictionUtil;
+import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 /**
  * Render spans.
@@ -59,7 +59,7 @@ public class RecommendationSpanRenderer
     implements RecommendationTypeRenderer
 {
     private SpanAdapter typeAdapter;
-
+    
     public RecommendationSpanRenderer(SpanAdapter aTypeAdapter)
     {
         typeAdapter = aTypeAdapter;
@@ -80,10 +80,10 @@ public class RecommendationSpanRenderer
      */
     @Override
     public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
-            ColoringStrategy aColoringStrategy, AnnotationLayer layer,
-            RecommendationService recommendationService,
-            LearningRecordService learningRecordService, AnnotationSchemaService aAnnotationService,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService)
+        ColoringStrategy aColoringStrategy, AnnotationLayer layer,
+        RecommendationService recommendationService, LearningRecordService learningRecordService,
+        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+        DocumentService aDocumentService)
     {
         if (aJcas == null || recommendationService == null) {
             return;
@@ -98,20 +98,20 @@ public class RecommendationSpanRenderer
         if (model == null) {
             return;
         }
-
+        
         // TODO #176 use the document Id once it it available in the CAS
         SuggestionDocumentGroup groups = model.getPredictions(
                 DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd);
-
+        
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
             return;
         }
-
+        
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
-        PredictionUtil.calculateVisibility(learningRecordService, aAnnotationService,
+        PredictionTask.calculateVisibility(learningRecordService, aAnnotationService,
                 aJcas.getCas(), aState.getUser().getUsername(), layer, groups, windowBegin,
                 windowEnd);
 
@@ -120,10 +120,10 @@ public class RecommendationSpanRenderer
 
         for (SuggestionGroup suggestion : groups) {
             Map<String, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
-
+ 
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
-            for (AnnotationSuggestion ao : suggestion) {
+            for (AnnotationSuggestion ao: suggestion) {
 
                 // Skip rendering AnnotationObjects that should not be rendered
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
@@ -131,15 +131,15 @@ public class RecommendationSpanRenderer
                 }
 
                 if (!labelMap.containsKey(ao.getLabel())
-                        || !labelMap.get(ao.getLabel()).containsKey(ao.getRecommenderId())
+                        || !labelMap.get(ao.getLabel())
+                                .containsKey(ao.getRecommenderId())
                         || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationSuggestion> confidencePerClassifier;
                     if (labelMap.get(ao.getLabel()) == null) {
                         confidencePerClassifier = new HashMap<>();
-                    }
-                    else {
+                    } else {
                         confidencePerClassifier = labelMap.get(ao.getLabel());
                     }
 
@@ -147,7 +147,7 @@ public class RecommendationSpanRenderer
                     labelMap.put(ao.getLabel(), confidencePerClassifier);
                 }
             }
-
+            
             // Determine the maximum confidence for per Label
             Map<String, Double> maxConfidencePerLabel = new HashMap<>();
             for (String label : labelMap.keySet()) {
@@ -160,12 +160,12 @@ public class RecommendationSpanRenderer
                 }
                 maxConfidencePerLabel.put(label, maxConfidence);
             }
-
+            
             // Sort and filter labels under threshold value
             List<String> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
-                    .limit(pref.getMaxPredictions()).map(Entry::getKey)
-                    .collect(Collectors.toList());
+                    .limit(pref.getMaxPredictions())
+                    .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
             for (String label : labelMap.keySet()) {
@@ -183,19 +183,19 @@ public class RecommendationSpanRenderer
                 }
 
                 VID vid = canonicalRecommendation.getVID();
-
+                
                 boolean first = true;
                 Map<Long, AnnotationSuggestion> confidencePerClassifier = labelMap.get(label);
-                for (Long recommenderId : confidencePerClassifier.keySet()) {
+                for (Long recommenderId: confidencePerClassifier.keySet()) {
                     AnnotationSuggestion ao = confidencePerClassifier.get(recommenderId);
 
                     // Only necessary for creating the first
                     if (first) {
-                        AnnotationFeature feature = aAnnotationService.getFeature(ao.getFeature(),
-                                layer);
+                        AnnotationFeature feature = aAnnotationService
+                            .getFeature(ao.getFeature(), layer);
                         // Retrieve the UI display label for the given feature value
                         String annotation = aFsRegistry.getFeatureSupport(feature)
-                                .renderFeatureValue(feature, ao.getLabel());
+                            .renderFeatureValue(feature, ao.getLabel());
 
                         Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
