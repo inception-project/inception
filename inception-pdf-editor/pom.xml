@@ -113,6 +113,12 @@
       <version>0.3.2.2</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.ahocorasick</groupId>
+      <artifactId>ahocorasick</artifactId>
+      <version>0.4.0</version>
+    </dependency>
+
     <!-- Testing -->
 
     <dependency>

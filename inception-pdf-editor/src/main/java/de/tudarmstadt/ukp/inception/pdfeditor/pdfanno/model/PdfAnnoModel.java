@@ -63,24 +63,30 @@ public class PdfAnnoModel
         return spans;
     }
 
-    public boolean addSpan(Span aSpan)
+    /**
+     * Adds a Span to the PdfAnnoModel.
+     * If the start position, end position or page is set to -1 it is added to unmatched spans
+     * else to spans
+     */
+    public void addSpan(Span aSpan)
     {
-        if (aSpan ==  null) {
-            return false;
-        } else {
-            spans.add(aSpan);
-            return true;
+        if (aSpan !=  null) {
+            if (aSpan.getStartPos() == -1 || aSpan.getEndPos() == -1 || aSpan.getPage() == -1) {
+                unmatchedSpans.add(aSpan);
+            } else {
+                spans.add(aSpan);
+            }
         }
+    }
+
+    public void addSpans(List<Span> aSpans)
+    {
+        aSpans.forEach(this::addSpan);
     }
 
     public List<Relation> getRelations()
     {
         return relations;
-    }
-
-    public void addUnmatchedSpan(Span aSpan)
-    {
-        unmatchedSpans.add(aSpan);
     }
 
     public List<Span> getUnmatchedSpans()

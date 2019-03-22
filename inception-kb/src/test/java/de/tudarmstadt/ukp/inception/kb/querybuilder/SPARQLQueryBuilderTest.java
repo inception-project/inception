@@ -534,6 +534,36 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
+    public void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forInstances(kb)
+                .childrenOf("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#1-instance-1");
+    }
+
+    @Test
+    public void thatItemQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .childrenOf("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#1-instance-1", 
+                        "http://example.org/#subclass1-1");
+    }
+    @Test
     public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
         throws Exception
     {

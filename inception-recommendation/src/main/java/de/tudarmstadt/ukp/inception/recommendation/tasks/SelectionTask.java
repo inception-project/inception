@@ -143,7 +143,8 @@ public class SelectionTask
                     log.info("[{}][{}]: Evaluating...", userName, recommenderName);
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-                    double score = recommendationEngine.evaluate(casses.get(), splitter);
+                    double score = recommendationEngine.evaluate(casses.get(), splitter)
+                            .getDefaultScore();
 
                     Double threshold = recommender.getThreshold();
                     boolean activated;
