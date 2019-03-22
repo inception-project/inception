@@ -26,7 +26,6 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -106,21 +105,21 @@ public interface TypeAdapter
      *            the document to which the CAS belongs
      * @param aUsername
      *            the user to which the CAS belongs
-     * @param aJCas
+     * @param aCas
      *            the CAS object
      * @param aVid
      *            the VID of the object to be deleted.
      */
-    void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid);
+    void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid);
 
     /**
      * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-     *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
+     *             {@link #delete(SourceDocument, String, CAS, VID)} instead.
      */
     @Deprecated
-    default void delete(AnnotatorState aState, JCas aJCas, VID aVid)
+    default void delete(AnnotatorState aState, CAS aCas, VID aVid)
     {
-        delete(aState.getDocument(), aState.getUser().getUsername(), aJCas, aVid);
+        delete(aState.getDocument(), aState.getUser().getUsername(), aCas, aVid);
     }
 
     /**
@@ -142,8 +141,8 @@ public interface TypeAdapter
      *            the document to which the CAS belongs
      * @param aUsername
      *            the user to which the CAS belongs
-     * @param aJcas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aAddress
      *            the annotation ID.
      * @param aFeature
@@ -151,18 +150,18 @@ public interface TypeAdapter
      * @param aValue
      *            the value.
      */
-    void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas, int aAddress,
+    void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue);
 
     /**
      * @deprecated The UI class {@link AnnotatorState} should not be passed here. Use
-     *             {@link #delete(SourceDocument, String, JCas, VID)} instead.
+     *             {@link #delete(SourceDocument, String, CAS, VID)} instead.
      */
     @Deprecated
-    default void setFeatureValue(AnnotatorState aState, JCas aJCas, int aAddress,
+    default void setFeatureValue(AnnotatorState aState, CAS aCas, int aAddress,
             AnnotationFeature aFeature, Object aValue)
     {
-        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aJCas, aAddress,
+        setFeatureValue(aState.getDocument(), aState.getUser().getUsername(), aCas, aAddress,
                 aFeature, aValue);
     }
 
@@ -189,5 +188,5 @@ public interface TypeAdapter
      * called when a document is marked as finished to prevent invalid annotations ending up in the
      * finished document.
      */
-    List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas);
+    List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
 }

@@ -97,7 +97,7 @@ public class ChainAdapterTest
                 behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.addSpan(document, username, jcas, 0, 
+                .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("covers multiple sentences");
     }
@@ -112,11 +112,11 @@ public class ChainAdapterTest
                 behaviors);
 
         // First time should work
-        sut.addSpan(document, username, jcas, 0, 1);
+        sut.addSpan(document, username, jcas.getCas(), 0, 1);
         
         // Second time not
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.addSpan(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not enabled");
     }
     
@@ -130,11 +130,11 @@ public class ChainAdapterTest
                 behaviors);
 
         // First time should work - we annotate the whole word "This"
-        sut.addSpan(document, username, jcas, 0, 4);
+        sut.addSpan(document, username, jcas.getCas(), 0, 4);
         
         // Second time not - here we annotate "T" but it should be expanded to "This"
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.addSpan(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not enabled");
     }
 }

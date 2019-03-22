@@ -84,40 +84,40 @@ public class TestCasDiff extends TestCase {
     }
 
     @SuppressWarnings("unused")
-    private void getCas1(JCasBuilder aBuilder, JCas aJCas)
+    private void getCas1(JCasBuilder aBuilder, JCas aCas)
     {
         Token token1 = aBuilder.add("Hallo", Token.class);
-        POS pos1 = new POS(aJCas, token1.getBegin(), token1.getEnd());
+        POS pos1 = new POS(aCas, token1.getBegin(), token1.getEnd());
         pos1.setPosValue("I");
         pos1.addToIndexes();
         token1.setPos(pos1);
         Token token2 = aBuilder.add("Welt", Token.class);
-        POS pos2 = new POS(aJCas, token2.getBegin(), token2.getEnd());
+        POS pos2 = new POS(aCas, token2.getBegin(), token2.getEnd());
         pos2.setPosValue("N");
         pos2.addToIndexes();
         token2.setPos(pos2);
         Token token3 = aBuilder.add("!", Token.class);
-        POS pos3 = new POS(aJCas, token3.getBegin(), token3.getEnd());
+        POS pos3 = new POS(aCas, token3.getBegin(), token3.getEnd());
         pos3.setPosValue("SENT");
         token3.setPos(pos3);
         pos3.addToIndexes();
     }
 
     @SuppressWarnings("unused")
-    private void getCas2(JCasBuilder aBuilder, JCas aJCas)
+    private void getCas2(JCasBuilder aBuilder, JCas aCas)
     {
         Token token1 = aBuilder.add("Hallo", Token.class);
-        POS pos1 = new POS(aJCas, token1.getBegin(), token1.getEnd());
+        POS pos1 = new POS(aCas, token1.getBegin(), token1.getEnd());
         pos1.setPosValue("O");
         pos1.addToIndexes();
         token1.setPos(pos1);
         Token token2 = aBuilder.add("Welt", Token.class);
-        POS pos2 = new POS(aJCas, token2.getBegin(), token2.getEnd());
+        POS pos2 = new POS(aCas, token2.getBegin(), token2.getEnd());
         pos2.setPosValue("N");
         pos2.addToIndexes();
         token2.setPos(pos2);
         Token token3 = aBuilder.add("!", Token.class);
-        POS pos3 = new POS(aJCas, token3.getBegin(), token3.getEnd());
+        POS pos3 = new POS(aCas, token3.getBegin(), token3.getEnd());
         pos3.setPosValue("SENT");
         token3.setPos(pos3);
         pos3.addToIndexes();

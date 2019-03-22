@@ -28,7 +28,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.springframework.context.ApplicationContext;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
@@ -42,12 +42,12 @@ public class SidebarPanel
     private @SpringBean AnnotationSidebarRegistry sidebarRegistry;
 
     private AnnotationActionHandler actionHandler;
-    private JCasProvider jCasProvider;
+    private CasProvider casProvider;
     private AnnotationPage annotationPage;
     private IModel<AnnotatorState> stateModel;
     
     public SidebarPanel(String aId, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final JCasProvider aJCasProvider,
+            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
         super(aId);
@@ -58,7 +58,7 @@ public class SidebarPanel
         setOutputMarkupPlaceholderTag(true);
         
         actionHandler = aActionHandler;
-        jCasProvider = aJCasProvider;
+        casProvider = aCasProvider;
         annotationPage = aAnnotationPage;
         stateModel = aModel;
         
@@ -97,7 +97,7 @@ public class SidebarPanel
                         ApplicationContext ctx = ApplicationContextProvider.getApplicationContext();
                         return ctx.getBean(AnnotationSidebarRegistry.class)
                                 .getSidebarFactory(factoryId).create(aPanelId, stateModel,
-                                        actionHandler, jCasProvider, annotationPage);
+                                        actionHandler, casProvider, annotationPage);
                     }
                     catch (Exception e) {
                         throw new RuntimeException(e);

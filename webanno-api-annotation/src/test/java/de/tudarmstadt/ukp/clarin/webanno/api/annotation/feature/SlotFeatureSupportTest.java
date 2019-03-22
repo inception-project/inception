@@ -141,7 +141,7 @@ public class SlotFeatureSupportTest
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
         
         assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> sut.setFeatureValue(jcas, slotFeature, getAddr(hostFS), 
+            .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), slotFeature, getAddr(hostFS), 
                     asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS)))))
             .withMessageContaining("is not in the tag list");
     }
@@ -163,7 +163,7 @@ public class SlotFeatureSupportTest
         
         when(schemaService.existsTag(role, slotFeatureTagset)).thenReturn(false);
         
-        sut.setFeatureValue(jcas, slotFeature, getAddr(hostFS),
+        sut.setFeatureValue(jcas.getCas(), slotFeature, getAddr(hostFS),
                 asList(new LinkWithRoleModel(role, "dummy", getAddr(targetFS))));
         
         verify(schemaService).createTag(new Tag(slotFeatureTagset, role));

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,7 +30,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -194,7 +194,7 @@ public class CorrectionPage
                     // update begin/end of the curation segment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
                     curationContainer.setBratAnnotatorModel(state);
-                    JCas editorCas = getEditorCas();
+                    CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
                     suggestionView.updatePanel(aTarget, curationContainer,
@@ -386,8 +386,7 @@ public class CorrectionPage
 
                 try {
                     AnnotatorState state = getModelObject();
-                    JCas editorCas = getEditorCas();
-                    //JCas correctionCas = repository.readCorrectionCas(state.getDocument());
+                    CAS editorCas = getEditorCas();
                     annotationEditor.requestRender(aTarget);
 
                     // info(bratAnnotatorModel.getMessage());
@@ -412,7 +411,7 @@ public class CorrectionPage
             }
             
             @Override
-            public JCas getEditorCas() throws IOException
+            public CAS getEditorCas() throws IOException
             {
                 return CorrectionPage.this.getEditorCas();
             }
@@ -443,7 +442,7 @@ public class CorrectionPage
     }
 
     @Override
-    protected JCas getEditorCas()
+    protected CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -460,7 +459,7 @@ public class CorrectionPage
                 state.getUser().getUsername());
     }
 
-    private void setCurationSegmentBeginEnd(JCas aEditorCas)
+    private void setCurationSegmentBeginEnd(CAS aEditorCas)
         throws UIMAException, ClassNotFoundException, IOException
     {
         AnnotatorState state = getModelObject();
@@ -497,8 +496,8 @@ public class CorrectionPage
     {
         AnnotatorState state = getModelObject();
         
-        JCas editorCas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(editorCas, Sentence.class));
+        CAS editorCas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(WebAnnoCasUtil.selectSentences(editorCas));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -534,7 +533,7 @@ public class CorrectionPage
         try {
             AnnotatorState state = getModelObject();
 
-            JCas editorCas = getEditorCas();
+            CAS editorCas = getEditorCas();
 
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
@@ -570,8 +569,8 @@ public class CorrectionPage
         throws Exception
     {
         AnnotatorState state = getModelObject();
-        JCas editorCas = documentService.createOrReadInitialCas(state.getDocument());
-        editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas);
+        CAS editorCas = documentService.createOrReadInitialCas(state.getDocument());
+        editorCas = BratAnnotatorUtility.clearAnnotations(editorCas);
         documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser(), false);
         actionLoadDocument(aTarget);
     }
@@ -617,7 +616,7 @@ public class CorrectionPage
                     .createOrGetAnnotationDocument(state.getDocument(), user);
 
             // Read the correction CAS - if it does not exist yet, from the initial CAS
-            JCas correctionCas;
+            CAS correctionCas;
             if (correctionDocumentService.existsCorrectionCas(state.getDocument())) {
                 correctionCas = correctionDocumentService.readCorrectionCas(state.getDocument());
             }
@@ -627,23 +626,23 @@ public class CorrectionPage
 
             // Read the annotation CAS or create an annotation CAS from the initial CAS by stripping
             // annotations
-            JCas editorCas;
+            CAS editorCas;
             if (documentService.existsCas(state.getDocument(), user.getUsername())) {
                 editorCas = documentService.readAnnotationCas(annotationDocument);
             }
             else {
                 editorCas = documentService.createOrReadInitialCas(state.getDocument());
-                editorCas = BratAnnotatorUtility.clearJcasAnnotations(editorCas);
+                editorCas = BratAnnotatorUtility.clearAnnotations(editorCas);
                 documentService.writeAnnotationCas(editorCas, state.getDocument(), user, false);
             }
 
             // Update the CASes
-            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
-            correctionDocumentService.upgradeCorrectionCas(correctionCas.getCas(),
+            annotationService.upgradeCas(editorCas, annotationDocument);
+            correctionDocumentService.upgradeCorrectionCas(correctionCas,
                     state.getDocument());
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas.getCas().getJCas(),
+            documentService.writeAnnotationCas(editorCas,
                     annotationDocument.getDocument(), user, false);
             correctionDocumentService.writeCorrectionCas(correctionCas, state.getDocument());
 

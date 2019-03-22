@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -70,11 +71,11 @@ public class CasStorageServiceImplTest
         JCas cas = JCasFactory.createText("This is a test");
         String user = "test";
         
-        sut.writeCas(doc, cas, user);
+        sut.writeCas(doc, cas.getCas(), user);
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        JCas cas2 = sut.readCas(doc, user);
+        CAS cas2 = sut.readCas(doc, user);
         assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
         
         sut.deleteCas(doc, user);
@@ -93,8 +94,8 @@ public class CasStorageServiceImplTest
         SourceDocument doc = makeSourceDocument(1l, 1l);
         String user = "test";
         
-        sut.writeCas(doc, cas, user);
-        JCas cas2 = sut.readCas(doc, user);
+        sut.writeCas(doc, cas.getCas(), user);
+        JCas cas2 = sut.readCas(doc, user).getJCas();
         
         List<CASMetadata> cmds = new ArrayList<>(select(cas2, CASMetadata.class));
         assertThat(cmds).hasSize(1);
@@ -112,16 +113,16 @@ public class CasStorageServiceImplTest
         
         JCas cas = sut.readOrCreateCas(doc, user, () -> {
             try {
-                return JCasFactory.createText("This is a test");
+                return JCasFactory.createText("This is a test").getCas();
             }
             catch (UIMAException e) {
                 throw new IOException(e);
             }
-        });
+        }).getJCas();
         assertThat(sut.getCasFile(doc, user)).exists();
         assertThat(sut.existsCas(doc, user)).isTrue();
         
-        JCas cas2 = sut.readCas(doc, user);
+        JCas cas2 = sut.readCas(doc, user).getJCas();
         assertThat(cas2.getDocumentText()).isEqualTo(cas.getDocumentText());
         
         sut.deleteCas(doc, user);

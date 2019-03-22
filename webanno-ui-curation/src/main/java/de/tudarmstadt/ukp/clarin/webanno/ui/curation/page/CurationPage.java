@@ -22,10 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -97,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -475,7 +474,7 @@ public class CurationPage
     }
 
     @Override
-    protected JCas getEditorCas()
+    protected CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -487,12 +486,12 @@ public class CurationPage
         return curationDocumentService.readCurationCas(state.getDocument());
     }
 
-    private void updateSentenceNumber(JCas aJCas, int aAddress)
+    private void updateSentenceNumber(CAS aCas, int aAddress)
     {
         AnnotatorState state = getModelObject();
-        Sentence sentence = selectByAddr(aJCas, Sentence.class, aAddress);
+        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, aAddress);
         state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aJCas, sentence.getBegin()));
+        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }
 
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
@@ -512,8 +511,8 @@ public class CurationPage
     {
         AnnotatorState state = getModelObject();
         
-        JCas jcas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(jcas, Sentence.class));
+        CAS cas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(cas));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -541,14 +540,14 @@ public class CurationPage
         aTarget.add(CurationPage.this);
         
         aTarget.add(getOrCreatePositionInfoLabel());
-        JCas mergeCas = null;
+        CAS mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
             mergeCas = curationDocumentService.readCurationCas(state.getDocument());
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(mergeCas, Sentence.class,
+            AnnotationFS sentence = selectByAddr(mergeCas, AnnotationFS.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             
@@ -604,9 +603,9 @@ public class CurationPage
             AnnotationDocument annotationDocument = documentService.getAnnotationDocument(aDocument,
                     user);
             try {
-                CAS cas = documentService.readAnnotationCas(annotationDocument).getCas();
+                CAS cas = documentService.readAnnotationCas(annotationDocument);
                 annotationService.upgradeCas(cas, annotationDocument);
-                documentService.writeAnnotationCas(cas.getJCas(), annotationDocument, false);
+                documentService.writeAnnotationCas(cas, annotationDocument, false);
             }
             catch (Exception e) {
                 // no need to catch, it is acceptable that no curation document
@@ -672,22 +671,22 @@ public class CurationPage
             for (AnnotationDocument ad : finishedAnnotationDocuments) {
                 upgradeCasAndSave(ad.getDocument(), ad.getUser());
             }
-            Map<String, JCas> jCases = cb.listJcasesforCuration(finishedAnnotationDocuments,
+            Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                     randomAnnotationDocument, state.getMode());
-            JCas mergeJCas = cb.getMergeCas(state, state.getDocument(), jCases,
+            CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
                     randomAnnotationDocument, true);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
             state.getPreferences()
-                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeJCas));
+                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeCas));
             
             // Initialize timestamp in state
             updateDocumentTimestampAfterWrite(state, curationDocumentService
                     .getCurationCasTimestamp(state.getDocument()));
                         
             // Initialize the visible content
-            state.moveToUnit(mergeJCas, aFocus);
+            state.moveToUnit(mergeCas, aFocus);
             gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
     
             // if project is changed, reset some project specific settings
@@ -704,7 +703,7 @@ public class CurationPage
             curationContainer.setBratAnnotatorModel(state);
             curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeJCas, state.getFirstVisibleUnitAddress());
+            updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);
             //curationPanel.updatePanel(aTarget, curationContainer);
             

@@ -17,30 +17,34 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.brat.util;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.copyDocumentMetadata;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createToken;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.exists;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.IOException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * Utility methods.
@@ -72,50 +76,42 @@ public class BratAnnotatorUtility
         }
     }
 
-    public static JCas clearJcasAnnotations(JCas aJCas)
+    public static CAS clearAnnotations(CAS aCas)
         throws IOException
     {
-        JCas target;
+        CAS target;
         try {
-            target = JCasFactory.createJCas();
+            target = createCas();
         }
         catch (UIMAException e) {
             throw new IOException(e);
         }
         
         // Copy the CAS - basically we do this just to keep the full type system information
-        CASCompleteSerializer serializer = serializeCASComplete(aJCas.getCasImpl());
-        deserializeCASComplete(serializer, (CASImpl) target.getCas());
-
-        // Re-init JCas
-        try {
-            target.getCas().getJCas();
-        }
-        catch (CASException e) {
-            throw new IOException(e);
-        }
+        CASCompleteSerializer serializer = serializeCASComplete((CASImpl) aCas);
+        deserializeCASComplete(serializer, (CASImpl) target);
 
         // Remove all annotations from the target CAS but we keep the type system!
         target.reset();
         
         // Copy over essential information
-        if (JCasUtil.exists(aJCas, DocumentMetaData.class)) {
-            DocumentMetaData.copy(aJCas, target);
+        if (exists(aCas, getType(aCas, DocumentMetaData.class))) {
+            copyDocumentMetadata(aCas, target);
         }
         else {
-            DocumentMetaData.create(aJCas);
+            WebAnnoCasUtil.createDocumentMetadata(aCas);
         }
-        target.setDocumentLanguage(aJCas.getDocumentLanguage()); // DKPro Core Issue 435
-        target.setDocumentText(aJCas.getDocumentText());
+        target.setDocumentLanguage(aCas.getDocumentLanguage()); // DKPro Core Issue 435
+        target.setDocumentText(aCas.getDocumentText());
         
         // Transfer token boundaries
-        for (Token t : select(aJCas, Token.class)) {
-            new Token(target, t.getBegin(), t.getEnd()).addToIndexes();
+        for (AnnotationFS t : selectTokens(aCas)) {
+            aCas.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));
         }
 
         // Transfer sentence boundaries
-        for (Sentence s : select(aJCas, Sentence.class)) {
-            new Sentence(target, s.getBegin(), s.getEnd()).addToIndexes();
+        for (AnnotationFS s : selectSentences(aCas)) {
+            aCas.addFsToIndexes(createSentence(target, s.getBegin(), s.getEnd()));
         }
 
         return target;

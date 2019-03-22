@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.event;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -28,13 +28,13 @@ public class AfterDocumentCreatedEvent
     private static final long serialVersionUID = 2367163371168212003L;
     
     private final SourceDocument document;
-    private final JCas jcas;
+    private final CAS cas;
 
-    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, JCas aJCas)
+    public AfterDocumentCreatedEvent(Object aSource, SourceDocument aDocument, CAS aCas)
     {
         super(aSource);
         document = aDocument;
-        jcas = aJCas;
+        cas = aCas;
     }
 
     public SourceDocument getDocument()
@@ -42,8 +42,8 @@ public class AfterDocumentCreatedEvent
         return document;
     }
 
-    public JCas getJcas()
+    public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 }

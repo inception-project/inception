@@ -97,7 +97,7 @@ public class SpanAdapterTest
                 behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("covers multiple sentences");
     }
@@ -114,11 +114,11 @@ public class SpanAdapterTest
 
         // Add two annotations
         neLayer.setCrossSentence(true);
-        sut.add(document, username, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, jcas.getCas(), 0, jcas.getDocumentText().length());
         
         //Validation fails
         neLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -136,11 +136,11 @@ public class SpanAdapterTest
                 behaviors);
 
         // First time should work
-        sut.add(document, username, jcas, 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
         
         // Second time not
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not enabled");
     }
 
@@ -155,12 +155,12 @@ public class SpanAdapterTest
 
         // Add two annotations
         neLayer.setAllowStacking(true);
-        sut.add(document, username, jcas, 0, 1);
-        sut.add(document, username, jcas, 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
         
         //Validation fails
         neLayer.setAllowStacking(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -176,11 +176,11 @@ public class SpanAdapterTest
                 behaviors);
 
         // First time should work - we annotate the whole word "This"
-        sut.add(document, username, jcas, 0, 4);
+        sut.add(document, username, jcas.getCas(), 0, 4);
         
         // Second time not - here we annotate "T" but it should be expanded to "This"
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not enabled");
     }
 }

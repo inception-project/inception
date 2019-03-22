@@ -135,7 +135,7 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        AnnotationFS dep = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
 
         assertThat(FSUtil.getFeature(dep, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
@@ -166,7 +166,7 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("multiple sentences");
     }
@@ -193,10 +193,11 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         depLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -225,9 +226,9 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(1);
 
         depLayer.setAllowStacking(true);
-        AnnotationFS dep1 = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep1 = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
-        AnnotationFS dep2 = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep2 = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
@@ -260,11 +261,12 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(1);
 
         // First annotation should work
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         // Second one at the same location should cause an error
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("stacking is not enabled");
     }
@@ -291,11 +293,13 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(1);
 
         depLayer.setAllowStacking(true);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         depLayer.setAllowStacking(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));

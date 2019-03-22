@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
 
 import java.io.IOException;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -39,12 +39,12 @@ public interface AnnotationEditorExtension
      * Handle an action.
      */
     void handleAction(AnnotationActionHandler panel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, JCas jCas, VID paramId, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction, int aBegin, int aEnd)
         throws AnnotationException, IOException;
 
     /**
      * Post-process the output during rendering.
      */
-    void render(JCas jCas, AnnotatorState aState, VDocument vdoc,
-                int aWindowBeginOffset, int aWindowEndOffset);
+    void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
+            int aWindowEndOffset);
 }

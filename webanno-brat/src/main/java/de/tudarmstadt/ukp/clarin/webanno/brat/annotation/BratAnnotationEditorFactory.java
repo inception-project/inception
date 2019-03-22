@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -38,9 +38,9 @@ public class BratAnnotationEditorFactory
     
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aJCasProvider);
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
     
     @Override

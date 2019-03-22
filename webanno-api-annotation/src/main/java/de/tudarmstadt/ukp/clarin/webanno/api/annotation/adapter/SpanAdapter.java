@@ -31,7 +31,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -80,8 +79,8 @@ public class SpanAdapter
      *            the document to which the CAS belongs
      * @param aUsername
      *            the user to which the CAS belongs
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aBegin
      *            the begin offset.
      * @param aEnd
@@ -90,11 +89,11 @@ public class SpanAdapter
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationFS add(SourceDocument aDocument, String aUsername, JCas aJCas, int aBegin,
+    public AnnotationFS add(SourceDocument aDocument, String aUsername, CAS aCas, int aBegin,
             int aEnd)
         throws AnnotationException
     {
-        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aJCas, aBegin, aEnd));
+        return handle(new CreateSpanAnnotationRequest(aDocument, aUsername, aCas, aBegin, aEnd));
     }
     
     public AnnotationFS handle(CreateSpanAnnotationRequest aRequest) throws AnnotationException
@@ -105,8 +104,8 @@ public class SpanAdapter
             request = behavior.onCreate(this, request);
         }
 
-        AnnotationFS newAnnotation = createSpanAnnotation(request.getJcas().getCas(),
-                request.getBegin(), request.getEnd());
+        AnnotationFS newAnnotation = createSpanAnnotation(request.getCas(), request.getBegin(),
+                request.getEnd());
 
         publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getUsername(),
                 newAnnotation));
@@ -142,17 +141,17 @@ public class SpanAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationFS fs = selectByAddr(aJCas, AnnotationFS.class, aVid.getId());
-        aJCas.removeFsFromIndexes(fs);
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
+        aCas.removeFsFromIndexes(fs);
 
         // delete associated attachFeature
         if (getAttachTypeName() != null) {
-            Type theType = CasUtil.getType(aJCas.getCas(), getAttachTypeName());
+            Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             if (attachFeature != null) {
-                CasUtil.selectCovered(aJCas.getCas(), theType, fs.getBegin(), fs.getEnd()).get(0)
+                CasUtil.selectCovered(aCas, theType, fs.getBegin(), fs.getEnd()).get(0)
                         .setFeatureValue(attachFeature, null);
             }
         }
@@ -161,12 +160,12 @@ public class SpanAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (SpanLayerBehavior behavior : behaviors) {
             long startTime = currentTimeMillis();
-            messages.addAll(behavior.onValidate(this, aJCas));
+            messages.addAll(behavior.onValidate(this, aCas));
             log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }

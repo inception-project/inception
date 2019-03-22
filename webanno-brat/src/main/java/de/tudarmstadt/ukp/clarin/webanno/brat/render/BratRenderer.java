@@ -18,11 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.uima.fit.util.JCasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -35,9 +36,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,9 +96,9 @@ public class BratRenderer
     private static final boolean DEBUG = false;
     
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState,
-            VDocument aVDoc, JCas aJCas, AnnotationSchemaService aAnnotationService)
+            VDocument aVDoc, CAS aCas, AnnotationSchemaService aAnnotationService)
     {
-        render(aResponse, aState, aVDoc, aJCas, aAnnotationService, null);
+        render(aResponse, aState, aVDoc, aCas, aAnnotationService, null);
     }
     
     /**
@@ -105,20 +108,20 @@ public class BratRenderer
      *            the response.
      * @param aState
      *            the annotator model.
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aAnnotationService
      *            the annotation service.s
      */
     public static void render(GetDocumentResponse aResponse, AnnotatorState aState, VDocument aVDoc,
-            JCas aJCas, AnnotationSchemaService aAnnotationService,
+            CAS aCas, AnnotationSchemaService aAnnotationService,
             ColoringStrategy aColoringStrategy)
     {
         aResponse.setRtlMode(ScriptDirection.RTL.equals(aState.getScriptDirection()));
         aResponse.setFontZoom(aState.getPreferences().getFontZoom());
 
         // Render invisible baseline annotations (sentence, tokens)
-        renderTokenAndSentence(aJCas, aResponse, aState);
+        renderTokenAndSentence(aCas, aResponse, aState);
         
         // Render visible (custom) layers
         Map<String[], Queue<String>> colorQueues = new HashMap<>();
@@ -177,7 +180,8 @@ public class BratRenderer
             }
         }
         
-        List<Sentence> sentences = new ArrayList<>(select(aJCas, Sentence.class));
+        List<AnnotationFS> sentences = new ArrayList<>(
+                select(aCas, getType(aCas, Sentence.class)));
         for (VComment vcomment : aVDoc.comments()) {
             String type;
             switch (vcomment.getCommentType()) {
@@ -198,7 +202,8 @@ public class BratRenderer
             AnnotationFS fs;
             if (
                     !vcomment.getVid().isSynthetic() && 
-                    ((fs = selectByAddr(aJCas, vcomment.getVid().getId())) instanceof Sentence)
+                    ((fs = selectAnnotationByAddr(aCas, vcomment.getVid().getId())) != null && 
+                            fs.getType().getName().equals(Sentence.class.getName()))
             ) {
                 int index = sentences.indexOf(fs) + 1;
                 aResponse.addComment(new SentenceComment(index, type, vcomment.getComment()));
@@ -259,7 +264,7 @@ public class BratRenderer
         return asList(new Argument("Arg1", aGovernorFs), new Argument("Arg2", aDependentFs));
     }
     
-    public static void renderTokenAndSentence(JCas aJcas, GetDocumentResponse aResponse,
+    public static void renderTokenAndSentence(CAS aCas, GetDocumentResponse aResponse,
             AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
@@ -267,8 +272,11 @@ public class BratRenderer
         
         aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
+        Type tokenType = CasUtil.getType(aCas, Token.class);
+        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
+        
         // Render token + texts
-        for (AnnotationFS fs : selectCovered(aJcas, Token.class, windowBegin, windowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, tokenType, windowBegin, windowEnd)) {
             // attache type such as POS adds non existing token element for ellipsis annotation
             if (fs.getBegin() == fs.getEnd()) {
                 continue;
@@ -285,14 +293,14 @@ public class BratRenderer
         
         // Replace newline characters before sending to the client to avoid rendering glitches
         // in the client-side brat rendering code
-        String visibleText = aJcas.getDocumentText().substring(windowBegin, windowEnd);
+        String visibleText = aCas.getDocumentText().substring(windowBegin, windowEnd);
         visibleText = StringUtils.replaceEachRepeatedly(visibleText, 
                 new String[] { "\n", "\r" }, new String[] { " ", " " });
         aResponse.setText(visibleText);
 
         // Render Sentence
         int sentIdx = aResponse.getSentenceNumberOffset();
-        for (AnnotationFS fs : selectCovered(aJcas, Sentence.class, windowBegin, windowEnd)) {
+        for (AnnotationFS fs : selectCovered(aCas, sentenceType, windowBegin, windowEnd)) {
             aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd()
                     - windowBegin);
             
