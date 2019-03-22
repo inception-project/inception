@@ -123,7 +123,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
+import de.tudarmstadt.ukp.inception.recommendation.util.PredictionUtil;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -1060,7 +1060,7 @@ public class ActiveLearningSidebar
     
             // Update visibility in case the annotation where the feature was set overlaps with 
             // any suggestions that need to be hidden now.
-            PredictionTask.calculateVisibility(learningRecordService, annotationService,
+            PredictionUtil.calculateVisibility(learningRecordService, annotationService,
                     getAnnotationPage().getEditorCas().getCas(), state.getUser().getUsername(),
                     aLayer, alState.getSuggestions(), state.getWindowBeginOffset(),
                     state.getWindowEndOffset());

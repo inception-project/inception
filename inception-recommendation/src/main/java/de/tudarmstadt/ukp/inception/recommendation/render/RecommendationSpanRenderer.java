@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
+import de.tudarmstadt.ukp.inception.recommendation.util.PredictionUtil;
 
 /**
  * Render spans.
@@ -111,7 +111,7 @@ public class RecommendationSpanRenderer
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
-        PredictionTask.calculateVisibility(learningRecordService, aAnnotationService,
+        PredictionUtil.calculateVisibility(learningRecordService, aAnnotationService,
                 aJcas.getCas(), aState.getUser().getUsername(), layer, groups, windowBegin,
                 windowEnd);
 
