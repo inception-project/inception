@@ -422,7 +422,6 @@ public class WebAnnoCasUtil
      *            the annotation address
      * @return the iterator.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static FSIterator<AnnotationFS> seekByAddress(CAS aCas, Type aType, int aAddr)
     {
         AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
@@ -440,7 +439,6 @@ public class WebAnnoCasUtil
      *            the annotation to seek for
      * @return the iterator.
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     private static FSIterator<AnnotationFS> seekByFs(CAS aCas, Type aType, AnnotationFS aFS)
     {
         AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
@@ -719,7 +717,7 @@ public class WebAnnoCasUtil
     /**
      * For a span annotation, if a sub-token is selected, display the whole text so that the user is
      * aware of what is being annotated, based on
-     * {@link WebAnnoCasUtil#selectOverlapping(CAS, Class, int, int)} ISSUE - Affected text not
+     * {@link WebAnnoCasUtil#selectOverlapping(CAS, Type, int, int)} ISSUE - Affected text not
      * correctly displayed in annotation dialog (Bug #272)
      *
      * @param aCas
