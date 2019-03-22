@@ -316,11 +316,30 @@ public class SPARQLQueryBuilder
          */
         protected GraphPattern childrenPattern(KnowledgeBase aKB, Iri aContext)
         {
-            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri());
             Iri subPropertyProperty = Rdf.iri(aKB.getSubPropertyIri());
+            Iri subClassProperty = Rdf.iri(aKB.getSubclassIri().toString());
+            Iri typeOfProperty = Rdf.iri(aKB.getTypeIri().toString());
                         
             switch (this) {
+            case ITEM: {
+                List<GraphPattern> classPatterns = new ArrayList<>();
+                classPatterns.add(
+                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
+                classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
+                if (OWL.CLASS.equals(aKB.getClassIri())) {
+                    classPatterns.add(VAR_SUBJECT.has(
+                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                            aContext));
+                }
+                
+                return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+            }
+            case INSTANCE: {
+                return VAR_SUBJECT.has(typeOfProperty, aContext);
+            }
             case CLASS: {
+                // Follow the subclass property and also take into account owl:intersectionOf if
+                // using OWL classes
                 List<GraphPattern> classPatterns = new ArrayList<>();
                 classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {

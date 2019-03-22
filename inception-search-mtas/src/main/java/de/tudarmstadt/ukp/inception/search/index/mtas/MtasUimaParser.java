@@ -76,11 +76,11 @@ public class MtasUimaParser
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    final private String MTAS_TOKEN_LABEL = "Token";
-    final private String MTAS_SENTENCE_LABEL = "s";
+    public static final String MTAS_TOKEN_LABEL = "Token";
+    public static final String MTAS_SENTENCE_LABEL = "s";
     
-    final private String SPECIAL_ATTR_REL_SOURCE = "source";
-    final private String SPECIAL_ATTR_REL_TARGET = "target";
+    private static final String SPECIAL_ATTR_REL_SOURCE = "source";
+    private static final String SPECIAL_ATTR_REL_TARGET = "target";
     
     // Annotation schema and project services with knowledge base service
     private @Autowired AnnotationSchemaService annotationSchemaService;
