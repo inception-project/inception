@@ -110,7 +110,7 @@ public class RecommendationSpanRenderer
         
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-
+        
         PredictionUtil.calculateVisibility(learningRecordService, aAnnotationService,
                 aJcas.getCas(), aState.getUser().getUsername(), layer, groups, windowBegin,
                 windowEnd);

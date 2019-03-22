@@ -1076,6 +1076,7 @@ public class ActiveLearningSidebar
         }
     }
 
+    
     @OnEvent
     public void onRecommendationRejectEvent(AjaxRecommendationRejectedEvent aEvent)
     {

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+
 package de.tudarmstadt.ukp.inception.recommendation.util;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_NO_LABEL;
