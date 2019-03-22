@@ -43,10 +43,10 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 public class RdfUtils
 {
     public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
-            Value obj, String language, KnowledgeBase aKB)
+            Value obj, KnowledgeBase aKB)
     {
-        try (RepositoryResult<Statement> results =
-            getStatementsSparql(conn, subj, pred, obj, false, language, aKB)) {
+        try (RepositoryResult<Statement> results = getStatementsSparql(conn, subj, pred, obj, false,
+                null, aKB)) {
             if (results.hasNext()) {
                 return Optional.of(results.next());
             }
@@ -54,12 +54,6 @@ public class RdfUtils
                 return Optional.empty();
             }
         }
-    }
-
-    public static Optional<Statement> readFirst(RepositoryConnection conn, Resource subj, IRI pred,
-        Value obj, KnowledgeBase aKB)
-    {
-        return readFirst(conn, subj, pred, obj, null, aKB);
     }
 
     public static RepositoryResult<Statement> getStatementsSparql(RepositoryConnection conn,
