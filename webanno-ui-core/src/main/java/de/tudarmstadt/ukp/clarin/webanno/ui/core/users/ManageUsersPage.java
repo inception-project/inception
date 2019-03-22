@@ -68,7 +68,7 @@ public class ManageUsersPage
     public static final String PARAM_USER = "user";
 
     private @SpringBean UserDao userRepository;
-    private @SpringBean RemoteApiProperties remoteApiProperties;
+    private @SpringBean(required = false) RemoteApiProperties remoteApiProperties;
 
     private class DetailForm
         extends Form<User>
@@ -300,7 +300,7 @@ public class ManageUsersPage
     private List<Role> getRoles()
     {
         List<Role> roles = new ArrayList<>(Arrays.asList(Role.values()));
-        if (!remoteApiProperties.isEnabled()) {
+        if (remoteApiProperties != null && !remoteApiProperties.isEnabled()) {
             roles.remove(Role.ROLE_REMOTE);
         }
         return roles;

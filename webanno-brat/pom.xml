@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.3-SNAPSHOT</version>
+    <version>3.6.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-brat</artifactId>
   <name>WebAnno - UI - Annotation (brat)</name>
@@ -177,11 +177,6 @@
       <artifactId>webanno-io-tcf</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-dkprocore</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -191,8 +186,6 @@
           <artifactId>maven-dependency-plugin</artifactId>
           <configuration>
             <usedDependencies combine.children="append">
-              <!-- UIMA types required during testing -->
-              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-dkprocore</usedDependency>
               <!-- Resources -->
               <usedDependency>org.webjars:animate.css</usedDependency>
             </usedDependencies>
@@ -227,4 +220,5 @@
         </pluginManagement>
       </build>
     </profile>
-  </profiles></project>
+  </profiles>
+</project>

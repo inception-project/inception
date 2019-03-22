@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.createCas;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isNativeUimaType;
 import static java.util.Arrays.asList;
 import static java.util.Objects.isNull;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -52,7 +54,6 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.CASImpl;
 import org.apache.uima.cas.impl.Serialization;
-import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -74,10 +75,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeSystemAnalysis.RelationDetails;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers.ProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -711,22 +715,88 @@ public class AnnotationSchemaServiceImpl
     }
 
     @Override
-    public TypeSystemDescription getProjectTypes(Project aProject)
+    public TypeSystemDescription getCustomProjectTypes(Project aProject)
     {
         // Create a new type system from scratch
         TypeSystemDescription tsd = new TypeSystemDescription_impl();
-        for (AnnotationLayer type : listAnnotationLayer(aProject)) {
-            if (type.isBuiltIn()) {
-                continue;
-            }
 
-            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(type);
-            layerSupport.generateTypes(tsd, type);
+        listAnnotationLayer(aProject).stream()
+                .filter(layer -> !layer.isBuiltIn())
+                .forEachOrdered(layer -> layerSupportRegistry.getLayerSupport(layer)
+                        .generateTypes(tsd, layer));
+
+        return tsd;
+    }
+
+    @Override
+    public TypeSystemDescription getAllProjectTypes(Project aProject)
+        throws ResourceInitializationException
+    {
+        // Create a new type system from scratch
+        TypeSystemDescription tsd = new TypeSystemDescription_impl();
+
+        TypeSystemDescription builtInTypes = createTypeSystemDescription();
+        
+        List<AnnotationLayer> layers = listAnnotationLayer(aProject);
+        
+        for (AnnotationLayer layer : layers) {
+            LayerSupport<?> layerSupport = layerSupportRegistry.getLayerSupport(layer);
+            
+            // for built-in layers, we clone the information from the built-in type descriptors
+            if (layer.isBuiltIn()) {
+                for (String typeName : layerSupport.getGeneratedTypeNames(layer)) {
+                    exportBuiltInTypeDescription(builtInTypes, tsd, typeName);
+                }
+            }
+            // for custom layers, we use the information from the project settings
+            else {
+                layerSupport.generateTypes(tsd, layer);
+            }
         }
 
         return tsd;
     }
     
+    private void exportBuiltInTypeDescription(TypeSystemDescription aSource,
+            TypeSystemDescription aTarget, String aType)
+    {
+        TypeDescription builtInType = aSource.getType(aType);
+        
+        if (builtInType == null) {
+            throw new IllegalArgumentException(
+                    "No type description found for type [" + aType + "]");
+        }
+        
+        TypeDescription clonedType = aTarget.addType(builtInType.getName(),
+                builtInType.getDescription(), builtInType.getSupertypeName());
+        
+        if (builtInType.getFeatures() != null) {
+            for (FeatureDescription feature : builtInType.getFeatures()) {
+                clonedType.addFeature(feature.getName(), feature.getDescription(),
+                        feature.getRangeTypeName(), feature.getElementType(),
+                        feature.getMultipleReferencesAllowed());
+                
+                // Export types referenced by built-in types also as built-in types. Note that
+                // it is conceptually impossible for built-in types to refer to custom types, so
+                // this is cannot lead to a custom type being exported as a built-in type.
+                if (
+                        feature.getElementType() != null && 
+                        !isNativeUimaType(feature.getElementType()) &&
+                        aTarget.getType(feature.getElementType()) == null
+                ) {
+                    exportBuiltInTypeDescription(aSource, aTarget, feature.getElementType());
+                }
+                else if (
+                        feature.getRangeTypeName() != null && 
+                        !isNativeUimaType(feature.getRangeTypeName()) &&
+                        aTarget.getType(feature.getRangeTypeName()) == null
+                ) {
+                    exportBuiltInTypeDescription(aSource, aTarget, feature.getRangeTypeName());
+                }
+            }
+        }
+    }
+
     @Override
     public TypeSystemDescription getFullProjectTypeSystem(Project aProject)
         throws ResourceInitializationException
@@ -752,7 +822,7 @@ public class AnnotationSchemaServiceImpl
         }
 
         // Types declared within the project
-        typeSystems.add(getProjectTypes(aProject));
+        typeSystems.add(getCustomProjectTypes(aProject));
 
         return (TypeSystemDescription_impl) mergeTypeSystems(typeSystems);
     }
@@ -849,16 +919,13 @@ public class AnnotationSchemaServiceImpl
         Serialization.serializeWithCompression(aSourceCas, serializedCasContents, sourceTypeSystem);
 
         // Re-initialize the target CAS with new type system
-        CAS tempCas = JCasFactory.createJCas(aTargetTypeSystem).getCas();
+        CAS tempCas = createCas(aTargetTypeSystem);
         CASCompleteSerializer serializer = Serialization.serializeCASComplete((CASImpl) tempCas);
         Serialization.deserializeCASComplete(serializer, (CASImpl) aTargetCas);
 
         // Leniently load the source CAS contents into the target CAS
         CasIOUtils.load(new ByteArrayInputStream(serializedCasContents.toByteArray()), aTargetCas,
                 sourceTypeSystem);
-
-        // Make sure JCas is properly initialized too
-        aTargetCas.getJCas();
     }
     
     /**
@@ -931,5 +998,63 @@ public class AnnotationSchemaServiceImpl
     public TypeAdapter getAdapter(AnnotationLayer aLayer)
     {
         return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
+    }
+    
+    @Override
+    @Transactional
+    public void importUimaTypeSystem(Project aProject, TypeSystemDescription aTSD)
+        throws ResourceInitializationException
+    {
+        TypeSystemDescription builtInTypes = createTypeSystemDescription();
+        
+        TypeSystemAnalysis analysis = TypeSystemAnalysis.of(aTSD);
+        for (AnnotationLayer l : analysis.getLayers()) {
+            // Modifications/imports of built-in layers are not supported
+            if (builtInTypes.getType(l.getName()) != null) {
+                continue;
+            }
+            
+            // If a custom layer does not exist yet, create it
+            if (!existsLayer(l.getName(), aProject)) {
+                l.setProject(aProject);
+
+                // Need to set the attach type
+                if (WebAnnoConst.RELATION_TYPE.equals(l.getType())) {
+                    RelationDetails relDetails = analysis.getRelationDetails(l.getName());
+
+                    AnnotationLayer attachLayer;
+                    try {
+                        // First check if this type is already in the project
+                        attachLayer = getLayer(relDetails.getAttachLayer(),
+                                aProject);
+                    }
+                    catch (NoResultException e) {
+                        // If it does not exist in the project yet, then we create it
+                        attachLayer = analysis.getLayer(relDetails.getAttachLayer());
+                        attachLayer.setProject(aProject);
+                        createLayer(attachLayer);
+                    }
+
+                    l.setAttachType(attachLayer);
+                }
+
+                createLayer(l);
+            }
+
+            // Import the features for the layer except if the layer is a built-in layer.
+            // We must not touch the built-in layers because WebAnno may rely on their
+            // structure. This is a conservative measure for now any may be relaxed in the
+            // future.
+            AnnotationLayer persistedLayer = getLayer(l.getName(), aProject);
+            if (!persistedLayer.isBuiltIn()) {
+                for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
+                    if (!existsFeature(f.getName(), persistedLayer)) {
+                        f.setProject(aProject);
+                        f.setLayer(persistedLayer);
+                        createFeature(f);
+                    }
+                }
+            }
+        }
     }
 }

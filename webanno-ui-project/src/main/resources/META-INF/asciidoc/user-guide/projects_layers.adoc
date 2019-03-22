@@ -5,7 +5,7 @@ All annotations belong to an annotation *layer*. Each layer has a structural *ty
 
 == Creating a custom layer
 
-This section provides a short walkthrough on the creation of a custom layer. The following sections act as reference documentation providing additional details on each step. In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
+This section provides a short walk-through on the creation of a custom layer. The following sections act as reference documentation providing additional details on each step. In the following example, we will create a custom layer called *Sentiment* with a feature called *Polarity* that can be *negative*, *neutral*, or *positive*.
 
 . Create the layer _Sentiment_
   * Go to the *Layers* tab in your project's settings and press the *Create layer* button
@@ -91,6 +91,21 @@ The coloring of the layers signal the following:
 |===
 
 To create a custom layer, select *Create Layer* in the *Layers* frame. Then, the following frame will be displayed. 
+
+.Exporting layers
+At times, it is useful to export the configuration of a layer or of all layers, e.g. to copy them
+to another project. There are two options:
+
+* **JSON (selected layer)**: exports the currently selected layer as JSON. If the layer depends on
+  other layers, these are included as well in the JSON export.
+* **UIMA (all layers)**: exports a UIMA type system description containing all layers of the project.
+  This includes built-in types (i.e. DKPro Core types) and it may include additional types required
+  to allow loading the type system description file again. However, this type system description
+  is usually not sufficient to interpret XMI files produced by {product-name}. Be sure to load XMI
+  files together with the type system description file which was included in the XMI export.
+  
+Both types of files can be imported back into {product-name}. Note that any built-in types that
+have have been included in the files are ignored on import.
 
 [[sect_projects_layers_properties]]
 == Properties 

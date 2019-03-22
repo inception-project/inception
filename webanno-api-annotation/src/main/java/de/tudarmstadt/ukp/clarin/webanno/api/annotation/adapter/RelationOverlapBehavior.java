@@ -37,7 +37,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -63,9 +62,8 @@ public class RelationOverlapBehavior
         throws AnnotationException
     {
         final AnnotationLayer layer = aAdapter.getLayer();
-        final JCas jcas = aRequest.getJcas();
-        final CAS cas = jcas.getCas();
-        final Type type = getType(jcas.getCas(), layer.getName());
+        final CAS cas = aRequest.getCas();
+        final Type type = getType(cas, layer.getName());
         final Feature targetFeature = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
         final Feature sourceFeature = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
         
@@ -200,12 +198,11 @@ public class RelationOverlapBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         final AnnotationLayer layer = aAdapter.getLayer();
         final RelationAdapter adapter = (RelationAdapter) aAdapter;
-        final CAS cas = aJCas.getCas();
-        final Type type = getType(cas, adapter.getAnnotationTypeName());
+        final Type type = getType(aCas, adapter.getAnnotationTypeName());
         final Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         final Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         
@@ -216,8 +213,8 @@ public class RelationOverlapBehavior
             return emptyList();
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
-            for (AnnotationFS rel1 : select(cas, type)) {
-                for (AnnotationFS rel2 : select(cas, type)) {
+            for (AnnotationFS rel1 : select(aCas, type)) {
+                for (AnnotationFS rel2 : select(aCas, type)) {
                     if (stacking(rel1, rel2, sourceFeature, targetFeature)) {
                         overlapping.add(rel1);
                         overlapping.add(rel2);
@@ -233,8 +230,8 @@ public class RelationOverlapBehavior
         }
         case STACKING_ONLY: {
             Set<AnnotationFS> overlapping = new HashSet<>();
-            for (AnnotationFS rel1 : select(cas, type)) {
-                for (AnnotationFS rel2 : select(cas, type)) {
+            for (AnnotationFS rel1 : select(aCas, type)) {
+                for (AnnotationFS rel2 : select(aCas, type)) {
                     if (
                             overlapping(rel1, rel2, sourceFeature, targetFeature) && 
                             !stacking(rel1, rel2, sourceFeature, targetFeature)
@@ -258,7 +255,7 @@ public class RelationOverlapBehavior
             // can be multiple relations going out from the same sourceFS, we need to consider all 
             // of them for potential stacking.
             List<AnnotationFS> candidates = new ArrayList<>();
-            for (AnnotationFS fs : select(cas, type)) {
+            for (AnnotationFS fs : select(aCas, type)) {
                 AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
                 AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
                 

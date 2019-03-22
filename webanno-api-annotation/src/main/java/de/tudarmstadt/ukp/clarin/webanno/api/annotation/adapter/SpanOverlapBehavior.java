@@ -36,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -69,7 +68,7 @@ public class SpanOverlapBehavior
             CreateSpanAnnotationRequest aRequest)
         throws AnnotationException
     {
-        final CAS aCas = aRequest.getJcas().getCas();
+        final CAS aCas = aRequest.getCas();
         final int aBegin = aRequest.getBegin();
         final int aEnd = aRequest.getEnd();
         Type type = getType(aCas, aAdapter.getAnnotationTypeName());
@@ -193,10 +192,9 @@ public class SpanOverlapBehavior
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
-        CAS cas = aJCas.getCas();
-        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         AnnotationFS prevFS = null;
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         
@@ -214,7 +212,7 @@ public class SpanOverlapBehavior
             // Since the annotations are sorted, we can easily find stacked annotation by scanning
             // through the entire list and checking if two adjacent annotations have the same
             // offsets
-            for (AnnotationFS fs : select(cas, type)) {
+            for (AnnotationFS fs : select(aCas, type)) {
                 if (prevFS != null && prevFS.getBegin() == fs.getBegin()
                         && prevFS.getEnd() == fs.getEnd()) {
                     messages.add(Pair.of(LogMessage.error(this, "Stacked annotation at [%d-%d]",

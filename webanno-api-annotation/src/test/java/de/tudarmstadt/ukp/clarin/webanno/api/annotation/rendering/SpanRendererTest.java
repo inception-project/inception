@@ -91,7 +91,7 @@ public class SpanRendererTest
                 asList(new SpanCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
-        sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
@@ -119,7 +119,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
             VDocument vdoc = new VDocument();
-            sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments())
                     .usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
@@ -130,7 +130,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
             VDocument vdoc = new VDocument();
-            sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments())
                     .usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
@@ -141,7 +141,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
             VDocument vdoc = new VDocument();
-            sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments())
                     .usingFieldByFieldElementComparator()
                     .isEmpty();
@@ -150,7 +150,7 @@ public class SpanRendererTest
         {
             neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
             VDocument vdoc = new VDocument();
-            sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
             assertThat(vdoc.comments())
                     .usingFieldByFieldElementComparator()
                     .isEmpty();

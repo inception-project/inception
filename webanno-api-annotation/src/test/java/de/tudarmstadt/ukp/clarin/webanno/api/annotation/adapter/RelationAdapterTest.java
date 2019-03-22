@@ -141,7 +141,7 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        AnnotationFS dep = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
 
         assertThat(FSUtil.getFeature(dep, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
@@ -172,7 +172,7 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("multiple sentences");
     }
@@ -199,10 +199,11 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         depLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -230,7 +231,7 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        AnnotationFS dep1 = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep1 = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
@@ -260,29 +261,30 @@ public class RelationAdapterTest
 
         // First annotation should work
         depLayer.setOverlapMode(ANY_OVERLAP);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         // Adding another annotation at the same place DOES NOT work
         depLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("no overlap or stacking");
 
         depLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("stacking is not allowed");
         
         // Adding another annotation at the same place DOES work
         depLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
-        assertThatCode(() -> sut.add(document, username, source, target, jcas, 0, 
+        assertThatCode(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .doesNotThrowAnyException();
 
         depLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
-        assertThatCode(() -> sut.add(document, username, source, target, jcas, 0, 
+        assertThatCode(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .doesNotThrowAnyException();
     }
@@ -309,29 +311,31 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(1);
 
         depLayer.setOverlapMode(ANY_OVERLAP);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         depLayer.setOverlapMode(ANY_OVERLAP);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         depLayer.setOverlapMode(STACKING_ONLY);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         depLayer.setOverlapMode(NO_OVERLAP);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
 
         depLayer.setOverlapMode(OVERLAP_ONLY);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));

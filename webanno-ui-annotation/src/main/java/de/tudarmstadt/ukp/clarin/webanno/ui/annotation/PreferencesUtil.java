@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 /**
  * This class contains Utility methods that can be used in Project settings
@@ -62,7 +63,10 @@ public class PreferencesUtil
         // set layers according to preferences
         aState.setAnnotationLayers(aAnnotationService
                 .listAnnotationLayer(aState.getProject()).stream()
-                .filter(l -> l.isEnabled())// only allow enabled layers
+                // Token layer cannot be selected!
+                .filter(l -> !Token.class.getName().equals(l.getName()))
+                // Only allow enabled layers
+                .filter(l -> l.isEnabled()) 
                 .filter(l -> !preference.getHiddenAnnotationLayerIds().contains(l.getId()))
                 .collect(Collectors.toList()));
         

@@ -44,13 +44,13 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import de.tudarmstadt.ukp.clarin.webanno.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
+import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiWriter;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 @RunWith(value = Parameterized.class)
@@ -100,12 +100,14 @@ public class WebAnnoTsv3XReaderWriterRoundTripTest
         AnalysisEngineDescription tsvWriter = createEngineDescription(WebannoTsv3XWriter.class,
                 merged,
                 WebannoTsv3XWriter.PARAM_TARGET_LOCATION, targetFolder,
-                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true);
+                WebannoTsv3XWriter.PARAM_STRIP_EXTENSION, true,
+                WebannoTsv3XWriter.PARAM_OVERWRITE, true);
 
         AnalysisEngineDescription xmiWriter = createEngineDescription(XmiWriter.class,
                 merged,
                 XmiWriter.PARAM_TARGET_LOCATION, targetFolder,
-                XmiWriter.PARAM_STRIP_EXTENSION, true);
+                XmiWriter.PARAM_STRIP_EXTENSION, true,
+                XmiWriter.PARAM_OVERWRITE, true);
 
         SimplePipeline.runPipeline(reader, checker, tsvWriter, xmiWriter);
         

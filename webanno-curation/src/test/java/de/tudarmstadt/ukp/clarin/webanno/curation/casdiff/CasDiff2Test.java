@@ -17,7 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.getCohenKappaAgreement;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffTestUtils.HOST_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffTestUtils.createMultiLinkWithRoleTestTypeSytem;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffTestUtils.makeLinkFS;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffTestUtils.makeLinkHostFS;
 import static java.util.Arrays.asList;
+import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.junit.Assert.assertEquals;
 
@@ -67,7 +73,7 @@ public class CasDiff2Test
         
         List<DiffAdapter> diffAdapters = new ArrayList<>();
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
 
         DiffResult result = CasDiff2.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
@@ -85,10 +91,10 @@ public class CasDiff2Test
     {
         String text = "";
         
-        JCas user1Cas = JCasFactory.createJCas();
+        CAS user1Cas = JCasFactory.createJCas().getCas();
         user1Cas.setDocumentText(text);
         
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1Cas));
 
         List<String> entryTypes = asList(Token.class.getName());
@@ -110,13 +116,13 @@ public class CasDiff2Test
     {
         String text = "";
         
-        JCas user1Cas = JCasFactory.createJCas();
+        CAS user1Cas = JCasFactory.createJCas().getCas();
         user1Cas.setDocumentText(text);
 
-        JCas user2Cas = JCasFactory.createJCas();
+        CAS user2Cas = JCasFactory.createJCas().getCas();
         user2Cas.setDocumentText(text);
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1Cas));
         casByUser.put("user2", asList(user2Cas));
 
@@ -145,27 +151,27 @@ public class CasDiff2Test
     {
         String text = "";
         
-        JCas user1Cas1 = null;
+        CAS user1Cas1 = null;
 
-        JCas user1Cas2 = null;
+        CAS user1Cas2 = null;
 
-        JCas user1Cas3 = JCasFactory.createJCas();
+        CAS user1Cas3 = JCasFactory.createJCas().getCas();
         user1Cas3.setDocumentText(text);
 
-        JCas user1Cas4 = JCasFactory.createJCas();
+        CAS user1Cas4 = JCasFactory.createJCas().getCas();
         user1Cas4.setDocumentText(text);
 
-        JCas user2Cas1 = JCasFactory.createJCas();
+        CAS user2Cas1 = JCasFactory.createJCas().getCas();
         user2Cas1.setDocumentText(text);
 
-        JCas user2Cas2 = null;
+        CAS user2Cas2 = null;
 
-        JCas user2Cas3 = null;
+        CAS user2Cas3 = null;
 
-        JCas user2Cas4 = JCasFactory.createJCas();
+        CAS user2Cas4 = JCasFactory.createJCas().getCas();
         user2Cas4.setDocumentText(text);
         
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(user1Cas1, user1Cas2, user1Cas3, user1Cas4));
         casByUser.put("user2", asList(user2Cas1, user2Cas2, user2Cas3, user2Cas4));
 
@@ -191,7 +197,7 @@ public class CasDiff2Test
     public void noDifferencesPosTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -218,7 +224,7 @@ public class CasDiff2Test
     public void noDifferencesDependencyTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -245,7 +251,7 @@ public class CasDiff2Test
     public void noDifferencesPosDependencyTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/noDifferences/data.conll",
                 "casdiff/noDifferences/data.conll");
 
@@ -276,7 +282,7 @@ public class CasDiff2Test
     public void singleDifferencesTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/singleSpanDifference/user1.conll",
                 "casdiff/singleSpanDifference/user2.conll");
 
@@ -315,10 +321,10 @@ public class CasDiff2Test
         pos3.setPosValue("test");
         pos3.addToIndexes();
         
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1));
-        casByUser.put("user2", asList(user2));
-        casByUser.put("user3", asList(user3));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1.getCas()));
+        casByUser.put("user2", asList(user2.getCas()));
+        casByUser.put("user3", asList(user3.getCas()));
         
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -355,10 +361,10 @@ public class CasDiff2Test
         POS pos3 = new POS(user3, 0, 4);
         pos3.addToIndexes();
         
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1));
-        casByUser.put("user2", asList(user2));
-        casByUser.put("user3", asList(user3));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1.getCas()));
+        casByUser.put("user2", asList(user2.getCas()));
+        casByUser.put("user3", asList(user3.getCas()));
         
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -401,9 +407,9 @@ public class CasDiff2Test
         p2.addToIndexes();
         
         
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(user1));
-        casByUser.put("user2", asList(user2));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(user1.getCas()));
+        casByUser.put("user2", asList(user2.getCas()));
         
         List<String> entryTypes = asList(POS.class.getName());
 
@@ -441,7 +447,7 @@ public class CasDiff2Test
     public void someDifferencesTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/someDifferences/user1.conll",
                 "casdiff/someDifferences/user2.conll");
 
@@ -468,7 +474,7 @@ public class CasDiff2Test
     public void singleNoDifferencesTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/singleSpanNoDifference/data.conll",
                 "casdiff/singleSpanNoDifference/data.conll");
 
@@ -496,7 +502,7 @@ public class CasDiff2Test
     public void relationDistanceTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/relationDistance/user1.conll",
                 "casdiff/relationDistance/user2.conll");
 
@@ -524,7 +530,7 @@ public class CasDiff2Test
     public void spanLabelLabelTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/spanLabel/user1.conll",
                 "casdiff/spanLabel/user2.conll");
 
@@ -552,7 +558,7 @@ public class CasDiff2Test
     public void relationLabelTest()
         throws Exception
     {
-        Map<String, List<JCas>> casByUser = DiffUtils.load(
+        Map<String, List<CAS>> casByUser = DiffTestUtils.load(
                 "casdiff/relationLabel/user1.conll",
                 "casdiff/relationLabel/user2.conll");
 
@@ -639,9 +645,9 @@ public class CasDiff2Test
             casB.addFsToIndexes(fs1B);
         }
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
         List<String> entryTypes = asList("webanno.custom.Relation");
 
@@ -673,21 +679,21 @@ public class CasDiff2Test
     public void multiLinkWithRoleNoDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));        
-        DiffUtils.makeLinkHostFS(jcasA, 10, 10, DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));        
+        makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 0, 0));
-        DiffUtils.makeLinkHostFS(jcasB, 10, 10, DiffUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
+        makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -701,7 +707,7 @@ public class CasDiff2Test
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffUtils.HOST_TYPE, "links",
+        AgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -715,19 +721,19 @@ public class CasDiff2Test
     public void multiLinkWithRoleLabelDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));     
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));     
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot2", 0, 0));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, DiffTestUtils.makeLinkFS(jcasB, "slot2", 0, 0));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -741,7 +747,7 @@ public class CasDiff2Test
         assertEquals(2, diff.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffUtils.HOST_TYPE, "links",
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffTestUtils.HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -755,19 +761,19 @@ public class CasDiff2Test
     public void multiLinkWithRoleLabelDifferenceTest2()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));     
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));     
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot2", 0, 0));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -781,7 +787,7 @@ public class CasDiff2Test
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffUtils.HOST_TYPE, "links",
+        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffTestUtils.HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -795,19 +801,19 @@ public class CasDiff2Test
     public void multiLinkWithRoleTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));      
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));      
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, DiffUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -821,7 +827,7 @@ public class CasDiff2Test
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
 
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, DiffUtils.HOST_TYPE, "links",
+        AgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -835,22 +841,22 @@ public class CasDiff2Test
     public void multiLinkWithRoleMultiTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, 
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0),
-                DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));      
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, 
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0),
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 10, 10));      
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, 
-                DiffUtils.makeLinkFS(jcasB, "slot1", 10, 10));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, 
+                DiffTestUtils.makeLinkFS(jcasB, "slot1", 10, 10));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
@@ -878,22 +884,22 @@ public class CasDiff2Test
     public void multiLinkWithRoleMultiTargetDifferenceTest2()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasA, 0, 0, 
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0),
-                DiffUtils.makeLinkFS(jcasA, "slot1", 10, 10));      
+        JCas jcasA = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasA, 0, 0, 
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0),
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 10, 10));      
 
-        JCas jcasB = JCasFactory.createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem());
-        DiffUtils.makeLinkHostFS(jcasB, 0, 0, 
-                DiffUtils.makeLinkFS(jcasB, "slot2", 10, 10));
+        JCas jcasB = JCasFactory.createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem());
+        DiffTestUtils.makeLinkHostFS(jcasB, 0, 0, 
+                DiffTestUtils.makeLinkFS(jcasB, "slot2", 10, 10));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(jcasA));
-        casByUser.put("user2", asList(jcasB));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(jcasA.getCas()));
+        casByUser.put("user2", asList(jcasB.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        SpanDiffAdapter adapter = new SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 

@@ -139,7 +139,7 @@ public class RelationRendererTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
-        AnnotationFS dep = adapter.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep = adapter.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         
         depLayer.setCrossSentence(false);
@@ -147,7 +147,7 @@ public class RelationRendererTest
                 asList(new RelationCrossSentenceBehavior()));
         
         VDocument vdoc = new VDocument();
-        sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
@@ -177,9 +177,9 @@ public class RelationRendererTest
         POS target = posAnnotations.get(1);
 
         depLayer.setAllowStacking(true);
-        AnnotationFS dep1 = adapter.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep1 = adapter.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
-        AnnotationFS dep2 = adapter.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep2 = adapter.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());        
         
         depLayer.setAllowStacking(false);
@@ -187,7 +187,7 @@ public class RelationRendererTest
                 asList(new RelationOverlapBehavior()));
         
         VDocument vdoc = new VDocument();
-        sut.render(jcas, asList(), vdoc, 0, jcas.getDocumentText().length());
+        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()

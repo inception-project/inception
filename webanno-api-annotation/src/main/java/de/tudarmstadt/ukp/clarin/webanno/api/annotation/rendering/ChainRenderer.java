@@ -28,12 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -69,7 +69,7 @@ public class ChainRenderer
     }
 
     @Override
-    public void render(JCas aJcas, List<AnnotationFeature> aFeatures, VDocument aResponse,
+    public void render(CAS aCas, List<AnnotationFeature> aFeatures, VDocument aResponse,
             int windowBeginOffset, int windowEndOffset)
     {
         List<AnnotationFeature> visibleFeatures = aFeatures.stream()
@@ -92,7 +92,7 @@ public class ChainRenderer
         // will crash.
 
         ChainAdapter typeAdapter = getTypeAdapter();
-        Type chainType = CasUtil.getType(aJcas.getCas(), typeAdapter.getChainTypeName());
+        Type chainType = CasUtil.getType(aCas, typeAdapter.getChainTypeName());
         Feature chainFirst = chainType.getFeatureByBaseName(typeAdapter.getChainFirstFeatureName());
 
         // Sorted index mapping annotations to the corresponding rendered spans
@@ -100,7 +100,7 @@ public class ChainRenderer
         
         int colorIndex = 0;
         // Iterate over the chains
-        for (FeatureStructure chainFs : selectFS(aJcas.getCas(), chainType)) {
+        for (FeatureStructure chainFs : selectFS(aCas, chainType)) {
             AnnotationFS linkFs = (AnnotationFS) chainFs.getFeatureValue(chainFirst);
             AnnotationFS prevLinkFs = null;
 

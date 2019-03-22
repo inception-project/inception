@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.MarkupContainer;
-import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.IModel;
 import org.wicketstuff.select2.Response;
 import org.wicketstuff.select2.Select2Choice;
@@ -70,7 +70,7 @@ public class Select2TextFeatureEditor
     }
 
     @Override
-    protected AbstractTextComponent createInputField()
+    protected FormComponent createInputField()
     {
         Select2Choice<String> select = new Select2Choice<>("value");
         select.getSettings().setTags(true);

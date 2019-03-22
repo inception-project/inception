@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.FSUtil.getFeature;
@@ -27,10 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -83,10 +83,8 @@ public class NoMultipleIncomingRelationsCheck
 
                 for (AnnotationFS rel : select(aCas, type)) {
 
-                    AnnotationFS source = getFeature(rel, WebAnnoConst.FEAT_REL_SOURCE,
-                            AnnotationFS.class);
-                    AnnotationFS target = getFeature(rel, WebAnnoConst.FEAT_REL_TARGET,
-                            AnnotationFS.class);
+                    AnnotationFS source = getFeature(rel, FEAT_REL_SOURCE, AnnotationFS.class);
+                    AnnotationFS target = getFeature(rel, FEAT_REL_TARGET, AnnotationFS.class);
 
                     AnnotationFS existingSource = incoming.get(target);
                     if (existingSource != null) {
@@ -95,13 +93,10 @@ public class NoMultipleIncomingRelationsCheck
                         // easier
                         Optional<Integer> sentenceNumber = Optional.empty();
                         try {
-                            JCas jcas;
-                            jcas = target.getCAS().getJCas();
-
-                            sentenceNumber = Optional
-                                    .of(WebAnnoCasUtil.getSentenceNumber(jcas, target.getBegin()));
+                            sentenceNumber = Optional.of(WebAnnoCasUtil
+                                    .getSentenceNumber(target.getCAS(), target.getBegin()));
                         }
-                        catch (CASException | IndexOutOfBoundsException e) {
+                        catch (IndexOutOfBoundsException e) {
                             // ignore this error and don't output sentence number
                             sentenceNumber = Optional.empty();
                         }

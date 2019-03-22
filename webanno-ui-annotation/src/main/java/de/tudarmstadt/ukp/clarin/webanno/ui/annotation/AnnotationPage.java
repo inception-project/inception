@@ -25,7 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorSt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +36,8 @@ import java.util.Map;
 
 import javax.persistence.NoResultException;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
@@ -338,7 +340,7 @@ public class AnnotationPage
             }
             
             @Override
-            public JCas getEditorCas() throws IOException
+            public CAS getEditorCas() throws IOException
             {
                 return AnnotationPage.this.getEditorCas();
             }
@@ -412,7 +414,7 @@ public class AnnotationPage
     }
 
     @Override
-    public JCas getEditorCas()
+    public CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -459,8 +461,8 @@ public class AnnotationPage
     {
         AnnotatorState state = getModelObject();
         
-        JCas jcas = getEditorCas();
-        List<Sentence> sentences = new ArrayList<>(select(jcas, Sentence.class));
+        CAS cas = getEditorCas();
+        List<AnnotationFS> sentences = new ArrayList<>(select(cas, getType(cas, Sentence.class)));
         int selectedSentence = gotoPageTextField.getModelObject();
         selectedSentence = Math.min(selectedSentence, sentences.size());
         gotoPageTextField.setModelObject(selectedSentence);
@@ -483,11 +485,11 @@ public class AnnotationPage
         try {
             AnnotatorState state = getModelObject();
             
-            JCas jCas = getEditorCas();
+            CAS cas = getEditorCas();
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(jCas, Sentence.class,
+            Sentence sentence = selectByAddr(cas, Sentence.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             
@@ -540,7 +542,7 @@ public class AnnotationPage
     
     protected void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
-        LOG.info("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
+        LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
         
@@ -553,13 +555,13 @@ public class AnnotationPage
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the CAS
-            JCas editorCas = documentService.readAnnotationCas(annotationDocument);
+            CAS editorCas = documentService.readAnnotationCas(annotationDocument);
 
             // Update the annotation document CAS
-            annotationService.upgradeCas(editorCas.getCas(), annotationDocument);
+            annotationService.upgradeCas(editorCas, annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas.getCas().getJCas(), annotationDocument,
+            documentService.writeAnnotationCas(editorCas, annotationDocument,
                     false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -622,7 +624,7 @@ public class AnnotationPage
             handleException(aTarget, e);
         }
 
-        LOG.info("END LOAD_DOCUMENT_ACTION");
+        LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
     
     @Override

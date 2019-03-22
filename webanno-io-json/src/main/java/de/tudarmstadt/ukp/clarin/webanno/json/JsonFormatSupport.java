@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.dkpro.core.io.json.JsonWriter;
 
 @Component
 public class JsonFormatSupport

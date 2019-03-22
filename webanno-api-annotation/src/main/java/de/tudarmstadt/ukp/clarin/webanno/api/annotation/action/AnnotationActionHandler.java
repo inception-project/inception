@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
 import java.io.IOException;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -28,19 +28,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 
 public interface AnnotationActionHandler
 {
-    void actionCreateOrUpdate(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Create annotation on the next token for forward annotation
      */
-    void actionCreateForward(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionCreateForward(AjaxRequestTarget aTarget, CAS aCas)
         throws IOException, AnnotationException;
 
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      */
-    void actionSelect(AjaxRequestTarget aTarget, JCas aJCas)
+    void actionSelect(AjaxRequestTarget aTarget, CAS aCas)
         throws AnnotationException;
 
     /**
@@ -64,10 +64,10 @@ public interface AnnotationActionHandler
     /**
      * Fill the currently armed slot with the given annotation.
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, JCas aJCas, int aBegin, int aEnd,
+    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aBegin, int aEnd,
             VID paramId)
         throws IOException, AnnotationException;
     
-    JCas getEditorCas()
+    CAS getEditorCas()
             throws IOException;
 }

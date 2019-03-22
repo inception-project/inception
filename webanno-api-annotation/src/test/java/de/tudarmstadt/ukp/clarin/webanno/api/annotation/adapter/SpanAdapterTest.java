@@ -103,7 +103,7 @@ public class SpanAdapterTest
                 behaviors);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("covers multiple sentences");
     }
@@ -120,11 +120,11 @@ public class SpanAdapterTest
 
         // Add two annotations
         neLayer.setCrossSentence(true);
-        sut.add(document, username, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, jcas.getCas(), 0, jcas.getDocumentText().length());
         
         //Validation fails
         neLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -141,25 +141,27 @@ public class SpanAdapterTest
 
         // First time should work
         neLayer.setOverlapMode(ANY_OVERLAP);
-        sut.add(document, username, jcas, 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
         
         // Adding another annotation at the same place DOES NOT work
         neLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("no overlap or stacking");
         
         neLayer.setOverlapMode(OVERLAP_ONLY);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not allowed");
         
         // Adding another annotation at the same place DOES work
         neLayer.setOverlapMode(STACKING_ONLY);
-        assertThatCode(() -> sut.add(document, username, jcas, 0, 1)).doesNotThrowAnyException();
+        assertThatCode(() -> sut.add(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
         
         neLayer.setOverlapMode(ANY_OVERLAP);
-        assertThatCode(() -> sut.add(document, username, jcas, 0, 1)).doesNotThrowAnyException();
+        assertThatCode(() -> sut.add(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -173,31 +175,31 @@ public class SpanAdapterTest
 
         // Add two annotations
         neLayer.setOverlapMode(ANY_OVERLAP);
-        sut.add(document, username, jcas, 0, 1);
-        sut.add(document, username, jcas, 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
+        sut.add(document, username, jcas.getCas(), 0, 1);
 
         //Validation succeeds
         neLayer.setOverlapMode(ANY_OVERLAP);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         neLayer.setOverlapMode(STACKING_ONLY);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         //Validation fails
         neLayer.setOverlapMode(OVERLAP_ONLY);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
 
         neLayer.setOverlapMode(NO_OVERLAP);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
@@ -214,24 +216,26 @@ public class SpanAdapterTest
 
         // First time should work - we annotate the whole word "This"
         neLayer.setOverlapMode(ANY_OVERLAP);
-        sut.add(document, username, jcas, 0, 4);
+        sut.add(document, username, jcas.getCas(), 0, 4);
         
         // Adding another annotation at the same place DOES NOT work
         neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("no overlap or stacking");
         
         neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, jcas, 0, 1))
+                .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not allowed");
         
         // Adding another annotation at the same place DOES work
         neLayer.setOverlapMode(STACKING_ONLY);
-        assertThatCode(() -> sut.add(document, username, jcas, 0, 1)).doesNotThrowAnyException();
+        assertThatCode(() -> sut.add(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
         
         neLayer.setOverlapMode(ANY_OVERLAP);
-        assertThatCode(() -> sut.add(document, username, jcas, 0, 1)).doesNotThrowAnyException();
+        assertThatCode(() -> sut.add(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
     }
 }

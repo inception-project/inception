@@ -20,9 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.message;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -33,7 +34,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -153,24 +153,23 @@ public class BratRendererTest
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
                 TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
-
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
 
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
         preRenderer.render(vdoc, state.getWindowBeginOffset(), state.getWindowEndOffset(),
-                jCas, schemaService.listAnnotationLayer(project));
+                cas, schemaService.listAnnotationLayer(project));
 
         GetDocumentResponse response = new GetDocumentResponse();
-        BratRenderer.render(response, state, vdoc, jCas, schemaService);
+        BratRenderer.render(response, state, vdoc, cas, schemaService);
 
         JSONUtil.generatePrettyJson(response, new File(jsonFilePath));
 
-        assertThat(linesOf(new File("src/test/resources/output_cas_to_json_document_expected.json"),
-                "UTF-8")).isEqualTo(linesOf(new File(jsonFilePath), "UTF-8"));
+        assertThat(contentOf(
+                new File("src/test/resources/output_cas_to_json_document_expected.json"), UTF_8))
+                        .isEqualToNormalizingNewlines(contentOf(new File(jsonFilePath), UTF_8));
     }
 }

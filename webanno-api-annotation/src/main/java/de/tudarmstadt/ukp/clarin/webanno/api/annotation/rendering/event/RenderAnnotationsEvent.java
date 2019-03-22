@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -26,15 +26,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 public class RenderAnnotationsEvent
 {
     private final IPartialPageRequestHandler requestHandler;
-    private final JCas jcas;
+    private final CAS cas;
     private final AnnotatorState state;
     private final VDocument vdoc;
 
-    public RenderAnnotationsEvent(IPartialPageRequestHandler aRequestHandler, JCas aJCas,
+    public RenderAnnotationsEvent(IPartialPageRequestHandler aRequestHandler, CAS aCas,
             AnnotatorState aState, VDocument aVDoc)
     {
         requestHandler = aRequestHandler;
-        jcas = aJCas;
+        cas = aCas;
         state = aState;
         vdoc = aVDoc;
     }
@@ -44,9 +44,9 @@ public class RenderAnnotationsEvent
         return requestHandler;
     }
     
-    public JCas getJCas()
+    public CAS getCas()
     {
-        return jcas;
+        return cas;
     }
 
     public AnnotatorState getState()

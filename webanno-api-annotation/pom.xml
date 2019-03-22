@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.3-SNAPSHOT</version>
+    <version>3.6.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-api-annotation</artifactId>
   <name>WebAnno - Core - Annotation API</name>
@@ -61,6 +61,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
     </dependency>
 
     <dependency>

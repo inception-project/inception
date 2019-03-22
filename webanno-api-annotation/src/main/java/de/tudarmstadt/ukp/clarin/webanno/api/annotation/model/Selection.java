@@ -21,8 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.io.Serializable;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,12 +68,17 @@ public class Selection
         
         LOG.debug("Arc: {}", this);
     }
+
+    public void selectSpan(AnnotationFS aFS)
+    {
+        selectSpan(new VID(aFS), aFS.getCAS(), aFS.getBegin(), aFS.getEnd());
+    }
     
-    public void selectSpan(VID aVid, JCas aJCas, int aBegin, int aEnd)
+    public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
     {
         arc = false;
         selectedAnnotationId = aVid;
-        text = aJCas.getDocumentText().substring(aBegin, aEnd);
+        text = aCAS.getDocumentText().substring(aBegin, aEnd);
         beginOffset = aBegin;
         endOffset = aEnd;
         
@@ -85,9 +90,9 @@ public class Selection
         LOG.debug("Span: {}", this);
     }
 
-    public void selectSpan(JCas aJCas, int aBegin, int aEnd)
+    public void selectSpan(CAS aCas, int aBegin, int aEnd)
     {
-        selectSpan(VID.NONE_ID, aJCas, aBegin, aEnd);
+        selectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
     }
     
     public void clear()

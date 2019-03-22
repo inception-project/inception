@@ -109,7 +109,8 @@ public class RelationLayerSupport
     @Override
     public void generateTypes(TypeSystemDescription aTsd, AnnotationLayer aLayer)
     {
-        TypeDescription td = aTsd.addType(aLayer.getName(), "", TYPE_NAME_ANNOTATION);
+        TypeDescription td = aTsd.addType(aLayer.getName(), aLayer.getDescription(),
+                TYPE_NAME_ANNOTATION);
         AnnotationLayer attachType = aLayer.getAttachType();
 
         td.addFeature(FEAT_REL_TARGET, "", attachType.getName());

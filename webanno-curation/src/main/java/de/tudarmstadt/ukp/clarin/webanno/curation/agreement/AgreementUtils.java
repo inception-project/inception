@@ -39,12 +39,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.ArrayFS;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcPosition;
@@ -114,7 +114,7 @@ public class AgreementUtils
     }
     
     public static PairwiseAnnotationResult getPairwiseCohenKappaAgreement(DiffResult aDiff,
-            String aType, String aFeature, Map<String, List<JCas>> aCasMap)
+            String aType, String aFeature, Map<String, List<CAS>> aCasMap)
     {
         return getPairwiseAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff,
                 aType, aFeature, aCasMap);
@@ -122,15 +122,15 @@ public class AgreementUtils
 
     public static PairwiseAnnotationResult getPairwiseAgreement(
             ConcreteAgreementMeasure aMeasure, boolean aExcludeIncomplete,
-            DiffResult aDiff, String aType, String aFeature, Map<String, List<JCas>> aCasMap)
+            DiffResult aDiff, String aType, String aFeature, Map<String, List<CAS>> aCasMap)
     {
         PairwiseAnnotationResult result = new PairwiseAnnotationResult();
-        List<Entry<String, List<JCas>>> entryList = new ArrayList<>(aCasMap.entrySet());
+        List<Entry<String, List<CAS>>> entryList = new ArrayList<>(aCasMap.entrySet());
         for (int m = 0; m < entryList.size(); m++) {
             for (int n = 0; n < entryList.size(); n++) {
                 // Triangle matrix mirrored
                 if (n < m) {
-                    Map<String, List<JCas>> pairwiseCasMap = new LinkedHashMap<>();
+                    Map<String, List<CAS>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
                     AgreementResult res = getAgreement(aMeasure, aExcludeIncomplete, aDiff, aType,
@@ -143,7 +143,7 @@ public class AgreementUtils
     }
 
     public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
-            String aFeature, Map<String, List<JCas>> aCasMap)
+            String aFeature, Map<String, List<CAS>> aCasMap)
     {
         return getAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff, aType,
                 aFeature, aCasMap);
@@ -151,7 +151,7 @@ public class AgreementUtils
 
     public static AgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
             boolean aExcludeIncomplete, DiffResult aDiff, String aType, String aFeature,
-            Map<String, List<JCas>> aCasMap)
+            Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.size() != 2) {
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
@@ -179,19 +179,19 @@ public class AgreementUtils
     }
     
     public static AgreementResult makeStudy(DiffResult aDiff, String aType, String aFeature,
-            boolean aExcludeIncomplete, Map<String, List<JCas>> aCasMap)
+            boolean aExcludeIncomplete, Map<String, List<CAS>> aCasMap)
     {
         return makeStudy(aDiff, aCasMap.keySet(), aType, aFeature, aExcludeIncomplete, true,
                 aCasMap);
     }
     
-    private static JCas findSomeCas(Map<String, List<JCas>> aCasMap)
+    private static CAS findSomeCas(Map<String, List<CAS>> aCasMap)
     {
-        for (List<JCas> l : aCasMap.values()) {
+        for (List<CAS> l : aCasMap.values()) {
             if (l != null) {
-                for (JCas jcas : l) {
-                    if (jcas != null) {
-                        return jcas;
+                for (CAS cas : l) {
+                    if (cas != null) {
+                        return cas;
                     }
                 }
             }
@@ -202,7 +202,7 @@ public class AgreementUtils
     
     private static AgreementResult makeStudy(DiffResult aDiff, Collection<String> aUsers,
             String aType, String aFeature, boolean aExcludeIncomplete, boolean aNullLabelsAsEmpty,
-            Map<String, List<JCas>> aCasMap)
+            Map<String, List<CAS>> aCasMap)
     {
         List<String> users = new ArrayList<>(aUsers);
         Collections.sort(users);
@@ -218,7 +218,7 @@ public class AgreementUtils
         // Check if the feature we are looking at is a primitive feature or a link feature
         // We do this by looking it up in the first available CAS. Mind that at this point all
         // CASes should have exactly the same typesystem.
-        JCas someCas = findSomeCas(aCasMap);
+        CAS someCas = findSomeCas(aCasMap);
         if (someCas == null) {
             // Well... there is NOTHING here!
             // All positions are irrelevant

@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -180,12 +181,6 @@ public class SlotFeatureSupport
     }
     
     @Override
-    public boolean isTagsetSupported(AnnotationFeature aFeature)
-    {
-        return true;
-    }
-    
-    @Override
     public void generateFeature(TypeSystemDescription aTSD, TypeDescription aTD,
             AnnotationFeature aFeature)
     {
@@ -194,9 +189,10 @@ public class SlotFeatureSupport
                 CAS.TYPE_NAME_TOP);
         linkTD.addFeature(aFeature.getLinkTypeRoleFeatureName(), "", CAS.TYPE_NAME_STRING);
         linkTD.addFeature(aFeature.getLinkTypeTargetFeatureName(), "", aFeature.getType());
+        
         // Link feature
-        aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_FS_ARRAY, linkTD.getName(),
-                false);
+        aTD.addFeature(aFeature.getName(), aFeature.getDescription(), CAS.TYPE_NAME_FS_ARRAY,
+                linkTD.getName(), false);
     }
     
     @Override
@@ -204,6 +200,32 @@ public class SlotFeatureSupport
     {
         Feature linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
         return wrapFeatureValue(aFeature, aFS.getCAS(), aFS.getFeatureValue(linkFeature));
+    }
+    
+    @Override
+    public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    {
+        if (
+                aValue instanceof List &&
+                aFeature.getTagset() != null
+        ) {
+            for (LinkWithRoleModel link : (List<LinkWithRoleModel>) aValue) {
+                if (!annotationService.existsTag(link.role, aFeature.getTagset())) {
+                    if (!aFeature.getTagset().isCreateTag()) {
+                        throw new IllegalArgumentException("[" + link.role
+                                + "] is not in the tag list. Please choose from the existing tags");
+                    }
+                    else {
+                        Tag selectedTag = new Tag();
+                        selectedTag.setName(link.role);
+                        selectedTag.setTagSet(aFeature.getTagset());
+                        annotationService.createTag(selectedTag);
+                    }
+                }
+            }
+        }
+        
+        FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
     
     @Override

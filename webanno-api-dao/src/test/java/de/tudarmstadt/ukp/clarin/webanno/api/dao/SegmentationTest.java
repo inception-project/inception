@@ -36,7 +36,7 @@ public class SegmentationTest
     {
         JCas jcas = JCasFactory.createText("I am one. I am two.", "en");
         
-        ImportExportServiceImpl.splitSentences(jcas);
+        ImportExportServiceImpl.splitSentences(jcas.getCas());
         
         assertEquals(asList("I am one.", "I am two."), toText(select(jcas, Sentence.class)));
     }
@@ -48,7 +48,7 @@ public class SegmentationTest
         new Sentence(jcas, 0, 9).addToIndexes();;
         new Sentence(jcas, 9, 18).addToIndexes();
         
-        ImportExportServiceImpl.tokenize(jcas);
+        ImportExportServiceImpl.tokenize(jcas.getCas());
         
         assertEquals(asList("i am one.", "i am two."), toText(select(jcas, Sentence.class)));
         assertEquals(asList("i", "am", "one", ".", "i", "am", "two", "."),

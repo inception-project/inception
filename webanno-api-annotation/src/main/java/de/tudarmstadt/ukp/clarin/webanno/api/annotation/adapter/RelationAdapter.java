@@ -32,7 +32,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
@@ -117,8 +116,8 @@ public class RelationAdapter
      *            the origin FS.
      * @param aTargetFs
      *            the target FS.
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aWindowBegin
      *            begin offset of the first visible sentence
      * @param aWindowEnd
@@ -128,10 +127,10 @@ public class RelationAdapter
      *             if the annotation could not be created/updated.
      */
     public AnnotationFS add(SourceDocument aDocument, String aUsername, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, JCas aJCas, int aWindowBegin, int aWindowEnd)
+            AnnotationFS aTargetFs, CAS aCas, int aWindowBegin, int aWindowEnd)
         throws AnnotationException
     {
-        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aJCas, aOriginFs,
+        return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aCas, aOriginFs,
                 aTargetFs, aWindowBegin, aWindowEnd));
     }
 
@@ -144,7 +143,7 @@ public class RelationAdapter
             request = behavior.onCreate(this, request);
         }
         
-        return createRelationAnnotation(request.getJcas().getCas(), request.getOriginFs(),
+        return createRelationAnnotation(request.getCas(), request.getOriginFs(),
                 request.getTargetFs());
     }
 
@@ -174,10 +173,10 @@ public class RelationAdapter
     }
 
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectByAddr(aJCas, FeatureStructure.class, aVid.getId());
-        aJCas.removeFsFromIndexes(fs);
+        FeatureStructure fs = selectByAddr(aCas, FeatureStructure.class, aVid.getId());
+        aCas.removeFsFromIndexes(fs);
     }
 
     public String getSourceFeatureName()
@@ -191,12 +190,12 @@ public class RelationAdapter
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         for (RelationLayerBehavior behavior : behaviors) {
             long startTime = currentTimeMillis();
-            messages.addAll(behavior.onValidate(this, aJCas));
+            messages.addAll(behavior.onValidate(this, aCas));
             log.trace("Validation for [{}] on [{}] took {}ms", behavior.getClass().getSimpleName(),
                     getLayer().getUiName(), currentTimeMillis() - startTime);
         }
