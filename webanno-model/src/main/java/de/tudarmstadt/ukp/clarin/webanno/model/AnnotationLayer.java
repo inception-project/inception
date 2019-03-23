@@ -453,7 +453,6 @@ public class AnnotationLayer
         validationMode = aValidationMode;
     }
 
-    @Deprecated
     public boolean isAllowStacking()
     {
         return asList(OverlapMode.ANY_OVERLAP, OverlapMode.STACKING_ONLY).contains(overlapMode);

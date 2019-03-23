@@ -31,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
 public class TypeSystemAnalysisTest
 {
@@ -51,7 +52,7 @@ public class TypeSystemAnalysisTest
         spanLayer.setUiName("Span");
         spanLayer.setType(WebAnnoConst.SPAN_TYPE);
         spanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        spanLayer.setAllowStacking(true);
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         spanLayer.setCrossSentence(true);
         
         AnnotationFeature stringFeature = new AnnotationFeature(
@@ -84,7 +85,7 @@ public class TypeSystemAnalysisTest
         slotSpanLayer.setUiName("SlotSpan");
         slotSpanLayer.setType(WebAnnoConst.SPAN_TYPE);
         slotSpanLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        slotSpanLayer.setAllowStacking(true);
+        slotSpanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         slotSpanLayer.setCrossSentence(true);
         
         AnnotationFeature freeSlot = new AnnotationFeature(
@@ -115,7 +116,7 @@ public class TypeSystemAnalysisTest
         relationLayer.setUiName("Relation");
         relationLayer.setType(WebAnnoConst.RELATION_TYPE);
         relationLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        relationLayer.setAllowStacking(true);
+        relationLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         relationLayer.setCrossSentence(true);
 
         AnnotationLayer relationTargetLayer = new AnnotationLayer();
@@ -123,7 +124,7 @@ public class TypeSystemAnalysisTest
         relationTargetLayer.setUiName("RelationTarget");
         relationTargetLayer.setType(WebAnnoConst.SPAN_TYPE);
         relationTargetLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        relationTargetLayer.setAllowStacking(true);
+        relationTargetLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         relationTargetLayer.setCrossSentence(true);
 
         AnnotationFeature stringFeature = new AnnotationFeature(
@@ -157,7 +158,7 @@ public class TypeSystemAnalysisTest
         chainLayer.setUiName("Chain");
         chainLayer.setType(WebAnnoConst.CHAIN_TYPE);
         chainLayer.setAnchoringMode(AnchoringMode.CHARACTERS);
-        chainLayer.setAllowStacking(true);
+        chainLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         chainLayer.setCrossSentence(true);
 
         AnnotationFeature referenceRelationFeature = new AnnotationFeature(

@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -295,7 +296,7 @@ public class CopyAnnotationTest
         AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
-        neLayer.setAllowStacking(true);
+        neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
 
         CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(NamedEntity.class.getTypeName());
@@ -318,7 +319,7 @@ public class CopyAnnotationTest
     public void copySpanWithSlotNoStackingTest()
         throws Exception
     {
-        slotLayer.setAllowStacking(false);
+        slotLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
         
         JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
@@ -347,7 +348,7 @@ public class CopyAnnotationTest
         state.setUser(new User());
         
         slotLayer.setAnchoringMode(TOKENS);
-        slotLayer.setAllowStacking(true);
+        slotLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         
         JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
         Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);

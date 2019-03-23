@@ -44,7 +44,7 @@ public enum OverlapMode
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:  AAAA
      *          BBBB
      *      
@@ -59,12 +59,12 @@ public enum OverlapMode
      * 
      * BAD: AAAA
      *       BB
-     * </pre></code>
+     * </code></pre>
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:   
      *        ┏━━ A ━━┓
      *       XXXX [XXX] XXXX
@@ -85,7 +85,7 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </pre></code>
+     * </code></pre>
      */
     NO_OVERLAP("none"),
 
@@ -94,7 +94,7 @@ public enum OverlapMode
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:  AAAA
      *      BBBB
      *      
@@ -109,13 +109,13 @@ public enum OverlapMode
      * 
      * BAD: AAAA
      *       BB
-     * </pre></code>
+     * </code></pre>
      * 
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:   
      *        ┏━━ A ━━┓
      *       XXXX [XXX] XXXX
@@ -129,18 +129,18 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </pre></code>
+     * </code></pre>
      */
     STACKING_ONLY("stackingOnly"),
 
     /**
      * Overlap only - overlapping annotations must <b>not</b> be at the same position. For
-     * {@link AnchoringMode#SINGLE_TOKEN}, this is equivalent to {@link #NONE} since non-stacking
-     * overlaps are not possible.
+     * {@link AnchoringMode#SINGLE_TOKEN}, this is equivalent to {@link #NO_OVERLAP} since
+     * non-stacking overlaps are not possible.
      * <p>
      * For span layers (the examples below do <b>not</b> include all possible overlapping cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:  AAAA
      *          BBBB
      *      
@@ -155,13 +155,13 @@ public enum OverlapMode
      *       
      * BAD: AAAA
      *      BBBB
-     * </pre></code>
+     * </code></pre>
      * 
      * <p>
      * For relation layers (the examples below do <b>not</b> include all possible overlapping
      * cases):
      * </p>
-     * <code><pre>
+     * <pre><code>
      * OK:    ┏ A ┓
      *       XXXX XXXX [XXX]
      *       
@@ -179,7 +179,7 @@ public enum OverlapMode
      *       
      *        ┏━━ B ━━┓
      *       XXXX [XXX] XXXX
-     * </pre></code>
+     * </code></pre>
      */
     OVERLAP_ONLY("overlapOnly"),
 
