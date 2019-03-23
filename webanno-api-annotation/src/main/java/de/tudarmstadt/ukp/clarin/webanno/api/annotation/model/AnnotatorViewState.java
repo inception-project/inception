@@ -164,7 +164,7 @@ public interface AnnotatorViewState
             throw new IllegalStateException("This is first page!");
         }
 
-        Sentence sentence = selectByAddr(aCas, Sentence.class, firstSentenceAddress);
+        AnnotationFS sentence = selectByAddr(aCas, Sentence.class, firstSentenceAddress);
         setFirstVisibleUnit(sentence);
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
     }
@@ -177,7 +177,7 @@ public interface AnnotatorViewState
             throw new IllegalStateException("This is last page!");
         }
 
-        Sentence sentence = selectByAddr(aCas, Sentence.class,
+        AnnotationFS sentence = selectByAddr(aCas, Sentence.class,
                 lastDisplayWindowBeginingSentenceAddress);
         setFirstVisibleUnit(sentence);
         setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
@@ -239,7 +239,7 @@ public interface AnnotatorViewState
     default void moveForward(CAS aCas)
     {
         // Fetch the first sentence on screen
-        Sentence sentence = selectByAddr(aCas, Sentence.class, getFirstVisibleUnitAddress());
+        AnnotationFS sentence = selectByAddr(aCas, Sentence.class, getFirstVisibleUnitAddress());
         // Find the following one
         int address = getNextSentenceAddress(aCas, sentence);
         // Move to it

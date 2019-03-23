@@ -147,15 +147,18 @@ public class WebAnnoCasUtil
         return selectByAddr(aCas, AnnotationFS.class, aAddress);
     }
 
-    public static FeatureStructure selectByAddr(CAS aCas, int aAddress)
+    public static FeatureStructure selectFsByAddr(CAS aCas, int aAddress)
     {
-        return selectByAddr(aCas, FeatureStructure.class, aAddress);
+        return aCas.getLowLevelCAS().ll_getFSForRef(aAddress);
     }
 
-    public static <T extends FeatureStructure> T selectByAddr(CAS aCas, Class<T> aType,
+    public static <T extends AnnotationFS> AnnotationFS selectByAddr(CAS aCas, Class<T> aType,
             int aAddress)
     {
-        return aType.cast(aCas.getLowLevelCAS().ll_getFSForRef(aAddress));
+        // Check that the type passed is actually an annotation type
+        CasUtil.getAnnotationType(aCas, aType);
+        
+        return aCas.getLowLevelCAS().ll_getFSForRef(aAddress);
     }
 
     private static AnnotationFS selectSingleAt(CAS aCas, Type type,
@@ -425,7 +428,7 @@ public class WebAnnoCasUtil
     private static FSIterator<AnnotationFS> seekByAddress(CAS aCas, Type aType, int aAddr)
     {
         AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
-        return idx.iterator(selectByAddr(aCas, aAddr));
+        return idx.iterator(selectFsByAddr(aCas, aAddr));
     }
 
     /**
@@ -499,7 +502,7 @@ public class WebAnnoCasUtil
         return s;
     }
 
-    public static int getNextSentenceAddress(CAS aCas, Sentence aSentence)
+    public static int getNextSentenceAddress(CAS aCas, AnnotationFS aSentence)
     {
         try {
             return getAddr(
@@ -928,7 +931,7 @@ public class WebAnnoCasUtil
 
                 FeatureStructure link = aFS.getCAS().createFS(linkType);
                 link.setStringValue(roleFeat, e.role);
-                link.setFeatureValue(targetFeat, selectByAddr(aFS.getCAS(), e.targetAddr));
+                link.setFeatureValue(targetFeat, selectFsByAddr(aFS.getCAS(), e.targetAddr));
                 linkFSes.add(link);
             }
         }

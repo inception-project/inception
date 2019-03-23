@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.util.Collection;
 import java.util.List;
@@ -81,7 +81,7 @@ public abstract class TypeAdapter_ImplBase
     public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 
         Object oldValue = getValue(fs, aFeature);
         
