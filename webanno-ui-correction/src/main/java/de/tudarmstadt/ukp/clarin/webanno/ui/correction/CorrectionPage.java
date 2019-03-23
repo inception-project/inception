@@ -537,7 +537,7 @@ public class CorrectionPage
 
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(editorCas, Sentence.class,
+            AnnotationFS sentence = selectByAddr(editorCas, Sentence.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
 

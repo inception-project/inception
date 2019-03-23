@@ -489,7 +489,7 @@ public class AnnotationPage
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            Sentence sentence = selectByAddr(cas, Sentence.class,
+            AnnotationFS sentence = selectByAddr(cas, Sentence.class,
                     state.getFirstVisibleUnitAddress());
             state.setFirstVisibleUnit(sentence);
             

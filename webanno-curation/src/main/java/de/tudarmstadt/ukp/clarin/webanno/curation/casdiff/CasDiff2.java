@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -1271,7 +1271,8 @@ public class CasDiff2
         private FeatureStructure getRepresentative()
         {
             Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return selectByAddr(cases.get(e.getKey()).get(position.getCasId()), e.getValue().addr);
+            return selectFsByAddr(cases.get(e.getKey()).get(position.getCasId()),
+                    e.getValue().addr);
         }
 
         private AID getRepresentativeAID()
@@ -1290,7 +1291,7 @@ public class CasDiff2
             return fsAddresses.get(aCasGroupId);
         }
 
-        public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
+        public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, int aCasId,
                 Class<T> aClass, Map<String, List<CAS>> aCasMap)
         {
             AID aid = fsAddresses.get(aCasGroupId);
@@ -1298,17 +1299,17 @@ public class CasDiff2
                 return null;
             }
             
-            List<CAS> cases = aCasMap.get(aCasGroupId);
-            if (cases == null) {
+            List<CAS> casses = aCasMap.get(aCasGroupId);
+            if (casses == null) {
                 return null;
             }
             
-            CAS cas = cases.get(aCasId);
+            CAS cas = casses.get(aCasId);
             if (cas == null) {
                 return null;
             }
             
-            return selectByAddr(cas, aClass, aid.addr);
+            return selectFsByAddr(cas, aid.addr);
         }
 
         // FIXME aCasId parameter should not be required as we can get it from the position
