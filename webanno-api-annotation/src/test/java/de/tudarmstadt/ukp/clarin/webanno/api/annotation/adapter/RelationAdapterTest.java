@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
@@ -310,34 +311,49 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
+        // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);
         sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
-        sut.add(document, username, source, target, jcas.getCas(), 0,
+        AnnotationFS rel2 = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         
         depLayer.setOverlapMode(ANY_OVERLAP);
         assertThat(sut.validate(jcas.getCas()))
-                .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         depLayer.setOverlapMode(STACKING_ONLY);
         assertThat(sut.validate(jcas.getCas()))
-                .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
-
-        depLayer.setOverlapMode(NO_OVERLAP);
-        assertThat(sut.validate(jcas.getCas()))
-                .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
-                .containsExactly(LogMessage.error(null, ""));
 
         depLayer.setOverlapMode(OVERLAP_ONLY);
         assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
-                .containsExactly(LogMessage.error(null, ""));
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked relation at [5-7]"), 
+                        LogMessage.error(null, "Stacked relation at [5-7]"));
+
+        depLayer.setOverlapMode(NO_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked relation at [5-7]"), 
+                        LogMessage.error(null, "Stacked relation at [5-7]"));
+
+        // Remove the stacked annotation and introduce one that is purely overlapping
+        sut.delete(document, username, jcas.getCas(), new VID(rel2));
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        sut.add(document, username, source, posAnnotations.get(2), jcas.getCas(), 0,
+                jcas.getDocumentText().length());
+        
+        depLayer.setOverlapMode(NO_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Overlapping relation at [5-7]"), 
+                        LogMessage.error(null, "Overlapping relation at [8-9]"));
     }
 }

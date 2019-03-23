@@ -31,8 +31,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.PersistentEnum;
  * </p>
  * <p>
  * For relation layers, overlap is defined in terms of the end points of the relation. If two
- * relations share an end point, they are considered to be <b>overlapping</b>. If two relations have
- * exactly the same end points, they are considered to be <b>stacking</b>.
+ * relations share any end point (source or target), they are considered to be <b>overlapping</b>.
+ * If two relations have exactly the same end points, they are considered to be <b>stacking</b>.
  * </p>
  */
 public enum OverlapMode

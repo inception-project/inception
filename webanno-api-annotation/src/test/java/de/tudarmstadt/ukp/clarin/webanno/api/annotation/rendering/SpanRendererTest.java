@@ -123,8 +123,8 @@ public class SpanRendererTest
             assertThat(vdoc.comments())
                     .usingFieldByFieldElementComparator()
                     .containsExactlyInAnyOrder(
-                            new VComment(ne1, VCommentType.ERROR, "Overlaps are not permitted."),
-                            new VComment(ne2, VCommentType.ERROR, "Overlaps are not permitted."));
+                            new VComment(ne1, VCommentType.ERROR, "Stacking is not permitted."),
+                            new VComment(ne2, VCommentType.ERROR, "Stacking is not permitted."));
         }
         
         {

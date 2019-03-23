@@ -181,28 +181,28 @@ public class SpanAdapterTest
         //Validation succeeds
         neLayer.setOverlapMode(ANY_OVERLAP);
         assertThat(sut.validate(jcas.getCas()))
-                .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         neLayer.setOverlapMode(STACKING_ONLY);
         assertThat(sut.validate(jcas.getCas()))
-                .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
                 .isEmpty();
 
         //Validation fails
         neLayer.setOverlapMode(OVERLAP_ONLY);
         assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
-                .containsExactly(LogMessage.error(null, ""));
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked annotation at [0-4]"),
+                        LogMessage.error(null, "Stacked annotation at [0-4]"));
 
         neLayer.setOverlapMode(NO_OVERLAP);
         assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
-                .containsExactly(LogMessage.error(null, ""));
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked annotation at [0-4]"),
+                        LogMessage.error(null, "Stacked annotation at [0-4]"));
     }
 
     @Test

@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedAnnotationLayerReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -96,12 +97,12 @@ public class LayerDetailForm
     private DropDownChoice<AnnotationLayer> attachTypes;
 
     private DropDownChoice<AnchoringMode> anchoringMode;
+    private DropDownChoice<OverlapMode> overlapMode;
     private DropDownChoice<ValidationMode> validationMode;
 
     private FeatureSelectionForm featureSelectionForm;
     private FeatureDetailForm featureDetailForm;
     
-    private CheckBox allowStacking;
     private CheckBox crossSentence;
     private CheckBox showTextInHover;
     private CheckBox linkedListBehavior;
@@ -153,12 +154,12 @@ public class LayerDetailForm
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                target.add(allowStacking);
                 target.add(crossSentence);
                 target.add(showTextInHover);
                 target.add(linkedListBehavior);
                 target.add(attachTypes);
                 target.add(anchoringMode);
+                target.add(overlapMode);
             }
         });
 
@@ -253,15 +254,16 @@ public class LayerDetailForm
                     // that is the only layer on which we use the attach feature)
                     layer.getAttachFeature() == null);
         }));
-        
-        add(allowStacking = new CheckBox("allowStacking"));
-        allowStacking.setOutputMarkupPlaceholderTag(true);
-        allowStacking.add(LambdaBehavior.onConfigure(_this -> {
+
+        add(overlapMode = new BootstrapSelect<OverlapMode>("overlapMode"));
+        overlapMode.setOutputMarkupPlaceholderTag(true);
+        overlapMode.setChoiceRenderer(new EnumChoiceRenderer<>(this));
+        overlapMode.setChoices(Arrays.asList(OverlapMode.values()));
+        overlapMode.add(LambdaBehavior.onConfigure(_this -> {
             AnnotationLayer layer = LayerDetailForm.this.getModelObject();
             _this.setVisible(!isBlank(layer.getType()));
             _this.setEnabled(
-                    // Surface form must be locked to token boundaries for CONLL-U writer
-                    // to work.
+                    // Surface form must be non-stacking for CONLL-U writer to work.
                     !SurfaceForm.class.getName().equals(layer.getName()) &&
                     // Not configurable for layers that attach to tokens (currently that is
                     // the only layer on which we use the attach feature)

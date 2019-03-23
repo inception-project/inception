@@ -24,13 +24,13 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.AnnotationComparator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -131,70 +132,48 @@ public class RelationOverlapBehavior
         final Type type = getType(cas, adapter.getAnnotationTypeName());
         final Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         final Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
+        AnnotationComparator cmp = new AnnotationComparator();
+        final List<AnnotationFS> sortedRelations = aAnnoToArcIdx.keySet().stream()
+                .sorted(cmp)
+                .collect(Collectors.toList());
 
         switch (layer.getOverlapMode()) {
         case ANY_OVERLAP:
-            return;
+            // Nothing to check
+            break;
         case NO_OVERLAP: {
-            throw new NotImplementedException("");
+            Set<AnnotationFS> overlapping = new HashSet<>();
+            Set<AnnotationFS> stacking = new HashSet<>();
+            
+            overlappingOrStackingRelations(sortedRelations, sourceFeature, targetFeature,
+                    stacking, overlapping);
+            
+            overlapping.forEach(fs -> aResponse
+                    .add(new VComment(new VID(fs), ERROR, "Overlap is not permitted.")));
+            
+            stacking.forEach(fs -> aResponse
+                    .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
+            break;
         }
         case STACKING_ONLY: {
-            throw new NotImplementedException("");
+            // Here, we must find all overlapping relations because they are not permitted
+            overlappingNonStackingRelations(sortedRelations, sourceFeature, targetFeature)
+                    .forEach(fs -> aResponse
+                            .add(new VComment(new VID(fs), ERROR, "Only stacking is permitted.")));
+            break;
         }
-        case OVERLAP_ONLY: {
+        case OVERLAP_ONLY:
+            // Here, we must find all stacked relations because they are not permitted.
             // We go through all relations based on the their offsets. Stacked relations must have
             // the same offsets (at least if we consider relations as having a direction, i.e. 
             // that a relation A->B does not count as stacked on a relation B->A). But since there 
             // can be multiple relations going out from the same sourceFS, we need to consider all 
             // of them for potential stacking.
-            List<AnnotationFS> candidates = new ArrayList<>();
-            Set<AnnotationFS> warningRendered = new HashSet<>();
-            for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
-                AnnotationFS fs = e.getKey();
-                AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
-                AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
-                
-                // If there are no stacking candidates at the current position yet, collect the 
-                // first
-                if (candidates.isEmpty()) {
-                    candidates.add(fs);
-                }
-                // If the current FS is at a different position from the current candidates, clear 
-                // the candidates list and add the current one as the first new candidate
-                else if (
-                        candidates.get(0).getBegin() != fs.getBegin() || 
-                        candidates.get(0).getEnd() != fs.getEnd()
-                ) {
-                    candidates.clear();
-                    warningRendered.clear();
-                    candidates.add(fs);
-                }
-                // If there are already stacking candidates, check if the current FS is stacking on 
-                // any of them. If yes, generate an error message
-                else {
-                    for (AnnotationFS candidate : candidates) {
-                        AnnotationFS candidateOriginFS = (AnnotationFS) candidate
-                                .getFeatureValue(sourceFeature);
-                        AnnotationFS candidateTargetFS = (AnnotationFS) candidate
-                                .getFeatureValue(targetFeature);
-
-                        if (stacking(candidateOriginFS, candidateTargetFS, sourceFs, targetFs)) {
-                            aResponse.add(new VComment(new VID(e.getKey()), ERROR,
-                                    "Stacking is not permitted."));
-                            warningRendered.add(e.getKey());
-                        }
-                        
-                        if (!warningRendered.contains(candidate)) {
-                            aResponse.add(new VComment(new VID(candidate), ERROR,
-                                    "Stacking is not permitted."));
-                            warningRendered.add(candidate);
-                        }
-                    }
-                }
-            }
+            stackingRelations(sortedRelations, sourceFeature, targetFeature)
+                    .forEach(fs -> aResponse
+                            .add(new VComment(new VID(fs), ERROR, "Stacking is not permitted.")));
             break;
         }
-        }        
     }
     
     @Override
@@ -213,84 +192,132 @@ public class RelationOverlapBehavior
             return emptyList();
         case NO_OVERLAP: {
             Set<AnnotationFS> overlapping = new HashSet<>();
-            for (AnnotationFS rel1 : select(aCas, type)) {
-                for (AnnotationFS rel2 : select(aCas, type)) {
-                    if (stacking(rel1, rel2, sourceFeature, targetFeature)) {
-                        overlapping.add(rel1);
-                        overlapping.add(rel2);
-                    }
-                }
-            }
+            Set<AnnotationFS> stacking = new HashSet<>();
+            
+            overlappingOrStackingRelations(select(aCas, type), sourceFeature, targetFeature,
+                    stacking, overlapping);
             
             for (AnnotationFS fs : overlapping) {
                 messages.add(Pair.of(LogMessage.error(this, "Overlapping relation at [%d-%d]",
                         fs.getBegin(), fs.getEnd()), fs));
             }
-            break;
-        }
-        case STACKING_ONLY: {
-            Set<AnnotationFS> overlapping = new HashSet<>();
-            for (AnnotationFS rel1 : select(aCas, type)) {
-                for (AnnotationFS rel2 : select(aCas, type)) {
-                    if (
-                            overlapping(rel1, rel2, sourceFeature, targetFeature) && 
-                            !stacking(rel1, rel2, sourceFeature, targetFeature)
-                    ) {
-                        overlapping.add(rel1);
-                        overlapping.add(rel2);
-                    }
-                }
-            }
-            
-            for (AnnotationFS fs : overlapping) {
-                messages.add(Pair.of(LogMessage.error(this, "Overlapping relation at [%d-%d]",
+            for (AnnotationFS fs : stacking) {
+                messages.add(Pair.of(LogMessage.error(this, "Stacked relation at [%d-%d]",
                         fs.getBegin(), fs.getEnd()), fs));
             }
             break;
         }
-        case OVERLAP_ONLY: {
+        case STACKING_ONLY:
+            // Here, we must find all overlapping relations because they are not permitted
+            overlappingNonStackingRelations(select(aCas, type), sourceFeature, targetFeature)
+                    .forEach(fs -> messages.add(Pair.of(LogMessage.error(this,
+                            "Overlapping relation at [%d-%d]", fs.getBegin(), fs.getEnd()), fs)));
+            break;
+        case OVERLAP_ONLY:
+            // Here, we must find all stacked relations because they are not permitted.
             // We go through all relations based on the their offsets. Stacked relations must have
             // the same offsets (at least if we consider relations as having a direction, i.e. 
             // that a relation A->B does not count as stacked on a relation B->A). But since there 
             // can be multiple relations going out from the same sourceFS, we need to consider all 
             // of them for potential stacking.
-            List<AnnotationFS> candidates = new ArrayList<>();
-            for (AnnotationFS fs : select(aCas, type)) {
-                AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
-                AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
-                
-                // If there are no stacking candidates at the current position yet, collect the
-                // first
-                if (candidates.isEmpty()) {
-                    candidates.add(fs);
-                }
-                // If the current FS is at a different position from the current candidates, clear 
-                // the candidates list and add the current one as the first new candidate
-                else if (
-                        candidates.get(0).getBegin() != fs.getBegin() || 
-                        candidates.get(0).getEnd() != fs.getEnd()
-                ) {
-                    candidates.clear();
-                    candidates.add(fs);
-                }
-                // If there are already stacking candidates, check if the current FS is stacking on 
-                // any of them. If yes, generate an error message
-                else {
-                    for (AnnotationFS cand : candidates) {
-                        FeatureStructure candidateOriginFS = cand.getFeatureValue(sourceFeature);
-                        FeatureStructure candidateTargetFS = cand.getFeatureValue(targetFeature);
+            stackingRelations(select(aCas, type), sourceFeature, targetFeature)
+                    .forEach(fs -> messages.add(Pair.of(LogMessage.error(this,
+                            "Stacked relation at [%d-%d]", fs.getBegin(), fs.getEnd()), fs)));
+            break;
+        }
 
-                        if (stacking(candidateOriginFS, candidateTargetFS, sourceFs, targetFs)) {
-                            messages.add(Pair.of(LogMessage.error(this, "Stacked annotation at [%d-%d]",
-                                    fs.getBegin(), fs.getEnd()), fs));
-                        }
+        return messages;
+    }
+    
+    private void overlappingOrStackingRelations(Collection<AnnotationFS> aRelations,
+            Feature sourceFeature, Feature targetFeature, Collection<AnnotationFS> aStacking,
+            Collection<AnnotationFS> aOverlapping)
+    {
+        for (AnnotationFS rel1 : aRelations) {
+            for (AnnotationFS rel2 : aRelations) {
+                if (rel1.equals(rel2)) {
+                    continue;
+                }
+                
+                if (stacking(rel1, rel2, sourceFeature, targetFeature)) {
+                    aStacking.add(rel1);
+                    aStacking.add(rel2);
+                }
+                else if (overlapping(rel1, rel2, sourceFeature, targetFeature)) {
+                    aOverlapping.add(rel1);
+                    aOverlapping.add(rel2);
+                }
+            }
+        }
+    }
+    
+    private Set<AnnotationFS> overlappingNonStackingRelations(Collection<AnnotationFS> aRelations,
+            Feature sourceFeature, Feature targetFeature)
+    {
+        Set<AnnotationFS> overlapping = new HashSet<>();
+        for (AnnotationFS rel1 : aRelations) {
+            for (AnnotationFS rel2 : aRelations) {
+                if (rel1.equals(rel2)) {
+                    continue;
+                }
+                 
+                if (
+                        overlapping(rel1, rel2, sourceFeature, targetFeature) && 
+                        !stacking(rel1, rel2, sourceFeature, targetFeature)
+                ) {
+                    overlapping.add(rel1);
+                    overlapping.add(rel2);
+                }
+            }
+        }
+        return overlapping;
+    }
+    
+    private Set<AnnotationFS> stackingRelations(Collection<AnnotationFS> aRelations,
+            Feature sourceFeature, Feature targetFeature)
+    {
+        // Here, we must find all stacked relations because they are not permitted.
+        // We go through all relations based on the their offsets. Stacked relations must have
+        // the same offsets (at least if we consider relations as having a direction, i.e. 
+        // that a relation A->B does not count as stacked on a relation B->A). But since there 
+        // can be multiple relations going out from the same sourceFS, we need to consider all 
+        // of them for potential stacking.
+        Set<AnnotationFS> stacking = new HashSet<>();
+        List<AnnotationFS> candidates = new ArrayList<>();
+        for (AnnotationFS fs : aRelations) {
+            AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
+            AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
+            
+            // If there are no stacking candidates at the current position yet, collect the
+            // first
+            if (candidates.isEmpty()) {
+                candidates.add(fs);
+            }
+            // If the current FS is at a different position from the current candidates, clear 
+            // the candidates list and add the current one as the first new candidate
+            else if (
+                    candidates.get(0).getBegin() != fs.getBegin() || 
+                    candidates.get(0).getEnd() != fs.getEnd()
+            ) {
+                candidates.clear();
+                candidates.add(fs);
+            }
+            // If there are already stacking candidates, check if the current FS is stacking on 
+            // any of them. If yes, generate an error message
+            else {
+                for (AnnotationFS cand : candidates) {
+                    FeatureStructure candidateOriginFS = cand.getFeatureValue(sourceFeature);
+                    FeatureStructure candidateTargetFS = cand.getFeatureValue(targetFeature);
+
+                    if (stacking(candidateOriginFS, candidateTargetFS, sourceFs, targetFs)) {
+                        stacking.add(fs);
+                        stacking.add(cand);
                     }
                 }
             }
         }
-        }
-
-        return messages;
+        
+        return stacking;
     }
     
     public static boolean stacking(FeatureStructure aRel1Src, FeatureStructure aRel1Tgt,
@@ -313,6 +340,10 @@ public class RelationOverlapBehavior
                 aRelation.getFeatureValue(aSrcFeat), aRelation.getFeatureValue(aTgtFeat));
     }
 
+    /**
+     * If two relations share any end point (source or target), they are considered to be
+     * <b>overlapping</b>.
+     */
     public static boolean overlapping(FeatureStructure aRel1Src, FeatureStructure aRel1Tgt,
             FeatureStructure aRel2Src, FeatureStructure aRel2Tgt)
     {
@@ -320,6 +351,9 @@ public class RelationOverlapBehavior
                 || isSame(aRel1Tgt, aRel2Src) || isSame(aRel1Tgt, aRel2Tgt);
     }
 
+    /**
+     * If two relations have exactly the same end points, they are considered to be <b>stacking</b>.
+     */
     public static boolean stacking(CreateRelationAnnotationRequest aRequest,
             AnnotationFS aRelation, Feature aSourceFeature, Feature aTargetFeature)
     {

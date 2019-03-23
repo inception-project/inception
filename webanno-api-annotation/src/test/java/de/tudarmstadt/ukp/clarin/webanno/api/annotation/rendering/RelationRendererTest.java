@@ -22,9 +22,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.YIELD;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,8 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationLayerBeh
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationOverlapBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -151,12 +155,12 @@ public class RelationRendererTest
         
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
-                .contains(new VComment(dep, VCommentType.ERROR, 
+                .contains(new VComment(dep, ERROR, 
                         "Crossing sentence bounardies is not permitted."));
     }
 
     @Test
-    public void thatRelationStackingBehaviorOnRenderGeneratesErrors() throws Exception
+    public void thatRelationOverlapBehaviorOnRenderGeneratesErrors() throws Exception
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
@@ -175,24 +179,81 @@ public class RelationRendererTest
 
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
+        
+        RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
+                asList(new RelationOverlapBehavior()));
 
-        depLayer.setAllowStacking(true);
+        // Create two annotations stacked annotations
+        depLayer.setOverlapMode(ANY_OVERLAP);
         AnnotationFS dep1 = adapter.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         AnnotationFS dep2 = adapter.add(document, username, source, target, jcas.getCas(), 0,
-                jcas.getDocumentText().length());        
+                jcas.getDocumentText().length());
         
-        depLayer.setAllowStacking(false);
-        RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
-                asList(new RelationOverlapBehavior()));
+        {
+            depLayer.setOverlapMode(ANY_OVERLAP);
+            VDocument vdoc = new VDocument();
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            
+            assertThat(vdoc.comments())
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .isEmpty();
+        }
         
-        VDocument vdoc = new VDocument();
-        sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+        {
+            depLayer.setOverlapMode(STACKING_ONLY);
+            VDocument vdoc = new VDocument();
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            
+            assertThat(vdoc.comments())
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .isEmpty();
+            
+        }
         
-        assertThat(vdoc.comments())
-                .usingFieldByFieldElementComparator()
-                .contains(
-                        new VComment(dep1, VCommentType.ERROR, "Stacking is not permitted."),
-                        new VComment(dep2, VCommentType.ERROR, "Stacking is not permitted."));
+        {
+            depLayer.setOverlapMode(OVERLAP_ONLY);
+            VDocument vdoc = new VDocument();
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            
+            assertThat(vdoc.comments())
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingFieldByFieldElementComparator()
+                    .contains(
+                            new VComment(dep1, ERROR, "Stacking is not permitted."),
+                            new VComment(dep2, ERROR, "Stacking is not permitted."));
+        }
+
+        {
+            depLayer.setOverlapMode(NO_OVERLAP);
+            VDocument vdoc = new VDocument();
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            
+            assertThat(vdoc.comments())
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingFieldByFieldElementComparator()
+                    .contains(
+                            new VComment(dep1, ERROR, "Stacking is not permitted."),
+                            new VComment(dep2, ERROR, "Stacking is not permitted."));
+        }
+
+        // Remove the stacked annotation and introduce one that is purely overlapping
+        adapter.delete(document, username, jcas.getCas(), new VID(dep2));
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        AnnotationFS dep3 = adapter.add(document, username, source, posAnnotations.get(2),
+                jcas.getCas(), 0, jcas.getDocumentText().length());
+        
+        {
+            depLayer.setOverlapMode(NO_OVERLAP);
+            VDocument vdoc = new VDocument();
+            sut.render(jcas.getCas(), asList(), vdoc, 0, jcas.getDocumentText().length());
+            
+            assertThat(vdoc.comments())
+                    .filteredOn(c -> !YIELD.equals(c.getCommentType()))
+                    .usingFieldByFieldElementComparator()
+                    .contains(
+                            new VComment(dep1, ERROR, "Overlap is not permitted."),
+                            new VComment(dep3, ERROR, "Overlap is not permitted."));
+        }
     }
 }
