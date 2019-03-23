@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
 import java.util.List;
@@ -247,7 +247,7 @@ public interface FeatureSupport<T>
     default void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress,
             Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aCas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
         
         Object value = unwrapFeatureValue(aFeature, fs.getCAS(), aValue);
         setFeature(fs, aFeature, value);
