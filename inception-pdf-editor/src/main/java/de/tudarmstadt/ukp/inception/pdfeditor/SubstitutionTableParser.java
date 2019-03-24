@@ -24,12 +24,12 @@ import org.xml.sax.Attributes;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Parse substitutionTable.xml and create a ligature map
+ * Parse substitutionTable.xml and create a map
  */
-public class LigatureHandler extends DefaultHandler
+public class SubstitutionTableParser extends DefaultHandler
 {
 
-    private Map<String, String> ligatures = new HashMap<>();
+    private Map<String, String> substitutionTable = new HashMap<>();
 
     private boolean inTable = false;
 
@@ -41,7 +41,7 @@ public class LigatureHandler extends DefaultHandler
         } else if (inTable && qName.equals("substitution")) {
             String orig = attributes.getValue("orig");
             String subst = attributes.getValue("subst");
-            ligatures.put(orig, subst);
+            substitutionTable.put(orig, subst);
         }
     }
 
@@ -53,7 +53,7 @@ public class LigatureHandler extends DefaultHandler
         }
     }
 
-    public Map<String, String> getLigatures() {
-        return ligatures;
+    public Map<String, String> getSubstitutionTable() {
+        return substitutionTable;
     }
 }

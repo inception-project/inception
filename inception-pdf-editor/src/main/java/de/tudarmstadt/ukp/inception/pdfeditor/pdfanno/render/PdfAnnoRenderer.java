@@ -137,7 +137,7 @@ public class PdfAnnoRenderer
             addContextToSpans(spans, windowSize, aDocumentText);
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
-                findOccurrences(spans, aPdfExtractFile.getLigaturelessContent());
+                findOccurrences(spans, aPdfExtractFile.getSanitizedContent());
 
             for (RenderSpan renderSpan : spans) {
                 // get occurrence list for span text with context window
@@ -158,10 +158,15 @@ public class PdfAnnoRenderer
                     int begin = emit.getStart() + renderSpan.getWindowBeforeText().length();
                     int end = emit.getEnd() - renderSpan.getWindowAfterText().length();
                     // get according PDFExtract file lines for begin and end of annotation
-                    PdfExtractLine firstLine = aPdfExtractFile.getStringPdfExtractLine(begin);
-                    PdfExtractLine lastLine = aPdfExtractFile.getStringPdfExtractLine(end);
+                    Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
+                    Offset endOffset = aPdfExtractFile.getExtractIndex(end);
+                    PdfExtractLine firstLine =
+                        aPdfExtractFile.getStringPdfExtractLine(beginOffset.getBegin());
+                    PdfExtractLine lastLine =
+                        aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
                     span.setEndPos(lastLine.getPosition());
+                    // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());
                     processed.add(span);
@@ -230,9 +235,9 @@ public class PdfAnnoRenderer
     {
         List<RenderSpan> iterList = new ArrayList<>();
         for (Offset offset : aOffsets) {
-            int begin = aPdfExtractFile.getStringIndex(offset.getBegin());
-            int end = aPdfExtractFile.getStringIndex(offset.getEnd()) + 1;
-            iterList.add(new RenderSpan(new Offset(begin, end)));
+            Offset begin = aPdfExtractFile.getStringIndex(offset.getBegin());
+            Offset end = aPdfExtractFile.getStringIndex(offset.getEnd());
+            iterList.add(new RenderSpan(new Offset(begin.getBegin(), end.getEnd() + 1)));
         }
         List<RenderSpan> ambiguous = new ArrayList<>();
         List<Offset> processed = new ArrayList<>();
@@ -240,7 +245,7 @@ public class PdfAnnoRenderer
 
         do {
             // add context before and after each span
-            addContextToSpans(iterList, windowSize, aPdfExtractFile.getLigaturelessContent());
+            addContextToSpans(iterList, windowSize, aPdfExtractFile.getSanitizedContent());
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
                 findOccurrences(iterList, aDocumentModel.getWhitespacelessText());
