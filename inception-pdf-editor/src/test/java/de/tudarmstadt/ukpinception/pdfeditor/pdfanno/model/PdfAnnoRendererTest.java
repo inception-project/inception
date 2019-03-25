@@ -172,7 +172,7 @@ public class PdfAnnoRendererTest
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
-            cas.getDocumentText(), schemaService, pdfExtractFile);
+            cas.getDocumentText(), schemaService, pdfExtractFile, Offset.empty());
 
         assertThat(linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"),
             "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));

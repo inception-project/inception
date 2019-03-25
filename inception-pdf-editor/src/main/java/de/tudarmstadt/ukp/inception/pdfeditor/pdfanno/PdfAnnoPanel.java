@@ -105,7 +105,8 @@ public class PdfAnnoPanel
             @Override
             protected void respond(AjaxRequestTarget aTarget)
             {
-                aPdfAnnotationEditor.renderPdfAnnoModel(aTarget);
+//                aPdfAnnotationEditor.renderPdfAnnoModel(aTarget);
+                System.out.println("WUT?!");
             }
         });
 

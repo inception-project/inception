@@ -108,6 +108,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 })
 
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+function getAnnotations() {
+  var data = {
+    "action": "getAnnotations",
+    "page": window.pageNumber
+  }
+  parent.Wicket.Ajax.ajax({
+    "m": "POST",
+    "ep": data,
+    "u": window.apiUrl,
+    "sh": [],
+    "fh": [function () {
+      console.log('Something went wrong on requesting annotations from inception backend.')
+    }]
+  });
+}
+// END INCEpTION EXTENSION
+
 async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
@@ -165,6 +183,8 @@ async function displayViewer () {
           }, 500)
         }
 */
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+/*
         parent.Wicket.Ajax.ajax({
           "m" : "GET",
           "u" : annoURL,
@@ -173,7 +193,9 @@ async function displayViewer () {
               console.log('Something went wrong on requesting annotations from inception backend.')
           }]
         });
-// END INCEpTION EXTENSION
+*/
+// END INCEpTION EXTENSION - #802
+// END INCEpTION EXTENSION - #627
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
@@ -188,6 +210,24 @@ async function displayViewer () {
     // Init textLayers.
     textLayer.setup(analyzeResult)
     window.annoPage.pdftxt = analyzeResult
+
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+    window.pageNumber = 1;
+    getAnnotations()
+
+    document.addEventListener('pagechange', function(e) {
+      if (e.pageNumber !== e.previousPageNumber) {
+        console.log("page change: " + e.previousPageNumber + " to " + e.pageNumber)
+        window.pageNumber = e.pageNumber
+        setTimeout(() => {
+          if (window.pageNumber === e.pageNumber) {
+            console.log("no further page changes after 1 second, requesting annotations ...")
+            getAnnotations()
+          }
+        }, 1500)
+      }
+    })
+// END INCEpTION EXTENSION
 
   } catch (err) {
 

@@ -97,6 +97,12 @@ public class PdfExtractFile implements Serializable
      */
     private Map<String, String> substitutionTable;
 
+    /**
+     * Maps a page number to its corresponding begin and end offset
+     */
+    private Map<Integer, Offset> pageOffsetMap;
+
+    private int maxPageNumber;
 
     public PdfExtractFile(String aPdftxt, Map<String, String> aSubstitutionTable)
     {
@@ -178,6 +184,7 @@ public class PdfExtractFile implements Serializable
         stringToExtract = new Int2IntOpenHashMap();
         extractToString = new Int2IntOpenHashMap();
         extractLines = new HashMap<>();
+        pageOffsetMap = new HashMap<>();
         pdftxt = aPdftxt;
 
         StringBuilder sb = new StringBuilder();
@@ -185,12 +192,15 @@ public class PdfExtractFile implements Serializable
 
         int extractLineIndex = 1;
         int strContentIndex = 0;
+        int lastPage = 1;
+        int pageBeginIndex = 1;
 
         for (String line : lines)
         {
             PdfExtractLine extractLine = new PdfExtractLine();
             String[] columns = line.split("\t");
-            extractLine.setPage(Integer.parseInt(columns[0].trim()));
+            int page = Integer.parseInt(columns[0].trim());
+            extractLine.setPage(page);
             extractLine.setPosition(extractLineIndex);
             extractLine.setValue(columns[1].trim());
             extractLine.setDisplayPositions(columns.length > 2 ? columns[2].trim() : "");
@@ -198,6 +208,12 @@ public class PdfExtractFile implements Serializable
 
             stringToExtract.put(strContentIndex, extractLineIndex);
             extractToString.put(extractLineIndex, strContentIndex);
+
+            if (page > lastPage) {
+                pageOffsetMap.put(lastPage, new Offset(pageBeginIndex, extractLineIndex - 1));
+                lastPage = page;
+                pageBeginIndex = extractLineIndex;
+            }
 
             // if value of PdfExtractLine is in brackets it is a draw operation and is ignored
             if (!extractLine.getValue().matches("^\\[.*\\]$")
@@ -209,6 +225,9 @@ public class PdfExtractFile implements Serializable
             extractLineIndex++;
         }
 
+        // add last page
+        pageOffsetMap.put(lastPage, new Offset(pageBeginIndex, extractLineIndex - 1));
+        maxPageNumber = lastPage;
         stringContent = sb.toString();
     }
 
@@ -259,5 +278,20 @@ public class PdfExtractFile implements Serializable
             int sanitizedIndex = stringToSanitized.get(stringIndex);
             return new Offset(sanitizedIndex, sanitizedIndex);
         }
+    }
+
+    /**
+     * Get gegin and end offset of a page.
+     * @param page
+     * @return
+     */
+    public Offset getPageOffset(int page)
+    {
+        return pageOffsetMap.get(page);
+    }
+
+    public int getMaxPageNumber()
+    {
+        return maxPageNumber;
     }
 }

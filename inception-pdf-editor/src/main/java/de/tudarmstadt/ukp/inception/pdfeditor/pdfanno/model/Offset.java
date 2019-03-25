@@ -72,4 +72,9 @@ public class Offset implements Serializable
             ", end=" + end +
             '}';
     }
+
+    public static Offset empty()
+    {
+        return new Offset(0,0);
+    }
 }

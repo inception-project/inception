@@ -52,7 +52,7 @@ public class PdfAnnoRenderer
 
     public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
-                                      PdfExtractFile aPdfExtractFile)
+                                      PdfExtractFile aPdfExtractFile, Offset offset)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
@@ -105,7 +105,7 @@ public class PdfAnnoRenderer
                     varc.getSource().toString(), varc.getTarget().toString(), labelText, color));
             }
         }
-        pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aDocumentText, aPdfExtractFile));
+        pdfAnnoModel.addSpans(convertToPdfAnnoSpans(spans, aDocumentText, aPdfExtractFile, offset));
         return pdfAnnoModel;
     }
 
@@ -124,8 +124,8 @@ public class PdfAnnoRenderer
         return color;
     }
 
-    private static List<Span> convertToPdfAnnoSpans(
-        List<RenderSpan> aSpans, String aDocumentText, PdfExtractFile aPdfExtractFile)
+    private static List<Span> convertToPdfAnnoSpans(List<RenderSpan> aSpans, String aDocumentText,
+                                                    PdfExtractFile aPdfExtractFile, Offset offset)
     {
         List<RenderSpan> spans = new ArrayList<>(aSpans);
         List<RenderSpan> ambiguous = new ArrayList<>();
@@ -134,7 +134,7 @@ public class PdfAnnoRenderer
 
         do {
             // add context before and after each span
-            addContextToSpans(spans, windowSize, aDocumentText);
+            addContextToSpans(spans, windowSize, aDocumentText, offset);
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
                 findOccurrences(spans, aPdfExtractFile.getSanitizedContent());
@@ -188,12 +188,12 @@ public class PdfAnnoRenderer
      * for each span adds context with given windowsize before and after span.
      */
     private static void addContextToSpans(List<RenderSpan> aSpans, int windowSize,
-                                          String text)
+                                          String text, Offset offset)
     {
         int textLen = text.length();
         for (RenderSpan span : aSpans) {
-            int begin = span.getBegin();
-            int end = span.getEnd();
+            int begin = span.getBegin() + offset.getBegin();
+            int end = span.getEnd() + offset.getBegin();
             // subtract windowSize from begin and add windowSize to end and stay in bounds
             int windowBegin = begin <= windowSize ? 0 : begin - windowSize;
             int windowEnd = end < textLen - windowSize ? end + windowSize : textLen;
@@ -245,7 +245,8 @@ public class PdfAnnoRenderer
 
         do {
             // add context before and after each span
-            addContextToSpans(iterList, windowSize, aPdfExtractFile.getSanitizedContent());
+            addContextToSpans(
+                iterList, windowSize, aPdfExtractFile.getSanitizedContent(),Offset.empty());
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
                 findOccurrences(iterList, aDocumentModel.getWhitespacelessText());
