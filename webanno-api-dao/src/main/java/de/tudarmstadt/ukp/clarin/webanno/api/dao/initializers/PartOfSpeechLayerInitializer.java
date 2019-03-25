@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,7 +32,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -68,7 +69,7 @@ public class PartOfSpeechLayerInitializer
                 aProject);
 
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                aProject, true, AnchoringMode.SINGLE_TOKEN);
+                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
 
         AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
                 "pos", POS.class.getName());

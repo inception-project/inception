@@ -195,13 +195,12 @@
                         <select wicket:id="anchoringMode" class="form-control" data-container="body"></select>
                       </div>
                     </div>
-                    <div class="form-group" wicket:enclosure="allowStacking">
-                      <div class="col-sm-offset-4 col-sm-8">
-                        <div class="checkbox">
-                          <label wicket:for="allowStacking">
-                            <input wicket:id="allowStacking" type="checkbox"> <wicket:label key="allowStacking"/>
-                          </label>
-                        </div>
+                    <div class="form-group" wicket:enclosure="overlapMode">
+                      <label wicket:for="overlapMode" class="col-sm-4 control-label"> <wicket:label
+                          key="overlapMode" />
+                      </label>
+                      <div class="col-sm-8">
+                        <select wicket:id="overlapMode" class="form-control" data-container="body"></select>
                       </div>
                     </div>
                     <div class="form-group" wicket:enclosure="crossSentence">

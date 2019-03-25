@@ -1148,6 +1148,31 @@
     </update>
   </changeSet>
   
+  <changeSet author="WebAnno Team" id="20190125-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="annotation_type" columnName="overlap_mode"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)">
+        <constraints nullable="true" />
+      </column>
+    </addColumn>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="any"/>
+      <where>allowSTacking = true</where>
+    </update>
+    <update tableName="annotation_type">
+      <column name="overlap_mode" type="VARCHAR(255)" value="overlapOnly"/>
+      <where>allowSTacking = false</where>
+    </update>
+    <addNotNullConstraint 
+      tableName="annotation_type" 
+      columnName="overlap_mode"
+      columnDataType="VARCHAR(255)" />
+  </changeSet>  
+  
   <changeSet author="WebAnno Team" id="20100129-1">
     <preConditions onFail="MARK_RAN">
       <not>

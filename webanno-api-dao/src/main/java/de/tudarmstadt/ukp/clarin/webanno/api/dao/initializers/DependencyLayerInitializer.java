@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,7 +32,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -70,7 +71,7 @@ public class DependencyLayerInitializer
         
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
-                RELATION_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN);
+                RELATION_TYPE, aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
         AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
                 aProject);
         List<AnnotationFeature> tokenFeatures = annotationSchemaService

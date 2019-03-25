@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static java.util.Arrays.asList;
 
 import java.io.File;
@@ -116,6 +118,7 @@ public class LayerExporter
         exLayer.setEnabled(aLayer.isEnabled());
         exLayer.setLockToTokenOffset(AnchoringMode.SINGLE_TOKEN.equals(aLayer.getAnchoringMode()));
         exLayer.setMultipleTokens(AnchoringMode.TOKENS.equals(aLayer.getAnchoringMode()));
+        exLayer.setOverlapMode(aLayer.getOverlapMode());
         exLayer.setAnchoringMode(aLayer.getAnchoringMode());
         exLayer.setValidationMode(aLayer.getValidationMode());
         exLayer.setLinkedListBehavior(aLayer.isLinkedListBehavior());
@@ -266,6 +269,13 @@ public class LayerExporter
         }
         else {
             aLayer.setAnchoringMode(aExLayer.getAnchoringMode());
+        }
+        if (aExLayer.getOverlapMode() == null) {
+            // This allows importing old projects which did not have the overlap mode yet
+            aLayer.setOverlapMode(aExLayer.isAllowStacking() ? ANY_OVERLAP : OVERLAP_ONLY);
+        }
+        else {
+            aLayer.setOverlapMode(aExLayer.getOverlapMode());
         }
         aLayer.setValidationMode(aExLayer.getValidationMode() != null ? aExLayer.getValidationMode()
                 : ValidationMode.NEVER);

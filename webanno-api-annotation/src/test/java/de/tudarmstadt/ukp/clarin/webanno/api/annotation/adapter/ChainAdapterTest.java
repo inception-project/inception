@@ -20,12 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.substring;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
@@ -74,14 +79,14 @@ public class ChainAdapterTest
         document.setProject(project);
         
         corefLayer = new AnnotationLayer(
-                StringUtils.substring(CoreferenceChain.class.getName(), 0,
+                substring(CoreferenceChain.class.getName(), 0,
                         CoreferenceChain.class.getName().length() - ChainAdapter.CHAIN.length()),
-                "Coreference", CHAIN_TYPE, project, true, TOKENS);
+                "Coreference", CHAIN_TYPE, project, true, TOKENS, ANY_OVERLAP);
         corefLayer.setId(1l);
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         
-        behaviors = asList(new SpanStackingBehavior(), new SpanCrossSentenceBehavior(),
+        behaviors = asList(new SpanOverlapBehavior(), new SpanCrossSentenceBehavior(),
                 new SpanAnchoringModeBehavior());
     }
     
@@ -103,7 +108,7 @@ public class ChainAdapterTest
     }
 
     @Test
-    public void thatSpanStackingBehaviorOnCreateThrowsException() throws AnnotationException
+    public void thatSpanOverlapBehaviorOnCreateWorks() throws AnnotationException
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .");
@@ -112,12 +117,28 @@ public class ChainAdapterTest
                 behaviors);
 
         // First time should work
+        corefLayer.setOverlapMode(ANY_OVERLAP);
         sut.addSpan(document, username, jcas.getCas(), 0, 1);
         
-        // Second time not
+        // Adding another annotation at the same place DOES NOT work
+        corefLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
-                .withMessageContaining("stacking is not enabled");
+                .withMessageContaining("no overlap or stacking");
+        
+        corefLayer.setOverlapMode(OVERLAP_ONLY);
+        assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .withMessageContaining("stacking is not allowed");
+        
+        // Adding another annotation at the same place DOES work
+        corefLayer.setOverlapMode(STACKING_ONLY);
+        assertThatCode(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
+        
+        corefLayer.setOverlapMode(ANY_OVERLAP);
+        assertThatCode(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
     }
     
     @Test
@@ -130,11 +151,29 @@ public class ChainAdapterTest
                 behaviors);
 
         // First time should work - we annotate the whole word "This"
+        corefLayer.setOverlapMode(ANY_OVERLAP);
         sut.addSpan(document, username, jcas.getCas(), 0, 4);
         
-        // Second time not - here we annotate "T" but it should be expanded to "This"
+        // Adding another annotation at the same place DOES NOT work
+        // Here we annotate "T" but it should be expanded to "This"
+        corefLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
-                .withMessageContaining("stacking is not enabled");
+                .withMessageContaining("no overlap or stacking");
+        
+        corefLayer.setOverlapMode(OVERLAP_ONLY);
+        assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .withMessageContaining("stacking is not allowed");
+        
+        // Adding another annotation at the same place DOES work
+        // Here we annotate "T" but it should be expanded to "This"
+        corefLayer.setOverlapMode(STACKING_ONLY);
+        assertThatCode(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
+        
+        corefLayer.setOverlapMode(ANY_OVERLAP);
+        assertThatCode(() -> sut.addSpan(document, username, jcas.getCas(), 0, 1))
+                .doesNotThrowAnyException();
     }
 }
