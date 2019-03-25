@@ -23,7 +23,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -199,11 +199,11 @@ public class PropertyFeatureEditor
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
-                JCas jCas;
+                CAS cas;
                 try {
-                    jCas = actionHandler.getEditorCas();
+                    cas = actionHandler.getEditorCas();
                     kbHandle = factService
-                        .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject(), traits);
+                        .getKBHandleFromCasByAddr(cas, targetAddress, aState.getProject(), traits);
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);
