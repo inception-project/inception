@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
@@ -257,7 +257,7 @@ public class ConceptLinkingServiceImpl
         candidate.put(KEY_QUERY, aQuery);
         
         if (aCas != null) {
-            AnnotationFS sentence = getSentence(aCas, aBegin);
+            AnnotationFS sentence = selectSentenceAt(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
                 List<Token> tokens = selectCovered(Token.class, sentence);

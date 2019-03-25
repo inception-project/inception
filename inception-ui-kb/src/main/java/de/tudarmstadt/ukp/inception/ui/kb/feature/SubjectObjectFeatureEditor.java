@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -301,7 +301,7 @@ public class SubjectObjectFeatureEditor
         if (roleLabelIsFilled()) {
             try {
                 CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectByAddr(cas, roleModel.targetAddr);
+                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
             }
@@ -320,7 +320,7 @@ public class SubjectObjectFeatureEditor
             
             try {
                 CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectByAddr(cas, roleModel.targetAddr);
+                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
                 selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
                         linkedAnnotationFeature.getName());
             }

@@ -18,7 +18,7 @@
 
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingConstants.LINKED_LAYER_FEATURE;
 
 import java.util.ArrayList;
@@ -79,7 +79,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
     public KBHandle getKBHandleFromCasByAddr(CAS aCas, int targetAddr, Project aProject,
         ConceptFeatureTraits traits)
     {
-        FeatureStructure selectedFS = selectByAddr(aCas, targetAddr);
+        FeatureStructure selectedFS = selectFsByAddr(aCas, targetAddr);
         String kbHandleIdentifier = WebAnnoCasUtil.getFeature(selectedFS, LINKED_LAYER_FEATURE);
         KBHandle kbHandle = null;
         try {

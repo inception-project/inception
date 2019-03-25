@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,10 +26,10 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.cas.AnnotationBase;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
@@ -112,7 +112,7 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationBase fs = selectByAddr(aCas, AnnotationBase.class, aVid.getId());
+        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));

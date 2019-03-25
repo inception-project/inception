@@ -242,7 +242,7 @@ public class RecommendationEditorExtension
     }
     
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc)
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aBegin, int aEnd)
     {
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user

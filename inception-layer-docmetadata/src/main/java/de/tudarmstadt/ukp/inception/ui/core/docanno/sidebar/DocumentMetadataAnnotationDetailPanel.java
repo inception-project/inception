@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -207,9 +207,9 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             return emptyList();
         }
         
-        AnnotationBaseFS fs;
+        FeatureStructure fs;
         try {
-            fs = selectByAddr(cas, AnnotationBaseFS.class, vid.getId());
+            fs = selectFsByAddr(cas, vid.getId());
         }
         catch (Exception e) {
             LOG.error("Unable to locate annotation with ID {}", vid);
@@ -293,8 +293,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
-            AnnotationBaseFS fs = selectByAddr(cas, AnnotationBaseFS.class,
-                    getModelObject().getId());
+            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
             AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
@@ -316,8 +315,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         try {
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
-            AnnotationBaseFS fs = selectByAddr(cas, AnnotationBaseFS.class,
-                    getModelObject().getId());
+            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
             AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             

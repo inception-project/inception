@@ -216,29 +216,15 @@ public class SearchAnnotationSidebar
                     Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
                             .getProject();
                     
-                    LambdaAjaxLink lambdaAjaxLink;
-                    if (aItem.getModel().getObject().getOffsetStart() != -1) {
-                        // When the offset exists, use it. Mtas indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
+                    LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
+                        t -> {
                             selectedResult = aItem.getModelObject();
                             actionShowSelectedDocument(t,
                                     documentService.getSourceDocument(currentProject,
                                             selectedResult.getDocumentTitle()),
-                                    selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
+                                    selectedResult.getOffsetStart(),
+                                    selectedResult.getOffsetEnd());
                         });
-                    }
-                    else {
-                        // If the offset doesn't exist, use the token position Mimir indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
-                            selectedResult = aItem.getModelObject();
-                            getAnnotationPage().actionShowSelectedDocumentByTokenPosition(t,
-                                    documentService.getSourceDocument(currentProject,
-                                            aItem.getModel().getObject().getDocumentTitle()),
-                                    aItem.getModel().getObject().getTokenStart());
-                            ;
-                        });
-
-                    }
                     aItem.add(lambdaAjaxLink);
 
                     String sentence = new String();

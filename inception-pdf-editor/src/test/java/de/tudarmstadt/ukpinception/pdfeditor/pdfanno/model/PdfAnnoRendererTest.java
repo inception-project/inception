@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.linesOf;
@@ -54,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -89,7 +90,7 @@ public class PdfAnnoRendererTest
         project = new Project();
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-            AnchoringMode.SINGLE_TOKEN);
+            SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -103,7 +104,7 @@ public class PdfAnnoRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-            AnchoringMode.SINGLE_TOKEN);
+            SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);

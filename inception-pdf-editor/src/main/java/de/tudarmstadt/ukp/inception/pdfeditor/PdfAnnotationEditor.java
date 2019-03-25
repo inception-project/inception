@@ -195,14 +195,14 @@ public class PdfAnnotationEditor
         throws IOException
     {
         try {
-            AnnotationFS originFs = (AnnotationFS) selectByAddr(aCas,
+            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, 
                     aParams.getParameterValue("origin").toInt());
             int target = aParams.getParameterValue("target").toInt();
             if (target == -1) {
                 // if -1 return, relation drawing was not stopped over a target
                 return;
             }
-            AnnotationFS targetFs = (AnnotationFS) selectByAddr(aCas, target);
+            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target);
 
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
@@ -233,9 +233,9 @@ public class PdfAnnotationEditor
         AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
     {
         try {
-            AnnotationFS originFs = (AnnotationFS) selectByAddr(aCas,
+            AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class,
                     aParams.getParameterValue("origin").toInt());
-            AnnotationFS targetFs = (AnnotationFS) selectByAddr(aCas,
+            AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class,
                     aParams.getParameterValue("target").toInt());
 
             AnnotatorState state = getModelObject();
