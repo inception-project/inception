@@ -18,21 +18,18 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
-	<wicket:panel>
-		<div class="flex-content panel panel-default panel-flex">
-			<div class="panel-heading">
-				<h3 class="panel-title">
-					<wicket:message key="recommenders" />
-				</h3>
-			</div>
-			<div class="panel-body fit-child-snug">
-				<select class="form-control" wicket:id="recommenders"></select>
-			</div>
-			<div class="panel-footer text-right">
-				<input wicket:id="create" type="button" class="btn btn-primary"
-					wicket:message="value:create" />
-			</div>
-		</div>
-	</wicket:panel>
+  <wicket:panel>
+    <div class="flex-content panel panel-default panel-flex">
+      <div class="panel-heading">
+        <h3 class="panel-title"><wicket:message key="recommenders"/></h3>
+      </div>
+      <div class="panel-body fit-child-snug">
+        <select class="form-control" wicket:id="recommenders"></select>
+      </div>
+      <div class="panel-footer text-right">
+        <input wicket:id="create" type="button" class="btn btn-primary" wicket:message="value:create"/>
+      </div>            
+    </div>
+  </wicket:panel>
 </body>
 </html>
