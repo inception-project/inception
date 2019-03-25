@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import static org.apache.commons.lang3.Validate.notNull;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -36,7 +36,7 @@ public abstract class Task
     private final String user;
     private SourceDocument sourceDocument;
     private AnnotationDocument annotationDocument;
-    private JCas jCas;
+    private CAS cas;
 
     public Task(Project aProject, String aUser)
     {
@@ -47,24 +47,24 @@ public abstract class Task
         user = aUser;
     }
 
-    public Task(SourceDocument aSourceDocument, JCas aJCas)
+    public Task(SourceDocument aSourceDocument, CAS aCas)
     {
         notNull(aSourceDocument);
 
         project = aSourceDocument.getProject();
         sourceDocument = aSourceDocument;
-        jCas = aJCas;
+        cas = aCas;
         user = null;
     }
 
-    public Task(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public Task(AnnotationDocument aAnnotationDocument, CAS aCas)
     {
         notNull(aAnnotationDocument);
-        notNull(aJCas);
+        notNull(aCas);
 
         project = aAnnotationDocument.getProject();
         annotationDocument = aAnnotationDocument;
-        jCas = aJCas;
+        cas = aCas;
         user = aAnnotationDocument.getUser();
     }
 
@@ -88,14 +88,14 @@ public abstract class Task
         return annotationDocument;
     }
 
-    public void setJCas(JCas aJCas)
+    public void setCas(CAS aCas)
     {
-        jCas = aJCas;
+        cas = aCas;
     }
 
-    public JCas getJCas()
+    public CAS getCas()
     {
-        return jCas;
+        return cas;
     }
 
     @Override

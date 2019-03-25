@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -32,12 +32,12 @@ public class IndexSourceDocumentTask
 {
     private @Autowired SearchService searchService;
     
-    public IndexSourceDocumentTask(SourceDocument aSourceDocument, JCas aJCas)
+    public IndexSourceDocumentTask(SourceDocument aSourceDocument, CAS aCas)
     {
-        super(aSourceDocument, aJCas);
+        super(aSourceDocument, aCas);
     }
 
-    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public IndexSourceDocumentTask(AnnotationDocument aAnnotationDocument, CAS aJCas)
     {
         super(aAnnotationDocument, aJCas);
     }
@@ -45,7 +45,7 @@ public class IndexSourceDocumentTask
     @Override
     public void run()
     {
-        searchService.indexDocument(super.getSourceDocument(), super.getJCas());
+        searchService.indexDocument(super.getSourceDocument(), super.getCas());
     }
     
     @Override

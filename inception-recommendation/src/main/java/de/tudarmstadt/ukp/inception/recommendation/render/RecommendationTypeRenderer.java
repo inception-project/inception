@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -39,8 +39,8 @@ public interface RecommendationTypeRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the intermediate
      * rendering representation {@link VDocument}.
      *
-     * @param aJcas
-     *            The JCAS object containing annotations
+     * @param aCas
+     *            The CAS object containing annotations
      * @param aVdoc
      *            A VDocument containing annotations for the given layer
      * @param aBratAnnotatorModel
@@ -48,7 +48,7 @@ public interface RecommendationTypeRenderer
      * @param aColoringStrategy
      *            the coloring strategy to render this layer
      */
-    void render(JCas aJcas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
+    void render(CAS aCas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
         ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
         RecommendationService aRecService, LearningRecordService aLearningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
