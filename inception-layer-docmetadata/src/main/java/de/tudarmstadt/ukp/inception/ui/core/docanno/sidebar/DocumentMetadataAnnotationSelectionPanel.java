@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.AnnotationBaseFS;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -48,7 +48,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -86,7 +86,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private @SpringBean AnnotationSchemaService annotationService;
     
     private final AnnotationPage annotationPage;
-    private final JCasProvider jcasProvider;
+    private final CasProvider jcasProvider;
     private final DocumentMetadataAnnotationDetailPanel detailPanel;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
@@ -95,7 +95,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            JCasProvider aJCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
+            CasProvider aCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aProject);
@@ -105,7 +105,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         annotationPage = aAnnotationPage;
         sourceDocument = aDocument;
         username = aUsername;
-        jcasProvider = aJCasProvider;
+        jcasProvider = aCasProvider;
         detailPanel = aDetails;
         selectedLayer = Model.of();
 
@@ -133,11 +133,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
                 .getAdapter(selectedLayer.getObject());
-        JCas jcas = jcasProvider.get();
-        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), jcas);
+        CAS cas = jcasProvider.get();
+        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
         detailPanel.setModelObject(new VID(fs));
         
-        annotationPage.writeEditorCas(jcas);
+        annotationPage.writeEditorCas(cas);
         
         aTarget.add(this);
         aTarget.add(detailPanel);
@@ -181,9 +181,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     private List<AnnotationListItem> listAnnotations()
     {
-        JCas jcas;
+        CAS cas;
         try {
-            jcas = jcasProvider.get();
+            cas = jcasProvider.get();
         }
         catch (IOException e) {
             LOG.error("Unable to load CAS", e);
@@ -200,8 +200,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
             
-            for (FeatureStructure fs : selectFS(jcas.getCas(),
-                    adapter.getAnnotationType(jcas.getCas()))) {
+            for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 if (labelText.isEmpty()) {

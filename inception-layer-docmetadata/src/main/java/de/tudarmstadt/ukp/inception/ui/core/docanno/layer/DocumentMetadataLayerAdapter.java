@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.layer;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,11 +26,10 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.cas.AnnotationBase;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
@@ -91,17 +90,15 @@ public class DocumentMetadataLayerAdapter
      *            the document to which the CAS belongs
      * @param aUsername
      *            the user to which the CAS belongs
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation cannot be created/updated.
      */
-    public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, JCas aJCas)
+    public AnnotationBaseFS add(SourceDocument aDocument, String aUsername, CAS aCas)
         throws AnnotationException
     {
-        CAS aCas = aJCas.getCas();
-        
         Type type = CasUtil.getType(aCas, getAnnotationTypeName());
         
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
@@ -113,16 +110,16 @@ public class DocumentMetadataLayerAdapter
     }
     
     @Override
-    public void delete(SourceDocument aDocument, String aUsername, JCas aJCas, VID aVid)
+    public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        AnnotationBase fs = selectByAddr(aJCas, AnnotationBase.class, aVid.getId());
-        aJCas.removeFsFromIndexes(fs);
+        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
+        aCas.removeFsFromIndexes(fs);
 
         publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> validate(JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas)
     {
         List<Pair<LogMessage, AnnotationFS>> messages = new ArrayList<>();
         // There are no behaviors for document metadata annotations yet

@@ -26,7 +26,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -183,9 +182,9 @@ public class SelectionTask
         List<CAS> casses = new ArrayList<>();
         for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
             try {
-                JCas jCas = documentService.readAnnotationCas(document, aUserName);
-                annoService.upgradeCasIfRequired(jCas.getCas(), document, aUserName);
-                casses.add(jCas.getCas());
+                CAS cas = documentService.readAnnotationCas(document, aUserName);
+                annoService.upgradeCasIfRequired(cas, document, aUserName);
+                casses.add(cas);
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
             } catch (UIMAException e) {

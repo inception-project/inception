@@ -52,9 +52,9 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -112,10 +112,10 @@ public class ExternalSearchAnnotationSidebar
     private WebMarkupContainer dataTableContainer;
 
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-        AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+        AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
         AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         // Attach search state to annotation page
         // This state is to maintain persistence of this sidebar so that when user moves to another
