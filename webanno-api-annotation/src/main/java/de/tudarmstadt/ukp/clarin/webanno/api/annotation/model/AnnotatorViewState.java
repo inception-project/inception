@@ -17,25 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFirstSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextSentenceAddress;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentencePagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 public interface AnnotatorViewState
     extends Serializable
@@ -66,17 +56,29 @@ public interface AnnotatorViewState
 
     /**
      * @return the UIMA address of the first unit in the display window.
+     *
+     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
+     * then fetch its begin offset.
      */
+    @Deprecated
     int getFirstVisibleUnitAddress();
 
     /**
      * @return the begin character offset of the first unit in the display window.
+     * 
+     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
+     * then fetch its begin offset.
      */
+    @Deprecated
     int getFirstVisibleUnitBegin();
 
     /**
      * @return the end character offset of the first unit in the display window.
+     *
+     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
+     * then fetch its end offset.
      */
+    @Deprecated
     int getFirstVisibleUnitEnd();
 
     /**
@@ -86,7 +88,10 @@ public interface AnnotatorViewState
 
     /**
      * @return the index of the last unit in the display window.
+     * 
+     * @deprecated try locating the last visible using using {@link #getWindowEndOffset()} instead
      */
+    @Deprecated
     int getLastVisibleUnitIndex();
 
     /**
@@ -120,130 +125,42 @@ public interface AnnotatorViewState
     // ---------------------------------------------------------------------------------------------
     default void moveToPreviousPage(CAS aCas)
     {
-        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aCas);
-
-        int previousSentenceAddress = WebAnnoCasUtil.getPreviousDisplayWindowSentenceBeginAddress(
-                aCas, getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
-        // Since BratAjaxCasUtil.getPreviousDisplayWindowSentenceBeginAddress returns same
-        // address
-        // if there are not much sentences to go back to as defined in windowSize
-        if (previousSentenceAddress == getFirstVisibleUnitAddress() &&
-        // Check whether it's not the beginning of document
-                getFirstVisibleUnitAddress() != firstSentenceAddress) {
-            previousSentenceAddress = firstSentenceAddress;
-        }
-
-        if (getFirstVisibleUnitAddress() == previousSentenceAddress) {
-            throw new IllegalStateException("This is First Page!");
-        }
-
-        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, previousSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
+        new SentencePagingStrategy().moveToPreviousPage(this, aCas);
     }
 
     default void moveToNextPage(CAS aCas)
     {
-        int nextSentenceAddress = WebAnnoCasUtil.getNextPageFirstSentenceAddress(aCas,
-                getFirstVisibleUnitAddress(), getPreferences().getWindowSize());
-
-        if (getFirstVisibleUnitAddress() == nextSentenceAddress) {
-            throw new IllegalStateException("This is last page!");
-        }
-
-        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, nextSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
+        new SentencePagingStrategy().moveToNextPage(this, aCas);
     }
 
     default void moveToFirstPage(CAS aCas)
     {
-        int firstSentenceAddress = WebAnnoCasUtil.getFirstSentenceAddress(aCas);
-
-        if (firstSentenceAddress == getFirstVisibleUnitAddress()) {
-            throw new IllegalStateException("This is first page!");
-        }
-
-        AnnotationFS sentence = selectByAddr(aCas, Sentence.class, firstSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
+        new SentencePagingStrategy().moveToFirstPage(this, aCas);
     }
 
     default void moveToLastPage(CAS aCas)
     {
-        int lastDisplayWindowBeginingSentenceAddress = WebAnnoCasUtil
-                .getLastDisplayWindowFirstSentenceAddress(aCas, getPreferences().getWindowSize());
-        if (lastDisplayWindowBeginingSentenceAddress == getFirstVisibleUnitAddress()) {
-            throw new IllegalStateException("This is last page!");
-        }
-
-        AnnotationFS sentence = selectByAddr(aCas, Sentence.class,
-                lastDisplayWindowBeginingSentenceAddress);
-        setFirstVisibleUnit(sentence);
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
+        new SentencePagingStrategy().moveToLastPage(this, aCas);
     }
 
     default void moveToUnit(CAS aCas, int aIndex)
     {
-        List<AnnotationFS> units = new ArrayList<>(select(aCas, getType(aCas, Sentence.class)));
-        
-        // Index is 1-based!
-        // The code below sets the focus unit index explicitly - see comment on getSentenceNumber
-        // in moveToOffset for an explanation. We already know the index here, so no need to
-        // calculate it (wrongly) using getSentenceNumber.
-        if (aIndex <= 0) {
-            moveToOffset(aCas, units.get(0).getBegin());
-            setFocusUnitIndex(1);
-        }
-        else if (aIndex > units.size()) {
-            moveToOffset(aCas, units.get(units.size() - 1).getBegin());
-            setFocusUnitIndex(units.size());
-        }
-        else {
-            moveToOffset(aCas, units.get(aIndex - 1).getBegin());
-            setFocusUnitIndex(aIndex);
-        }
+        new SentencePagingStrategy().moveToUnit(this, aCas, aIndex);
     }
     
     default void moveToOffset(CAS aCas, int aOffset)
     {
-        // Fetch the first sentence on screen or first sentence
-        AnnotationFS sentence;
-        if (getFirstVisibleUnitAddress() > -1) {
-            sentence = selectByAddr(aCas, Sentence.class, getFirstVisibleUnitAddress());
-        }
-        else {
-            sentence = getFirstSentence(aCas);
-        }
-        
-        // Calculate the first sentence in the window in such a way that the annotation
-        // currently selected is in the center of the window
-        sentence = findWindowStartCenteringOnSelection(aCas, sentence, aOffset,
-                getProject(), getDocument(), getPreferences().getWindowSize());
-        
-        // Move to it
-        setFirstVisibleUnit(sentence);
-        
-        // FIXME getSentenceNumber is not a good option... if we aim for the begin offset of the
-        // very last unit, then we get (max-units - 1) instead of (max-units). However, this
-        // method is used also in curation and I dimly remember that things broke when I tried
-        // to fix it. Probably better to move away from it in the long run. -- REC
-        setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, aOffset));
+        new SentencePagingStrategy().moveToOffset(this, aCas, aOffset);
     }
 
     default void moveToSelection(CAS aCas)
     {
-        moveToOffset(aCas, getSelection().getBegin());
+        new SentencePagingStrategy().moveToSelection(this, aCas);
     }
 
     default void moveForward(CAS aCas)
     {
-        // Fetch the first sentence on screen
-        AnnotationFS sentence = selectByAddr(aCas, Sentence.class, getFirstVisibleUnitAddress());
-        // Find the following one
-        int address = getNextSentenceAddress(aCas, sentence);
-        // Move to it
-        setFirstVisibleUnit(selectByAddr(aCas, Sentence.class, address));
+        new SentencePagingStrategy().moveForward(this, aCas);
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static java.util.Collections.unmodifiableList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -67,7 +68,11 @@ public class AnnotatorStateImpl
      * The source document the to be annotated
      */
     private SourceDocument document;
+    
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int documentIndex = -1;
+    
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int numberOfDocuments = -1;
 
     /**
@@ -110,19 +115,22 @@ public class AnnotatorStateImpl
     /**
      * The index of the first visible unit in the display window.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int firstVisibleUnitIndex;
     
     /**
      * The index of the last visible unit in the display window.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int lastVisibleUnitIndex;
 
     /**
      * The total number of units in the document.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int unitCount;
 
-    private final List<FeatureState> featureModels = new ArrayList<>();          
+    private final List<FeatureState> featureModels = new ArrayList<>();
     
     /**
      * Constraints object from rule file
@@ -300,10 +308,9 @@ public class AnnotatorStateImpl
 
         AnnotationFS lastVisibleUnit = getLastSentenceInDisplayWindow(cas,
                 getAddr(aFirstVisibleUnit), getPreferences().getWindowSize());
-        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas,
-                aFirstVisibleUnit.getBegin());
-        lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas, lastVisibleUnit.getBegin());
         unitCount = select(cas, getType(cas, Sentence.class)).size();
+        firstVisibleUnitIndex = getSentenceNumber(cas, aFirstVisibleUnit.getBegin());
+        lastVisibleUnitIndex = getSentenceNumber(cas, lastVisibleUnit.getBegin());
         
         windowBeginOffset = aFirstVisibleUnit.getBegin();
         windowEndOffset = lastVisibleUnit.getEnd();

@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
@@ -31,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
@@ -46,8 +46,6 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -70,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -86,9 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
@@ -124,7 +121,6 @@ public class CurationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    private NumberTextField<Integer> gotoPageTextField;
     private DocumentNamePanel documentNamePanel;
     
     private long currentprojectId;
@@ -254,18 +250,6 @@ public class CurationPage
         
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
 
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
-                gotoPageTextFieldForm, this::actionGotoPage);
-        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
-        gotoPageTextFieldForm.add(gotoPageLink);
-        add(gotoPageTextFieldForm);
-
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
         remergeDocumentDialog = new ChallengeResponseDialog("remergeDocumentDialog",
                 new StringResourceModel("RemergeDocumentDialog.title", this),
@@ -316,18 +300,6 @@ public class CurationPage
         add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
-
-        add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
-
-        add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -413,12 +385,6 @@ public class CurationPage
     }
 
     @Override
-    public NumberTextField<Integer> getGotoPageTextField()
-    {
-        return gotoPageTextField;
-    }
-
-    @Override
     public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
@@ -452,9 +418,7 @@ public class CurationPage
     private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
     {
         AnnotatorState state = getModelObject();
-        gotoPageTextField.setModelObject(state.getFirstVisibleUnitIndex());
         curationPanel.setDefaultModelObject(curationContainer);
-        aTarget.add(gotoPageTextField);
     }
 
     /**
@@ -474,7 +438,7 @@ public class CurationPage
     }
 
     @Override
-    protected CAS getEditorCas()
+    public CAS getEditorCas()
         throws IOException
     {
         AnnotatorState state = getModelObject();
@@ -485,7 +449,20 @@ public class CurationPage
 
         return curationDocumentService.readCurationCas(state.getDocument());
     }
+    
+    @Override
+    public void writeEditorCas(CAS aCas) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        curationDocumentService.writeCurationCas(aCas, state.getDocument(), true);
 
+        // Update timestamp in state
+        Optional<Long> diskTimestamp = curationDocumentService
+                .getCurationCasTimestamp(state.getDocument());
+        if (diskTimestamp.isPresent()) {
+            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        }
+    }
     private void updateSentenceNumber(CAS aCas, int aAddress)
     {
         AnnotatorState state = getModelObject();
@@ -506,23 +483,6 @@ public class CurationPage
         preferencesModal.show(aTarget);
     }
     
-    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        
-        CAS cas = getEditorCas();
-        List<AnnotationFS> sentences = new ArrayList<>(selectSentences(cas));
-        int selectedSentence = gotoPageTextField.getModelObject();
-        selectedSentence = Math.min(selectedSentence, sentences.size());
-        gotoPageTextField.setModelObject(selectedSentence);
-        
-        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
-        state.setFocusUnitIndex(selectedSentence);        
-        
-        actionRefreshDocument(aTarget);
-    }
-
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
@@ -687,7 +647,6 @@ public class CurationPage
                         
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus);
-            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
     
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -723,7 +682,7 @@ public class CurationPage
     }
 
     @Override
-    protected void actionRefreshDocument(AjaxRequestTarget aTarget)
+    public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
             aTarget.add(getOrCreatePositionInfoLabel());

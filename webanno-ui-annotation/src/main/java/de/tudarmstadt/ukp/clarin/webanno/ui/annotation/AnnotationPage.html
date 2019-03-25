@@ -49,30 +49,7 @@
               </fieldset>
             </li>
   
-            <li>
-              <fieldset>
-                <legend>Page</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showFirst" />
-                  <li wicket:id="showPrevious" />
-  
-                  <li>
-                    <form wicket:id="gotoPageTextFieldForm">
-                      <div style="height: 32px;">
-                        <input type="number" wicket:id="gotoPageText"
-                          style="width: 4em; text-align: right;" title="press Enter" />
-                      </div>
-                      <div>
-                        <a wicket:id="gotoPageLink">Go to</a>
-                      </div>
-                    </form>
-                  </li>
-  
-                  <li wicket:id="showNext" />
-                  <li wicket:id="showLast" />
-                </ul>
-              </fieldset>
-            </li>
+            <li wicket:id="pageNavigator"/>
   
             <li>
               <fieldset>
@@ -106,8 +83,8 @@
           </ul>
         </div>
         <div class="locationbar">
-          <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
-            wicket:id="numberOfPages"></span>
+          <span wicket:id="documentNamePanel"></span> <span style="float: right;">
+          <span wicket:id="numberOfPages"></span>
           </span>
         </div>
       </div>

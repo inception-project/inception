@@ -161,24 +161,6 @@ public class WebAnnoCasUtil
         return aCas.getLowLevelCAS().ll_getFSForRef(aAddress);
     }
 
-    private static AnnotationFS selectSingleAt(CAS aCas, Type type,
-            int aBegin, int aEnd)
-    {
-        List<AnnotationFS> covered = CasUtil.selectCovered(aCas, type, aBegin, aEnd);
-        if (covered.isEmpty()) {
-            return null;
-        }
-        else {
-            AnnotationFS first = covered.get(0);
-            if (first.getBegin() == aBegin && first.getEnd() == aEnd) {
-                return first;
-            }
-            else {
-                return null;
-            }
-        }
-    }
-
     public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
     {
         List<AnnotationFS> covered = CasUtil.selectCovered(aCas, type, aBegin, aEnd);
@@ -221,13 +203,14 @@ public class WebAnnoCasUtil
      *            the CAS.
      * @param aBegin
      *            the begin offset.
-     * @param aEnd
-     *            the end offset.
      * @return the sentence.
      */
-    public static AnnotationFS selectSentenceAt(CAS aCas, int aBegin, int aEnd)
+    public static AnnotationFS selectSentenceAt(CAS aCas, int aBegin)
     {
-        return selectSingleAt(aCas, getType(aCas, Sentence.class), aBegin, aEnd);
+        return CasUtil.select(aCas, getType(aCas, Sentence.class)).stream()
+            .filter(s -> s.getBegin() == aBegin)
+            .findFirst()
+            .orElse(null);
     }
     
     public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
@@ -351,7 +334,7 @@ public class WebAnnoCasUtil
      *            the begin offset.
      * @return the sentence.
      */
-    public static AnnotationFS getSentence(CAS aCas, int aBegin)
+    public static AnnotationFS selectSentenceCovering(CAS aCas, int aBegin)
     {
         AnnotationFS currentSentence = null;
         for (AnnotationFS sentence : select(aCas, getType(aCas, Sentence.class))) {
@@ -474,7 +457,7 @@ public class WebAnnoCasUtil
         }
 
         // Seek the sentence that contains the current focus
-        AnnotationFS s = getSentence(aCas, aFocusOffset);
+        AnnotationFS s = selectSentenceCovering(aCas, aFocusOffset);
         
         // If the focus is outside any sentence, then we just return the reference sentence.
         // This should actually never happen, but in case it does, we log a warning and try to

@@ -71,6 +71,12 @@ public class Offsets
     {
         end = aEnd;
     }
+    
+    @Override
+    public String toString()
+    {
+        return "[" + begin + "-" + end + "]";
+    }
 
     /**
      * Deserialize {@link Offsets} from JSON to Java.

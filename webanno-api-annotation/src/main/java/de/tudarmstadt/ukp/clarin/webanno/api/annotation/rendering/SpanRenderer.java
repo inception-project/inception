@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -100,10 +99,10 @@ public class SpanRenderer
             String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
             Map<String, String> features = getFeatures(typeAdapter, fs, visibleFeatures);
             Map<String, String> hoverFeatures = getHoverFeatures(typeAdapter, fs, aFeatures);
-            List<VRange> ranges = calculateRanges(aCas, visibleSentences, aResponse,
+            VRange range = calculateRange(aCas, visibleSentences, aResponse,
                     aWindowBegin, aWindowEnd, fs);
 
-            VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, ranges, features,
+            VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, range, features,
                     hoverFeatures);
             
             annoToSpanIdx.put(fs, span);
@@ -135,7 +134,7 @@ public class SpanRenderer
         }
     }
     
-    private List<VRange> calculateRanges(CAS aCas, List<AnnotationFS> aVisibleSentences,
+    private VRange calculateRange(CAS aCas, List<AnnotationFS> aVisibleSentences,
             VDocument aResponse, int aWindowBegin, int aWindowEnd, AnnotationFS aFS)
     {
         AnnotationFS beginSent = null;
@@ -179,32 +178,6 @@ public class SpanRenderer
                     "Unable to determine sentences in which the annotation starts/ends: " + aFS);
         }
 
-        // If the annotation extends across sentence boundaries, create multiple ranges for the
-        // annotation, one for every sentence.
-        List<AnnotationFS> sentences = selectCovered(aCas, getType(aCas, Sentence.class),
-                beginSent.getBegin(), endSent.getEnd());
-        List<VRange> ranges = new ArrayList<>();
-        if (sentences.size() > 1) {
-            for (AnnotationFS sentence : sentences) {
-                if (sentence.getBegin() <= aFS.getBegin() && aFS.getBegin() < sentence.getEnd()) {
-                    ranges.add(new VRange(aFS.getBegin() - aWindowBegin,
-                            sentence.getEnd() - aWindowBegin));
-                }
-                else if (sentence.getBegin() <= aFS.getEnd() && aFS.getEnd() <= sentence.getEnd()) {
-                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
-                            aFS.getEnd() - aWindowBegin));
-                }
-                else {
-                    ranges.add(new VRange(sentence.getBegin() - aWindowBegin,
-                            sentence.getEnd() - aWindowBegin));
-                }
-            }
-
-            return ranges;
-        }
-        else {
-            return asList(
-                    new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin));
-        }
+        return new VRange(aFS.getBegin() - aWindowBegin, aFS.getEnd() - aWindowBegin);
     }
 }
