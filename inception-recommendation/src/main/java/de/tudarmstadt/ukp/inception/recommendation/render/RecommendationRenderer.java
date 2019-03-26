@@ -75,7 +75,7 @@ public class RecommendationRenderer
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
                 renderer.render(aCas, aVdoc, aState, coloringStrategy, layer, aRecService,
-                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService);
+                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService,
                     aWindowBeginOffset, aWindowEndOffset);
             }
         }
