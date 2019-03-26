@@ -120,7 +120,7 @@ public class Span {
             "page = " + page + "\n" +
             "label = \"" + label + "\"\n" +
             "color = \"" + color + "\"\n" +
-            "text = \"" + text + "\"\n" +
+            "text = \"" + text.replace("\"", "\\\\\"") + "\"\n" +
             "textrange = [" + startPos + "," + endPos + "]\n";
     }
 
