@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.linesOf;
@@ -36,7 +38,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.CollectionReaderFactory;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -56,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -91,7 +91,7 @@ public class PdfAnnoRendererTest
         project = new Project();
 
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-            AnchoringMode.SINGLE_TOKEN);
+            SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
 
         tokenPosFeature = new AnnotationFeature();
@@ -105,7 +105,7 @@ public class PdfAnnoRendererTest
         tokenPosFeature.setVisible(true);
 
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-            AnchoringMode.SINGLE_TOKEN);
+            SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
@@ -159,16 +159,15 @@ public class PdfAnnoRendererTest
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
             TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
-        preRenderer.render(vdoc, 0, cas.getDocumentText().length(),
-            jCas, schemaService.listAnnotationLayer(project));
+        preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
+                schemaService.listAnnotationLayer(project));
 
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
@@ -193,11 +192,10 @@ public class PdfAnnoRendererTest
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,
             TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
-        JCas jCas = cas.getJCas();
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(jCas));
+        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         DocumentModel documentModel = new DocumentModel(cas.getDocumentText());
