@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class EvaluationResult
 {
@@ -29,7 +30,6 @@ public class EvaluationResult
     private boolean skippedEvaluation;
 
     private String ignoreLabel;
-    private List<AnnotatedTokenPair> annotatedPairs;
 
     /**
      * Stores number of predicted labels for each gold label
@@ -52,45 +52,42 @@ public class EvaluationResult
      * @param aAnnotatedPairs
      *            pairs of gold and predicted labels for the same token
      */
-    // TODO: use a stream for the annotation pairs
-    public EvaluationResult(String aIgnoreLabel, List<AnnotatedTokenPair> aAnnotatedPairs)
+    public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs)
     {
         super();
         labels = new ArrayList<>();
         ignoreLabel = aIgnoreLabel;
-        annotatedPairs = aAnnotatedPairs;
-        confusionMatrix = countMatches(aAnnotatedPairs);
+        // construct confusion matrix
+        confusionMatrix = new HashMap<>();
+        aAnnotatedPairs.filter(this::isEqualIgnoreLabel).forEach(this::incConfusionMatrix);
     }
 
-    //FIXME: wrong matrix values
-    private Map<String, Map<String, Integer>> countMatches(List<AnnotatedTokenPair> aAnnotatedPairs)
+    public EvaluationResult()
     {
-        confusionMatrix = new HashMap<>();
+    }
 
-        String goldLabel;
-        String predictedLabel;
-        for (AnnotatedTokenPair pair : aAnnotatedPairs) {
-            goldLabel = pair.getGoldLabel();
-            predictedLabel = pair.getPredictedLabel();
+    private boolean isEqualIgnoreLabel(AnnotatedTokenPair aPair)
+    {
+        return !aPair.getGoldLabel().equals(ignoreLabel)
+                && !aPair.getPredictedLabel().equals(ignoreLabel);
+    }
 
-            // do not consider annotations that labeled with the ignore label
-            if (!goldLabel.equals(ignoreLabel) && !predictedLabel.equals(ignoreLabel)) {
+    private void incConfusionMatrix(AnnotatedTokenPair aPair)
+    {
+        String goldLabel = aPair.getGoldLabel();
+        String predictedLabel = aPair.getPredictedLabel();
 
-                // annotated pair is true positive
-                if (goldLabel.equals(predictedLabel)) {
-                    incCounter(goldLabel, goldLabel);
-                }
-                else {
-                    // annotated pair is false negative for gold class
-                    incCounter(goldLabel, predictedLabel);
-                    // annotate pair is false positive for predicted class
-                    incCounter(predictedLabel, goldLabel);
-                }
-
-                total += 1;
-            }
+        // annotated pair is true positive
+        if (goldLabel.equals(predictedLabel)) {
+            incCounter(goldLabel, goldLabel);
         }
-        return confusionMatrix;
+        else {
+            // annotated pair is false negative for gold class = annotated pair is false
+            // positive for predicted class
+            incCounter(goldLabel, predictedLabel);
+        }
+
+        total += 1;
     }
 
     private void incCounter(String aGoldLabel, String aPredictedLabel)
@@ -245,11 +242,6 @@ public class EvaluationResult
     public boolean isEvaluationSkipped()
     {
         return skippedEvaluation;
-    }
-
-    public List<AnnotatedTokenPair> getAnnotatedPairs()
-    {
-        return annotatedPairs;
     }
 
 }

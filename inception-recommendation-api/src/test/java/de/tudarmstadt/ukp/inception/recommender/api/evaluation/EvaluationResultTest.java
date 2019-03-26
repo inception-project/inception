@@ -27,7 +27,7 @@ public class EvaluationResultTest
         for (String[] labels : instanceLabels) {
             instances.add(new AnnotatedTokenPair(0, 0, labels[0], labels[1]));
         }
-        calc = new EvaluationResult(null, instances);
+        calc = new EvaluationResult(null, instances.stream());
     }
 
     @Test
