@@ -30,6 +30,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -168,7 +169,7 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile);
 
@@ -185,7 +186,7 @@ public class PdfAnnoRendererTest
         String file = "src/test/resources/tcf04-karin-wl.xml";
         String pdftxt = new Scanner(
             new File("src/test/resources/rendererTestPdfExtract.txt")).useDelimiter("\\Z").next();
-        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt);
+        PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
 
         CAS cas = JCasFactory.createJCas().getCas();
         CollectionReader reader = CollectionReaderFactory.createReader(TcfReader.class,

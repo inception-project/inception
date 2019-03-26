@@ -21,7 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.Map;
 import java.util.stream.Collectors;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParser;
+import javax.xml.parsers.SAXParserFactory;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
@@ -36,6 +42,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -48,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.dkpro.core.api.resources.ResourceUtils;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -326,6 +334,20 @@ public class PdfAnnotationEditor
         return pdfExtractFile;
     }
 
+    public static Map<String, String> getSubstitutionTable()
+        throws IOException, ParserConfigurationException, SAXException {
+        String substitutionTable =
+            "classpath:/de/tudarmstadt/ukp/dkpro/core/io/pdf/substitutionTable.xml";
+        URL url = ResourceUtils.resolveLocation(substitutionTable);
+        try (InputStream is = url.openStream()) {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            SAXParser saxParser = factory.newSAXParser();
+            SubstitutionTableParser substitutionTableParser = new SubstitutionTableParser();
+            saxParser.parse(is, substitutionTableParser);
+            return substitutionTableParser.getSubstitutionTable();
+        }
+    }
+
     public void initialize(AjaxRequestTarget aTarget)
     {
         try {
@@ -338,8 +360,8 @@ public class PdfAnnotationEditor
 
         try {
             String pdfText = PDFExtractor.processFileToString(pdfFile, false);
-            pdfExtractFile = new PdfExtractFile(pdfText);
-        } catch (IOException e) {
+            pdfExtractFile = new PdfExtractFile(pdfText, getSubstitutionTable());
+        } catch (IOException | SAXException | ParserConfigurationException e) {
             handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
                 + "with PDFExtractor.", e, aTarget);
         }
