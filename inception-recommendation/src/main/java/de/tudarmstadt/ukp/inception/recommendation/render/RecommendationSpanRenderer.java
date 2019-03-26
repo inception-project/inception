@@ -84,14 +84,11 @@ public class RecommendationSpanRenderer
         ColoringStrategy aColoringStrategy, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService)
+        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
     {
         if (aCas == null || recommendationService == null) {
             return;
         }
-
-        int windowBegin = aState.getWindowBeginOffset();
-        int windowEnd = aState.getWindowEndOffset();
 
         Predictions model = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
@@ -102,7 +99,7 @@ public class RecommendationSpanRenderer
         
         // TODO #176 use the document Id once it it available in the CAS
         SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
-                windowBegin, windowEnd);
+                aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -113,8 +110,8 @@ public class RecommendationSpanRenderer
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
         PredictionTask.calculateVisibility(learningRecordService, aAnnotationService,
-                aCas, aState.getUser().getUsername(), layer, groups, windowBegin,
-                windowEnd);
+                aCas, aState.getUser().getUsername(), layer, groups, aWindowBeginOffset,
+                aWindowEndOffset);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
@@ -202,7 +199,8 @@ public class RecommendationSpanRenderer
                         featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
-                                new VRange(ao.getBegin() - windowBegin, ao.getEnd() - windowBegin),
+                                new VRange(ao.getBegin() - aWindowBeginOffset,
+                                        ao.getEnd() - aWindowBeginOffset),
                                 featureAnnotation, Collections.emptyMap(), color);
                         vdoc.add(v);
                         first = false;
