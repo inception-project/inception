@@ -19,7 +19,7 @@ export INCEPTION_PORT=port-on-host
 
 In the folder where the **docker-compose.yml** is located, call
 
-    docker-compose inception up -d
+    docker-compose up -d
     
 This starts an INCEpTION instance together with a MySQL database.   
     

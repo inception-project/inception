@@ -10,6 +10,7 @@ networks:
 services:
   mysqlserver:
     image: "mysql:5"
+    container_name: inception_mysql
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
@@ -28,7 +29,8 @@ services:
       inception-net:
 
   webserver:
-    image: "inceptionproject/inception-snapshots:latest"
+    image: "inceptionproject/inception:latest"
+    container_name: inception_webserver
     ports:
       - "${INCEPTION_PORT}:8080"
     environment:

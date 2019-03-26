@@ -27,7 +27,7 @@
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
   <properties>
-    <docker.image.name>inception/inception-snapshots</docker.image.name>
+    <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
     <!-- INCEPTION - CORE DEPENDENCIES -->
