@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,7 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -42,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -69,8 +70,8 @@ public class RecommendationSpanRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the VDocument
      * {@link VDocument}
      *
-     * @param aJcas
-     *            The JCAS object containing annotations
+     * @param aCas
+     *            The CAS object containing annotations
      * @param vdoc
      *            A VDocument containing annotations for the given layer
      * @param aState
@@ -79,13 +80,13 @@ public class RecommendationSpanRenderer
      *            the coloring strategy to render this layer
      */
     @Override
-    public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
         ColoringStrategy aColoringStrategy, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
         DocumentService aDocumentService)
     {
-        if (aJcas == null || recommendationService == null) {
+        if (aCas == null || recommendationService == null) {
             return;
         }
 
@@ -100,8 +101,8 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup groups = model.getPredictions(
-                DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd);
+        SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
+                windowBegin, windowEnd);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -112,7 +113,7 @@ public class RecommendationSpanRenderer
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
 
         PredictionTask.calculateVisibility(learningRecordService, aAnnotationService,
-                aJcas.getCas(), aState.getUser().getUsername(), layer, groups, windowBegin,
+                aCas, aState.getUser().getUsername(), layer, groups, windowBegin,
                 windowEnd);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),

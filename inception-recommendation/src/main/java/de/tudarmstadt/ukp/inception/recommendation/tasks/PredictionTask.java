@@ -160,7 +160,7 @@ public class PredictionTask
                     if (!originalCas.isPresent()) {
                         try {
                             originalCas = Optional.of(documentService.readAnnotationCas(document,
-                                    user.getUsername()).getCas());
+                                    user.getUsername()));
                         }
                         catch (IOException e) {
                             log.error(

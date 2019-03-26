@@ -20,15 +20,14 @@ package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
-import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractLine;
 
 public class PdfExtractFileTest
 {
@@ -39,25 +38,60 @@ public class PdfExtractFileTest
     {
         String pdftxt = new Scanner(new File("src/test/resources/pdfextract.txt"))
             .useDelimiter("\\Z").next();
-        pdfExtractFile = new PdfExtractFile(pdftxt);
+        pdfExtractFile = new PdfExtractFile(pdftxt, PdfAnnotationEditor.getSubstitutionTable());
     }
 
     @Test
     public void testGetStringContent()
     {
-        assertThat("2abc[4]d").isEqualTo(pdfExtractFile.getStringContent());
+        assertThat("2abc[4]dﬁeg`A").isEqualTo(pdfExtractFile.getStringContent());
+    }
+
+    @Test
+    public void testGetSanitizedContent()
+    {
+        assertThat("2abc[4]dfiegÀ").isEqualTo(pdfExtractFile.getSanitizedContent());
     }
 
     @Test
     public void testGetStringPdfExtractLines()
     {
-        List<PdfExtractLine> pdfExtractLines = new ArrayList<>();
-        pdfExtractLines.add(
-            new PdfExtractLine(1, 7, "c", "550.406 789.56177 8.3499165 16.080894"));
-        pdfExtractLines.add(
-            new PdfExtractLine(1, 11, "[", "551.406 790.56177 9.3499165 17.080894"));
-        pdfExtractLines.add(
-            new PdfExtractLine(1, 12, "4", "552.406 791.56177 10.3499165 18.080894"));
-        assertThat(pdfExtractLines).isEqualTo(pdfExtractFile.getStringPdfExtractLines(3, 5));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getExtractIndex(0));
+        assertThat(new Offset(5, 5)).isEqualTo(pdfExtractFile.getExtractIndex(1));
+        assertThat(new Offset(6, 6)).isEqualTo(pdfExtractFile.getExtractIndex(2));
+        assertThat(new Offset(7, 7)).isEqualTo(pdfExtractFile.getExtractIndex(3));
+        assertThat(new Offset(11, 11)).isEqualTo(pdfExtractFile.getExtractIndex(4));
+        assertThat(new Offset(12, 12)).isEqualTo(pdfExtractFile.getExtractIndex(5));
+        assertThat(new Offset(13, 13)).isEqualTo(pdfExtractFile.getExtractIndex(6));
+        assertThat(new Offset(14, 14)).isEqualTo(pdfExtractFile.getExtractIndex(7));
+        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getExtractIndex(8));
+        assertThat(new Offset(15, 15)).isEqualTo(pdfExtractFile.getExtractIndex(9));
+        assertThat(new Offset(16, 16)).isEqualTo(pdfExtractFile.getExtractIndex(10));
+        assertThat(new Offset(17, 17)).isEqualTo(pdfExtractFile.getExtractIndex(11));
+        assertThat(new Offset(18, 19)).isEqualTo(pdfExtractFile.getExtractIndex(12));
+    }
+
+    @Test
+    public void testGetStringIndex()
+    {
+        assertThat(new Offset(0, 0)).isEqualTo(pdfExtractFile.getStringIndex(1));
+        assertThat(new Offset(0, 0)).isEqualTo(pdfExtractFile.getStringIndex(2));
+        assertThat(new Offset(0, 0)).isEqualTo(pdfExtractFile.getStringIndex(3));
+        assertThat(new Offset(0, 0)).isEqualTo(pdfExtractFile.getStringIndex(4));
+        assertThat(new Offset(1, 1)).isEqualTo(pdfExtractFile.getStringIndex(5));
+        assertThat(new Offset(2, 2)).isEqualTo(pdfExtractFile.getStringIndex(6));
+        assertThat(new Offset(3, 3)).isEqualTo(pdfExtractFile.getStringIndex(7));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getStringIndex(8));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getStringIndex(9));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getStringIndex(10));
+        assertThat(new Offset(4, 4)).isEqualTo(pdfExtractFile.getStringIndex(11));
+        assertThat(new Offset(5, 5)).isEqualTo(pdfExtractFile.getStringIndex(12));
+        assertThat(new Offset(6, 6)).isEqualTo(pdfExtractFile.getStringIndex(13));
+        assertThat(new Offset(7, 7)).isEqualTo(pdfExtractFile.getStringIndex(14));
+        assertThat(new Offset(8, 9)).isEqualTo(pdfExtractFile.getStringIndex(15));
+        assertThat(new Offset(10, 10)).isEqualTo(pdfExtractFile.getStringIndex(16));
+        assertThat(new Offset(11, 11)).isEqualTo(pdfExtractFile.getStringIndex(17));
+        assertThat(new Offset(12, 12)).isEqualTo(pdfExtractFile.getStringIndex(18));
+        assertThat(new Offset(12, 12)).isEqualTo(pdfExtractFile.getStringIndex(19));
     }
 }

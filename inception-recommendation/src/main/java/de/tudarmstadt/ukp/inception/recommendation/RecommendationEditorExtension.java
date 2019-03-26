@@ -26,8 +26,8 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningReco
 import java.io.IOException;
 import java.util.Optional;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
@@ -114,16 +114,16 @@ public class RecommendationEditorExtension
 
     @Override
     public void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, JCas aJCas, VID aVID, String aAction, int aBegin, int aEnd)
+            AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction, int aBegin, int aEnd)
         throws IOException, AnnotationException
     {
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
-            actionAcceptRecommendation(aActionHandler, aState, aTarget, aJCas, aVID, aBegin, aEnd);
+            actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
         }
         // Reject annotation
         else if (DoActionResponse.is(aAction)) {
-            actionRejectRecommendation(aActionHandler, aState, aTarget, aJCas, aVID, aBegin, aEnd);
+            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
         }
     }
     
@@ -139,7 +139,7 @@ public class RecommendationEditorExtension
      * </ul>
      */
     private void actionAcceptRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin,
             int aEnd)
         throws AnnotationException, IOException
     {
@@ -161,7 +161,7 @@ public class RecommendationEditorExtension
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
         int address = recommendationService.upsertFeature(annotationService, aState.getDocument(),
-                aState.getUser().getUsername(), aJCas, layer, feature, suggestion.getLabel(),
+                aState.getUser().getUsername(), aCas, layer, feature, suggestion.getLabel(),
                 suggestion.getBegin(), suggestion.getEnd());
 
         // Hide the suggestion. This is faster than having to recalculate the visibility status for
@@ -170,16 +170,16 @@ public class RecommendationEditorExtension
 
         // Set selection to the accepted annotation and select it and load it into the detail editor
         // panel
-        aState.getSelection().selectSpan(new VID(address), aJCas.getCas(), aBegin, aEnd);
-        aActionHandler.actionSelect(aTarget, aJCas);            
-        aActionHandler.actionCreateOrUpdate(aTarget, aJCas);
+        aState.getSelection().selectSpan(new VID(address), aCas, aBegin, aEnd);
+        aActionHandler.actionSelect(aTarget, aCas);            
+        aActionHandler.actionCreateOrUpdate(aTarget, aCas);
 
         // Log the action to the learning record
         learningRecordService.logRecord(document, aState.getUser().getUsername(),
                 suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
         
         // Send an application event that the suggestion has been accepted
-        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aJCas, AnnotationFS.class, address);
+        AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
         applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
                 document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
 
@@ -198,7 +198,7 @@ public class RecommendationEditorExtension
      * </ul>
      */
     private void actionRejectRecommendation(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, JCas aJCas, VID aVID, int aBegin,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin,
             int aEnd)
         throws AnnotationException
     {
@@ -229,7 +229,7 @@ public class RecommendationEditorExtension
                 suggestion, layer, feature, REJECTED, MAIN_EDITOR);
 
         // Trigger a re-rendering of the document
-        aActionHandler.actionSelect(aTarget, aJCas);
+        aActionHandler.actionSelect(aTarget, aCas);
         
         // Send an application event that the suggestion has been rejected
         applicationEventPublisher.publishEvent(
@@ -242,7 +242,7 @@ public class RecommendationEditorExtension
     }
     
     @Override
-    public void render(JCas aJCas, AnnotatorState aState, VDocument aVDoc)
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aBegin, int aEnd)
     {
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user
@@ -257,11 +257,11 @@ public class RecommendationEditorExtension
             RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.getPage().send(_target.getPage(),
                             Broadcast.BREADTH,
-                            new AjaxPredictionsSwitchedEvent(_target, aJCas, aState, aVDoc)));
+                            new AjaxPredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
         }
 
         // Add the suggestions to the visual document
-        RecommendationRenderer.render(aVDoc, aState, aJCas, annotationService,
+        RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
                 recommendationService, learningRecordService, fsRegistry, documentService);
     }
 }
