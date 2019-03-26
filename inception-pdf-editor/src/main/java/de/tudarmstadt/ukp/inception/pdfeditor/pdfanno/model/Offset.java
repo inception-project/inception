@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 import org.apache.wicket.request.IRequestParameters;
 
-public class Offset {
+public class Offset implements Serializable
+{
 
+    private static final long serialVersionUID = -6076735271434213572L;
     private int begin;
     private int end;
 

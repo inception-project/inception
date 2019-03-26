@@ -17,13 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model;
 
+import java.io.Serializable;
 import java.util.Objects;
 
 /**
  * Represents a line within a PDFExtract file.
  */
-public class PdfExtractLine
+public class PdfExtractLine implements Serializable
 {
+
+    private static final long serialVersionUID = -246112751706793932L;
 
     private int page;
 
