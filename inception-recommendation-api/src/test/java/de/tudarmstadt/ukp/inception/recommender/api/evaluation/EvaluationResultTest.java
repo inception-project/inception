@@ -41,21 +41,20 @@ public class EvaluationResultTest
     public void thatPrecisionWorks()
     {
         assertThat(calc.getPrecisionScore()).as("precision is correctly calculated")
-                .isEqualTo((7.0 / 9 + 0.5) / 3);
+                .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
 
     @Test
     public void thatRecallWorks()
     {
         assertThat(calc.getRecallScore()).as("recall is correctly calculated")
-                .isEqualTo((1.0 + 1.0 / 3) / 3);
+                .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
 
     @Test
     public void thatF1Works()
     {
         assertThat(calc.getF1Score()).as("f1 is correctly calculated")
-                .isEqualTo((2 * (7.0 / 9 + 0.5) / 3 * ((1.0 + 1.0 / 3) / 3)) / (7.0 / 9 + 0.5) / 3
-                        + (1.0 + 1.0 / 3) / 3);
+                .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
     }
 }
