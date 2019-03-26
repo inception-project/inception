@@ -212,19 +212,20 @@ async function displayViewer () {
     window.annoPage.pdftxt = analyzeResult
 
 // BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+    const renderTimeout = 1500
     window.pageNumber = 1;
     getAnnotations()
 
     document.addEventListener('pagechange', function(e) {
       if (e.pageNumber !== e.previousPageNumber) {
-        console.log("page change: " + e.previousPageNumber + " to " + e.pageNumber)
+        console.log('page change: ' + e.previousPageNumber + ' to ' + e.pageNumber)
         window.pageNumber = e.pageNumber
         setTimeout(() => {
           if (window.pageNumber === e.pageNumber) {
-            console.log("no further page changes after 1 second, requesting annotations ...")
+            console.log('no further page changes after ' + renderTimeout + ' ms, requesting annotations ...')
             getAnnotations()
           }
-        }, 1500)
+        }, renderTimeout)
       }
     })
 // END INCEpTION EXTENSION
