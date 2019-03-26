@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
@@ -38,7 +39,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,9 +53,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
@@ -170,11 +170,17 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            List<KBHandle> exactMatches =  newQueryBuilder(aValueType, aKB)
-                    .withLabelMatchingExactlyAnyOf(exactLabels)
+            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
+                    .withLabelMatchingExactlyAnyOf(exactLabels);
+            
+            if (aConceptScope != null) {
+                exactBuilder.childrenOf(aConceptScope);
+            }
+            
+            List<KBHandle> exactMatches = exactBuilder
                     .retrieveLabel()
                     .retrieveDescription()
-                    .asHandles((RepositoryConnection) conn, true);
+                    .asHandles(conn, true);
 
             log.debug("Found [{}] candidates exactly matching {}",
                     exactMatches.size(), asList(exactLabels));
@@ -185,11 +191,17 @@ public class ConceptLinkingServiceImpl
             if (aQuery != null && aQuery.length() > threshold) {
                 // Collect matches starting with the query - this is the main driver for the
                 // auto-complete functionality
-                List<KBHandle> startingWithMatches = newQueryBuilder(aValueType, aKB)
-                        .withLabelStartingWith(aQuery)
+                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB)
+                        .withLabelStartingWith(aQuery);
+                
+                if (aConceptScope != null) {
+                    startingWithBuilder.childrenOf(aConceptScope);
+                }
+                
+                List<KBHandle> startingWithMatches = startingWithBuilder
                         .retrieveLabel()
                         .retrieveDescription()
-                        .asHandles((RepositoryConnection) conn, true);
+                        .asHandles(conn, true);
                 
                 log.debug("Found [{}] candidates starting with [{}]]",
                         startingWithMatches.size(), aQuery);            
@@ -204,11 +216,17 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            List<KBHandle> containingMatches = newQueryBuilder(aValueType, aKB)
-                    .withLabelContainingAnyOf(containingLabels)
+            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB)
+                    .withLabelContainingAnyOf(containingLabels);
+            
+            if (aConceptScope != null) {
+                containingBuilder.childrenOf(aConceptScope);
+            }
+            
+            List<KBHandle> containingMatches = containingBuilder
                     .retrieveLabel()
                     .retrieveDescription()
-                    .asHandles((RepositoryConnection) conn, true);
+                    .asHandles(conn, true);
             
             log.debug("Found [{}] candidates using containing {}",
                     containingMatches.size(), asList(containingLabels));
@@ -225,29 +243,21 @@ public class ConceptLinkingServiceImpl
     @Override
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
-            int aMentionBeginOffset, JCas aJcas)
+            int aMentionBeginOffset, CAS aCas)
     {
         Set<KBHandle> candidates = generateCandidates(aKB, aConceptScope, aValueType, aQuery,
                 aMention);
-        return rankCandidates(aQuery, aMention, candidates, aJcas, aMentionBeginOffset);
-    }
-
-    /**
-     * Retrieves the sentence containing the mention
-     */
-    private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
-    {
-        return WebAnnoCasUtil.getSentence(aJcas, aBegin);
+        return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
     private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
-            JCas aJCas, int aBegin)
+            CAS aCas, int aBegin)
     {
         candidate.put(KEY_MENTION, aMention);
         candidate.put(KEY_QUERY, aQuery);
         
-        if (aJCas != null) {
-            Sentence sentence = getMentionSentence(aJCas, aBegin);
+        if (aCas != null) {
+            AnnotationFS sentence = getSentence(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
                 List<Token> tokens = selectCovered(Token.class, sentence);
@@ -293,19 +303,22 @@ public class ConceptLinkingServiceImpl
                 .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
                 // A low wikidata ID rank is preferred.
                 .append(e1.getIdRank(), e2.getIdRank())
+                // Finally order alphabetically
+                .append(e1.getLabel().toLowerCase(e1.getLocale()), 
+                        e2.getLabel().toLowerCase(e2.getLocale()))
                 .toComparison();
     }
     
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
-            JCas aJCas, int aBegin)
+            CAS aCas, int aBegin)
     {
         long startTime = currentTimeMillis();
         
         // Set the feature values
         List<CandidateEntity> candidates = aCandidates.parallelStream()
                 .map(CandidateEntity::new)
-                .map(candidate -> initCandidate(candidate, aQuery, aMention, aJCas, aBegin))
+                .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
                     for (EntityRankingFeatureGenerator generator : featureGenerators) {
                         generator.apply(candidate);
@@ -336,7 +349,7 @@ public class ConceptLinkingServiceImpl
     @Override
     public List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
-            int aMentionBeginOffset, JCas aJCas, Project aProject)
+            int aMentionBeginOffset, CAS aCas, Project aProject)
     {
         // Sanitize query by removing typical wildcard characters
         String query = aQuery.replaceAll("[*?]", "").trim();
@@ -359,7 +372,7 @@ public class ConceptLinkingServiceImpl
         }
         
         // Rank the candidates and return them
-        return rankCandidates(query, aMention, candidates, aJCas, aMentionBeginOffset);
+        return rankCandidates(query, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
     /**

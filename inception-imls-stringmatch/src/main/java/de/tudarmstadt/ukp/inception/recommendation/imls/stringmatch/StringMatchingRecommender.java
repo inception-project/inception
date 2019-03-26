@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -177,8 +178,10 @@ public class StringMatchingRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<Sample> data = extractData(aCasses, layerName, featureName);
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
@@ -204,6 +207,9 @@ public class StringMatchingRecommender
             }            
         }
 
+        result.setTestSetSize(testSet.size());
+        result.setTrainingSetSize(trainingSet.size());
+        
         long trainingSetLabeledSamplesCount = trainingSet.stream()
                 .filter(sample -> !sample.getSpans().isEmpty())
                 .count();
@@ -217,7 +223,8 @@ public class StringMatchingRecommender
                     "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
                     trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                     testSetLabeledSamplesCount, data.size());
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         log.info(
@@ -276,7 +283,8 @@ public class StringMatchingRecommender
         // ... so to avoid confusing the user completely by returning a negative number and
         // not having the recommender activate even if the threshold is set to 0, we just cap
         // the score here at 0.
-        return Math.max(0, score);
+        result.setDefaultScore(Math.max(0, score));
+        return result;
     }
     
     private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,

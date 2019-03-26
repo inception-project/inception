@@ -27,7 +27,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -224,7 +224,7 @@ public class SearchServiceImpl
     }
     
     @Override
-    public void indexDocument(SourceDocument aSourceDocument, JCas aJCas)
+    public void indexDocument(SourceDocument aSourceDocument, CAS aJCas)
     {
         // Retrieve index entry for the project
         Index index = getIndexFromMemory(aSourceDocument.getProject());
@@ -253,7 +253,7 @@ public class SearchServiceImpl
 
 
     @Override
-    public void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public void indexDocument(AnnotationDocument aAnnotationDocument, CAS aCas)
     {
         log.debug("Indexing annotation document [{}]({}) in project [{}]({})",
                 aAnnotationDocument.getName(), aAnnotationDocument.getId(),
@@ -274,7 +274,7 @@ public class SearchServiceImpl
                         aAnnotationDocument.getName(), aAnnotationDocument.getId(),
                         aAnnotationDocument.getProject().getName(),
                         aAnnotationDocument.getProject().getId());
-                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aJCas);
+                index.getPhysicalIndex().indexDocument(aAnnotationDocument, aCas);
                 
                 // If there was a previous timestamped indexed annotation document, remove it from 
                 // index
@@ -308,7 +308,7 @@ public class SearchServiceImpl
         log.trace("Starting afterAnnotationUpdate");
 
         // Schedule new document index process
-        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJCas());
+        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
     }
 
     @Override
@@ -382,7 +382,7 @@ public class SearchServiceImpl
         log.trace("Starting afterDocumentCreate");
 
         // Schedule new document index process
-        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getJcas());
+        indexScheduler.enqueueIndexDocument(aEvent.getDocument(), aEvent.getCas());
 
     }
 
