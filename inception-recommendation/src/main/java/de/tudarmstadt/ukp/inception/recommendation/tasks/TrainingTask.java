@@ -29,7 +29,6 @@ import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -184,8 +183,8 @@ public class TrainingTask
                 AnnotationDocumentState state = annotationDocument != null ?
                         annotationDocument.getState() : AnnotationDocumentState.NEW;
 
-                JCas jCas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername());
-                casses.add(new TrainingDocument(jCas.getCas(), state));
+                CAS cas = documentService.readAnnotationCas(sourceDocument, aUser.getUsername());
+                casses.add(new TrainingDocument(cas, state));
             } catch (IOException e) {
                 log.error("Cannot read annotation CAS.", e);
             }

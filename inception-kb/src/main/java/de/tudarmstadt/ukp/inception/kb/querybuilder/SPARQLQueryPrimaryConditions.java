@@ -21,11 +21,17 @@ public interface SPARQLQueryPrimaryConditions
     extends SPARQLQuery, SPARQLQueryOptionalElements
 {
     /**
+     * Find the item with the given identifier.
+     * 
+     * @param aIdentifier
+     *            the item identifier.
+     * @return the builder (fluent API)
+     */
+    SPARQLQueryPrimaryConditions withIdentifier(String aIdentifier);
+    
+    /**
      * Find entries where the label matches exactly one of the given values. The match is
      * case-sensitive and it takes the default language of the KB into consideration.
-     * 
-     * <b>Note:</b> This matching does not make use of any fulltext search capabilities which the
-     * triple store might provide.
      * 
      * @param aValues
      *            label values.
@@ -67,14 +73,18 @@ public interface SPARQLQueryPrimaryConditions
     SPARQLQueryPrimaryConditions ancestorsOf(String aItemIri);
 
     /**
-     * Limits results to descendants of the given class.
+     * Limits results to descendants of the given class. Descendants of a class include its
+     * subclasses and instances (of subclasses). Depending on which kind if items the query is built
+     * for, either one of them or both are returned.
      * 
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions descendantsOf(String aClassIri);
 
     /**
-     * Limits results to children of the given class.
+     * Limits results to children of the given class. Children of a class are its subclasses and
+     * instances. Depending on which kind if items the query is built for, either one of them or
+     * both are returned.
      * 
      * @return the builder (fluent API)
      */

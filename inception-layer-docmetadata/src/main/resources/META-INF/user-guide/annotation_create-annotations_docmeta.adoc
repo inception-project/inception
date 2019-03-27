@@ -1,6 +1,0 @@
-= Document metadata
-
-To manage document-level annotations, access the **Document metadata** sidebar on the annotation
-page.
-
-

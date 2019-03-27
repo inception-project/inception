@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.exporter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,7 +85,8 @@ public class GazeteerExporterTest
         sourceProject.setName("Test Project");
         sourceProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        sourceLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS);
+        sourceLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
+                NO_OVERLAP);
         sourceFeature = new AnnotationFeature(sourceProject, sourceLayer, "value", "value",
                 CAS.TYPE_NAME_STRING);
         sourceRecommender = new Recommender("rec1", sourceLayer);
@@ -95,7 +97,8 @@ public class GazeteerExporterTest
         targetProject.setName("Test Project");
         targetProject.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        targetLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS);
+        targetLayer = new AnnotationLayer("span", "span", SPAN_TYPE, sourceProject, false, TOKENS,
+                NO_OVERLAP);
         targetFeature = new AnnotationFeature(sourceProject, targetLayer, "value", "value",
                 CAS.TYPE_NAME_STRING);
         targetRecommender = new Recommender("rec1", targetLayer);

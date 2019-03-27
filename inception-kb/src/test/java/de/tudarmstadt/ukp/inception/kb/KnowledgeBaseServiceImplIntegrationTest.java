@@ -1234,21 +1234,28 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception {
+    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
-                .map(KBHandle::getName);
-
-        String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
-            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
-        };
+        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
+        
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
-            .containsExactlyInAnyOrder(expectedLabels);
+            .usingElementComparatorOnFields(
+                "identifier", "name")
+            .containsExactlyInAnyOrder(
+                new KBHandle("http://purl.org/ontology/wo/Adaptation", "Adaptation"),
+                new KBHandle("http://purl.org/ontology/wo/AnimalIntelligence", "Animal Intelligence"),
+                new KBHandle("http://purl.org/dc/dcmitype/Collection", null),
+                new KBHandle("http://purl.org/ontology/wo/ConservationStatus", "Conservation Status"),
+                new KBHandle("http://purl.org/ontology/wo/Ecozone", "Ecozone"),
+                new KBHandle("http://purl.org/ontology/wo/Habitat", "Habitat"),
+                new KBHandle("http://purl.org/ontology/wo/RedListStatus", "Red List Status"),
+                new KBHandle("http://purl.org/ontology/wo/TaxonName", "Taxon Name"),
+                new KBHandle("http://purl.org/ontology/wo/TaxonRank", "Taxonomic Rank"));
     }
 
     @Test

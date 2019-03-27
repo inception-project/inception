@@ -124,7 +124,7 @@ public class SearchPage extends ApplicationPageBase
         dataTableContainer.setOutputMarkupId(true);
         add(dataTableContainer);
 
-        dataTableContainer.add(new DefaultDataTable<>("resultsTable", columns, dataProvider, 8));
+        dataTableContainer.add(new DefaultDataTable<>("resultsTable", columns, dataProvider, 10));
     }
 
     private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)

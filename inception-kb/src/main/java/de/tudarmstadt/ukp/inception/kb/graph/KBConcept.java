@@ -17,16 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Resource;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -228,56 +226,11 @@ public class KBConcept
         */
     }
     
-    public static KBConcept read(RepositoryConnection aConn, Resource aSubject, KnowledgeBase kb)
-    {
-        KBConcept kbConcept = new KBConcept();
-        kbConcept.setIdentifier(aSubject.stringValue());
-        kbConcept.setKB(kb);
-
-        readFirst(aConn, aSubject, kb.getLabelIri(), null, kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbConcept.setName(stmt.getObject().stringValue());
-                kbConcept.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbConcept::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aSubject, kb.getDescriptionIri(), null, kb.getDefaultLanguage(), kb)
-            .ifPresent((stmt) -> {
-                kbConcept.setDescription(stmt.getObject().stringValue());
-                kbConcept.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbConcept::setLanguage);
-                }
-            });
-
-        /* Commented out until the functionality which uses them is actually implemented
-        readFirst(aConn, aStmt.getSubject(), CLOSED, null).ifPresent((stmt) -> {
-            kbConcept.setClosed(((Literal) stmt.getObject()).booleanValue());
-            kbConcept.originalStatements.add(stmt);
-        });
-        readFirst(aConn, aStmt.getSubject(), ABSTRACT, null).ifPresent((stmt) -> {
-            kbConcept.setAbstract(((Literal) stmt.getObject()).booleanValue());
-            kbConcept.originalStatements.add(stmt);
-        });
-        */
-
-        return kbConcept;
-    }
-
     @Override
     public String toString()
     {
-        StringBuilder builder = new StringBuilder();
-        builder.append("KBConcept [identifier=");
-        builder.append(identifier);
-        builder.append("]");
-        return builder.toString();
+        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
+                .append("language", language).append("description", description).toString();
     }
 
     @Override
