@@ -18,11 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
 import java.io.Serializable;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentencePagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -34,14 +37,18 @@ public interface AnnotatorViewState
     // Window of visible annotations
     // ---------------------------------------------------------------------------------------------
 
-    // REC: sentenceNumber/sentenceAddress can probably be dropped in favor of
-    // firstSentenceNumber/firstSentenceAddress?
-
+    PagingStrategy getPagingStrategy();
+    
+    void setPagingStrategy(PagingStrategy aPagingStrategy);
+    
     /**
      * @param aUnit
      *            the first unit in the display window.
      */
     void setFirstVisibleUnit(AnnotationFS aUnit);
+    void setPageBegin(CAS aCas, int aOffset);
+    void setVisibleUnits(List<Unit> aUnit, int aTotalUnitCount);
+    List<Unit> getVisibleUnits();
 
     /**
      * @param aIndex
@@ -55,43 +62,13 @@ public interface AnnotatorViewState
     int getFocusUnitIndex();
 
     /**
-     * @return the UIMA address of the first unit in the display window.
-     *
-     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
-     * then fetch its begin offset.
-     */
-    @Deprecated
-    int getFirstVisibleUnitAddress();
-
-    /**
-     * @return the begin character offset of the first unit in the display window.
-     * 
-     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
-     * then fetch its begin offset.
-     */
-    @Deprecated
-    int getFirstVisibleUnitBegin();
-
-    /**
-     * @return the end character offset of the first unit in the display window.
-     *
-     * @deprecated try using locating the first unit via {@link #getWindowBeginOffset()} instead and
-     * then fetch its end offset.
-     */
-    @Deprecated
-    int getFirstVisibleUnitEnd();
-
-    /**
      * @return the index of the first unit in the display window.
      */
     int getFirstVisibleUnitIndex();
 
     /**
      * @return the index of the last unit in the display window.
-     * 
-     * @deprecated try locating the last visible using using {@link #getWindowEndOffset()} instead
      */
-    @Deprecated
     int getLastVisibleUnitIndex();
 
     /**
@@ -123,44 +100,44 @@ public interface AnnotatorViewState
     // ---------------------------------------------------------------------------------------------
     // Navigation within a document
     // ---------------------------------------------------------------------------------------------
-    default void moveToPreviousPage(CAS aCas)
+    default void moveToPreviousPage(CAS aCas, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToPreviousPage(this, aCas);
+        getPagingStrategy().moveToPreviousPage(this, aCas, aPos);
     }
 
-    default void moveToNextPage(CAS aCas)
+    default void moveToNextPage(CAS aCas, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToNextPage(this, aCas);
+        getPagingStrategy().moveToNextPage(this, aCas, aPos);
     }
 
-    default void moveToFirstPage(CAS aCas)
+    default void moveToFirstPage(CAS aCas, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToFirstPage(this, aCas);
+        getPagingStrategy().moveToFirstPage(this, aCas, aPos);
     }
 
-    default void moveToLastPage(CAS aCas)
+    default void moveToLastPage(CAS aCas, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToLastPage(this, aCas);
+        getPagingStrategy().moveToLastPage(this, aCas, aPos);
     }
 
-    default void moveToUnit(CAS aCas, int aIndex)
+    default void moveToUnit(CAS aCas, int aIndex, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToUnit(this, aCas, aIndex);
+        getPagingStrategy().moveToUnit(this, aCas, aIndex, aPos);
     }
     
-    default void moveToOffset(CAS aCas, int aOffset)
+    default void moveToOffset(CAS aCas, int aOffset, FocusPosition aPos)
     {
-        new SentencePagingStrategy().moveToOffset(this, aCas, aOffset);
+        getPagingStrategy().moveToOffset(this, aCas, aOffset, aPos);
     }
 
     default void moveToSelection(CAS aCas)
     {
-        new SentencePagingStrategy().moveToSelection(this, aCas);
+        getPagingStrategy().moveToSelection(this, aCas);
     }
 
     default void moveForward(CAS aCas)
     {
-        new SentencePagingStrategy().moveForward(this, aCas);
+        getPagingStrategy().moveForward(this, aCas);
     }
 
     // ---------------------------------------------------------------------------------------------

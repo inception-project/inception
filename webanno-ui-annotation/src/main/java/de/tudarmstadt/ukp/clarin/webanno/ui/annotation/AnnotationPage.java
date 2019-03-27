@@ -22,9 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -36,11 +37,11 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -85,7 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -99,7 +99,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDial
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -186,7 +185,7 @@ public class AnnotationPage
 
         add(createUrlFragmentBehavior());      
         
-        add(annotationEditor = createAnnotationEditor());
+        createAnnotationEditor(null);
         
         add(createRightSidebar());
 
@@ -312,8 +311,10 @@ public class AnnotationPage
         };
     }
     
-    private AnnotationEditorBase createAnnotationEditor()
+    private void createAnnotationEditor(IPartialPageRequestHandler aTarget)
     {
+        AnnotatorState state = getModelObject();
+        
         String editorId = getModelObject().getPreferences().getEditor();
         
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
@@ -321,11 +322,29 @@ public class AnnotationPage
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        AnnotationEditorBase editor = factory.create("editor", getModel(), detailEditor,
-                this::getEditorCas);
-        editor.add(LambdaBehavior.visibleWhen(() -> getModelObject().getDocument() != null));
-        editor.setOutputMarkupPlaceholderTag(true);
-        return editor;
+        annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
+        annotationEditor.add(visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        
+        addOrReplace(annotationEditor);
+        
+        // Give the new editor an opportunity to configure the current paging strategy
+        factory.initState(state);
+        if (state.getDocument() != null) {
+            try {
+                state.getPagingStrategy().recalculatePage(state, getEditorCas());
+            }
+            catch (Exception e) {
+                LOG.info("Error reading CAS: {}", e.getMessage());
+                error("Error reading CAS " + e.getMessage());
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
+        }
+        
+        // Use the proper page navigator for the current paging strategy
+        addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
     }
 
     private SidebarPanel createLeftSidebar()
@@ -451,16 +470,12 @@ public class AnnotationPage
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            AnnotationFS sentence = selectByAddr(cas, Sentence.class,
-                    state.getFirstVisibleUnitAddress());
-            state.setFirstVisibleUnit(sentence);
+            state.getPagingStrategy().recalculatePage(state, cas);
             
             // The selection of layers may have changed. Update the dropdown
             detailEditor.getAnnotationFeatureForm().updateLayersDropdown();
             
-            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-            annotationEditor.replaceWith(newAnnotationEditor);
-            annotationEditor = newAnnotationEditor;
+            createAnnotationEditor(aTarget);
             
             // Reload all AJAX-enabled children of the page but not the page itself!
             WicketUtil.refreshPage(aTarget, getPage());
@@ -523,8 +538,7 @@ public class AnnotationPage
             annotationService.upgradeCas(editorCas, annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas, annotationDocument,
-                    false);
+            documentService.writeAnnotationCas(editorCas, annotationDocument, false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -546,14 +560,12 @@ public class AnnotationPage
             }
 
             // Initialize the visible content
-            state.moveToUnit(editorCas, aFocus);
+            state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Set the actual editor component. This has to happen *before* any AJAX refreshs are
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
-            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-            annotationEditor.replaceWith(newAnnotationEditor);
-            annotationEditor = newAnnotationEditor;
+            createAnnotationEditor(aTarget);
 
             // Update document state
             if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
@@ -753,7 +765,7 @@ public class AnnotationPage
             }
             else {
                 try {
-                    getModelObject().moveToUnit(getEditorCas(), focus);
+                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
                     actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.render;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Arrays.asList;
-import static org.apache.commons.lang3.StringUtils.countMatches;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -41,7 +40,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VAnnotationMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -124,8 +123,8 @@ public class BratRenderer
         renderText(aCas, aResponse, aState);
         // The rows need to be rendered first because we use the row boundaries to split
         // cross-row spans into multiple ranges
-        renderSentencesAsRows(aCas, aResponse, aState);
-        //renderLinesAsRows(aCas, aResponse, aState);
+        renderUnitsAsRows(aResponse, aState);
+        
         renderTokens(aCas, aResponse, aState);
         
         // Render visible (custom) layers
@@ -147,7 +146,10 @@ public class BratRenderer
             
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 List<Offsets> offsets = vspan.getRanges().stream()
-                        .flatMap(range -> split(aResponse.getSentenceOffsets(), 
+                        .flatMap(range -> split(aResponse.getSentenceOffsets(),
+                                aCas.getDocumentText().substring(
+                                        aState.getWindowBeginOffset(),
+                                        aState.getWindowEndOffset()),
                                 range.getBegin(), range.getEnd()).stream())
                         .collect(Collectors.toList());
                 String bratLabelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
@@ -292,7 +294,8 @@ public class BratRenderer
                 continue;
             }
             
-            split(aResponse.getSentenceOffsets(), fs.getBegin() - winBegin, fs.getEnd() - winBegin)
+            split(aResponse.getSentenceOffsets(), fs.getCoveredText(), fs.getBegin() - winBegin,
+                    fs.getEnd() - winBegin)                    
                     .forEach(range -> {
                         aResponse.addToken(range.getBegin(), range.getEnd());
                         if (DEBUG) {
@@ -304,51 +307,26 @@ public class BratRenderer
                     });
         }
     }
-
-    public static void renderSentencesAsRows(CAS aCas, GetDocumentResponse aResponse,
-            AnnotatorState aState)
+    
+    public static void renderUnitsAsRows(GetDocumentResponse aResponse, AnnotatorState aState)
     {
         int windowBegin = aState.getWindowBeginOffset();
-        int windowEnd = aState.getWindowEndOffset();
-        Type sentenceType = CasUtil.getType(aCas, Sentence.class);
 
         aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
 
         // Render sentences
         int sentIdx = aResponse.getSentenceNumberOffset();
-        for (AnnotationFS fs : selectCovered(aCas, sentenceType, windowBegin, windowEnd)) {
-            aResponse.addSentence(fs.getBegin() - windowBegin, fs.getEnd() - windowBegin);
+        for (Unit unit : aState.getVisibleUnits()) {
+            aResponse.addSentence(unit.getBegin() - windowBegin, unit.getEnd() - windowBegin);
 
             // If there is a sentence ID, then make it accessible to the user via a sentence-level
             // comment.
-            String sentId = FSUtil.getFeature(fs, "id", String.class);
-            if (isNotBlank(sentId)) {
+            if (isNotBlank(unit.getId())) {
                 aResponse.addComment(new SentenceComment(sentIdx, Comment.ANNOTATOR_NOTES,
-                        String.format("Sentence ID: %s", sentId)));
+                        String.format("Sentence ID: %s", unit.getId())));
             }
 
             sentIdx++;
-        }
-    }
-    
-    public static void renderLinesAsRows(CAS aCas, GetDocumentResponse aResponse,
-            AnnotatorState aState)
-    {
-        int windowBegin = aState.getWindowBeginOffset();
-        int windowEnd = aState.getWindowEndOffset();
-
-        int rowIdx = countMatches(aCas.getDocumentText().substring(0, windowBegin), "\n");
-        aResponse.setSentenceNumberOffset(rowIdx);
-        // aResponse.setSentenceNumberOffset(aState.getFirstVisibleUnitIndex());
-
-        // Render lines
-        String[] lines = aCas.getDocumentText().substring(windowBegin, windowEnd).split("\n");
-        int offset = 0;
-        for (String line : lines) {
-            aResponse.addSentence(offset, offset + line.length());
-            // The +1 here accounts for the linebreak by which we split
-            offset += line.length() + 1;
-            rowIdx++;
         }
     }
     
@@ -361,7 +339,7 @@ public class BratRenderer
      * @param aEnd (window-relative positions)
      * @return list of ranges.
      */
-    public static List<Offsets> split(List<Offsets> aRows, int aBegin, int aEnd)
+    public static List<Offsets> split(List<Offsets> aRows, String aText, int aBegin, int aEnd)
     {
         // Zero-width spans never need to be split
         if (aBegin == aEnd) {
@@ -399,15 +377,21 @@ public class BratRenderer
         
         List<Offsets> ranges = new ArrayList<>();
         for (Offsets row : coveredRows) {
+            Offsets range;
+            
             if (row.getBegin() <= aBegin && aBegin < row.getEnd()) {
-                ranges.add(new Offsets(aBegin, row.getEnd()));
+                range = new Offsets(aBegin, row.getEnd());
             }
             else if (row.getBegin() <= aEnd && aEnd <= row.getEnd()) {
-                ranges.add(new Offsets(row.getBegin(), aEnd));
+                range = new Offsets(row.getBegin(), aEnd);
             }
             else {
-                ranges.add(new Offsets(row.getBegin(), row.getEnd()));
+                range = new Offsets(row.getBegin(), row.getEnd());
             }
+            
+            trim(aText, range);
+            
+            ranges.add(range);
         }
 
         return ranges;
@@ -579,5 +563,55 @@ public class BratRenderer
             }
         }
         return abbr.toString();
+    }
+    
+    /**
+     * Remove trailing or leading whitespace from the annotation.
+     * 
+     * @param aText
+     *            the text.
+     * @param aSpan
+     *            the offsets.
+     */
+    static private void trim(CharSequence aText, Offsets aOffsets)
+    {
+        int begin = aOffsets.getBegin();
+        int end = aOffsets.getEnd() - 1;
+
+        // Remove whitespace at end
+        while ((end > 0) && trimChar(aText.charAt(end))) {
+            end--;
+        }
+        end++;
+
+        // Remove whitespace at start
+        while ((begin < end) && trimChar(aText.charAt(begin))) {
+            begin++;
+        }
+
+        aOffsets.setBegin(begin);
+        aOffsets.setEnd(end);
+    }
+    
+    private static boolean trimChar(final char aChar)
+    {
+        switch (aChar) {
+        case '\n':
+            return true; // Line break
+        case '\r':
+            return true; // Carriage return
+        case '\t':
+            return true; // Tab
+        case '\u200E':
+            return true; // LEFT-TO-RIGHT MARK
+        case '\u200F':
+            return true; // RIGHT-TO-LEFT MARK
+        case '\u2028':
+            return true; // LINE SEPARATOR
+        case '\u2029':
+            return true; // PARAGRAPH SEPARATOR
+        default:
+            return Character.isWhitespace(aChar);
+        }
     }
 }

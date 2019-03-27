@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 
 import java.io.IOException;
@@ -32,7 +31,6 @@ import java.util.Optional;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -64,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -95,7 +94,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationCon
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -160,6 +158,9 @@ public class CorrectionPage
         setVersioned(false);
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
+        
+        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
+        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
 
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferences
@@ -190,7 +191,7 @@ public class CorrectionPage
                 try {
                     // update begin/end of the curation segment based on bratAnnotatorModel changes
                     // (like sentence change in auto-scroll mode,....
-                    curationContainer.setBratAnnotatorModel(state);
+                    curationContainer.setState(state);
                     CAS editorCas = getEditorCas();
                     setCurationSegmentBeginEnd(editorCas);
 
@@ -222,7 +223,7 @@ public class CorrectionPage
         add(annotationEditor);
 
         curationContainer = new CurationContainer();
-        curationContainer.setBratAnnotatorModel(getModelObject());
+        curationContainer.setState(getModelObject());
 
         add(documentNamePanel = createDocumentInfoLabel());
 
@@ -362,7 +363,7 @@ public class CorrectionPage
                             annotationService, userRepository);
                     curationContainer = builder.buildCurationContainer(state);
                     setCurationSegmentBeginEnd(editorCas);
-                    curationContainer.setBratAnnotatorModel(state);
+                    curationContainer.setState(state);
 
                     update(aTarget);
                 }
@@ -475,7 +476,7 @@ public class CorrectionPage
         getModelObject().toggleScriptDirection();
         annotationEditor.requestRender(aTarget);
 
-        curationContainer.setBratAnnotatorModel(getModelObject());
+        curationContainer.setState(getModelObject());
         suggestionView.updatePanel(aTarget, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
     }
@@ -489,16 +490,14 @@ public class CorrectionPage
 
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            AnnotationFS sentence = selectByAddr(editorCas, Sentence.class,
-                    state.getFirstVisibleUnitAddress());
-            state.setFirstVisibleUnit(sentence);
+            state.getPagingStrategy().recalculatePage(state, editorCas);
 
             SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setBratAnnotatorModel(state);
+            curationContainer.setState(state);
             
             update(aTarget);
             aTarget.appendJavaScript(
@@ -657,7 +656,7 @@ public class CorrectionPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             setCurationSegmentBeginEnd(getEditorCas());
-            curationContainer.setBratAnnotatorModel(state);
+            curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
         }

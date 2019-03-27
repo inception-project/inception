@@ -50,13 +50,9 @@ import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -67,8 +63,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
  */
 public class WebAnnoCasUtil
 {
-    private static final Logger LOG = LoggerFactory.getLogger(WebAnnoCasUtil.class);
-
     /**
      * Annotation a and annotation b are the same if they have the same address.
      *
@@ -211,6 +205,15 @@ public class WebAnnoCasUtil
             .filter(s -> s.getBegin() == aBegin)
             .findFirst()
             .orElse(null);
+    }
+    
+    /**
+     * @deprecated use {@link #selectSentenceAt(CAS, int)}
+     */
+    @Deprecated
+    public static AnnotationFS getSentence(CAS aCas, int aBegin)
+    {
+        return selectSentenceAt(aCas, aBegin);
     }
     
     public static AnnotationFS createToken(CAS aCas, int aBegin, int aEnd)
@@ -412,77 +415,6 @@ public class WebAnnoCasUtil
     {
         AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
         return idx.iterator(selectFsByAddr(aCas, aAddr));
-    }
-
-    /**
-     * Get an iterator position at the annotation with the specified address.
-     *
-     * @param aCas
-     *            the CAS object
-     * @param aType
-     *            the expected annotation type
-     * @param aFS
-     *            the annotation to seek for
-     * @return the iterator.
-     */
-    private static FSIterator<AnnotationFS> seekByFs(CAS aCas, Type aType, AnnotationFS aFS)
-    {
-        AnnotationIndex<AnnotationFS> idx = aCas.getAnnotationIndex(aType);
-        return idx.iterator(aFS);
-    }
-    /**
-     * Gets the address of the first sentence visible on screen in such a way that the specified
-     * focus offset is centered on screen.
-     *
-     * @param aCas
-     *            the CAS object
-     * @param aSentence
-     *            the old sentence
-     * @param aFocusOffset
-     *            the actual offset of the sentence.
-     * @param aProject
-     *            the project.
-     * @param aDocument
-     *            the document.
-     * @param aWindowSize
-     *            the window size.
-     * @return the ID of the first sentence.
-     */
-    public static AnnotationFS findWindowStartCenteringOnSelection(CAS aCas,
-            AnnotationFS aSentence, int aFocusOffset, Project aProject, SourceDocument aDocument,
-            int aWindowSize)
-    {
-        if (aWindowSize == 1) {
-            return aSentence;
-        }
-
-        // Seek the sentence that contains the current focus
-        AnnotationFS s = selectSentenceCovering(aCas, aFocusOffset);
-        
-        // If the focus is outside any sentence, then we just return the reference sentence.
-        // This should actually never happen, but in case it does, we log a warning and try to
-        // behave.
-        if (s == null) {
-            LOG.warn("Focus [{}] is outside any unit, using first unit.", aFocusOffset);
-            return aSentence;
-        }
-
-        // Center sentence
-        FSIterator<AnnotationFS> si = seekByFs(aCas, getAnnotationType(aCas, Sentence.class), s);
-        if (aWindowSize == 2 && s.getBegin() > aSentence.getBegin()) {
-            return s;
-        }
-        int count = 0;
-        while (si.isValid() && count < (aWindowSize / 2)) {
-            si.moveToPrevious();
-            if (si.isValid()) {
-                s = si.get();
-            }
-
-            count++;
-        }
-
-        return s;
     }
 
     public static int getNextSentenceAddress(CAS aCas, AnnotationFS aSentence)

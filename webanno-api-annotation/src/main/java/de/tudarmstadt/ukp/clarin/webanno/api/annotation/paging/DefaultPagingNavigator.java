@@ -17,14 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
@@ -39,21 +32,23 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
 
-public class SentencePagingNavigator extends Panel
+public class DefaultPagingNavigator extends Panel
 {
     private static final long serialVersionUID = -6315861062996783626L;
     
     private AnnotationPageBase page;
     private NumberTextField<Integer> gotoPageTextField;
+    private FocusPosition defaultFocusPosition = FocusPosition.TOP;
     
-    public SentencePagingNavigator(String aId, AnnotationPageBase aPage)
+    public DefaultPagingNavigator(String aId, AnnotationPageBase aPage)
     {
         super(aId);
+        
+        setOutputMarkupPlaceholderTag(true);
         
         page = aPage;
         
@@ -62,9 +57,10 @@ public class SentencePagingNavigator extends Panel
         // Using a LambdaModel here because the model object in the page may change and we want to
         // always get the right one
         gotoPageTextField.setModel(
-                PropertyModel.of(LambdaModel.of(() -> aPage.getModel()), "focusUnitIndex"));
+                PropertyModel.of(LambdaModel.of(() -> aPage.getModel()), "firstVisibleUnitIndex"));
         // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
+        gotoPageTextField.setMinimum(1);
+        //gotoPageTextField.setMaximum(LambdaModel.of(() -> aPage.getModelObject().getUnitCount()));
         gotoPageTextField.setOutputMarkupId(true); 
         gotoPageTextFieldForm.add(gotoPageTextField);
         LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
@@ -95,7 +91,7 @@ public class SentencePagingNavigator extends Panel
         throws Exception
     {
         CAS cas = page.getEditorCas();
-        getModelObject().moveToPreviousPage(cas);
+        getModelObject().moveToPreviousPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
@@ -103,7 +99,7 @@ public class SentencePagingNavigator extends Panel
         throws Exception
     {
         CAS cas = page.getEditorCas();
-        getModelObject().moveToNextPage(cas);
+        getModelObject().moveToNextPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
@@ -111,7 +107,7 @@ public class SentencePagingNavigator extends Panel
         throws Exception
     {
         CAS cas = page.getEditorCas();
-        getModelObject().moveToFirstPage(cas);
+        getModelObject().moveToFirstPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
 
@@ -119,30 +115,32 @@ public class SentencePagingNavigator extends Panel
         throws Exception
     {
         CAS cas = page.getEditorCas();
-        getModelObject().moveToLastPage(cas);
+        getModelObject().moveToLastPage(cas, defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
     }
     
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
         throws Exception
     {
-        AnnotatorState state = getModelObject();
-        
         CAS cas = page.getEditorCas();
-        List<AnnotationFS> sentences = new ArrayList<>(select(cas, getType(cas, Sentence.class)));
-        int selectedSentence = gotoPageTextField.getModelObject();
-        selectedSentence = Math.min(selectedSentence, sentences.size());
-        gotoPageTextField.setModelObject(selectedSentence);
-        
-        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
-        state.setFocusUnitIndex(selectedSentence);        
-        
+        getModelObject().moveToUnit(cas, gotoPageTextField.getModelObject(), defaultFocusPosition);
         page.actionRefreshDocument(aTarget);
+    }
+    
+    public void setDefaultFocusPosition(FocusPosition aPos)
+    {
+        defaultFocusPosition = aPos;
+    }    
+    
+    public FocusPosition getDefaultFocusPosition()
+    {
+        return defaultFocusPosition;
     }
     
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         aEvent.getRequestHandler().add(gotoPageTextField);
-    }    
+    }
+
 }

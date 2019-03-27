@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,7 +31,6 @@ import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -224,7 +223,7 @@ public class CurationPanel
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(state), editor,
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
-        annotationEditor.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.add(visibleWhen(() -> state.getDocument() != null));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
@@ -414,12 +413,8 @@ public class CurationPanel
     private void updateCurationView(final CurationContainer curationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
-        AnnotationFS currentSent = WebAnnoCasUtil.getCurrentSentence(aCas,
-                curationViewItem.getBegin(), curationViewItem.getEnd());
-        state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(aCas,
-                currentSent, curationViewItem.getBegin(), state.getProject(), state.getDocument(),
-                state.getPreferences().getWindowSize()));
-        curationContainer.setBratAnnotatorModel(state);
+        state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
+        curationContainer.setState(state);
         onChange(aTarget);
     }
 
@@ -469,12 +464,6 @@ public class CurationPanel
     
     private void commonUpdate() throws IOException
     {
-        CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-
-        // Determine the FIRST visible unit
-        final AnnotationFS firstVisibleUnit = selectSentenceAt(cas, state.getWindowBeginOffset());
-        state.setFirstVisibleUnit(firstVisibleUnit);
-
         curationView.setCurationBegin(state.getWindowBeginOffset());
         curationView.setCurationEnd(state.getWindowEndOffset());
         fSn = state.getFirstVisibleUnitIndex();

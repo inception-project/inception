@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
@@ -37,7 +37,6 @@ import javax.persistence.NoResultException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -69,8 +68,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -180,11 +179,15 @@ public class CurationPage
     private void commonInit()
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
+        
+        getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
+        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
 
         curationContainer = new CurationContainer();
-        curationContainer.setBratAnnotatorModel(getModelObject());
+        curationContainer.setState(getModelObject());
 
         curationPanel = new CurationPanel("curationPanel", this, new Model<>(
                 curationContainer))
@@ -463,14 +466,7 @@ public class CurationPage
             state.setAnnotationDocumentTimestamp(diskTimestamp.get());
         }
     }
-    private void updateSentenceNumber(CAS aCas, int aAddress)
-    {
-        AnnotatorState state = getModelObject();
-        AnnotationFS sentence = selectByAddr(aCas, AnnotationFS.class, aAddress);
-        state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(WebAnnoCasUtil.getSentenceNumber(aCas, sentence.getBegin()));
-    }
-
+    
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
         getModelObject().getSelection().clear();
@@ -507,13 +503,10 @@ public class CurationPage
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            AnnotationFS sentence = selectByAddr(mergeCas, AnnotationFS.class,
-                    state.getFirstVisibleUnitAddress());
-            state.setFirstVisibleUnit(sentence);
+            state.getPagingStrategy().recalculatePage(state, mergeCas);
             
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -638,15 +631,13 @@ public class CurationPage
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
-            state.getPreferences()
-                    .setCurationWindowSize(WebAnnoCasUtil.getSentenceCount(mergeCas));
             
             // Initialize timestamp in state
             updateDocumentTimestampAfterWrite(state, curationDocumentService
                     .getCurationCasTimestamp(state.getDocument()));
                         
             // Initialize the visible content
-            state.moveToUnit(mergeCas, aFocus);
+            state.moveToUnit(mergeCas, aFocus, TOP);
     
             // if project is changed, reset some project specific settings
             if (currentprojectId != state.getProject().getId()) {
@@ -659,10 +650,9 @@ public class CurationPage
                     correctionDocumentService, curationDocumentService, annotationService,
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
-            curationContainer.setBratAnnotatorModel(state);
+            curationContainer.setState(state);
             curationPanel.getEditor().reset(aTarget);
             updatePanel(curationContainer, aTarget);
-            updateSentenceNumber(mergeCas, state.getFirstVisibleUnitAddress());
             curationPanel.init(aTarget, curationContainer);
             //curationPanel.updatePanel(aTarget, curationContainer);
             
@@ -782,7 +772,7 @@ public class CurationPage
             }
             else {
                 try {
-                    getModelObject().moveToUnit(getEditorCas(), focus);
+                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
                     actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {

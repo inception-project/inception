@@ -110,7 +110,7 @@ public class SpanOverlapBehavior
 
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> aAnnoToSpanIdx)
+            Map<AnnotationFS, VSpan> aAnnoToSpanIdx, int aPageBegin, int aPageEnd)
     {
         if (aAnnoToSpanIdx.isEmpty()) {
             return;

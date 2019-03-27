@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -82,18 +83,36 @@ public class SpanCrossSentenceBehavior
     
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx)
+            Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
     {
-        if (aAdapter.getLayer().isCrossSentence()) {
+        if (aAdapter.getLayer().isCrossSentence() || annoToSpanIdx.isEmpty()) {
             return;
         }
         
-        // Since we split spans into multiple ranges at sentence boundaries, we can simply check
-        // if there are multiple ranges for a given span. This is cheaper than checking for
-        // every annotation whether the begin/end offset is in the same sentence.
-        for (Entry<AnnotationFS, VSpan> e : annoToSpanIdx.entrySet()) {
-            if (e.getValue().getRanges().size() > 1) {
-                aResponse.add(new VComment(new VID(e.getKey()), ERROR,
+        CAS cas = annoToSpanIdx.entrySet().iterator().next().getKey().getCAS();
+        
+        // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
+        // The indexes are navigable, we can also find the sentences starting/ending closes to a
+        // particular offset, even if it is not the start/end offset of a sentence.
+        NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
+        NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
+        for (AnnotationFS sent : selectOverlapping(cas, getType(cas, Sentence.class), aPageBegin,
+                aPageEnd)) {
+            sentBeginIdx.put(sent.getBegin(), sent);
+            sentEndIdx.put(sent.getEnd(), sent);
+        }
+        
+        for (AnnotationFS fs : annoToSpanIdx.keySet()) {
+            Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(fs.getBegin());
+            Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
+            
+            if (s1 == null || s2 == null) {
+                // Unable to determine any sentences overlapping with the annotation
+                continue;
+            }
+            
+            if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
+                aResponse.add(new VComment(new VID(fs), ERROR,
                         "Crossing sentence bounardies is not permitted."));
             }
         }

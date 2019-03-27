@@ -44,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentencePagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -68,12 +68,10 @@ public abstract class AnnotationPageBase
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
     private Component numberOfPages;
-    
-    protected AnnotationPageBase()
+
+    public AnnotationPageBase()
     {
         super();
-        
-        add(new SentencePagingStrategy().createPageNavigator("pageNavigator", this));
     }
 
     protected AnnotationPageBase(PageParameters aParameters)
@@ -105,7 +103,7 @@ public abstract class AnnotationPageBase
     protected Component getOrCreatePositionInfoLabel()
     {
         if (numberOfPages == null) {
-            numberOfPages = new SentencePagingStrategy().createPositionLabel("numberOfPages",
+            numberOfPages = new SentenceOrientedPagingStrategy().createPositionLabel("numberOfPages",
                     getModel());
             numberOfPages.add(visibleWhen(() -> getModelObject().getDocument() != null));
         }
