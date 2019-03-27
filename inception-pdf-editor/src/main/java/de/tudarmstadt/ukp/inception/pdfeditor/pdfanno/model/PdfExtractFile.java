@@ -216,6 +216,7 @@ public class PdfExtractFile implements Serializable
             }
 
             // if value of PdfExtractLine is in brackets it is a draw operation and is ignored
+            // if value is "NO_UNICODE" also skip, unicode mapping is unavailable for this character
             if (!extractLine.getValue().matches("^\\[.*\\]$")
                 && !extractLine.getValue().equals("NO_UNICODE"))
             {
@@ -281,13 +282,11 @@ public class PdfExtractFile implements Serializable
     }
 
     /**
-     * Get gegin and end offset of a page.
-     * @param page
-     * @return
+     * Get begin and end offset of a page.
      */
-    public Offset getPageOffset(int page)
+    public Offset getPageOffset(int aPage)
     {
-        return pageOffsetMap.get(page);
+        return pageOffsetMap.get(aPage);
     }
 
     public int getMaxPageNumber()

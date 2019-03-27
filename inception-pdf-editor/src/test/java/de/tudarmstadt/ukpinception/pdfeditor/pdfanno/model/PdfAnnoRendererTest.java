@@ -148,6 +148,9 @@ public class PdfAnnoRendererTest
         preRenderer = new PreRendererImpl(layerRegistry, schemaService);
     }
 
+    /**
+     * Tests if anno file is correctly rendered for a given document
+     */
     @Test
     public void testRender() throws Exception
     {
@@ -169,12 +172,14 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
+        List expectedAnnoFileLines = linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"), "UTF-8");
+
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
-            cas.getDocumentText(), schemaService, pdfExtractFile, Offset.empty());
+            cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"),
-            "UTF-8")).isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+        assertThat(expectedAnnoFileLines)
+            .isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
     }
 
     /**

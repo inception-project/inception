@@ -112,7 +112,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 function getAnnotations() {
   var data = {
     "action": "getAnnotations",
-    "page": window.pageNumber
+    "page": window.pageRender
   }
   parent.Wicket.Ajax.ajax({
     "m": "POST",
@@ -120,7 +120,7 @@ function getAnnotations() {
     "u": window.apiUrl,
     "sh": [],
     "fh": [function () {
-      console.log('Something went wrong on requesting annotations from inception backend.')
+      alert('Something went wrong on requesting annotations from inception backend.')
     }]
   });
 }
@@ -212,17 +212,19 @@ async function displayViewer () {
     window.annoPage.pdftxt = analyzeResult
 
 // BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
-    const renderTimeout = 1500
-    window.pageNumber = 1;
+    const renderTimeout = 500
+    window.pagechangeEventCounter = 0
+    window.pageRender = 1;
     getAnnotations()
 
     document.addEventListener('pagechange', function(e) {
-      if (e.pageNumber !== e.previousPageNumber) {
-        console.log('page change: ' + e.previousPageNumber + ' to ' + e.pageNumber)
-        window.pageNumber = e.pageNumber
+      pagechangeEventCounter++
+      if (e.pageNumber !== window.pageRender) {
+        const snapshot = window.pagechangeEventCounter
         setTimeout(() => {
-          if (window.pageNumber === e.pageNumber) {
-            console.log('no further page changes after ' + renderTimeout + ' ms, requesting annotations ...')
+          if (snapshot === pagechangeEventCounter && e.pageNumber != window.pageRender) {
+            window.pageRender = e.pageNumber
+            window.pagechangeEventCounter = 0
             getAnnotations()
           }
         }, renderTimeout)

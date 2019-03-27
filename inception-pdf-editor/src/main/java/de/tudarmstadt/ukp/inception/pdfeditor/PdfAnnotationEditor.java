@@ -133,14 +133,17 @@ public class PdfAnnotationEditor
             try
             {
                 CAS cas = getCasProvider().get();
+                // get sentences in which page begin and end offsets are and use those to compute
+                // the new page begin and end offsets. required because annotation rendering will
+                // sometimes fail if offset in middle of a sentence
                 AnnotationFS beginSent = getSentence(cas, pageOffset.getBegin());
                 int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
                 AnnotationFS endSent = getSentence(cas, pageOffset.getEnd());
                 int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
-                Offset offset = new Offset(begin, end);
+
                 VDocument vdoc = render(cas, begin, end);
                 PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
-                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile, offset);
+                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile, begin);
                 // show unmatched spans to user
                 if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                     String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
@@ -302,14 +305,6 @@ public class PdfAnnotationEditor
         if (pageOffsetCache.containsKey(page)) {
             pageOffset = pageOffsetCache.get(page);
         } else {
-//            List<Offset> newOffsets = new ArrayList<>();
-//            if (page == 1) {
-//                newOffsets.add(new Offset(0,0));
-//            }
-//            if (page == pdfExtractFile.getMaxPageNumber()) {
-//                int docLen = documentModel.getDocumentText().length();
-//                newOffsets.add(new Offset(docLen, docLen));
-//            }
             // get page offsets, if possible for the from previous to next page
             int begin = pdfExtractFile.getPageOffset(page > 1 ? page - 1 : page).getBegin();
             int end = pdfExtractFile.getPageOffset(page < pdfExtractFile.getMaxPageNumber()
