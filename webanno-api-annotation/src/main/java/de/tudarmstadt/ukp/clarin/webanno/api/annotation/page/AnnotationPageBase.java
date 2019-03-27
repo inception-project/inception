@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -29,7 +28,6 @@ import java.util.Objects;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
@@ -44,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -67,7 +64,6 @@ public abstract class AnnotationPageBase
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
-    private Component numberOfPages;
 
     public AnnotationPageBase()
     {
@@ -99,16 +95,6 @@ public abstract class AnnotationPageBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
-    protected Component getOrCreatePositionInfoLabel()
-    {
-        if (numberOfPages == null) {
-            numberOfPages = new SentenceOrientedPagingStrategy().createPositionLabel("numberOfPages",
-                    getModel());
-            numberOfPages.add(visibleWhen(() -> getModelObject().getDocument() != null));
-        }
-        return numberOfPages;
-    }    
     
     protected ChallengeResponseDialog createOrGetResetDocumentDialog()
     {

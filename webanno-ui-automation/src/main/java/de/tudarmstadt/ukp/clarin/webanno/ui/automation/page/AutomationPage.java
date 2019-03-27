@@ -17,11 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.automation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AUTOMATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -67,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -86,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
@@ -131,8 +135,6 @@ public class AutomationPage
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AutomationService automationService;
 
-    private DocumentNamePanel documentNamePanel;
-    
     private long currentprojectId;
 
     // Open the dialog window on first load
@@ -171,6 +173,10 @@ public class AutomationPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
+                        e.getRequestHandler().add(c))));
 
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferences
@@ -208,7 +214,6 @@ public class AutomationPage
                             annotationSelectionByUsernameAndAddress, curationSegment);
                     
                     annotationEditor.requestRender(aTarget);
-                    aTarget.add(getOrCreatePositionInfoLabel());
                     update(aTarget);
                 }
                 catch (Exception e) {
@@ -227,9 +232,7 @@ public class AutomationPage
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
 
-        add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
-
-        add(getOrCreatePositionInfoLabel());
+        add(new DocumentNamePanel("documentNamePanel", getModel()));
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -348,7 +351,7 @@ public class AutomationPage
             List<DecoratedObject<Project>> allowedProject = new ArrayList<>();
             for (Project project : projectService.listProjects()) {
                 if (projectService.isAnnotator(project, user)
-                        && WebAnnoConst.PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
+                        && PROJECT_TYPE_AUTOMATION.equals(project.getMode())) {
                     allowedProject.add(DecoratedObject.of(project));
                 }
             }
@@ -570,8 +573,6 @@ public class AutomationPage
     {
         suggestionView.updatePanel(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-
-        target.add(getOrCreatePositionInfoLabel());
     }
 
     

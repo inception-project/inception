@@ -193,8 +193,6 @@ public class AnnotationPage
         
         add(createDocumentInfoLabel());
 
-        add(getOrCreatePositionInfoLabel());
-
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
         {
@@ -343,8 +341,10 @@ public class AnnotationPage
             }
         }
         
-        // Use the proper page navigator for the current paging strategy
+        // Use the proper page navigator and position labels for the current paging strategy
         addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
+        addOrReplace(state.getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
     private SidebarPanel createLeftSidebar()
@@ -608,7 +608,6 @@ public class AnnotationPage
             throw new RestartResponseException(getPage());
         }
         
-        aTarget.add(getOrCreatePositionInfoLabel());
         aTarget.addChildren(getPage(), IFeedback.class);
         
         // Update URL for current document

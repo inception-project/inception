@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosit
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -84,6 +86,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
@@ -182,6 +185,10 @@ public class CurationPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null))
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
+                        e.getRequestHandler().add(c))));
         
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
@@ -209,8 +216,6 @@ public class CurationPage
 
         add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
         documentNamePanel.setOutputMarkupId(true);
-
-        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -495,7 +500,6 @@ public class CurationPage
         // Re-render the whole page because the width of the sidebar may have changed
         aTarget.add(CurationPage.this);
         
-        aTarget.add(getOrCreatePositionInfoLabel());
         CAS mergeCas = null;
         try {
             aTarget.add(getFeedbackPanel());
@@ -659,7 +663,6 @@ public class CurationPage
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
     
-            aTarget.add(getOrCreatePositionInfoLabel());
             aTarget.add(documentNamePanel);
             aTarget.add(remergeDocumentLink);
             aTarget.add(finishDocumentLink);
@@ -675,7 +678,6 @@ public class CurationPage
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
-            aTarget.add(getOrCreatePositionInfoLabel());
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
         }

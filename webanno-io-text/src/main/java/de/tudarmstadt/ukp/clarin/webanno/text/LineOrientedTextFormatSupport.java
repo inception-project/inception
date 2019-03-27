@@ -30,7 +30,7 @@ public class LineOrientedTextFormatSupport
     implements FormatSupport
 {
     public static final String ID = "textlines";
-    public static final String NAME = "Plain text (line-oriented) (experimental)";
+    public static final String NAME = "Plain text (one sentence per line)";
     
     @Override
     public String getId()
