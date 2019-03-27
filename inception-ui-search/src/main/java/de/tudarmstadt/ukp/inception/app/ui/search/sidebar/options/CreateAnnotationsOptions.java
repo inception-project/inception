@@ -32,6 +32,6 @@ public class CreateAnnotationsOptions
 
     public void setOverrideExistingAnnotations(boolean aOverrideExistingAnnotations)
     {
-        aOverrideExistingAnnotations = overrideExistingAnnotations;
+        overrideExistingAnnotations = aOverrideExistingAnnotations;
     }
 }
