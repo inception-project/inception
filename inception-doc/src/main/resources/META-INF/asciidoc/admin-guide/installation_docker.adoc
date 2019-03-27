@@ -1,0 +1,127 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+= Running via Docker
+
+== Quick start
+
+If you have Docker installed, you can run INCEpTION using
+
+[source,text,subs="+attributes"]
+----
+docker run -it --name inception -p8080:8080 inception/inception:{revnumber}
+----
+
+The command download INCEpTION from Dockerhub and starts it on port 8080. If this port is not
+available on your machine, you should provide another port to the `-p` parameter. 
+
+The logs will be printed to the console. To stop the container, press `CTRL-C`.
+
+To run the INCEpTION docker in the background use 
+
+[source,text,subs="+attributes"]
+----
+docker run -d --name inception -p8080:8080 inception/inception:{revnumber}
+----
+
+Logs are accessible by typing 
+
+[source,text,subs="+attributes"]
+----
+docker logs inception
+----
+
+NOTE: Use `docker run` only the first time that you run INCEpTION. If you try it a second time, Docker
+      will complain about the name `inception` already being in use. If you follow Docker`s suggestion
+      to delete the container, you will loose all your INCEpTION data. Further below, we explain how
+      you can store your data outside the container in a folder on your host.
+      
+When you want to run INCEpTION again later, use the command
+
+[source,text,subs="+attributes"]
+----
+docker start -ai inception
+----
+
+or for the background mode 
+
+[source,text,subs="+attributes"]
+----
+docker start inception
+----
+
+== Storing data on the host
+
+If you follow the quick start instructions above, INCEpTION will store all its data inside the docker
+container. This is normally not what you want because as soon as you delete the container, all data
+is gone. That means for example that you cannot easily upgrade to a new version of the INCEpTION
+docker image when one is released.
+
+To store your data on your host computer, first create a folder where you want to store your data.
+For example, if you are on Linux, you could create a folder `/srv/inception`:
+
+----
+$ mkdir /srv/inception
+----
+
+When you run INCEpTION via Docker, you then mount this folder into the container:
+
+[source,text,subs="+attributes"]
+----
+docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
+----
+
+== Connecting to a MySQL database
+
+By default, INCEpTION uses an embedded SQL database to store its metadata (not the texts,
+annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
+recommended to use a separate MySQL database instead of the embedded SQL database.
+
+You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
+We provide a docker-compose example file, which combines the two containers. In order to use this, download link:https://raw.githubusercontent.com/inception/inception/master/inception-app-webapp/src/main/docker/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
+
+[source,text,subs="+attributes"]
+----
+export INCEPTION_HOME=/srv/inception
+export INCEPTION_PORT=8080
+docker-compose -p inception up -d
+----
+
+This will start two docker containers: `inception_mysqlserver_1`, and `inception_webserver_1`. You can check the logs of each by running 
+
+[source,text,subs="+attributes"]
+----
+docker logs inception_mysqlserver_1
+docker logs inception_webserver_1
+----
+
+The actual name of these containers might vary. A list of running containers can be retrieved by
+
+[source,text,subs="+attributes"]
+----
+docker ps
+----
+
+Two directories in your INCEpTION home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
+
+[source,text,subs="+attributes"]
+----
+docker-compose -p inception down
+----
+
+You can also just stop or pause them, please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
+
+NOTE: The settings within the docker-compose.yml file are just examples. Adjust the database URL, username, and password accordingly.
