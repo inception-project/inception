@@ -29,7 +29,7 @@ public class EvaluationResult
     private int testSetSize;
     private boolean skippedEvaluation;
 
-    private String ignoreLabel;
+    private final String ignoreLabel;
 
     /**
      * Stores number of predicted labels for each gold label
@@ -40,8 +40,6 @@ public class EvaluationResult
     private int total;
     private int numOfLabels;
 
-    // TODO replace or delete
-    private double defaultScore;
 
     /**
      * Calculate macro-averaged scores on per-token basis over all labels contained in the given
@@ -54,16 +52,11 @@ public class EvaluationResult
      */
     public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs)
     {
-        super();
         labels = new ArrayList<>();
         ignoreLabel = aIgnoreLabel;
         // construct confusion matrix
         confusionMatrix = new HashMap<>();
         aAnnotatedPairs.filter(this::isEqualIgnoreLabel).forEach(this::incConfusionMatrix);
-    }
-
-    public EvaluationResult()
-    {
     }
 
     private boolean isEqualIgnoreLabel(AnnotatedTokenPair aPair)
@@ -112,7 +105,7 @@ public class EvaluationResult
      * 
      * @return accuracy score
      */
-    public double getAccuracyScore()
+    public double computeAccuracyScore()
     {
         double tp = 0.0;
         for (String label : labels) {
@@ -126,7 +119,7 @@ public class EvaluationResult
      * 
      * @return precision score
      */
-    public double getPrecisionScore()
+    public double computePrecisionScore()
     {
         double precision = 0.0;
         if (numOfLabels > 0) {
@@ -149,7 +142,7 @@ public class EvaluationResult
      * 
      * @return recall score
      */
-    public double getRecallScore()
+    public double computeRecallScore()
     {
         double recall = 0.0;
         if (numOfLabels > 0) {
@@ -173,24 +166,11 @@ public class EvaluationResult
      * 
      * @return f1 score
      */
-    public double getF1Score()
+    public double computeF1Score()
     {
-        double precision = getPrecisionScore();
-        double recall = getRecallScore();
+        double precision = computePrecisionScore();
+        double recall = computeRecallScore();
         return (precision > 0 || recall > 0) ? 2 * precision * recall / (precision + recall) : 0;
-    }
-
-    /**
-     * Set the specific score which the recommender evaluation uses e.g. accuracy or f-score.
-     */
-    public void setDefaultScore(double aDefaultScore)
-    {
-        defaultScore = aDefaultScore;
-    }
-
-    public double getDefaultScore()
-    {
-        return defaultScore;
     }
 
     /**

@@ -30,12 +30,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 
 public class EvaluationResultTest
 {
-    private EvaluationResult calc;
+    private List<AnnotatedTokenPair> instances;
 
     @Before
     public void setUp()
     {
-        List<AnnotatedTokenPair> instances = new ArrayList<>();
+        instances = new ArrayList<>();
         String[][] instanceLabels = new String[][] { { "PER", "PER" }, { "PER", "ORG" },
                 { "ORG", "PER" }, { "ORG", "LOC" }, { "PER", "LOC" }, { "LOC", "ORG" },
                 { "LOC", "LOC" }, { "ORG", "LOC" }, { "PER", "ORG" }, { "ORG", "ORG" },
@@ -44,34 +44,54 @@ public class EvaluationResultTest
         for (String[] labels : instanceLabels) {
             instances.add(new AnnotatedTokenPair(0, 0, labels[0], labels[1]));
         }
-        calc = new EvaluationResult(null, instances.stream());
+        
     }
 
     @Test
     public void thatAccuracyWorks()
     {
-        assertThat(calc.getAccuracyScore()).as("accuracy is correctly calculated")
+        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        assertThat(calc.computeAccuracyScore()).as("accuracy is correctly calculated")
                 .isEqualTo(4.0 / 9.0);
     }
 
     @Test
     public void thatPrecisionWorks()
     {
-        assertThat(calc.getPrecisionScore()).as("precision is correctly calculated")
+        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        assertThat(calc.computePrecisionScore()).as("precision is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
 
     @Test
     public void thatRecallWorks()
     {
-        assertThat(calc.getRecallScore()).as("recall is correctly calculated")
+        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        assertThat(calc.computeRecallScore()).as("recall is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
 
     @Test
     public void thatF1Works()
     {
-        assertThat(calc.getF1Score()).as("f1 is correctly calculated")
+        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        assertThat(calc.computeF1Score()).as("f1 is correctly calculated")
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
+    }
+    
+    @Test
+    public void thatIgnoringALabelWorks()
+    {
+        EvaluationResult calc = new EvaluationResult("PER", instances.stream());
+        assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
+                .isEqualTo(2 * (13.0 / 21.0 * (4.0 / 5 + 2.0 / 5) * 0.5)
+                        / (13.0 / 21.0 + (4.0 / 5 + 2.0 / 5) * 0.5));
+        assertThat(calc.computeRecallScore()).as("recall with ignore label is correctly calculated")
+                .isEqualTo(13.0 / 21.0);
+        assertThat(calc.computeAccuracyScore())
+                .as("accuracy with ignore label is correctly calculated").isEqualTo(0.6);
+        assertThat(calc.computePrecisionScore())
+                .as("precision with ignore label is correctly calculated")
+                .isEqualTo((4.0 / 5 + 2.0 / 5) * 0.5);
     }
 }
