@@ -57,8 +57,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -117,10 +117,10 @@ public class SearchAnnotationSidebar
     private SearchResult selectedResult;
 
     public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         currentUser = userRepository.getCurrentUser();
         
@@ -464,29 +464,15 @@ public class SearchAnnotationSidebar
                     Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
                             .getProject();
                     
-                    LambdaAjaxLink lambdaAjaxLink;
-                    if (aItem.getModel().getObject().getOffsetStart() != -1) {
-                        // When the offset exists, use it. Mtas indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
+                    LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
+                        t -> {
                             selectedResult = aItem.getModelObject();
                             actionShowSelectedDocument(t,
                                     documentService.getSourceDocument(currentProject,
                                             selectedResult.getDocumentTitle()),
-                                    selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
+                                    selectedResult.getOffsetStart(),
+                                    selectedResult.getOffsetEnd());
                         });
-                    }
-                    else {
-                        // If the offset doesn't exist, use the token position Mimir indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
-                            selectedResult = aItem.getModelObject();
-                            getAnnotationPage().actionShowSelectedDocumentByTokenPosition(t,
-                                    documentService.getSourceDocument(currentProject,
-                                            aItem.getModel().getObject().getDocumentTitle()),
-                                    aItem.getModel().getObject().getTokenStart());
-                            ;
-                        });
-
-                    }
                     aItem.add(lambdaAjaxLink);
 
                     AjaxCheckBox selected = new AjaxCheckBox("selected",

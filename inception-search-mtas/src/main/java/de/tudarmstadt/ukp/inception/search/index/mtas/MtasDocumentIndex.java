@@ -68,9 +68,9 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -451,7 +451,7 @@ public class MtasDocumentIndex
     }
 
     private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, JCas aJCas)
+            long aAnnotationDocumentId, String aUser, CAS aCas)
         throws IOException
     {
         if (indexWriter != null) {
@@ -464,7 +464,7 @@ public class MtasDocumentIndex
                 
                 // Prepare bytearray with document content to be indexed
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
+                XmiCasSerializer.serialize(aCas, null, bos, true, null);
                 bos.close();
 
                 // Calculate timestamp that will be indexed
@@ -512,17 +512,17 @@ public class MtasDocumentIndex
     };
 
     @Override
-    public void indexDocument(SourceDocument aDocument, JCas aJCas) throws IOException
+    public void indexDocument(SourceDocument aDocument, CAS aCas) throws IOException
     {
-        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aJCas);
+        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aCas);
     };
 
     @Override
-    public void indexDocument(AnnotationDocument aDocument, JCas aJCas) throws IOException
+    public void indexDocument(AnnotationDocument aDocument, CAS aCas) throws IOException
     {
         log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
-                aDocument.getUser(), aJCas);
+                aDocument.getUser(), aCas);
         log.debug("***** End of Indexing annotation document");
     };
 

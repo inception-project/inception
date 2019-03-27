@@ -154,9 +154,13 @@ public class ElasticSearchProvider
         ObjectNode bodyNode = mapper.createObjectNode();
         bodyNode.put("size", aTraits.getResultSize());
 
+        ObjectNode queryString = mapper.createObjectNode();
+        queryString.put("default_field", "doc.text");
+        queryString.put("query", aQuery);
+        
         ObjectNode queryBody = mapper.createObjectNode();
-        queryBody.putPOJO("match", mapper.createObjectNode()
-            .put("doc.text", aQuery));
+        queryBody.putPOJO("query_string", queryString);
+        
         if (aTraits.isRandomOrder()) {
             ObjectNode query = mapper.createObjectNode();
 
