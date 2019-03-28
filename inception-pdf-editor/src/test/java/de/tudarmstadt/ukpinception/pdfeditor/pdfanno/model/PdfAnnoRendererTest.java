@@ -186,7 +186,7 @@ public class PdfAnnoRendererTest
      * Tests if given offsets for PDFAnno can be converted to offsets for the document in INCEpTION
      */
     @Test
-    public void tetsConvertToDocumentOffset() throws Exception
+    public void testConvertToDocumentOffset() throws Exception
     {
         String file = "src/test/resources/tcf04-karin-wl.xml";
         String pdftxt = new Scanner(
