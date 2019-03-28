@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ModelChangedVisitor;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.NameUtil;
-import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiProperties;
 
 /**
  * Manage Application wide Users.

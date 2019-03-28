@@ -22,33 +22,31 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.NoResultException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
@@ -74,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -87,8 +86,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -102,7 +99,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDial
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.InputBehavior;
 import wicket.contrib.input.events.key.KeyType;
@@ -130,8 +126,6 @@ public class AnnotationPage
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
-    
-    private NumberTextField<Integer> gotoPageTextField;
     
     private long currentprojectId;
 
@@ -191,15 +185,13 @@ public class AnnotationPage
 
         add(createUrlFragmentBehavior());      
         
-        add(annotationEditor = createAnnotationEditor());
+        createAnnotationEditor(null);
         
         add(createRightSidebar());
 
         add(createLeftSidebar());
         
         add(createDocumentInfoLabel());
-
-        add(getOrCreatePositionInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -219,18 +211,6 @@ public class AnnotationPage
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
 
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
-
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
-        gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
-        // FIXME minimum and maximum should be obtained from the annotator state
-        gotoPageTextField.setMinimum(1); 
-        gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
-        LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
-                gotoPageTextFieldForm, this::actionGotoPage);
-        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
-        gotoPageTextFieldForm.add(gotoPageLink);
-        add(gotoPageTextFieldForm);
 
         add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
 
@@ -254,18 +234,6 @@ public class AnnotationPage
         add(new ActionBarLink("showNextDocument", t -> actionShowNextDocument(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
                         EventType.click)));
-
-        add(new ActionBarLink("showNext", t -> actionShowNextPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
-
-        add(new ActionBarLink("showPrevious", t -> actionShowPreviousPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
-
-        add(new ActionBarLink("showFirst", t -> actionShowFirstPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
-
-        add(new ActionBarLink("showLast", t -> actionShowLastPage(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
 
         add(new ActionBarLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -310,12 +278,6 @@ public class AnnotationPage
         });
     }
 
-    @Override
-    public NumberTextField<Integer> getGotoPageTextField()
-    {
-        return gotoPageTextField;
-    }
-
     private DocumentNamePanel createDocumentInfoLabel()
     {
         return new DocumentNamePanel("documentNamePanel", getModel());
@@ -347,8 +309,10 @@ public class AnnotationPage
         };
     }
     
-    private AnnotationEditorBase createAnnotationEditor()
+    private void createAnnotationEditor(IPartialPageRequestHandler aTarget)
     {
+        AnnotatorState state = getModelObject();
+        
         String editorId = getModelObject().getPreferences().getEditor();
         
         AnnotationEditorFactory factory = editorRegistry.getEditorFactory(editorId);
@@ -356,11 +320,31 @@ public class AnnotationPage
             factory = editorRegistry.getDefaultEditorFactory();
         }
 
-        AnnotationEditorBase editor = factory.create("editor", getModel(), detailEditor,
-                this::getEditorCas);
-        editor.add(LambdaBehavior.visibleWhen(() -> getModelObject().getDocument() != null));
-        editor.setOutputMarkupPlaceholderTag(true);
-        return editor;
+        annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
+        annotationEditor.add(visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        
+        addOrReplace(annotationEditor);
+        
+        // Give the new editor an opportunity to configure the current paging strategy
+        factory.initState(state);
+        if (state.getDocument() != null) {
+            try {
+                state.getPagingStrategy().recalculatePage(state, getEditorCas());
+            }
+            catch (Exception e) {
+                LOG.info("Error reading CAS: {}", e.getMessage());
+                error("Error reading CAS " + e.getMessage());
+                if (aTarget != null) {
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                }
+            }
+        }
+        
+        // Use the proper page navigator and position labels for the current paging strategy
+        addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
+        addOrReplace(state.getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+                .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
     private SidebarPanel createLeftSidebar()
@@ -430,7 +414,21 @@ public class AnnotationPage
         return documentService.readAnnotationCas(state.getDocument(),
                 state.getUser().getUsername());
     }
+    
+    @Override
+    public void writeEditorCas(CAS aCas) throws IOException
+    {
+        AnnotatorState state = getModelObject();
+        documentService.writeAnnotationCas(aCas, state.getDocument(), state.getUser(), true);
 
+        // Update timestamp in state
+        Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
+        if (diskTimestamp.isPresent()) {
+            state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+        }
+    }
+    
     private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
     {
         // If the page has loaded and there is no document open yet, show the open-document
@@ -456,23 +454,6 @@ public class AnnotationPage
         preferencesModal.show(aTarget);
     }
 
-    private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        
-        CAS cas = getEditorCas();
-        List<AnnotationFS> sentences = new ArrayList<>(select(cas, getType(cas, Sentence.class)));
-        int selectedSentence = gotoPageTextField.getModelObject();
-        selectedSentence = Math.min(selectedSentence, sentences.size());
-        gotoPageTextField.setModelObject(selectedSentence);
-        
-        state.setFirstVisibleUnit(sentences.get(selectedSentence - 1));
-        state.setFocusUnitIndex(selectedSentence);        
-        
-        actionRefreshDocument(aTarget);
-    }
-
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
@@ -489,16 +470,12 @@ public class AnnotationPage
             
             // The number of visible sentences may have changed - let the state recalculate 
             // the visible sentences 
-            AnnotationFS sentence = selectByAddr(cas, Sentence.class,
-                    state.getFirstVisibleUnitAddress());
-            state.setFirstVisibleUnit(sentence);
+            state.getPagingStrategy().recalculatePage(state, cas);
             
             // The selection of layers may have changed. Update the dropdown
             detailEditor.getAnnotationFeatureForm().updateLayersDropdown();
             
-            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-            annotationEditor.replaceWith(newAnnotationEditor);
-            annotationEditor = newAnnotationEditor;
+            createAnnotationEditor(aTarget);
             
             // Reload all AJAX-enabled children of the page but not the page itself!
             WicketUtil.refreshPage(aTarget, getPage());
@@ -561,8 +538,7 @@ public class AnnotationPage
             annotationService.upgradeCas(editorCas, annotationDocument);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
-            documentService.writeAnnotationCas(editorCas, annotationDocument,
-                    false);
+            documentService.writeAnnotationCas(editorCas, annotationDocument, false);
 
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -584,15 +560,12 @@ public class AnnotationPage
             }
 
             // Initialize the visible content
-            state.moveToUnit(editorCas, aFocus);
-            gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
+            state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Set the actual editor component. This has to happen *before* any AJAX refreshs are
             // scheduled and *after* the preferences have been loaded (because the current editor
             // type is set in the preferences.
-            AnnotationEditorBase newAnnotationEditor = createAnnotationEditor();
-            annotationEditor.replaceWith(newAnnotationEditor);
-            annotationEditor = newAnnotationEditor;
+            createAnnotationEditor(aTarget);
 
             // Update document state
             if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
@@ -615,10 +588,6 @@ public class AnnotationPage
             applicationEventPublisherHolder.get().publishEvent(
                     new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
                             getModelObject().getUser().getUsername()));
-            
-            LOG.debug("Configured BratAnnotatorModel for user [" + state.getUser().getUsername()
-                    + "] f:[" + state.getFirstVisibleUnitIndex() + "] l:["
-                    + state.getLastVisibleUnitIndex() + "] s:[" + state.getFocusUnitIndex() + "]");
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -630,8 +599,6 @@ public class AnnotationPage
     @Override
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
-        gotoPageTextField.setModelObject(getModelObject().getFirstVisibleUnitIndex());
-        
         try {
             annotationEditor.requestRender(aTarget);
         }
@@ -641,8 +608,6 @@ public class AnnotationPage
             throw new RestartResponseException(getPage());
         }
         
-        aTarget.add(gotoPageTextField);
-        aTarget.add(getOrCreatePositionInfoLabel());
         aTarget.addChildren(getPage(), IFeedback.class);
         
         // Update URL for current document
@@ -799,7 +764,7 @@ public class AnnotationPage
             }
             else {
                 try {
-                    getModelObject().moveToUnit(getEditorCas(), focus);
+                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
                     actionRefreshDocument(aTarget);
                 }
                 catch (Exception e) {

@@ -15,29 +15,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
-public interface AnnotationEditorFactory
+@Component("bratEditor")
+public class BratSentenceOrientedAnnotationEditorFactory
+    extends AnnotationEditorFactoryImplBase
 {
-    /**
-     * @return get the bean name.
-     */
-    String getBeanName();
+    @Override
+    public String getDisplayName()
+    {
+        return "brat (sentence-oriented)";
+    }
     
-    String getDisplayName();
+    @Override
+    public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+    {
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
+    }
     
-    AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
-
-    /**
-     * Configure the state to be compatible with the editor produced by this factory. E.g. set the
-     * paging strategy adequately.
-     */
-    void initState(AnnotatorState aModelObject);
+    @Override
+    public int getOrder()
+    {
+        return 0;
+    }
 }

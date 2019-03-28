@@ -18,10 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
-import static org.apache.uima.fit.util.CasUtil.getType;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +31,6 @@ import java.util.Map;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -63,20 +59,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Main panel of the curation page. It displays a box with the complete text on the left side and a
@@ -229,7 +223,7 @@ public class CurationPanel
         annotationEditor = new BratAnnotationEditor("mergeView", new Model<>(state), editor,
             this::getEditorCas);
         annotationEditor.setHighlightEnabled(false);
-        annotationEditor.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
+        annotationEditor.add(visibleWhen(() -> state.getDocument() != null));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         // reset sentenceAddress and lastSentenceAddress to the orginal once
         add(annotationEditor);
@@ -419,12 +413,8 @@ public class CurationPanel
     private void updateCurationView(final CurationContainer curationContainer,
             final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
     {
-        AnnotationFS currentSent = WebAnnoCasUtil.getCurrentSentence(aCas,
-                curationViewItem.getBegin(), curationViewItem.getEnd());
-        state.setFirstVisibleUnit(WebAnnoCasUtil.findWindowStartCenteringOnSelection(aCas,
-                currentSent, curationViewItem.getBegin(), state.getProject(), state.getDocument(),
-                state.getPreferences().getWindowSize()));
-        curationContainer.setBratAnnotatorModel(state);
+        state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
+        curationContainer.setState(state);
         onChange(aTarget);
     }
 
@@ -474,32 +464,10 @@ public class CurationPanel
     
     private void commonUpdate() throws IOException
     {
-        CAS cas = curationDocumentService.readCurationCas(state.getDocument());
-
-        // Determine the FIRST visible unit
-        final AnnotationFS firstVisibleUnit = selectSentenceAt(cas,
-                state.getFirstVisibleUnitBegin(), state.getFirstVisibleUnitEnd());
-        state.setFirstVisibleUnit(firstVisibleUnit);
-
-        // Determine the LAST visible unit
-        List<AnnotationFS> followingUnits = CasUtil.selectFollowing(cas,
-                getType(cas, Sentence.class), firstVisibleUnit,
-                state.getPreferences().getWindowSize());
-        // Check also, when getting the last sentence address in the display window, if this is the
-        // last sentence or the ONLY sentence in the document
-        AnnotationFS lastVisibleUnit = followingUnits.size() == 0 ? firstVisibleUnit
-                : followingUnits.get(followingUnits.size() - 1);
-        
-        curationView.setCurationBegin(firstVisibleUnit.getBegin());
-        curationView.setCurationEnd(lastVisibleUnit.getEnd());
-
-        // Determine the number of the first and last visible unit
-        int ws = state.getPreferences().getWindowSize();
-        AnnotationFS fs = selectSentenceAt(cas, state.getFirstVisibleUnitBegin(),
-                state.getFirstVisibleUnitEnd());
-        AnnotationFS ls = getLastSentenceInDisplayWindow(cas, getAddr(fs), ws);
-        fSn = WebAnnoCasUtil.getSentenceNumber(cas, fs.getBegin());
-        lSn = WebAnnoCasUtil.getSentenceNumber(cas, ls.getBegin());
+        curationView.setCurationBegin(state.getWindowBeginOffset());
+        curationView.setCurationEnd(state.getWindowEndOffset());
+        fSn = state.getFirstVisibleUnitIndex();
+        lSn = state.getLastVisibleUnitIndex();
     }
 
     /**

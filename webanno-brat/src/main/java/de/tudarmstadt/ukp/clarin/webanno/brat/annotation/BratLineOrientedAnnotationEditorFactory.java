@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -25,15 +25,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
 
-@Component("bratEditor")
-public class BratAnnotationEditorFactory
+@Component("lineOrientedBratEditor")
+public class BratLineOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     @Override
     public String getDisplayName()
     {
-        return "brat";
+        return "brat (line-oriented)";
     }
     
     @Override
@@ -46,6 +47,12 @@ public class BratAnnotationEditorFactory
     @Override
     public int getOrder()
     {
-        return 0;
+        return 1;
+    }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new LineOrientedPagingStrategy());
     }
 }

@@ -17,11 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getLastSentenceInDisplayWindow;
 import static java.util.Collections.unmodifiableList;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -35,7 +31,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -47,7 +44,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 
 /**
  * Data model for annotation editors
@@ -67,7 +63,11 @@ public class AnnotatorStateImpl
      * The source document the to be annotated
      */
     private SourceDocument document;
+    
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int documentIndex = -1;
+    
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int numberOfDocuments = -1;
 
     /**
@@ -76,21 +76,6 @@ public class AnnotatorStateImpl
     private User user;
 
     private ScriptDirection scriptDirection;
-
-    /**
-     * The sentence address where the display window starts with, in its UIMA annotation
-     */
-    private int firstVisibleUnitAddress = -1;
-
-    /**
-     * The begin offset of the first visible unit in the display window.
-     */
-    private int firstVisibleUnitBegin;
-
-    /**
-     * The end offset of the first visible unit in the display window.
-     */
-    private int firstVisibleUnitEnd;
 
     /**
      * The begin offset of the first visible sentence.
@@ -110,19 +95,22 @@ public class AnnotatorStateImpl
     /**
      * The index of the first visible unit in the display window.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int firstVisibleUnitIndex;
     
     /**
      * The index of the last visible unit in the display window.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int lastVisibleUnitIndex;
 
     /**
      * The total number of units in the document.
      */
+    // This is being used in the action bar paging area to indicate the maximum number of units
     private int unitCount;
 
-    private final List<FeatureState> featureModels = new ArrayList<>();          
+    private final List<FeatureState> featureModels = new ArrayList<>();
     
     /**
      * Constraints object from rule file
@@ -171,6 +159,10 @@ public class AnnotatorStateImpl
     private String userAction;
     
     private Long annotationDocumentTimestamp;
+    
+    private PagingStrategy pagingStrategy;
+    
+    private List<Unit> visibleUnits;
 
     public AnnotatorStateImpl(Mode aMode)
     {
@@ -289,30 +281,43 @@ public class AnnotatorStateImpl
         user = aUser;
     }
 
+    /**
+     * @deprecated use {@link #setPageBegin(CAS, int)} instead.
+     */
+    @Deprecated
     @Override
     public void setFirstVisibleUnit(AnnotationFS aFirstVisibleUnit)
     {
-        CAS cas = aFirstVisibleUnit.getCAS();
-
-        firstVisibleUnitAddress = WebAnnoCasUtil.getAddr(aFirstVisibleUnit);
-        firstVisibleUnitBegin = aFirstVisibleUnit.getBegin();
-        firstVisibleUnitEnd = aFirstVisibleUnit.getEnd();
-
-        AnnotationFS lastVisibleUnit = getLastSentenceInDisplayWindow(cas,
-                getAddr(aFirstVisibleUnit), getPreferences().getWindowSize());
-        firstVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas,
-                aFirstVisibleUnit.getBegin());
-        lastVisibleUnitIndex = WebAnnoCasUtil.getSentenceNumber(cas, lastVisibleUnit.getBegin());
-        unitCount = select(cas, getType(cas, Sentence.class)).size();
+        setPageBegin(aFirstVisibleUnit.getCAS(), aFirstVisibleUnit.getBegin());
+    }
+    
+    @Override
+    public void setPageBegin(CAS aCas, int aOffset)
+    {
+        PagingStrategy ps = getPagingStrategy();
         
-        windowBeginOffset = aFirstVisibleUnit.getBegin();
-        windowEndOffset = lastVisibleUnit.getEnd();
+        setVisibleUnits(ps.unitsStartingAtOffset(aCas, aOffset,
+                getPreferences().getWindowSize()), ps.unitCount(aCas));        
     }
 
     @Override
-    public int getFirstVisibleUnitAddress()
+    public void setVisibleUnits(List<Unit> aUnits, int aTotalUnitCount)
     {
-        return firstVisibleUnitAddress;
+        unitCount = aTotalUnitCount;
+        firstVisibleUnitIndex = aUnits.get(0).getIndex();
+        lastVisibleUnitIndex = aUnits.get(aUnits.size() - 1).getIndex();
+        focusUnitIndex = firstVisibleUnitIndex;
+        
+        windowBeginOffset = aUnits.get(0).getBegin();
+        windowEndOffset = aUnits.get(aUnits.size() - 1).getEnd();
+        
+        visibleUnits = aUnits;
+    }
+    
+    @Override
+    public List<Unit> getVisibleUnits()
+    {
+        return visibleUnits;
     }
     
     @Override
@@ -426,18 +431,6 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public int getFirstVisibleUnitBegin()
-    {
-        return firstVisibleUnitBegin;
-    }
-
-    @Override
-    public int getFirstVisibleUnitEnd()
-    {
-        return firstVisibleUnitEnd;
-    }
-
-    @Override
     public int getFocusUnitIndex()
     {
         return focusUnitIndex;
@@ -532,9 +525,6 @@ public class AnnotatorStateImpl
         clearArmedSlot();
         clearRememberedFeatures();
         focusUnitIndex = 0;
-        firstVisibleUnitAddress = -1;
-        firstVisibleUnitBegin = 0;
-        firstVisibleUnitEnd = 0;
         firstVisibleUnitIndex = 0;
         lastVisibleUnitIndex = 0;
         unitCount = 0;
@@ -611,5 +601,17 @@ public class AnnotatorStateImpl
     public void setAnnotationDocumentTimestamp(long aAnnotationDocumentTimestamp)
     {
         annotationDocumentTimestamp = aAnnotationDocumentTimestamp;
+    }
+
+    @Override
+    public PagingStrategy getPagingStrategy()
+    {
+        return pagingStrategy;
+    }
+
+    @Override
+    public void setPagingStrategy(PagingStrategy aPagingStrategy)
+    {
+        pagingStrategy = aPagingStrategy;
     }
 }

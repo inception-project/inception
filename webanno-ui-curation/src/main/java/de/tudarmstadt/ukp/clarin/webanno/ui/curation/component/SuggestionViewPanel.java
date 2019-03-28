@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.findWindowStartCenteringOnSelection;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -239,11 +238,11 @@ public class SuggestionViewPanel
         createSpan(spanType, state, aCas, clickedAnnotationDocument, address);
     }
 
-    private void createSpan(String spanType, AnnotatorState aBModel, CAS aMergeCas,
+    private void createSpan(String spanType, AnnotatorState aState, CAS aMergeCas,
             AnnotationDocument aAnnotationDocument, int aAddress)
             throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
-        CAS clickedCas = getCas(aBModel, aAnnotationDocument);
+        CAS clickedCas = getCas(aState, aAnnotationDocument);
 
         AnnotationFS fsClicked = selectAnnotationByAddr(clickedCas, aAddress);
 
@@ -253,23 +252,18 @@ public class SuggestionViewPanel
         long layerId = TypeUtil.getLayerId(spanType);
 
         AnnotationLayer layer = annotationService.getLayer(layerId);
-        MergeCas.addSpanAnnotation(aBModel, annotationService, layer, aMergeCas, fsClicked,
+        MergeCas.addSpanAnnotation(aState, annotationService, layer, aMergeCas, fsClicked,
                 layer.isAllowStacking());
 
-        writeEditorCas(aBModel, aMergeCas);
+        writeEditorCas(aState, aMergeCas);
 
         // update timestamp
         int sentenceNumber = getSentenceNumber(clickedCas, fsClicked.getBegin());
-        aBModel.setFocusUnitIndex(sentenceNumber);
-        aBModel.getDocument().setSentenceAccessed(sentenceNumber);
+        aState.getDocument().setSentenceAccessed(sentenceNumber);
 
-        if (aBModel.getPreferences().isScrollPage()) {
-            AnnotationFS sentence = selectSentenceAt(aMergeCas, aBModel.getFirstVisibleUnitBegin(),
-                    aBModel.getFirstVisibleUnitEnd());
-            sentence = findWindowStartCenteringOnSelection(aMergeCas, sentence,
-                    fsClicked.getBegin(), aBModel.getProject(), aBModel.getDocument(),
-                    aBModel.getPreferences().getWindowSize());
-            aBModel.setFirstVisibleUnit(sentence);
+        if (aState.getPreferences().isScrollPage()) {
+            aState.getPagingStrategy().moveToOffset(aState, aMergeCas, fsClicked.getBegin(),
+                    CENTERED);
         }
     }
 
@@ -283,8 +277,8 @@ public class SuggestionViewPanel
         String arcType = removePrefix(aRequest.getParameterValue(PARAM_TYPE).toString());
         String fsArcaddress = aRequest.getParameterValue(PARAM_ARC_ID).toString();
 
-        AnnotatorState bModel = aCurationUserSegment.getAnnotatorState();
-        SourceDocument sourceDocument = bModel.getDocument();
+        AnnotatorState state = aCurationUserSegment.getAnnotatorState();
+        SourceDocument sourceDocument = state.getDocument();
         
         // for correction and automation, the lower panel is the clickedCas, from the suggestions
         CAS clickedCas;
@@ -295,7 +289,7 @@ public class SuggestionViewPanel
             User user = userRepository.get(aCurationUserSegment.getUsername());
             AnnotationDocument clickedAnnotationDocument = documentService
                     .getAnnotationDocument(sourceDocument, user);
-            clickedCas = getCas(bModel, clickedAnnotationDocument);
+            clickedCas = getCas(state, clickedAnnotationDocument);
         }
 
         long layerId = TypeUtil.getLayerId(arcType);
@@ -311,21 +305,14 @@ public class SuggestionViewPanel
 
         MergeCas.addArcAnnotation(adapter, aCas, addressOriginClicked, addressTargetClicked,
                 fsArcaddress, clickedCas, clickedFS);
-        writeEditorCas(bModel, aCas);
+        writeEditorCas(state, aCas);
 
-        int sentenceNumber = getSentenceNumber(clickedCas, clickedFS.getBegin());
-        bModel.setFocusUnitIndex(sentenceNumber);
-        
         // Update timestamp
-        bModel.getDocument().setSentenceAccessed(sentenceNumber);
+        int sentenceNumber = getSentenceNumber(clickedCas, clickedFS.getBegin());
+        state.getDocument().setSentenceAccessed(sentenceNumber);
 
-        if (bModel.getPreferences().isScrollPage()) {
-            AnnotationFS sentence = selectSentenceAt(aCas, bModel.getFirstVisibleUnitBegin(),
-                    bModel.getFirstVisibleUnitEnd());
-            sentence = findWindowStartCenteringOnSelection(aCas, sentence,
-                    clickedFS.getBegin(), bModel.getProject(), bModel.getDocument(),
-                    bModel.getPreferences().getWindowSize());
-            bModel.setFirstVisibleUnit(sentence);
+        if (state.getPreferences().isScrollPage()) {
+            state.getPagingStrategy().moveToOffset(state, aCas, clickedFS.getBegin(), CENTERED);
         }
     }
 

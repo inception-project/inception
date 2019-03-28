@@ -1,8 +1,2 @@
-= Annotation Editor
-
-== Editors
-
-== Editor extensions
-
-== Sidebar
+= Editor extensions
 

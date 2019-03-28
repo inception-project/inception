@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSuppo
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
@@ -154,6 +155,7 @@ public class BratRendererTest
                 TcfReader.PARAM_SOURCE_LOCATION, file);
         reader.getNext(cas);
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
         state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
 
