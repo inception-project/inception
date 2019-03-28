@@ -18,32 +18,17 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
 /**
- * Holds information on an annotated token: its gold label, its predicted label and their text
- * indices.
+ * Holds information on an annotated token: its gold label and its predicted label.
  */
 public class AnnotatedTokenPair
 {
-    private final int begin;
-    private final int end;
     private final String goldLabel;
     private final String predictedLabel;
 
-    public AnnotatedTokenPair(int aBegin, int aEnd, String aGoldLabel, String aPredictedLabel)
+    public AnnotatedTokenPair(String aGoldLabel, String aPredictedLabel)
     {
-        begin = aBegin;
-        end = aEnd;
         goldLabel = aGoldLabel;
         predictedLabel = aPredictedLabel;
-    }
-
-    public int getBegin()
-    {
-        return begin;
-    }
-
-    public int getEnd()
-    {
-        return end;
     }
 
     public String getGoldLabel()

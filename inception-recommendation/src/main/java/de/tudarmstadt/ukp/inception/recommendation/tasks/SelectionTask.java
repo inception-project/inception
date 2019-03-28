@@ -143,8 +143,9 @@ public class SelectionTask
                     log.info("[{}][{}]: Evaluating...", userName, recommenderName);
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
+                    // set F1-score as default score for threshold
                     double score = recommendationEngine.evaluate(casses.get(), splitter)
-                            .getDefaultScore();
+                            .computeF1Score();
 
                     Double threshold = recommender.getThreshold();
                     boolean activated;

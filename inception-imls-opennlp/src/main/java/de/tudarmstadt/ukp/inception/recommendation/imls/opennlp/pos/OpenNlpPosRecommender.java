@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -52,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.ml.BeamSearch;
-import opennlp.tools.postag.POSEvaluator;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerFactory;
@@ -165,9 +165,7 @@ public class OpenNlpPosRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
-    {
-        EvaluationResult result = new EvaluationResult();
-        
+    {        
         List<POSSample> data = extractPosSamples(aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
@@ -188,11 +186,12 @@ public class OpenNlpPosRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        result.setTestSetSize(testSetSize);
-        result.setTrainingSetSize(trainingSetSize);
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
+
+            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+                    testSetSize);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -209,15 +208,17 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
-        try (POSSampleStream stream = new POSSampleStream(testSet)) {
-            POSEvaluator evaluator = new POSEvaluator(tagger);
-            evaluator.evaluate(stream);
-            result.setDefaultScore(evaluator.getWordAccuracy());
-            return result;
+        List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        for (POSSample sample : testSet) {
+            String[] predictedTags = tagger.tag(sample.getSentence());
+            String[] goldTags = sample.getTags();
+            for (int i = 0; i < predictedTags.length; i++) {
+                predictions.add(new AnnotatedTokenPair(goldTags[i], predictedTags[i]));
+            }
         }
-        catch (IOException e) {
-            throw new RecommendationException("Error while evaluating", e);
-        }
+        
+        // TODO: check again if PAD should be an ignored label
+        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

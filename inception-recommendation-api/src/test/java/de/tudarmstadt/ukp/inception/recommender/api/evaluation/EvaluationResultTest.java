@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommender.api.evaluation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +43,7 @@ public class EvaluationResultTest
                 { "LOC", "LOC" }, { "ORG", "LOC" }, { "PER", "ORG" }, { "ORG", "ORG" },
                 { "LOC", "PER" }, { "ORG", "ORG" }, { "PER", "PER" }, { "ORG", "ORG" } };
         for (String[] labels : instanceLabels) {
-            instances.add(new AnnotatedTokenPair(0, 0, labels[0], labels[1]));
+            instances.add(new AnnotatedTokenPair(labels[0], labels[1]));
         }
         
     }
@@ -93,5 +94,12 @@ public class EvaluationResultTest
         assertThat(calc.computePrecisionScore())
                 .as("precision with ignore label is correctly calculated")
                 .isEqualTo((4.0 / 5 + 2.0 / 5) * 0.5);
+    }
+    
+    @Test
+    public void thatMissingClassesWorks()
+    {
+        // TODO: test with classes which are never gold or never predicted
+        fail("not implemnted yet");
     }
 }

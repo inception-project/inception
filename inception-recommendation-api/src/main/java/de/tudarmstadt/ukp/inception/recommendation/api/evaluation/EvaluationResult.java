@@ -58,6 +58,14 @@ public class EvaluationResult
         confusionMatrix = new HashMap<>();
         aAnnotatedPairs.filter(this::isEqualIgnoreLabel).forEach(this::incConfusionMatrix);
     }
+    
+    public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs,
+            int aTrainSetSize, int aTestSetSize)
+    {
+        this(aIgnoreLabel, aAnnotatedPairs);
+        trainingSetSize = aTrainSetSize;
+        testSetSize = aTestSetSize;
+    }
 
     private boolean isEqualIgnoreLabel(AnnotatedTokenPair aPair)
     {
@@ -85,6 +93,14 @@ public class EvaluationResult
 
     private void incCounter(String aGoldLabel, String aPredictedLabel)
     {
+        initConfEntries(aGoldLabel, aPredictedLabel);
+        
+        int count = confusionMatrix.get(aGoldLabel).get(aPredictedLabel) + 1;
+        confusionMatrix.get(aGoldLabel).put(aPredictedLabel, count);
+    }
+
+    private void initConfEntries(String aGoldLabel, String aPredictedLabel)
+    {
         if (!confusionMatrix.containsKey(aGoldLabel)) {
             Map<String, Integer> initMap = new HashMap<>();
             initMap.put(aGoldLabel, 0);
@@ -96,8 +112,6 @@ public class EvaluationResult
         if (!confusionMatrix.get(aGoldLabel).containsKey(aPredictedLabel)) {
             confusionMatrix.get(aGoldLabel).put(aPredictedLabel, 0);
         }
-        int count = confusionMatrix.get(aGoldLabel).get(aPredictedLabel) + 1;
-        confusionMatrix.get(aGoldLabel).put(aPredictedLabel, count);
     }
 
     /**
@@ -127,9 +141,11 @@ public class EvaluationResult
                 double tp = confusionMatrix.get(label).get(label);
                 double numPredictedAsLabel = 0.0;
                 for (String predictedLabel : labels) {
-                    numPredictedAsLabel += confusionMatrix.get(predictedLabel).get(label);
+                    if (confusionMatrix.containsKey(predictedLabel)
+                            && confusionMatrix.get(predictedLabel).containsKey(label))
+                        numPredictedAsLabel += confusionMatrix.get(predictedLabel).get(label);
                 }
-                precision += tp / numPredictedAsLabel;
+                precision += (numPredictedAsLabel > 0) ? tp / numPredictedAsLabel : 0;
 
             }
             precision = precision / numOfLabels;
@@ -150,8 +166,9 @@ public class EvaluationResult
                 double tp = confusionMatrix.get(label).get(label);
                 double numIsLabel = 0.0;
                 for (String predictedLabel : labels) {
-                    numIsLabel += confusionMatrix.get(label).get(predictedLabel);
-
+                    if (confusionMatrix.containsKey(label)
+                            && confusionMatrix.get(label).containsKey(predictedLabel))
+                        numIsLabel += confusionMatrix.get(label).get(predictedLabel);
                 }
                 recall += (numIsLabel > 0) ? tp / numIsLabel : 0;
 

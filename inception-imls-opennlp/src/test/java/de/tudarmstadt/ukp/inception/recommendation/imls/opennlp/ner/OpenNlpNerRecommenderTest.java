@@ -105,7 +105,7 @@ public class OpenNlpNerRecommenderTest
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         
@@ -123,7 +123,7 @@ public class OpenNlpNerRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 

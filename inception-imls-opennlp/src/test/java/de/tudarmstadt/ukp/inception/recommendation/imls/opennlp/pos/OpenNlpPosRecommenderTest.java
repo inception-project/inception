@@ -105,7 +105,7 @@ public class OpenNlpPosRecommenderTest
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         assertThat(score).isStrictlyBetween(0.0, 1.0);
     }
@@ -121,7 +121,7 @@ public class OpenNlpPosRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             assertThat(score).isBetween(0.0, 1.0);
             
