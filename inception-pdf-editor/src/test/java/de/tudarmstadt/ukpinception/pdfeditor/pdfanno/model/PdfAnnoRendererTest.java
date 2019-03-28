@@ -53,10 +53,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.RelationLayerSuppo
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.SpanLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRendererImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -164,8 +164,8 @@ public class PdfAnnoRendererTest
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         VDocument vdoc = new VDocument();
@@ -199,8 +199,8 @@ public class PdfAnnoRendererTest
         reader.getNext(cas);
 
         AnnotatorState state = new AnnotatorStateImpl(Mode.ANNOTATION);
+        state.setPagingStrategy(new SentenceOrientedPagingStrategy());
         state.getPreferences().setWindowSize(10);
-        state.setFirstVisibleUnit(WebAnnoCasUtil.getFirstSentence(cas));
         state.setProject(project);
 
         DocumentModel documentModel = new DocumentModel(cas.getDocumentText());
