@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommender.api.evaluation;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -85,21 +84,35 @@ public class EvaluationResultTest
     {
         EvaluationResult calc = new EvaluationResult("PER", instances.stream());
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
-                .isEqualTo(2 * (13.0 / 21.0 * (4.0 / 5 + 2.0 / 5) * 0.5)
-                        / (13.0 / 21.0 + (4.0 / 5 + 2.0 / 5) * 0.5));
+                .isEqualTo(2 * (0.5 * (0.5 + 1.0 / 3) * 0.5)
+                        / (0.5 + (0.5 + 1.0 / 3) * 0.5));
         assertThat(calc.computeRecallScore()).as("recall with ignore label is correctly calculated")
-                .isEqualTo(13.0 / 21.0);
+                .isEqualTo(0.5);
         assertThat(calc.computeAccuracyScore())
-                .as("accuracy with ignore label is correctly calculated").isEqualTo(0.6);
+                .as("accuracy with ignore label is correctly calculated").isEqualTo(6.0 / 12);
         assertThat(calc.computePrecisionScore())
                 .as("precision with ignore label is correctly calculated")
-                .isEqualTo((4.0 / 5 + 2.0 / 5) * 0.5);
+                .isEqualTo((0.5 + 1.0 / 3) * 0.5);
     }
     
     @Test
     public void thatMissingClassesWorks()
     {
-        // TODO: test with classes which are never gold or never predicted
-        fail("not implemnted yet");
+        // test with classes which are never gold or never predicted
+        List<AnnotatedTokenPair> newInstances = new ArrayList<>(instances);
+        newInstances.add(new AnnotatedTokenPair("PART", "ORG"));
+        newInstances.add(new AnnotatedTokenPair("PER", "PUNC"));
+        EvaluationResult calc = new EvaluationResult(null, newInstances.stream());
+        assertThat(calc.computeAccuracyScore())
+                .as("accuracy with missing classes is correctly calculated").isEqualTo(2.0 / 5);
+        assertThat(calc.computePrecisionScore())
+                .as("precision with missing classes is correctly calculated")
+                .isEqualTo((0.5 + 7.0 / 9) / 5);
+        assertThat(calc.computeRecallScore())
+                .as("recall with missing classes is correctly calculated")
+                .isEqualTo((2.0 / 7 + 0.5 + 0.5) / 5);
+        assertThat(calc.computeF1Score()).as("f1 with missing classes is correctly calculated")
+                .isEqualTo(2 * ((0.5 + 7.0 / 9) / 5 * (2.0 / 7 + 0.5 + 0.5) / 5)
+                        / ((0.5 + 7.0 / 9) / 5 + (2.0 / 7 + 0.5 + 0.5) / 5));
     }
 }

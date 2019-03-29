@@ -43,10 +43,10 @@ public class EvaluationResult
 
     /**
      * Calculate macro-averaged scores on per-token basis over all labels contained in the given
-     * annotated pairs except for those matching the given ignore-label.
+     * annotated pairs except for those matching the given ignore-label as a gold label.
      * 
      * @param aIgnoreLabel
-     *            this label will be ignored during evaluation
+     *            this label will be ignored as a gold label during evaluation
      * @param aAnnotatedPairs
      *            pairs of gold and predicted labels for the same token
      */
@@ -56,7 +56,8 @@ public class EvaluationResult
         ignoreLabel = aIgnoreLabel;
         // construct confusion matrix
         confusionMatrix = new HashMap<>();
-        aAnnotatedPairs.filter(this::isEqualIgnoreLabel).forEach(this::incConfusionMatrix);
+        aAnnotatedPairs.forEach(this::incConfusionMatrix);
+        numOfLabels = (ignoreLabel != null) ? labels.size() - 1 : labels.size();
     }
     
     public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs,
@@ -65,12 +66,6 @@ public class EvaluationResult
         this(aIgnoreLabel, aAnnotatedPairs);
         trainingSetSize = aTrainSetSize;
         testSetSize = aTestSetSize;
-    }
-
-    private boolean isEqualIgnoreLabel(AnnotatedTokenPair aPair)
-    {
-        return !aPair.getGoldLabel().equals(ignoreLabel)
-                && !aPair.getPredictedLabel().equals(ignoreLabel);
     }
 
     private void incConfusionMatrix(AnnotatedTokenPair aPair)
@@ -88,7 +83,9 @@ public class EvaluationResult
             incCounter(goldLabel, predictedLabel);
         }
 
-        total += 1;
+        if (!goldLabel.equals(ignoreLabel)) {
+            total += 1;
+        }
     }
 
     private void incCounter(String aGoldLabel, String aPredictedLabel)
@@ -101,21 +98,30 @@ public class EvaluationResult
 
     private void initConfEntries(String aGoldLabel, String aPredictedLabel)
     {
+        Map<String, Integer> initMap;
         if (!confusionMatrix.containsKey(aGoldLabel)) {
-            Map<String, Integer> initMap = new HashMap<>();
+            initMap = new HashMap<>();
             initMap.put(aGoldLabel, 0);
             confusionMatrix.put(aGoldLabel, initMap);
 
+            
             labels.add(aGoldLabel);
-            numOfLabels++;
+            
         }
         if (!confusionMatrix.get(aGoldLabel).containsKey(aPredictedLabel)) {
             confusionMatrix.get(aGoldLabel).put(aPredictedLabel, 0);
+            
+            if (!labels.contains(aPredictedLabel)) {
+                labels.add(aPredictedLabel);
+                initMap = new HashMap<>();
+                initMap.put(aPredictedLabel, 0);
+                confusionMatrix.put(aPredictedLabel, initMap);
+            }
         }
     }
 
     /**
-     * Calculate accuracy
+     * Calculate accuracy, ignoring the ignoreLabel class as a gold label.
      * 
      * @return accuracy score
      */
@@ -123,13 +129,15 @@ public class EvaluationResult
     {
         double tp = 0.0;
         for (String label : labels) {
-            tp += confusionMatrix.get(label).get(label);
+            if (!label.equalsIgnoreCase(ignoreLabel)) {
+                tp += confusionMatrix.get(label).get(label);
+            }
         }
         return (total > 0) ? tp / (double) total : 0.0;
     }
 
     /**
-     * Calculate macro-averaged precision score
+     * Calculate macro-averaged precision score, ignoring the ignoreLabel class as a gold label.
      * 
      * @return precision score
      */
@@ -141,11 +149,12 @@ public class EvaluationResult
                 double tp = confusionMatrix.get(label).get(label);
                 double numPredictedAsLabel = 0.0;
                 for (String predictedLabel : labels) {
-                    if (confusionMatrix.containsKey(predictedLabel)
-                            && confusionMatrix.get(predictedLabel).containsKey(label))
+                    if (haveSeenInstance(label, predictedLabel))
                         numPredictedAsLabel += confusionMatrix.get(predictedLabel).get(label);
                 }
-                precision += (numPredictedAsLabel > 0) ? tp / numPredictedAsLabel : 0;
+                precision += (numPredictedAsLabel > 0 && !label.equals(ignoreLabel))
+                        ? tp / numPredictedAsLabel
+                        : 0;
 
             }
             precision = precision / numOfLabels;
@@ -153,8 +162,14 @@ public class EvaluationResult
         return precision;
     }
 
+    private boolean haveSeenInstance(String label, String predictedLabel)
+    {
+        return confusionMatrix.containsKey(predictedLabel)
+                && confusionMatrix.get(predictedLabel).containsKey(label);
+    }
+
     /**
-     * Calculate macro-averaged recall score
+     * Calculate macro-averaged recall score, ignoring the ignoreLabel class as a gold label.
      * 
      * @return recall score
      */
@@ -166,11 +181,10 @@ public class EvaluationResult
                 double tp = confusionMatrix.get(label).get(label);
                 double numIsLabel = 0.0;
                 for (String predictedLabel : labels) {
-                    if (confusionMatrix.containsKey(label)
-                            && confusionMatrix.get(label).containsKey(predictedLabel))
+                    if (haveSeenInstance(predictedLabel, label))
                         numIsLabel += confusionMatrix.get(label).get(predictedLabel);
                 }
-                recall += (numIsLabel > 0) ? tp / numIsLabel : 0;
+                recall += (numIsLabel > 0 && !label.equals(ignoreLabel)) ? tp / numIsLabel : 0;
 
             }
             recall = recall / numOfLabels;
