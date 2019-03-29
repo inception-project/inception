@@ -206,7 +206,7 @@ zbw-stw-economics:
   reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/stw/query
-    full-text-search: FTS:NONE
+    full-text-search: text:query
   mapping:
       class: http://www.w3.org/2004/02/skos/core#Concept
       subclass-of: http://www.w3.org/2004/02/skos/core#broader
@@ -230,7 +230,7 @@ zbw-gnd:
   reification: NONE
   access:
     access-url: http://zbw.eu/beta/sparql/gnd/query
-    full-text-search: FTS:NONE
+    full-text-search: text:query
   mapping:
       class: http://www.w3.org/2002/07/owl#Class
       subclass-of: http://www.w3.org/2000/01/rdf-schema#subClassOf

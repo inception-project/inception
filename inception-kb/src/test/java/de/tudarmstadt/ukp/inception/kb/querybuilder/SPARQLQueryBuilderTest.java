@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
@@ -1005,9 +1006,45 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_GND_noFTS() throws Exception
+    public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(null);
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        
+        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelStartingWith("Thom"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().startsWith("thom"));
+    }
+    
+    
+    @Test
+    public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        
+        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelContainingAnyOf("Schapiro-Frisch", "Stiker-Métral"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.contains("Schapiro-Frisch") || 
+                        label.contains("Stiker-Métral"));
+    }
+    
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS() throws Exception
+    {
+        kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         
