@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_ANNOTATION;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.io.IOUtils.toInputStream;
 import static org.apache.uima.cas.CAS.TYPE_NAME_STRING;
@@ -97,7 +98,8 @@ public class GazeteerServiceImplTest
         project.setMode(PROJECT_TYPE_ANNOTATION);
         em.persist(project);
         
-        spanLayer = new AnnotationLayer("span", "span", SPAN_TYPE, project, false, TOKENS);
+        spanLayer = new AnnotationLayer("span", "span", SPAN_TYPE, project, false, TOKENS,
+                NO_OVERLAP);
         em.persist(spanLayer);
 
         spanFeat1 = new AnnotationFeature(project, spanLayer, "feat1", "feat1", TYPE_NAME_STRING);

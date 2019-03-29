@@ -23,7 +23,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -77,16 +77,16 @@ public class IndexScheduler
         enqueue(new ReindexTask(aProject));
     }
 
-    public void enqueueIndexDocument(SourceDocument aSourceDocument, JCas aJCas)
+    public void enqueueIndexDocument(SourceDocument aSourceDocument, CAS aCas)
     {
         // Index source document
-        enqueue(new IndexSourceDocumentTask(aSourceDocument, aJCas));
+        enqueue(new IndexSourceDocumentTask(aSourceDocument, aCas));
     }
 
-    public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas)
+    public void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, CAS aCas)
     {
         // Index annotation document
-        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aJCas));
+        enqueue(new IndexAnnotationDocumentTask(aAnnotationDocument, aCas));
     }
     
     /**
@@ -133,7 +133,7 @@ public class IndexScheduler
             // This must be done so that the task will take into account the
             // latest changes to the annotation document.
             if (alreadyScheduledTask.isPresent()) {
-                alreadyScheduledTask.get().setJCas(aRunnable.getJCas());
+                alreadyScheduledTask.get().setCas(aRunnable.getCas());
                 log.debug(
                         "Matching source document indexing task already scheduled: [{}] - updating CAS",
                         aRunnable);

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.search;
 import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class SearchResult
     implements Serializable
@@ -168,9 +169,13 @@ public class SearchResult
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("documentId", documentId)
-                .append("documentTitle", documentTitle).append("offsetStart", offsetStart)
-                .append("offsetEnd", offsetEnd).append("text", text)
-                .append("leftContext", leftContext).append("rightContext", rightContext).toString();
-    }    
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("documentId", documentId).append("documentTitle", documentTitle)
+                .append("tokenStart", tokenStart).append("tokenLength", tokenLength)
+                .append("offsetStart", offsetStart).append("offsetEnd", offsetEnd)
+                .append("leftContext", leftContext).append("text", text)
+                .append("rightContext", rightContext).toString();
+    }
+    
+    
 }
