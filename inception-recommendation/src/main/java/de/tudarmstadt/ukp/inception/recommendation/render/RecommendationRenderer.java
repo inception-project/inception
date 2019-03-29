@@ -53,7 +53,7 @@ public class RecommendationRenderer
     public static void render(VDocument aVdoc, AnnotatorState aState, CAS aCas,
             AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
             LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry,
-            DocumentService aDocumentService)
+            DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
     {
         if (aCas == null) {
             return;
@@ -75,7 +75,8 @@ public class RecommendationRenderer
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
                 renderer.render(aCas, aVdoc, aState, coloringStrategy, layer, aRecService,
-                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService);
+                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService,
+                    aWindowBeginOffset, aWindowEndOffset);
             }
         }
     }
