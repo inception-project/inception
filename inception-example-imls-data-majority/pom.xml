@@ -95,6 +95,10 @@
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-lang3</artifactId>
+    </dependency>
   </dependencies>
 
 </project>
