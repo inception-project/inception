@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 
+import com.google.common.base.Objects;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
@@ -117,7 +119,7 @@ public class RecommendationSpanRenderer
                 layer.getProject());
 
         for (SuggestionGroup suggestion : groups) {
-            Map<String, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
+            Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
@@ -128,11 +130,7 @@ public class RecommendationSpanRenderer
                     continue;
                 }
                 
-                String label = getAnnotationDescriptor(ao);
-                // Skip rendering if annotation label and feature is null
-                if (label == null) {
-                    continue;
-                }
+                LabelMapKey label = new LabelMapKey(ao);
 
                 if (!labelMap.containsKey(label)
                         || !labelMap.get(label)
@@ -152,9 +150,9 @@ public class RecommendationSpanRenderer
                 }
             }
             
-            // Determine the maximum confidence for per Label
-            Map<String, Double> maxConfidencePerLabel = new HashMap<>();
-            for (String label : labelMap.keySet()) {
+            // Determine the maximum confidence per Label
+            Map<LabelMapKey, Double> maxConfidencePerLabel = new HashMap<>();
+            for (LabelMapKey label : labelMap.keySet()) {
                 double maxConfidence = 0;
                 for (Entry<Long, AnnotationSuggestion> classifier : labelMap.get(label)
                         .entrySet()) {
@@ -166,13 +164,13 @@ public class RecommendationSpanRenderer
             }
             
             // Sort and filter labels under threshold value
-            List<String> filtered = maxConfidencePerLabel.entrySet().stream()
+            List<LabelMapKey> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
-            for (String label : labelMap.keySet()) {
+            for (LabelMapKey label : labelMap.keySet()) {
                 if (!filtered.contains(label)) {
                     continue;
                 }
@@ -180,8 +178,7 @@ public class RecommendationSpanRenderer
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
-                        .filter(p -> (p.getLabel() == null && p.getFeature().equals(label))
-                                || (p.getLabel() != null && p.getLabel().equals(label)))
+                        .filter(p -> label.equalsAnnotationSuggestion(p))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
@@ -231,19 +228,67 @@ public class RecommendationSpanRenderer
         }
     }
 
+
     /**
-     * Describe this annotation by its label or feature
      * 
-     * @param aSuggestion
-     *            suggestion for an annotation
-     * @return the suggestion's label or feature
+     * A Key identifying an AnnotationSuggestion by its label or as a suggestion without label.
+     *
      */
-    private String getAnnotationDescriptor(AnnotationSuggestion aSuggestion)
+    protected class LabelMapKey
     {
-        String label = aSuggestion.getLabel();
-        if (label == null) {
-            label = aSuggestion.getFeature();
+
+        private String label;
+
+        private boolean hasNoLabel;
+
+        public LabelMapKey(AnnotationSuggestion aSuggestion)
+        {
+            if (aSuggestion.getLabel() == null) {
+                hasNoLabel = true;
+                label = aSuggestion.getFeature();
+            }
+            else {
+                label = aSuggestion.getLabel();
+            }
         }
-        return label;
+
+        @Override
+        public boolean equals(Object aObj)
+        {
+            if (aObj == null || getClass() != aObj.getClass()) {
+                return false;
+            }
+
+            LabelMapKey aKey = (LabelMapKey) aObj;
+            return label.equals(aKey.getLabel()) && hasNoLabel == aKey.hasNoLabel();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hashCode(label, hasNoLabel);
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        public boolean hasNoLabel()
+        {
+            return hasNoLabel;
+        }
+        
+        public boolean equalsAnnotationSuggestion(AnnotationSuggestion aSuggestion)
+        {
+            // annotation is label-less
+            if (aSuggestion.getLabel() == null) {
+                return hasNoLabel && label.equals(aSuggestion.getFeature());
+            }
+            else {
+                return !hasNoLabel && label.equals(aSuggestion.getLabel());
+            }
+        }
+
     }
 }

@@ -175,7 +175,7 @@ public class PredictionTaskTest
     private Collection<SuggestionGroup> getSuggestionGroup(int[][] vals)
     {
 
-        List<AnnotationSuggestion> suggestions = new ArrayList<AnnotationSuggestion>();
+        List<AnnotationSuggestion> suggestions = new ArrayList<>();
         for (int[] val : vals) {
             suggestions.add(new AnnotationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
