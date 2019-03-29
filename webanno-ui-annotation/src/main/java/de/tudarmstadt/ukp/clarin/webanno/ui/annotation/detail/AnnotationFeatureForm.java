@@ -275,34 +275,34 @@ public class AnnotationFeatureForm
         
         // If "remember layer" is set, the we really just update the selected layer...
         // we do not touch the selected annotation not the annotation detail panel
-        if (state.getPreferences().isRememberLayer()) {
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-        }
-        // If "remember layer" is not set, then changing the layer means that we
-        // want to change the type of the currently selected annotation
-        else if (!Objects.equals(state.getSelectedAnnotationLayer(), 
-                state.getDefaultAnnotationLayer())
-            && state.getSelection().getAnnotation().isSet()) {
-            try {
-                if (state.getSelection().isArc()) {
-                    editorPanel.actionClear(aTarget);
+        if (!state.getPreferences().isRememberLayer()) {
+
+            // If "remember layer" is not set, then changing the layer means that we
+            // want to change the type of the currently selected annotation
+            if (!Objects
+                    .equals(state.getSelectedAnnotationLayer(), state.getDefaultAnnotationLayer())
+                    && state.getSelection().getAnnotation().isSet()) {
+                try {
+                    if (state.getSelection().isArc()) {
+                        editorPanel.actionClear(aTarget);
+                    }
+                    else {
+                        actionReplace(aTarget);
+                    }
                 }
-                else {
-                    actionReplace(aTarget);
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
                 }
             }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
+            // If no annotation is selected, then prime the annotation detail panel for the new type
+            else {
+                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+                selectedAnnotationLayer.setDefaultModelObject(
+                        Optional.ofNullable(state.getDefaultAnnotationLayer())
+                                .map(AnnotationLayer::getUiName).orElse(null));
+                aTarget.add(selectedAnnotationLayer);
+                editorPanel.clearFeatureEditorModels(aTarget);
             }
-        }
-        // If no annotation is selected, then prime the annotation detail panel for the new type
-        else {
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-            selectedAnnotationLayer
-                    .setDefaultModelObject(Optional.ofNullable(state.getDefaultAnnotationLayer())
-                            .map(AnnotationLayer::getUiName).orElse(null));
-            aTarget.add(selectedAnnotationLayer);
-            editorPanel.clearFeatureEditorModels(aTarget);
         }
         
         // Save the currently selected layer as a user preference so it is remains active when a
