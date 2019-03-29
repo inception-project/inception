@@ -75,6 +75,7 @@ public class OpenNlpDoccatRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpDoccatRecommenderTraits();
+        traits.setNumThreads(2);
     }
 
     @Test

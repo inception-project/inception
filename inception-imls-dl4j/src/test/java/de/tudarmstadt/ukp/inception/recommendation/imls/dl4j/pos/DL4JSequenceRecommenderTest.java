@@ -37,6 +37,10 @@ import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
+import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.nativeblas.NativeOps;
+import org.nd4j.nativeblas.NativeOpsHolder;
+import org.nd4j.nativeblas.Nd4jBlas;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -64,7 +68,15 @@ public class DL4JSequenceRecommenderTest
     private DL4JSequenceRecommenderTraits traits;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
+        Nd4jBlas nd4jBlas = (Nd4jBlas) Nd4j.factory().blas();
+        nd4jBlas.setMaxThreads(2);
+
+        NativeOpsHolder instance = NativeOpsHolder.getInstance();
+        NativeOps deviceNativeOps = instance.getDeviceNativeOps();
+        deviceNativeOps.setOmpNumThreads(2);
+
         context = new RecommenderContext();
         traits = new DL4JSequenceRecommenderTraits();
         traits.setTrainingSetSizeLimit(250);

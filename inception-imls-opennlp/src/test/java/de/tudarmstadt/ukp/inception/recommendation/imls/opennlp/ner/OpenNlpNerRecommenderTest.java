@@ -65,6 +65,7 @@ public class OpenNlpNerRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpNerRecommenderTraits();
+        traits.setNumThreads(2);
     }
 
     @Test

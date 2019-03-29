@@ -17,14 +17,33 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import java.io.Serializable;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
-public class OpenNlpNerRecommenderTraits {
+public class OpenNlpNerRecommenderTraits
+    implements Serializable
+{
+    private static final long serialVersionUID = 7717316701623340670L;
 
-    public TrainingParameters getParameters() {
+    private int numThreads = 1;
+
+    public int getNumThreads()
+    {
+        return numThreads;
+    }
+
+    public void setNumThreads(int aNumThreads)
+    {
+        numThreads = aNumThreads;
+    }
+
+    public TrainingParameters getParameters()
+    {
         TrainingParameters parameters = TrainingParameters.defaultParams();
         parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
+        parameters.put(TrainingParameters.THREADS_PARAM, numThreads);
         return parameters;
     }
 }

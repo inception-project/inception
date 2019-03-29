@@ -29,6 +29,7 @@ public class OpenNlpDoccatRecommenderTraits
     
     private int iterations = 100;
     private int cutoff = 5;
+    private int numThreads = 1;
 
     public int getIterations()
     {
@@ -50,12 +51,23 @@ public class OpenNlpDoccatRecommenderTraits
         cutoff = aCutoff;
     }
     
+    public int getNumThreads()
+    {
+        return numThreads;
+    }
+
+    public void setNumThreads(int aNumThreads)
+    {
+        numThreads = aNumThreads;
+    }
+
     public TrainingParameters getParameters()
     {
         TrainingParameters parameters = TrainingParameters.defaultParams();
         parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
         parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
         parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
+        parameters.put(TrainingParameters.THREADS_PARAM, numThreads);
         return parameters;
     }
 }
