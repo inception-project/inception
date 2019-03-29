@@ -52,7 +52,7 @@ public class PdfAnnoRenderer
 
     public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
-                                      PdfExtractFile aPdfExtractFile)
+                                      PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
@@ -82,7 +82,7 @@ public class PdfAnnoRenderer
                     color = vspan.getColorHint();
                 }
                 spans.add(new RenderSpan(vspan,
-                    new Span(vspan.getVid().toString(), labelText, color)));
+                    new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -187,22 +187,21 @@ public class PdfAnnoRenderer
     /**
      * for each span adds context with given windowsize before and after span.
      */
-    private static void addContextToSpans(List<RenderSpan> aSpans, int windowSize,
-                                          String text)
+    private static void addContextToSpans(List<RenderSpan> aSpans, int aWindowSize, String aText)
     {
-        int textLen = text.length();
+        int textLen = aText.length();
         for (RenderSpan span : aSpans) {
             int begin = span.getBegin();
             int end = span.getEnd();
             // subtract windowSize from begin and add windowSize to end and stay in bounds
-            int windowBegin = begin <= windowSize ? 0 : begin - windowSize;
-            int windowEnd = end < textLen - windowSize ? end + windowSize : textLen;
+            int windowBegin = begin <= aWindowSize ? 0 : begin - aWindowSize;
+            int windowEnd = end < textLen - aWindowSize ? end + aWindowSize : textLen;
             // get context window before and after annotatedText
             // also remove all whitespaces
-            span.setWindowBeforeText(text.substring(windowBegin, begin).replaceAll("\\s", ""));
-            span.setWindowAfterText(text.substring(end, windowEnd).replaceAll("\\s", ""));
+            span.setWindowBeforeText(aText.substring(windowBegin, begin).replaceAll("\\s", ""));
+            span.setWindowAfterText(aText.substring(end, windowEnd).replaceAll("\\s", ""));
             // get annotated text and remove whitespaces
-            span.setText(text.substring(begin, end).replaceAll("\\s", ""));
+            span.setText(aText.substring(begin, end).replaceAll("\\s", ""));
             span.setBegin(begin);
             span.setEnd(end);
         }
