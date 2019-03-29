@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.nio.file.Files.readAllBytes;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.File;
-import java.util.Scanner;
+import java.nio.file.Paths;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -36,8 +37,8 @@ public class PdfExtractFileTest
     @Before
     public void setup() throws Exception
     {
-        String pdftxt = new Scanner(new File("src/test/resources/pdfextract.txt"))
-            .useDelimiter("\\Z").next();
+        String pdftxt = new String(readAllBytes(Paths.get("src/test/resources/pdfextract.txt")),
+                UTF_8);
         pdfExtractFile = new PdfExtractFile(pdftxt, PdfAnnotationEditor.getSubstitutionTable());
     }
 
