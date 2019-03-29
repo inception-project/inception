@@ -288,11 +288,12 @@ public class ConceptLinkingServiceImpl
     private Comparator<CandidateEntity> baseLineRankingStrategy()
     {
         return (e1, e2) -> new CompareToBuilder()
-                // The edit distance between query and label is given high importance
-                // Comparing simultaneously against the edit distance to the query and to the 
-                // mention causes items similar to either to be ranked up
-                .append(Math.min(e1.getLevQuery(), e1.getLevMention()),
-                        Math.min(e2.getLevQuery(), e2.getLevMention()))
+                // Compare geometric mean of the Levenshtein distance to query and mention
+                // since both are important and a very close similarity in say the mention outweighs
+                // a not so close similarity in the query
+                .append(
+                        Math.sqrt(e1.getLevQuery() * e1.getLevMention()), 
+                        Math.sqrt(e2.getLevQuery() * e2.getLevMention()))
                 // A high signature overlap score is preferred.
                 .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
                 // A low edit distance is preferred.
