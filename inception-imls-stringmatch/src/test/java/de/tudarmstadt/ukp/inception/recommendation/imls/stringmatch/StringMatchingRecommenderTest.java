@@ -146,7 +146,7 @@ public class StringMatchingRecommenderTest
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         
@@ -159,7 +159,7 @@ public class StringMatchingRecommenderTest
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
 
-        double score = sut.evaluate(asList(), splitStrategy).getDefaultScore();
+        double score = sut.evaluate(asList(), splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         
@@ -177,7 +177,7 @@ public class StringMatchingRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 

@@ -61,6 +61,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -460,7 +461,6 @@ public class DL4JSequenceRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult();
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label
         Object2IntMap<String> tagsetCollector = new Object2IntOpenHashMap<>();
@@ -487,11 +487,11 @@ public class DL4JSequenceRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        result.setTestSetSize(testSetSize);
-        result.setTrainingSetSize(trainingSetSize);
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             log.info("Not enough data to evaluate, skipping!");
+            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+                    testSetSize);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -509,9 +509,8 @@ public class DL4JSequenceRecommender
             final int batchSize = 250;
             
             int sentNum = 0;
-            double total = 0;
-            double correct = 0;
             Iterator<Sample> testSetIterator = testSet.iterator();
+            List<AnnotatedTokenPair> predictions = new ArrayList<>();
             while (testSetIterator.hasNext()) {
                 // Prepare a batch of sentences that we want to predict because calling the
                 // prediction is expensive
@@ -522,21 +521,18 @@ public class DL4JSequenceRecommender
                 }
                 
                 List<Outcome<Sample>> outcomes = predict(classifier, tagset, batch);
-                
+
                 for (Outcome<Sample> outcome : outcomes) {
                     List<String> expectedLabels = outcome.getSample().getTags();
                     List<String> actualLabels = outcome.getLabels();
                     for (int i = 0; i < expectedLabels.size(); i++) {
-                        total++;
-                        if (expectedLabels.get(i).equals(actualLabels.get(i))) {
-                            correct++;
-                        }
+                        predictions.add(
+                                new AnnotatedTokenPair(expectedLabels.get(i), actualLabels.get(i)));
                     }
                 }
             }
-            
-            result.setDefaultScore(correct / total);
-            return result;
+            //TODO: maybe ignore NO_LABEL ??
+            return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

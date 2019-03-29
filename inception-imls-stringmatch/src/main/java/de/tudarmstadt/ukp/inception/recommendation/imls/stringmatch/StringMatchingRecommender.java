@@ -180,8 +180,6 @@ public class StringMatchingRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult();
-        
         List<Sample> data = extractData(aCasses, layerName, featureName);
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
@@ -207,8 +205,8 @@ public class StringMatchingRecommender
             }            
         }
 
-        result.setTestSetSize(testSet.size());
-        result.setTrainingSetSize(trainingSet.size());
+        int trainingSetSize = trainingSet.size();
+        int testSetSize = testSet.size();
         
         long trainingSetLabeledSamplesCount = trainingSet.stream()
                 .filter(sample -> !sample.getSpans().isEmpty())
@@ -223,6 +221,8 @@ public class StringMatchingRecommender
                     "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
                     trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                     testSetLabeledSamplesCount, data.size());
+            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+                    testSetSize);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -283,8 +283,10 @@ public class StringMatchingRecommender
         // ... so to avoid confusing the user completely by returning a negative number and
         // not having the recommender activate even if the threshold is set to 0, we just cap
         // the score here at 0.
-        result.setDefaultScore(Math.max(0, score));
-        return result;
+//        result.setDefaultScore(Math.max(0, score));
+        // TODO: actually fill this result
+        return new EvaluationResult(null, null, trainingSetSize,
+                testSetSize);
     }
     
     private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -165,8 +166,6 @@ public class DataMajorityNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
-        EvaluationResult result = new EvaluationResult();
-        
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
@@ -183,21 +182,18 @@ public class DataMajorityNerRecommender
             }
         }
         
-        result.setTestSetSize(testData.size());
-        result.setTrainingSetSize(trainingData.size());
+        int trainingSetSize = trainingData.size();
+        int testSetSize = testData.size();
 
         DataMajorityModel model = trainModel(trainingData);
 
-        // Compute accuracy between annotated data by the user and predictions
-        int correct = 0;
+        // evaluation
+        List<AnnotatedTokenPair> predictions = new ArrayList<>();
         for (Annotation gold : testData) {
-            if (gold.label.equals(model.majorityLabel)) {
-                correct += 1;
-            }
+            predictions.add(new AnnotatedTokenPair(gold.label, model.majorityLabel));
         }
 
-        result.setDefaultScore((double) correct / (double) testData.size());
-        return result;
+        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
     }
 // end::evaluate[]
 // tag::utility[]
