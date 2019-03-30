@@ -148,15 +148,27 @@ public class SPARQLQueryBuilderTest
             "<#property-1>",
             "    rdf:type rdf:Property ;",
             "    skos:prefLabel 'Property 1' ;",
-            "    so:description 'Property One' .",
+            "    so:description 'Property One' ;",
+            "    rdfs:domain <#explicitRoot> ;",
+            "    rdfs:range xsd:string .",
             "<#property-2>",
             "    rdf:type rdf:Property ;",
             "    skos:prefLabel 'Property 2' ;",
-            "    so:description 'Property Two' .",
+            "    so:description 'Property Two' ;",
+            "    rdfs:domain <#subclass1> ;",
+            "    rdfs:range xsd:Integer .",
+            "<#property-3>",
+            "    rdf:type rdf:Property ;",
+            "    skos:prefLabel 'Property 3' ;",
+            "    so:description 'Property Three' .",
             "<#subproperty-1-1>",
             "    rdfs:subPropertyOf <#property-1> ;",
             "    skos:prefLabel 'Subproperty 1-1' ;",
             "    so:description 'Property One-One' .",
+            "<#subproperty-1-1-1>",
+            "    rdfs:subPropertyOf <#subproperty-1-1> ;",
+            "    skos:prefLabel 'Subproperty 1-1-1' ;",
+            "    so:description 'Property One-One-One' .",
             "<#subclass1>",
             "    rdf:type rdfs:Class ;",
             "    rdfs:subClassOf <#explicitRoot> ;",
@@ -397,23 +409,30 @@ public class SPARQLQueryBuilderTest
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
                 .forProperties(kb)
                 .retrieveLabel()
-                .retrieveDescription());
+                .retrieveDescription()
+                .retrieveDomainAndRange());
         
         assertThat(results).isNotEmpty();
         assertThat(results)
                 .usingElementComparatorOnFields(
-                        "identifier", "name", "description")
+                        "identifier", "name", "description", "range", "domain")
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://example.org/#property-1", "Property 1",
-                                "Property One"),
+                                "Property One", null, "http://example.org/#explicitRoot", 
+                                "http://www.w3.org/2001/XMLSchema#string"),
                         new KBHandle("http://example.org/#property-2", "Property 2",
-                                "Property Two"),
+                                "Property Two", null, "http://example.org/#subclass1", 
+                                "http://www.w3.org/2001/XMLSchema#Integer"),
+                        new KBHandle("http://example.org/#property-3", "Property 3",
+                                "Property Three"),
                         new KBHandle("http://example.org/#subproperty-1-1", "Subproperty 1-1",
-                                "Property One-One"));
+                                "Property One-One"),
+                        new KBHandle("http://example.org/#subproperty-1-1-1", "Subproperty 1-1-1",
+                                "Property One-One-One"));
     }
 
     @Test
-    public void thatPropertyQueryLimitdToDescendantsDoesNotReturnOutOfScopeResults()
+    public void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
         throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
@@ -425,9 +444,46 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isNotEmpty();
         assertThat(results)
                 .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#subproperty-1-1",
+                        "http://example.org/#subproperty-1-1-1");
+    }
+
+    @Test
+    public void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults()
+        throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forProperties(kb)
+                .childrenOf("http://example.org/#property-1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder("http://example.org/#subproperty-1-1");
     }
 
+    @Test
+    public void thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults()
+        throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
+        
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forProperties(kb)
+                .matchingDomain("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder(
+                        // property-2 defines a matching domain
+                        "http://example.org/#property-2",
+                        // property-2 defines no domain
+                        "http://example.org/#property-3");
+                        // other properties all either define or inherit an incompatible domain
+    }
 
     @Test
     public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception
@@ -567,6 +623,21 @@ public class SPARQLQueryBuilderTest
                 .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder("http://example.org/#subclass1-1", 
                         "http://example.org/#subclass1-1-1");
+    }
+
+    @Test
+    public void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .parentsOf("http://example.org/#1-1-1-instance-4"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#subclass1-1-1");
     }
 
     @Test
@@ -1313,27 +1384,6 @@ public class SPARQLQueryBuilderTest
                 .contains("agent", "Thing");
     }
 
-    public void __thatChildrenOfExplicitRootCanBeRetrieved(Repository aRepository,
-            String aRootClass)
-    {
-        List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
-                .forClasses(kb)
-                .childrenOf(aRootClass)
-                .retrieveLabel());
-        
-        assertThat(results).isNotEmpty();
-        
-        assertThat(results).allMatch(_child -> {
-            try (RepositoryConnection conn = aRepository.getConnection()) {
-                return SPARQLQueryBuilder.forClasses(kb).parentsOf(_child.getIdentifier())
-                        .asHandles(conn, true)
-                        .stream()
-                        .map(KBHandle::getIdentifier)
-                        .anyMatch(iri -> iri.equals(aRootClass));
-            }
-        });
-    }
-    
     @Test
     public void testWithLabelContainingAnyOf_RDF4J_pets_ttl() throws Exception
     {

@@ -33,7 +33,14 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
+import org.eclipse.rdf4j.model.vocabulary.RDF;
+import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.query.BindingSet;
+import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -52,7 +59,6 @@ import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.SemanticSignature;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.SPARQLQueryStore;
 import de.tudarmstadt.ukp.inception.kb.event.KnowledgeBaseConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -67,7 +73,16 @@ public class SemanticSignatureFeatureGenerator
     implements EntityRankingFeatureGenerator
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
+    public static final String SPARQL_PREFIX = String.join("\n",
+            "PREFIX rdf: <" + RDF.NAMESPACE + ">",
+            "PREFIX rdfs: <" + RDFS.NAMESPACE + ">",
+            "PREFIX owl: <" + OWL.NAMESPACE + ">",
+            "PREFIX skos:<" + SKOS.NAMESPACE + ">",
+            "PREFIX e:<http://www.wikidata.org/entity/>",
+            "PREFIX base:<http://www.wikidata.org/ontology#>",
+            "PREFIX search: <http://www.openrdf.org/contrib/lucenesail#>");
+
     private final Map<String, Property> propertyWithLabels;
     private final Set<String> propertyBlacklist;
     private final Set<String> typeBlacklist = new HashSet<>(Arrays
@@ -156,7 +171,7 @@ public class SemanticSignatureFeatureGenerator
         Set<String> relatedRelations = new HashSet<>();
         Set<String> relatedEntities = new HashSet<>();
         try (RepositoryConnection conn = kbService.getConnection(aKey.getKnowledgeBase())) {
-            TupleQuery query = SPARQLQueryStore.generateSemanticSignatureQuery(conn,
+            TupleQuery query = generateSemanticSignatureQuery(conn,
                     aKey.getQuery(), properties.getSignatureQueryLimit(), aKey.getKnowledgeBase());
             try (TupleQueryResult result = query.evaluate()) {
                 while (result.hasNext()) {
@@ -234,5 +249,37 @@ public class SemanticSignatureFeatureGenerator
         {
             return new HashCodeBuilder().append(knowledgeBase).append(query).toHashCode();
         }
+    }
+    
+    /**
+     *
+     * @param aIri
+     *            an IRI, e.g. "http://www.wikidata.org/entity/Q3"
+     * @param aLimit
+     *            maximum number of results
+     * @param aKb
+     *            the Knowledge Base
+     * @return a query to retrieve the semantic signature
+     */
+    public static TupleQuery generateSemanticSignatureQuery(RepositoryConnection aConn, String aIri,
+            int aLimit, KnowledgeBase aKb)
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        String query = String.join("\n", 
+                SPARQL_PREFIX, 
+                "SELECT DISTINCT ?label ?p WHERE ", 
+                "  {",
+                "    { ?e1  ?rd ?m . ?m ?p ?e2 . }", 
+                "    UNION",
+                "    { ?e2 ?p ?m . ?m ?rr ?e1 . }", 
+                "    ?e1 ?labelIri ?label. ", "  }",
+                " LIMIT " + aLimit);
+
+        TupleQuery tupleQuery = aConn.prepareTupleQuery(QueryLanguage.SPARQL, query);
+        tupleQuery.setBinding("language", vf.createLiteral(
+                (aKb.getDefaultLanguage() != null) ? aKb.getDefaultLanguage() : "en"));
+        tupleQuery.setBinding("e2", vf.createIRI(aIri));
+        tupleQuery.setBinding("labelIri", aKb.getLabelIri());
+        return tupleQuery;
     }
 }

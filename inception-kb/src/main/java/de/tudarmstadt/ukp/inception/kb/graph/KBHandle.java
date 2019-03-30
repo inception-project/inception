@@ -73,6 +73,17 @@ public class KBHandle
         language = aLanguage;
     }
 
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
+            String aDomain, String aRange)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+        domain = aDomain;
+        range = aRange;
+    }
+
     public String getDomain()
     {
         return domain;
@@ -237,8 +248,21 @@ public class KBHandle
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("identifier", identifier)
-                .append("name", name).append("description", description)
-                .append("language", language).toString();
+        ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
+        builder.append("identifier", identifier);
+        builder.append("name", name);
+        if (description != null) {
+            builder.append("description", description);
+        }
+        if (language != null) {
+            builder.append("language", language);
+        }
+        if (domain != null) {
+            builder.append("domain", domain);
+        }
+        if (range != null) {
+            builder.append("range", range);
+        }
+        return builder.toString();
     }
 }
