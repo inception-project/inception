@@ -366,7 +366,7 @@ public class DL4JSequenceRecommender
             Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
-            final int limit = Integer.MAX_VALUE;
+            final int limit = traits.getPredictionLimit();
             final int batchSize = traits.getBatchSize();
 
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);

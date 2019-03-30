@@ -66,6 +66,8 @@ public class OpenNlpNerRecommenderTest
         recommender = buildRecommender();
         traits = new OpenNlpNerRecommenderTraits();
         traits.setNumThreads(2);
+        traits.setTrainingSetSizeLimit(250);
+        traits.setPredictionLimit(250);
     }
 
     @Test

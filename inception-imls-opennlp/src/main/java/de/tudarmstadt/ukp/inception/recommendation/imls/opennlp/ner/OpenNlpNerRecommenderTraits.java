@@ -27,6 +27,9 @@ public class OpenNlpNerRecommenderTraits
 {
     private static final long serialVersionUID = 7717316701623340670L;
 
+    private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int predictionLimit = Integer.MAX_VALUE;
+    
     private int numThreads = 1;
 
     public int getNumThreads()
@@ -37,6 +40,26 @@ public class OpenNlpNerRecommenderTraits
     public void setNumThreads(int aNumThreads)
     {
         numThreads = aNumThreads;
+    }
+
+    public int getTrainingSetSizeLimit()
+    {
+        return trainingSetSizeLimit;
+    }
+
+    public void setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
+    {
+        trainingSetSizeLimit = aTrainingSetSizeLimit;
+    }
+
+    public int getPredictionLimit()
+    {
+        return predictionLimit;
+    }
+
+    public void setPredictionLimit(int aPredictionLimit)
+    {
+        predictionLimit = aPredictionLimit;
     }
 
     public TrainingParameters getParameters()

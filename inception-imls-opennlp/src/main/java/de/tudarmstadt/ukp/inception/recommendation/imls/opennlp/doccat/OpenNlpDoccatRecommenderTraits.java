@@ -26,7 +26,10 @@ public class OpenNlpDoccatRecommenderTraits
     implements Serializable
 {
     private static final long serialVersionUID = 220089332064652542L;
-    
+
+    private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int predictionLimit = Integer.MAX_VALUE;
+
     private int iterations = 100;
     private int cutoff = 5;
     private int numThreads = 1;
@@ -59,6 +62,26 @@ public class OpenNlpDoccatRecommenderTraits
     public void setNumThreads(int aNumThreads)
     {
         numThreads = aNumThreads;
+    }
+
+    public int getTrainingSetSizeLimit()
+    {
+        return trainingSetSizeLimit;
+    }
+
+    public void setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
+    {
+        trainingSetSizeLimit = aTrainingSetSizeLimit;
+    }
+
+    public int getPredictionLimit()
+    {
+        return predictionLimit;
+    }
+
+    public void setPredictionLimit(int aPredictionLimit)
+    {
+        predictionLimit = aPredictionLimit;
     }
 
     public TrainingParameters getParameters()
