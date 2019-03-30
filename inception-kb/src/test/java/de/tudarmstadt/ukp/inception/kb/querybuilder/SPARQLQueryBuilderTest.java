@@ -18,12 +18,16 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
+import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.eclipse.rdf4j.rio.RDFFormat.TURTLE;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -178,21 +182,10 @@ public class SPARQLQueryBuilderTest
         kb = new KnowledgeBase();
         kb.setDefaultLanguage("en");
         kb.setType(RepositoryType.LOCAL);
-
-        kb.setTypeIri(RDF.TYPE);
-
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
-        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        
         kb.setFullTextSearchIri(null);
         kb.setMaxResults(1000);
+        
+        initRdfsMapping();
         
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
@@ -531,22 +524,6 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
-    {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
-    
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
-                .forClasses(kb)
-                .ancestorsOf("http://example.org/#1-1-1-instance-4"));
-        
-        assertThat(results).isNotEmpty();
-        assertThat(results)
-                .extracting(KBHandle::getIdentifier)
-                .containsExactlyInAnyOrder("http://example.org/#explicitRoot", 
-                        "http://example.org/#subclass1", "http://example.org/#subclass1-1",
-                        "http://example.org/#subclass1-1-1");
-    }    
-    @Test
     public void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
@@ -593,6 +570,23 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
+    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+    
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .ancestorsOf("http://example.org/#1-1-1-instance-4"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .containsExactlyInAnyOrder("http://example.org/#explicitRoot", 
+                        "http://example.org/#subclass1", "http://example.org/#subclass1-1",
+                        "http://example.org/#subclass1-1-1");
+    }
+
+    @Test
     public void thatInstanceQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
@@ -605,6 +599,22 @@ public class SPARQLQueryBuilderTest
         assertThat(results)
                 .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder("http://example.org/#1-instance-1");
+    }
+
+    @Test
+    public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
+        throws Exception
+    {
+        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
+
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forInstances(kb)
+                .descendantsOf("http://example.org/#subclass1"));
+        
+        assertThat(results).isNotEmpty();
+        assertThat(results)
+                .extracting(KBHandle::getIdentifier)
+                .allMatch(label -> label.matches("http://example.org/#1(-1)*-instance-.*"));
     }
 
     @Test
@@ -621,21 +631,6 @@ public class SPARQLQueryBuilderTest
                 .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder("http://example.org/#1-instance-1", 
                         "http://example.org/#subclass1-1");
-    }
-    @Test
-    public void thatInstanceQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
-        throws Exception
-    {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
-
-        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
-                .forInstances(kb)
-                .descendantsOf("http://example.org/#subclass1"));
-        
-        assertThat(results).isNotEmpty();
-        assertThat(results)
-                .extracting(KBHandle::getIdentifier)
-                .allMatch(label -> label.matches("http://example.org/#1(-1)*-instance-.*"));
     }
 
     @Test
@@ -673,8 +668,7 @@ public class SPARQLQueryBuilderTest
     public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
         throws Exception
     {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
-                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
+        importDataFromString(TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
         List<KBHandle> results = asHandles(aRepository, SPARQLQueryBuilder
                 .forItems(kb)
@@ -692,6 +686,74 @@ public class SPARQLQueryBuilderTest
                                 null, "en"));
     }
     
+    @Test
+    public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_VIRTUOSO);
+        
+        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelContainingAnyOf("Tower"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("tower"));
+    }
+
+    @Test
+    public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        initWikidataMapping();
+        
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelContainingAnyOf("Tower"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("tower"));
+    }
+
+    @Test
+    public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_FUSEKI);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        
+        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelContainingAnyOf("Schapiro-Frisch", "Stiker-Métral"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.contains("Schapiro-Frisch") || 
+                        label.contains("Stiker-Métral"));
+    }
+
+    @Test
+    public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        
+        List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder
+                .forClasses(kb)
+                .withLabelContainingAnyOf("work"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.toLowerCase().contains("work"));
+    }
+
     @Test
     public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_noFTS() throws Exception
     {
@@ -891,38 +953,9 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
-        
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder
-                .forItems(kb)
-                .withLabelContainingAnyOf("Tower"));
-        
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.toLowerCase().contains("tower"));
-    }
-
-    @Test
-    public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
-        
-        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder
-                .forItems(kb)
-                .withLabelMatchingExactlyAnyOf("Green Goblin"));
-        
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> "Green Goblin".equals(label));
-    }
-    
-    @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_1() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
         // Single word - actually, we add a wildcard here so anything that starts with "Barack"
@@ -940,6 +973,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_2() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
         // Two words with the second being very short - in this case, we drop the very short word
@@ -958,6 +992,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_3() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
         // Two words with the second being very short and a space following - in this case we
@@ -976,6 +1011,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_4() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
         // Two words with the second being 4+ chars - we add a wildcard here so anything
@@ -991,23 +1027,26 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_ZBW_noFTS() throws Exception
+    public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
     {
-        kb.setFullTextSearchIri(null);
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(FTS_WIKIDATA);
+        initWikidataMapping();
         
-        List<KBHandle> results = asHandles(zbwStw, SPARQLQueryBuilder
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
                 .forItems(kb)
-                .withLabelMatchingExactlyAnyOf("Labour"));
+                .withLabelStartingWith("Barack"));
         
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> "Labour".equals(label));
+                .allMatch(label -> label.toLowerCase().startsWith("barack"));
     }
 
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
@@ -1022,28 +1061,26 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.toLowerCase().startsWith("thom"));
     }
     
-    
     @Test
-    public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOf_Fuseki_noFTS_STW() throws Exception
     {
-        kb.setFullTextSearchIri(FTS_FUSEKI);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(null);
         
-        List<KBHandle> results = asHandles(zbwGnd, SPARQLQueryBuilder
+        List<KBHandle> results = asHandles(zbwStw, SPARQLQueryBuilder
                 .forItems(kb)
-                .withLabelContainingAnyOf("Schapiro-Frisch", "Stiker-Métral"));
+                .withLabelMatchingExactlyAnyOf("Labour"));
         
         assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
         assertThat(results).isNotEmpty();
         assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.contains("Schapiro-Frisch") || 
-                        label.contains("Stiker-Métral"));
+                .allMatch(label -> "Labour".equals(label));
     }
-    
+
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
@@ -1063,7 +1100,9 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
+        initWikidataMapping();
         
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
                 .forItems(kb)
@@ -1074,10 +1113,61 @@ public class SPARQLQueryBuilderTest
         assertThat(results).extracting(KBHandle::getUiLabel)
                 .allMatch(label -> "Labour".equals(label));
     }
-    
+
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        initWikidataMapping();
+        
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelMatchingExactlyAnyOf("Labour"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> label.equalsIgnoreCase("Labour"));
+    }
+
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
+        initWikidataMapping();
+        
+        List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
+                .forInstances(kb)
+                .withLabelMatchingExactlyAnyOf("Labour", "Tory"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> "Labour".equals(label) || "Tory".equals(label));
+    }
+
+    @Test
+    public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
+    {
+        kb.setType(REMOTE);
+        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
+        
+        List<KBHandle> results = asHandles(ukpVirtuosoRepo, SPARQLQueryBuilder
+                .forItems(kb)
+                .withLabelMatchingExactlyAnyOf("Green Goblin"));
+        
+        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
+        assertThat(results).isNotEmpty();
+        assertThat(results).extracting(KBHandle::getUiLabel)
+                .allMatch(label -> "Green Goblin".equals(label));
+    }
+
     @Test
     public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         
         List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder
@@ -1093,6 +1183,7 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_onlyDescendants_HUCIT_noFTS() throws Exception
     {
+        kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         
         List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder
@@ -1106,21 +1197,6 @@ public class SPARQLQueryBuilderTest
                 .allMatch(label -> label.startsWith("Achilles"));
     }
 
-    @Test
-    public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
-    {
-        kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
-        
-        List<KBHandle> results = asHandles(hucit, SPARQLQueryBuilder
-                .forClasses(kb)
-                .withLabelContainingAnyOf("work"));
-        
-        assertThat(results).extracting(KBHandle::getIdentifier).doesNotHaveDuplicates();
-        assertThat(results).isNotEmpty();
-        assertThat(results).extracting(KBHandle::getUiLabel)
-                .allMatch(label -> label.toLowerCase().contains("work"));
-    }
-    
     @Test
     public void testWithLabelStartingWith_OLIA_FTS() throws Exception
     {
@@ -1145,6 +1221,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatRootsCanBeRetrieved_BritishMuseum()
     {
+        kb.setType(REMOTE);
+        
         List<KBHandle> results = asHandles(britishMuseum, SPARQLQueryBuilder.forClasses(kb).roots());
         
         assertThat(results).isNotEmpty();
@@ -1153,6 +1231,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenCanBeRetrieved_BritishMuseum()
     {
+        kb.setType(REMOTE);
+        
         List<KBHandle> results = asHandles(britishMuseum, SPARQLQueryBuilder
                 .forClasses(kb)
                 .childrenOf("file:/data-to-load/07bde589-588c-4f0d-8715-c71c0ba2bfdb/crm-extensions/E12_Production"));
@@ -1163,6 +1243,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_DBPedia()
     {
+        kb.setType(REMOTE);
+        
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, dbpedia,
                 "http://www.w3.org/2002/07/owl#Thing");
     }
@@ -1170,6 +1252,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_YAGO()
     {
+        kb.setType(REMOTE);
+        
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago,
                 "http://www.w3.org/2002/07/owl#Thing");
     }
@@ -1177,10 +1261,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatParentsCanBeRetrieved_Wikidata()
     {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
-        kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
-        kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
+        kb.setType(REMOTE);
+        initWikidataMapping();
         
         List<KBHandle> results = asHandles(wikidata, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -1200,6 +1282,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
     {
+        kb.setType(REMOTE);
+        
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
                 .forClasses(kb)
                 .roots()
@@ -1215,6 +1299,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()
     {
+        kb.setType(REMOTE);
+        
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
                 .forClasses(kb)
                 .ancestorsOf("http://dbpedia.org/ontology/Organisation")
@@ -1298,4 +1384,37 @@ public class SPARQLQueryBuilderTest
             conn.add(aIS, prefix, aFormat);
         }
     }
+    
+    private void initRdfsMapping()
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        
+        kb.setClassIri(RDFS.CLASS);
+        kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setDescriptionIri(RDFS.COMMENT);
+        // We are intentionally not using RDFS.LABEL here to ensure we can test the label
+        // and property label separately
+        kb.setPropertyLabelIri(SKOS.PREF_LABEL);        
+        // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
+        // and property description separately
+        kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+    }
+    
+    private void initWikidataMapping()
+    {
+        ValueFactory vf = SimpleValueFactory.getInstance();
+        kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
+        kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
+        kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
+        kb.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        kb.setPropertyTypeIri(vf.createIRI("http://www.wikidata.org/entity/Q18616576"));
+        kb.setDescriptionIri(vf.createIRI("http://schema.org/description"));
+        kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+        kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
+    }    
 }

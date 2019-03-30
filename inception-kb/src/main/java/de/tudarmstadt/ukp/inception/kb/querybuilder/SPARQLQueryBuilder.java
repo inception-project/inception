@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.oneOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
@@ -42,6 +43,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATC
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LCASE;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
+import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.filterExists;
 import static org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns.optional;
@@ -91,7 +93,6 @@ import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -130,14 +131,14 @@ public class SPARQLQueryBuilder
     public static final Variable VAR_DESCRIPTION = var(VAR_DESCRIPTION_NAME);
     public static final Variable VAR_DESC_CANDIDATE = var(VAR_DESCRIPTION_CANDIDATE_NAME);
 
-    public static final Prefix PREFIX_LUCENE_SEARCH = SparqlBuilder.prefix("search",
+    public static final Prefix PREFIX_LUCENE_SEARCH = prefix("search",
             iri("http://www.openrdf.org/contrib/lucenesail#"));
     public static final Iri LUCENE_QUERY = PREFIX_LUCENE_SEARCH.iri("query");
     public static final Iri LUCENE_PROPERTY = PREFIX_LUCENE_SEARCH.iri("property");
     public static final Iri LUCENE_SCORE = PREFIX_LUCENE_SEARCH.iri("score");
     public static final Iri LUCENE_SNIPPET = PREFIX_LUCENE_SEARCH.iri("snippet");
 
-    public static final Prefix PREFIX_FUSEKI_SEARCH = SparqlBuilder.prefix("text",
+    public static final Prefix PREFIX_FUSEKI_SEARCH = prefix("text",
             iri("http://jena.apache.org/text#"));
     public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
 
@@ -612,6 +613,9 @@ public class SPARQLQueryBuilder
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
         }
+        else if (FTS_WIKIDATA.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(aValues));
+        }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
         }
@@ -694,6 +698,7 @@ public class SPARQLQueryBuilder
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
+    
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
@@ -716,42 +721,30 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    @Override
-    public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
+    private GraphPattern withLabelMatchingExactlyAnyOf_Wikidata_FTS(String[] aValues)
     {
-        if (aPrefixQuery.length() == 0) {
-            returnEmptyResult = true;
-            return this;
+        // In our KB settings, the language can be unset, but the Wikidata entity search
+        // requires a preferred language. So we use English as the default.
+        String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+                            .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                                    .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb))));
         }
         
-        
-        IRI ftsMode = kb.getFullTextSearchIri();
-        
-        if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
-        }
-        else if (IriConstants.FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(aPrefixQuery));
-        }
-        else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
-        }
-        else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
-        }
-        else {
-            throw new IllegalStateException(
-                    "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
-        }
-        
-        // Retain only the first description - do this here since we change the server-side reduce
-        // flag above when using Lucene FTS
-        projections.add(getLabelProjection());
-        labelImplicitlyRetrieved = true;
-        
-        return this;
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
-    
+
     @Override
     public SPARQLQueryBuilder withLabelContainingAnyOf(String... aValues)
     {
@@ -770,6 +763,9 @@ public class SPARQLQueryBuilder
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
+        }
+        else if (FTS_WIKIDATA.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(aValues));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
             addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
@@ -877,6 +873,69 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelContainingAnyOf_Wikidata_FTS(String[] aValues)
+    {
+        // In our KB settings, the language can be unset, but the Wikidata entity search
+        // requires a preferred language. So we use English as the default.
+        String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+                    .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                            .filter(containsPattern(VAR_LABEL_CANDIDATE, value))));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
+    @Override
+    public SPARQLQueryBuilder withLabelStartingWith(String aPrefixQuery)
+    {
+        if (aPrefixQuery.length() == 0) {
+            returnEmptyResult = true;
+            return this;
+        }
+        
+        
+        IRI ftsMode = kb.getFullTextSearchIri();
+        
+        if (FTS_LUCENE.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
+        }
+        else if (FTS_FUSEKI.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(aPrefixQuery));
+        }
+        else if (FTS_VIRTUOSO.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
+        }
+        else if (FTS_WIKIDATA.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(aPrefixQuery));
+        }
+        else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
+            addPattern(PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
+        }
+        else {
+            throw new IllegalStateException(
+                    "Unknown FTS mode: [" + kb.getFullTextSearchIri() + "]");
+        }
+        
+        // Retain only the first description - do this here since we change the server-side reduce
+        // flag above when using Lucene FTS
+        projections.add(getLabelProjection());
+        labelImplicitlyRetrieved = true;
+        
+        return this;
+    }
+
     private GraphPattern withLabelStartingWith_No_FTS(String aPrefixQuery)
     {
         if (aPrefixQuery.isEmpty()) {
@@ -887,6 +946,25 @@ public class SPARQLQueryBuilder
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
+    }
+
+    private GraphPattern withLabelStartingWith_Wikidata_FTS(String aPrefix)
+    {
+        // In our KB settings, the language can be unset, but the Wikidata entity search
+        // requires a preferred language. So we use English as the default.
+        String language = kb.getDefaultLanguage() != null ? kb.getDefaultLanguage() : "en";
+        
+        if (aPrefix.isEmpty()) {
+            returnEmptyResult = true;
+        }
+        
+        String sanitizedValue = sanitizeQueryStringForFTS(aPrefix);
+
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                new WikidataEntitySearchService(VAR_SUBJECT, sanitizedValue, language)
+                        .and(VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                                .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefix))));
     }
 
     private GraphPattern withLabelStartingWith_Virtuoso_FTS(String aPrefixQuery)
@@ -1157,7 +1235,8 @@ public class SPARQLQueryBuilder
         Iri typeOfProperty = Rdf.iri(kb.getTypeIri().toString());
         
         // An item is a class if ...
-        addPattern(PRIMARY_RESTRICTIONS, VAR_SUBJECT.has(typeOfProperty, bNode())
+        addPattern(PRIMARY_RESTRICTIONS, 
+                filterExists(VAR_SUBJECT.has(typeOfProperty, bNode()))
                 // ... it is explicitly defined as being a class
                 .filterNotExists(VAR_SUBJECT.has(typeOfProperty, classIri))
                 // ... it has any subclass
