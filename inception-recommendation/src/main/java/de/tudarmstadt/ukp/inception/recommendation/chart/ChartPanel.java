@@ -17,20 +17,31 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.chart;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
-import java.io.IOException;
-
+import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptContentHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
-import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
-import org.apache.wicket.markup.html.WebComponent;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.protocol.http.WebApplication;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.TextRequestHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
@@ -45,21 +56,22 @@ public class ChartPanel
 
     private static final String MID_CHART_CONTAINER = "chart";
 
-    private StringBuilder dataColumns;
-    private StringBuilder chartType;
     private IModel<LearningCurve> model;
-    private final WebComponent chart;
+    private final WebMarkupContainer chart;
+    private final ChartAjaxBejavior chartAjaxBejavior;
 
     public ChartPanel(String aId, IModel<LearningCurve> aModel)
     {
         super(aId);
         model = (aModel);
-        dataColumns = new StringBuilder();
-        chartType = new StringBuilder();
 
-        chart = new Label(MID_CHART_CONTAINER);
+        chart = new WebMarkupContainer(MID_CHART_CONTAINER);
+        chart.setMarkupId("canvas");
         chart.setOutputMarkupId(true);
         add(chart);
+
+        chartAjaxBejavior = new ChartAjaxBejavior();
+        add(chartAjaxBejavior);
     }
 
     @Override
@@ -77,30 +89,68 @@ public class ChartPanel
         aResponse.render(
                 CssHeaderItem.forReference(new WebjarsCssResourceReference("c3/current/c3.css")));
 
+        aResponse.render(JavaScriptReferenceHeaderItem.forReference(
+                getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
+
         model = getModel();
 
         if (model == null)
             return;
 
-        resetChart();
+        String chartTriggerJavascript = "$(document).ready(function() {$.ajax({url:'"
+                + chartAjaxBejavior.getCallbackUrl().toString()
+                + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){OnSuccess(result)}})})";
 
-        LearningCurve learningCurve = model.getObject();
+        aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
+    }
 
-        // there can be multiple learning curves. iterate over them to create data
-        // columns for all
-        for (String data : learningCurve.getCurveData().keySet()) {
-            addLearningCurve(learningCurve.getCurveData().get(data), data);
+    @Override
+    protected void onBeforeRender()
+    {
+        chart.add(new AttributeModifier("my:canvas.chartid", getMarkupId()));
+        super.onBeforeRender();
+    }
+
+    private final class ChartAjaxBejavior
+        extends AbstractAjaxBehavior
+    {
+        private static final long serialVersionUID = 1L;
+
+        @Override
+        protected void onComponentTag(final ComponentTag tag)
+        {
+            tag.put("my:canvas.chartid", getMarkupId());
         }
 
-        String javascript = createJSScript(learningCurve.getXaxis());
+        @Override
+        public void onRequest()
+        {
 
-        if (javascript == null || javascript.isEmpty()) {
-            LOG.warn("No javascript to render the learning curve diagram.");
-            return;
+            RequestCycle requestCycle = RequestCycle.get();
+            WebApplication app = (WebApplication) getComponent().getApplication();
+            AjaxRequestTarget target = app.newAjaxRequestTarget(getComponent().getPage());
+
+            model = getModel();
+
+            if (model == null)
+                return;
+
+            LearningCurve learningCurve = model.getObject();
+
+            try {
+                String json = addLearningCurve(learningCurve);
+
+                // return the chart data back to the UI with the JSON. JSON define te learning
+                // curves and the xaxis
+                requestCycle.scheduleRequestHandlerAfterCurrent(
+                        new TextRequestHandler("application/json", "UTF-8", "\r\n" + json));
+            }
+            catch (JsonProcessingException e) {
+                LOG.error(e.toString(), e);
+                error("Unable to render chart: " + e.getMessage());
+                target.addChildren(getPage(), IFeedback.class);
+            }
         }
-
-        LOG.debug("Rendering Recommender Evaluation Chart: {}", javascript);
-        aResponse.render(OnDomReadyHeaderItem.forScript(javascript));
     }
 
     @SuppressWarnings("unchecked")
@@ -110,69 +160,33 @@ public class ChartPanel
     }
 
     /**
-     * to create a learning curve, it creates/updates the strings dataColumns and chartTypes for the
-     * given recommender by appending data string. The type of the chart is set to be step. Calling
-     * this method iteratively will generate multiple learning curves
+     * creates a JSON of learning curves of learning Curves including the xaxis.
      * 
-     * @param aData
-     *            a string that looks something like 2,5,3,7,8,4,
-     * @param aName
-     *            name of the learning curve
+     * @throws JsonProcessingException
      */
-    public void addLearningCurve(String aData, String aName)
+    public String addLearningCurve(LearningCurve aLearningCurve) throws JsonProcessingException
     {
-        // define chart type for the recommender
-        chartType.append("'");
-        chartType.append(aName);
-        chartType.append("': 'step', ");
+        List<List<String>> lines = new ArrayList<>();
 
-        // append recommender name to the data
-        dataColumns.append("['");
-        dataColumns.append(aName);
+        // add xaxis to the list of lines
+        List<String> asList = new ArrayList<>();
+        asList.add("x");
+        asList.addAll(Arrays.asList(aLearningCurve.getXaxis().split(",")));
+        lines.add(asList);
 
-        // append data columns
-        dataColumns.append("', ");
-        dataColumns.append(aData);
-        dataColumns.append("]");
-        dataColumns.append(",");
-    }
+        // there can be multiple learning curves. add them to te list of lines
+        for (String data : aLearningCurve.getCurveData().keySet()) {
 
-    public void resetChart()
-    {
-        chartType = new StringBuilder();
-        dataColumns = new StringBuilder();
-    }
+            List<String> newLine = new ArrayList<String>();
+            newLine.add(data);
 
-    /**
-     * Creates the JS script to render graph with the help of given data points. Also creates an
-     * x-axis of a sequence from 0 to maximumNumberOfPoints (50). Example value of aDataColumns:
-     * 
-     * <pre>
-     * ['recommender1', 1.0, 2.0, 3.0 ], ['recommender2', 2.0, 3.0, 4.0]
-     * </pre>
-     * 
-     * Example value of aChartType
-     * 
-     * <pre>
-     * recommender1: 'step', recommender2 : 'step'
-     * </pre>
-     */
-    public String createJSScript(String xaxis)
-    {
-        try {
-            String xaxisValues = "[ 'x' ," + xaxis + "]";
-            String data = toJsonString(dataColumns).substring(1, dataColumns.toString().length());
-
-            // bind data to chart container
-            String javascript = "var chart=c3.generate({bindto:'#" + chart.getMarkupId()
-                    + "',data:{ x:'x', columns:[" + xaxisValues + " ," + data + "],types:{"
-                    + chartType + "}},"
-                    + "axis: { x:{type: 'category',tick: {rotate: 0,multiline: true}}, y : { tick : { format: function(d){return Math.round(d * 10000) / 10000}}}}});;";
-            return javascript;
+            newLine.addAll(Arrays.asList(aLearningCurve.getCurveData().get(data).split(",")));
+            lines.add(newLine);
         }
-        catch (IOException e) {
-            LOG.error("Could not create the dataColumns. Bad Value. Javascript creation failed");
-            return null;
-        }
+
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writeValueAsString(lines);
+
+        return json;
     }
 }
