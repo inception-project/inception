@@ -150,7 +150,7 @@ public class StringMatchingRecommenderTest
 
         System.out.printf("Score: %f%n", score);
         
-        // assertThat(score).isStrictlyBetween(0.0, 1.0);
+        assertThat(score).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test

@@ -54,10 +54,13 @@ public class EvaluationResult
     {
         labels = new ArrayList<>();
         ignoreLabel = aIgnoreLabel;
+        numOfLabels = 0;
         // construct confusion matrix
         confusionMatrix = new HashMap<>();
-        aAnnotatedPairs.forEach(this::incConfusionMatrix);
-        numOfLabels = (ignoreLabel != null) ? labels.size() - 1 : labels.size();
+        if (aAnnotatedPairs != null) {
+            aAnnotatedPairs.forEach(this::incConfusionMatrix);
+            numOfLabels = (ignoreLabel != null) ? labels.size() - 1 : labels.size();
+        }
     }
     
     public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs,

@@ -30,6 +30,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -37,13 +38,12 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.dkpro.statistics.agreement.unitizing.KrippendorffAlphaUnitizingAgreement;
-import org.dkpro.statistics.agreement.unitizing.UnitizingAnnotationStudy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -60,6 +60,7 @@ public class StringMatchingRecommender
     implements RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
+    private static final String NO_LABEL = "no_label";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -184,12 +185,6 @@ public class StringMatchingRecommender
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
 
-        // For the DKPro Statistics evaluation study, we need to define a continuum over the data.
-        // We do this in terms of character positions which are aggregated over all samples in the
-        // test set. Thus, the continuum size is equal to the sum of the length of all samples in
-        // the test set.
-        int testSetContinuumSize = 0;
-        
         for (Sample sample : data) {
             switch (aDataSplitter.getTargetSet(sample)) {
             case TRAIN:
@@ -197,24 +192,21 @@ public class StringMatchingRecommender
                 break;
             case TEST:
                 testSet.add(sample);
-                testSetContinuumSize += sample.getText().length();
                 break;
             default:
                 // Do nothing
                 break;
-            }            
+            }
         }
 
         int trainingSetSize = trainingSet.size();
         int testSetSize = testSet.size();
-        
+
         long trainingSetLabeledSamplesCount = trainingSet.stream()
-                .filter(sample -> !sample.getSpans().isEmpty())
-                .count();
+                .filter(sample -> !sample.getSpans().isEmpty()).count();
 
         long testSetLabeledSamplesCount = testSet.stream()
-                .filter(sample -> !sample.getSpans().isEmpty())
-                .count();
+                .filter(sample -> !sample.getSpans().isEmpty()).count();
 
         if (trainingSetLabeledSamplesCount < 2 || testSetLabeledSamplesCount < 2) {
             log.info(
@@ -231,7 +223,7 @@ public class StringMatchingRecommender
                 "Training on [{}] items ([{}] labeled), predicting on [{}] ([{}] labeled) of total [{}]",
                 trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                 testSetLabeledSamplesCount, data.size());
-            
+
         // Train
         Trie<DictEntry> dict = createTrie();
         for (Sample sample : trainingSet) {
@@ -241,76 +233,37 @@ public class StringMatchingRecommender
         }
 
         // Predict
-        List<Sample> actualData = new ArrayList<>();
+        List<AnnotatedTokenPair> predictions = new ArrayList<>();
         for (Sample sample : testSet) {
-            List<Span> spans = new ArrayList<>();
-            
+
             for (TokenSpan token : sample.getTokens()) {
                 Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
                         token.getBegin() - sample.getBegin());
                 if (node != null) {
                     int begin = token.getBegin();
                     int end = token.getBegin() + node.level;
-                    
+
                     // Need to check that the match actually ends at a token boundary!
                     if (sample.hasTokenEndingAt(end)) {
-                        for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            spans.add(new Span(begin, end,
-                                    sample.getText().substring(begin - sample.getBegin(),
-                                            end - sample.getBegin()),
-                                    lc.getLabel(), lc.getRelFreq()));
+                        for (LabelStats lc : node.value.getBest(1)) {
+                            // TODO: check with issue #325
+                            String goldLabel = NO_LABEL;
+                            Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
+                            if (coveringSpan.isPresent()) {
+                                goldLabel = coveringSpan.get().getLabel();
+                            }
+                            predictions.add(new AnnotatedTokenPair(goldLabel, lc.getLabel()));
                         }
                     }
                 }
             }
-            
-            actualData.add(new Sample(sample, spans));
-        }
-        
-        // Evaluate
-        UnitizingAnnotationStudy study = new UnitizingAnnotationStudy(2, 0, testSetContinuumSize);
-        
-        // Add reference data to the study
-        addDataToStudy(testSet, study, 0);
-        
-        // Add actual data to the study
-        addDataToStudy(actualData, study, 1);
 
-        double score = new KrippendorffAlphaUnitizingAgreement(study).calculateAgreement();
-        
-        // KrippendorffAlphaUnitizingAgreement can return a negative score on systematic
-        // disagreement, but the score threshold is expected to take 0 as the lowest value...
-        // ... so to avoid confusing the user completely by returning a negative number and
-        // not having the recommender activate even if the threshold is set to 0, we just cap
-        // the score here at 0.
-//        result.setDefaultScore(Math.max(0, score));
-        // TODO: actually fill this result
-        return new EvaluationResult(null, null, trainingSetSize,
-                testSetSize);
-    }
-    
-    private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,
-            int aAnnotatorId)
-    {
-        // Offset of the current sample within the evaluation continuum
-        int offset = 0;
-        
-        for (Sample sample : aData) {
-            // Add all labeled spans to the study
-            for (Span span : sample.getSpans()) {
-                // Length of the labeled span
-                int length = span.getEnd() - span.getBegin();
-                
-                // Begin offset of the span within the current sample
-                int beginInSample = span.getBegin() - sample.getBegin();
-                
-                aStudy.addUnit(offset + beginInSample, length, aAnnotatorId, span.getLabel());
-            }
-            
-            // Shift within continuum
-            offset += sample.getLength();
         }
+
+        // TODO: check if NO_LABEL should be ignored
+        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
     }
+
     
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
         if (isNoneBlank(aLabel)) {
@@ -372,16 +325,6 @@ public class StringMatchingRecommender
         private final List<TokenSpan> tokens;
         private final List<Span> spans;
 
-        public Sample(Sample aSample, Collection<Span> aSpans)
-        {
-            docNo = aSample.getDocNo();
-            begin = aSample.getBegin();
-            end = aSample.getEnd();
-            text = aSample.getText();
-            tokens = aSample.getTokens();
-            spans = asList(aSpans.toArray(new Span[aSpans.size()]));
-        }
-
         public Sample(int aDocNo, int aBegin, int aEnd, String aText,
                 Collection<AnnotationFS> aTokens, Collection<Span> aSpans)
         {
@@ -395,6 +338,12 @@ public class StringMatchingRecommender
             spans = asList(aSpans.toArray(new Span[aSpans.size()]));
         }
         
+        public Optional<Span> getCoveringSpan(int aBegin, int aEnd)
+        {
+            return spans.stream().filter(s -> (s.getBegin() <= aBegin && s.getEnd() >= aEnd))
+                    .findFirst();
+        }
+
         public int getDocNo()
         {
             return docNo;
