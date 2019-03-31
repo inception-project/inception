@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.DEFAULT_LIMIT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.iri;
 
@@ -29,7 +30,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -923,11 +923,11 @@ public class KnowledgeBaseServiceImpl
         throws IOException
     {
         try (Reader r = new InputStreamReader(
-                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML),
-                StandardCharsets.UTF_8)) {
+                getClass().getResourceAsStream(KNOWLEDGEBASE_PROFILES_YAML), UTF_8)) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            return mapper.readValue(r, 
-                    new TypeReference<HashMap<String, KnowledgeBaseProfile>>(){});
+            return mapper.readValue(r, new TypeReference<HashMap<String, KnowledgeBaseProfile>>()
+            {
+            });
         }
     }
     

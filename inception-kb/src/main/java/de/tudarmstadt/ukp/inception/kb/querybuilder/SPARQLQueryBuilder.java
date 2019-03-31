@@ -1636,33 +1636,34 @@ public class SPARQLQueryBuilder
     private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
     {
         aQuery.setIncludeInferred(aIncludeInferred);
-        TupleQueryResult result = aQuery.evaluate();
         
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        
-        List<Statement> statements = new ArrayList<>();
-        while (result.hasNext()) {
-            BindingSet bindings = result.next();
-            if (bindings.size() == 0) {
-                continue;
+        try (TupleQueryResult result = aQuery.evaluate()) {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            
+            List<Statement> statements = new ArrayList<>();
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                if (bindings.size() == 0) {
+                    continue;
+                }
+                
+                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                
+                Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
+                Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
+                Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
+    
+                IRI subject = vf.createIRI(subj.getValue().stringValue());
+                IRI predicate = vf.createIRI(pred.getValue().stringValue());
+                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
+                
+                // Avoid duplicate statements
+                if (!statements.contains(stmt)) {
+                    statements.add(stmt);
+                }
             }
-            
-            LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
-            
-            Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
-            Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
-            Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
-
-            IRI subject = vf.createIRI(subj.getValue().stringValue());
-            IRI predicate = vf.createIRI(pred.getValue().stringValue());
-            Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-            
-            // Avoid duplicate statements
-            if (!statements.contains(stmt)) {
-                statements.add(stmt);
-            }
+            return statements;
         }
-        return statements;
     }
     
     /**
