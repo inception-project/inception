@@ -25,11 +25,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
-
-import com.google.common.base.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -266,7 +265,7 @@ public class RecommendationSpanRenderer
         @Override
         public int hashCode()
         {
-            return Objects.hashCode(label, hasNoLabel);
+            return Objects.hash(label, hasNoLabel);
         }
 
         public String getLabel()
