@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -107,7 +107,7 @@ public interface RecommendationService
      * @return the CAS address of the created/updated annotation.
      */
     public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
     

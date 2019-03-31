@@ -52,7 +52,7 @@ public class PdfAnnoRenderer
 
     public static PdfAnnoModel render(AnnotatorState aState, VDocument aVDoc, String aDocumentText,
                                       AnnotationSchemaService aAnnotationService,
-                                      PdfExtractFile aPdfExtractFile)
+                                      PdfExtractFile aPdfExtractFile, int aPageBeginOffset)
     {
         PdfAnnoModel pdfAnnoModel = new PdfAnnoModel("0.5.0", "0.3.2");
         List<RenderSpan> spans = new ArrayList<>();
@@ -82,7 +82,7 @@ public class PdfAnnoRenderer
                     color = vspan.getColorHint();
                 }
                 spans.add(new RenderSpan(vspan,
-                    new Span(vspan.getVid().toString(), labelText, color)));
+                    new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -137,7 +137,7 @@ public class PdfAnnoRenderer
             addContextToSpans(spans, windowSize, aDocumentText);
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
-                findOccurrences(spans, aPdfExtractFile.getStringContent());
+                findOccurrences(spans, aPdfExtractFile.getSanitizedContent());
 
             for (RenderSpan renderSpan : spans) {
                 // get occurrence list for span text with context window
@@ -158,10 +158,15 @@ public class PdfAnnoRenderer
                     int begin = emit.getStart() + renderSpan.getWindowBeforeText().length();
                     int end = emit.getEnd() - renderSpan.getWindowAfterText().length();
                     // get according PDFExtract file lines for begin and end of annotation
-                    PdfExtractLine firstLine = aPdfExtractFile.getStringPdfExtractLine(begin);
-                    PdfExtractLine lastLine = aPdfExtractFile.getStringPdfExtractLine(end);
+                    Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
+                    Offset endOffset = aPdfExtractFile.getExtractIndex(end);
+                    PdfExtractLine firstLine =
+                        aPdfExtractFile.getStringPdfExtractLine(beginOffset.getBegin());
+                    PdfExtractLine lastLine =
+                        aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
                     span.setEndPos(lastLine.getPosition());
+                    // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());
                     processed.add(span);
@@ -182,22 +187,21 @@ public class PdfAnnoRenderer
     /**
      * for each span adds context with given windowsize before and after span.
      */
-    private static void addContextToSpans(List<RenderSpan> aSpans, int windowSize,
-                                          String text)
+    private static void addContextToSpans(List<RenderSpan> aSpans, int aWindowSize, String aText)
     {
-        int textLen = text.length();
+        int textLen = aText.length();
         for (RenderSpan span : aSpans) {
             int begin = span.getBegin();
             int end = span.getEnd();
             // subtract windowSize from begin and add windowSize to end and stay in bounds
-            int windowBegin = begin <= windowSize ? 0 : begin - windowSize;
-            int windowEnd = end < textLen - windowSize ? end + windowSize : textLen;
+            int windowBegin = begin <= aWindowSize ? 0 : begin - aWindowSize;
+            int windowEnd = end < textLen - aWindowSize ? end + aWindowSize : textLen;
             // get context window before and after annotatedText
             // also remove all whitespaces
-            span.setWindowBeforeText(text.substring(windowBegin, begin).replaceAll("\\s", ""));
-            span.setWindowAfterText(text.substring(end, windowEnd).replaceAll("\\s", ""));
+            span.setWindowBeforeText(aText.substring(windowBegin, begin).replaceAll("\\s", ""));
+            span.setWindowAfterText(aText.substring(end, windowEnd).replaceAll("\\s", ""));
             // get annotated text and remove whitespaces
-            span.setText(text.substring(begin, end).replaceAll("\\s", ""));
+            span.setText(aText.substring(begin, end).replaceAll("\\s", ""));
             span.setBegin(begin);
             span.setEnd(end);
         }
@@ -230,9 +234,9 @@ public class PdfAnnoRenderer
     {
         List<RenderSpan> iterList = new ArrayList<>();
         for (Offset offset : aOffsets) {
-            int begin = aPdfExtractFile.getStringIndex(offset.getBegin());
-            int end = aPdfExtractFile.getStringIndex(offset.getEnd()) + 1;
-            iterList.add(new RenderSpan(new Offset(begin, end)));
+            Offset begin = aPdfExtractFile.getStringIndex(offset.getBegin());
+            Offset end = aPdfExtractFile.getStringIndex(offset.getEnd());
+            iterList.add(new RenderSpan(new Offset(begin.getBegin(), end.getEnd() + 1)));
         }
         List<RenderSpan> ambiguous = new ArrayList<>();
         List<Offset> processed = new ArrayList<>();
@@ -240,7 +244,7 @@ public class PdfAnnoRenderer
 
         do {
             // add context before and after each span
-            addContextToSpans(iterList, windowSize, aPdfExtractFile.getStringContent());
+            addContextToSpans(iterList, windowSize, aPdfExtractFile.getSanitizedContent());
             // find occurences by using Aho-Corasick algorithm
             Map<String, List<Emit>> occurrenceMap =
                 findOccurrences(iterList, aDocumentModel.getWhitespacelessText());

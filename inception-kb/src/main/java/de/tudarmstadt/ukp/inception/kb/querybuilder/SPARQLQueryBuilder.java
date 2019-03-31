@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static com.github.jsonldjava.shaded.com.google.common.collect.Streams.concat;
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_LUCENE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_NONE;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.oneOrMore;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.Path.zeroOrMore;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.RdfCollection.collectionOf;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.PRIMARY_RESTRICTIONS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Priority.SECONDARY;
@@ -144,7 +146,11 @@ public class SPARQLQueryBuilder
     public static final Iri LUCENE_PROPERTY = PREFIX_LUCENE_SEARCH.iri("property");
     public static final Iri LUCENE_SCORE = PREFIX_LUCENE_SEARCH.iri("score");
     public static final Iri LUCENE_SNIPPET = PREFIX_LUCENE_SEARCH.iri("snippet");
-    
+
+    public static final Prefix PREFIX_FUSEKI_SEARCH = SparqlBuilder.prefix("text",
+            iri("http://jena.apache.org/text#"));
+    public static final Iri FUSEKI_QUERY = PREFIX_FUSEKI_SEARCH.iri("query");
+
     public static final Iri OWL_INTERSECTIONOF = Rdf.iri(OWL.INTERSECTIONOF.stringValue());
     public static final Iri RDF_REST = Rdf.iri(RDF.REST.stringValue());
     public static final Iri RDF_FIRST = Rdf.iri(RDF.FIRST.stringValue());
@@ -605,6 +611,9 @@ public class SPARQLQueryBuilder
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
         }
+        else if (FTS_FUSEKI.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Fuseki_FTS(aValues));
+        }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
         }
@@ -651,8 +660,6 @@ public class SPARQLQueryBuilder
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
-        Iri pLabelFts = iri(IriConstants.FTS_LUCENE.toString());
-        
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             if (StringUtils.isBlank(value)) {
@@ -660,7 +667,7 @@ public class SPARQLQueryBuilder
             }
             
             valuePatterns.add(VAR_SUBJECT
-                    .has(pLabelFts,
+                    .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(value))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
@@ -671,11 +678,29 @@ public class SPARQLQueryBuilder
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
-    
+
+    private GraphPattern withLabelMatchingExactlyAnyOf_Fuseki_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_FUSEKI_SEARCH);
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            if (StringUtils.isBlank(value)) {
+                continue;
+            }
+            
+            valuePatterns.add(VAR_SUBJECT
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(value)))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                    .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
+        }
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
     private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
     {
-        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
-        
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
@@ -686,7 +711,8 @@ public class SPARQLQueryBuilder
                         
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + sanitizedValue + "\"")))
+                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
+                            literalOf("\"" + sanitizedValue + "\"")))
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
         
@@ -708,6 +734,9 @@ public class SPARQLQueryBuilder
         
         if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
+        }
+        else if (IriConstants.FTS_FUSEKI.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(aPrefixQuery));
         }
         else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
@@ -738,13 +767,16 @@ public class SPARQLQueryBuilder
         
         IRI ftsMode = kb.getFullTextSearchIri();
         
-        if (IriConstants.FTS_LUCENE.equals(ftsMode)) {
+        if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
         }
-        else if (IriConstants.FTS_VIRTUOSO.equals(ftsMode)) {
+        else if (FTS_FUSEKI.equals(ftsMode)) {
+            addPattern(PRIMARY, withLabelContainingAnyOf_Fuseki_FTS(aValues));
+        }
+        else if (FTS_VIRTUOSO.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
         }
-        else if (IriConstants.FTS_NONE.equals(ftsMode) || ftsMode == null) {
+        else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
             addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
         }
         else {
@@ -782,8 +814,6 @@ public class SPARQLQueryBuilder
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
-        Iri pLabelFts = iri(IriConstants.FTS_LUCENE.toString());
-        
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
@@ -793,7 +823,7 @@ public class SPARQLQueryBuilder
             }
 
             valuePatterns.add(VAR_SUBJECT
-                    .has(pLabelFts,
+                    .has(FTS_LUCENE,
                             bNode(LUCENE_QUERY, literalOf(sanitizedValue + "*"))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
@@ -805,10 +835,33 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
+    private GraphPattern withLabelContainingAnyOf_Fuseki_FTS(String[] aValues)
+    {
+        prefixes.add(PREFIX_FUSEKI_SEARCH);
+        
+        List<GraphPattern> valuePatterns = new ArrayList<>();
+        for (String value : aValues) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+
+            if (StringUtils.isBlank(sanitizedValue)) {
+                continue;
+            }
+
+            valuePatterns.add(VAR_SUBJECT
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
+                    .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                    .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
+        }
+
+        
+        
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
+    }
+
     private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
     {
-        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
-        
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
             String sanitizedValue = sanitizeQueryStringForFTS(value);
@@ -819,7 +872,8 @@ public class SPARQLQueryBuilder
                         
             valuePatterns.add(VAR_SUBJECT
                     .has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                    .and(VAR_LABEL_CANDIDATE.has(pLabelFts,literalOf("\"" + sanitizedValue + "\"")))
+                    .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO, 
+                            literalOf("\"" + sanitizedValue + "\"")))
                     .filter(containsPattern(VAR_LABEL_CANDIDATE, value)));
         }
         
@@ -885,14 +939,12 @@ public class SPARQLQueryBuilder
             returnEmptyResult = true;
         }
         
-        Iri pLabelFts = iri(FTS_VIRTUOSO.toString());
-        
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
         return GraphPatterns.and(
                 bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
-                        .and(VAR_LABEL_CANDIDATE.has(pLabelFts,
+                        .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO,
                                 literalOf(ftsQueryString.toString())))
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
@@ -918,14 +970,43 @@ public class SPARQLQueryBuilder
             queryString += "*";
         }
 
-        Iri pLabelFts = iri(IriConstants.FTS_LUCENE.toString());
+        // Locate all entries where the label contains the prefix (using the FTS) and then
+        // filter them by those which actually start with the prefix.
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                VAR_SUBJECT.has(FTS_LUCENE, bNode(LUCENE_QUERY, literalOf(queryString))
+                        .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                        .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
+                        .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
+    }
+    
+    private GraphPattern withLabelStartingWith_Fuseki_FTS(String aPrefixQuery)
+    {
+        // REC: Haven't been able to get this to work with server-side reduction, so implicitly
+        // turning it off here.
+        serverSideReduce = false;
+        
+        prefixes.add(PREFIX_FUSEKI_SEARCH);
+        
+        String queryString = aPrefixQuery.trim();
+        
+        if (queryString.isEmpty()) {
+            returnEmptyResult = true;
+        }
+
+        // If the query string entered by the user does not end with a space character, then
+        // we assume that the user may not yet have finished writing the word and add a
+        // wildcard
+        if (!aPrefixQuery.endsWith(" ")) {
+            queryString += "*";
+        }
 
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
         return GraphPatterns.and(
                 bindLabelProperties(VAR_LABEL_PROPERTY),
-                VAR_SUBJECT.has(pLabelFts,bNode(LUCENE_QUERY, literalOf(queryString))
-                        .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
+                VAR_SUBJECT.has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, 
+                                literalOf(queryString)))
                         .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }

@@ -214,7 +214,7 @@ public class MtasDocumentIndexTest
                 .createOrGetAnnotationDocument(aSourceDocument, aUser);
 
         // Write annotated CAS to annotated document
-        documentService.writeAnnotationCas(jCas, annotationDocument, false);
+        documentService.writeAnnotationCas(jCas.getCas(), annotationDocument, false);
 
         await("Waiting for indexing process to complete")
                 .atMost(60, SECONDS)
