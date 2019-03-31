@@ -28,6 +28,7 @@ public class DL4JSequenceRecommenderTraits
 {
     // General parameters
     private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int predictionLimit = Integer.MAX_VALUE;
     private int batchSize = 250;
     private int maxTagsetSize = 70;
     private int maxSentenceLength = 150;
@@ -54,6 +55,16 @@ public class DL4JSequenceRecommenderTraits
     public void setTrainingSetSizeLimit(int aLimit)
     {
         trainingSetSizeLimit = aLimit;
+    }
+    
+    public int getPredictionLimit()
+    {
+        return predictionLimit;
+    }
+
+    public void setPredictionLimit(int aPredictionLimit)
+    {
+        predictionLimit = aPredictionLimit;
     }
 
     public int getBatchSize()
