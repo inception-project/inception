@@ -82,6 +82,7 @@ public class IriConstants
      */
     public static final IRI SCHEMA_DESCRIPTION;
 
+    public static final IRI FTS_FUSEKI;
     public static final IRI FTS_VIRTUOSO;
     public static final IRI FTS_LUCENE;
     public static final IRI FTS_NONE;
@@ -106,6 +107,7 @@ public class IriConstants
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         WIKIDATA_SUBPROPERTY = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P1647");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
+        FTS_FUSEKI = vf.createIRI("text:query");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
         FTS_NONE = vf.createIRI("FTS:NONE");
@@ -119,7 +121,7 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        FTS_IRIS = asList(FTS_VIRTUOSO, FTS_LUCENE);
+        FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_LUCENE);
     }
     
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)

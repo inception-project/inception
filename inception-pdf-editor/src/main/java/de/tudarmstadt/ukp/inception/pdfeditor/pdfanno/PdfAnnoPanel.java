@@ -54,8 +54,6 @@ public class PdfAnnoPanel
 
     private AbstractAjaxBehavior pdftxtProvider;
 
-    private AbstractAjaxBehavior annoProvider;
-
     private AbstractAjaxBehavior apiProvider;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -98,17 +96,6 @@ public class PdfAnnoPanel
             }
         });
 
-        add(annoProvider = new AbstractDefaultAjaxBehavior() {
-
-            private static final long serialVersionUID = 8501859992311111560L;
-
-            @Override
-            protected void respond(AjaxRequestTarget aTarget)
-            {
-                aPdfAnnotationEditor.renderPdfAnnoModel(aTarget);
-            }
-        });
-
         add(apiProvider = new AbstractDefaultAjaxBehavior() {
             private static final long serialVersionUID = 3816087744638629290L;
 
@@ -138,14 +125,10 @@ public class PdfAnnoPanel
                 String pdftxtUrl = getPage().getRequestCycle().getUrlRenderer()
                     .renderFullUrl(Url.parse(pdftxtProvider.getCallbackUrl()));
 
-                String annoUrl = getPage().getRequestCycle().getUrlRenderer()
-                    .renderFullUrl(Url.parse(annoProvider.getCallbackUrl()));
-
                 String apiUrl = getPage().getRequestCycle().getUrlRenderer()
                     .renderFullUrl(Url.parse(apiProvider.getCallbackUrl()));
 
-                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&anno=" + annoUrl
-                            + "&api=" + apiUrl;
+                viewerUrl += "?pdf=" + pdfUrl + "&pdftxt=" + pdftxtUrl + "&api=" + apiUrl;
 
                 aTag.put("src", viewerUrl);
 

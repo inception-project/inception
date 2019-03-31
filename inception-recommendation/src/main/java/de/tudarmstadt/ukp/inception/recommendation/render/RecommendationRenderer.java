@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -45,17 +45,17 @@ public class RecommendationRenderer
      *            A VDocument containing annotations for the given layer
      * @param aState
      *            the annotator state.
-     * @param aJCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(VDocument aVdoc, AnnotatorState aState, JCas aJCas,
+    public static void render(VDocument aVdoc, AnnotatorState aState, CAS aCas,
             AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
             LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry,
-            DocumentService aDocumentService)
+            DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
     {
-        if (aJCas == null) {
+        if (aCas == null) {
             return;
         }
         
@@ -74,8 +74,9 @@ public class RecommendationRenderer
             TypeAdapter adapter = aAnnotationService.getAdapter(layer);      
             RecommendationTypeRenderer renderer = getRenderer(adapter);
             if (renderer != null) {
-                renderer.render(aJCas, aVdoc, aState, coloringStrategy, layer, aRecService,
-                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService);
+                renderer.render(aCas, aVdoc, aState, coloringStrategy, layer, aRecService,
+                    aLearningRecordService, aAnnotationService, aFsRegistry, aDocumentService,
+                    aWindowBeginOffset, aWindowEndOffset);
             }
         }
     }

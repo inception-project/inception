@@ -40,10 +40,10 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -421,7 +421,7 @@ public class RecommendationServiceImpl
     
     @Override
     public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException
     {
@@ -429,8 +429,8 @@ public class RecommendationServiceImpl
         SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
         
         // Check if there is already an annotation of the target type at the given location
-        Type type = CasUtil.getType(aJCas.getCas(), adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleFsAt(aJCas, type, aBegin, aEnd);
+        Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
+        AnnotationFS annoFS = selectSingleFsAt(aCas, type, aBegin, aEnd);
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation
@@ -439,11 +439,11 @@ public class RecommendationServiceImpl
         else {
             // ... if not, then we create a new annotation - this also takes care of attaching to 
             // an annotation if necessary
-            address = getAddr(adapter.add(aDocument, aUsername, aJCas, aBegin, aEnd));
+            address = getAddr(adapter.add(aDocument, aUsername, aCas, aBegin, aEnd));
         }
 
         // Update the feature value
-        adapter.setFeatureValue(aDocument, aUsername, aJCas, address, aFeature, aValue);
+        adapter.setFeatureValue(aDocument, aUsername, aCas, address, aFeature, aValue);
         
         return address;
     }
