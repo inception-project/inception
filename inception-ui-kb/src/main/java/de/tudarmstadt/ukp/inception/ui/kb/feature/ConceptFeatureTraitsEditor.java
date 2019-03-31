@@ -186,14 +186,14 @@ public class ConceptFeatureTraitsEditor
     {
         // If a specific KB is selected, we show the concepts inside that one
         if (traits.getObject().knowledgeBase != null) {
-            return kbService.listConcepts(traits.getObject().knowledgeBase, false);
+            return kbService.listAllConcepts(traits.getObject().knowledgeBase, false);
         }
         // Otherwise, we offer concepts from all KBs
         else {
             List<KBHandle> allConcepts = new ArrayList<>();
             for (KnowledgeBase kb : kbService
                 .getEnabledKnowledgeBases(feature.getObject().getProject())) {
-                allConcepts.addAll(kbService.listConcepts(kb, false));
+                allConcepts.addAll(kbService.listAllConcepts(kb, false));
             }
 
             return allConcepts;

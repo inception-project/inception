@@ -43,9 +43,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmitting
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -102,7 +102,7 @@ public class PropertyListPanel extends Panel {
         // preferences filtered implicit statements from the list. It is necessary to flip the
         // filter preferences in this case to keep the UI consistent.
         boolean isSelectedPropertyFromImplicitNamespace = selectedProperty.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject());
+                && IriConstants.isFromImplicitNamespace(selectedProperty.getObject());
         if (isSelectedPropertyFromImplicitNamespace) {
             preferences.getObject().showAllProperties = true;
         }
@@ -123,7 +123,7 @@ public class PropertyListPanel extends Panel {
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllProperties && selectedProperty.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedProperty.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
