@@ -330,7 +330,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-          console.log('Something went wrong on selecting a relation annotation for: ' + data)
+            alert('Something went wrong on selecting a relation annotation for: ' + data)
         }]
       });
     }

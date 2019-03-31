@@ -91,14 +91,13 @@ public class ActiveLearningServiceImpl
         List<SuggestionGroup> suggestions = getSuggestions(user,
                 aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
-            if (listOfAO.stream().anyMatch(suggestion -> 
-                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
-                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
-                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
-                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
-                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
-                    suggestion.isVisible())
-            ) {
+            if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
+                    .equals(aRecord.getSourceDocument().getName())
+                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
+                    && suggestion.labelEquals(aRecord.getAnnotation())
+                    && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
+                    && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
+                    && suggestion.isVisible())) {
                 return true;
             }
         }
@@ -132,7 +131,7 @@ public class ActiveLearningServiceImpl
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
                                     && r.getOffsetCharacterBegin() == s.getBegin()
                                     && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && r.getAnnotation().equals(s.getLabel()))
+                                    && s.labelEquals(r.getAnnotation()))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
                                     s.hide(FLAG_REJECTED);
