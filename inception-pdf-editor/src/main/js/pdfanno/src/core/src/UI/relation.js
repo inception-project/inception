@@ -89,7 +89,7 @@ window.addEventListener('DOMContentLoaded', () => {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-          console.log('Something went wrong on creating new relation for: ' + data)
+            alert('Something went wrong on creating new relation for: ' + data)
         }]
       });
     }

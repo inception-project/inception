@@ -225,7 +225,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-           console.log('Something went wrong on selecting a span annotation for: ' + data)
+            alert('Something went wrong on selecting a span annotation for: ' + data)
         }]
       });
     }
@@ -283,7 +283,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
       "u": window.apiUrl,
       "sh": [],
       "fh": [function () {
-        console.log('Something went wrong on deleting a recommendation for: ' + data)
+          alert('Something went wrong on deleting a recommendation for: ' + data)
       }]
     });
   }
