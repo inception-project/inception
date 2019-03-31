@@ -116,7 +116,13 @@ public class OpenNlpNerRecommender
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+            
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -196,13 +202,18 @@ public class OpenNlpNerRecommender
     private List<NameSample> extractNameSamples(List<CAS> aCasses)
     {
         List<NameSample> nameSamples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+                    cas, sentenceType, tokenType);
             for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+                if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break casses;
+                }
+                
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 NameSample nameSample = createNameSample(cas, sentence, tokens);
@@ -211,6 +222,7 @@ public class OpenNlpNerRecommender
                 }
             }
         }
+        
         return nameSamples;
     }
 
