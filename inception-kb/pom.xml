@@ -285,7 +285,7 @@
               <usedDependency>org.eclipse.rdf4j:rdf4j-util</usedDependency>
               <!-- Testing - used via reflection -->
               <usedDependency>com.h2database:h2</usedDependency>
-              <usedDependency>org.springframework.boot:spring-boot-starter-test</usedDependency>
+              <usedDependency>com.jayway.jsonpath:json-path</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-data-jpa</usedDependency>
             </usedDependencies>
           </configuration>
