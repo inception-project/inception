@@ -1619,7 +1619,7 @@ public class SPARQLQueryBuilder
                 KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
                 KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
                 
-                KBStatement kbStatement = new KBStatement(subject, predicate, value);
+                KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
                 kbStatement.setInferred(!explicitStmts.contains(stmt));
                 kbStatement.setOriginalStatements(singleton(stmt));
 

@@ -22,6 +22,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
@@ -44,6 +46,16 @@ public class KBQualifier
 
     private Set<Statement> originalStatements;
 
+    public KBQualifier(String aKbProperty, Object aValue)
+    {
+        this(null, new KBHandle(aKbProperty), aValue);
+    }
+
+    public KBQualifier(KBHandle aKbProperty, Object aValue)
+    {
+        this(null, aKbProperty, aValue);
+    }
+
     public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
     {
         kbStatement = aKbStatement;
@@ -52,8 +64,13 @@ public class KBQualifier
 
         if (aValue instanceof Literal) {
             Literal litValue = (Literal) aValue;
-            language = litValue.getLanguage().orElse(null);
-            value = mapper.getJavaObject(litValue);
+            try {
+                language = litValue.getLanguage().orElse(null);
+                value = mapper.getJavaObject(litValue);
+            }
+            catch (Exception e) {
+                value = "ERROR converting [" + litValue + "]: " + e.getMessage();
+            }
         }
         else if (aValue instanceof IRI) {
             value = aValue;
@@ -62,8 +79,9 @@ public class KBQualifier
             value = null;
         }
         else {
-            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+            value = "ERROR: Unknown object type: " + aValue.getClass();
         }
+        
         originalStatements = new HashSet<>();
     }
 
@@ -107,9 +125,9 @@ public class KBQualifier
         return value;
     }
 
-    public void setValue(Object value)
+    public void setValue(Object aValue)
     {
-        this.value = value;
+        value = aValue;
     }
 
     public String getLanguage() {
@@ -117,7 +135,7 @@ public class KBQualifier
     }
 
     public void setLanguage(String aLanguage) {
-        language = language;
+        language = aLanguage;
     }
 
     public Set<Statement> getOriginalStatements()
@@ -150,4 +168,12 @@ public class KBQualifier
         return -1;
     }
 
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("kbStatement", kbStatement).append("language", language)
+                .append("kbProperty", kbProperty).append("value", value)
+                .append("originalStatements", originalStatements).toString();
+    }
 }

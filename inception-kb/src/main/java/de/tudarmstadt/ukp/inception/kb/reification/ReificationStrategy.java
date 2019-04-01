@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -34,25 +35,32 @@ public interface ReificationStrategy
 {
     Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
 
-    List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aInstance, boolean aAll);
+    List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBHandle aInstance, boolean aAll);
 
-    void deleteInstance(KnowledgeBase kb, KBInstance aInstance);
+    void deleteInstance(RepositoryConnection aConnection, KnowledgeBase kb, KBInstance aInstance);
 
-    void deleteProperty(KnowledgeBase kb, KBProperty aProperty);
+    void deleteProperty(RepositoryConnection aConnection, KnowledgeBase kb, KBProperty aProperty);
 
-    void deleteConcept(KnowledgeBase kb, KBConcept aConcept);
+    void deleteConcept(RepositoryConnection aConnection, KnowledgeBase kb, KBConcept aConcept);
 
-    void deleteStatement(KnowledgeBase kb, KBStatement aStatement);
+    void deleteStatement(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBStatement aStatement);
 
-    void upsertStatement(KnowledgeBase kb, KBStatement aStatement);
+    void upsertStatement(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBStatement aStatement);
 
-    void addQualifier(KnowledgeBase kb, KBQualifier newQualifier);
+    void addQualifier(RepositoryConnection aConnection, KnowledgeBase kb, KBQualifier newQualifier);
 
-    void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier);
+    void deleteQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBQualifier oldQualifier);
 
-    void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier);
+    void upsertQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBQualifier aQualifier);
 
-    List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
+    List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase kb,
+            KBStatement aStatement);
 
-    boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
+    boolean statementsMatchSPO(RepositoryConnection aConnection, KnowledgeBase akb,
+            KBStatement mockStatement);
 }

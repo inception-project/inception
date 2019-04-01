@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
@@ -42,6 +41,7 @@ public class KBStatement implements Serializable
     private static final long serialVersionUID = 6117845741665780184L;
 
     private String statementId;
+
     // Subject
     private KBHandle instance;
 
@@ -60,36 +60,36 @@ public class KBStatement implements Serializable
 
     private List<KBQualifier> qualifiers;
 
-    /**
-     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
-     * after constructing this in order to allow upserting.
-     * @param aInstance {@link KBHandle} for the statement instance
-     * @param aProperty {@link KBHandle} for the statement property
-     * @param aValue Defines value for the statement
-     */
-    public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
+    public KBStatement(String aId, String aInstance)
     {
+        this(aId, new KBHandle(aInstance), null, null);
+    }
+
+    public KBStatement(String aId, String aInstance, String aProperty, Object aValue)
+    {
+        this(aId, new KBHandle(aInstance), new KBHandle(aProperty), aValue);
+    }
+
+    /**
+     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)} after
+     * constructing this in order to allow upserting.
+     * 
+     * @param aInstance
+     *            {@link KBHandle} for the statement instance
+     * @param aProperty
+     *            {@link KBHandle} for the statement property
+     * @param aValue
+     *            Defines value for the statement
+     */
+    public KBStatement(String aId, KBHandle aInstance, KBHandle aProperty, Object aValue)
+    {
+        statementId = aId;
         instance = aInstance;
         property = aProperty;
 
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
-        if (aValue instanceof Literal) {
-            Literal litValue = (Literal) aValue;
-            language = litValue.getLanguage().orElse(null);
-            value = mapper.getJavaObject(litValue);
-        }
-        else if (aValue instanceof IRI) {
-            value = aValue;
-        }
-        else if (aValue instanceof BNode) {
-            value = null;
-        }
-        else {
-            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
-        }
-
+        setValue(aValue);
+        
         originalStatements = new HashSet<>();
-
         qualifiers = new ArrayList<>();
     }
 
@@ -100,6 +100,11 @@ public class KBStatement implements Serializable
         value = null;
         originalStatements = new HashSet<>();
         qualifiers = new ArrayList<>();
+    }
+
+    public KBStatement(KBHandle aInstance)
+    {
+        this(aInstance, null);
     }
 
     public KBStatement(KBStatement other)
@@ -151,7 +156,26 @@ public class KBStatement implements Serializable
 
     public void setValue(Object aValue)
     {
-        value = aValue;
+        if (aValue instanceof Value) {
+            DatatypeMapper mapper = new DefaultDatatypeMapper();
+            if (aValue instanceof Literal) {
+                Literal litValue = (Literal) aValue;
+                language = litValue.getLanguage().orElse(null);
+                value = mapper.getJavaObject(litValue);
+            }
+            else if (aValue instanceof IRI) {
+                value = aValue;
+            }
+            else if (aValue instanceof BNode) {
+                value = null;
+            }
+            else {
+                throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+            }
+        }
+        else {
+            value = aValue;
+        }
     }
 
     public String getLanguage()
@@ -186,6 +210,7 @@ public class KBStatement implements Serializable
 
     public void addQualifier(KBQualifier aQualifier)
     {
+        aQualifier.setKbStatement(this);
         qualifiers.add(aQualifier);
     }
 
@@ -199,11 +224,13 @@ public class KBStatement implements Serializable
         qualifiers = qualifierList;
     }
 
-    @Override public String toString()
+    @Override
+    public String toString()
     {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("instance", instance)
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("statementId", statementId).append("instance", instance)
                 .append("property", property).append("value", value).append("language", language)
                 .append("inferred", inferred).append("originalStatements", originalStatements)
-                .toString();
+                .append("qualifiers", qualifiers).toString();
     }
 }
