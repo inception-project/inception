@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.inception.htmleditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
-import static org.apache.uima.fit.util.JCasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +28,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -48,7 +50,7 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
@@ -85,9 +87,9 @@ public class HtmlAnnotationEditor
     private @SpringBean AnnotationSchemaService annotationService;
 
     public HtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider);
+        super(aId, aModel, aActionHandler, aCasProvider);
 
         vis = new Label("vis", LambdaModel.of(this::renderHtml));
         vis.setOutputMarkupId(true);
@@ -115,20 +117,20 @@ public class HtmlAnnotationEditor
 
     public String renderHtml()
     {
-        JCas aJCas;
+        CAS cas;
         try {
-            aJCas = getJCasProvider().get();
+            cas = getCasProvider().get();
         }
         catch (IOException e) {
             handleError("Unable to load data", e);
             return "";
         }
         
-        StringBuilder buf = new StringBuilder(Strings.escapeMarkup(aJCas.getDocumentText()));
+        StringBuilder buf = new StringBuilder(Strings.escapeMarkup(cas.getDocumentText()));
 
         List<Node> nodes = new ArrayList<>();
-        for (Div div : select(aJCas, Div.class)) {
-            if (div instanceof Paragraph) {
+        for (AnnotationFS div : select(cas, getType(cas, Div.class))) {
+            if (div.getType().getName().equals(Paragraph.class.getName())) {
                 Node startNode = new Node();
                 startNode.position = div.getBegin();
                 startNode.type = "<p>";
@@ -139,7 +141,7 @@ public class HtmlAnnotationEditor
                 endNode.type = "</p>";
                 nodes.add(endNode);
             }
-            if (div instanceof Heading) {
+            if (div.getType().getName().equals(Heading.class.getName())) {
                 Node startNode = new Node();
                 startNode.position = div.getBegin();
                 startNode.type = "<h1>";
@@ -295,11 +297,11 @@ public class HtmlAnnotationEditor
             throws JsonParseException, JsonMappingException, IOException
         {
             AnnotatorState aState = getModelObject();
-            JCas jcas = getJCasProvider().get();
+            CAS cas = getCasProvider().get();
 
             VDocument vdoc = new VDocument();
             preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
-                    jcas, getLayersToRender());
+                    cas, getLayersToRender());
 
             List<Annotation> annotations = new ArrayList<>();
 

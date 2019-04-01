@@ -295,7 +295,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }, 1000)
           }],
           "fh": [function () {
-              console.log('Something went wrong on creating new annotation for: ' + data)
+              alert('Something went wrong on creating new annotation for: ' + data)
           }]
         });
       }

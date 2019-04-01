@@ -44,13 +44,15 @@ public class RenderSpan
         end = aOffset.getEnd();
     }
 
-    public RenderSpan(VSpan aVSpan, Span aSpan)
+    public RenderSpan(VSpan aVSpan, Span aSpan, int aPageBeginOffset)
     {
         vSpan = aVSpan;
         span = aSpan;
         // search for begin of the first range and end of the last range
         begin = vSpan.getRanges().stream().mapToInt(VRange::getBegin).min().getAsInt();
+        begin += aPageBeginOffset;
         end = vSpan.getRanges().stream().mapToInt(VRange::getEnd).max().getAsInt();
+        end += aPageBeginOffset;
     }
 
     public void setText(String aText)

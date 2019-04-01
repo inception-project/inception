@@ -116,7 +116,13 @@ public class OpenNlpDoccatRecommender
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+            
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -189,12 +195,12 @@ public class OpenNlpDoccatRecommender
     private List<DocumentSample> extractSamples(List<CAS> aCasses)
     {
         List<DocumentSample> samples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+                    cas, sentenceType, tokenType);
             for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
@@ -206,6 +212,10 @@ public class OpenNlpDoccatRecommender
                 Feature feature = annotationType.getFeatureByBaseName(featureName);
                 
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
+                    if (samples.size() >= traits.getTrainingSetSizeLimit()) {
+                        break casses;
+                    }
+                    
                     String label = annotation.getFeatureValueAsString(feature);
                     DocumentSample nameSample = new DocumentSample(
                             label != null ? label : NO_CATEGORY, tokenTexts);
@@ -215,6 +225,7 @@ public class OpenNlpDoccatRecommender
                 }
             }
         }
+        
         return samples;
     }
 

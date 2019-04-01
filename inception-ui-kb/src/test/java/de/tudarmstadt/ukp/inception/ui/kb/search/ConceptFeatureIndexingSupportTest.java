@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -117,7 +119,7 @@ public class ConceptFeatureIndexingSupportTest
         builder.add(".", Token.class);
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, AnchoringMode.TOKENS);
+                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 

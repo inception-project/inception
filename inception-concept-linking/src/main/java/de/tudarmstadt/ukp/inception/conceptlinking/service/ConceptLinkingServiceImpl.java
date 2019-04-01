@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokensCovered;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
@@ -24,10 +26,10 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +40,8 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.CompareToBuilder;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,10 +54,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.feature.EntityRankingFeatureGenerator;
@@ -243,36 +243,28 @@ public class ConceptLinkingServiceImpl
     @Override
     public List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
-            int aMentionBeginOffset, JCas aJcas)
+            int aMentionBeginOffset, CAS aCas)
     {
         Set<KBHandle> candidates = generateCandidates(aKB, aConceptScope, aValueType, aQuery,
                 aMention);
-        return rankCandidates(aQuery, aMention, candidates, aJcas, aMentionBeginOffset);
-    }
-
-    /**
-     * Retrieves the sentence containing the mention
-     */
-    private synchronized Sentence getMentionSentence(JCas aJcas, int aBegin)
-    {
-        return WebAnnoCasUtil.getSentence(aJcas, aBegin);
+        return rankCandidates(aQuery, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
     private CandidateEntity initCandidate(CandidateEntity candidate, String aQuery, String aMention,
-            JCas aJCas, int aBegin)
+            CAS aCas, int aBegin)
     {
         candidate.put(KEY_MENTION, aMention);
         candidate.put(KEY_QUERY, aQuery);
         
-        if (aJCas != null) {
-            Sentence sentence = getMentionSentence(aJCas, aBegin);
+        if (aCas != null) {
+            AnnotationFS sentence = selectSentenceAt(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
-                List<Token> tokens = selectCovered(Token.class, sentence);
+                Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
                 // Collect left context
                 tokens.stream()
                         .filter(t -> t.getEnd() <= aBegin)
-                        .sorted(Comparator.comparingInt(Token::getBegin).reversed())
+                        .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
                         .filter(s -> !stopwords.contains(s))
@@ -319,14 +311,14 @@ public class ConceptLinkingServiceImpl
     
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
-            JCas aJCas, int aBegin)
+            CAS aCas, int aBegin)
     {
         long startTime = currentTimeMillis();
         
         // Set the feature values
         List<CandidateEntity> candidates = aCandidates.parallelStream()
                 .map(CandidateEntity::new)
-                .map(candidate -> initCandidate(candidate, aQuery, aMention, aJCas, aBegin))
+                .map(candidate -> initCandidate(candidate, aQuery, aMention, aCas, aBegin))
                 .map(candidate -> {
                     for (EntityRankingFeatureGenerator generator : featureGenerators) {
                         generator.apply(candidate);
@@ -357,7 +349,7 @@ public class ConceptLinkingServiceImpl
     @Override
     public List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
             ConceptFeatureValueType aValueType, String aQuery, String aMention,
-            int aMentionBeginOffset, JCas aJCas, Project aProject)
+            int aMentionBeginOffset, CAS aCas, Project aProject)
     {
         // Sanitize query by removing typical wildcard characters
         String query = aQuery.replaceAll("[*?]", "").trim();
@@ -380,7 +372,7 @@ public class ConceptLinkingServiceImpl
         }
         
         // Rank the candidates and return them
-        return rankCandidates(query, aMention, candidates, aJCas, aMentionBeginOffset);
+        return rankCandidates(query, aMention, candidates, aCas, aMentionBeginOffset);
     }
 
     /**
