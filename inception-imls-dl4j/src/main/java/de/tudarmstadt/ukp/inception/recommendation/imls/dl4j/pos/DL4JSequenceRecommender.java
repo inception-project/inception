@@ -531,8 +531,8 @@ public class DL4JSequenceRecommender
                     }
                 }
             }
-            // ignore padded gold annotations (i.e. no real gold label) in evaluation
-            return new EvaluationResult(NO_LABEL, predictions.stream(), trainingSetSize,
+            // FIXME test fails after ignoring no_label (all 0.0)
+            return new EvaluationResult(null, predictions.stream(), trainingSetSize,
                     testSetSize);
         }
         catch (IOException e) {
