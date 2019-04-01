@@ -45,6 +45,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
@@ -196,6 +198,65 @@ public class StringMatchingRecommenderTest
         assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
+    @Test
+    public void thatEvaluationProducesSpecificResults() throws Exception
+    {
+        String text = "Hans Peter, Peter und Hans. Blabla Peter. Und so weiter Darmstadt, Darmstadt.";
+        String[] vals = new String[] { "PER", "PER", "PER", "PER", "LOC", "ORG" };
+        int[][] indices = new int[][] { { 0, 9 }, { 12, 16 }, { 22, 25 }, { 35, 39 }, { 56, 64 },
+                { 67, 75 } };
+        int[][] sentIndices = new int[][] { { 0, 26 }, {27, 40}, {41, 65}, {66, 76} };
+        int[][] tokenIndices = new int[][] { { 0, 3 }, { 5, 9 }, { 10, 10 }, { 12, 16 }, { 18, 20 },
+                { 22, 25 }, { 26, 26 }, { 28, 33 }, { 35, 39 }, { 40, 40 }, { 42, 44 }, { 46, 47 },
+                { 49, 54 }, { 56, 64 }, { 65, 65 }, {67, 75}, {76, 76} };
+
+        List<CAS> testCas = getTestNECas(text, vals, indices, sentIndices, tokenIndices);
+
+        int expectedTestSize = 2;
+        int expectedTrainSize = 2;
+
+        EvaluationResult result = new StringMatchingRecommender(buildRecommender(), null)
+                .evaluate(testCas, new PercentageBasedSplitter(0.5, 500));
+
+        assertThat(result.getTestSetSize()).as("correct test size").isEqualTo(expectedTestSize);
+        assertThat(result.getTrainingSetSize()).as("correct training size")
+                .isEqualTo(expectedTrainSize);
+
+        // sentences are not processed in sequence, here second and fourth are in test set.
+        assertThat(result.computeAccuracyScore()).as("correct accuracy").isEqualTo(0.5);
+        assertThat(result.computePrecisionScore()).as("correct precision").isEqualTo(1.0 / 3);
+        assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
+        assertThat(result.computeF1Score()).as("correct f1").isEqualTo((2.0 / 9) / (2.0 / 3));
+    }
+    
+    private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aNEIndices,
+            int[][] aSentIndices, int[][] aTokenIndices)
+        throws Exception
+    {
+        JCas jcas = JCasFactory.createText(aText, "de");
+
+        for (int j = 0; j < aSentIndices.length; j++) {
+            Sentence newSent = new Sentence(jcas, aSentIndices[j][0], aSentIndices[j][1]);
+            newSent.addToIndexes();
+        }
+
+        for (int k = 0; k < aTokenIndices.length; k++) {
+            Token newToken = new Token(jcas, aTokenIndices[k][0], aTokenIndices[k][1]);
+            newToken.addToIndexes();
+        }
+
+        for (int i = 0; i < aVals.length; i++) {
+            NamedEntity newNE = new NamedEntity(jcas, aNEIndices[i][0], aNEIndices[i][1]);
+            newNE.setValue(aVals[i]);
+            newNE.addToIndexes();
+        }
+
+        List<CAS> casses = new ArrayList<>();
+        casses.add(jcas.getCas());
+
+        return casses;
+    }
+    
     @Test
     public void thatEvaluationSkippingWorks() throws Exception
     {

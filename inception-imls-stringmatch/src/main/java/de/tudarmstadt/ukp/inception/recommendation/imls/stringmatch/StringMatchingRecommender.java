@@ -61,9 +61,9 @@ public class StringMatchingRecommender
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
 
-    private static final String NO_LABEL = "no_label";
-
     private static final String UNKNOWN_LABEL = "unknown";
+
+    private static final String NO_LABEL = "O";
 
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -248,29 +248,25 @@ public class StringMatchingRecommender
             for (TokenSpan token : sample.getTokens()) {
                 Trie<DictEntry>.Node node = dict.getNode(sample.getText(),
                         token.getBegin() - sample.getBegin());
-                if (node != null) {
-                    int begin = token.getBegin();
-                    int end = token.getBegin() + node.level;
+                int begin = token.getBegin();
+                int end = token.getEnd();
 
-                    // Need to check that the match actually ends at a token boundary!
-                    if (sample.hasTokenEndingAt(end)) {
-                        for (LabelStats lc : node.value.getBest(1)) {
-                            // TODO: check with issue #325
-                            String goldLabel = NO_LABEL;
-                            Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
-                            if (coveringSpan.isPresent()) {
-                                goldLabel = coveringSpan.get().getLabel();
-                            }
-                            predictions.add(new AnnotatedTokenPair(goldLabel, lc.getLabel()));
-                        }
-                    }
+                String predictedLabel = NO_LABEL;
+                if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
+                    List<LabelStats> labelStats = node.value.getBest(1);
+                    if (!labelStats.isEmpty())
+                        predictedLabel = labelStats.get(0).getLabel();
+                }
+                Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
+                if (coveringSpan.isPresent()) {
+                    String goldLabel = coveringSpan.get().getLabel();
+                    predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
                 }
             }
-
         }
 
-        // TODO: check if NO_LABEL should be ignored
-        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
+        return new EvaluationResult(UNKNOWN_LABEL, predictions.stream(), trainingSetSize,
+                testSetSize);
     }
 
     
