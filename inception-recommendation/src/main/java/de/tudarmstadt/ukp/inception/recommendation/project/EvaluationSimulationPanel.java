@@ -148,7 +148,7 @@ public class EvaluationSimulationPanel
         List<CAS> casList = new ArrayList<>();
         listAllDocuments.forEach((source, annotation) -> {
             try {
-                CAS cas = documentService.createOrReadInitialCas(source).getCas();
+                CAS cas = documentService.createOrReadInitialCas(source);
                 casList.add(cas);
             }
             catch (IOException e1) {
