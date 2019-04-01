@@ -531,8 +531,9 @@ public class DL4JSequenceRecommender
                     }
                 }
             }
-            //TODO: maybe ignore NO_LABEL ??
-            return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
+            // ignore padded gold annotations (i.e. no real gold label) in evaluation
+            return new EvaluationResult(NO_LABEL, predictions.stream(), trainingSetSize,
+                    testSetSize);
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

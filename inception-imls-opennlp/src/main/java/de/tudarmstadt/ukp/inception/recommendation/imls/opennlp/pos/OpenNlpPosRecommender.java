@@ -223,7 +223,7 @@ public class OpenNlpPosRecommender
             }
         }
         
-        // FIXME: no difference when ignoring PAD, still high
+        // ignore PAD gold annotations  (i.e. no real gold annotations) during evaluation
         return new EvaluationResult(PAD, predictions.stream(), trainingSetSize, testSetSize);
     }
 
