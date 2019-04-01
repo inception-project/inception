@@ -258,6 +258,7 @@ public class StringMatchingRecommender
                         predictedLabel = labelStats.get(0).getLabel();
                 }
                 Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
+                // check there is a gold label here
                 if (coveringSpan.isPresent()) {
                     String goldLabel = coveringSpan.get().getLabel();
                     predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));

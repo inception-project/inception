@@ -204,7 +204,6 @@ public class OpenNlpNerRecommender
 
         }
 
-        // TODO check if NO_NE_TAG should be ignored
         return new EvaluationResult(null, predictions.stream(), trainingSetSize,
                 testSetSize);
     }
@@ -243,7 +242,10 @@ public class OpenNlpNerRecommender
                 }
             }
 
-            predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
+            // check there is a gold label here, check for instance equality to avoid user label
+            // collision
+            if (goldLabel != NO_NE_TAG)
+                predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
 
         }
 
