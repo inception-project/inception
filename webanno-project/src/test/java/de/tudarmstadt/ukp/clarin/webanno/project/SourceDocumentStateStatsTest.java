@@ -26,8 +26,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Random;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore("This worked well for hundreds of builds - turning it off now")
 public class SourceDocumentStateStatsTest
 {
     @Test
