@@ -19,10 +19,10 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentUri;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
-import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
@@ -138,10 +138,9 @@ public class NamedEntityLinker
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        Type sentenceType = getType(aCas, Sentence.class);
         Type tokenType = getType(aCas, Token.class);
 
-        for (AnnotationFS sentence : select(aCas, sentenceType)) {
+        for (AnnotationFS sentence : selectSentences(aCas)) {
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             predictSentence(aContext, tokenAnnotations, aCas);
         }

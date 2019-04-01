@@ -166,11 +166,10 @@ public class Predictions
     public void putPredictions(long aLayerId, List<AnnotationSuggestion> aPredictions)
     {
         aPredictions.forEach(prediction -> {
-            if (prediction.getLabel() != null) {
-                predictions.put(new ExtendedId(user.getUsername(), project.getId(),
-                        prediction.getDocumentName(), aLayerId, prediction.getOffset(),
-                        prediction.getRecommenderId(), prediction.getId(), -1), prediction);
-            }
+            predictions.put(new ExtendedId(user.getUsername(), project.getId(),
+                    prediction.getDocumentName(), aLayerId, prediction.getOffset(),
+                    prediction.getRecommenderId(), prediction.getId(), -1), prediction);
+
         });
     }
 

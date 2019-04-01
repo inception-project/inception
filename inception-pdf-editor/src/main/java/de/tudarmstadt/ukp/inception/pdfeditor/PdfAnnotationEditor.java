@@ -17,12 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.xml.parsers.ParserConfigurationException;
@@ -72,6 +76,9 @@ public class PdfAnnotationEditor
 
     private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
+    private int page;
+    private Offset pageOffset;
+    private Map<Integer, Offset> pageOffsetCache;
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -126,9 +133,17 @@ public class PdfAnnotationEditor
             try
             {
                 CAS cas = getCasProvider().get();
-                VDocument vdoc = render(cas, 0, cas.getDocumentText().length());
+                // get sentences in which page begin and end offsets are and use those to compute
+                // the new page begin and end offsets. required because annotation rendering will
+                // sometimes fail if offset in middle of a sentence
+                AnnotationFS beginSent = getSentence(cas, pageOffset.getBegin());
+                int begin = (beginSent != null) ? beginSent.getBegin() : pageOffset.getBegin();
+                AnnotationFS endSent = getSentence(cas, pageOffset.getEnd());
+                int end = (endSent != null) ? endSent.getEnd() : pageOffset.getEnd();
+
+                VDocument vdoc = render(cas, begin, end);
                 PdfAnnoModel pdfAnnoModel = PdfAnnoRenderer.render(getModelObject(),
-                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile);
+                    vdoc, cas.getDocumentText(), annotationService, pdfExtractFile, begin);
                 // show unmatched spans to user
                 if (pdfAnnoModel.getUnmatchedSpans().size() > 0) {
                     String annotations = pdfAnnoModel.getUnmatchedSpans().stream()
@@ -284,6 +299,29 @@ public class PdfAnnotationEditor
         }
     }
 
+    private void getAnnotations(AjaxRequestTarget aTarget, IRequestParameters aParams)
+    {
+        page = aParams.getParameterValue("page").toInt();
+        if (pageOffsetCache.containsKey(page)) {
+            pageOffset = pageOffsetCache.get(page);
+        } else {
+            // get page offsets, if possible for the from previous to next page
+            int begin = pdfExtractFile.getPageOffset(page > 1 ? page - 1 : page).getBegin();
+            int end = pdfExtractFile.getPageOffset(page < pdfExtractFile.getMaxPageNumber()
+                ? page + 1 : page).getEnd();
+            List<Offset> offsets = new ArrayList<>();
+            offsets.add(new Offset(begin, begin));
+            offsets.add(new Offset(end, end));
+            offsets =
+                PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
+            int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
+            int newEnd = offsets.stream().mapToInt(Offset::getEnd).max().getAsInt();
+            pageOffset = new Offset(newBegin, newEnd);
+            pageOffsetCache.put(page, pageOffset);
+        }
+        renderPdfAnnoModel(aTarget);
+    }
+
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
         try
@@ -301,8 +339,9 @@ public class PdfAnnotationEditor
                 break;
             case "selectRelation": selectRelationAnnotation(aTarget, aParams, cas);
                 break;
-            case "deleteRecommendation":
-                deleteRecommendation(aTarget, aParams, cas);
+            case "deleteRecommendation": deleteRecommendation(aTarget, aParams, cas);
+                break;
+            case "getAnnotations": getAnnotations(aTarget, aParams);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }
@@ -365,5 +404,7 @@ public class PdfAnnotationEditor
             handleError("Unable to create PdfExtractFile for [" + pdfFile.getName() + "]"
                 + "with PDFExtractor.", e, aTarget);
         }
+
+        pageOffsetCache = new HashMap<>();
     }
 }
