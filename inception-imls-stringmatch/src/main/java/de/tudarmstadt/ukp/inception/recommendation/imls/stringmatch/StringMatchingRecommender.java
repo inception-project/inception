@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -60,6 +60,7 @@ public class StringMatchingRecommender
     implements RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
+    private static final String UNKNOWN_LABEL = "unknown";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -163,8 +164,13 @@ public class StringMatchingRecommender
                     // Need to check that the match actually ends at a token boundary!
                     if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
                         for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            spans.add(new Span(begin, end, text.substring(begin, end),
-                                    lc.getLabel(), lc.getRelFreq()));
+                            String label = lc.getLabel();
+                            // check instance equality to avoid collision with user labels
+                            if (label == UNKNOWN_LABEL) {
+                                label = null;
+                            }
+                            spans.add(new Span(begin, end, text.substring(begin, end), label,
+                                    lc.getRelFreq()));
                         }
                     }
                 }
@@ -310,16 +316,18 @@ public class StringMatchingRecommender
         }
     }
     
-    private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
-        if (isNoneBlank(aLabel)) {
-            DictEntry entry = aDict.get(aText);
-            if (entry == null) {
-                entry = new DictEntry(aText);
-                aDict.put(aText, entry);
-            }
-            
-            entry.put(aLabel);
+    private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
+    {
+        String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
+
+        DictEntry entry = aDict.get(aText);
+        if (entry == null) {
+            entry = new DictEntry(aText);
+            aDict.put(aText, entry);
         }
+
+        entry.put(label);
+
     }
     
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)
