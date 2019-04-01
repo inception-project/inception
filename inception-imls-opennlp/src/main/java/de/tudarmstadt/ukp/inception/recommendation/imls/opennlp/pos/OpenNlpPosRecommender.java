@@ -223,8 +223,8 @@ public class OpenNlpPosRecommender
             }
         }
         
-        // TODO: check again if PAD should be an ignored label
-        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
+        // FIXME: no difference when ignoring PAD, still high
+        return new EvaluationResult(PAD, predictions.stream(), trainingSetSize, testSetSize);
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

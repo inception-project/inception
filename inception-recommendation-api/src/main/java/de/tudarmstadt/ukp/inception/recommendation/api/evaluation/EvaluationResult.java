@@ -59,7 +59,8 @@ public class EvaluationResult
         confusionMatrix = new HashMap<>();
         if (aAnnotatedPairs != null) {
             aAnnotatedPairs.forEach(this::incConfusionMatrix);
-            numOfLabels = (ignoreLabel != null) ? labels.size() - 1 : labels.size();
+            numOfLabels = (ignoreLabel != null && labels.contains(ignoreLabel)) ? labels.size() - 1
+                    : labels.size();
         }
     }
     

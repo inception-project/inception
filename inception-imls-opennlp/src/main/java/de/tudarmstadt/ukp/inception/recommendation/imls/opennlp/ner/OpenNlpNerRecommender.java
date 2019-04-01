@@ -205,7 +205,7 @@ public class OpenNlpNerRecommender
         }
 
         // TODO check if NO_NE_TAG should be ignored
-        return new EvaluationResult(NameSample.DEFAULT_TYPE, predictions.stream(), trainingSetSize,
+        return new EvaluationResult(null, predictions.stream(), trainingSetSize,
                 testSetSize);
     }
 

@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter.TargetSet.TEST;
+import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter.TargetSet.TRAIN;
 
 /**
  * Maps all data to the training set.
@@ -28,6 +28,6 @@ public class TrainOnAllDataSplitter
     @Override
     public TargetSet getTargetSet(Object aObject)
     {
-        return TEST;
+        return TRAIN; //TODO: changed this from TEST, makes sense, right?
     }
 }

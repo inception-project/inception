@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.uima.cas.CAS;
@@ -181,15 +182,11 @@ public class OpenNlpDoccatRecommender
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        List<AnnotatedTokenPair> predictions = new ArrayList<>();
-        for (DocumentSample sample : testSet) {
-            String predictedLabel = doccat.getBestCategory(doccat.categorize(sample.getText()));
-            String goldLabel = sample.getCategory();
-            predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
-        }
+        Stream<AnnotatedTokenPair> predictions = testSet.stream()
+                .map(sample -> new AnnotatedTokenPair(sample.getCategory(),
+                        doccat.getBestCategory(doccat.categorize(sample.getText()))));
         
-        // TODO: check if NO_CATEGORY label should be ignored
-        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
+        return new EvaluationResult(null, predictions, trainingSetSize, testSetSize);
     }
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)

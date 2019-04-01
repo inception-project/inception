@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.dkpro.core.tokit.BreakIteratorSegmenter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -119,11 +120,22 @@ public class OpenNlpDoccatRecommenderTest
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
 
-        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+        EvaluationResult result = sut.evaluate(casList, splitStrategy);
 
-        System.out.printf("Score: %f%n", score);
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
+
+        System.out.printf("F1-Score: %f%n", fscore);
+        System.out.printf("Accuracy: %f%n", accuracy);
+        System.out.printf("Precision: %f%n", precision);
+        System.out.printf("Recall: %f%n", recall);
         
-        assertThat(score).isStrictlyBetween(0.0, 1.0);
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
     @Test
