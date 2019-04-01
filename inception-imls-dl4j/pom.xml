@@ -104,9 +104,14 @@
           <artifactId>lombok</artifactId>
         </exclusion>
       </exclusions>
-      </dependency>
-  
-  
+     </dependency>
+     <!--  
+     <dependency>
+       <groupId>org.nd4j</groupId>
+       <artifactId>nd4j-native-api</artifactId>
+       <version>${dl4j.version}</version>
+     </dependency>
+     -->
   
   <!--  
       <dependency>

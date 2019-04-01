@@ -17,14 +17,56 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import java.io.Serializable;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
-public class OpenNlpNerRecommenderTraits {
+public class OpenNlpNerRecommenderTraits
+    implements Serializable
+{
+    private static final long serialVersionUID = 7717316701623340670L;
 
-    public TrainingParameters getParameters() {
+    private int trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int predictionLimit = Integer.MAX_VALUE;
+    
+    private int numThreads = 1;
+
+    public int getNumThreads()
+    {
+        return numThreads;
+    }
+
+    public void setNumThreads(int aNumThreads)
+    {
+        numThreads = aNumThreads;
+    }
+
+    public int getTrainingSetSizeLimit()
+    {
+        return trainingSetSizeLimit;
+    }
+
+    public void setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
+    {
+        trainingSetSizeLimit = aTrainingSetSizeLimit;
+    }
+
+    public int getPredictionLimit()
+    {
+        return predictionLimit;
+    }
+
+    public void setPredictionLimit(int aPredictionLimit)
+    {
+        predictionLimit = aPredictionLimit;
+    }
+
+    public TrainingParameters getParameters()
+    {
         TrainingParameters parameters = TrainingParameters.defaultParams();
         parameters.put(AbstractTrainer.VERBOSE_PARAM, "false");
+        parameters.put(TrainingParameters.THREADS_PARAM, numThreads);
         return parameters;
     }
 }

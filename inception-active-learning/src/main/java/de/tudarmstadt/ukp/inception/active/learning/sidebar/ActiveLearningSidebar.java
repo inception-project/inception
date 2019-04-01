@@ -659,13 +659,17 @@ public class ActiveLearningSidebar
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
-        
-        suggestion.hide(selectedValue.equals(suggestion.getLabel()) ? FLAG_TRANSIENT_ACCEPTED
+
+        boolean areLabelsEqual = suggestion.labelEquals(selectedValue);
+
+        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED
                 : FLAG_TRANSIENT_CORRECTED);
 
         // Log the action to the learning record
-        writeLearningRecordInDatabaseAndEventLog(suggestion, 
-                selectedValue.equals(suggestion.getLabel()) ? ACCEPTED : CORRECTED, selectedValue);
+        writeLearningRecordInDatabaseAndEventLog(suggestion,
+                (areLabelsEqual) ? ACCEPTED
+                        : CORRECTED,
+                selectedValue);
         
         recommendationService.getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(suggestion.getDocumentName(),
@@ -875,6 +879,7 @@ public class ActiveLearningSidebar
 
         // ... if a matching annotation exists, highlight the annotaiton
         Optional<AnnotationFS> annotation = getMatchingAnnotation(cas, aRecord);
+        
         if (annotation.isPresent()) {
             setHighlight(aRecord.getSourceDocument(), annotation.get());
         }
