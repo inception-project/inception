@@ -25,7 +25,7 @@ If you have Docker installed, you can run INCEpTION using
 docker run -it --name inception -p8080:8080 inception/inception:{revnumber}
 ----
 
-The command download INCEpTION from Dockerhub and starts it on port 8080. If this port is not
+The command downloads INCEpTION from Dockerhub and starts it on port 8080. If this port is not
 available on your machine, you should provide another port to the `-p` parameter. 
 
 The logs will be printed to the console. To stop the container, press `CTRL-C`.
