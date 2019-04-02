@@ -40,6 +40,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.wicket.Component;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -63,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -186,7 +188,7 @@ public class ProjectsOverviewPage
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
                 DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
                     () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
-                addOptions(aItem);
+                addActionsDropdown(aItem);
                 aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
@@ -211,21 +213,30 @@ public class ProjectsOverviewPage
         return projectList;
     }
     
-    private void addOptions(ListItem<Project> aItem)
+    private void addActionsDropdown(ListItem<Project> aItem)
     {
         User user = userRepository.getCurrentUser();
         Project currentProject = aItem.getModelObject();
 
+        WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
         
         LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
             _target -> actionConfirmLeaveProject(_target, aItem));
         boolean hasProjectPermissions = !projectService
                 .listProjectPermissionLevel(user, currentProject).isEmpty();
 
-        leaveProjectLink.add(LambdaBehavior.visibleWhen(
-            () -> hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
+        leaveProjectLink.add(LambdaBehavior.visibleWhen(() -> 
+                hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
 
-        aItem.add(leaveProjectLink);
+        container.add(leaveProjectLink);
+        
+        // If there are no active items in the dropdown, then do not show the dropdown. However,
+        // to still make it take up the usual space and keep the overview nicely aligned, we use
+        // the "invisible" CSS class here instead of telling Wicket to not render the dropdown
+        container.add(new CssClassNameAppender(LoadableDetachableModel.of(() -> 
+                container.streamChildren().anyMatch(Component::isVisible) ? "" : "invisible")));
+        
+        aItem.add(container);
     }
 
 
@@ -233,10 +244,12 @@ public class ProjectsOverviewPage
     {
         User user = userRepository.getCurrentUser();
         Project currentProject = aItem.getModelObject();
-        confirmLeaveDialog.setConfirmAction((target) -> {
+        confirmLeaveDialog.setConfirmAction((_target) -> {
             projectService.listProjectPermissionLevel(user, currentProject).stream()
                     .forEach(projectService::removeProjectPermission);
-            setResponsePage(getPage());
+            _target.add(projectListContainer);
+            _target.addChildren(getPage(), IFeedback.class);
+            success("You are no longer a member of project [" + currentProject.getName() + "]");
         });
         confirmLeaveDialog.show(aTarget);
     }

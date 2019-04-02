@@ -48,28 +48,32 @@
       </div>
       <div class="scrolling flex-content flex-h-container flex-gutter">
         <div wicket:id="projects" class="flex-content list-group">
-          <div wicket:id="project" class="list-group-item flex-h-container flex-gutter flex-only-internal-gutter">
-            <div class="flex-content">
-              <div class="text-right">
-                <span wicket:id="role" class="badge"><wicket:container wicket:id="label"/></span>
+          <div wicket:id="project" class="list-group-item">
+            <div class="flex-h-container flex-gutter flex-only-internal-gutter">
+              <div class="flex-content">
+                <div class="pull-right">
+                  <span wicket:id="role" class="badge" style="margin-left: 5px;"><wicket:container wicket:id="label"/></span>
+                </div>
+                <h4 class="list-group-item-heading">
+                  <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
+                </h4>
+                <div class="list-group-item-text">
+                  <div class="text-right">
+                    <i wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></i>
+                  </div>
+                </div>
               </div>
-              <h4 class="list-group-item-heading">
-                <a wicket:id="projectLink"><wicket:container wicket:id="name"/></a>
-              </h4>
-              <div class="text-right">
-                <i wicket:enclosure="created">Created: <wicket:container wicket:id="created"/></i>
+              <div wicket:id="actionDropdown" class="flex-h-container">
+                <div class="dropdown flex-content flex-h-container">
+                  <button class="btn btn-default dropdown-toggle flex-content" type="button" data-toggle="dropdown">
+                    <span class="fa fa-ellipsis-v"></span>
+                  </button>
+                  <ul class="dropdown-menu pull-right" role="menu">
+                    <li role="presentation"><a role="menuitem" tabindex="-1" wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
+                  </ul>
+                </div>
               </div>
-	        </div>
-	        <div class="list group">
-	            <div class="dropdown" wicket:enclosure>
-	              <button class="btn btn-default dropdown-toggle" type="button" data-toggle="dropdown">
-	                <span class="fa fa-ellipsis-v"></span>
-	              </button>
-	              <ul class="dropdown-menu dropdown-menu-right">
-	                <li><a wicket:id="leaveProject"><wicket:message key="leaveDialog.title"/></a></li>
-	              </ul>
-	            </div>
-            </div>
+  	        </div>
           </div>
         </div>
         <div wicket:id="confirmLeave"></div>
