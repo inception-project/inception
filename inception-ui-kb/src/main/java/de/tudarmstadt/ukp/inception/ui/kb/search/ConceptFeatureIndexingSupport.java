@@ -103,7 +103,7 @@ public class ConceptFeatureIndexingSupport
         }
 
         // Get object from the KB
-        Optional<KBObject> kbObject = kbService.readKBIdentifier(aFeature.getProject(),
+        Optional<KBObject> kbObject = kbService.readItem(aFeature.getProject(),
                 WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName()));
 
         if (!kbObject.isPresent()) {

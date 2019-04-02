@@ -52,5 +52,5 @@ public interface RecommendationTypeRenderer
         ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
         RecommendationService aRecService, LearningRecordService aLearningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService);
+        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
 }

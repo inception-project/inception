@@ -242,7 +242,8 @@ public class RecommendationEditorExtension
     }
     
     @Override
-    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc, int aBegin, int aEnd)
+    public void render(CAS aCas, AnnotatorState aState, VDocument aVDoc,
+                       int aWindowBeginOffset, int aWindowEndOffset)
     {
         // We activate new suggestions during rendering. For one, we don't have a push mechanism
         // at the moment. For another, even if we had it, it would be quite annoying to the user
@@ -262,6 +263,7 @@ public class RecommendationEditorExtension
 
         // Add the suggestions to the visual document
         RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
-                recommendationService, learningRecordService, fsRegistry, documentService);
+                recommendationService, learningRecordService, fsRegistry, documentService,
+                aWindowBeginOffset, aWindowEndOffset);
     }
 }
