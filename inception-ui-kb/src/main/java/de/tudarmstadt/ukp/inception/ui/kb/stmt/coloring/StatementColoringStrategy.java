@@ -17,13 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
+import java.util.List;
+
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
-public interface StatementColoringStrategy extends BeanNameAware
+public interface StatementColoringStrategy
+    extends BeanNameAware
 {
-
     /**
      * @return id
      */
@@ -31,7 +33,8 @@ public interface StatementColoringStrategy extends BeanNameAware
 
     String getBackgroundColor();
 
-    default String getTextColor() {
+    default String getTextColor()
+    {
         String backgroundColor = getBackgroundColor();
         int r = Integer.parseInt(backgroundColor.substring(0, 2), 16);
         int b = Integer.parseInt(backgroundColor.substring(2, 4), 16);
@@ -43,5 +46,6 @@ public interface StatementColoringStrategy extends BeanNameAware
 
     String getFrameColor();
 
-    boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB);
+    boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB,
+            List<String> aLabelProperties);
 }

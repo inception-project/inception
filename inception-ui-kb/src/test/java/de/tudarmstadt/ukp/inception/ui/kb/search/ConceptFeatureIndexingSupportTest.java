@@ -135,7 +135,7 @@ public class ConceptFeatureIndexingSupportTest
         KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
         kbInstance.setKB(kb);
         
-        when(kbService.readKBIdentifier(any(Project.class), any(String.class)))
+        when(kbService.readItem(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbInstance));
 
         List<KBHandle> dummyValue = new ArrayList<KBHandle>();
