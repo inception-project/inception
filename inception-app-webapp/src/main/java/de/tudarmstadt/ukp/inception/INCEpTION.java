@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.swing.JWindow;
@@ -39,6 +41,11 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -59,6 +66,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  * Boots INCEpTION in standalone JAR or WAR modes.
  */
 @SpringBootApplication
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 @ComponentScan(excludeFilters = {
         @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
         @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
@@ -100,6 +108,22 @@ public class INCEpTION
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+    
+    // The WebAnno User model class picks this bean up by name!
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
+        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder 
+        String encoderForEncoding = "bcrypt";
+        Map<String, PasswordEncoder> encoders = new HashMap<>();
+        encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
+        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
+                encoderForEncoding, encoders);
+        // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
+        delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
+        return delegatingEncoder;
     }
     
     @Bean

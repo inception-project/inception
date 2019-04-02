@@ -151,12 +151,12 @@ public class ConceptFeatureSupport
                 kbObject = kbService
                         .getKnowledgeBaseById(aKey.getAnnotationFeature().getProject(),
                                 t.getRepositoryId())
-                        .flatMap(kb -> kbService.readKBIdentifier(kb, aKey.getLabel()));
+                        .flatMap(kb -> kbService.readItem(kb, aKey.getLabel()));
             }
             
             // Use the concept from any knowledge base (leave KB unselected)
             else {
-                kbObject = kbService.readKBIdentifier(aKey.getAnnotationFeature().getProject(),
+                kbObject = kbService.readItem(aKey.getAnnotationFeature().getProject(),
                         aKey.getLabel());
 
             }

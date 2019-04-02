@@ -17,7 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceAt;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokensCovered;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_MENTION_CONTEXT;
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
@@ -25,10 +26,10 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -54,7 +55,6 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.feature.EntityRankingFeatureGenerator;
@@ -187,7 +187,6 @@ public class ConceptLinkingServiceImpl
 
             result.addAll(exactMatches);
 
-            
             if (aQuery != null && aQuery.length() > threshold) {
                 // Collect matches starting with the query - this is the main driver for the
                 // auto-complete functionality
@@ -257,14 +256,14 @@ public class ConceptLinkingServiceImpl
         candidate.put(KEY_QUERY, aQuery);
         
         if (aCas != null) {
-            AnnotationFS sentence = getSentence(aCas, aBegin);
+            AnnotationFS sentence = selectSentenceAt(aCas, aBegin);
             if (sentence != null) {
                 List<String> mentionContext = new ArrayList<>();
-                List<Token> tokens = selectCovered(Token.class, sentence);
+                Collection<AnnotationFS> tokens = selectTokensCovered(sentence);
                 // Collect left context
                 tokens.stream()
                         .filter(t -> t.getEnd() <= aBegin)
-                        .sorted(Comparator.comparingInt(Token::getBegin).reversed())
+                        .sorted(Comparator.comparingInt(AnnotationFS::getBegin).reversed())
                         .limit(properties.getMentionContextSize())
                         .map(t -> t.getCoveredText().toLowerCase(candidate.getLocale()))
                         .filter(s -> !stopwords.contains(s))
