@@ -31,7 +31,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +42,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
@@ -66,18 +64,20 @@ public class ConceptInstancePanel
 
     private Component instanceInfoPanel;
 
+    private List<String> labelProperties;
+
     public ConceptInstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedConceptHandle, IModel<KBConcept> selectedConceptModel)
+            IModel<KBHandle> aSelectedConceptHandle, IModel<KBConcept> aSelectedConceptModel)
     {
-        super(aId, selectedConceptModel);
+        super(aId, aSelectedConceptModel);
         setOutputMarkupId(true);
         kbModel = aKbModel;
         selectedInstanceHandle = Model.of();
-        this.selectedConceptHandle = selectedConceptHandle;
+        selectedConceptHandle = aSelectedConceptHandle;
         
         add(new BootstrapAjaxTabbedPanel<ITab>("tabPanel", makeTabs()));
         
-        add(new ConceptInfoPanel("info", kbModel, selectedConceptHandle, selectedConceptModel));
+        add(new ConceptInfoPanel("info", kbModel, aSelectedConceptHandle, aSelectedConceptModel));
                 
         instanceInfoPanel = new EmptyPanel(INSTANCE_INFO_MARKUP_ID).setVisibilityAllowed(false);
         add(instanceInfoPanel);
@@ -136,7 +136,7 @@ public class ConceptInstancePanel
             return;
         }
 
-        if (!isRenamingEvent(event)) {
+        if (!isLabelStatement(event.getStatement())) {
             return;
         }
         Optional<KBInstance> kbInstance = kbService
@@ -149,29 +149,42 @@ public class ConceptInstancePanel
         event.getTarget().add(this);
     }
 
+//    /**
+//     * Checks whether the given event is about renaming a knowledge base instance i.e. checks
+//     * whether the label of an instance has been changed in the event.
+//     * An event is considered a renaming event if the changed property is:
+//     *
+//     * a main label (declared with {@link KnowledgeBase#getLabelIri()})
+//     * or
+//     * a subproperty label and there is no main label present for this instance
+//     *
+//     * @param aEvent the event that is checked
+//     * @return true if the event is a renaming event, false otherwise
+//     */
+//    private boolean isRenamingEvent(AjaxStatementChangedEvent aEvent)
+//    {
+//        KBStatement changedStatement = aEvent.getStatement();
+//        String propertyIdentifier = changedStatement.getProperty().getIdentifier();
+//        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+//        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
+//            vf.createIRI(changedStatement.getInstance().getIdentifier()),
+//            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
+//        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
+//            kbService.isLabelProperty(kbModel.getObject(), propertyIdentifier)
+//                && !hasMainLabel);
+//    }
+    
     /**
-     * Checks whether the given event is about renaming a knowledge base instance i.e. checks
-     * whether the label of an instance has been changed in the event.
-     * An event is considered a renaming event if the changed property is:
-     *
-     * a main label (declared with {@link KnowledgeBase#getLabelIri()})
-     * or
-     * a subproperty label and there is no main label present for this instance
-     *
-     * @param aEvent the event that is checked
-     * @return true if the event is a renaming event, false otherwise
+     * Checks if the given statement is (potentially) assigning the label to the item in subject
+     * position. This is the case if the property is a label property.
      */
-    private boolean isRenamingEvent(AjaxStatementChangedEvent aEvent)
+    private boolean isLabelStatement(KBStatement aStatement)
     {
-        KBStatement changedStatement = aEvent.getStatement();
-        String propertyIdentifier = changedStatement.getProperty().getIdentifier();
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
-            vf.createIRI(changedStatement.getInstance().getIdentifier()),
-            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
-        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
-            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
-                && !hasMainLabel);
+        if (labelProperties == null) {
+            labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties.contains(aStatement.getProperty().getIdentifier());
     }
 
     @OnEvent
