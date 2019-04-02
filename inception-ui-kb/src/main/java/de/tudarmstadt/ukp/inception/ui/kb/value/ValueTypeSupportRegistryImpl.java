@@ -83,7 +83,6 @@ public class ValueTypeSupportRegistryImpl
     @Override
     public ValueType getValueType(KBStatement aStatement, KBProperty aProperty)
     {
-        String datatype = getDataType(aStatement, aProperty);
         try {
             return getValueSupport(aStatement, aProperty).getSupportedValueTypes().stream()
                 .findFirst().orElse(null);
@@ -145,8 +144,7 @@ public class ValueTypeSupportRegistryImpl
         }
         
         if (support == null) {
-            throw new IllegalArgumentException(
-                    "Unsupported value type: [" + datatype + "]");
+            throw new IllegalArgumentException("Unsupported value type: [" + datatype + "]");
         }
         
         return support;

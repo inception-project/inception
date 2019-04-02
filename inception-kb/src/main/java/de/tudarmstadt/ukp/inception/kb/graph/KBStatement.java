@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -199,8 +201,9 @@ public class KBStatement implements Serializable
 
     @Override public String toString()
     {
-        return new ToStringBuilder(this).append("instance", instance).append("property", property)
-            .append("value", value).append("language", language).append("inferred", inferred)
-            .append("originalStatements", originalStatements).toString();
+        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("instance", instance)
+                .append("property", property).append("value", value).append("language", language)
+                .append("inferred", inferred).append("originalStatements", originalStatements)
+                .toString();
     }
 }

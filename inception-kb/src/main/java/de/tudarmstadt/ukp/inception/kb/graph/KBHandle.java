@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -69,6 +71,17 @@ public class KBHandle
         name = aLabel;
         description = aDescription;
         language = aLanguage;
+    }
+
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
+            String aDomain, String aRange)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+        domain = aDomain;
+        range = aRange;
     }
 
     public String getDomain()
@@ -235,7 +248,21 @@ public class KBHandle
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
-                .append("description", description).append("language", language).toString();
+        ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
+        builder.append("identifier", identifier);
+        builder.append("name", name);
+        if (description != null) {
+            builder.append("description", description);
+        }
+        if (language != null) {
+            builder.append("language", language);
+        }
+        if (domain != null) {
+            builder.append("domain", domain);
+        }
+        if (range != null) {
+            builder.append("range", range);
+        }
+        return builder.toString();
     }
 }

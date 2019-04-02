@@ -26,5 +26,5 @@ public interface StatementColoringRegistry
     List<StatementColoringStrategy> getStatementColoringStrategies();
 
     StatementColoringStrategy getStatementColoringStrategy(String aPropertyIdentifier,
-        KnowledgeBase aKB);
+        KnowledgeBase aKB, List<String> aLabelProperties);
 }

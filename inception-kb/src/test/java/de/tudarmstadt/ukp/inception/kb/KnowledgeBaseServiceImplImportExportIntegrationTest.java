@@ -111,7 +111,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
         Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
@@ -128,7 +128,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
         Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
         assertThat(conceptLabels)
             .as("Check that no concepts have been imported")
@@ -146,7 +146,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
         Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
 
         assertThat(conceptLabels)
@@ -169,7 +169,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         }
 
         KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listConcepts(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
         Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
         Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
             .stream()
@@ -203,7 +203,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         try (InputStream is = new FileInputStream(kbFile)) {
             sut.importData(importedKb, kbFile.getAbsolutePath(), is);
         }
-        List<String> conceptLabels = sut.listConcepts(importedKb, false)
+        List<String> conceptLabels = sut.listAllConcepts(importedKb, false)
             .stream()
             .map(KBHandle::getName)
             .collect(Collectors.toList());

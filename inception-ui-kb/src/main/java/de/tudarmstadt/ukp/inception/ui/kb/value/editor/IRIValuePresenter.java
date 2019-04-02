@@ -76,7 +76,7 @@ public class IRIValuePresenter
     {
         Object stmtValue = getModelObject().getValue();
         if (stmtValue != null) {
-            return kbService.readKBIdentifier(kbModel.getObject(), stmtValue.toString())
+            return kbService.readItem(kbModel.getObject(), stmtValue.toString())
                     .orElse(null);
         }
         else {

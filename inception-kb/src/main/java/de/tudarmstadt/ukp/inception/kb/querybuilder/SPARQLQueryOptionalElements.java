@@ -34,6 +34,8 @@ public interface SPARQLQueryOptionalElements
      */
     SPARQLQueryOptionalElements retrieveDescription();
 
+    SPARQLQueryOptionalElements retrieveDomainAndRange();
+    
     SPARQLQueryOptionalElements limit(int aLimit);
 
     SPARQLQueryOptionalElements caseSensitive();

@@ -67,7 +67,10 @@ public class SPARQLQueryBuilderAsserts
 
             System.out.printf("Results : %d in %dms%n", results.size(),
                     System.currentTimeMillis() - startTime);
-            results.forEach(r -> System.out.printf("          %s%n", r));
+            results.stream().limit(10).forEach(r -> System.out.printf("          %s%n", r));
+            if (results.size() > 10) {
+                System.out.printf("          ... and %d more ...%n", results.size() - 10);
+            }
             
             return results;
         }
