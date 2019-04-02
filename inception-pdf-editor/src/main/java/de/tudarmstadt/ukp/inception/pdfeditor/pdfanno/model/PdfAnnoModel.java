@@ -39,8 +39,6 @@ public class PdfAnnoModel
 
     private List<Relation> relations;
 
-    private ColorMap colorMap;
-
     public PdfAnnoModel(String aPdfannoVersion, String aPdfextractVersion)
     {
         pdfannoVersion = aPdfannoVersion;
@@ -48,7 +46,6 @@ public class PdfAnnoModel
         spans = new ArrayList<>();
         unmatchedSpans = new ArrayList<>();
         relations = new ArrayList<>();
-        colorMap = new ColorMap("#808080");
     }
 
     public String getPdfannoVersion()
@@ -66,28 +63,30 @@ public class PdfAnnoModel
         return spans;
     }
 
-    public boolean addSpan(Span aSpan)
+    /**
+     * Adds a Span to the PdfAnnoModel.
+     * If the start position, end position or page is set to -1 it is added to unmatched spans
+     * else to spans
+     */
+    public void addSpan(Span aSpan)
     {
-        if (aSpan ==  null) {
-            return false;
-        } else {
-            spans.add(aSpan);
-            // Span label contains color value as the real label won't be used in PDFAnno
-            // the real label is seen in the right panel this is a workaround if two equal
-            // labels have different colors also it reduces mapsize.
-            colorMap.addSpan(aSpan.getLabel(), aSpan.getLabel());
-            return true;
+        if (aSpan !=  null) {
+            if (aSpan.getStartPos() == -1 || aSpan.getEndPos() == -1 || aSpan.getPage() == -1) {
+                unmatchedSpans.add(aSpan);
+            } else {
+                spans.add(aSpan);
+            }
         }
+    }
+
+    public void addSpans(List<Span> aSpans)
+    {
+        aSpans.forEach(this::addSpan);
     }
 
     public List<Relation> getRelations()
     {
         return relations;
-    }
-
-    public void addUnmatchedSpan(Span aSpan)
-    {
-        unmatchedSpans.add(aSpan);
     }
 
     public List<Span> getUnmatchedSpans()
@@ -101,17 +100,8 @@ public class PdfAnnoModel
             return false;
         } else {
             relations.add(aRelation);
-            // Relation label contains color value as the real label won't be used in PDFAnno
-            // the real label is seen in the right panel this is a workaround if two equal
-            // labels have different colors, also it reduces mapsize.
-            colorMap.addRelation(aRelation.getLabel(), aRelation.getLabel());
             return true;
         }
-    }
-
-    public ColorMap getColorMap()
-    {
-        return colorMap;
     }
 
     public String getAnnoFileContent()

@@ -110,7 +110,9 @@ public class ConceptFeatureTraitsEditor
         form.add(
             new BootstrapSelect<>(MID_ALLOWED_VALUE_TYPE, LambdaModel.of(this::listAllowedTypes)));
 
+        form.add(new DisabledKBWarning("disabledKBWarning", feature));
         add(form);
+
     }
     
     /**
@@ -129,7 +131,7 @@ public class ConceptFeatureTraitsEditor
         if (t.getRepositoryId() != null) {
             Optional<KnowledgeBase> kb = kbService.getKnowledgeBaseById(project,
                     t.getRepositoryId());
-            if (kb.isPresent()) {
+            if (kb.isPresent() && kb.get().isEnabled()) {
                 result.setKnowledgeBase(kb.get());
                 if (t.getScope() != null) {
                     kbService.readConcept(kb.get(), t.getScope(), true)
@@ -177,20 +179,21 @@ public class ConceptFeatureTraitsEditor
     
     private List<KnowledgeBase> listKnowledgeBases()
     {
-        return kbService.getKnowledgeBases(feature.getObject().getProject());
+        return kbService.getEnabledKnowledgeBases(feature.getObject().getProject());
     }
     
     private List<KBHandle> listConcepts()
     {
         // If a specific KB is selected, we show the concepts inside that one
         if (traits.getObject().knowledgeBase != null) {
-            return kbService.listConcepts(traits.getObject().knowledgeBase, false);
+            return kbService.listAllConcepts(traits.getObject().knowledgeBase, false);
         }
         // Otherwise, we offer concepts from all KBs
         else {
             List<KBHandle> allConcepts = new ArrayList<>();
-            for (KnowledgeBase kb : kbService.getKnowledgeBases(feature.getObject().getProject())) {
-                allConcepts.addAll(kbService.listConcepts(kb, false));
+            for (KnowledgeBase kb : kbService
+                .getEnabledKnowledgeBases(feature.getObject().getProject())) {
+                allConcepts.addAll(kbService.listAllConcepts(kb, false));
             }
 
             return allConcepts;

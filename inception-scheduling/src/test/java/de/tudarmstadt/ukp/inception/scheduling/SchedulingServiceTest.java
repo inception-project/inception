@@ -77,7 +77,7 @@ public class SchedulingServiceTest {
         }
 
         // Wait until the threads have actually been started
-        await().atMost(5, SECONDS).until(() -> Thread.activeCount() >= 3);
+        await().atMost(15, SECONDS).until(() -> sut.getRunningTasks().size() == tasks.size());
 
         assertThat(sut.getRunningTasks()).as("All enqueued tasks should be running")
                 .containsExactlyInAnyOrderElementsOf(tasks);

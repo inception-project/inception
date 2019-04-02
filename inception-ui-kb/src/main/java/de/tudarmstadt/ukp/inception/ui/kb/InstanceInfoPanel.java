@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -40,6 +41,8 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     private static final long serialVersionUID = 7894987557444275022L;
     
     private @SpringBean KnowledgeBaseService kbService;    
+
+    private List<String> labelProperties;
 
     public InstanceInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
             IModel<KBHandle> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
@@ -90,11 +93,22 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     }
 
     @Override
+    public List<String> getLabelProperties()
+    {
+        if (labelProperties == null) {
+            labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties;
+    }
+    
+    
+    @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator()
     {
         return new ImportantStatementComparator<>(
             sgb -> sgb.getProperty().getIdentifier(),
             identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
-                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
+                    || getLabelProperties().contains(identifier));
     }
 }

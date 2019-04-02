@@ -17,72 +17,73 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
-import java.util.ArrayList;
+import java.io.IOException;
 
 import org.apache.wicket.RestartResponseException;
-import org.apache.wicket.Session;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
-import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/documentDetails.html")
 public class DocumentDetailsPage
     extends ApplicationPageBase
 {
-    public static final String DOCUMENT_TITLE = "title";
+    public static final String REPOSITORY_ID = "repo";
+    public static final String COLLECTION_ID = "col";
+    public static final String DOCUMENT_ID = "doc";
 
     private @SpringBean ExternalSearchService externalSearchService;
+    private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
-
-    private DocumentRepository currentRepository;
-    private User currentUser;
-    private Project project;
 
     public DocumentDetailsPage(PageParameters aParameters)
     {
-        project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
-        if (project == null) {
+        StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
+        StringValue collectionIdStringValue = aParameters.get(COLLECTION_ID);
+        StringValue documentIdStringValue = aParameters.get(DOCUMENT_ID);
+
+        if (
+                repositoryIdStringValue == null || 
+                documentIdStringValue == null || 
+                collectionIdStringValue == null
+        ) {
             abort();
-        }
-
-        currentUser = userRepository.getCurrentUser();
-
-        ArrayList<DocumentRepository> repositories;
-
-        repositories = (ArrayList<DocumentRepository>) externalSearchService
-                .listDocumentRepositories(project);
-
-        if (repositories.size() > 0) {
-            currentRepository = repositories.get(0);
         }
         else {
-            currentRepository = null;
+            DocumentRepository repo = externalSearchService
+                    .getRepository(repositoryIdStringValue.toLong());
+            
+            // Check access to project
+            User currentUser = userRepository.getCurrentUser();
+            if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
+                error("You have no permission to access project [" + repo.getProject().getId()
+                        + "]");
+                return;
+            }
+            
+            String documentText;
+            try {
+                documentText = externalSearchService.getDocumentText(repo,
+                        collectionIdStringValue.toString(), documentIdStringValue.toString());
+            }
+            catch (IOException e) {
+                documentText = e.getMessage();
+            }
+
+            // FIXME: Instead of showing the document ID, we should fetch the document metadata
+            // and show the title.
+            add(new Label("title", documentIdStringValue.toString()));
+            add(new Label("text", documentText));
         }
-
-        StringValue documentTitleStringValue = aParameters.get(DOCUMENT_TITLE);
-
-        if (documentTitleStringValue == null) {
-            abort();
-        }
-
-        String documentTitle = documentTitleStringValue.toString();
-        add(new Label("title", documentTitle));
-
-        String documentText = externalSearchService
-                .getDocumentById(currentUser, currentRepository, documentTitle).getText();
-        Label textElement = new Label("text", documentText);
-        textElement.setOutputMarkupId(true);
-        add(textElement);
     }
 
     private void abort()

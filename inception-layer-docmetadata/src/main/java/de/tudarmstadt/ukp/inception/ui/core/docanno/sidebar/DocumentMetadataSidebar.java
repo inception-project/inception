@@ -21,7 +21,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -36,10 +36,10 @@ public class DocumentMetadataSidebar
     private static final long serialVersionUID = 2085197932148384096L;
 
     public DocumentMetadataSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         IModel<Project> project = LoadableDetachableModel.of(() -> aModel.getObject().getProject());
         IModel<SourceDocument> sourceDocument = LoadableDetachableModel
@@ -48,10 +48,11 @@ public class DocumentMetadataSidebar
                 .of(() -> aModel.getObject().getUser().getUsername());
         
         DocumentMetadataAnnotationDetailPanel details = new DocumentMetadataAnnotationDetailPanel(
-                "details", Model.of(VID.NONE_ID), sourceDocument, username, aJCasProvider, project,
+                "details", Model.of(VID.NONE_ID), sourceDocument, username, aCasProvider, project,
                 aAnnotationPage);
         add(details);
+        
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aJCasProvider, details, aAnnotationPage));
+                username, aCasProvider, details, aAnnotationPage));
     }
 }

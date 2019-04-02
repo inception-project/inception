@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -24,10 +27,8 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
@@ -41,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -119,7 +119,7 @@ public class ConceptFeatureIndexingSupportTest
         builder.add(".", Token.class);
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, AnchoringMode.TOKENS);
+                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -135,10 +135,10 @@ public class ConceptFeatureIndexingSupportTest
         KBInstance kbInstance = new KBInstance("urn:dummy-concept", "Dummy concept");
         kbInstance.setKB(kb);
         
-        when(kbService.readKBIdentifier(any(Project.class), any(String.class)))
+        when(kbService.readItem(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbInstance));
 
-        Set<KBHandle> dummyValue = new HashSet<KBHandle>();
+        List<KBHandle> dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
         
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),

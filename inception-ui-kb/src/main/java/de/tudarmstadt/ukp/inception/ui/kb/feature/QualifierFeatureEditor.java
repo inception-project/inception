@@ -17,19 +17,19 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -73,20 +73,20 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
 {
     private static final long serialVersionUID = 7469241620229001983L;
+    
     private static final Logger LOG = LoggerFactory.getLogger(QualifierFeatureEditor.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean ConceptLinkingServiceImpl clService;
+    private @SpringBean ConceptLinkingService clService;
     private @SpringBean FactLinkingService factService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean KnowledgeBaseService kbService;
@@ -109,7 +109,9 @@ public class QualifierFeatureEditor
         actionHandler = aHandler;
         project = stateModel.getObject().getProject();
 
-        add(new Label("feature", getModelObject().feature.getUiName()));
+        // Add warning that shows up if the knowledge base that is used by the concept feature
+        // is disabled
+        add(new DisabledKBWarning("disabledKBWarning", Model.of(getLinkedAnnotationFeature())));
 
         // Most of the content is inside this container such that we can refresh it independently
         // from the rest of the form
@@ -271,11 +273,7 @@ public class QualifierFeatureEditor
     private AutoCompleteTextField<KBHandle> createMentionKBLinkTextField(
         Item<LinkWithRoleModel> aItem)
     {
-        String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
-        AnnotationFeature linkedAnnotationFeature = annotationService
-            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        AnnotationFeature linkedAnnotationFeature = getLinkedAnnotationFeature();
 
         qualifierModel = new LambdaModelAdapter<>(() -> this.getSelectedKBItem(aItem), (v) -> {
             this.setSelectedKBItem((KBHandle) v, aItem, linkedAnnotationFeature);
@@ -290,14 +288,8 @@ public class QualifierFeatureEditor
             @Override
             protected List<KBHandle> getChoices(String input)
             {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    input = input.replaceAll("[*?]", "").trim();
-                    choices = listInstances(actionHandler, input, linkedAnnotationFeature,
-                        aItem.getModelObject().label, aItem.getModelObject().targetAddr);
-                }
-                return choices;
-
+                return listInstances(actionHandler, input, linkedAnnotationFeature,
+                    aItem.getModelObject().label, aItem.getModelObject().targetAddr);
             }
 
             @Override
@@ -321,14 +313,23 @@ public class QualifierFeatureEditor
         return field;
     }
 
+    private AnnotationFeature getLinkedAnnotationFeature() {
+        String linkedType = this.getModelObject().feature.getType();
+        AnnotationLayer linkedLayer = annotationService
+            .getLayer(linkedType, this.stateModel.getObject().getProject());
+        AnnotationFeature linkedAnnotationFeature = annotationService
+            .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+        return linkedAnnotationFeature;
+    }
+
     private KBHandle getSelectedKBItem(Item<LinkWithRoleModel> aItem) {
         KBHandle selectedKBHandleItem = null;
         if (aItem.getModelObject().targetAddr != -1) {
             try {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-                JCas jCas = actionHandler.getEditorCas();
+                CAS cas = actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
-                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(jCas, targetAddr,
+                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(cas, targetAddr,
                     project, traits);
             } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -343,9 +344,9 @@ public class QualifierFeatureEditor
     {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                JCas jCas = actionHandler.getEditorCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil
-                    .selectByAddr(jCas, aItem.getModelObject().targetAddr);
+                CAS cas = actionHandler.getEditorCas();
+                FeatureStructure selectedFS = selectFsByAddr(cas,
+                        aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
@@ -357,7 +358,7 @@ public class QualifierFeatureEditor
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
                 actionHandler.actionCreateOrUpdate(
-                        RequestCycle.get().find(AjaxRequestTarget.class).get(), jCas);
+                        RequestCycle.get().find(AjaxRequestTarget.class).get(), cas);
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -371,16 +372,16 @@ public class QualifierFeatureEditor
         roleAddr)
     {
         if (linkedAnnotationFeature == null) {
-            String linkedType = this.getModelObject().feature.getType();
-            AnnotationLayer linkedLayer = annotationService
-                .getLayer(linkedType, this.stateModel.getObject().getProject());
-            linkedAnnotationFeature = annotationService
-                .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
+            linkedAnnotationFeature = getLinkedAnnotationFeature();
         }
         List<KBHandle> handles = new ArrayList<>();
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
-            .getFeatureSupport(linkedAnnotationFeature);
-        ConceptFeatureTraits traits = fs.readTraits(linkedAnnotationFeature);
+
+        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
+        // Check if kb is actually enabled
+        String repoId = traits.getRepositoryId();
+        if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+            return Collections.emptyList();
+        }
 
         // Use concept linking if enabled
         try {
@@ -394,20 +395,19 @@ public class QualifierFeatureEditor
             RequestCycle.get().find(IPartialPageRequestHandler.class)
                 .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
         }
+        return handles;
 
-        // if concept linking does not return any results or is disabled
-        if (handles.size() == 0) {
-            handles = kbService.getEntitiesInScope(traits.getRepositoryId(), traits.getScope(),
-                traits.getAllowedValueType(), project);
-            // Sort and filter results
-            handles = handles.stream()
-                .filter(handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-        }
-        return KBHandle.distinctByIri(handles);
     }
 
-    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature)
+    {
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+            .getFeatureSupport(aAnnotationFeature);
+        ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
+        return traits;
+    }
+
+    private CAS getEditorCas(AnnotationActionHandler aHandler) throws IOException
     {
         return aHandler.getEditorCas();
     }
@@ -424,6 +424,10 @@ public class QualifierFeatureEditor
             @Override protected List<KBHandle> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
+                String repoId = traits.getRepositoryId();
+                if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+                    return Collections.emptyList();
+                }
                 return factService.getPredicatesFromKB(project, traits);
             }
 

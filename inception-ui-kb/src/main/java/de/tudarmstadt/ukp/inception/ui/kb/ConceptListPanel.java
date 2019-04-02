@@ -42,9 +42,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmitting
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
@@ -109,7 +109,7 @@ public class ConceptListPanel extends Panel {
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedConcept.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
@@ -120,8 +120,7 @@ public class ConceptListPanel extends Panel {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
             try {
-                return kbService.listConcepts(kbModel.getObject(),
-                    prefs.showAllConcepts);
+                return kbService.listAllConcepts(kbModel.getObject(), prefs.showAllConcepts);
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list concepts: " + e.getLocalizedMessage());

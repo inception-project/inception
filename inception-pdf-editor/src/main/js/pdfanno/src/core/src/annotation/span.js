@@ -36,7 +36,12 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   static newInstance (annotation) {
     let a          = new SpanAnnotation()
+// BEGIN INCEpTION EXTENSION - #593 - add pdfanno sources
+/*
+    a.uuid         = uuid()
+*/
     a.uuid         = annotation.uuid || uuid()
+// END INCEpTION EXTENSION
     a.text         = annotation.text
     a.color        = annotation.color
     a.readOnly     = annotation.readOnly || false
@@ -220,7 +225,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
         "u": window.apiUrl,
         "sh": [],
         "fh": [function () {
-           console.log('Something went wrong on selecting an annotation for: ' + data)
+            alert('Something went wrong on selecting a span annotation for: ' + data)
         }]
       });
     }
@@ -263,14 +268,61 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
   }
 
+// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
+  deleteRecommendation() {
+    var data = {
+      "action": "deleteRecommendation",
+      "id": this.uuid,
+      "page": this.page,
+      "begin": this.textRange[0],
+      "end": this.textRange[1]
+    }
+    parent.Wicket.Ajax.ajax({
+      "m": "POST",
+      "ep": data,
+      "u": window.apiUrl,
+      "sh": [],
+      "fh": [function () {
+          alert('Something went wrong on deleting a recommendation for: ' + data)
+      }]
+    });
+  }
+// END INCEpTION EXTENSION
+
   /**
    * Enable view mode.
    */
   enableViewMode () {
     this.disableViewMode()
     super.enableViewMode()
+// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
+/*
     if (!this.readOnly) {
       this.$element.find('.anno-knob').on('click', this.handleClickEvent)
+*/
+    var singleClickAction = this.handleClickEvent
+    var doubleClickAction = this.deleteRecommendation
+    if (!this.readOnly) {
+      this.$element.find('.anno-knob').on('click', function (e) {
+        clickCount++
+        if (clickCount === 1) {
+          timer = setTimeout(function () {
+            try {
+              singleClickAction() // perform single-click action
+            } finally {
+              clickCount = 0      // after action performed, reset counter
+            }
+          }, CLICK_DELAY);
+        } else {
+          clearTimeout(timer)     // prevent single-click action
+          try {
+            doubleClickAction()   // perform double-click action
+          } finally {
+            clickCount = 0        // after action performed, reset counter
+          }
+        }
+      })
+// END INCEpTION EXTENSION
     }
   }
 
@@ -282,3 +334,9 @@ export default class SpanAnnotation extends AbstractAnnotation {
     this.$element.find('.anno-knob').off('click')
   }
 }
+
+// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
+var clickCount = 0;
+var timer = null;
+var CLICK_DELAY = 300;
+// END INCEpTION EXTENSION

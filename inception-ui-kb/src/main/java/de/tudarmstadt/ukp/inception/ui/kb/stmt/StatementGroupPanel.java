@@ -42,6 +42,7 @@ import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -60,6 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
+import de.tudarmstadt.ukp.inception.ui.kb.AbstractInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -170,7 +172,7 @@ public class StatementGroupPanel extends Panel {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
                 
-                Set<KBHandle> parentConceptList = kbService.getParentConceptList(
+                List<KBHandle> parentConceptList = kbService.getParentConceptList(
                         groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
                 
                 for (KBHandle parent : parentConceptList) {
@@ -284,27 +286,39 @@ public class StatementGroupPanel extends Panel {
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
-            // Apply a specific coloring strategy depending on the property
-            StatementColoringStrategy coloringStrategy = coloringRegistry
-                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier(),
-                    statementGroupBean.getKb());
-
-            String frameColor = coloringStrategy.getFrameColor();
             AttributeAppender framehighlightAppender = new AttributeAppender("style",
-                "background-color:#" + frameColor);
+                    LoadableDetachableModel.of(() -> 
+                        "background-color:#" + getColoringStrategy().getFrameColor()
+                    ));
             statementGroupFooter.add(framehighlightAppender);
             form.add(framehighlightAppender);
 
-            String textColor = coloringStrategy.getTextColor();
-            String backgroundColor = coloringStrategy.getBackgroundColor();
             AttributeAppender highlightAppender = new AttributeAppender("style",
-                "background-color:#" + backgroundColor + ";color:#" + textColor);
+                    LoadableDetachableModel.of(() -> {
+                        StatementColoringStrategy coloringStrategy = getColoringStrategy();
+                        return "background-color:#" + coloringStrategy.getBackgroundColor()
+                                + ";color:#" + coloringStrategy.getTextColor();
+                    }));
             statementListWrapper.add(highlightAppender);
-
 
             form.add(statementGroupFooter);
             add(form);
 
+        }
+        
+        public StatementGroupBean getModelObject()
+        {
+            return (StatementGroupBean) getDefaultModelObject();
+        }
+        
+        private StatementColoringStrategy getColoringStrategy()
+        {
+            AbstractInfoPanel<?> aip = findParent(AbstractInfoPanel.class);
+            StatementGroupBean statementGroupBean = getModelObject();
+            return coloringRegistry
+                    .getStatementColoringStrategy(
+                            statementGroupBean.getProperty().getIdentifier(),
+                            statementGroupBean.getKb(), aip.getLabelProperties());
         }
         
         private void actionPropertyLinkClicked(AjaxRequestTarget target)

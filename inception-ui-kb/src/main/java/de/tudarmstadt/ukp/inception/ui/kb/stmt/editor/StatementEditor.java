@@ -225,7 +225,7 @@ public class StatementEditor extends Panel
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
-                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                        + "String Editor is used as default: {}", e.getLocalizedMessage());
                 presenter = new StringLiteralValuePresenter("value", model);
             }
             add(presenter);
@@ -350,7 +350,7 @@ public class StatementEditor extends Panel
             valueTypes = valueTypeRegistry.getAllTypes();
             if (rangeValue != null) {
                 Optional<KBObject> rangeKBHandle = kbService
-                        .readKBIdentifier(kbModel.getObject().getProject(), rangeValue);
+                        .readItem(kbModel.getObject().getProject(), rangeValue);
                 valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
             valueType = new BootstrapSelect<>("valueType", valueTypes);
@@ -375,7 +375,7 @@ public class StatementEditor extends Panel
             }
             catch (IllegalArgumentException e) {
                 LOG.warn("Unable to find an editor that supports the value type. "
-                        + "String Editor is used as default: {}", e.getLocalizedMessage(), e);
+                        + "String Editor is used as default: {}", e.getLocalizedMessage());
                 editor = new StringLiteralValueEditor("value", model);
             }
             editor.setOutputMarkupId(true);

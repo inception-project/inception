@@ -23,9 +23,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
@@ -131,8 +129,6 @@ public interface KnowledgeBaseService
     RepositoryImplConfig getKnowledgeBaseConfig(KnowledgeBase kb)
         throws RepositoryConfigException, RepositoryException;
 
-    void registerImplicitNamespace(String aImplicitNameSpace);
-
     /**
      * Creates a new concept in the given knowledge base. Does nothing 
      * if the knowledge base is read only.
@@ -169,9 +165,6 @@ public interface KnowledgeBaseService
      * @param aType The concept to delete
      */
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
-
-    
-    List<KBHandle> listConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
      * Creates a new property in the given knowledge base. Does nothing
@@ -339,19 +332,6 @@ public interface KnowledgeBaseService
             int aLimit)
         throws QueryEvaluationException;
     
-    /**
-     * List the instances for the child concepts
-     * 
-     * @param aKB The knowledge base
-     * @param aParentIdentifier a Parent identifier.
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @param aLimit Limit for SPARQL queries
-     * @return All instances of the child concepts
-     */
-    List<KBHandle> listInstancesForChildConcepts(KnowledgeBase aKB, String aParentIdentifier,
-            boolean aAll, int aLimit) throws QueryEvaluationException;
-    
-    
     RepositoryConnection getConnection(KnowledgeBase kb);
 
     interface ReadAction<T>
@@ -367,9 +347,6 @@ public interface KnowledgeBaseService
     {
         KBHandle accept(RepositoryConnection aConnection);
     }
-
-    List<KBHandle> list(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-        aAll, int aLimit);
 
     /**
      * List the properties for a specific accepted domain identifier and also 
@@ -387,38 +364,6 @@ public interface KnowledgeBaseService
      */
     List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
             boolean aAll);
-
-    /**
-     * List the properties for a specific accepted range identifier
-     * 
-     * @param kb
-     *            The knowledge base
-     * @param aDomain
-     *            a range identifier.
-     * @param aIncludeInferred
-     *            indicates whether inferred statements should be included in the result.
-     * @param aAll
-     *            indicates whether to include base properties or not
-     * @return All properties for a specific accepted range identifier
-     */
-    List<KBHandle> listPropertiesRangeValue(KnowledgeBase kb, String aDomain,
-            boolean aIncludeInferred, boolean aAll);
-    
-    /**
-     * List the properties
-     * 
-     * @param kb
-     *            The knowledge base
-     * @param aType
-     *            a {@link IRI} for type of property
-     * @param aIncludeInferred
-     *            indicates whether inferred statements should be included in the result.
-     * @param aAll
-     *            indicates whether to include base properties or not
-     * @return All properties 
-     */
-    List<KBHandle> listProperties(KnowledgeBase kb, IRI aType, boolean aIncludeInferred, boolean
-            aAll);
 
     /**
      * Adds a new qualifier in the given knowledge base. Does
@@ -470,7 +415,7 @@ public interface KnowledgeBaseService
      * @param aIdentifier String value for IRI
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    Optional<KBObject> readKBIdentifier(Project aProject, String aIdentifier);
+    Optional<KBObject> readItem(Project aProject, String aIdentifier);
 
     /**
      * Read an identifier value from a particular kb to return {@link KBObject}
@@ -478,18 +423,8 @@ public interface KnowledgeBaseService
      * @param aIdentifier
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
-    Optional<KBObject> readKBIdentifier(KnowledgeBase akb, String aIdentifier);
+    Optional<KBObject> readItem(KnowledgeBase akb, String aIdentifier);
 
-     /** Retrieves the parent concept for a concept identifier
-     * 
-     * @param aKB The knowledge base
-     * @param aHandle a concept.
-     * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
-     * @return List of parent concept for an identifier
-     */
-    List<KBHandle> getParentConcept(KnowledgeBase aKB, KBHandle aHandle, boolean aAll)
-        throws QueryEvaluationException;
-    
     /**
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept
@@ -499,7 +434,7 @@ public interface KnowledgeBaseService
      * @param aAll True if entities with implicit namespaces (e.g. defined by RDF)
      * @return List of parent concept for an identifier
      */
-    Set<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
+    List<KBHandle> getParentConceptList(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
     
     /**
@@ -513,8 +448,6 @@ public interface KnowledgeBaseService
     List<KBHandle> getConceptForInstance(KnowledgeBase aKB, String aIdentifier, boolean aAll)
         throws QueryEvaluationException;
 
-    boolean hasImplicitNamespace(KnowledgeBase kb, String s);
-
     /**
      * List all the concepts
      * @param kb The knowledge base from which concepts will be listed
@@ -524,15 +457,20 @@ public interface KnowledgeBaseService
     List<KBHandle> listAllConcepts(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
 
     /**
-     * Returns whether the given identifier is a subproperty of the label IRI defined for this
-     * knowledge base
-     *
-     * @param aKB the knowledge base
-     * @param aIdentifier the identifier of the label
-     * @return true if the identifier is a subproperty of the label IRI defined for this
-     * knowledge base, false otherwise
+     * Retrieve all properties which are used to display labels - includes labels for all kinds of
+     * items: classes, instances and properties.
      */
-    boolean isSubpropertyLabel(KnowledgeBase aKB, String aIdentifier);
+    List<String> listLabelProperties(KnowledgeBase aKB);
+
+    /**
+     * Retrieve all properties which are used to display labels for classes or instances.
+     */
+    List<String> listConceptOrInstanceLabelProperties(KnowledgeBase aKB);
+    
+    /**
+     * Retrieve all properties which are used to display labels for properties.
+     */
+    List<String> listPropertyLabelProperties(KnowledgeBase aKB);
 
     /**
      * Checks whether a property is a base property
@@ -561,34 +499,10 @@ public interface KnowledgeBaseService
     Optional<KBConcept> readConcept(KnowledgeBase aKB, String aIdentifier, boolean aAll)
             throws QueryEvaluationException;
 
-   /**
-     *  List all Instances of a given knowledge base
-     * @param aKB the knowledge base
-     * @param aAll indicates whether to include everything
-     * @return list of all the instances {@link KBHandle}
-     */
-    List<KBHandle> listAllInstances(KnowledgeBase aKB, boolean aAll);
-
     /**
-     * List all the concepts/instances in a given scope. The scope is given in form of a knowledge
-     * base id and a concept id. Null can be passed as a wildcard. If the the given
-     * knowledge base id or concept id can not be found the method will return an empty list.
-     *
-     * @param aRepositoryId the id of the knowledge base that is searched in
-     * @param aConceptScope the id of a concept that defines a scope
-     * @param aValueType    whether only concepts/instances or both should be returned
-     * @param project       the corresponding project
-     * @return a list of all entities within the given scope
+     * Checks weather a knowledge base is present and enabled, given a repository id
+     * @param repositoryID id of the knowledge base
+     * @return whether the knowledge base with the given id is available or not
      */
-    List<KBHandle> getEntitiesInScope(String aRepositoryId, String aConceptScope,
-        ConceptFeatureValueType aValueType, Project project);
-
-    /**
-     * Gets a list of sub-property of label 
-     * 
-     * @param aKB
-     *            a knowledge base.
-     * @return set of properties
-     */
-    Set<KBHandle> getSubPropertyLabels(KnowledgeBase aKB);
+    boolean isKnowledgeBaseEnabled(Project aProject, String repositoryID);
 }

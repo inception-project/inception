@@ -44,7 +44,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -66,8 +65,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
@@ -186,10 +185,10 @@ public class ActiveLearningSidebar
     private boolean protectHighlight;
     
     public ActiveLearningSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         annotationPage = aAnnotationPage;
 
@@ -638,18 +637,18 @@ public class ActiveLearningSidebar
         SourceDocument sourceDoc = documentService.getSourceDocument(state.getProject(),
                 suggestion.getDocumentName());
         String username = state.getUser().getUsername();
-        JCas jCas = documentService.readAnnotationCas(sourceDoc, username);
+        CAS cas = documentService.readAnnotationCas(sourceDoc, username);
 
         // Upsert an annotation based on the suggestion
-        String selectedValue = (String) featureSupport.unwrapFeatureValue(feat, jCas.getCas(),
+        String selectedValue = (String) featureSupport.unwrapFeatureValue(feat, cas,
                 editor.getModelObject().value);
         AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
-        recommendationService.upsertFeature(annotationService, sourceDoc, username, jCas, layer,
+        recommendationService.upsertFeature(annotationService, sourceDoc, username, cas, layer,
                 feature, selectedValue, suggestion.getBegin(), suggestion.getEnd());
         
         // Save CAS after annotation has been created
-        documentService.writeAnnotationCas(jCas, sourceDoc, state.getUser(), true);
+        documentService.writeAnnotationCas(cas, sourceDoc, state.getUser(), true);
         
         // If the currently displayed document is the same one where the annotation was created,
         // then update timestamp in state to avoid concurrent modification errors
@@ -660,13 +659,17 @@ public class ActiveLearningSidebar
                 state.setAnnotationDocumentTimestamp(diskTimestamp.get());
             }
         }
-        
-        suggestion.hide(selectedValue.equals(suggestion.getLabel()) ? FLAG_TRANSIENT_ACCEPTED
+
+        boolean areLabelsEqual = suggestion.labelEquals(selectedValue);
+
+        suggestion.hide((areLabelsEqual) ? FLAG_TRANSIENT_ACCEPTED
                 : FLAG_TRANSIENT_CORRECTED);
 
         // Log the action to the learning record
-        writeLearningRecordInDatabaseAndEventLog(suggestion, 
-                selectedValue.equals(suggestion.getLabel()) ? ACCEPTED : CORRECTED, selectedValue);
+        writeLearningRecordInDatabaseAndEventLog(suggestion,
+                (areLabelsEqual) ? ACCEPTED
+                        : CORRECTED,
+                selectedValue);
         
         recommendationService.getPredictions(state.getUser(), state.getProject())
                 .getPredictionsByTokenAndFeature(suggestion.getDocumentName(),
@@ -768,9 +771,9 @@ public class ActiveLearningSidebar
             
             // Obtain some left and right context of the active suggestion while we have easy
             // access to the document which contains the current suggestion
-            JCas cas;
+            CAS cas;
             if (state.getDocument().getName().equals(suggestion.getDocumentName())) {
-                cas = getJCasProvider().get();
+                cas = getCasProvider().get();
             }
             else {
                 cas = documentService.readAnnotationCas(sourceDocument,
@@ -872,10 +875,11 @@ public class ActiveLearningSidebar
         
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
-        JCas jCas = getJCasProvider().get();
+        CAS cas = getCasProvider().get();
 
         // ... if a matching annotation exists, highlight the annotaiton
-        Optional<AnnotationFS> annotation = getMatchingAnnotation(jCas.getCas(), aRecord);
+        Optional<AnnotationFS> annotation = getMatchingAnnotation(cas, aRecord);
+        
         if (annotation.isPresent()) {
             setHighlight(aRecord.getSourceDocument(), annotation.get());
         }
@@ -963,9 +967,9 @@ public class ActiveLearningSidebar
             // be deleted because deleteAnnotationByHistory will delete the annotation via the
             // methods provided by the AnnotationActionHandler and these operate ONLY on the
             // currently visible/selected document.
-            JCas jCas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
+            CAS cas = documentService.readAnnotationCas(aRecord.getSourceDocument(),
                     aRecord.getUser());
-            if (getMatchingAnnotation(jCas.getCas(), aRecord).isPresent()) {
+            if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                         aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
                 confirmationDialog.setTitleModel(new StringResourceModel(
@@ -991,10 +995,10 @@ public class ActiveLearningSidebar
     {
         AnnotatorState state = getModelObject();
         
-        JCas jCas = this.getJCasProvider().get();
-        Optional<AnnotationFS> anno = getMatchingAnnotation(jCas.getCas(), aRecord);
+        CAS cas = this.getCasProvider().get();
+        Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
-            state.getSelection().selectSpan(new VID(anno.get()), jCas,
+            state.getSelection().selectSpan(new VID(anno.get()), cas,
                     aRecord.getOffsetCharacterBegin(), aRecord.getOffsetCharacterEnd());
             getActionHandler().actionDelete(aTarget);
         }
@@ -1061,7 +1065,7 @@ public class ActiveLearningSidebar
             // Update visibility in case the annotation where the feature was set overlaps with 
             // any suggestions that need to be hidden now.
             PredictionTask.calculateVisibility(learningRecordService, annotationService,
-                    getAnnotationPage().getEditorCas().getCas(), state.getUser().getUsername(),
+                    getAnnotationPage().getEditorCas(), state.getUser().getUsername(),
                     aLayer, alState.getSuggestions(), state.getWindowBeginOffset(),
                     state.getWindowEndOffset());
     

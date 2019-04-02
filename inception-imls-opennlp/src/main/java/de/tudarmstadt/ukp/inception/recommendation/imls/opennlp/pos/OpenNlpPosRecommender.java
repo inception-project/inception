@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -119,7 +120,13 @@ public class OpenNlpPosRecommender
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+            
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -162,9 +169,11 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<POSSample> data = extractPosSamples(aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
@@ -183,9 +192,15 @@ public class OpenNlpPosRecommender
             }
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        result.setTestSetSize(testSetSize);
+        result.setTrainingSetSize(trainingSetSize);
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -203,7 +218,8 @@ public class OpenNlpPosRecommender
         try (POSSampleStream stream = new POSSampleStream(testSet)) {
             POSEvaluator evaluator = new POSEvaluator(tagger);
             evaluator.evaluate(stream);
-            return evaluator.getWordAccuracy();
+            result.setDefaultScore(evaluator.getWordAccuracy());
+            return result;
         }
         catch (IOException e) {
             throw new RecommendationException("Error while evaluating", e);
@@ -213,13 +229,18 @@ public class OpenNlpPosRecommender
     private List<POSSample> extractPosSamples(List<CAS> aCasses)
     {
         List<POSSample> posSamples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+                    cas, sentenceType, tokenType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+                if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break casses;
+                }
+                
                 AnnotationFS sentence = e.getKey();
 
                 Collection<AnnotationFS> tokens = e.getValue();

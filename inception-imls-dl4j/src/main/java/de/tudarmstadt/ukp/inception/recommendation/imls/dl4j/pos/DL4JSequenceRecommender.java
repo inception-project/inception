@@ -42,7 +42,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.layers.GravesLSTM;
+import org.deeplearning4j.nn.conf.layers.LSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.recurrent.Bidirectional;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -62,6 +62,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -365,7 +366,7 @@ public class DL4JSequenceRecommender
             Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
-            final int limit = Integer.MAX_VALUE;
+            final int limit = traits.getPredictionLimit();
             final int batchSize = traits.getBatchSize();
 
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);
@@ -457,8 +458,9 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
     {
+        EvaluationResult result = new EvaluationResult();
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label
         Object2IntMap<String> tagsetCollector = new Object2IntOpenHashMap<>();
@@ -483,9 +485,15 @@ public class DL4JSequenceRecommender
             }            
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        result.setTestSetSize(testSetSize);
+        result.setTrainingSetSize(trainingSetSize);
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             log.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         log.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -527,7 +535,8 @@ public class DL4JSequenceRecommender
                 }
             }
             
-            return correct / total;
+            result.setDefaultScore(correct / total);
+            return result;
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);
@@ -551,7 +560,7 @@ public class DL4JSequenceRecommender
                 .gradientNormalization(aTraits.getGradientNormalization())
                 .gradientNormalizationThreshold(aTraits.getGradientNormalizationThreshold())
                 .list()
-                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new GravesLSTM.Builder()
+                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new LSTM.Builder()
                         .nIn(aEmbeddingsDim)
                         .nOut(200)
                         .activation(aTraits.getActivationL0())
@@ -562,8 +571,6 @@ public class DL4JSequenceRecommender
                         .activation(aTraits.getActivationL1())
                         .lossFunction(aTraits.getLossFunction())
                         .build())
-                .pretrain(false)
-                .backprop(true)
                 .build();
         
         // log.info("Network configuration: {}", conf.toYaml());

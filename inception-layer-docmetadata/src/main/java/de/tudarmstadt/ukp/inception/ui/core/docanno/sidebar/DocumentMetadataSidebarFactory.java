@@ -23,7 +23,7 @@ import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -37,12 +37,12 @@ public class DocumentMetadataSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private static final ResourceReference ICON = new PackageResourceReference(
-            DocumentMetadataSidebarFactory.class, "magnifier.png");
+            DocumentMetadataSidebarFactory.class, "three_tags.png");
     
     @Override
     public String getDisplayName()
     {
-        return "documentMetadataSidebar";
+        return "Document Metadata";
     }
 
     @Override
@@ -53,10 +53,10 @@ public class DocumentMetadataSidebarFactory
     
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new DocumentMetadataSidebar(aId, aModel, aActionHandler, aJCasProvider,
+        return new DocumentMetadataSidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }
 }

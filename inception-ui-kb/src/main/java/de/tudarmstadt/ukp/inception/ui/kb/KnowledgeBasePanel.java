@@ -17,12 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -39,23 +36,15 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
-import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
-
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
-import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
@@ -63,7 +52,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
@@ -71,6 +59,7 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.KnowledgeBaseItemAutoCompleteField;
 
 /**
  * Houses the UI for interacting with one knowledge base.<br>
@@ -105,6 +94,8 @@ public class KnowledgeBasePanel
     private ConceptTreePanel conceptTreePanel;
     private PropertyListPanel propertyListPanel;
     
+    private List<String> labelProperties;
+    
     /**
      * right-side component which either displays concept details or property details
      */
@@ -133,9 +124,7 @@ public class KnowledgeBasePanel
         ddc.setChoiceRenderer(new ChoiceRenderer<>("name"));
         add(ddc);
 
-        add(createSearchField("searchBar", searchHandleModel, aProjectModel)
-            .add(AttributeModifier.append("placeholder",
-                new ResourceModel("page.search.placeholder"))));
+        add(createSearchField("searchBar", searchHandleModel, aProjectModel));
 
         add(conceptTreePanel = new ConceptTreePanel("concepts", kbModel, selectedConceptHandle));
         add(propertyListPanel = new PropertyListPanel("properties", kbModel,
@@ -149,57 +138,33 @@ public class KnowledgeBasePanel
         detailContainer.add(details);
     }
 
-    private AutoCompleteTextField<KBHandle> createSearchField(String aId,
+    private KnowledgeBaseItemAutoCompleteField createSearchField(String aId,
         IModel<KBHandle> aHandleModel, IModel<Project> aProjectModel)
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>(aId,
-            aHandleModel, new TextRenderer<>("uiLabel"))
-        {
-            private static final long serialVersionUID = -1955006051950156603L;
-
-            @Override
-            protected List<KBHandle> getChoices(String input)
-            {
-                List<KBHandle> choices = new ArrayList<>();
-                if (input != null) {
-                    // Remove wildcards and leading/trailing whitespace from the input string
-                    String cleanInput = input.replaceAll("[*?]", "").trim();
-                    choices = listSearchResults(aProjectModel.getObject(), cleanInput);
-                }
-                return choices;
-
-            }
+        KnowledgeBaseItemAutoCompleteField field = new KnowledgeBaseItemAutoCompleteField(
+                aId, aHandleModel, _query -> 
+                        listSearchResults(aProjectModel.getObject(), _query)) {
+            private static final long serialVersionUID = 3188821013226116770L;
 
             @Override
             protected void onSelected(AjaxRequestTarget aTarget)
             {
                 KBHandle selectedResource = this.getModelObject();
                 Optional<KBObject> optKbObject = kbService
-                    .readKBIdentifier(kbModel.getObject(), selectedResource.getIdentifier());
+                    .readItem(kbModel.getObject(), selectedResource.getIdentifier());
 
                 if (optKbObject.isPresent()) {
                     KBObject kbObject = optKbObject.get();
                     sendSelectionChangedEvents(aTarget, kbObject);
                 }
             }
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-
-                behavior.setOption("autoWidth", true);
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate() {
-                return KendoChoiceDescriptionScriptReference.template();
-            }
         };
-
+        
+        field.add(AttributeModifier.append("placeholder",
+                new ResourceModel("page.search.placeholder")));
+        
         return field;
     }
-
     /**
      * Search for Entities in the current knowledge base based on a typed string. Use full text
      * search if it is available. Returns a sorted/ranked list of KBHandles
@@ -208,18 +173,7 @@ public class KnowledgeBasePanel
     {
         List<KBHandle> results;
         KnowledgeBase kb = kbModel.getObject();
-        if (kb.isSupportConceptLinking()) {
-            results = conceptLinkingService.searchEntitiesFullText(kb, aTypedString);
-        }
-        else {
-            results = kbService.getEntitiesInScope(kbModel.getObject().getRepositoryId(), null,
-                ConceptFeatureValueType.ANY_OBJECT, aProject);
-            // Sort and filter results
-            results = results.stream().filter(
-                handle -> handle.getUiLabel().toLowerCase().startsWith(aTypedString))
-                .sorted(Comparator.comparing(KBObject::getUiLabel)).collect(Collectors.toList());
-            results = KBHandle.distinctByIri(results);
-        }
+        results = conceptLinkingService.searchItems(kb, aTypedString);
         return results;
     }
 
@@ -261,8 +215,6 @@ public class KnowledgeBasePanel
      * page may not seem like the smartest solution. However, given the severe consequences a single
      * statement change can have (transforming a property into a concept?), it is the simplest
      * working solution.
-     *
-     * @param event
      */
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
@@ -270,7 +222,7 @@ public class KnowledgeBasePanel
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
 
-        if (isRenamingEvent(statement)) {
+        if (isLabelStatement(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
 
@@ -280,7 +232,7 @@ public class KnowledgeBasePanel
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
                         Optional<KBObject> kbObject = kbService
-                            .readKBIdentifier(kbModel.getObject(),
+                            .readItem(kbModel.getObject(),
                                 model.getObject().getIdentifier());
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());
@@ -293,16 +245,36 @@ public class KnowledgeBasePanel
         }
     }
 
-    private boolean isRenamingEvent(KBStatement aStatement)
+    /**
+     * Checks if the given statement is (potentially) assigning the label to the item in subject
+     * position. This is the case if the property is a label property. Since we do at this point
+     * not know if the statement is about a class, instance or property, we need to check all
+     * label properties.
+     */
+    private boolean isLabelStatement(KBStatement aStatement)
     {
-        String propertyIdentifier = aStatement.getProperty().getIdentifier();
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
-            vf.createIRI(aStatement.getInstance().getIdentifier()),
-            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
-        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
-            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
-                && !hasMainLabel);
+        if (labelProperties == null) {
+            labelProperties = kbService.listLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties.contains(aStatement.getProperty().getIdentifier());
+        
+        
+//        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+//        
+//        String propertyIri = aStatement.getProperty().getIdentifier();
+//        IRI subjectIri = vf.createIRI(aStatement.getInstance().getIdentifier());
+//        IRI labelIri = kbModel.getObject().getLabelIri();
+//
+//        try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject())) {
+//            
+//            boolean hasMainLabel = RdfUtils
+//                    .readFirst(conn, subjectIri, labelIri, null, kbModel.getObject()).isPresent();
+//            
+//            return propertyIri.equals(labelIri.stringValue())
+//                    || (kbService.isLabelProperty(kbModel.getObject(), propertyIri)
+//                            && !hasMainLabel);
+//        }
     }
 
     @OnEvent

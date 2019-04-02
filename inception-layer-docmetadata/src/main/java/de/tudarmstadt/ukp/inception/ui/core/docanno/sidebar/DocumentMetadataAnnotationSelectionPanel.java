@@ -27,9 +27,10 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.AnnotationBaseFS;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -43,11 +44,13 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -71,19 +74,28 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private static final Logger LOG = LoggerFactory
             .getLogger(DocumentMetadataAnnotationSelectionPanel.class);
     
+    private static final String CID_LABEL = "label";
+    private static final String CID_ANNOTATION_LINK = "annotationLink";
+    private static final String CID_TYPE = "type";
+    private static final String CID_ANNOTATIONS = "annotations";
+    private static final String CID_LAYER = "layer";
+    private static final String CID_CREATE = "create";
+    private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
+    
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     
     private final AnnotationPage annotationPage;
-    private final JCasProvider jcasProvider;
+    private final CasProvider jcasProvider;
     private final DocumentMetadataAnnotationDetailPanel detailPanel;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
+    private final WebMarkupContainer annotationsContainer;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            JCasProvider aJCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
+            CasProvider aCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aProject);
@@ -93,20 +105,23 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         annotationPage = aAnnotationPage;
         sourceDocument = aDocument;
         username = aUsername;
-        jcasProvider = aJCasProvider;
+        jcasProvider = aCasProvider;
         detailPanel = aDetails;
         selectedLayer = Model.of();
 
-        add(createAnnotationList());
+        annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
+        annotationsContainer.setOutputMarkupId(true);
+        annotationsContainer.add(createAnnotationList());
+        add(annotationsContainer);
         
-        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>("layer");
+        DropDownChoice<AnnotationLayer> layer = new BootstrapSelect<>(CID_LAYER);
         layer.setModel(selectedLayer);
         layer.setChoices(this::listMetadataLayers);
         layer.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         layer.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
         add(layer);
         
-        add(new LambdaAjaxLink("create", this::actionCreate));
+        add(new LambdaAjaxLink(CID_CREATE, this::actionCreate));
     }
     
     public Project getModelObject()
@@ -118,11 +133,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         DocumentMetadataLayerAdapter adapter = (DocumentMetadataLayerAdapter) annotationService
                 .getAdapter(selectedLayer.getObject());
-        JCas jcas = jcasProvider.get();
-        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), jcas);
+        CAS cas = jcasProvider.get();
+        AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
         detailPanel.setModelObject(new VID(fs));
         
-        annotationPage.writeEditorCas(jcas);
+        annotationPage.writeEditorCas(cas);
         
         aTarget.add(this);
         aTarget.add(detailPanel);
@@ -132,13 +147,12 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     {
         detailPanel.setModelObject(new VID(aItem.addr));
         
-        aTarget.add(this);
         aTarget.add(detailPanel);
     }
     
     private ListView<AnnotationListItem> createAnnotationList()
     {
-        return new ListView<AnnotationListItem>("annotations",
+        return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
                 LoadableDetachableModel.of(this::listAnnotations))
         {
             private static final long serialVersionUID = -6833373063896777785L;
@@ -148,11 +162,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             {
                 aItem.setModel(CompoundPropertyModel.of(aItem.getModel()));
 
-                aItem.add(new Label("type", aItem.getModelObject().layer.getUiName()));
+                aItem.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
 
-                LambdaAjaxLink link = new LambdaAjaxLink("annotationLink",
+                LambdaAjaxLink link = new LambdaAjaxLink(CID_ANNOTATION_LINK,
                     _target -> actionSelect(_target, aItem.getModelObject()));
-                link.add(new Label("label"));
+                link.add(new Label(CID_LABEL));
                 aItem.add(link);
             }
         };
@@ -167,9 +181,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     
     private List<AnnotationListItem> listAnnotations()
     {
-        JCas jcas;
+        CAS cas;
         try {
-            jcas = jcasProvider.get();
+            cas = jcasProvider.get();
         }
         catch (IOException e) {
             LOG.error("Unable to load CAS", e);
@@ -186,8 +200,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
             TypeAdapter adapter = annotationService.getAdapter(layer);
             Renderer renderer = layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
             
-            for (FeatureStructure fs : selectFS(jcas.getCas(),
-                    adapter.getAnnotationType(jcas.getCas()))) {
+            for (FeatureStructure fs : selectFS(cas, adapter.getAnnotationType(cas))) {
                 Map<String, String> renderedFeatures = renderer.getFeatures(adapter, fs, features);
                 String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
                 if (labelText.isEmpty()) {
@@ -198,6 +211,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         return items;
+    }
+    
+    @OnEvent
+    public void onFeatureValueUpdated(FeatureValueUpdatedEvent aEvent)
+    {
+        // If a feature value is updated refresh the annotation list since it might mean that
+        // a label has changed
+        aEvent.getRequestTarget().add(annotationsContainer);
     }
     
     private class AnnotationListItem

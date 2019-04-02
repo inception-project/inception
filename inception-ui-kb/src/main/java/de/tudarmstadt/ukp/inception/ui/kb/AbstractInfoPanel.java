@@ -238,7 +238,9 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     }
     
     protected abstract String getTypeLabelResourceKey();
-    
+
+    public abstract List<String> getLabelProperties();
+
     /**
      * Returns the {@link StatementDetailPreference} for the included {@link StatementsPanel}. If
      * this method returns {@code null}, the {@code StatementDetailPreference} can be defined by

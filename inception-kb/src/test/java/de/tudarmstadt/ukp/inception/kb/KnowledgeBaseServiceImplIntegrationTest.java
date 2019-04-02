@@ -271,7 +271,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.clear(kb);
 
         List<KBHandle> handles = new ArrayList<>();
-        handles.addAll(sut.listConcepts(kb, false));
+        handles.addAll(sut.listAllConcepts(kb, false));
         handles.addAll(sut.listProperties(kb, false));
         assertThat(handles)
             .as("Check that no custom entities are found after clearing")
@@ -287,7 +287,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.clear(kb);
 
         List<KBHandle> handles = new ArrayList<>();
-        handles.addAll(sut.listConcepts(kb, true));
+        handles.addAll(sut.listAllConcepts(kb, true));
         handles.addAll(sut.listProperties(kb, true));
         assertThat(handles)
             .as("Check that only entities with implicit namespace are found after clearing")
@@ -565,7 +565,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle handle = sut.createConcept(kb, concept);
 
-        List<KBHandle> concepts = sut.listConcepts(kb, false);
+        List<KBHandle> concepts = sut.listAllConcepts(kb, false);
 
         assertThat(concepts)
             .as("Check that concepts contain the one, saved item")
@@ -580,7 +580,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void listConcepts_WithNoSavedConceptAndAll_ShouldFindRdfConcepts() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        List<KBHandle> concepts = sut.listConcepts(kb, true);
+        List<KBHandle> concepts = sut.listAllConcepts(kb, true);
 
         assertThat(concepts)
             .as("Check that all concepts have implicit namespaces")
@@ -1234,21 +1234,28 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception {
+    public void getConceptRoots_WithWildlifeOntology_ShouldReturnRootConcepts() throws Exception
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         importKnowledgeBase("data/wildlife_ontology.ttl");
         setSchema(kb, OWL.CLASS, RDFS.SUBCLASSOF, RDF.TYPE, RDFS.COMMENT, RDFS.LABEL, RDF.PROPERTY);
 
-        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
-                .map(KBHandle::getName);
-
-        String[] expectedLabels = {
-            "Adaptation", "Animal Intelligence", "Collection", "Conservation Status", "Ecozone",
-            "Habitat", "Red List Status", "Taxon Name", "Taxonomic Rank"
-        };
+        List<KBHandle> rootConcepts = sut.listRootConcepts(kb, false);
+        
         assertThat(rootConcepts)
             .as("Check that all root concepts have been found")
-            .containsExactlyInAnyOrder(expectedLabels);
+            .usingElementComparatorOnFields(
+                "identifier", "name")
+            .containsExactlyInAnyOrder(
+                new KBHandle("http://purl.org/ontology/wo/Adaptation", "Adaptation"),
+                new KBHandle("http://purl.org/ontology/wo/AnimalIntelligence", "Animal Intelligence"),
+                new KBHandle("http://purl.org/dc/dcmitype/Collection", null),
+                new KBHandle("http://purl.org/ontology/wo/ConservationStatus", "Conservation Status"),
+                new KBHandle("http://purl.org/ontology/wo/Ecozone", "Ecozone"),
+                new KBHandle("http://purl.org/ontology/wo/Habitat", "Habitat"),
+                new KBHandle("http://purl.org/ontology/wo/RedListStatus", "Red List Status"),
+                new KBHandle("http://purl.org/ontology/wo/TaxonName", "Taxon Name"),
+                new KBHandle("http://purl.org/ontology/wo/TaxonRank", "Taxonomic Rank"));
     }
 
     @Test
@@ -1520,7 +1527,8 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
     }
 
-    @Test public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
+    @Test
+    public void readKBIdentifiers_ShouldReturnCorrectClassInstances()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
@@ -1528,15 +1536,39 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String instanceId = sut.createInstance(kb, buildInstance()).getIdentifier();
         String propertyId = sut.createProperty(kb, buildProperty()).getIdentifier();
 
-        assertThat(sut.readKBIdentifier(kb, conceptId).get())
+        assertThat(sut.readItem(kb, conceptId).get())
             .as("Check that reading a concept id returns an instance of KBConcept")
             .isInstanceOf(KBConcept.class);
-        assertThat(sut.readKBIdentifier(kb, instanceId).get())
+        assertThat(sut.readItem(kb, instanceId).get())
             .as("Check that reading an instance id returns an instance of KBInstance")
             .isInstanceOf(KBInstance.class);
-        assertThat(sut.readKBIdentifier(kb, propertyId).get())
+        assertThat(sut.readItem(kb, propertyId).get())
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
+    }
+
+    @Test
+    public void checkIfKBIsEnabledById_WithExistingAndEnabledKB_ShouldReturnTrue() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        String repoId = kb.getRepositoryId();
+        assertThat(sut.isKnowledgeBaseEnabled(project, repoId))
+            .as("Check that correct accessibility value is returned for enabled kb ")
+            .isTrue();
+    }
+
+    @Test
+    public void checkIfKBIsEnabledById_WithDisabledKBAndNonExistingId_ShouldReturnFalse() {
+        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        kb.setEnabled(false);
+        String repoId = kb.getRepositoryId();
+
+        assertThat(sut.isKnowledgeBaseEnabled(project, repoId))
+            .as("Check that correct accessibility value is returned for disabled kb ")
+            .isFalse();
+
+        assertThat(sut.isKnowledgeBaseEnabled(project, "NonExistingID"))
+            .as("Check that correct accessibility value is returned for non existing id ")
+            .isFalse();
     }
 
     // Helper
@@ -1585,9 +1617,10 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         return !(id.endsWith("#abstract") || id.endsWith("#closed"));
     }
 
-    private boolean hasImplicitNamespace(KBHandle handle) {
-        return sut.getImplicitNamespaces().stream()
-            .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
+    private boolean hasImplicitNamespace(KBHandle handle)
+    {
+        return IriConstants.IMPLICIT_NAMESPACES.stream()
+                .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {

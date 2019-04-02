@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -115,7 +116,13 @@ public class OpenNlpNerRecommender
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+            
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -137,9 +144,11 @@ public class OpenNlpNerRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<NameSample> data = extractNameSamples(aCasses);
         List<NameSample> trainingSet = new ArrayList<>();
         List<NameSample> testSet = new ArrayList<>();
@@ -157,10 +166,16 @@ public class OpenNlpNerRecommender
                 break;
             }            
         }
+        
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        result.setTestSetSize(testSetSize);
+        result.setTrainingSetSize(trainingSetSize);
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -176,7 +191,8 @@ public class OpenNlpNerRecommender
             evaluator.evaluate(stream);
             // getFMeasure returns -1 if the evaluation cannot be performed, but we want any 
             // recommender to get activated when the threshold is set to 0, so we cap at 0.
-            return Math.max(0, evaluator.getFMeasure().getFMeasure());
+            result.setDefaultScore(Math.max(0, evaluator.getFMeasure().getFMeasure()));
+            return result;
         } catch (IOException e) {
             LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
             throw new RecommendationException("Error while evaluating OpenNlp NER", e);
@@ -186,13 +202,18 @@ public class OpenNlpNerRecommender
     private List<NameSample> extractNameSamples(List<CAS> aCasses)
     {
         List<NameSample> nameSamples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+                    cas, sentenceType, tokenType);
             for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+                if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break casses;
+                }
+                
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 NameSample nameSample = createNameSample(cas, sentence, tokens);
@@ -201,6 +222,7 @@ public class OpenNlpNerRecommender
                 }
             }
         }
+        
         return nameSamples;
     }
 
@@ -237,9 +259,18 @@ public class OpenNlpNerRecommender
         int highestEndTokenPositionObserved = 0;
         for (int i = 0; i < numberOfAnnotations; i++) {
             AnnotationFS annotation = annotations.get(i);
-            int begin = idxToken.get(idxTokenOffset.get(annotation.getBegin()));
-            int end = idxToken.get(idxTokenOffset.get(annotation.getEnd()));
             String label = annotation.getFeatureValueAsString(feature);
+            
+            AnnotationFS beginToken = idxTokenOffset.get(annotation.getBegin());
+            AnnotationFS endToken = idxTokenOffset.get(annotation.getEnd());
+            if (beginToken == null || endToken == null) {
+                LOG.warn("Skipping annotation not starting/ending at token boundaries: [{}-{}, {}]",
+                        annotation.getBegin(), annotation.getEnd(), label);
+                continue;
+            }
+            
+            int begin = idxToken.get(beginToken);
+            int end = idxToken.get(endToken);
             
             // If the begin offset of the current annotation is lower than the highest offset so far
             // observed, then it is overlapping with some annotation that we have seen before. 
