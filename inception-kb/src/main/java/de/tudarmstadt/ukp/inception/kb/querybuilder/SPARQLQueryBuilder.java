@@ -1581,55 +1581,54 @@ public class SPARQLQueryBuilder
         String queryString = selectQuery().getQueryString();
         LOG.trace("[{}] Query: {}", queryId, queryString);
 
-        List<KBStatement> results;
         if (returnEmptyResult) {
-            results = emptyList();
-            
             LOG.debug("[{}] Query was skipped because it would not return any results anyway",
                     queryId);
+            
+            return emptyList();
+            
         }
-        else {
-            TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
-            
-            // The only way to tell if a statement was inferred or not is by running the same query
-            // twice, once with and once without inference being enabled. Those that are in the
-            // first but not in the second were the inferred statements.
-            List<Statement> explicitStmts = listStatements(tupleQuery, false);
-            List<Statement> allStmts = listStatements(tupleQuery, true);
-            
-            results = new ArrayList<>();
-            for (Statement stmt : allStmts) {
+        
+        TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+        
+        // The only way to tell if a statement was inferred or not is by running the same query
+        // twice, once with and once without inference being enabled. Those that are in the
+        // first but not in the second were the inferred statements.
+        List<Statement> explicitStmts = listStatements(tupleQuery, false);
+        List<Statement> allStmts = listStatements(tupleQuery, true);
+        
+        List<KBStatement> results = new ArrayList<>();
+        for (Statement stmt : allStmts) {
 
-                Value value = stmt.getObject();
-                if (value == null) {
-                    // Can this really happen?
-                    LOG.warn("Property with null value detected.");
-                    continue;
-                }
+            Value value = stmt.getObject();
+            if (value == null) {
+                // Can this really happen?
+                LOG.warn("Property with null value detected.");
+                continue;
+            }
 
-                if (value instanceof BNode) {
-                    LOG.warn("Properties with blank node values are not supported");
-                    continue;
-                }
-                
-                if ((!aAll && hasImplicitNamespace(kb, stmt.getPredicate().stringValue()))) {
-                    continue;
-                }
-
-                KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
-                KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
-                
-                KBStatement kbStatement = new KBStatement(subject, predicate, value);
-                kbStatement.setInferred(!explicitStmts.contains(stmt));
-                kbStatement.setOriginalStatements(singleton(stmt));
-
-                results.add(kbStatement);
+            if (value instanceof BNode) {
+                LOG.warn("Properties with blank node values are not supported");
+                continue;
             }
             
-            LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
-                    currentTimeMillis() - startTime);
-        }
+            if ((!aAll && hasImplicitNamespace(kb, stmt.getPredicate().stringValue()))) {
+                continue;
+            }
 
+            KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
+            KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
+            
+            KBStatement kbStatement = new KBStatement(subject, predicate, value);
+            kbStatement.setInferred(!explicitStmts.contains(stmt));
+            kbStatement.setOriginalStatements(singleton(stmt));
+
+            results.add(kbStatement);
+        }
+        
+        LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
+                currentTimeMillis() - startTime);
+ 
         return results;
     }
     
