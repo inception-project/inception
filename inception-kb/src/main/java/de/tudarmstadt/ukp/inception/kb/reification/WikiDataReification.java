@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.kb.reification;
 
 import static java.lang.Integer.toHexString;
+import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toList;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
@@ -87,46 +89,13 @@ public class WikiDataReification
     private static final String PREDICATE_NAMESPACE = NAMPESPACE_ROOT + "/predicate#";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
-    private final InceptionValueMapper valueMapper;
+    
+    private static final String PREFIX_PROP = "http://www.wikidata.org/prop/P";
+    private static final String PREFIX_PROP_STATEMENT = "http://www.wikidata.org/prop/statement/P";
+    private static final String PREFIX_PROP_QUALIFIER = "http://www.wikidata.org/prop/qualifier/P";
 
-    public WikiDataReification()
-    {
-        valueMapper = new InceptionValueMapper();
-    }
-
-    @Override
-    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
-    {
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        
-        String statementId = aStatement.getStatementId();
-        KBHandle instance = aStatement.getInstance();
-        KBHandle property = aStatement.getProperty();
-        Value value = valueMapper.mapStatementValue(aStatement, vf);
-
-        IRI subject = vf.createIRI(instance.getIdentifier());
-        IRI predicate = vf.createIRI(property.getIdentifier());
-        if (statementId == null) {
-            statementId = vf.createBNode().stringValue();
-        }
-
-        Resource id = vf.createBNode(statementId);
-
-        Statement root = vf.createStatement(subject, predicate, id);
-        IRI valuePredicate = vf.createIRI(PREDICATE_NAMESPACE, predicate.getLocalName());
-        Statement valueStatement = vf.createStatement(id, valuePredicate, value);
-
-        Set<Statement> statements = new HashSet<>();
-        statements.add(root);           // S    P   id
-        statements.add(valueStatement); // id   p_s V
-
-        for (KBQualifier aQualifier : aStatement.getQualifiers()) {
-            Set<Statement> qualifierStatement = reifyQualifier(kb, aQualifier);
-            aQualifier.setOriginalStatements(qualifierStatement);
-        }
-
-        return statements;
-    }
+    
+    private final InceptionValueMapper valueMapper = new InceptionValueMapper();
 
     private Set<Statement> reifyQualifier(KnowledgeBase kb, KBQualifier aQualifier)
     {
@@ -148,10 +117,6 @@ public class WikiDataReification
     public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase kb,
             KBHandle aInstance, boolean aAll)
     {
-        final String P = "http://www.wikidata.org/prop/P";
-        final String PS = "http://www.wikidata.org/prop/statement/P";
-        final String PQ = "http://www.wikidata.org/prop/qualifier/P";
-        
         Variable vSubject = SparqlBuilder.var("s");
         Variable vProp1 = SparqlBuilder.var("p1");
         Variable vProp2 = SparqlBuilder.var("p2");
@@ -160,13 +125,13 @@ public class WikiDataReification
         
         SelectQuery query = Queries.SELECT(vSubject, vProp1, vStmt, vProp2, vValue);
         query.where(
-                new ValuesPattern(vSubject, Rdf.iri(aInstance.getIdentifier())),
-                GraphPatterns.and(vSubject.has(vProp1, vStmt),
-                vStmt.has(vProp2, vValue)).filter(and(
-                        function(STRSTARTS, function(STR, vProp1), literalOf(P)),or(
-                                function(STRSTARTS, function(STR, vProp2), literalOf(PS)),
-                                function(STRSTARTS, function(STR, vProp2), literalOf(PQ)))
-                                .parenthesize())));
+            new ValuesPattern(vSubject, Rdf.iri(aInstance.getIdentifier())),
+            GraphPatterns.and(vSubject.has(vProp1, vStmt),
+            vStmt.has(vProp2, vValue)).filter(and(
+                function(STRSTARTS, function(STR, vProp1), literalOf(PREFIX_PROP)),or(
+                    function(STRSTARTS, function(STR, vProp2), literalOf(PREFIX_PROP_STATEMENT)),
+                    function(STRSTARTS, function(STR, vProp2), literalOf(PREFIX_PROP_QUALIFIER)))
+                    .parenthesize())));
         query.limit(kb.getMaxResults());
         
         log.trace("[{}] Query: {}", toHexString(hashCode()), query.getQueryString());
@@ -183,7 +148,7 @@ public class WikiDataReification
                 
                 IRI subject = (IRI) bindings.getBinding("s").getValue();
                 IRI pred1 = (IRI) bindings.getBinding("p1").getValue();
-                IRI stmt = (IRI) bindings.getBinding("st").getValue();
+                Resource stmt = (Resource) bindings.getBinding("st").getValue();
                 IRI pred2 = (IRI) bindings.getBinding("p2").getValue();
                 Value value = bindings.getBinding("v").getValue();
                 
@@ -203,17 +168,18 @@ public class WikiDataReification
                 }
                 
                 // Always store the primary original triple in the statement
-                statement.getOriginalStatements().add(priStatement);
+                statement.getOriginalTriples().add(priStatement);
                 
                 // Check if the secondary statement contains the property value or a qualifier
-                if (secStatement.getPredicate().stringValue().startsWith(PS)) {
+                if (secStatement.getPredicate().stringValue().startsWith(PREFIX_PROP_STATEMENT)) {
                     // Property value
                     statement.setValue(value);
                     
                     // Store the secondary original triple in the statement
-                    statement.getOriginalStatements().add(secStatement);
+                    statement.getOriginalTriples().add(secStatement);
                 }
-                else if (secStatement.getPredicate().stringValue().startsWith(PQ)) {
+                else if (secStatement.getPredicate().stringValue()
+                        .startsWith(PREFIX_PROP_QUALIFIER)) {
                     // Qualifier
                     KBQualifier qualifier = new KBQualifier(statement,
                             new KBHandle(pred2.stringValue()), value);
@@ -383,51 +349,76 @@ public class WikiDataReification
     public void deleteStatement(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
-        String statementId = aStatement.getStatementId();
-        if (statementId != null) {
-            RepositoryConnection conn = aConnection;
-            conn.remove(getStatementsById(conn, kb, statementId));
-            conn.remove(getQualifiersById(conn, kb, statementId));
-            aStatement.setOriginalStatements(Collections.emptySet());
-            aStatement.setQualifiers(Collections.emptyList());
-        }
+        // Delete original triples
+        aConnection.remove(aStatement.getOriginalTriples());
+        aConnection.remove(aStatement.getQualifiers().stream()
+                .flatMap(qualifier -> qualifier.getOriginalStatements().stream())
+                .collect(toList()));
+        
+        // Clear original triples
+        aStatement.setOriginalTriples(emptySet());
+        aStatement.getQualifiers()
+                .forEach(qualifier -> qualifier.setOriginalStatements(emptySet()));
+        
+//        String statementId = aStatement.getStatementId();
+//        if (statementId != null) {
+//            RepositoryConnection conn = aConnection;
+//            conn.remove(getStatementsById(conn, kb, statementId));
+//            conn.remove(getQualifiersById(conn, kb, statementId));
+//            aStatement.setOriginalTriples(Collections.emptySet());
+//            aStatement.setQualifiers(Collections.emptyList());
+//        }
     }
 
     @Override
     public void upsertStatement(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
+        if (!aStatement.getProperty().getIdentifier().startsWith(PREFIX_PROP)) {
+            throw new IllegalArgumentException(
+                    "With WikiDataReification, properties must start " + "with [" + PREFIX_PROP
+                            + "] but found [" + aStatement.getProperty().getIdentifier() + "]");
+        }
+        
         ValueFactory vf = aConnection.getValueFactory();
         
-        KBStatement statement = aStatement;
-        String statementId = statement.getStatementId();
-        if (statementId != null) {
-            // remove old statements by id
-            aConnection.remove(getStatementsById(aConnection, kb, statement.getStatementId()));
-        }
-        else {
-            statementId = vf.createBNode().stringValue();
-        }
-        // add new statements
-        IRI subject = vf.createIRI(statement.getInstance().getIdentifier());
-        IRI predicate = vf.createIRI(statement.getProperty().getIdentifier());
-        Resource id = vf.createBNode(statementId);
-
-        Statement root = vf.createStatement(subject, predicate, id);
-        IRI valuePredicate = vf.createIRI(PREDICATE_NAMESPACE, predicate.getLocalName());
-        Value value = valueMapper.mapStatementValue(statement, vf);
-        Statement valueStatement = vf.createStatement(id, valuePredicate, value);
-
-        aConnection.add(root);
-        aConnection.add(valueStatement);
-        aStatement.setStatementId(statementId);
-
+        // According to the Wikidata reification scheme, the predicate of the secondary triple
+        // corresponds to the predicate of the primary triple with the prefix replaced, e.g.
+        // p:P186 -> ps:P186
+        String propStatementIri = aStatement.getProperty().getIdentifier().replace(PREFIX_PROP,
+                PREFIX_PROP_STATEMENT);
+        
+        IRI subject = vf.createIRI(aStatement.getInstance().getIdentifier());
+        IRI pred1 =  vf.createIRI(aStatement.getProperty().getIdentifier());
+        Resource stmt = aStatement.getStatementId() != null
+                ? vf.createIRI(aStatement.getStatementId())
+                : vf.createBNode();
+        IRI pred2 =  vf.createIRI(propStatementIri);
+        Value value = valueMapper.mapStatementValue(aStatement, vf);
+        
+        // Generate all the triples that are to be stored by this statement
+        // Add primary and secondary triple
         Set<Statement> statements = new HashSet<>();
-        statements.add(root);
-        statements.add(valueStatement);
-        aStatement.setOriginalStatements(statements);
+        statements.add(vf.createStatement(subject, pred1, stmt));
+        statements.add(vf.createStatement(stmt, pred2, value));
+        
+//        // Add qualifier triples
+//        for (KBQualifier qualifier : aStatement.getQualifiers()) {
+//            statements.add(vf.createStatement(stmt,
+//                    vf.createIRI(qualifier.getKbProperty().getIdentifier()),
+//                    valueMapper.mapQualifierValue(qualifier, vf)));
+//        }
+//        aStatement.getQualifiers().stream()
+//        .flatMap(q -> q.getOriginalStatements().stream())
+//        .forEach(statementsToDelete::add);
+        
+        // Delete all original triples except the ones which we would re-create anyway
+        upsert(aConnection, aStatement.getOriginalTriples(), statements);
+        
+        // Update the original triples in the statement
+        aStatement.setOriginalTriples(statements);
     }
-
+    
     @Override
     public void addQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
             KBQualifier newQualifier)
@@ -536,8 +527,8 @@ public class WikiDataReification
     }
 
     @Override
-    public boolean statementsMatchSPO(RepositoryConnection aConnection, KnowledgeBase akb,
-            KBStatement mockStatement)
+    public boolean exists(RepositoryConnection aConnection, KnowledgeBase akb,
+            KBStatement aStatement)
     {
         ValueFactory vf = aConnection.getValueFactory();
         String QUERY = String.join("\n", 
@@ -548,15 +539,41 @@ public class WikiDataReification
                 "}", 
                 "LIMIT 10");
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-        tupleQuery.setBinding("s", vf.createIRI(mockStatement.getInstance().getIdentifier()));
-        tupleQuery.setBinding("p", vf.createIRI(mockStatement.getProperty().getIdentifier()));
+        tupleQuery.setBinding("s", vf.createIRI(aStatement.getInstance().getIdentifier()));
+        tupleQuery.setBinding("p", vf.createIRI(aStatement.getProperty().getIdentifier()));
 
         InceptionValueMapper mapper = new InceptionValueMapper();
-        tupleQuery.setBinding("o", mapper.mapStatementValue(mockStatement, vf));
+        tupleQuery.setBinding("o", mapper.mapStatementValue(aStatement, vf));
         tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
 
         try (TupleQueryResult result = tupleQuery.evaluate()) {
             return result.hasNext();
         }
+    }
+    
+    @Override
+    public String generatePropertyIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        ValueFactory vf = aConn.getValueFactory();
+        return PREFIX_PROP + vf.createBNode().getID();
+    }
+    
+    @Override
+    public String generateConceptIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        return generateIdentifier(aConn, aKB);
+    }
+    
+    @Override
+    public String generateInstanceIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        return generateIdentifier(aConn, aKB);
+    }
+    
+    private String generateIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        ValueFactory vf = aConn.getValueFactory();
+        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
+        return aKB.getBasePrefix() + vf.createBNode().getID();
     }
 }

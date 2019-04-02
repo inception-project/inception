@@ -1621,7 +1621,7 @@ public class SPARQLQueryBuilder
                 
                 KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
                 kbStatement.setInferred(!explicitStmts.contains(stmt));
-                kbStatement.setOriginalStatements(singleton(stmt));
+                kbStatement.setOriginalTriples(singleton(stmt));
 
                 results.add(kbStatement);
             }

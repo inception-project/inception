@@ -444,7 +444,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
             aConcept.setIdentifier(identifier);
             aConcept.write(conn, kb);
             return new KBHandle(identifier, aConcept.getName());
@@ -524,7 +524,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
             return new KBHandle(identifier, aProperty.getName());
@@ -598,7 +598,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
 
@@ -673,11 +673,12 @@ public class KnowledgeBaseServiceImpl
 
     // Statements
 
+    @Deprecated
     @Override
     public void initStatement(KnowledgeBase kb, KBStatement aStatement)
     {
-        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
-        aStatement.setOriginalStatements(statements);
+//        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
+//        aStatement.setOriginalStatements(statements);
     }
 
     @Override
@@ -736,14 +737,6 @@ public class KnowledgeBaseServiceImpl
                 }
             }
         }
-    }
-
-    private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
-    {
-        ValueFactory vf = conn.getValueFactory();
-        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
-        String basePrefix = kb.getBasePrefix();
-        return basePrefix + vf.createBNode().getID();
     }
 
     @Override
@@ -941,10 +934,9 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public boolean statementsMatchSPO(KnowledgeBase aKB, KBStatement mockStatement)
+    public boolean exists(KnowledgeBase aKB, KBStatement mockStatement)
     {
-        return read(aKB, conn -> 
-                getReificationStrategy(aKB).statementsMatchSPO(conn, aKB, mockStatement));
+        return read(aKB, conn -> getReificationStrategy(aKB).exists(conn, aKB, mockStatement));
     }
 
     @Override

@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -607,6 +608,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
     {
+        assumeFalse("Wikidata reification has hardcoded property prefix", 
+                Reification.WIKIDATA.equals(kb.getReification()));
+        
         KBProperty property = buildProperty();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -1214,9 +1218,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("value", "Test statement");
 
-        assertThat(statements.get(0).getOriginalStatements())
+        assertThat(statements.get(0).getOriginalTriples())
             .as("Check that original statements are recreated")
-            .containsExactlyInAnyOrderElementsOf(statement.getOriginalStatements());
+            .containsExactlyInAnyOrderElementsOf(statement.getOriginalTriples());
     }
 
     @Test
@@ -1413,7 +1417,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
             "Test statement");
-        assertTrue(sut.statementsMatchSPO(kb, mockStatement));
+        assertTrue(sut.exists(kb, mockStatement));
     }
 
     @Test
@@ -1430,7 +1434,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         KBStatement mockStatement = buildStatement(kb, conceptHandle, propertyHandle,
             "Test statement");
-        assertFalse(sut.statementsMatchSPO(kb, mockStatement));
+        assertFalse(sut.exists(kb, mockStatement));
     }
 
     @Test

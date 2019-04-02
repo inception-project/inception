@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,8 +35,6 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public interface ReificationStrategy
 {
-    Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement);
-
     List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase kb,
             KBHandle aInstance, boolean aAll);
 
@@ -61,6 +61,25 @@ public interface ReificationStrategy
     List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement);
 
-    boolean statementsMatchSPO(RepositoryConnection aConnection, KnowledgeBase akb,
+    boolean exists(RepositoryConnection aConnection, KnowledgeBase akb,
             KBStatement mockStatement);
+    
+    default void upsert(RepositoryConnection aConnection, Collection<Statement> aOriginalTriples,
+            Collection<Statement> aNewTriples)
+    {
+        // Delete all original triples except the ones which we would re-create anyway
+        Set<Statement> triplesToDelete = new HashSet<>();
+        aOriginalTriples.forEach(triplesToDelete::add);
+        triplesToDelete.removeAll(aNewTriples);
+        aConnection.remove(triplesToDelete);
+        
+        // Store the new triples
+        aConnection.add(aNewTriples);
+    }
+
+    String generatePropertyIdentifier(RepositoryConnection aConn, KnowledgeBase aKb);
+
+    String generateInstanceIdentifier(RepositoryConnection aConn, KnowledgeBase aKb);
+
+    String generateConceptIdentifier(RepositoryConnection aConn, KnowledgeBase aKb);
 }

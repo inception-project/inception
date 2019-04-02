@@ -56,7 +56,7 @@ public class KBStatement implements Serializable
 
     private boolean inferred;
 
-    private Set<Statement> originalStatements;
+    private Set<Statement> originalTriples;
 
     private List<KBQualifier> qualifiers;
 
@@ -89,7 +89,7 @@ public class KBStatement implements Serializable
 
         setValue(aValue);
         
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
         qualifiers = new ArrayList<>();
     }
 
@@ -98,7 +98,7 @@ public class KBStatement implements Serializable
         instance = aInstance;
         property = aProperty;
         value = null;
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
         qualifiers = new ArrayList<>();
     }
 
@@ -113,7 +113,7 @@ public class KBStatement implements Serializable
         this.inferred = other.inferred;
         this.instance = other.instance;
         this.language = other.language;
-        this.originalStatements = other.originalStatements;
+        this.originalTriples = other.originalTriples;
         this.property = other.property;
         this.value = other.value;
         qualifiers = other.qualifiers;
@@ -198,14 +198,14 @@ public class KBStatement implements Serializable
         inferred = aInferred;
     }
 
-    public Set<Statement> getOriginalStatements()
+    public Set<Statement> getOriginalTriples()
     {
-        return originalStatements;
+        return originalTriples;
     }
 
-    public void setOriginalStatements(Set<Statement> statements)
+    public void setOriginalTriples(Set<Statement> statements)
     {
-        originalStatements = statements;
+        originalTriples = statements;
     }
 
     public void addQualifier(KBQualifier aQualifier)
@@ -230,7 +230,7 @@ public class KBStatement implements Serializable
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
                 .append("statementId", statementId).append("instance", instance)
                 .append("property", property).append("value", value).append("language", language)
-                .append("inferred", inferred).append("originalStatements", originalStatements)
+                .append("inferred", inferred).append("originalTriples", originalTriples)
                 .append("qualifiers", qualifiers).toString();
     }
 }

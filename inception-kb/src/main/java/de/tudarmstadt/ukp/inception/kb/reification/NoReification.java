@@ -17,16 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
+import static java.util.Collections.singleton;
+
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -50,25 +49,8 @@ public class NoReification
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Override
-    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
-    {
-        KBHandle instance = aStatement.getInstance();
-        KBHandle property = aStatement.getProperty();
-
-        ValueFactory vf = SimpleValueFactory.getInstance();
-        IRI subject = vf.createIRI(instance.getIdentifier());
-        IRI predicate = vf.createIRI(property.getIdentifier());
-
-        InceptionValueMapper mapper = new InceptionValueMapper();
-        Value value = mapper.mapStatementValue(aStatement, vf);
-
-        Statement statement = vf.createStatement(subject, predicate, value);
-        Set<Statement> statements = new HashSet<>(1);
-        statements.add(statement);
-        return statements;
-    }
-
+    private final InceptionValueMapper valueMapper = new InceptionValueMapper();
+    
     @Override
     public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase aKB,
             KBHandle aItem, boolean aAll)
@@ -115,20 +97,23 @@ public class NoReification
     public void deleteStatement(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
-        aConnection.remove(aStatement.getOriginalStatements());
-        aStatement.setOriginalStatements(Collections.emptySet());
+        aConnection.remove(aStatement.getOriginalTriples());
+        aStatement.setOriginalTriples(Collections.emptySet());
     }
 
     @Override
     public void upsertStatement(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
-        if (!aStatement.isInferred()) {
-            aConnection.remove(aStatement.getOriginalStatements());
-        }
-        Set<Statement> statements = reify(kb, aStatement);
-        aConnection.add(statements);
-        aStatement.setOriginalStatements(statements);
+        ValueFactory vf = aConnection.getValueFactory();
+        Set<Statement> newTriples = singleton(vf.createStatement(
+                vf.createIRI(aStatement.getInstance().getIdentifier()), 
+                vf.createIRI(aStatement.getProperty().getIdentifier()), 
+                valueMapper.mapStatementValue(aStatement, vf)));
+        
+        upsert(aConnection, aStatement.getOriginalTriples(), newTriples);
+       
+        aStatement.setOriginalTriples(newTriples);
     }
 
     @Override
@@ -161,7 +146,7 @@ public class NoReification
     }
 
     @Override
-    public boolean statementsMatchSPO(RepositoryConnection aConnection, KnowledgeBase akb,
+    public boolean exists(RepositoryConnection aConnection, KnowledgeBase akb,
             KBStatement mockStatement)
     {
         ValueFactory vf = aConnection.getValueFactory();
@@ -176,5 +161,30 @@ public class NoReification
         try (TupleQueryResult result = tupleQuery.evaluate()) {
             return result.hasNext();
         }
+    }
+    
+    @Override
+    public String generatePropertyIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        return generateIdentifier(aConn, aKB);
+    }
+    
+    @Override
+    public String generateConceptIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        return generateIdentifier(aConn, aKB);
+    }
+    
+    @Override
+    public String generateInstanceIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        return generateIdentifier(aConn, aKB);
+    }
+    
+    private String generateIdentifier(RepositoryConnection aConn, KnowledgeBase aKB)
+    {
+        ValueFactory vf = aConn.getValueFactory();
+        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
+        return aKB.getBasePrefix() + vf.createBNode().getID();
     }
 }

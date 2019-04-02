@@ -398,7 +398,7 @@ public interface KnowledgeBaseService
      */
     List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement);
 
-    boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement);
+    boolean exists(KnowledgeBase akb, KBStatement mockStatement);
 
     /**
      * Define base default properties of comment, label and subClassOf with schema set defined for
