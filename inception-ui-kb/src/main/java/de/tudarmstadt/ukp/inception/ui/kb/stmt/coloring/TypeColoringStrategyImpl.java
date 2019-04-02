@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -46,12 +48,14 @@ public class TypeColoringStrategyImpl
     }
 
     @Override
-    public String getFrameColor() {
+    public String getFrameColor()
+    {
         return "D3D3D3";
     }
 
     @Override
-    public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB)
+    public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB,
+            List<String> aLabelProperties)
     {
         return aPropertyIdentifier.equals(aKB.getTypeIri().stringValue());
     }

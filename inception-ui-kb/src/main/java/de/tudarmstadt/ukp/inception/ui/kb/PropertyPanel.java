@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -50,6 +51,8 @@ public class PropertyPanel extends Panel {
 
     private @SpringBean KnowledgeBaseService kbService;
 
+    private List<String> labelProperties;
+    
     public PropertyPanel(String id, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> handleModel,
             IModel<KBProperty> selectedPropertyModel) {
         super(id, selectedPropertyModel);
@@ -95,13 +98,23 @@ public class PropertyPanel extends Panel {
         }
 
         @Override
+        public List<String> getLabelProperties()
+        {
+            if (labelProperties == null) {
+                labelProperties = kbService.listPropertyLabelProperties(kbModel.getObject());
+            }
+            
+            return labelProperties;
+        }
+        
+        @Override
         protected Comparator<StatementGroupBean> getStatementGroupComparator()
         {
             return new ImportantStatementComparator<>(
                 sgb -> sgb.getProperty().getIdentifier(),
                 identifier -> IMPORTANT_PROPERTY_URIS.contains(identifier)
                         || kbService.isBaseProperty(identifier, kbModel.getObject())
-                        || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
+                        || getLabelProperties().contains(identifier));
         }
         
         @Override

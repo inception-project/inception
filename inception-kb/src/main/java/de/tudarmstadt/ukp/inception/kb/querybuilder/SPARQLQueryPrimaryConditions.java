@@ -96,4 +96,12 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
+    
+    /**
+     * Limits results to properties with the given domain or without any domain.
+     * 
+     * @return the builder (fluent API)
+     */
+    SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier);
+
 }
