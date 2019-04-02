@@ -219,12 +219,15 @@ public class OpenNlpPosRecommender
             String[] predictedTags = tagger.tag(sample.getSentence());
             String[] goldTags = sample.getTags();
             for (int i = 0; i < predictedTags.length; i++) {
-                predictions.add(new AnnotatedTokenPair(goldTags[i], predictedTags[i]));
+                // ignore PAD gold annotations  (i.e. no real gold annotations) during evaluation
+                // use instance comparison to not confuse with possible user PAD label
+                if (goldTags[i] != PAD) {
+                    predictions.add(new AnnotatedTokenPair(goldTags[i], predictedTags[i]));
+                }
             }
         }
         
-        // ignore PAD gold annotations  (i.e. no real gold annotations) during evaluation
-        return new EvaluationResult(PAD, predictions.stream(), trainingSetSize, testSetSize);
+        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

@@ -511,6 +511,8 @@ public class DL4JSequenceRecommender
             int sentNum = 0;
             Iterator<Sample> testSetIterator = testSet.iterator();
             List<AnnotatedTokenPair> predictions = new ArrayList<>();
+            int notNoLabelCount = 0;
+            int totalTokenCount = 0;
             while (testSetIterator.hasNext()) {
                 // Prepare a batch of sentences that we want to predict because calling the
                 // prediction is expensive
@@ -526,12 +528,23 @@ public class DL4JSequenceRecommender
                     List<String> expectedLabels = outcome.getSample().getTags();
                     List<String> actualLabels = outcome.getLabels();
                     for (int i = 0; i < expectedLabels.size(); i++) {
-                        predictions.add(
-                                new AnnotatedTokenPair(expectedLabels.get(i), actualLabels.get(i)));
+                        // ignore NO_LABEL gold annotations (i.e. no real gold annotations) during
+                        // evaluation
+                        // use instance comparison to not confuse with possible user NO_LABEL label
+                        if (expectedLabels.get(i) != NO_LABEL) {
+                            predictions.add(new AnnotatedTokenPair(expectedLabels.get(i),
+                                    actualLabels.get(i)));
+                        }
+                        if (!actualLabels.get(i).equals(NO_LABEL))
+                            notNoLabelCount++;
+                        totalTokenCount++;
                     }
                 }
+                
             }
-            // FIXME test fails after ignoring no_label (all 0.0)
+            //FIXME only no-label is predicted
+            System.out.println(notNoLabelCount);
+            System.out.println(totalTokenCount);
             return new EvaluationResult(null, predictions.stream(), trainingSetSize,
                     testSetSize);
         }

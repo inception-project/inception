@@ -223,11 +223,15 @@ public class OpenNlpNerRecommender
         String goldLabel = NO_NE_TAG;
 
         List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        // Spans store which tokens are part of it as [begin,end). 
+        // Tokens are counted 0 to length of sentence.
+        // Therefore go through all tokens, determine which span they are part of 
+        // for predictions and gold ones. Assign label accordingly to the annotated-token.
         for (int i = 0; i < sentence.length; i++) {
 
             if (predictedNameIdx < predictedNames.length) {
                 predictedName = predictedNames[predictedNameIdx];
-                predictedLabel = determineLabel(predictedNames, predictedName, i);
+                predictedLabel = determineLabel(predictedName, i);
 
                 if (i > predictedName.getEnd()) {
                     predictedNameIdx++;
@@ -236,7 +240,7 @@ public class OpenNlpNerRecommender
 
             if (goldNameIdx < goldNames.length) {
                 goldName = goldNames[goldNameIdx];
-                goldLabel = determineLabel(goldNames, goldName, i);
+                goldLabel = determineLabel(goldName, i);
                 if (i > goldName.getEnd()) {
                     goldNameIdx++;
                 }
@@ -248,15 +252,18 @@ public class OpenNlpNerRecommender
                 predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
 
         }
-
         return predictions;
     }
 
-    private String determineLabel(Span[] aNames, Span aName, int aTokenIdx)
+    /**
+     * Check that token index is part of the given span and return the span's label 
+     * or no-label (token is outside span). 
+     */
+    private String determineLabel(Span aName, int aTokenIdx)
     {
         String label = NO_NE_TAG;
 
-        if (aName.getStart() <= aTokenIdx && aName.getEnd() >= aTokenIdx) {
+        if (aName.getStart() <= aTokenIdx && aName.getEnd() > aTokenIdx) {
             label = aName.getType();
         }
 
