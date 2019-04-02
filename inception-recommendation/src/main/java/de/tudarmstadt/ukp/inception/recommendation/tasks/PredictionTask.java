@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_NO_LABEL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
@@ -218,9 +217,9 @@ public class PredictionTask
                                 predictionCas.get(), predictionType, labelFeature, scoreFeature,
                                 document, recommender);
                         
-                        // Calculate the visbility of the suggestions. This happens via the original
-                        // CAS which contains only the manually created annotations and *not* the
-                        // suggestions.
+                        // Calculate the visibility of the suggestions. This happens via the 
+                        // original CAS which contains only the manually created annotations and 
+                        // *not* the suggestions.
                         Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
                         calculateVisibility(learningRecordService, annoService, originalCas.get(),
                                 getUser().getUsername(), layer, groups, 0,
@@ -337,11 +336,11 @@ public class PredictionTask
         for (AnnotationFeature feature : aAnnotationService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
-            // Reduce the annotations to the once which have a non-null feature value. We need to
+            // Reduce the annotations to the ones which have a non-null feature value. We need to
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
             MultiValuedMap<Offset, AnnotationFS> annotations = new ArrayListValuedHashMap<>();
-            annotationsInWindow.stream().filter(fs -> fs.getFeatureValueAsString(feat) != null)
+            annotationsInWindow.stream()
                     .forEach(fs -> annotations.put(new Offset(fs.getBegin(), fs.getEnd()), fs));
             // We need to constructed a sorted list of the keys for the OverlapIterator below
             List<Offset> sortedAnnotationKeys = new ArrayList<>(annotations.keySet());
@@ -361,9 +360,10 @@ public class PredictionTask
                 continue;
             }
 
-            // This iterator gives us pairs of annotations and suggestions. Note that bot lists must
-            // be sorted in the same way. The suggestion offsets are sorted because they are the
-            // keys in a TreeSet - and the annotation offsets are sorted in the same way manually
+            // This iterator gives us pairs of annotations and suggestions. Note that both lists
+            // must be sorted in the same way. The suggestion offsets are sorted because they are 
+            // the keys in a TreeSet - and the annotation offsets are sorted in the same way 
+            // manually
             OverlapIterator oi = new OverlapIterator(new ArrayList<>(suggestions.keySet()),
                     sortedAnnotationKeys);
 
@@ -376,7 +376,9 @@ public class PredictionTask
                     for (AnnotationFS annotation : annotations.get(oi.getB())) {
                         String label = annotation.getFeatureValueAsString(feat);
                         for (AnnotationSuggestion suggestion : group) {
-                            if (!aLayer.isAllowStacking() || label.equals(suggestion.getLabel())) {
+                            if (!aLayer.isAllowStacking()
+                                    || (label != null && label.equals(suggestion.getLabel()))
+                                    || suggestion.getLabel() == null) {
                                 suggestion.hide(FLAG_OVERLAP);
                             }
                         }
@@ -389,29 +391,22 @@ public class PredictionTask
                 oi.step();
             }
 
-            // Anything that was not hidden so far might still have been rejected or not have a
-            // label
+            // Anything that was not hidden so far might still have been rejected
             suggestions.values().stream().flatMap(SuggestionGroup::stream)
                     .filter(AnnotationSuggestion::isVisible)
-                    .forEach(suggestion -> hideSuggestionsRejectedOrWithoutLabel(suggestion,
+                    .forEach(suggestion -> hideSuggestionsRejectedOrSkipped(suggestion,
                             recordedAnnotations));
         }
     }
 
-    private static void hideSuggestionsRejectedOrWithoutLabel(AnnotationSuggestion aSuggestion,
+    private static void hideSuggestionsRejectedOrSkipped(AnnotationSuggestion aSuggestion,
             List<LearningRecord> aRecordedRecommendations)
     {
-        // If there is no label, then hide it
-        if (aSuggestion.getLabel() == null) {
-            aSuggestion.hide(FLAG_NO_LABEL);
-            return;
-        }
-
-        // If it was rejected or skipped, it hide it
+        // If it was rejected or skipped, hide it
         for (LearningRecord record : aRecordedRecommendations) {
-            if (record.getOffsetCharacterBegin() == aSuggestion.getBegin()
-                    && record.getOffsetCharacterEnd() == aSuggestion.getEnd()
-                    && record.getAnnotation().equals(aSuggestion.getLabel())) {
+            boolean isAtTheSamePlace = record.getOffsetCharacterBegin() == aSuggestion
+                    .getBegin() && record.getOffsetCharacterEnd() == aSuggestion.getEnd();
+            if (isAtTheSamePlace && aSuggestion.labelEquals(record.getAnnotation())) {
                 switch (record.getUserAction()) {
                 case REJECTED:
                     aSuggestion.hide(FLAG_REJECTED);

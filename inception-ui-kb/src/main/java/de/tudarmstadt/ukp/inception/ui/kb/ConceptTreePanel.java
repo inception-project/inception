@@ -49,9 +49,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
@@ -146,7 +146,7 @@ public class ConceptTreePanel extends Panel {
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllConcepts && selectedConcept.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedConcept.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedConcept.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
@@ -163,7 +163,9 @@ public class ConceptTreePanel extends Panel {
         @Override
         public void detach()
         {
-            // Nothing to do
+            if (!kbModel.getObject().isReadOnly()) {
+                childrenPresentCache.clear();
+            }
         }
 
         @Override
@@ -207,8 +209,14 @@ public class ConceptTreePanel extends Panel {
                     }
                 }
                 else {
-                    return kbService.hasChildConcepts(kbModel.getObject(),
-                            aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                    Boolean hasChildren = childrenPresentCache.get(aNode);
+                    if (hasChildren == null) {
+                        hasChildren = kbService.hasChildConcepts(kbModel.getObject(),
+                                aNode.getIdentifier(), preferences.getObject().showAllConcepts);
+                        childrenPresentCache.put(aNode, hasChildren);
+                    }
+                    
+                    return hasChildren;
                 }
             }
             catch (QueryEvaluationException e) {
