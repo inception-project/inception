@@ -32,10 +32,10 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
@@ -329,9 +329,9 @@ public class SearchAnnotationSidebar
         SourceDocument sourceDoc = documentService
             .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
         try {
-            JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
 
-            Type type = CasUtil.getAnnotationType(jCas.getCas(), aAdapter.getAnnotationTypeName());
+            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
@@ -380,9 +380,9 @@ public class SearchAnnotationSidebar
         SourceDocument sourceDoc = documentService
             .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
         try {
-            JCas jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
 
-            Type type = CasUtil.getAnnotationType(jCas.getCas(), aAdapter.getAnnotationTypeName());
+            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
             AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
                 searchResult.getOffsetEnd());
 
@@ -404,7 +404,7 @@ public class SearchAnnotationSidebar
         }
     }
 
-    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, JCas aJCas)
+    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aJCas)
         throws IOException
     {
         if (!documentService.existsAnnotationDocument(aSourceDoc, currentUser)) {
