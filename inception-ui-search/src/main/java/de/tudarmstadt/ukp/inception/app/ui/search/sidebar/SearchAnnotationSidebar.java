@@ -304,19 +304,23 @@ public class SearchAnnotationSidebar
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget,
         BiConsumer<SearchResult, SpanAdapter> aConsumer)
     {
-        AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
-        try {
-            SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-            for (SearchResult result : searchResults.getObject()) {
-                if (result.isSelectedForAnnotation()) {
-                    aConsumer.accept(result, adapter);
+        if (VID.NONE_ID.equals(getModelObject().getSelection().getAnnotation())) {
+            error("No annotation selected. Please select an annotation first");
+        }
+        else {
+            AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
+            try {
+                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+                for (SearchResult result : searchResults.getObject()) {
+                    if (result.isSelectedForAnnotation()) {
+                        aConsumer.accept(result, adapter);
+                    }
                 }
             }
-        }
-        catch (ClassCastException e) {
-            error(
-                "Can only create SPAN annotations for search results: " + e.getLocalizedMessage());
-            LOG.error("Can only create SPAN annotations for search results", e);
+            catch (ClassCastException e) {
+                error("Can only create SPAN annotations for search results.");
+                LOG.error("Can only create SPAN annotations for search results", e);
+            }
         }
         getAnnotationPage().actionRefreshDocument(aTarget);
     }
