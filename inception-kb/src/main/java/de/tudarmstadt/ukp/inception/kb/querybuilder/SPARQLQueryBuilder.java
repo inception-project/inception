@@ -33,6 +33,7 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Pr
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singleton;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
@@ -55,6 +56,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOf;
 import static org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf.literalOfLanguage;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,8 +67,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
+import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
+import org.eclipse.rdf4j.model.ValueFactory;
+import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -97,6 +104,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -111,14 +119,15 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
  * </p>
  */
 public class SPARQLQueryBuilder
-    implements SPARQLQueryPrimaryConditions, SPARQLQueryOptionalElements
+    implements SPARQLQuery, SPARQLQueryPrimaryConditions, SPARQLQueryOptionalElements
 {
     private final static Logger LOG = LoggerFactory.getLogger(SPARQLQueryBuilder.class);
 
     public static final int DEFAULT_LIMIT = 0;
     
-    public static final String VAR_SUBJECT_NAME = "s";
-    public static final String VAR_PREDICATE_NAME = "p";
+    public static final String VAR_SUBJECT_NAME = "subj";
+    public static final String VAR_PREDICATE_NAME = "pred";
+    public static final String VAR_OBJECT_NAME = "obj";
     public static final String VAR_LABEL_PROPERTY_NAME = "pLabel";
     public static final String VAR_LABEL_NAME = "l";
     public static final String VAR_LABEL_CANDIDATE_NAME = "lc";
@@ -129,6 +138,7 @@ public class SPARQLQueryBuilder
     
     public static final Variable VAR_SUBJECT = var(VAR_SUBJECT_NAME);
     public static final Variable VAR_PREDICATE = var(VAR_PREDICATE_NAME);
+    public static final Variable VAR_OBJECT = var(VAR_OBJECT_NAME);
     public static final Variable VAR_RANGE = var(VAR_RANGE_NAME);
     public static final Variable VAR_DOMAIN = var(VAR_DOMAIN_NAME);
     public static final Variable VAR_LABEL = var(VAR_LABEL_NAME);
@@ -581,7 +591,7 @@ public class SPARQLQueryBuilder
         caseInsensitive = true;
         return this;
     }
-
+    
     /**
      * Generates a pattern which binds all sub-properties of the label property to the given 
      * variable. 
@@ -595,10 +605,11 @@ public class SPARQLQueryBuilder
     }
 
     @Override
-    public SPARQLQueryPrimaryConditions withIdentifier(String aIdentifier)
+    public SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers)
     {
-        addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT, iri(aIdentifier)));
-                
+        addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT,
+                Arrays.stream(aIdentifiers).map(Rdf::iri).toArray(RdfValue[]::new)));
+        
         return this;
     }
     
@@ -692,9 +703,9 @@ public class SPARQLQueryBuilder
         }
         
         return GraphPatterns.and(
-            bindLabelProperties(VAR_LABEL_PROPERTY),
-            new ValuesPattern(VAR_LABEL_CANDIDATE, values),
-            VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
+                bindLabelProperties(VAR_LABEL_PROPERTY),
+                new ValuesPattern(VAR_LABEL_CANDIDATE, values),
+                VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
     }
     
     private GraphPattern withLabelMatchingExactlyAnyOf_RDF4J_FTS(String[] aValues)
@@ -1056,7 +1067,8 @@ public class SPARQLQueryBuilder
         
         // Locate all entries where the label contains the prefix (using the FTS) and then
         // filter them by those which actually start with the prefix.
-        return GraphPatterns.and(bindLabelProperties(VAR_LABEL_PROPERTY),
+        return GraphPatterns.and(
+                bindLabelProperties(VAR_LABEL_PROPERTY),
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                         .and(VAR_LABEL_CANDIDATE.has(FTS_VIRTUOSO,
                                 literalOf(ftsQueryString.toString())))
@@ -1252,20 +1264,20 @@ public class SPARQLQueryBuilder
 
         List<GraphPattern> classPatterns = new ArrayList<>();
         
+        // An item is a class if ...
         // ... it is explicitly defined as being a class
         classPatterns.add(VAR_SUBJECT.has(typeOfProperty, classIri));
         // ... it has any subclass
         classPatterns.add(bNode().has(subClassProperty, VAR_SUBJECT));
         // ... it has any superclass
         classPatterns.add(VAR_SUBJECT.has(subClassProperty, bNode()));
-        
+        // ... it participates in an owl:intersectionOf
         if (OWL.CLASS.equals(kb.getClassIri())) {
             classPatterns.add(VAR_SUBJECT.has(
                     Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
                     bNode()));
         }
         
-        // An item is a class if ...
         addPattern(PRIMARY_RESTRICTIONS,
                 filterExists(union(classPatterns.stream().toArray(GraphPattern[]::new))));
     }
@@ -1554,6 +1566,103 @@ public class SPARQLQueryBuilder
         }
 
         return result;    
+    }
+    
+    @Override
+    public List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll)
+    {
+        long startTime = currentTimeMillis();
+        String queryId = toHexString(hashCode());
+        
+        projections.add(VAR_PREDICATE);
+        projections.add(VAR_OBJECT);
+        addPattern(PRIMARY, VAR_SUBJECT.has(VAR_PREDICATE, VAR_OBJECT));
+
+        String queryString = selectQuery().getQueryString();
+        LOG.trace("[{}] Query: {}", queryId, queryString);
+
+        if (returnEmptyResult) {
+            LOG.debug("[{}] Query was skipped because it would not return any results anyway",
+                    queryId);
+            
+            return emptyList();
+            
+        }
+        
+        TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
+        
+        // The only way to tell if a statement was inferred or not is by running the same query
+        // twice, once with and once without inference being enabled. Those that are in the
+        // first but not in the second were the inferred statements.
+        List<Statement> explicitStmts = listStatements(tupleQuery, false);
+        List<Statement> allStmts = listStatements(tupleQuery, true);
+        
+        List<KBStatement> results = new ArrayList<>();
+        for (Statement stmt : allStmts) {
+
+            Value value = stmt.getObject();
+            if (value == null) {
+                // Can this really happen?
+                LOG.warn("Property with null value detected.");
+                continue;
+            }
+
+            if (value instanceof BNode) {
+                LOG.warn("Properties with blank node values are not supported");
+                continue;
+            }
+            
+            if ((!aAll && hasImplicitNamespace(kb, stmt.getPredicate().stringValue()))) {
+                continue;
+            }
+
+            KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
+            KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
+            
+            KBStatement kbStatement = new KBStatement(subject, predicate, value);
+            kbStatement.setInferred(!explicitStmts.contains(stmt));
+            kbStatement.setOriginalStatements(singleton(stmt));
+
+            results.add(kbStatement);
+        }
+        
+        LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
+                currentTimeMillis() - startTime);
+ 
+        return results;
+    }
+    
+    private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
+    {
+        aQuery.setIncludeInferred(aIncludeInferred);
+        
+        try (TupleQueryResult result = aQuery.evaluate()) {
+            ValueFactory vf = SimpleValueFactory.getInstance();
+            
+            List<Statement> statements = new ArrayList<>();
+            while (result.hasNext()) {
+                BindingSet bindings = result.next();
+                if (bindings.size() == 0) {
+                    continue;
+                }
+                
+                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                
+                Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
+                Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
+                Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
+    
+                IRI subject = vf.createIRI(subj.getValue().stringValue());
+                IRI predicate = vf.createIRI(pred.getValue().stringValue());
+                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
+                
+                // Avoid duplicate statements
+                if (!statements.contains(stmt)) {
+                    statements.add(stmt);
+                }
+            }
+            return statements;
+        }
     }
     
     /**
