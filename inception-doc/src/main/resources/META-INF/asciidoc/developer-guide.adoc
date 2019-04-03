@@ -68,6 +68,8 @@ include::{include-dir}knowledgebase_irischema.adoc[leveloffset=+2]
 
 include::{include-dir}concept-linking.adoc[leveloffset=+1]
 
+include::{include-dir}pdf-editor.adoc[leveloffset=+1]
+
 <<<
 
 

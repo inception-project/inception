@@ -176,6 +176,10 @@ include::{include-dir}guidelines.adoc[leveloffset=+1]
 
 <<<
 
+include::{include-dir}pdf-editor.adoc[leveloffset=+1]
+
+<<<
+
 = Appendices
 
 [appendix]
