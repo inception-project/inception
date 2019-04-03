@@ -38,7 +38,7 @@ The currently selected annotation in the annotation editor serves as template fo
 that are to be created/deleted. Note that selecting an annotation first is necessary for
 creating/deleting annotations in this way.
 
-Clicking on the create annotation settings button (cog wheel) shows additional options:
+Clicking on the create settings button (cog wheel) shows additional options:
 
 * **Override existing** will override an existing annotation of the same layer at a target location.
     If this option is disabled, annotations of the same layer will be stacked if stacking is enabled
@@ -46,7 +46,7 @@ Clicking on the create annotation settings button (cog wheel) shows additional o
 
 Clicking on the delete settings button (cog wheel) shows additional options:
 
-* **Delete only matching feature values** means that if this
-    option is enabled, only annotations at search results that exactly match the currently selected
-    annotation including all feature values will be deleted. If this option is disabled all
-    annotations with the same layer as the currently selected annotation will be deleted.
+* **Delete only matching feature values** will only delete annotations at search results that
+    exactly match the currently selected annotation including all feature values. If this option is
+    disabled all annotations with the same layer as the currently selected annotation will be
+    deleted regardless of their feature values.
