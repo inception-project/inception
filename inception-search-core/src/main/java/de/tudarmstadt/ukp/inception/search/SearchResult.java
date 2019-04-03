@@ -40,7 +40,7 @@ public class SearchResult
     private long documentId;
     private String documentTitle;
 
-    // only used in the ui the simply annotateAll and deleteAll functions
+    // only used in the ui to simplify the selection of search results for annotation
     private boolean isSelectedForAnnotation = true;
 
     public int getTokenStart()
