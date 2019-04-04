@@ -187,7 +187,6 @@ public class ConceptLinkingServiceImpl
 
             result.addAll(exactMatches);
 
-            
             if (aQuery != null && aQuery.length() > threshold) {
                 // Collect matches starting with the query - this is the main driver for the
                 // auto-complete functionality

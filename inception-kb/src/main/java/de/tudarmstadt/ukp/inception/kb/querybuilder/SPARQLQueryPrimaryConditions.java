@@ -21,13 +21,13 @@ public interface SPARQLQueryPrimaryConditions
     extends SPARQLQuery, SPARQLQueryOptionalElements
 {
     /**
-     * Find the item with the given identifier.
+     * Find the item with the given identifiers.
      * 
-     * @param aIdentifier
-     *            the item identifier.
+     * @param aIdentifiers
+     *            the item identifiers.
      * @return the builder (fluent API)
      */
-    SPARQLQueryPrimaryConditions withIdentifier(String aIdentifier);
+    SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers);
     
     /**
      * Find entries where the label matches exactly one of the given values. The match is
@@ -96,4 +96,12 @@ public interface SPARQLQueryPrimaryConditions
      * @return the builder (fluent API)
      */
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
+    
+    /**
+     * Limits results to properties with the given domain or without any domain.
+     * 
+     * @return the builder (fluent API)
+     */
+    SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier);
+
 }

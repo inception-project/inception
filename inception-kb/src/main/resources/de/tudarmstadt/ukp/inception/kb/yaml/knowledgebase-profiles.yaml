@@ -29,7 +29,7 @@ wikidata:
   reification: NONE
   access:
     access-url: https://query.wikidata.org/sparql
-    full-text-search: FTS:NONE
+    full-text-search: https://www.mediawiki.org/ontology#API/search
   mapping:
       class: http://www.wikidata.org/entity/Q35120
       subclass-of: http://www.wikidata.org/prop/direct/P279
