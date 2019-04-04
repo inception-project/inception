@@ -19,105 +19,84 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
 
 public class KBQualifier
     implements Serializable
 {
     private static final long serialVersionUID = 4648563545691138244L;
 
-    private KBStatement kbStatement;
+    private KBStatement statement;
 
     private String language;
 
-    private KBHandle kbProperty;
+    private KBHandle property;
 
     private Object value;
 
-    private Set<Statement> originalStatements;
+    private Set<Statement> originalTriples;
 
     public KBQualifier(String aKbProperty, Object aValue)
     {
         this(null, new KBHandle(aKbProperty), aValue);
     }
 
-    public KBQualifier(KBHandle aKbProperty, Object aValue)
+    public KBQualifier(KBHandle aProperty, Object aValue)
     {
-        this(null, aKbProperty, aValue);
+        this(null, aProperty, aValue);
     }
 
-    public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
+    public KBQualifier(KBStatement aStatement, KBHandle aKbProperty, Object aValue)
     {
-        kbStatement = aKbStatement;
-        kbProperty = aKbProperty;
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
+        statement = aStatement;
+        property = aKbProperty;
+        setValue(aValue);
 
-        if (aValue instanceof Literal) {
-            Literal litValue = (Literal) aValue;
-            try {
-                language = litValue.getLanguage().orElse(null);
-                value = mapper.getJavaObject(litValue);
-            }
-            catch (Exception e) {
-                value = "ERROR converting [" + litValue + "]: " + e.getMessage();
-            }
-        }
-        else if (aValue instanceof IRI) {
-            value = aValue;
-        }
-        else if (aValue instanceof BNode) {
-            value = null;
-        }
-        else {
-            value = "ERROR: Unknown object type: " + aValue.getClass();
-        }
-        
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
     }
 
     public KBQualifier(KBStatement aKbStatement)
     {
-        kbStatement = aKbStatement;
-        originalStatements = new HashSet<>();
+        statement = aKbStatement;
+        originalTriples = new HashSet<>();
     }
 
     public KBQualifier(KBQualifier other)
     {
-        kbStatement = other.kbStatement;
-        kbProperty = other.kbProperty;
+        statement = other.statement;
+        property = other.property;
         value = other.value;
         language = other.language;
-        originalStatements = other.originalStatements;
+        originalTriples = other.originalTriples;
     }
 
-    public KBStatement getKbStatement()
+    public KBStatement getStatement()
     {
-        return kbStatement;
+        return statement;
     }
 
-    public void setKbStatement(KBStatement kbStatement)
+    public void setStatement(KBStatement aKBStatement)
     {
-        this.kbStatement = kbStatement;
+        statement = aKBStatement;
     }
 
-    public KBHandle getKbProperty()
+    public KBHandle getProperty()
     {
-        return kbProperty;
+        return property;
     }
 
-    public void setKbProperty(KBHandle kbProperty)
+    public void setProperty(KBHandle kbProperty)
     {
-        this.kbProperty = kbProperty;
+        this.property = kbProperty;
     }
 
     public Object getValue()
@@ -127,53 +106,58 @@ public class KBQualifier
 
     public void setValue(Object aValue)
     {
-        value = aValue;
+        if (aValue instanceof Value) {
+            if (aValue instanceof Literal) {
+                Literal litValue = (Literal) aValue;
+                try {
+                    language = litValue.getLanguage().orElse(null);
+                    value = new DefaultDatatypeMapper().getJavaObject(litValue);
+                }
+                catch (Exception e) {
+                    value = "ERROR converting [" + litValue + "]: " + e.getMessage();
+                }
+            }
+            else if (aValue instanceof IRI) {
+                value = aValue;
+            }
+            else if (aValue instanceof BNode) {
+                value = null;
+            }
+            else {
+                value = "ERROR: Unknown object type: " + aValue.getClass();
+            }
+        }
+        else {
+            value = aValue;
+        }
     }
 
-    public String getLanguage() {
+    public String getLanguage()
+    {
         return language;
     }
 
-    public void setLanguage(String aLanguage) {
+    public void setLanguage(String aLanguage)
+    {
         language = aLanguage;
     }
 
-    public Set<Statement> getOriginalStatements()
+    public Set<Statement> getOriginalTriples()
     {
-        return originalStatements;
+        return originalTriples;
     }
 
-    public void setOriginalStatements(Set<Statement> originalStatements)
+    public void setOriginalTriples(Set<Statement> aOriginalStatements)
     {
-        this.originalStatements = originalStatements;
-    }
-
-    public int getQualifierIndexByOriginalStatements()
-    {
-        List<KBQualifier> qualifiers = kbStatement.getQualifiers();
-        for (KBQualifier qualifier : qualifiers) {
-            if (qualifier.getOriginalStatements().size() == originalStatements.size()) {
-                boolean flag = true;
-                for (Statement statement : qualifier.getOriginalStatements()) {
-                    if (!originalStatements.contains(statement)) {
-                        flag = false;
-                        break;
-                    }
-                }
-                if (flag) {
-                    return qualifiers.indexOf(qualifier);
-                }
-            }
-        }
-        return -1;
+        originalTriples = aOriginalStatements;
     }
 
     @Override
     public String toString()
     {
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
-                .append("kbStatement", kbStatement).append("language", language)
-                .append("kbProperty", kbProperty).append("value", value)
-                .append("originalStatements", originalStatements).toString();
+                .append("kbStatement", statement).append("language", language)
+                .append("kbProperty", property).append("value", value)
+                .append("originalStatements", originalTriples).toString();
     }
 }

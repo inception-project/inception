@@ -820,8 +820,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", handle.getIdentifier())
-            .hasFieldOrProperty("name")
-            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
+            .hasFieldOrProperty("name");
     }
 
     @Test
@@ -1404,7 +1403,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTrue()
+    public void thatExistsFindsExistingStatement()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
@@ -1421,7 +1420,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void statementsMatchSPO_WithMissmatchedStatement_ShouldReturnFalse()
+    public void thatExistsDoesNotFindNonExistingStatement()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
@@ -1612,7 +1611,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         KBHandle propertyHandle, String value)
     {
         KBStatement stmt = testFixtures.buildStatement(conceptHandle, propertyHandle, value);
-        sut.initStatement(knowledgeBase, stmt);
         return stmt;
     }
 

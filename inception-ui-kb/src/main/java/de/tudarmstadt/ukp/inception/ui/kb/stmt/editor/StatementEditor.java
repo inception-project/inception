@@ -285,14 +285,14 @@ public class StatementEditor extends Panel
         @OnEvent
         public void actionQualifierChanged(AjaxQualifierChangedEvent event)
         {
-            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
+            boolean isEventForThisStatement = event.getQualifier().getStatement()
                 .equals(statement.getObject());
             if (isEventForThisStatement) {
                 if (event.isDeleted()) {
-                    event.getQualifier().getKbStatement().getQualifiers()
+                    event.getQualifier().getStatement().getQualifiers()
                         .remove(event.getQualifier());
                 }
-                statement.setObject(event.getQualifier().getKbStatement());
+                statement.setObject(event.getQualifier().getStatement());
                 event.getTarget().add(qualifierListWrapper);
             }
         }

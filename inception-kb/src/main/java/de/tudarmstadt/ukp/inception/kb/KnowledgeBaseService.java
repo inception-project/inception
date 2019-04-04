@@ -280,14 +280,6 @@ public interface KnowledgeBaseService
     // Statements
 
     /**
-     * Initializes the internal representation of a KBStatement specifically
-     * for the given knowledge base. Call this before upserting it
-     * @param kb The knowledge base the statement will be use in
-     * @param aStatement The statement itself
-     */
-    void initStatement(KnowledgeBase kb, KBStatement aStatement);
-
-    /**
      * Inserts a new statement. If the statement has an original statement, that one is deleted
      * before inserting the new one. If the statement is an inferred statement, then no deletion
      * attempt will be made, but the statement will be added as a new explicit statement. Does

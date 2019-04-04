@@ -33,9 +33,6 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-
 public class KBStatement implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
@@ -71,9 +68,6 @@ public class KBStatement implements Serializable
     }
 
     /**
-     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)} after
-     * constructing this in order to allow upserting.
-     * 
      * @param aInstance
      *            {@link KBHandle} for the statement instance
      * @param aProperty
@@ -210,8 +204,10 @@ public class KBStatement implements Serializable
 
     public void addQualifier(KBQualifier aQualifier)
     {
-        aQualifier.setKbStatement(this);
-        qualifiers.add(aQualifier);
+        aQualifier.setStatement(this);
+        if (!qualifiers.contains(aQualifier)) {
+            qualifiers.add(aQualifier);
+        }
     }
 
     public List<KBQualifier> getQualifiers()

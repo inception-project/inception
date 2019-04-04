@@ -673,14 +673,6 @@ public class KnowledgeBaseServiceImpl
 
     // Statements
 
-    @Deprecated
-    @Override
-    public void initStatement(KnowledgeBase kb, KBStatement aStatement)
-    {
-//        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
-//        aStatement.setOriginalStatements(statements);
-    }
-
     @Override
     public void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
         throws RepositoryException
@@ -900,7 +892,7 @@ public class KnowledgeBaseServiceImpl
     public void addQualifier(KnowledgeBase aKB, KBQualifier newQualifier)
     {
         update(aKB, conn -> {
-            getReificationStrategy(aKB).addQualifier(conn, aKB, newQualifier);
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier);
             return null;
         });
     }

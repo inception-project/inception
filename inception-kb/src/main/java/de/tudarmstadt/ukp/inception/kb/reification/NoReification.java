@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -31,8 +32,6 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryResult;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.InceptionValueMapper;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
@@ -47,8 +46,6 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 public class NoReification
     implements ReificationStrategy
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
     private final InceptionValueMapper valueMapper = new InceptionValueMapper();
     
     @Override
@@ -117,32 +114,24 @@ public class NoReification
     }
 
     @Override
-    public void addQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
-            KBQualifier newQualifier)
-    {
-        log.error("Qualifiers are not supported.");
-    }
-
-    @Override
     public void deleteQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
             KBQualifier oldQualifier)
     {
-        log.error("Qualifiers are not supported.");
+        throw new NotImplementedException("Qualifiers are not supported.");
     }
 
     @Override
     public void upsertQualifier(RepositoryConnection aConnection, KnowledgeBase kb,
             KBQualifier aQualifier)
     {
-        log.error("Qualifiers are not supported.");
+        throw new NotImplementedException("Qualifiers are not supported.");
     }
 
     @Override
     public List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
-        log.error("Qualifiers are not supported.");
-        return Collections.emptyList();
+        throw new NotImplementedException("Qualifiers are not supported.");
     }
 
     @Override
