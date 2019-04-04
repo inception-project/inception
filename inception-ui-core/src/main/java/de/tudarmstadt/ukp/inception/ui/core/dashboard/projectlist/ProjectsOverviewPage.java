@@ -40,6 +40,7 @@ import java.util.zip.ZipFile;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.wicket.Component;
 import org.apache.wicket.Session;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
@@ -53,6 +54,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -62,6 +64,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.datetime.markup.html.basic.DateLabel;
 
+import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -75,7 +78,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.ZipUtils;
+import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.project.ProjectPage;
@@ -96,6 +101,8 @@ public class ProjectsOverviewPage
     private static final String MID_IMPORT_PROJECT_FORM = "importProjectForm";
     private static final String MID_NEW_PROJECT = "newProject";
     private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
+    private static final String MID_LEAVE_PROJECT = "leaveProject";
+    private static final String MID_CONFIRM_LEAVE = "confirmLeave";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -109,6 +116,7 @@ public class ProjectsOverviewPage
     private WebMarkupContainer projectListContainer;
     private WebMarkupContainer roleFilters;
     private IModel<Set<PermissionLevel>> activeRoleFilters;
+    private ConfirmationDialog confirmLeaveDialog;
     
     public ProjectsOverviewPage()
     {
@@ -116,7 +124,9 @@ public class ProjectsOverviewPage
         add(createNewProjectLink());
         add(createImportProjectForm());
         add(roleFilters = createRoleFilters());
-        
+        add(confirmLeaveDialog = new ConfirmationDialog(MID_CONFIRM_LEAVE,
+                new StringResourceModel("leaveDialog.title", this),
+                new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
     }
     
@@ -173,14 +183,15 @@ public class ProjectsOverviewPage
             @Override
             protected void populateItem(ListItem<Project> aItem)
             {
-                LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK, () -> 
-                        selectProject(aItem.getModelObject()));
+                LambdaStatelessLink projectLink = new LambdaStatelessLink(MID_PROJECT_LINK,
+                    () -> selectProject(aItem.getModelObject()));
                 projectLink.add(new Label(MID_NAME, aItem.getModelObject().getName()));
-                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED, () -> 
-                        aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                DateLabel createdLabel = DateLabel.forDatePattern(MID_CREATED,
+                    () -> aItem.getModelObject().getCreated(), "yyyy-MM-dd");
+                addActionsDropdown(aItem);
+                aItem.add(projectLink);
                 createdLabel.add(visibleWhen(() -> createdLabel.getModelObject() != null));
                 aItem.add(createdLabel);
-                aItem.add(projectLink);
                 aItem.add(createRoleBadges(aItem.getModelObject()));
             }
 
@@ -202,6 +213,47 @@ public class ProjectsOverviewPage
         return projectList;
     }
     
+    private void addActionsDropdown(ListItem<Project> aItem)
+    {
+        User user = userRepository.getCurrentUser();
+        Project currentProject = aItem.getModelObject();
+
+        WebMarkupContainer container = new WebMarkupContainer("actionDropdown");
+        
+        LambdaAjaxLink leaveProjectLink = new LambdaAjaxLink(MID_LEAVE_PROJECT,
+            _target -> actionConfirmLeaveProject(_target, aItem));
+        boolean hasProjectPermissions = !projectService
+                .listProjectPermissionLevel(user, currentProject).isEmpty();
+
+        leaveProjectLink.add(LambdaBehavior.visibleWhen(() -> 
+                hasProjectPermissions && !projectService.isAdmin(currentProject, user)));
+
+        container.add(leaveProjectLink);
+        
+        // If there are no active items in the dropdown, then do not show the dropdown. However,
+        // to still make it take up the usual space and keep the overview nicely aligned, we use
+        // the "invisible" CSS class here instead of telling Wicket to not render the dropdown
+        container.add(new CssClassNameAppender(LoadableDetachableModel.of(() -> 
+                container.streamChildren().anyMatch(Component::isVisible) ? "" : "invisible")));
+        
+        aItem.add(container);
+    }
+
+
+    private void actionConfirmLeaveProject(AjaxRequestTarget aTarget, ListItem<Project> aItem)
+    {
+        User user = userRepository.getCurrentUser();
+        Project currentProject = aItem.getModelObject();
+        confirmLeaveDialog.setConfirmAction((_target) -> {
+            projectService.listProjectPermissionLevel(user, currentProject).stream()
+                    .forEach(projectService::removeProjectPermission);
+            _target.add(projectListContainer);
+            _target.addChildren(getPage(), IFeedback.class);
+            success("You are no longer a member of project [" + currentProject.getName() + "]");
+        });
+        confirmLeaveDialog.show(aTarget);
+    }
+
     private WebMarkupContainer createRoleFilters()
     {
         ListView<PermissionLevel> listview = new ListView<PermissionLevel>(MID_ROLE_FILTER,
