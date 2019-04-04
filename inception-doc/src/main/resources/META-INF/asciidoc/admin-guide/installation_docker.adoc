@@ -18,19 +18,19 @@
 
 == Quick start
 
-If you have Docker installed, you can run INCEpTION using
+If you have Docker installed, you can run {product-name} using
 
 [source,text,subs="+attributes"]
 ----
 docker run -it --name inception -p8080:8080 inception/inception:{revnumber}
 ----
 
-The command downloads INCEpTION from Dockerhub and starts it on port 8080. If this port is not
+The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
 available on your machine, you should provide another port to the `-p` parameter. 
 
 The logs will be printed to the console. To stop the container, press `CTRL-C`.
 
-To run the INCEpTION docker in the background use 
+To run the {product-name} docker in the background use 
 
 [source,text,subs="+attributes"]
 ----
@@ -44,12 +44,12 @@ Logs are accessible by typing
 docker logs inception
 ----
 
-NOTE: Use `docker run` only the first time that you run INCEpTION. If you try it a second time, Docker
+NOTE: Use `docker run` only the first time that you run {product-name}. If you try it a second time, Docker
       will complain about the name `inception` already being in use. If you follow Docker`s suggestion
-      to delete the container, you will loose all your INCEpTION data. Further below, we explain how
+      to delete the container, you will loose all your {product-name} data. Further below, we explain how
       you can store your data outside the container in a folder on your host.
       
-When you want to run INCEpTION again later, use the command
+When you want to run {product-name} again later, use the command
 
 [source,text,subs="+attributes"]
 ----
@@ -65,9 +65,9 @@ docker start inception
 
 == Storing data on the host
 
-If you follow the quick start instructions above, INCEpTION will store all its data inside the docker
+If you follow the quick start instructions above, {product-name} will store all its data inside the docker
 container. This is normally not what you want because as soon as you delete the container, all data
-is gone. That means for example that you cannot easily upgrade to a new version of the INCEpTION
+is gone. That means for example that you cannot easily upgrade to a new version of the {product-name}
 docker image when one is released.
 
 To store your data on your host computer, first create a folder where you want to store your data.
@@ -77,16 +77,25 @@ For example, if you are on Linux, you could create a folder `/srv/inception`:
 $ mkdir /srv/inception
 ----
 
-When you run INCEpTION via Docker, you then mount this folder into the container:
+When you run {product-name} via Docker, you then mount this folder into the container:
 
 [source,text,subs="+attributes"]
 ----
 docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
 ----
 
+== Settings file
+
+The dockerized {product-name} expects the `settings.properties` file in the `/export` folder. Instead of
+injecting a custom `settings.properties` file into the container, it is strongly recommender to
+use the instructions above (Storing data on the host) to mount a folder from the host system to 
+`/export` then to place the into the mounted folder `settings.properties`. Thus, if you follow
+the instructions above, the settings file would go to `/srv/webanno/settings.properties` on the host
+system.
+
 == Connecting to a MySQL database
 
-By default, INCEpTION uses an embedded SQL database to store its metadata (not the texts,
+By default, {product-name} uses an embedded SQL database to store its metadata (not the texts,
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
 recommended to use a separate MySQL database instead of the embedded SQL database.
 
@@ -115,7 +124,7 @@ The actual name of these containers might vary. A list of running containers can
 docker ps
 ----
 
-Two directories in your INCEpTION home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
+Two directories in your {product-name} home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
 
 [source,text,subs="+attributes"]
 ----
