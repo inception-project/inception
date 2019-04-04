@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.ToDoubleBiFunction;
 import java.util.stream.Stream;
 
 public class EvaluationResult
@@ -29,7 +30,7 @@ public class EvaluationResult
     private int testSetSize;
     private boolean skippedEvaluation;
 
-    private final String ignoreLabel;
+    private final List<String> ignoreLabels;
 
     /**
      * Stores number of predicted labels for each gold label
@@ -43,31 +44,43 @@ public class EvaluationResult
 
     /**
      * Calculate macro-averaged scores on per-token basis over all labels contained in the given
-     * annotated pairs except for those matching the given ignore-label as a gold label.
+     * annotated pairs except for those matching the given ignore-labels as a gold label.
      * 
-     * @param aIgnoreLabel
-     *            this label will be ignored as a gold label during evaluation
+     * @param aIgnoreLabels
+     *            these labels will be ignored as gold labels during evaluation
      * @param aAnnotatedPairs
      *            pairs of gold and predicted labels for the same token
      */
-    public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs)
+    public EvaluationResult(List<String> aIgnoreLabels, Stream<AnnotatedTokenPair> aAnnotatedPairs)
     {
         labels = new ArrayList<>();
-        ignoreLabel = aIgnoreLabel;
+        ignoreLabels = aIgnoreLabels;
         numOfLabels = 0;
         // construct confusion matrix
         confusionMatrix = new HashMap<>();
         if (aAnnotatedPairs != null) {
             aAnnotatedPairs.forEach(this::incConfusionMatrix);
-            numOfLabels = (ignoreLabel != null && labels.contains(ignoreLabel)) ? labels.size() - 1
-                    : labels.size();
+            numOfLabels = countLabels();
         }
     }
     
-    public EvaluationResult(String aIgnoreLabel, Stream<AnnotatedTokenPair> aAnnotatedPairs,
+    private int countLabels()
+    {
+        if (ignoreLabels != null) {
+            return Math.toIntExact(labels.stream().filter(l -> !ignoreLabels.contains(l)).count());
+        }
+        return labels.size();
+    }
+
+    public int getNumOfLabels()
+    {
+        return numOfLabels;
+    }
+
+    public EvaluationResult(List<String> aIgnoreLabels, Stream<AnnotatedTokenPair> aAnnotatedPairs,
             int aTrainSetSize, int aTestSetSize)
     {
-        this(aIgnoreLabel, aAnnotatedPairs);
+        this(aIgnoreLabels, aAnnotatedPairs);
         trainingSetSize = aTrainSetSize;
         testSetSize = aTestSetSize;
     }
@@ -87,7 +100,7 @@ public class EvaluationResult
             incCounter(goldLabel, predictedLabel);
         }
 
-        if (!goldLabel.equals(ignoreLabel)) {
+        if (ignoreLabels == null || !ignoreLabels.contains(goldLabel)) {
             total += 1;
         }
     }
@@ -133,7 +146,7 @@ public class EvaluationResult
     {
         double tp = 0.0;
         for (String label : labels) {
-            if (!label.equalsIgnoreCase(ignoreLabel)) {
+            if (ignoreLabels == null || !ignoreLabels.contains(label)) {
                 tp += confusionMatrix.get(label).get(label);
             }
         }
@@ -147,23 +160,9 @@ public class EvaluationResult
      */
     public double computePrecisionScore()
     {
-        double precision = 0.0;
-        if (numOfLabels > 0) {
-            for (String label : labels) {
-                double tp = confusionMatrix.get(label).get(label);
-                double numPredictedAsLabel = 0.0;
-                for (String predictedLabel : labels) {
-                    if (haveSeenInstance(label, predictedLabel))
-                        numPredictedAsLabel += confusionMatrix.get(predictedLabel).get(label);
-                }
-                precision += (numPredictedAsLabel > 0 && !label.equals(ignoreLabel))
-                        ? tp / numPredictedAsLabel
-                        : 0;
-
-            }
-            precision = precision / numOfLabels;
-        }
-        return precision;
+        // precision divides tp by (tp + fp) i.e num of instances predicted as the goldlabel
+        return calcMetricAverage(
+            (goldLabel, predictedLabel) -> countLabelCombi(predictedLabel, goldLabel));
     }
 
     private boolean haveSeenInstance(String label, String predictedLabel)
@@ -179,21 +178,53 @@ public class EvaluationResult
      */
     public double computeRecallScore()
     {
-        double recall = 0.0;
+        // recall divides tp by (tp + fn) i.e num of instances that are the goldlabel
+        return calcMetricAverage(
+            (goldLabel, predictedLabel) -> countLabelCombi(goldLabel, predictedLabel));
+    }
+
+    /**
+     * Calculate the metric average for all labels for metrics which divide tp by a specific count
+     * @param countFunction the specific count of a certain label combination
+     * @return macro-averaged metric score
+     */
+    private double calcMetricAverage(ToDoubleBiFunction<String, String> countFunction)
+    {
+        double metric = 0.0;
         if (numOfLabels > 0) {
             for (String label : labels) {
                 double tp = confusionMatrix.get(label).get(label);
                 double numIsLabel = 0.0;
                 for (String predictedLabel : labels) {
-                    if (haveSeenInstance(predictedLabel, label))
-                        numIsLabel += confusionMatrix.get(label).get(predictedLabel);
+                    numIsLabel += countFunction.applyAsDouble(label, predictedLabel);
                 }
-                recall += (numIsLabel > 0 && !label.equals(ignoreLabel)) ? tp / numIsLabel : 0;
+                metric += calcClassMetric(label, tp, numIsLabel);
 
             }
-            recall = recall / numOfLabels;
+            metric = metric / numOfLabels;
         }
-        return recall;
+        return metric;
+    }
+
+    /**
+     * Count instances with given gold-label that were predicted as given predicted-label.
+     * @return count
+     */
+    private double countLabelCombi(String aGoldLabel, String aPredictedLabel)
+    {
+        double numIsLabel = 0.0;
+        if (haveSeenInstance(aPredictedLabel, aGoldLabel))
+            numIsLabel = confusionMatrix.get(aGoldLabel).get(aPredictedLabel);
+        return numIsLabel;
+    }
+
+    private double calcClassMetric(String aLabel, double aTp, double aNumIsLabel)
+    {
+        double classMetric = 0.0;
+        if (aNumIsLabel > 0 && (ignoreLabels == null || !ignoreLabels.contains(aLabel))) {
+            classMetric = aTp / aNumIsLabel;
+        }
+        return classMetric;
     }
 
     /**

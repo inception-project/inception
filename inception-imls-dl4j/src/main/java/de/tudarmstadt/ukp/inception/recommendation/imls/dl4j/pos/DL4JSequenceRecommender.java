@@ -511,8 +511,6 @@ public class DL4JSequenceRecommender
             int sentNum = 0;
             Iterator<Sample> testSetIterator = testSet.iterator();
             List<AnnotatedTokenPair> predictions = new ArrayList<>();
-            int notNoLabelCount = 0;
-            int totalTokenCount = 0;
             while (testSetIterator.hasNext()) {
                 // Prepare a batch of sentences that we want to predict because calling the
                 // prediction is expensive
@@ -535,17 +533,11 @@ public class DL4JSequenceRecommender
                             predictions.add(new AnnotatedTokenPair(expectedLabels.get(i),
                                     actualLabels.get(i)));
                         }
-                        if (!actualLabels.get(i).equals(NO_LABEL))
-                            notNoLabelCount++;
-                        totalTokenCount++;
                     }
                 }
                 
             }
-            //FIXME only no-label is predicted
-            System.out.println(notNoLabelCount);
-            System.out.println(totalTokenCount);
-            return new EvaluationResult(null, predictions.stream(), trainingSetSize,
+            return new EvaluationResult(asList(NO_LABEL), predictions.stream(), trainingSetSize,
                     testSetSize);
         }
         catch (IOException e) {

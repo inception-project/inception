@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommender.api.evaluation;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
@@ -82,7 +83,7 @@ public class EvaluationResultTest
     @Test
     public void thatIgnoringALabelWorks()
     {
-        EvaluationResult calc = new EvaluationResult("PER", instances.stream());
+        EvaluationResult calc = new EvaluationResult(asList("PER"), instances.stream());
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
                 .isEqualTo(2 * (0.5 * (0.5 + 1.0 / 3) * 0.5)
                         / (0.5 + (0.5 + 1.0 / 3) * 0.5));
@@ -94,7 +95,23 @@ public class EvaluationResultTest
                 .as("precision with ignore label is correctly calculated")
                 .isEqualTo((0.5 + 1.0 / 3) * 0.5);
     }
-    
+
+    @Test
+    public void thatNumOfLabelsWorks()
+    {
+        EvaluationResult calc = new EvaluationResult(asList(), instances.stream());
+        assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
+
+        calc = new EvaluationResult(asList("PER"), instances.stream());
+        assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
+                .isEqualTo(2);
+
+        calc = new EvaluationResult(asList("PER", "ORG"), instances.stream());
+        assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
+                .isEqualTo(1);
+
+    }
+
     @Test
     public void thatMissingClassesWorks()
     {

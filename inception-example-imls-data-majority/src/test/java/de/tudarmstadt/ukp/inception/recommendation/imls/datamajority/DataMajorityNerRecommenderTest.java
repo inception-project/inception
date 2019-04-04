@@ -120,10 +120,10 @@ public class DataMajorityNerRecommenderTest
         System.out.printf("Precision: %f%n", precision);
         System.out.printf("Recall: %f%n", recall);
         
-        assertThat(fscore).isBetween(0.0, 1.0);
-        assertThat(precision).isBetween(0.0, 1.0);
-        assertThat(recall).isBetween(0.0, 1.0);
-        assertThat(accuracy).isBetween(0.0, 1.0);
+        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
     
     @Test
@@ -186,9 +186,7 @@ public class DataMajorityNerRecommenderTest
 
             System.out.printf("Score: %f%n", score);
 
-            // Lower than 0 means systematic disagreement
-            // Higher than 0 means agreement
-            assertThat(score).isBetween(-1.0, 1.0);
+            assertThat(score).isStrictlyBetween(0.0, 1.0);
             
             i++;
         }

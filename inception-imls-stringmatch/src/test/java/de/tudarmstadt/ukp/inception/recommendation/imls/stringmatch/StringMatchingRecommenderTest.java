@@ -285,9 +285,7 @@ public class StringMatchingRecommenderTest
 
             System.out.printf("Score: %f%n", score);
 
-            // Lower than 0 means systematic disagreement
-            // Higher than 0 means agreement
-            assertThat(score).isBetween(-1.0, 1.0);
+            assertThat(score).isStrictlyBetween(0.0, 1.0);
             
             i++;
         }

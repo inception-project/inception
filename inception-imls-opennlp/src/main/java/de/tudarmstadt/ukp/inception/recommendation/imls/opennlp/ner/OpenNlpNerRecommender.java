@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -204,7 +205,7 @@ public class OpenNlpNerRecommender
 
         }
 
-        return new EvaluationResult(null, predictions.stream(), trainingSetSize,
+        return new EvaluationResult(asList(NO_NE_TAG), predictions.stream(), trainingSetSize,
                 testSetSize);
     }
 

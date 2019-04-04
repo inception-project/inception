@@ -266,7 +266,7 @@ public class StringMatchingRecommender
             }
         }
 
-        return new EvaluationResult(UNKNOWN_LABEL, predictions.stream(), trainingSetSize,
+        return new EvaluationResult(asList(NO_LABEL), predictions.stream(), trainingSetSize,
                 testSetSize);
     }
 

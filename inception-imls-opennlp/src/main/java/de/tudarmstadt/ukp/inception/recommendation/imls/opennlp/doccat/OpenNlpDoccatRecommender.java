@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -186,7 +187,7 @@ public class OpenNlpDoccatRecommender
                 .map(sample -> new AnnotatedTokenPair(sample.getCategory(),
                         doccat.getBestCategory(doccat.categorize(sample.getText()))));
         
-        return new EvaluationResult(null, predictions, trainingSetSize, testSetSize);
+        return new EvaluationResult(asList(NO_CATEGORY), predictions, trainingSetSize, testSetSize);
     }
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)

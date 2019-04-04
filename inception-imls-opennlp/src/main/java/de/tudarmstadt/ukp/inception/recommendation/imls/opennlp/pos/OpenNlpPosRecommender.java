@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -227,7 +228,8 @@ public class OpenNlpPosRecommender
             }
         }
         
-        return new EvaluationResult(null, predictions.stream(), trainingSetSize, testSetSize);
+        return new EvaluationResult(asList(PAD), predictions.stream(), trainingSetSize,
+                testSetSize);
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

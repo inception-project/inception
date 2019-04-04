@@ -140,7 +140,7 @@ public class OpenNlpPosRecommenderTest
             
             double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
-            assertThat(score).isBetween(0.0, 1.0);
+            assertThat(score).isStrictlyBetween(0.0, 1.0);
             
             i++;
         }
