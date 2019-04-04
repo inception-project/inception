@@ -17,24 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.lang3.time.StopWatch;
-import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.query.Binding;
-import org.eclipse.rdf4j.query.BindingSet;
-import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.eclipse.rdf4j.query.QueryLanguage;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
@@ -52,10 +44,13 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
 
-public class NoReification implements ReificationStrategy {
-
+public class NoReification
+    implements ReificationStrategy
+{
     private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final KnowledgeBaseService kbService;
 
     public NoReification(KnowledgeBaseService aKbService)
@@ -64,7 +59,8 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement) {
+    public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
+    {
         KBHandle instance = aStatement.getInstance();
         KBHandle property = aStatement.getProperty();
 
@@ -82,100 +78,12 @@ public class NoReification implements ReificationStrategy {
     }
 
     @Override
-    public List<KBStatement> listStatements(KnowledgeBase kb, KBHandle aItem, boolean aAll)
+    public List<KBStatement> listStatements(KnowledgeBase aKB, KBHandle aItem, boolean aAll)
     {
-        Map<String, KBHandle> props = new HashMap<>();
-        for (KBHandle prop : kbService.listProperties(kb, aAll)) {
-            props.put(prop.getIdentifier(), prop);
-        }
-
-        List<Statement> explicitStmts = listStatements(kb, aItem.getIdentifier(), false);
-        List<Statement> allStmts = listStatements(kb, aItem.getIdentifier(), true);
-
-        List<KBStatement> result = new ArrayList<>();
-        for (Statement stmt : allStmts) {
-            // Can this really happen?
-
-            Value value = stmt.getObject();
-            if (value == null) {
-                log.warn("Property with null value detected.");
-                continue;
-            }
-
-            if (value instanceof BNode) {
-                log.warn("Properties with blank node values are not supported");
-                continue;
-            }
-
-            KBHandle property = props.get(stmt.getPredicate().stringValue());
-            if (property == null) {
-                // This happens in particular for built-in properties such as
-                // RDF / RDFS / OWL properties
-                if (aAll) {
-                    property = new KBHandle();
-                    property.setIdentifier(stmt.getPredicate().stringValue());
-                }
-                else {
-                    continue;
-                }
-            }
-
-            Set<Statement> originalStatements = new HashSet<>();
-            originalStatements.add(stmt);
-
-            KBStatement kbStatement = new KBStatement(aItem, property, value);
-            kbStatement.setInferred(!explicitStmts.contains(stmt));
-            kbStatement.setOriginalStatements(originalStatements);
-
-            result.add(kbStatement);
-        }
-
-        return result;
-    }
-
-    /**
-     * Returns all statements for which the given instance identifier is the subject
-     */
-    private List<Statement> listStatements(KnowledgeBase kb, String aIdentifier,
-            boolean aIncludeInferred)
-    {
-        StopWatch timer = new StopWatch();
-        timer.start();
-        
-        try (RepositoryConnection conn = kbService.getConnection(kb)) {
-            ValueFactory vf = conn.getValueFactory();
-            String QUERY = "SELECT * WHERE { ?s ?p ?o . }";
-            TupleQuery tupleQuery = conn.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-            tupleQuery.setBinding("s", vf.createIRI(aIdentifier));
-            tupleQuery.setIncludeInferred(aIncludeInferred);
-
-            TupleQueryResult result;
-            try {
-                result = tupleQuery.evaluate();
-            }
-            catch (QueryEvaluationException e) {
-                log.warn("Listing statements failed.", e);
-                return Collections.emptyList();
-            }
-
-            List<Statement> statements = new ArrayList<>();
-            IRI subject = vf.createIRI(aIdentifier);
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                Binding pred = bindings.getBinding("p");
-                Binding obj = bindings.getBinding("o");
-
-                IRI predicate = vf.createIRI(pred.getValue().stringValue());
-                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                if (!statements.contains(stmt)) {
-                    statements.add(stmt);
-                }
-            }
-            return statements;
-        }
-        finally {
-            log.trace("NoReification.listStatementsForInstance took {} ms", timer.getTime());
-        }
+        return kbService.read(aKB, conn -> SPARQLQueryBuilder
+                .forItems(aKB)
+                .withIdentifier(aItem.getIdentifier())
+                .asStatements(conn, aAll));
     }
     
     @Override

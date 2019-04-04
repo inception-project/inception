@@ -26,6 +26,9 @@ role that you have in them. By default, all projects are visible.
 Users with the role *project creator* can conveniently *create new projects* or
 *import project archives* on this page.
 
+Users without a *manager* role can leave a project by clicking on the *Leave Project* button 
+below the project name.
+
 When uploading projects via this page, user roles for the project are not fully imported! 
 If the importing user has the role *project creator*, then the *manager* role is added
 for the importing user. Otherwise, only the roles of the importing user are retained.
