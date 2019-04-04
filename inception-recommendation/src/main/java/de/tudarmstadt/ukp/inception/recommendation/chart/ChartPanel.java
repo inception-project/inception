@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
+import de.tudarmstadt.ukp.inception.recommendation.chart.resources.ChartJsReference;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
 public class ChartPanel
@@ -91,6 +92,8 @@ public class ChartPanel
 
         aResponse.render(JavaScriptReferenceHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
+        
+        aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
         model = getModel();
 
