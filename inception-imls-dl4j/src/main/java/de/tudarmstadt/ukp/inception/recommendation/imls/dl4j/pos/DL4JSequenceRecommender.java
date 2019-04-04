@@ -262,9 +262,19 @@ public class DL4JSequenceRecommender
                 }
     
                 featureVec.put(new INDArrayIndex[] { point(sampleIdx), all(), point(t) }, vector);
-                featureMask.putScalar(new int[] { sampleIdx, t }, 1.0);
-                labelMask.putScalar(new int[] { sampleIdx, t }, 1.0);
-    
+                
+
+                // FIXME: exclude padding labels from training
+                // compare instances to avoid collision with possible no_label user label
+                if (labels == null || labels.get(t) == NO_LABEL) {
+                    labelMask.putScalar(new int[] { sampleIdx, t }, 0.0);
+                    featureMask.putScalar(new int[] { sampleIdx, t }, 0.0);
+                }
+                else {
+                    labelMask.putScalar(new int[] { sampleIdx, t }, 1.0);
+                    featureMask.putScalar(new int[] { sampleIdx, t }, 1.0);
+                }
+
                 if (aIncludeLabels) {
                     String label = labels.get(t);
                     if (!aTagset.containsKey(label)) {

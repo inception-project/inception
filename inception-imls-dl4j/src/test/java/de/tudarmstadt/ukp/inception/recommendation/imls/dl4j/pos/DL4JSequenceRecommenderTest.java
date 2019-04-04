@@ -334,6 +334,29 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
+    public void thatNerPredictionProducesNonPaddingLabels() throws Exception
+    {
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
+                cache);
+        JCas cas = loadNerDevelopmentData();
+
+        sut.train(context, asList(cas.getCas()));
+
+        sut.predict(context, cas.getCas());
+
+        Collection<PredictedSpan> predictions = JCasUtil.select(cas, PredictedSpan.class);
+
+        long numWithLabel = predictions.stream()
+                .filter(p -> !p.getLabel().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+
+        System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
+                predictions.size());
+
+        assertThat(predictions).as("There are predictions other than *No_Label*")
+                .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
+    }
+
+    @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 50, 10);
