@@ -26,6 +26,9 @@
   <artifactId>inception-app-webapp</artifactId>
   <name>INCEpTION - Web-Application</name>
   <packaging>war</packaging>
+  <properties>
+    <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
+  </properties>
   <dependencies>
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
@@ -907,6 +910,50 @@
             </plugin>
           </plugins>
         </pluginManagement>
+      </build>
+    </profile>
+    <profile>
+      <id>docker</id>
+      <activation>
+        <property>
+          <name>enable-docker</name>
+        </property>
+      </activation>
+      <properties>
+        <docker.jarfile>maven/inception-app-standalone-${project.version}.jar</docker.jarfile>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <configuration>
+              <images>
+                <image>
+                  <name>${docker.image.name}</name>
+                  <build>
+                    <tags>
+                      <tag>latest</tag>
+                      <tag>${project.version}</tag>
+                    </tags>
+                    <dockerFileDir>${project.basedir}/src/main/docker</dockerFileDir>
+                    <filter>@</filter>
+                    <assembly>
+                      <descriptorRef>artifact</descriptorRef>
+                      <inline>
+                        <files>
+                          <file>
+                            <source>${project.build.directory}/inception-app-standalone-${project.version}.jar</source>
+                          </file>
+                        </files>
+                      </inline>
+                    </assembly>
+                  </build>
+                </image>
+              </images>
+            </configuration>
+          </plugin>
+        </plugins>
       </build>
     </profile>
     <profile>
