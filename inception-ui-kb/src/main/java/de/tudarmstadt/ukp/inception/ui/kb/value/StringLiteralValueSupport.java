@@ -58,7 +58,7 @@ public class StringLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType(XMLSchema.STRING.stringValue(), "String Resource",
+        return asList(new ValueType(XMLSchema.STRING.stringValue(), "String",
                 valueTypeSupportId));
     }
     
