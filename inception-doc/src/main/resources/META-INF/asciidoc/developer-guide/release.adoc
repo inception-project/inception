@@ -1,0 +1,101 @@
+= Releasing INCEpTION
+
+== Prerequisites
+
+When deploying to an Artifactory instance, make sure that the UKP Maven Repository is with your
+user credentials are added to your machines `settings.xml`. In our case, the repository
+`ukp-oss-releases` has to be listed with a user and password that belongs to the `trusted-user`
+group. See https://dkpro.github.io/dkpro-core/pages/setup-maven[DKPro Core - Setting up Maven repository]
+for more information on how to do this.
+
+== Release steps
+
+[arabic]
+. Create a release issue in the INCEpTION Github issue tracker
+. Merge the branch you want to release (e.g. `{revnumber}`) into the
+  master branch. This can be done right away with push permissions to
+  master or requires a pull request.
+. Checkout the branch you want to release. Create a new branch `released_branch` and check
+  it out, call it e.g. `release/issue-number-release-{revnumber}`
+. Run `mvn -Dmaven.surefire.heap=6g -Darguments="-Dmaven.surefire.heap=6g" -DautoVersionSubmodules release:prepare release:perform`;
+  the released jar is then in `target/checkout/inception-app-webapp/target/`, look for the standalone jar
+. Immediately after the release, again merge the released branch into the
+  master branch, using `git merge -s ours `released_branch`. Create a
+  pull request for this. Doing this second merge does not actually change
+  anything in the master. However, it ensures that the updates to the
+  version number in the `released_branch` will not make it to the
+  master branch.
+. Create a new pull request from `released_branch` to the release
+branch.
+
+== Making the release available
+
+[arabic]
+. Sign the jar with `gpg --detach-sign --armor`. Use these files to
+create a new release under
+https://github.com/inception-project/inception/releases . The issues
+that were solved with this release can be found by filtering issues by
+milestones.
+
+== Deploy the new release
+
+Copy the new release onto `your_server`. SSH to it and run the following:
+
+....
+sudo su -
+cd /srv/inception-stable
+service inception-stable stop
+mv ~/inception-app-standalone-{release}-SNAPSHOT.jar inception-stable.jar
+service inception-stable start
+....
+
+Make sure that the file is owned by `www-data`. If not, then run
+
+....
+chown www-data:www-data inception-stable.jar
+....
+
+== Update the testing script
+
+In order to update the version on `your_server` testing, edit
+
+....
+/home/local/UKP/svc_inception_deploy/bin/install-inception-testing
+....
+
+and update the version to the new version set during the ``prepare
+release'' step.
+
+== Updating documentation
+
+Checkout or or go into the `inception-project.github.io` repository and
+create a new branch. In order to publish the documentation for this new
+release, copy the data from the INCEpTION repository that was just
+released under
+`target/checkout/inception-app-webapp/target/generated-docs` into a
+version folder under `releases/docs/{version}` in the documentation
+repoository. Also updating the `_data/releases.yml` file. Create a pull
+request for this as well.
+
+== Publish to docker
+
+Make sure that you configured your docker user in your maven settings:
+
+[source,xml]
+----
+<server>
+    <id>docker.io</id>
+    <username>user</username>
+    <password>password</password>
+</server>
+----
+
+Also, your user needs to have push rights to the `inceptionproject` Dockerhub group.
+Check out the release tag, make sure that in the master pom, the version is set to
+a release version (no snapshot suffix). Then run
+
+[source,xml]
+----
+mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
+mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
+----
