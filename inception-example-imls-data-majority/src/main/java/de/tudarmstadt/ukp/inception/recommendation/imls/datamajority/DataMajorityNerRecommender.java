@@ -191,7 +191,8 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
         
         DataMajorityModel model = trainModel(trainingData);
