@@ -94,6 +94,10 @@ public class EvaluationSimulationPanel
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
                 String[] scoresAndTrainingSizes = evaluate(_target);
+                
+                if (scoresAndTrainingSizes == null) {
+                    return;
+                }
 
                 String scores = scoresAndTrainingSizes[0];
                 String trainingSizes = scoresAndTrainingSizes[1];
