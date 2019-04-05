@@ -153,6 +153,13 @@ public class StatementEditor extends Panel
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
     {
         KBStatement modifiedStatement = aForm.getModelObject();
+        
+        if (modifiedStatement.getValue() == null) {
+            error("The value of statement cannot be empty");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+        
         try {
             // persist the modified statement and replace the original, unchanged model
             KBStatement oldStatement = statement.getObject();

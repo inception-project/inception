@@ -63,7 +63,9 @@ public interface ConceptLinkingService
      * for a single knowledge base
      *
      * @param aRepositoryId
-     *            the RepositoryId of the knowledge base that defines the scope
+     *            the RepositoryId of the knowledge base that defines the scope. If this
+     *            parameter is {@code null}, then all enabled knowledge bases are searched.
+     *            If the specified knowledge base is disabled, an empty list is returned.
      * @param aTypedString
      *            What the user has typed so far in the text field. Might be null.
      * @param aMention
