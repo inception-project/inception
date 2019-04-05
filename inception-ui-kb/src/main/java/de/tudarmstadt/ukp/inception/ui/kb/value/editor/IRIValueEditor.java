@@ -124,6 +124,7 @@ public class IRIValueEditor
         };
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
+        value.setRequired(true);
         add(value);
     }
 
