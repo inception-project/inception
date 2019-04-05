@@ -40,6 +40,9 @@ public class SearchResult
     private long documentId;
     private String documentTitle;
 
+    // only used in the ui to simplify the selection of search results for annotation
+    private boolean isSelectedForAnnotation = true;
+
     public int getTokenStart()
     {
         return tokenStart;
@@ -128,6 +131,16 @@ public class SearchResult
     public void setDocumentTitle(String aDocumentTitle)
     {
         documentTitle = aDocumentTitle;
+    }
+
+    public boolean isSelectedForAnnotation()
+    {
+        return isSelectedForAnnotation;
+    }
+
+    public void setSelectedForAnnotation(boolean selectedForAnnotation)
+    {
+        isSelectedForAnnotation = selectedForAnnotation;
     }
 
     @Override
