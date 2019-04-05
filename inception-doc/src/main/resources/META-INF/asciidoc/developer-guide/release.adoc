@@ -2,69 +2,68 @@
 
 == Prerequisites
 
-When deploying to an Artifactory instance, make sure that the UKP Maven Repository is with your
-user credentials are added to your machines `settings.xml`. In our case, the repository
-`ukp-oss-releases` has to be listed with a user and password that belongs to the `trusted-user`
-group. See https://dkpro.github.io/dkpro-core/pages/setup-maven[DKPro Core - Setting up Maven repository]
+When releasing and publishing the resulting artifact, make sure that you have actually the rights
+to publish new artifacts to the target repository. See e.g.
+https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] or
+https://dkpro.github.io/dkpro-core/pages/setup-maven[DKPro Core - Setting up Maven repository]
 for more information on how to do this.
+
+== Branching model
+
+INCEpTION uses a branching model where new features are added to master. When a stable version is
+release, it is branched from master and called after the to be release version where the last digit is
+replace by an `x`, e.g. `0.8.x`. Bugfixes are in general performed by branching from the stable
+version in which the error occurs. Afterwards, this stable branch is then merged back into master to
+have the fix both in stable and master. From time to time, a new stable minor version is
+released (bugfix release).
 
 == Release steps
 
-[arabic]
-. Create a release issue in the INCEpTION Github issue tracker
-. Merge the branch you want to release (e.g. `{revnumber}`) into the
-  master branch. This can be done right away with push permissions to
-  master or requires a pull request.
-. Checkout the branch you want to release. Create a new branch `released_branch` and check
-  it out, call it e.g. `release/issue-number-release-{revnumber}`
-. Run `mvn -Dmaven.surefire.heap=6g -Darguments="-Dmaven.surefire.heap=6g" -DautoVersionSubmodules release:prepare release:perform`;
-  the released jar is then in `target/checkout/inception-app-webapp/target/`, look for the standalone jar
+For these steps, we assume push permissions to the master branch. If these are not given, pull
+requests have to be used for the relevant steps. For the sake of this guide, we assume that `0.8.x`
+is the latest stable version.
+
+== Bugfix release preparations
+
+Do this when you want to do a bugfix release.
+
+. Create a bugfix release issue in the INCEpTION Github issue tracker
+. Checkout the stable branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
+. Merge the branch you just created into the master branch; this makes sure that all bugfixes are
+  also applied to master git merge:
+
+[source,bash]
+----
+git checkout master
+git merge 0.8.x
+----
+
+== Stable release preparations
+
+Do this when you want to do a stable release.
+
+. Checkout master and make sure that you pulled the most recent version of it
+. Create a new branch from master and call it after the release you want to do, by e.g. `git checkout -b 0.9.x`
+
+== Running the release process
+
+. Run `mvn release:prepare release:perform`; the released jar is then in
+  `target/checkout/inception-app-webapp/target/`, look for the standalone jar
 . Immediately after the release, again merge the released branch into the
-  master branch, using `git merge -s ours `released_branch`. Create a
-  pull request for this. Doing this second merge does not actually change
-  anything in the master. However, it ensures that the updates to the
-  version number in the `released_branch` will not make it to the
-  master branch.
-. Create a new pull request from `released_branch` to the release
-branch.
+  master branch, using e.g. `git merge -s ours 0.9.x`. Doing this second merge does
+  not actually change anything in the master. However, it ensures that the updates to the
+  version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
 
 == Making the release available
 
 [arabic]
 . Sign the jar with `gpg --detach-sign --armor`. Use these files to
-create a new release under
-https://github.com/inception-project/inception/releases . The issues
-that were solved with this release can be found by filtering issues by
-milestones.
+create a new release under https://github.com/inception-project/inception/releases . The issues
+that were solved with this release can be found by filtering issues by milestones.
 
 == Deploy the new release
 
-Copy the new release onto `your_server`. SSH to it and run the following:
-
-....
-sudo su -
-cd /srv/inception-stable
-service inception-stable stop
-mv ~/inception-app-standalone-{release}-SNAPSHOT.jar inception-stable.jar
-service inception-stable start
-....
-
-Make sure that the file is owned by `www-data`. If not, then run
-
-....
-chown www-data:www-data inception-stable.jar
-....
-
-== Update the testing script
-
-In order to update the version on `your_server` testing, edit
-
-....
-/home/local/UKP/svc_inception_deploy/bin/install-inception-testing
-....
-
-and update the version to the new version set during the ``prepare
-release'' step.
+In order to deploy the new version, see the https://zoidberg.ukp.informatik.tu-darmstadt.de/jenkins/job/INCEpTION%20(GitHub)%20(master)/de.tudarmstadt.ukp.inception.app$inception-app-webapp/doclinks/2/#sect_upgrade[Admin Upgrading Guide].
 
 == Updating documentation
 
