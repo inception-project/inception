@@ -6,7 +6,8 @@ When releasing and publishing the resulting artifact, make sure that you have ac
 to publish new artifacts to the target repository. See e.g.
 https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] or
 https://dkpro.github.io/dkpro-core/pages/setup-maven[DKPro Core - Setting up Maven repository]
-for more information on how to do this.
+for more information on how to do this. Additionally, it assumes that you have write permissions
+to the protected `master` branch and to the protected maintenance branches.
 
 == Branching model
 
