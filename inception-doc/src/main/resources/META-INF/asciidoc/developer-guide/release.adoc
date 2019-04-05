@@ -45,15 +45,10 @@ is the most recent maintenance branch.
 Do this when you want to do a bugfix release.
 
 . Create a bugfix release issue in the INCEpTION Github issue tracker
+. Checkout the master branch: e.g. `git checkout master`
+. Merge the maintenance created into the master branch; this makes sure that all bugfixes are
+  also applied to master: e.g. `git merge 0.8.x`
 . Checkout the maintenance branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
-. Merge the branch you just created into the master branch; this makes sure that all bugfixes are
-  also applied to master git merge:
-
-[source,bash]
-----
-git checkout master
-git merge 0.8.x
-----
 
 == Feature release preparations
 
