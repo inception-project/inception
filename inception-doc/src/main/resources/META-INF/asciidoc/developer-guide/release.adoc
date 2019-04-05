@@ -10,25 +10,41 @@ for more information on how to do this.
 
 == Branching model
 
-INCEpTION uses a branching model where new features are added to master. When a stable version is
-release, it is branched from master and called after the to be release version where the last digit is
-replace by an `x`, e.g. `0.8.x`. Bugfixes are in general performed by branching from the stable
-version in which the error occurs. Afterwards, this stable branch is then merged back into master to
-have the fix both in stable and master. From time to time, a new stable minor version is
-released (bugfix release).
+INCEpTION uses a branching model where the development towards the next feature release happens on the
+`master`. Additionally, there are *maintenance* (also called *stable*) branches for all past feature 
+releases which are used to create bugfix releases when necessary. 
+
+To prepare a new feature release, we first create a maintenance branch from `master`. Assuming the current
+development version on the `master` branch is `0.8.0-SNAPSOHT`, we create a maintenance branch by the name
+`0.8.x`. After this, the version on the master branch must be manually updated to the next feature version,
+typically by increasing the second digit of the version (e.g. `0.9.0-SNAPSOHT` becomes `0.9.0-SNAPSOHT`).
+
+The process of doing the initial feature release on a new maintenance branch (e.g. for version `0.8.0`) is 
+largely the same then as for performing a bugfix release (e.g. for version `0.8.1`).
+
+Changes are usually not committed directly to the master or maintenance branches. Instead we work with
+feature branches. Features branches for new enhancements or refactorings normally are made from the 
+master branch. Feature branches for bugfixes are made from a maintenance branch (unless the bug only 
+exists on the master branch or is too difficult to fix without extensive refactoring and risk of 
+breaking other things). After accepting a pull request for a bugfix to a maintenance branch, a developer
+with write access to the mster branch should regularly merge the maintanence branch into the master branch
+to have the fix both in maintenance and master. From time to time, a new bugfix release is made.
+
+The first digit of the version can be increased to indicate e.g. major improvements, major technological
+changes or incompatible changes. This is done only very rarely (like maybe once every 1-3 years). 
 
 == Release steps
 
 For these steps, we assume push permissions to the master branch. If these are not given, pull
 requests have to be used for the relevant steps. For the sake of this guide, we assume that `0.8.x`
-is the latest stable version.
+is the most recent maintenance branch.
 
 == Bugfix release preparations
 
 Do this when you want to do a bugfix release.
 
 . Create a bugfix release issue in the INCEpTION Github issue tracker
-. Checkout the stable branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
+. Checkout the maintenance branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
 . Merge the branch you just created into the master branch; this makes sure that all bugfixes are
   also applied to master git merge:
 
@@ -38,9 +54,9 @@ git checkout master
 git merge 0.8.x
 ----
 
-== Stable release preparations
+== Feature release preparations
 
-Do this when you want to do a stable release.
+Do this when you want to do a feature release.
 
 . Checkout master and make sure that you pulled the most recent version of it
 . Create a new branch from master and call it after the release you want to do, by e.g. `git checkout -b 0.9.x`
@@ -57,13 +73,16 @@ Do this when you want to do a stable release.
 == Making the release available
 
 [arabic]
-. Sign the jar with `gpg --detach-sign --armor`. Use these files to
-create a new release under https://github.com/inception-project/inception/releases . The issues
+. Sign the jar with `gpg --detach-sign --armor`. Attach these files to
+the link:https://github.com/inception-project/inception/releases[GitHub release] that
+you are currently preparing. GitHub automatically creates a stub release for every tag
+and the Maven release process has automatically created such a tag for your release. The issues
 that were solved with this release can be found by filtering issues by milestones.
 
 == Deploy the new release
 
-In order to deploy the new version, see the https://zoidberg.ukp.informatik.tu-darmstadt.de/jenkins/job/INCEpTION%20(GitHub)%20(master)/de.tudarmstadt.ukp.inception.app$inception-app-webapp/doclinks/2/#sect_upgrade[Admin Upgrading Guide].
+In order to deploy the new version, see the <<admin-guide.adoc#sect_upgrade,upgrade process>> 
+in the Administrator Guide..
 
 == Updating documentation
 
@@ -83,9 +102,9 @@ Make sure that you configured your docker user in your maven settings:
 [source,xml]
 ----
 <server>
-    <id>docker.io</id>
-    <username>user</username>
-    <password>password</password>
+  <id>docker.io</id>
+  <username>user</username>
+  <password>password</password>
 </server>
 ----
 
