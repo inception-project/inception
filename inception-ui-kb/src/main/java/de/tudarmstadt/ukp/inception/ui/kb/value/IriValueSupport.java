@@ -58,7 +58,7 @@ public class IriValueSupport
     public List<ValueType> getSupportedValueTypes()
     {
         return asList(
-            new ValueType(XMLSchema.ANYURI.stringValue(), "KB Resource", valueTypeSupportId));
+            new ValueType(XMLSchema.ANYURI.stringValue(), "Resource", valueTypeSupportId));
     }
 
     @Override
