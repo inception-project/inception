@@ -2,26 +2,25 @@
 
 == Prerequisites
 
-When releasing and publishing the resulting artifact, make sure that you have actually the rights
+When releasing and publishing the resulting artifact, make sure that you actually have the rights
 to publish new artifacts to the target repository. See e.g.
-https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] or
-https://dkpro.github.io/dkpro-core/pages/setup-maven[DKPro Core - Setting up Maven repository]
-for more information on how to do this. Additionally, it assumes that you have write permissions
+https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] 
+for more information on how to do this. Additionally, this documentation assumes that you have write permissions
 to the protected `master` branch and to the protected maintenance branches.
 
 == Branching model
 
 INCEpTION uses a branching model where the development towards the next feature release happens on the
 `master`. Additionally, there are *maintenance* (also called *stable*) branches for all past feature 
-releases which are used to create bugfix releases when necessary. 
+releases which are used to create bugfix releases when necessary (`0.1.x`, `0.2.x`, `0.3.x` etc.). 
 
 To prepare a new feature release, we first create a maintenance branch from `master`. Assuming the current
-development version on the `master` branch is `0.8.0-SNAPSOHT`, we create a maintenance branch by the name
+development version on the `master` branch is `0.8.0-SNAPSHOT`, we create a maintenance branch by the name
 `0.8.x`. After this, the version on the master branch must be manually updated to the next feature version,
-typically by increasing the second digit of the version (e.g. `0.9.0-SNAPSOHT` becomes `0.9.0-SNAPSOHT`).
+typically by increasing the second digit of the version (e.g. `0.8.0-SNAPSHOT` becomes `0.9.0-SNAPSHOT`).
 
 The process of doing the initial feature release on a new maintenance branch (e.g. for version `0.8.0`) is 
-largely the same then as for performing a bugfix release (e.g. for version `0.8.1`).
+largely the same then as for performing a bugfix release (e.g. for version `0.8.1`) as described in the next section.
 
 Changes are usually not committed directly to the master or maintenance branches. Instead we work with
 feature branches. Features branches for new enhancements or refactorings normally are made from the 
@@ -46,8 +45,8 @@ Do this when you want to do a bugfix release.
 
 . Create a bugfix release issue in the INCEpTION Github issue tracker
 . Checkout the master branch: e.g. `git checkout master`
-. Merge the maintenance created into the master branch; this makes sure that all bugfixes are
-  also applied to master: e.g. `git merge 0.8.x`
+. Merge the maintenance into the master branch; this makes sure that all bugfixes are
+  also applied to master: e.g. `git merge 0.8.x` and then `git push`
 . Checkout the maintenance branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
 
 == Feature release preparations
@@ -60,19 +59,20 @@ Do this when you want to do a feature release.
 == Running the release process
 
 . Run `mvn release:prepare release:perform`; the released jar is then in
-  `target/checkout/inception-app-webapp/target/`, look for the standalone jar
+  `inception-app-webapp/target/`, look for the standalone jar
+. Push to the release branch and tag the commit: 
+  e.g. `git tag inception-app-0.8.1`and `git push origin inception-app-0.8.1`
 . Immediately after the release, again merge the released branch into the
-  master branch, using e.g. `git merge -s ours 0.9.x`. Doing this second merge does
-  not actually change anything in the master. However, it ensures that the updates to the
-  version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
+  master branch, using e.g. `git checkout master` and `git merge -s ours 0.9.x` and `git push`. 
+  Doing this second merge does not actually change anything in the master. 
+  However, it ensures that the updates to the version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
 
 == Making the release available
 
 [arabic]
-. Sign the jar with `gpg --detach-sign --armor`. Attach these files to
+. Sign the jar with `gpg --detach-sign --armor`. This creates the signature in a separate file. Attach both files to
 the link:https://github.com/inception-project/inception/releases[GitHub release] that
-you are currently preparing. GitHub automatically creates a stub release for every tag
-and the Maven release process has automatically created such a tag for your release. The issues
+you are currently preparing. The issues
 that were solved with this release can be found by filtering issues by milestones.
 
 == Deploy the new release
@@ -82,13 +82,13 @@ in the Administrator Guide..
 
 == Updating documentation
 
-Checkout or or go into the `inception-project.github.io` repository and
+Checkout or go into the `inception-project.github.io` repository and
 create a new branch. In order to publish the documentation for this new
 release, copy the data from the INCEpTION repository that was just
 released under
-`target/checkout/inception-app-webapp/target/generated-docs` into a
-version folder under `releases/docs/{version}` in the documentation
-repoository. Also updating the `_data/releases.yml` file. Create a pull
+`inception-app-webapp/target/generated-docs` into a
+version folder under `releases/{version}/docs` in the documentation
+repository. Also updating the `_data/releases.yml` file. Create a pull
 request for this as well.
 
 == Publish to docker
