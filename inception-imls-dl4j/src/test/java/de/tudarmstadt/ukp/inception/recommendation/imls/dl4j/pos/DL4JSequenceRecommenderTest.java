@@ -278,7 +278,7 @@ public class DL4JSequenceRecommenderTest
                 predictions.size());
         
         assertThat(predictions).as("There are predictions other than *No_Label*")
-        .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
+            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test
@@ -333,7 +333,7 @@ public class DL4JSequenceRecommenderTest
                 predictions.size());
         
         assertThat(predictions).as("There are predictions other than *No_Label*")
-        .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
+            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test

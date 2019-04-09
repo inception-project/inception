@@ -274,9 +274,7 @@ public class DL4JSequenceRecommender
                     String label = labels.get(t);
                     // do not add padding label no_label as predictable label
                     if (label != NO_LABEL) {
-                        if (!aTagset.containsKey(label)) {
-                            aTagset.put(label, aTagset.size());
-                        }
+                        aTagset.computeIfAbsent(label, key -> aTagset.size());
                         labelVec.putScalar(sampleIdx, aTagset.get(label), t, 1.0);
                     }
                 }
