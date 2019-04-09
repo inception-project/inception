@@ -45,13 +45,13 @@ public class EvaluationResultTest
         for (String[] labels : instanceLabels) {
             instances.add(new AnnotatedTokenPair(labels[0], labels[1]));
         }
-        
     }
 
     @Test
     public void thatAccuracyWorks()
     {
-        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        EvaluationResult calc = new EvaluationResult(instances.stream());
+        
         assertThat(calc.computeAccuracyScore()).as("accuracy is correctly calculated")
                 .isEqualTo(4.0 / 9.0);
     }
@@ -59,7 +59,8 @@ public class EvaluationResultTest
     @Test
     public void thatPrecisionWorks()
     {
-        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        EvaluationResult calc = new EvaluationResult(instances.stream());
+        
         assertThat(calc.computePrecisionScore()).as("precision is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
@@ -67,7 +68,8 @@ public class EvaluationResultTest
     @Test
     public void thatRecallWorks()
     {
-        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        EvaluationResult calc = new EvaluationResult(instances.stream());
+        
         assertThat(calc.computeRecallScore()).as("recall is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
     }
@@ -75,7 +77,8 @@ public class EvaluationResultTest
     @Test
     public void thatF1Works()
     {
-        EvaluationResult calc = new EvaluationResult(null, instances.stream());
+        EvaluationResult calc = new EvaluationResult(instances.stream());
+        
         assertThat(calc.computeF1Score()).as("f1 is correctly calculated")
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
     }
@@ -84,6 +87,7 @@ public class EvaluationResultTest
     public void thatIgnoringALabelWorks()
     {
         EvaluationResult calc = new EvaluationResult(asList("PER"), instances.stream());
+        
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
                 .isEqualTo(2 * (0.5 * (0.5 + 1.0 / 3) * 0.5)
                         / (0.5 + (0.5 + 1.0 / 3) * 0.5));
@@ -109,7 +113,6 @@ public class EvaluationResultTest
         calc = new EvaluationResult(asList("PER", "ORG"), instances.stream());
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
-
     }
 
     @Test
@@ -119,7 +122,9 @@ public class EvaluationResultTest
         List<AnnotatedTokenPair> newInstances = new ArrayList<>(instances);
         newInstances.add(new AnnotatedTokenPair("PART", "ORG"));
         newInstances.add(new AnnotatedTokenPair("PER", "PUNC"));
-        EvaluationResult calc = new EvaluationResult(null, newInstances.stream());
+        
+        EvaluationResult calc = new EvaluationResult(newInstances.stream());
+        
         assertThat(calc.computeAccuracyScore())
                 .as("accuracy with missing classes is correctly calculated").isEqualTo(2.0 / 5);
         assertThat(calc.computePrecisionScore())

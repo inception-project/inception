@@ -182,7 +182,7 @@ public class DataMajorityNerRecommenderTest
         List<CAS> casList = new ArrayList<>();
         casList.add(getTestCasNoLabelLabels());
 
-        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         

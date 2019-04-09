@@ -28,6 +28,7 @@ public class TrainOnAllDataSplitter
     @Override
     public TargetSet getTargetSet(Object aObject)
     {
-        return TRAIN; //TODO: changed this from TEST, makes sense, right?
+        return TRAIN; // I changed this from TEST, because we want to declare all data for training
+                      // not testing
     }
 }
