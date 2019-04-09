@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 
 import java.util.ArrayList;
@@ -85,7 +86,9 @@ public class DataMajorityNerRecommender
 
             for (AnnotationFS ann : CasUtil.select(cas, annotationType)) {
                 String label = ann.getFeatureValueAsString(labelFeature);
-                annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
+                if (isNotEmpty(label)) {
+                    annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
+                }
             }
         }
 
@@ -186,6 +189,12 @@ public class DataMajorityNerRecommender
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
 
+        if (trainingData.size() < 1 || testData.size() < 1) {
+            log.info("Not enough data to evaluate, skipping!");
+            result.setEvaluationSkipped(true);
+            return result;
+        }
+        
         DataMajorityModel model = trainModel(trainingData);
 
         // evaluation: collect predicted and gold labels for evaluation
