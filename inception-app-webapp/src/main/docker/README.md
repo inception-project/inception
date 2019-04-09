@@ -1,12 +1,12 @@
 For a SNAPSHOT build:
 
-  mvn -Pdocker clean install docker:build
-  mvn -Pdocker clean install docker:push   (only if the build should be published)
+    mvn -Pdocker clean install docker:build
+    mvn -Pdocker clean install docker:push   (only if the build should be published)
   
 For a release build:
 
-  mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
-  mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
+    mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
+    mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
 
 The container than can be started by executing
 
