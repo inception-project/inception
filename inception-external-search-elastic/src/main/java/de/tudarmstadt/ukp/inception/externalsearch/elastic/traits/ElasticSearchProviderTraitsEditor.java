@@ -85,9 +85,9 @@ public class ElasticSearchProviderTraitsEditor
         form.add(objectType);
     
         NumberTextField<Integer> resultSize =
-                new NumberTextField<Integer>("resultSize", Integer.class);
+                new NumberTextField<>("resultSize", Integer.class);
         resultSize.setMinimum(1);
-        resultSize.setMaximum(25000);
+        resultSize.setMaximum(10000);
         resultSize.setRequired(true);
         form.add(resultSize);
 
