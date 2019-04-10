@@ -283,7 +283,7 @@ public class ExternalRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult(null, null);
+        EvaluationResult result = new EvaluationResult();
         result.setEvaluationSkipped(true);
         return result;
     }

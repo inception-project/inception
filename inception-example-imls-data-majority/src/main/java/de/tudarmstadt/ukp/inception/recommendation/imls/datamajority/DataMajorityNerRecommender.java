@@ -191,7 +191,7 @@ public class DataMajorityNerRecommender
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
-            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
                     testSetSize);
             result.setEvaluationSkipped(true);
             return result;
@@ -203,7 +203,7 @@ public class DataMajorityNerRecommender
         Stream<AnnotatedTokenPair> predictions = testData.stream()
                 .map(anno -> new AnnotatedTokenPair(anno.label, model.majorityLabel));
 
-        return new EvaluationResult(null, predictions, trainingSetSize, testSetSize);
+        return new EvaluationResult(predictions, trainingSetSize, testSetSize);
     }
 // end::evaluate[]
 // tag::utility[]

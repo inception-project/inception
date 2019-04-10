@@ -222,7 +222,7 @@ public class StringMatchingRecommender
                     "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
                     trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                     testSetLabeledSamplesCount, data.size());
-            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
                     testSetSize);
             result.setEvaluationSkipped(true);
             return result;

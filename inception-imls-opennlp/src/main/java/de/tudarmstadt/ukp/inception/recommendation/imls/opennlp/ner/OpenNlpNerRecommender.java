@@ -174,7 +174,7 @@ public class OpenNlpNerRecommender
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
             
-            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
                     testSetSize);
             result.setEvaluationSkipped(true);
             return result;
