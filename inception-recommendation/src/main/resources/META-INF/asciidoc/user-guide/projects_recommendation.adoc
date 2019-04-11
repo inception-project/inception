@@ -37,3 +37,9 @@ can be selected from the left pane, edited and then saved. Recommenders can be d
 *Delete*. This also removes all predictions by this recommender.
 
 image::recommendation2.png[align="center"]
+
+= Evaluation Simulation
+
+Evaluation Simulation provides a visualization of the performance of the selected recommender with the help of a learning curve diagram. On the bottom right of the panel, the start button performs evaluation on the selected recommender using the annotated documents in the project and plots the evaluation scores against the training data size on the graph.
+
+image::recommendation5.png[align="center"]
