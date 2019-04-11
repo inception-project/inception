@@ -50,7 +50,7 @@ public class EvaluationResultTest
     @Test
     public void thatAccuracyWorks()
     {
-        EvaluationResult calc = new EvaluationResult(instances.stream());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
         
         assertThat(calc.computeAccuracyScore()).as("accuracy is correctly calculated")
                 .isEqualTo(4.0 / 9.0);
@@ -59,7 +59,7 @@ public class EvaluationResultTest
     @Test
     public void thatPrecisionWorks()
     {
-        EvaluationResult calc = new EvaluationResult(instances.stream());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
         
         assertThat(calc.computePrecisionScore()).as("precision is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
@@ -68,7 +68,7 @@ public class EvaluationResultTest
     @Test
     public void thatRecallWorks()
     {
-        EvaluationResult calc = new EvaluationResult(instances.stream());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
         
         assertThat(calc.computeRecallScore()).as("recall is correctly calculated")
                 .isEqualTo((0.5 + 0.5 + 1.0 / 3.0) / 3);
@@ -77,12 +77,13 @@ public class EvaluationResultTest
     @Test
     public void thatF1Works()
     {
-        EvaluationResult calc = new EvaluationResult(instances.stream());
+        EvaluationResult calc = instances.stream().collect(EvaluationResult.collector());
         
         assertThat(calc.computeF1Score()).as("f1 is correctly calculated")
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
     }
     
+    //FIXME re-calculate
     @Test
     public void thatIgnoringALabelWorks()
     {
@@ -123,7 +124,7 @@ public class EvaluationResultTest
         newInstances.add(new AnnotatedTokenPair("PART", "ORG"));
         newInstances.add(new AnnotatedTokenPair("PER", "PUNC"));
         
-        EvaluationResult calc = new EvaluationResult(newInstances.stream());
+        EvaluationResult calc = newInstances.stream().collect(EvaluationResult.collector());
         
         assertThat(calc.computeAccuracyScore())
                 .as("accuracy with missing classes is correctly calculated").isEqualTo(2.0 / 5);

@@ -44,8 +44,6 @@ public class EvaluationResult
      */
     private ConfusionMatrix confusionMatrix;
 
-    private int total;
-
 
     /**
      * Calculate macro-averaged scores on per-token basis over all labels contained in the given
@@ -66,7 +64,9 @@ public class EvaluationResult
         // construct confusion matrix
         confusionMatrix = new ConfusionMatrix();
         if (aAnnotatedPairs != null) {
-            aAnnotatedPairs.forEach(this::incConfusionMatrix);
+            aAnnotatedPairs.filter(pair -> !ignoreLabels.contains(pair.getGoldLabel()))
+                    .forEach(pair -> confusionMatrix.incrementCounts(pair.getPredictedLabel(),
+                            pair.getGoldLabel()));
         }
     }
 
@@ -104,6 +104,7 @@ public class EvaluationResult
 
     public EvaluationResult(ConfusionMatrix aConfMatrix)
     {
+        ignoreLabels = new HashSet<>();
         confusionMatrix = aConfMatrix;
     }
 
@@ -124,17 +125,6 @@ public class EvaluationResult
         }
     }
 
-    private void incConfusionMatrix(AnnotatedTokenPair aPair)
-    {
-        String goldLabel = aPair.getGoldLabel();
-
-        confusionMatrix.incrementCounts(aPair.getPredictedLabel(), goldLabel);
-
-        if (!ignoreLabels.contains(goldLabel)) {
-            total += 1;
-        }
-    }
-
     /**
      * Calculate accuracy, ignoring the ignoreLabel class as a gold label.
      * 
@@ -148,6 +138,7 @@ public class EvaluationResult
                 tp += confusionMatrix.getEntryCount(label, label);
             }
         }
+        int total = confusionMatrix.getTotal();
         return (total > 0) ? tp / (double) total : 0.0;
     }
 

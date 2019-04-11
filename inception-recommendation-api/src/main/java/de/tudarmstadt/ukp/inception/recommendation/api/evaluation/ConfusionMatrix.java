@@ -31,6 +31,7 @@ public class ConfusionMatrix
      */
     private Object2IntOpenHashMap<ConfMatrixKey> confusionMatrix;
     private Set<String> labels;
+    private int total;
 
     public ConfusionMatrix()
     {
@@ -55,7 +56,9 @@ public class ConfusionMatrix
     {
         labels.add(aGoldLabel);
         labels.add(aPredictedLabel);
-        
+
+        total++;
+
         // annotated pair is true positive
         if (aGoldLabel.equals(aPredictedLabel)) {
             confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aGoldLabel), 1);
@@ -65,6 +68,11 @@ public class ConfusionMatrix
             // positive for predicted class
             confusionMatrix.addTo(new ConfMatrixKey(aGoldLabel, aPredictedLabel), 1);
         }
+    }
+
+    public int getTotal()
+    {
+        return total;
     }
 
     public Set<String> getLabels()
@@ -97,11 +105,11 @@ public class ConfusionMatrix
         // table
         for (String goldLabel : labels) {
             matrixStr.append(goldLabel);
-            matrixStr.append(" | ");
+            matrixStr.append("\t| ");
             for (String predictedLabel : labels) {
                 matrixStr.append(
                         confusionMatrix.getInt(new ConfMatrixKey(goldLabel, predictedLabel)));
-                matrixStr.append(" | ");
+                matrixStr.append("\t| ");
             }
             matrixStr.append("\n");
         }
