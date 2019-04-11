@@ -18,10 +18,16 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.ToDoubleBiFunction;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 
@@ -31,7 +37,7 @@ public class EvaluationResult
     private int testSetSize;
     private boolean skippedEvaluation;
 
-    private final Set<String> ignoreLabels;
+    private Set<String> ignoreLabels;
 
     /**
      * Stores number of predicted labels for each gold label
@@ -63,7 +69,7 @@ public class EvaluationResult
             aAnnotatedPairs.forEach(this::incConfusionMatrix);
         }
     }
-    
+
     public EvaluationResult(List<String> aIgnoreLabels, Stream<AnnotatedTokenPair> aAnnotatedPairs,
             int aTrainSetSize, int aTestSetSize)
     {
@@ -94,6 +100,16 @@ public class EvaluationResult
     public EvaluationResult(Stream<AnnotatedTokenPair> aAnnotatedPairs)
     {
         this(new HashSet<>(), aAnnotatedPairs);
+    }
+
+    public EvaluationResult(ConfusionMatrix aConfMatrix)
+    {
+        confusionMatrix = aConfMatrix;
+    }
+
+    public void setIgnoreLabels(Set<String> aIgnoreLabels)
+    {
+        ignoreLabels = aIgnoreLabels;
     }
 
     public int getNumOfLabels()
@@ -256,6 +272,54 @@ public class EvaluationResult
         return skippedEvaluation;
     }
     
+    public void setConfusionMatrix(ConfusionMatrix aConfusionMatrix)
+    {
+        confusionMatrix = aConfusionMatrix;
+    }
+
+    public static EvaluationResultCollector collector() {
+        return new EvaluationResultCollector();
+    }
     
+    public static class EvaluationResultCollector
+        implements 
+        Collector<AnnotatedTokenPair, ConfusionMatrix, EvaluationResult>
+    {
+
+        @Override
+        public Supplier<ConfusionMatrix> supplier()
+        {
+            return ConfusionMatrix::new;
+        }
+
+        @Override
+        public BiConsumer<ConfusionMatrix, AnnotatedTokenPair> accumulator()
+        {
+            return (confMatrix, pair) -> confMatrix.incrementCounts(pair.getPredictedLabel(),
+                    pair.getGoldLabel());
+        }
+
+        @Override
+        public BinaryOperator<ConfusionMatrix> combiner()
+        {
+            return (matrix1, matrix2) -> {
+                matrix1.addMatrix(matrix2);
+                return matrix1;
+            };
+        }
+
+        @Override
+        public Function<ConfusionMatrix, EvaluationResult> finisher()
+        {
+            return confMatrix -> new EvaluationResult(confMatrix);
+        }
+
+        @Override
+        public Set<Collector.Characteristics> characteristics()
+        {
+            return Collections.emptySet();
+        }
+
+    }    
 
 }

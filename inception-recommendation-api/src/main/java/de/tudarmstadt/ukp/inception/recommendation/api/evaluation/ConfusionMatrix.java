@@ -1,9 +1,27 @@
+/*
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class ConfusionMatrix
@@ -52,6 +70,17 @@ public class ConfusionMatrix
     public Set<String> getLabels()
     {
         return labels;
+    }
+
+    public Object2IntOpenHashMap<ConfMatrixKey> getConfusionMatrix()
+    {
+        return confusionMatrix;
+    }
+
+    public void addMatrix(ConfusionMatrix aMatrix) {
+        for (Entry<ConfMatrixKey> entry : aMatrix.getConfusionMatrix().object2IntEntrySet()) {
+            confusionMatrix.addTo(entry.getKey(), entry.getIntValue());
+        }
     }
 
     @Override
@@ -121,4 +150,6 @@ public class ConfusionMatrix
             return goldLabel;
         }
     }
+
+
 }
