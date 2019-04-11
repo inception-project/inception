@@ -42,6 +42,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -50,8 +52,8 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
@@ -778,6 +780,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_VIRTUOSO);
         
@@ -794,6 +798,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_WIKIDATA);
         initWikidataMapping();
@@ -811,6 +817,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
     {
+        assertIsReachable(zbwGnd);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
@@ -830,6 +838,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
     {
+        assertIsReachable(hucit);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
         
@@ -1045,6 +1055,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_1() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
@@ -1063,6 +1075,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_2() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
@@ -1082,6 +1096,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_3() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
@@ -1101,6 +1117,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_4() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
     
@@ -1119,6 +1137,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_WIKIDATA);
         initWikidataMapping();
@@ -1136,6 +1156,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
     {
+        assertIsReachable(zbwGnd);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
@@ -1154,6 +1176,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_noFTS_STW() throws Exception
     {
+        assertIsReachable(zbwStw);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         
@@ -1170,6 +1194,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
     {
+        assertIsReachable(zbwGnd);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(FTS_FUSEKI);
         kb.setLabelIri(RDFS.LABEL);
@@ -1190,6 +1216,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS() throws Exception
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         initWikidataMapping();
@@ -1207,6 +1235,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
         initWikidataMapping();
@@ -1224,6 +1254,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_WIKIDATA);
         initWikidataMapping();
@@ -1241,6 +1273,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
     {
+        assertIsReachable(ukpVirtuosoRepo);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(IriConstants.FTS_VIRTUOSO);
         
@@ -1257,6 +1291,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
     {
+        assertIsReachable(hucit);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         
@@ -1273,6 +1309,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void testWithLabelStartingWith_onlyDescendants_HUCIT_noFTS() throws Exception
     {
+        assertIsReachable(hucit);
+        
         kb.setType(REMOTE);
         kb.setFullTextSearchIri(null);
         
@@ -1311,6 +1349,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatRootsCanBeRetrieved_BritishMuseum()
     {
+        assertIsReachable(britishMuseum);
+        
         kb.setType(REMOTE);
         
         List<KBHandle> results = asHandles(britishMuseum, SPARQLQueryBuilder.forClasses(kb).roots());
@@ -1321,6 +1361,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenCanBeRetrieved_BritishMuseum()
     {
+        assertIsReachable(britishMuseum);
+        
         kb.setType(REMOTE);
         
         List<KBHandle> results = asHandles(britishMuseum, SPARQLQueryBuilder
@@ -1333,6 +1375,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_DBPedia()
     {
+        assertIsReachable(dbpedia);
+        
         kb.setType(REMOTE);
         
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, dbpedia,
@@ -1342,6 +1386,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatChildrenOfExplicitRootCanBeRetrieved_YAGO()
     {
+        assertIsReachable(yago);
+        
         kb.setType(REMOTE);
         
         assertThatChildrenOfExplicitRootCanBeRetrieved(kb, yago,
@@ -1351,6 +1397,8 @@ public class SPARQLQueryBuilderTest
     @Test
     public void thatParentsCanBeRetrieved_Wikidata()
     {
+        assertIsReachable(wikidata);
+        
         kb.setType(REMOTE);
         initWikidataMapping();
         
@@ -1366,13 +1414,13 @@ public class SPARQLQueryBuilderTest
                 .contains("http://www.wikidata.org/entity/Q35120");
     }
     
-    @Ignore(
-            "This times out unless we restrict the query to the named graph 'http://dbpedia.org' " +
-            "but we cannot do that due to https://github.com/eclipse/rdf4j/issues/1324")
     @Test
     public void thatRootsCanBeRetrieved_DBPedia()
     {
+        assertIsReachable(dbpedia);
+        
         kb.setType(REMOTE);
+        kb.setDefaultDatasetIri(SimpleValueFactory.getInstance().createIRI("http://dbpedia.org"));
         
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
                 .forClasses(kb)
@@ -1382,13 +1430,15 @@ public class SPARQLQueryBuilderTest
         assertThat(results).isNotEmpty();
         
         assertThat(results)
-                .extracting(KBHandle::getName)
-                .contains("agent");
+                .extracting(KBHandle::getUiLabel)
+                .contains("Thing");
     }
     
     @Test
     public void thatParentsCanBeRetrieved_DBPedia()
     {
+        assertIsReachable(dbpedia);
+        
         kb.setType(REMOTE);
         
         List<KBHandle> results = asHandles(dbpedia, SPARQLQueryBuilder
@@ -1486,4 +1536,28 @@ public class SPARQLQueryBuilderTest
         kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
         kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
     }    
+    
+    public static void assertIsReachable(Repository aRepository)
+    {
+        if (!(aRepository instanceof SPARQLRepository)) {
+            return;
+        }
+        
+        SPARQLRepository sparqlRepository = (SPARQLRepository) aRepository;
+        
+        boolean reachable;
+        try (RepositoryConnection conn = sparqlRepository.getConnection()) {
+            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+            try (TupleQueryResult result = query.evaluate()) {
+                reachable = true;
+            }
+        }
+        catch (Exception e) {
+            reachable = false;
+        }
+        
+        Assume.assumeTrue("Remote repository at [" + sparqlRepository + "] is not reachable",
+                reachable);
+        
+    }
 }
