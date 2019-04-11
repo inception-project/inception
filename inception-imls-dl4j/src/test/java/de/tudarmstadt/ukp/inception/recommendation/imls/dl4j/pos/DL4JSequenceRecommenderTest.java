@@ -64,10 +64,21 @@ public class DL4JSequenceRecommenderTest
     private DL4JSequenceRecommenderTraits traits;
 
     @Before
-    public void setUp() {
+    public void setUp()
+    {
+        // By default, ND4J will use a value equal to the number of physical CPU cores (not logical
+        // cores) as this will give optimal performance
+        // Nd4jBlas nd4jBlas = (Nd4jBlas) Nd4j.factory().blas();
+        // nd4jBlas.setMaxThreads(2);
+
+        // NativeOpsHolder instance = NativeOpsHolder.getInstance();
+        // NativeOps deviceNativeOps = instance.getDeviceNativeOps();
+        // deviceNativeOps.setOmpNumThreads(2);
+
         context = new RecommenderContext();
         traits = new DL4JSequenceRecommenderTraits();
         traits.setTrainingSetSizeLimit(250);
+        traits.setPredictionLimit(250);
         traits.setBatchSize(50);
     }
 
@@ -280,7 +291,7 @@ public class DL4JSequenceRecommenderTest
                 cache);
         JCas cas = loadPosDevelopmentData();
 
-        double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
+        double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
 
         System.out.printf("Score: %f%n", score);
         
@@ -326,7 +337,7 @@ public class DL4JSequenceRecommenderTest
                 cache);
         JCas cas = loadNerDevelopmentData();
 
-        double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
+        double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
 
         System.out.printf("Score: %f%n", score);
         
@@ -345,7 +356,7 @@ public class DL4JSequenceRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(asList(cas.getCas()), splitStrategy);
+            double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
 
             System.out.printf("Score: %f%n", score);
 

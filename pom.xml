@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>20</version>
+    <version>22</version>
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-beta-3</webanno.version>
+    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.5.RELEASE</spring.version>
@@ -1226,6 +1226,11 @@
             </systemPropertyVariables>
           </configuration>
         </plugin>
+        <plugin>
+          <groupId>io.fabric8</groupId>
+          <artifactId>docker-maven-plugin</artifactId>
+          <version>0.22.1</version>
+        </plugin>
       </plugins>
     </pluginManagement>
   </build>
@@ -1341,6 +1346,7 @@
                     <exclude>README</exclude>
                     <exclude>src/main/resources/**/*</exclude>
                     <exclude>src/test/resources/**/*</exclude>
+                    <exclude>src/main/docker/**/*</exclude>
                   </excludes>
                 </configuration>
               </execution>

@@ -24,7 +24,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -44,10 +44,10 @@ public class RecommendationSidebar
     private @SpringBean RecommendationService recommendationService;
 
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
             () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
@@ -69,7 +69,6 @@ public class RecommendationSidebar
         add(form);
 
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
-        chartContainer.setVisibilityAllowed(recommendationService.showLearningCurveDiagram());
         add(chartContainer);
     }
 }

@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component
-public class DescriptionColoringStrategyImpl implements StatementColoringStrategy
+public class DescriptionColoringStrategyImpl
+    implements StatementColoringStrategy
 {
     private String coloringStrategyId;
 
@@ -45,12 +48,14 @@ public class DescriptionColoringStrategyImpl implements StatementColoringStrateg
     }
 
     @Override
-    public String getFrameColor() {
+    public String getFrameColor()
+    {
         return "f0e68c";
     }
 
     @Override
-    public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB)
+    public boolean acceptsProperty(String aPropertyIdentifier, KnowledgeBase aKB,
+            List<String> aLabelProperties)
     {
         return aPropertyIdentifier.equals(aKB.getDescriptionIri().stringValue());
     }

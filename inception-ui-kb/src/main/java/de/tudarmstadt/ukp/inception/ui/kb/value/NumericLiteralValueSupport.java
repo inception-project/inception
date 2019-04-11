@@ -77,7 +77,7 @@ public class NumericLiteralValueSupport
     @Override
     public List<ValueType> getSupportedValueTypes()
     {
-        return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Numeric", valueTypeSupportId));
+        return asList(new ValueType(XMLSchema.DOUBLE.stringValue(), "Number", valueTypeSupportId));
     }
     
     @Override

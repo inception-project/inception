@@ -86,12 +86,12 @@ public class IRIValueEditor
                         values.addAll(kbService.listInstances(kbModel.getObject(),
                                 childConcept.getIdentifier(), true));
                     }
-                    values.add(kbService.readKBIdentifier(kbModel.getObject().getProject(),
+                    values.add(kbService.readItem(kbModel.getObject().getProject(),
                             aProperty.getObject().getRange()).get().toKBHandle());
                 }
                 
                 if (values.isEmpty()) {
-                    values = kbService.listConcepts(kbModel.getObject(), true);
+                    values = kbService.listAllConcepts(kbModel.getObject(), true);
                 }
                 // Filter for input string
                 values = values.stream().filter(
@@ -124,6 +124,7 @@ public class IRIValueEditor
         };
         value.setOutputMarkupId(true);
         value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
+        value.setRequired(true);
         add(value);
     }
 
@@ -153,7 +154,7 @@ public class IRIValueEditor
         KBHandle handleModel = new KBHandle("","","");
         if (statementValue instanceof IRI) {
             Optional<KBObject> kbObject = kbService
-                .readKBIdentifier(aKbModel.getObject(), ((IRI) statementValue).stringValue());
+                .readItem(aKbModel.getObject(), ((IRI) statementValue).stringValue());
             if (kbObject.isPresent()) {
                 handleModel = new KBHandle(kbObject.get().getIdentifier(),
                     kbObject.get().getUiLabel());

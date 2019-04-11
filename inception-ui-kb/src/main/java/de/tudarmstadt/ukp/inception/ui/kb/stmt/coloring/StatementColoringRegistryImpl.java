@@ -79,10 +79,10 @@ public class StatementColoringRegistryImpl implements StatementColoringRegistry
 
     @Override
     public StatementColoringStrategy getStatementColoringStrategy(
-        String aPropertyIdentifier, KnowledgeBase aKB)
+        String aPropertyIdentifier, KnowledgeBase aKB, List<String> aLabelProperties)
     {
         for (StatementColoringStrategy coloringStrategy : getStatementColoringStrategies()) {
-            if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB)
+            if (coloringStrategy.acceptsProperty(aPropertyIdentifier, aKB, aLabelProperties)
                 && !(coloringStrategy instanceof DefaultColoringStrategyImpl)) {
                 return coloringStrategy;
             }

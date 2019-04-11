@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -82,7 +84,9 @@ public class DataMajorityNerRecommender
 
             for (AnnotationFS ann : CasUtil.select(cas, annotationType)) {
                 String label = ann.getFeatureValueAsString(labelFeature);
-                annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
+                if (isNotEmpty(label)) {
+                    annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
+                }
             }
         }
 
@@ -161,9 +165,11 @@ public class DataMajorityNerRecommender
 // end::predict2[]
 // tag::evaluate[]
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
@@ -179,7 +185,16 @@ public class DataMajorityNerRecommender
                 break;
             }
         }
+        
+        result.setTestSetSize(testData.size());
+        result.setTrainingSetSize(trainingData.size());
 
+        if (trainingData.size() < 1 || testData.size() < 1) {
+            log.info("Not enough data to evaluate, skipping!");
+            result.setEvaluationSkipped(true);
+            return result;
+        }
+        
         DataMajorityModel model = trainModel(trainingData);
 
         // Compute accuracy between annotated data by the user and predictions
@@ -190,7 +205,8 @@ public class DataMajorityNerRecommender
             }
         }
 
-        return (double) correct / (double) testData.size();
+        result.setDefaultScore((double) correct / (double) testData.size());
+        return result;
     }
 // end::evaluate[]
 // tag::utility[]

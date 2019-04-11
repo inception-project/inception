@@ -36,6 +36,8 @@ include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
 
 include::{include-dir}installation_jar.adoc[leveloffset=+1]
 
+include::{include-dir}installation_docker.adoc[leveloffset=+1]
+
 <<<
 
 

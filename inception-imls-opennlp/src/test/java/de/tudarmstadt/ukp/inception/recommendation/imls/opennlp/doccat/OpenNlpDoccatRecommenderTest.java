@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedInputStream;
@@ -27,6 +28,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -38,7 +40,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionException;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
@@ -75,13 +76,16 @@ public class OpenNlpDoccatRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpDoccatRecommenderTraits();
+        traits.setNumThreads(2);
+        traits.setTrainingSetSizeLimit(250);
+        traits.setPredictionLimit(250);
     }
 
     @Test
     public void thatTrainingWorks() throws Exception
     {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        List<CAS> casList = loadArxivData();
 
         sut.train(context, casList);
 
@@ -94,7 +98,7 @@ public class OpenNlpDoccatRecommenderTest
     public void thatPredictionWorks() throws Exception
     {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        List<CAS> casList = loadArxivData();
         
         CAS cas = casList.get(0);
         
@@ -102,7 +106,7 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<PredictedSpan> predictions = select(cas.getJCas(), PredictedSpan.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -113,9 +117,9 @@ public class OpenNlpDoccatRecommenderTest
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        List<CAS> casList = loadArxivData();
 
-        double score = sut.evaluate(casList, splitStrategy);
+        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
 
         System.out.printf("Score: %f%n", score);
         
@@ -127,13 +131,13 @@ public class OpenNlpDoccatRecommenderTest
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
-        List<CAS> casList = loadAllData();
+        List<CAS> casList = loadArxivData();
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy);
+            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
 
             System.out.printf("Score: %f%n", score);
 
@@ -143,16 +147,12 @@ public class OpenNlpDoccatRecommenderTest
         }
     }
 
-    private List<CAS> loadAllData() throws IOException, UIMAException
+    private List<CAS> loadArxivData() throws IOException, UIMAException
     {
         Dataset ds = loader.load("sentence-classification-en");
-        return loadData(ds, ds.getDataFiles());
-    }
-
-    private List<CAS> loadDevelopmentData() throws IOException, UIMAException
-    {
-        Dataset ds = loader.load("sentence-classification-en");
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        return loadData(ds, Arrays.stream(ds.getDataFiles())
+                .filter(file -> file.getName().contains("arxiv"))
+                .toArray(File[]::new));
     }
 
     private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException

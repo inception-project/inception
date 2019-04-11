@@ -17,16 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
-import java.io.Serializable;
+import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -40,16 +52,24 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VMarker;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VTextMarker;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -60,6 +80,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -68,6 +91,8 @@ public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -3358207848681467993L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(SearchAnnotationSidebar.class);
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
@@ -80,16 +105,22 @@ public class SearchAnnotationSidebar
     private final WebMarkupContainer mainContainer;
 
     private IModel<String> targetQuery = Model.of("");
-    private IModel<Options> options = CompoundPropertyModel.of(new Options());
+    private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
     private IModel<List<SearchResult>> searchResults;
-    
+    private Map<String, Boolean> documentLevelSelections = initDocumentLevelSelections();
+    private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
+        .of(new CreateAnnotationsOptions());
+    private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
+        .of(new DeleteAnnotationsOptions());
+
+
     private SearchResult selectedResult;
 
     public SearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         currentUser = userRepository.getCurrentUser();
         
@@ -104,7 +135,7 @@ public class SearchAnnotationSidebar
         searchForm.setDefaultButton(searchButton);
         mainContainer.add(searchForm);
 
-        Form<Options> searchOptionsForm = new Form<>("searchOptionsForm", options);
+        Form<SearchOptions> searchOptionsForm = new Form<>("searchOptionsForm", searchOptions);
         searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
@@ -132,6 +163,9 @@ public class SearchAnnotationSidebar
             protected void populateItem(ListItem<String> item)
             {
                 item.add(new Label("documentTitle", LambdaModel.of(() -> item.getModelObject())));
+                item.add(createDocumentLevelSelectionCheckBox("selectAllInDoc", Model.of(
+                    documentLevelSelections.get(item.getModelObject())),
+                    item.getModelObject()));
                 item.add(new SearchResultGroup("group", "resultGroup", 
                         SearchAnnotationSidebar.this,
                         LambdaModel.of(() -> searchResults.getObject().stream().filter((result) -> {
@@ -147,10 +181,81 @@ public class SearchAnnotationSidebar
         searchResultGroups.setModel(LambdaModel.of(() -> 
                 searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
                         .distinct().collect(Collectors.toList())));
-        
+
         mainContainer.add(searchResultGroups);
+
+        Form<Void> annotationForm = new Form("annotateForm");
+        // create annotate-button and options form
+        LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
+            (target, form) -> actionApplyToSelectedResults(target,
+                this::createAnnotationAtSearchResult));
+        annotationForm.add(annotateButton);
+
+        Form<CreateAnnotationsOptions> annotationOptionsForm = new Form<>("createOptions",
+            createOptions);
+        annotationOptionsForm.add(new CheckBox("overrideExistingAnnotations"));
+        annotationOptionsForm
+            .add(visibleWhen(() -> annotationOptionsForm.getModelObject().isVisible()));
+        annotationOptionsForm.setOutputMarkupPlaceholderTag(true);
+        annotationForm.add(annotationOptionsForm);
+
+        annotationForm.add(new LambdaAjaxLink("toggleCreateOptionsVisibility", _target -> {
+            annotationOptionsForm.getModelObject().toggleVisibility();
+            _target.add(annotationOptionsForm);
+        }));
+
+        // create delete-button and options form
+        LambdaAjaxButton<Void> deleteButton = new LambdaAjaxButton<>("deleteButton",
+            (target, from) -> actionApplyToSelectedResults(target,
+                this::deleteAnnotationAtSearchResult));
+        annotationForm.add(deleteButton);
+
+        Form<DeleteAnnotationsOptions> deleteOptionsForm = new Form<>("deleteOptions",
+            deleteOptions);
+        deleteOptionsForm.add(new CheckBox("deleteOnlyMatchingFeatureValues"));
+        deleteOptionsForm.add(visibleWhen(() -> deleteOptionsForm.getModelObject().isVisible()));
+        deleteOptionsForm.setOutputMarkupPlaceholderTag(true);
+        annotationForm.add(deleteOptionsForm);
+
+        annotationForm.add(new LambdaAjaxLink("toggleDeleteOptionsVisibility", _target -> {
+            deleteOptionsForm.getModelObject().toggleVisibility();
+            _target.add(deleteOptionsForm);
+        }));
+
+        annotationForm.setDefaultButton(annotateButton);
+        annotationForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
+
+        mainContainer.add(annotationForm);
     }
-    
+
+    private Map<String, Boolean> initDocumentLevelSelections()
+    {
+        Map<String, Boolean> docLevelSelections = new HashMap();
+        Project project = getModelObject().getProject();
+        for (SourceDocument document : documentService.listSourceDocuments(project)) {
+            docLevelSelections.put(document.getName(), true);
+        }
+        return docLevelSelections;
+    }
+
+    private AjaxCheckBox createDocumentLevelSelectionCheckBox(String aId, IModel<Boolean> aModel,
+        String aDocumentTitle)
+    {
+        AjaxCheckBox selectAllCheckBox = new AjaxCheckBox(aId, aModel)
+        {
+            @Override
+            protected void onUpdate(AjaxRequestTarget target)
+            {
+                searchResults.getObject().stream()
+                    .filter(r -> r.getDocumentTitle().equals(aDocumentTitle))
+                    .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                documentLevelSelections.put(aDocumentTitle, getModelObject());
+                target.add(mainContainer);
+            }
+        };
+        return selectAllCheckBox;
+    }
+
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
         selectedResult = null;
         searchResults.detach();
@@ -167,7 +272,7 @@ public class SearchAnnotationSidebar
         try {
             AnnotatorState state = getModelObject();
             Project project = state.getProject();
-            SourceDocument limitToDocument = options.getObject().isLimitedToCurrentDocument()
+            SourceDocument limitToDocument = searchOptions.getObject().isLimitedToCurrentDocument()
                     ? state.getDocument()
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
@@ -196,6 +301,153 @@ public class SearchAnnotationSidebar
         }
     }
 
+    public void actionApplyToSelectedResults(AjaxRequestTarget aTarget,
+        BiConsumer<SearchResult, SpanAdapter> aConsumer)
+    {
+        if (VID.NONE_ID.equals(getModelObject().getSelection().getAnnotation())) {
+            error("No annotation selected. Please select an annotation first");
+        }
+        else {
+            AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
+            try {
+                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
+                for (SearchResult result : searchResults.getObject()) {
+                    if (result.isSelectedForAnnotation()) {
+                        aConsumer.accept(result, adapter);
+                    }
+                }
+            }
+            catch (ClassCastException e) {
+                error("Can only create SPAN annotations for search results.");
+                LOG.error("Can only create SPAN annotations for search results", e);
+            }
+        }
+        getAnnotationPage().actionRefreshDocument(aTarget);
+    }
+
+    private void createAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
+    {
+        AnnotatorState state = getModelObject();
+        AnnotationLayer layer = aAdapter.getLayer();
+        List<FeatureState> featureStates = state.getFeatureStates();
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
+        try {
+            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+
+            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
+            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
+                searchResult.getOffsetEnd());
+
+            boolean overrideExisting = createOptions.getObject().isOverrideExistingAnnotations();
+
+            // if there is already an annotation of the same type at the target location
+            // and we don't want to override it and stacking is not enabled, do nothing.
+            if (annoFS != null && !overrideExisting && !layer.isAllowStacking()) {
+                return;
+            }
+
+            // create a new annotation if not already there or if stacking is enabled and the
+            // new annotation has different features than the existing one
+            if (annoFS == null || !featureValuesMatchCurrentState(annoFS) && !overrideExisting) {
+                annoFS = aAdapter
+                    .add(sourceDoc, currentUser.getUsername(), jCas, searchResult.getOffsetStart(),
+                        searchResult.getOffsetEnd());
+            }
+
+            // set values for all features according to current state
+            for (FeatureState featureState : featureStates) {
+                Object featureValue = featureState.value;
+                AnnotationFeature feature = featureState.feature;
+                if (featureValue != null) {
+                    int addr = getAddr(annoFS);
+                    aAdapter
+                        .setFeatureValue(sourceDoc, currentUser.getUsername(), jCas, addr, feature,
+                            featureValue);
+                }
+            }
+
+            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
+        }
+        catch (IOException | AnnotationException e) {
+            error(
+                "Unable to create annotation for search result [" + searchResult.toString() + " ]: "
+                    + e.getLocalizedMessage());
+            LOG.error("Unable to create annotation for search result [" + searchResult.toString()
+                + " ]: ", e);
+        }
+    }
+
+    private void deleteAnnotationAtSearchResult(SearchResult searchResult, SpanAdapter aAdapter)
+    {
+        AnnotatorState state = getModelObject();
+        SourceDocument sourceDoc = documentService
+            .getSourceDocument(state.getProject(), searchResult.getDocumentTitle());
+        try {
+            CAS jCas = documentService.readAnnotationCas(sourceDoc, currentUser.getUsername());
+
+            Type type = CasUtil.getAnnotationType(jCas, aAdapter.getAnnotationTypeName());
+            AnnotationFS annoFS = selectSingleFsAt(jCas, type, searchResult.getOffsetStart(),
+                searchResult.getOffsetEnd());
+
+            if (annoFS == null
+                || !featureValuesMatchCurrentState(annoFS) && deleteOptions.getObject()
+                .isDeleteOnlyMatchingFeatureValues()) {
+                return;
+            }
+            aAdapter.delete(sourceDoc, currentUser.getUsername(), jCas, new VID(annoFS));
+
+            writeJCasAndUpdateTimeStamp(sourceDoc, jCas);
+        }
+        catch (IOException e) {
+            error(
+                "Unable to delete annotation for search result [" + searchResult.toString() + " ]: "
+                    + e.getLocalizedMessage());
+            LOG.error("Unable to delete annotation for search result [" + searchResult.toString()
+                + " ]: ", e);
+        }
+    }
+
+    private void writeJCasAndUpdateTimeStamp(SourceDocument aSourceDoc, CAS aJCas)
+        throws IOException
+    {
+        if (!documentService.existsAnnotationDocument(aSourceDoc, currentUser)) {
+            documentService.createOrGetAnnotationDocument(aSourceDoc, currentUser);
+        }
+        documentService.writeAnnotationCas(aJCas, aSourceDoc, currentUser, true);
+
+        updateTimestamp(aSourceDoc);
+    }
+
+    private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
+    {
+        SpanAdapter aAdapter = (SpanAdapter) annotationService
+            .getAdapter(getModelObject().getSelectedAnnotationLayer());
+        for (FeatureState state : getModelObject().getFeatureStates()) {
+            Object featureValue = state.value;
+            AnnotationFeature feature = state.feature;
+            Object valueAtFS = aAdapter.getFeatureValue(feature, aAnnotationFS);
+            if (!Objects.equals(valueAtFS, featureValue)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void updateTimestamp(SourceDocument aModifiedDocument) throws IOException
+    {
+        // If the currently displayed document is the same one where the annotation was created,
+        // then update timestamp in state to avoid concurrent modification errors
+        AnnotatorState state = getModelObject();
+        if (Objects.equals(state.getDocument().getId(), aModifiedDocument.getId())) {
+            Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(aModifiedDocument, currentUser.getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
+        }
+    }
+
     private class SearchResultGroup
         extends Fragment
     {
@@ -216,30 +468,34 @@ public class SearchAnnotationSidebar
                     Project currentProject = SearchAnnotationSidebar.this.getModel().getObject()
                             .getProject();
                     
-                    LambdaAjaxLink lambdaAjaxLink;
-                    if (aItem.getModel().getObject().getOffsetStart() != -1) {
-                        // When the offset exists, use it. Mtas indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
+                    LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument",
+                        t -> {
                             selectedResult = aItem.getModelObject();
                             actionShowSelectedDocument(t,
                                     documentService.getSourceDocument(currentProject,
                                             selectedResult.getDocumentTitle()),
-                                    selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
+                                    selectedResult.getOffsetStart(),
+                                    selectedResult.getOffsetEnd());
                         });
-                    }
-                    else {
-                        // If the offset doesn't exist, use the token position Mimir indexes.
-                        lambdaAjaxLink = new LambdaAjaxLink("showSelectedDocument", t -> {
-                            selectedResult = aItem.getModelObject();
-                            getAnnotationPage().actionShowSelectedDocumentByTokenPosition(t,
-                                    documentService.getSourceDocument(currentProject,
-                                            aItem.getModel().getObject().getDocumentTitle()),
-                                    aItem.getModel().getObject().getTokenStart());
-                            ;
-                        });
-
-                    }
                     aItem.add(lambdaAjaxLink);
+
+                    AjaxCheckBox selected = new AjaxCheckBox("selected",
+                        Model.of(aItem.getModelObject().isSelectedForAnnotation()))
+                    {
+                        @Override
+                        protected void onUpdate(AjaxRequestTarget target)
+                        {
+                            SearchResult modelObject = aItem.getModelObject();
+                            modelObject.setSelectedForAnnotation(getModelObject());
+                            if (getModelObject() == false) {
+                                // not all results in the document are selected, so set document
+                                // level selection to false
+                                documentLevelSelections.put(modelObject.getDocumentTitle(), false);
+                                target.add(mainContainer);
+                            }
+                        }
+                    };
+                    aItem.add(selected);
 
                     String sentence = new String();
 
@@ -253,39 +509,6 @@ public class SearchAnnotationSidebar
             };
             statementList.setModel(aModel);
             add(statementList);        
-        }
-    }
-    
-    public static class Options
-        implements Serializable
-    {
-        private static final long serialVersionUID = 3030323391922717647L;
-        
-        private boolean visible = false;
-        
-        private boolean limitedToCurrentDocument = false;
-
-        /**
-         * Whether or not the options form should be displayed
-         */
-        public boolean isVisible()
-        {
-            return visible;
-        }
-
-        public void toggleVisibility()
-        {
-            visible = !visible;
-        }
-
-        public boolean isLimitedToCurrentDocument()
-        {
-            return limitedToCurrentDocument;
-        }
-
-        public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
-        {
-            limitedToCurrentDocument = aLimitedToCurrentDocument;
         }
     }
 }

@@ -34,7 +34,7 @@ C:\> git config --global core.autocrlf input
 
 After changing this setting, best do a fresh clone and check-out of the project.
 
-== Setting up the for development in Eclipse
+== Setting up for the development in Eclipse
 
 This is a guide to setting up a development environment using Eclipse on Mac OS X. The 
 procedure should be similar for other operation systems.  
@@ -139,6 +139,7 @@ We use a style for formatting the source code in {product-name}. Our approach co
   properly.
 
 Here is a brief summary of the formatting rules:
+
 * no tabs, only spaces
 * indenting using 4 spaces in Java files and 2 spaces in XML files
 * maximum 100 characters per line (with a few exceptions)
@@ -162,4 +163,6 @@ NOTE: Should the steps mentioned above not have been sufficient, close all the {
       in Eclipse, then remove them form the workspace (not from the disk), delete any `.checkstyle` files
       in the {product-name} modules, and then re-import them into Eclipse again using *Import->Existing Maven
       projects*. During the project import, the Checkstyle configuration plugin for M2Eclipse should
-      properly set up the `.checkstyle` files and activate checkstyle. 
+      properly set up the `.checkstyle` files and activate checkstyle. +
+      If the Maven project update cannot be completed due to missing .jars, execute a Maven install via right click on the inception project *Run as ->
+      Maven build...*, enter the goal `install` and check *Skip Tests*. Alternatively, use the command `mvn clean install -DskipTests`.

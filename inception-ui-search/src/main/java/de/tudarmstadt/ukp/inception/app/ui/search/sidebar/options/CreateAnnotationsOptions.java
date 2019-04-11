@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception;
+package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
-public class MultipleMatchesFoundException extends Exception
+public class CreateAnnotationsOptions
+    extends Options
 {
-    public MultipleMatchesFoundException(String message)
+    /**
+     * Whether or not to override existing annotations of the same layer
+     */
+    private boolean overrideExistingAnnotations = false;
+
+    public boolean isOverrideExistingAnnotations()
     {
-        super(message);
+        return overrideExistingAnnotations;
+    }
+
+    public void setOverrideExistingAnnotations(boolean aOverrideExistingAnnotations)
+    {
+        overrideExistingAnnotations = aOverrideExistingAnnotations;
     }
 }
