@@ -58,8 +58,8 @@ Do this when you want to do a feature release.
 
 == Running the release process
 
-. Run `mvn release:prepare release:perform`; this automatically commits and pushes all changes performed
-  during the release process to the git repository and it also creates and pushes an appropriate tag for the release.
+. Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT). After that, it will update the version (push), build the code, and create a tag (push).
+. Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the releaes artifacts there.
 . Immediately after the release, again merge the released branch into the
   master branch, using e.g. `git checkout master` and `git merge -s ours 0.9.x` and `git push`. 
   Doing this second merge does not actually change anything in the master. 
