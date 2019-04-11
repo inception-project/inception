@@ -22,13 +22,13 @@ typically by increasing the second digit of the version (e.g. `0.8.0-SNAPSHOT` b
 The process of doing the initial feature release on a new maintenance branch (e.g. for version `0.8.0`) is 
 largely the same then as for performing a bugfix release (e.g. for version `0.8.1`) as described in the next section.
 
-Changes are usually not committed directly to the master or maintenance branches. Instead we work with
-feature branches. Features branches for new enhancements or refactorings normally are made from the 
-master branch. Feature branches for bugfixes are made from a maintenance branch (unless the bug only 
-exists on the master branch or is too difficult to fix without extensive refactoring and risk of 
+Changes are usually not committed directly to the `master` or maintenance branches. Instead we work with
+*feature* branches. Feature branches for new enhancements or refactorings are normally made from the 
+`master` branch. Feature branches for bugfixes are made from a maintenance branch (unless the bug only 
+exists on the `master` branch or is too difficult to fix without extensive refactoring and risk of 
 breaking other things). After accepting a pull request for a bugfix to a maintenance branch, a developer
-with write access to the mster branch should regularly merge the maintanence branch into the master branch
-to have the fix both in maintenance and master. From time to time, a new bugfix release is made.
+with write access to the `master` branch should regularly merge the maintanence branch into the `master` branch
+to have the fix both in maintenance and `master`. From time to time, a new bugfix release is made.
 
 The first digit of the version can be increased to indicate e.g. major improvements, major technological
 changes or incompatible changes. This is done only very rarely (like maybe once every 1-3 years). 
@@ -44,8 +44,8 @@ is the most recent maintenance branch.
 Do this when you want to do a bugfix release.
 
 . Create a bugfix release issue in the INCEpTION Github issue tracker
-. Checkout the master branch: e.g. `git checkout master`
-. Merge the maintenance into the master branch; this makes sure that all bugfixes are
+. Checkout the `master` branch: e.g. `git checkout master`
+. Merge the maintenance into the `master` branch; this makes sure that all bugfixes are
   also applied to master: e.g. `git merge 0.8.x` and then `git push`
 . Checkout the maintenance branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
 
@@ -53,24 +53,23 @@ Do this when you want to do a bugfix release.
 
 Do this when you want to do a feature release.
 
-. Checkout master and make sure that you pulled the most recent version of it
-. Create a new branch from master and call it after the release you want to do, by e.g. `git checkout -b 0.9.x`
+. Checkout `master` and make sure that you pulled the most recent version of it
+. Create a new branch from `master` and name it according to the new version with the last digit (the bugfix part of the version) being `x`, by e.g. `git checkout -b 0.9.x`
 
 == Running the release process
 
-. Run `mvn release:prepare release:perform`; the released jar is then in
-  `inception-app-webapp/target/`, look for the standalone jar
-. Push to the release branch and tag the commit: 
-  e.g. `git tag inception-app-0.8.1`and `git push origin inception-app-0.8.1`
+. Run `mvn release:prepare release:perform`; this automatically commits and pushes all changes performed
+  during the release process to the git repository and it also creates and pushes an appropriate tag for the release.
 . Immediately after the release, again merge the released branch into the
   master branch, using e.g. `git checkout master` and `git merge -s ours 0.9.x` and `git push`. 
   Doing this second merge does not actually change anything in the master. 
   However, it ensures that the updates to the version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
+. The released jar is now in `target/checkout/inception-app-webapp/target/` (*not* in `inception-app-webapp/target/`), look for the standalone jar
 
 == Making the release available
 
 [arabic]
-. Sign the jar with `gpg --detach-sign --armor`. This creates the signature in a separate file. Attach both files to
+. Sign the standalone jar using `gpg --detach-sign --armor`. This creates the signature in a separate file. Attach both files to
 the link:https://github.com/inception-project/inception/releases[GitHub release] that
 you are currently preparing. The issues
 that were solved with this release can be found by filtering issues by milestones.
@@ -78,7 +77,7 @@ that were solved with this release can be found by filtering issues by milestone
 == Deploy the new release
 
 In order to deploy the new version, see the <<admin-guide.adoc#sect_upgrade,upgrade process>> 
-in the Administrator Guide..
+in the Administrator Guide.
 
 == Updating documentation
 
@@ -86,9 +85,9 @@ Checkout or go into the `inception-project.github.io` repository and
 create a new branch. In order to publish the documentation for this new
 release, copy the data from the INCEpTION repository that was just
 released under
-`inception-app-webapp/target/generated-docs` into a
+`target/checkout/inception-app-webapp/target/generated-docs` into a
 version folder under `releases/{version}/docs` in the documentation
-repository. Also updating the `_data/releases.yml` file. Create a pull
+repository. Also update the `_data/releases.yml` file. Create a pull
 request for this as well.
 
 == Publish to docker
