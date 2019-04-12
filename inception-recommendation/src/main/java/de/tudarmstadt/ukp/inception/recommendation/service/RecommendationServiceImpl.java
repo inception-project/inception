@@ -274,6 +274,23 @@ public class RecommendationServiceImpl
     }
     
     @Override
+    @Transactional
+    public List<Recommender> listAllEnabledRecommenders(Project aProject, AnnotationLayer aLayer)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND",
+                "layer = :layer AND",
+                "enabled = :enabled");
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aProject)
+                .setParameter("layer", aLayer)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
+    
+    @Override
     public List<Recommender> listEnabledRecommenders(Project aProject)
     {
         String query = String.join("\n",

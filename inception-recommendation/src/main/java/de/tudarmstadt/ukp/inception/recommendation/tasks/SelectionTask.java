@@ -130,7 +130,6 @@ public class SelectionTask
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
                                 + "- skipping recommender", user.getUsername(), r.getName());
-                        // TODO: inform user
                         continue;
                     }
                     

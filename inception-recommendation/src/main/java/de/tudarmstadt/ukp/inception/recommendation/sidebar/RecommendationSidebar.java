@@ -23,25 +23,34 @@ import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 4306746527837380863L;
+    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private static final String LEARNING_CURVE = "learningCurve";
     
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean AnnotationSchemaService annoService;
 
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
@@ -71,5 +80,33 @@ public class RecommendationSidebar
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
         chartContainer.setVisibilityAllowed(recommendationService.showLearningCurveDiagram());
         add(chartContainer);
+        
+        addRecommenderFeedback(aModel);
+    }
+
+    /**
+     * Inform whether recommender and annotation layers are a valid match.
+     */
+    private void addRecommenderFeedback(IModel<AnnotatorState> aModel)
+    {
+        Project project = aModel.getObject().getProject();
+
+        for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
+            if (!layer.isEnabled()) {
+                continue;
+            }
+            for (Recommender recommender : recommendationService.listAllEnabledRecommenders(project,
+                    layer)) {
+                RecommendationEngineFactory<?> factory = recommendationService
+                        .getRecommenderFactory(recommender);
+                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                  //FIXME error message only blinks shortly into existence
+                    log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                            + "- skipping recommender", recommender.getName());
+                    error(String.format("The recommender %s is configured for an invalid layer "
+                            + "is therefore skipped.", recommender.getName()));
+                }
+            }
+        }
     }
 }

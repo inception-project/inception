@@ -55,6 +55,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -82,6 +84,7 @@ public class RecommenderEditorPanel
     extends Panel
 {
     private static final long serialVersionUID = -5278078988218713188L;
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     private static final String MID_CANCEL = "cancel";
     private static final String MID_DELETE = "delete";
@@ -207,6 +210,16 @@ public class RecommenderEditorPanel
                     RecommendationEngineFactory factory = recommenderRegistry
                             .getFactory(getModelObject().getKey());
                     newTraits = factory.createTraitsEditor(MID_TRAITS, form.getModel());
+                    
+                    Recommender recommender = recommenderModel.getObject();
+                    // check if recommender and layer still match
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        //FIXME error does not show
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                + "- skipping recommender", recommender.getName());
+                        error(String.format("The recommender %s is configured for an invalid layer."
+                                , recommender.getName()));
+                    }
                 }
                 else {
                     newTraits = new EmptyPanel(MID_TRAITS);

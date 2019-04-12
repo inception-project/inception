@@ -78,6 +78,21 @@ public class RecommendationServiceImplIntegrationTest
     }
     
     @Test
+    public void listRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
+    {
+        rec = buildRecommender(project, feature);
+        rec.setEnabled(true);
+
+        sut.createOrUpdateRecommender(rec);
+
+        List<Recommender> enabledRecommenders = sut.listAllEnabledRecommenders(rec.getProject(),
+                rec.getLayer());
+
+        assertThat(enabledRecommenders).as("Check that the previously created recommender is found")
+                .hasSize(1).contains(rec);
+    }
+    
+    @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         rec = buildRecommender(project, feature);

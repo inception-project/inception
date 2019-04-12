@@ -112,4 +112,6 @@ public interface RecommendationService
         throws AnnotationException;
     
     Boolean showLearningCurveDiagram();
+
+    List<Recommender> listAllEnabledRecommenders(Project aProject, AnnotationLayer aLayer);
 }
