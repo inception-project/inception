@@ -28,6 +28,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -227,9 +228,9 @@ public class OpenNlpPosRecommender
                 }
             }
         }
-        
-        return new EvaluationResult(asList(PAD), predictions.stream(), trainingSetSize,
-                testSetSize);
+
+        return predictions.stream().collect(EvaluationResult
+                .collector(new HashSet<String>(asList(PAD)), trainingSetSize, testSetSize));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

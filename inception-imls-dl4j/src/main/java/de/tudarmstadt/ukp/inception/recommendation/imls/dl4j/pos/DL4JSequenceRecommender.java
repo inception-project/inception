@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -537,8 +538,9 @@ public class DL4JSequenceRecommender
                 }
                 
             }
-            return new EvaluationResult(asList(NO_LABEL), predictions.stream(), trainingSetSize,
-                    testSetSize);
+            
+            return predictions.stream().collect(EvaluationResult.collector(
+                    new HashSet<String>(asList(NO_LABEL)), trainingSetSize, testSetSize));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

@@ -21,6 +21,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
@@ -83,35 +84,35 @@ public class EvaluationResultTest
                 .isEqualTo(2 * (4.0 / 9.0 * 4.0 / 9.0) / (8.0 / 9.0));
     }
     
-    //FIXME re-calculate
     @Test
     public void thatIgnoringALabelWorks()
     {
-        EvaluationResult calc = new EvaluationResult(asList("PER"), instances.stream());
-        
+        double expectedPrec = (4.0 / 5 + 2.0 / 5) * 0.5;
+        double expectedRecall = 0.5;
+        EvaluationResult calc = new EvaluationResult(new HashSet<String>(asList("PER")),
+                instances.stream());
+
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
-                .isEqualTo(2 * (0.5 * (0.5 + 1.0 / 3) * 0.5)
-                        / (0.5 + (0.5 + 1.0 / 3) * 0.5));
+                .isEqualTo(2 * expectedPrec * expectedRecall / (expectedPrec + expectedRecall));
         assertThat(calc.computeRecallScore()).as("recall with ignore label is correctly calculated")
-                .isEqualTo(0.5);
+                .isEqualTo(expectedRecall);
         assertThat(calc.computeAccuracyScore())
                 .as("accuracy with ignore label is correctly calculated").isEqualTo(6.0 / 12);
         assertThat(calc.computePrecisionScore())
-                .as("precision with ignore label is correctly calculated")
-                .isEqualTo((0.5 + 1.0 / 3) * 0.5);
+                .as("precision with ignore label is correctly calculated").isEqualTo(expectedPrec);
     }
 
     @Test
     public void thatNumOfLabelsWorks()
     {
-        EvaluationResult calc = new EvaluationResult(asList(), instances.stream());
+        EvaluationResult calc = new EvaluationResult(new HashSet<String>(), instances.stream());
         assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
 
-        calc = new EvaluationResult(asList("PER"), instances.stream());
+        calc = new EvaluationResult(new HashSet<String>(asList("PER")), instances.stream());
         assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
                 .isEqualTo(2);
 
-        calc = new EvaluationResult(asList("PER", "ORG"), instances.stream());
+        calc = new EvaluationResult(new HashSet<String>(asList("PER", "ORG")), instances.stream());
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
     }

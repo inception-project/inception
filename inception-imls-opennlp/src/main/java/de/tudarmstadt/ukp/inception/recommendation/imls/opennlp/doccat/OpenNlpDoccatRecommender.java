@@ -27,10 +27,10 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.uima.cas.CAS;
@@ -183,11 +183,13 @@ public class OpenNlpDoccatRecommender
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        Stream<AnnotatedTokenPair> predictions = testSet.stream()
+        EvaluationResult result = testSet.stream()
                 .map(sample -> new AnnotatedTokenPair(sample.getCategory(),
-                        doccat.getBestCategory(doccat.categorize(sample.getText()))));
-        
-        return new EvaluationResult(asList(NO_CATEGORY), predictions, trainingSetSize, testSetSize);
+                        doccat.getBestCategory(doccat.categorize(sample.getText()))))
+                .collect(EvaluationResult.collector(new HashSet<String>(asList(NO_CATEGORY)),
+                        trainingSetSize, testSetSize));
+
+        return result;
     }
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)

@@ -29,6 +29,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -266,8 +267,8 @@ public class StringMatchingRecommender
             }
         }
 
-        return new EvaluationResult(asList(NO_LABEL), predictions.stream(), trainingSetSize,
-                testSetSize);
+        return predictions.stream().collect(EvaluationResult
+                .collector(new HashSet<String>(asList(NO_LABEL)), trainingSetSize, testSetSize));
     }
 
     

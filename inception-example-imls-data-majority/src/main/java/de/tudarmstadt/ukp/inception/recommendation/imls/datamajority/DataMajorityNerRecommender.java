@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -200,10 +199,11 @@ public class DataMajorityNerRecommender
         DataMajorityModel model = trainModel(trainingData);
 
         // evaluation: collect predicted and gold labels for evaluation
-        Stream<AnnotatedTokenPair> predictions = testData.stream()
-                .map(anno -> new AnnotatedTokenPair(anno.label, model.majorityLabel));
-
-        return new EvaluationResult(predictions, trainingSetSize, testSetSize);
+        EvaluationResult result = testData.stream()
+                .map(anno -> new AnnotatedTokenPair(anno.label, model.majorityLabel))
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize));
+        
+        return result;
     }
 // end::evaluate[]
 // tag::utility[]
