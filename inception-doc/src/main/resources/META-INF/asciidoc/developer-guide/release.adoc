@@ -27,11 +27,12 @@ Changes are usually not committed directly to the `master` or maintenance branch
 `master` branch. Feature branches for bugfixes are made from a maintenance branch (unless the bug only 
 exists on the `master` branch or is too difficult to fix without extensive refactoring and risk of 
 breaking other things). After accepting a pull request for a bugfix to a maintenance branch, a developer
-with write access to the `master` branch should regularly merge the maintanence branch into the `master` branch
-to have the fix both in maintenance and `master`. From time to time, a new bugfix release is made.
+with write access to the `master` branch should regularly merge the maintenance branch into the `master` branch
+to have the fix both in maintenance and `master`. From time to time, a new bugfix release is made. Here, the third digit
+of the version is increased (e.g. from `0.8.0` to `0.8.1`). 
 
 The first digit of the version can be increased to indicate e.g. major improvements, major technological
-changes or incompatible changes. This is done only very rarely (like maybe once every 1-3 years). 
+changes or incompatible changes. This is done only very rarely (maybe once every 1-3 years). 
 
 == Release steps
 
@@ -58,20 +59,21 @@ Do this when you want to do a feature release.
 
 == Running the release process
 
-. Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT). After that, it will update the version (push), build the code, and create a tag (push).
-. Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the releaes artifacts there.
+. Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT`). After that, it will update the version (push), build the code, and create a tag (push).
+. Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the release artifacts there.
 . Immediately after the release, again merge the released branch into the
   master branch, using e.g. `git checkout master` and `git merge -s ours 0.9.x` and `git push`. 
   Doing this second merge does not actually change anything in the master. 
   However, it ensures that the updates to the version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
-. The released jar is now in `target/checkout/inception-app-webapp/target/` (*not* in `inception-app-webapp/target/`), look for the standalone jar
+. The released jar is now in `target/checkout/inception-app-webapp/target/` (*not* in `inception-app-webapp/target/`), look for the standalone jar.
 
 == Making the release available
 
 [arabic]
 . Sign the standalone jar using `gpg --detach-sign --armor`. This creates the signature in a separate file. Attach both files to
 the link:https://github.com/inception-project/inception/releases[GitHub release] that
-you are currently preparing. The issues
+you are currently preparing. GitHub automatically creates a stub release for every tag
+and the Maven release process has automatically created such a tag for your release. The issues
 that were solved with this release can be found by filtering issues by milestones.
 
 == Deploy the new release
@@ -112,3 +114,13 @@ a release version (no snapshot suffix). Then run
 mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
 mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
 ----
+
+== Aborting and re-running a release
+
+If for some reason the release process failed, re-run the maven command during which the process was aborted 
+(i.e. `mvn release:prepare` or `mvn release:perform`). Maven should repeat any failed steps of the respective process.
+
+If you need to abort the release process use `mvn release:rollback`. However, in this case, you also need to check
+if the release tag was already created. You then might need to manually remove it. You might also need to revert the commits 
+that were created during the release to re-set the version to the previous state. 
+This can be done with `git revert <commit>`.
