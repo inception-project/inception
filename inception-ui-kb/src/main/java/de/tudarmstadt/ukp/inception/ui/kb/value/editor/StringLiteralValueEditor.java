@@ -38,6 +38,7 @@ public class StringLiteralValueEditor
 
         value = new TextArea<>("value");
         value.setOutputMarkupId(true);
+        value.setRequired(true);
         add(value);
 
         add(new TextField<>("language"));
