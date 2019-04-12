@@ -39,6 +39,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -47,6 +49,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,6 +135,11 @@ public class SPARQLQueryBuilderGenericTest
             break;
         }
         case REMOTE: {
+            Assume.assumeTrue(
+                    "Remote repository at [" + profile.getAccess().getAccessUrl()
+                            + "] is not reachable",
+                    isReachable(profile.getAccess().getAccessUrl()));
+            
             repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
             repo.init();
             break;
@@ -216,6 +224,21 @@ public class SPARQLQueryBuilderGenericTest
         }
         else {
             return new URL(aUrl).openStream();
+        }
+    }
+    
+    public static boolean isReachable(String aUrl)
+    {
+        SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.init();
+        try (RepositoryConnection conn = r.getConnection()) {
+            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+            try (TupleQueryResult result = query.evaluate()) {
+                return true;
+            }
+        }
+        catch (Exception e) {
+            return false;
         }
     }
 }
