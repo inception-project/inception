@@ -27,9 +27,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.Collector;
-import java.util.stream.Stream;
 
-
+/**
+ * Provides macro-averaged scores on per-token basis over all labels contained in processed
+ * annotated pairs except for those matching the optionally provided ignore-labels as a gold label.
+ */
 public class EvaluationResult
 {
     private final int trainingSetSize;
@@ -43,38 +45,6 @@ public class EvaluationResult
      */
     private ConfusionMatrix confusionMatrix;
 
-
-    /**
-     * Calculate macro-averaged scores on per-token basis over all labels contained in the given
-     * annotated pairs except for those matching the given ignore-labels as a gold label.
-     * 
-     * @param aIgnoreLabels
-     *            these labels will be ignored as gold labels during evaluation
-     * @param aAnnotatedPairs
-     *            pairs of gold and predicted labels for the same token
-     */
-    public EvaluationResult(Set<String> aIgnoreLabels,
-            Stream<AnnotatedTokenPair> aAnnotatedPairs)
-    {
-        ignoreLabels = new HashSet<>();
-        testSetSize = 0;
-        trainingSetSize = 0;
-        
-        ignoreLabels.addAll(aIgnoreLabels);
-        
-        // construct confusion matrix
-        confusionMatrix = new ConfusionMatrix();
-        processAnnotatedTokens(aAnnotatedPairs);
-    }
-
-    private void processAnnotatedTokens(Stream<AnnotatedTokenPair> aAnnotatedPairs)
-    {
-        if (aAnnotatedPairs != null) {
-            aAnnotatedPairs.filter(pair -> !ignoreLabels.contains(pair.getGoldLabel()))
-                    .forEach(pair -> confusionMatrix.incrementCounts(pair.getPredictedLabel(),
-                            pair.getGoldLabel()));
-        }
-    }
     
     public EvaluationResult() {
         ignoreLabels = new HashSet<>();
