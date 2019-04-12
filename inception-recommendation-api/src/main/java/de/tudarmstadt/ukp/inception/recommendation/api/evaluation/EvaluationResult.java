@@ -285,8 +285,8 @@ public class EvaluationResult
         @Override
         public Function<ConfusionMatrix, EvaluationResult> finisher()
         {
-            return confMatrix -> new EvaluationResult(ignoreLabels, confMatrix, testSize,
-                    trainSize);
+            return confMatrix -> new EvaluationResult(ignoreLabels, confMatrix, trainSize,
+                    testSize);
         }
 
         @Override
