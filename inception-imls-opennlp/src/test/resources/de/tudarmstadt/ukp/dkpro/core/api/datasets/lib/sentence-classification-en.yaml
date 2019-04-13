@@ -38,7 +38,7 @@ artifacts:
 #    url: "https://creativecommons.org/licenses/by/4.0/legalcode.txt"
 #    sha1: 563e2664fed2ce3e65bd1dd396422f46c5db9040
   SentenceCorpus.zip:
-    url: "https://archive.ics.uci.edu/ml/machine-learning-databases/00311/SentenceCorpus.zip"
+    url: "http://archive.ics.uci.edu/ml/machine-learning-databases/00311/SentenceCorpus.zip"
     sha1: c1595c2e6ba7a81856f07d9fbcfbc3b1c9ef1ec9
     actions:
     - action: explode

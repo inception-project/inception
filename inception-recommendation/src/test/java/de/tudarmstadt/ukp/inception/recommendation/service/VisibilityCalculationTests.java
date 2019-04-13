@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.tasks;
+package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -44,8 +44,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 
-public class PredictionTaskTest
+public class VisibilityCalculationTests
 {
     private @Mock LearningRecordService recordService;
     private @Mock AnnotationSchemaService annoService;
@@ -55,6 +56,8 @@ public class PredictionTaskTest
     private String user;
     private String neName;
     private long layerId;
+    
+    private RecommendationServiceImpl sut;
 
     // AnnotationSuggestion
     private final static long RECOMMENDER_ID = 1;
@@ -85,7 +88,9 @@ public class PredictionTaskTest
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
         featureList.add(new AnnotationFeature("value", "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
-
+        
+        sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
+                recordService, null);
     }
 
     @Test
@@ -96,8 +101,7 @@ public class PredictionTaskTest
         CAS cas = getTestCas();
         Collection<SuggestionGroup> suggestions = getSuggestionGroup(
                 new int[][] { { 1, 0, 3 }, { 2, 13, 20 } });
-        PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
-                suggestions, 0, 25);
+        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
         List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
@@ -121,8 +125,7 @@ public class PredictionTaskTest
 
         CAS cas = getTestCas();
         Collection<SuggestionGroup> suggestions = getSuggestionGroup(new int[][] { { 1, 5, 10 } });
-        PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
-                suggestions, 0, 25);
+        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
         List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
@@ -145,8 +148,7 @@ public class PredictionTaskTest
 
         CAS cas = getTestCas();
         Collection<SuggestionGroup> suggestions = getSuggestionGroup(new int[][] { { 1, 5, 10 } });
-        PredictionTask.calculateVisibility(recordService, annoService, cas, user, layer,
-                suggestions, 0, 25);
+        sut.calculateVisibility(cas, user, layer, suggestions, 0, 25);
 
         List<AnnotationSuggestion> invisibleSuggestions = getInvisibleSuggestions(suggestions);
         List<AnnotationSuggestion> visibleSuggestions = getVisibleSuggestions(suggestions);
