@@ -282,6 +282,15 @@ public class DL4JSequenceRecommenderTest
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
+        
+        // check how many labels are not padding labels
+        long numWithLabel = predictions.stream()
+                .filter(p -> !p.getLabel().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+        System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
+                predictions.size());
+        
+        assertThat(predictions).as("There are predictions other than *No_Label*")
+            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test
@@ -339,6 +348,15 @@ public class DL4JSequenceRecommenderTest
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
+        
+        // check how many labels are not padding labels
+        long numWithLabel = predictions.stream()
+                .filter(p -> !p.getLabel().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+        System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
+                predictions.size());
+        
+        assertThat(predictions).as("There are predictions other than *No_Label*")
+            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test
