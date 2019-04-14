@@ -17,19 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -45,7 +46,6 @@ public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 4306746527837380863L;
-    private final Logger log = LoggerFactory.getLogger(getClass());
     
     private static final String LEARNING_CURVE = "learningCurve";
     
@@ -80,17 +80,15 @@ public class RecommendationSidebar
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
         chartContainer.setVisibilityAllowed(recommendationService.showLearningCurveDiagram());
         add(chartContainer);
-        
-        addRecommenderFeedback(aModel);
     }
 
+    @OnEvent
     /**
      * Inform whether recommender and annotation layers are a valid match.
      */
-    private void addRecommenderFeedback(IModel<AnnotatorState> aModel)
+    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        Project project = aModel.getObject().getProject();
-
+        Project project = getModelObject().getProject();
         for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
             if (!layer.isEnabled()) {
                 continue;
@@ -100,11 +98,9 @@ public class RecommendationSidebar
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                  //FIXME error message only blinks shortly into existence
-                    log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                            + "- skipping recommender", recommender.getName());
                     error(String.format("The recommender %s is configured for an invalid layer "
-                            + "is therefore skipped.", recommender.getName()));
+                            + "and therefore skipped.", recommender.getName()));
+                    aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
                 }
             }
         }
