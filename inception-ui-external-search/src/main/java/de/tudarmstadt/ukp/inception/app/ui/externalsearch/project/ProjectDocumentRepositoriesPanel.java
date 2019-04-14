@@ -36,6 +36,8 @@ public class ProjectDocumentRepositoriesPanel
     {
         super(aId);
 
+        setOutputMarkupId(true);
+        
         selectedDocumentRepository = Model.of();
         projectModel = aProject;
 

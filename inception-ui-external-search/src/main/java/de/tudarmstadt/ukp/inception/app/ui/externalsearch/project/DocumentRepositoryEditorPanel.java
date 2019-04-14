@@ -25,6 +25,7 @@ import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -136,9 +137,15 @@ public class DocumentRepositoryEditorPanel
             private static final long serialVersionUID = -3902555252753037183L;
 
             @Override
-            protected void onAfterSubmit(AjaxRequestTarget target)
+            protected void onAfterSubmit(AjaxRequestTarget aTarget)
             {
-                actionSave(target);
+                actionSave(aTarget);
+            };
+            
+            @Override
+            protected void onError(AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), IFeedback.class);
             };
         });
         form.add(new LambdaAjaxLink("delete", this::actionDelete)
@@ -182,11 +189,14 @@ public class DocumentRepositoryEditorPanel
         documentRepository.setProject(projectModel.getObject());
         externalSearchService.createOrUpdateDocumentRepository(documentRepository);
 
+        success("Document repository settings saved");
+        
         // causes deselection after saving
         repositoryModel.setObject(null);
 
         // Reload whole page because master panel also needs to be reloaded.
-        aTarget.add(getPage());
+        aTarget.add(findParent(ProjectDocumentRepositoriesPanel.class));
+        aTarget.addChildren(getPage(), IFeedback.class);
     }
 
     private void actionDelete(AjaxRequestTarget aTarget)
