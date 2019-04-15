@@ -1,0 +1,126 @@
+= Releasing INCEpTION
+
+== Prerequisites
+
+When releasing and publishing the resulting artifact, make sure that you actually have the rights
+to publish new artifacts to the target repository. See e.g.
+https://maven.apache.org/settings.html#Servers[the Maven documentationon authentication] 
+for more information on how to do this. Additionally, this documentation assumes that you have write permissions
+to the protected `master` branch and to the protected maintenance branches.
+
+== Branching model
+
+INCEpTION uses a branching model where the development towards the next feature release happens on the
+`master`. Additionally, there are *maintenance* (also called *stable*) branches for all past feature 
+releases which are used to create bugfix releases when necessary (`0.1.x`, `0.2.x`, `0.3.x` etc.). 
+
+To prepare a new feature release, we first create a maintenance branch from `master`. Assuming the current
+development version on the `master` branch is `0.8.0-SNAPSHOT`, we create a maintenance branch by the name
+`0.8.x`. After this, the version on the master branch must be manually updated to the next feature version,
+typically by increasing the second digit of the version (e.g. `0.8.0-SNAPSHOT` becomes `0.9.0-SNAPSHOT`).
+
+The process of doing the initial feature release on a new maintenance branch (e.g. for version `0.8.0`) is 
+largely the same then as for performing a bugfix release (e.g. for version `0.8.1`) as described in the next section.
+
+Changes are usually not committed directly to the `master` or maintenance branches. Instead we work with
+*feature* branches. Feature branches for new enhancements or refactorings are normally made from the 
+`master` branch. Feature branches for bugfixes are made from a maintenance branch (unless the bug only 
+exists on the `master` branch or is too difficult to fix without extensive refactoring and risk of 
+breaking other things). After accepting a pull request for a bugfix to a maintenance branch, a developer
+with write access to the `master` branch should regularly merge the maintenance branch into the `master` branch
+to have the fix both in maintenance and `master`. From time to time, a new bugfix release is made. Here, the third digit
+of the version is increased (e.g. from `0.8.0` to `0.8.1`). 
+
+The first digit of the version can be increased to indicate e.g. major improvements, major technological
+changes or incompatible changes. This is done only very rarely (maybe once every 1-3 years). 
+
+== Release steps
+
+For these steps, we assume push permissions to the master branch. If these are not given, pull
+requests have to be used for the relevant steps. For the sake of this guide, we assume that `0.8.x`
+is the most recent maintenance branch.
+
+== Bugfix release preparations
+
+Do this when you want to do a bugfix release.
+
+. Create a bugfix release issue in the INCEpTION Github issue tracker
+. Checkout the `master` branch: e.g. `git checkout master`
+. Merge the maintenance into the `master` branch; this makes sure that all bugfixes are
+  also applied to master: e.g. `git merge 0.8.x` and then `git push`
+. Checkout the maintenance branch of which you want to make a bugfix release, by e.g. `git checkout 0.8.x`
+
+== Feature release preparations
+
+Do this when you want to do a feature release.
+
+. Checkout `master` and make sure that you pulled the most recent version of it
+. Create a new branch from `master` and name it according to the new version with the last digit (the bugfix part of the version) being `x`, by e.g. `git checkout -b 0.9.x`
+
+== Running the release process
+
+. Run `mvn release:prepare`; this step will ask you for the release version (e.g. `0.9.0`) for the tag to be created (e.g. `inception-app-0.9.0`), and for the new development version (e.g. `0.10.0-SNAPSHOT`). After that, it will update the version (push), build the code, and create a tag (push).
+. Run `mvn release:perform`; this will check out the created tag into the folder `target/checkout` and build the release artifacts there.
+. Immediately after the release, again merge the released branch into the
+  master branch, using e.g. `git checkout master` and `git merge -s ours 0.9.x` and `git push`. 
+  Doing this second merge does not actually change anything in the master. 
+  However, it ensures that the updates to the version number in the released_branch (e.g.  `0.9.x`) will not make it to the master branch.
+. The released jar is now in `target/checkout/inception-app-webapp/target/` (*not* in `inception-app-webapp/target/`), look for the standalone jar.
+
+== Making the release available
+
+[arabic]
+. Sign the standalone jar using `gpg --detach-sign --armor`. This creates the signature in a separate file. Attach both files to
+the link:https://github.com/inception-project/inception/releases[GitHub release] that
+you are currently preparing. GitHub automatically creates a stub release for every tag
+and the Maven release process has automatically created such a tag for your release. The issues
+that were solved with this release can be found by filtering issues by milestones.
+
+== Deploy the new release
+
+In order to deploy the new version, see the <<admin-guide.adoc#sect_upgrade,upgrade process>> 
+in the Administrator Guide.
+
+== Updating documentation
+
+Checkout or go into the `inception-project.github.io` repository and
+create a new branch. In order to publish the documentation for this new
+release, copy the data from the INCEpTION repository that was just
+released under
+`target/checkout/inception-app-webapp/target/generated-docs` into a
+version folder under `releases/{version}/docs` in the documentation
+repository. Also update the `_data/releases.yml` file. Create a pull
+request for this as well.
+
+== Publish to docker
+
+Make sure that you configured your docker user in your maven settings:
+
+[source,xml]
+----
+<server>
+  <id>docker.io</id>
+  <username>user</username>
+  <password>password</password>
+</server>
+----
+
+Also, your user needs to have push rights to the `inceptionproject` Dockerhub group.
+Check out the release tag, make sure that in the master pom, the version is set to
+a release version (no snapshot suffix). Then run
+
+[source,xml]
+----
+mvn -Pdocker clean install docker:build -Ddocker.image.name="inceptionproject/inception"
+mvn -Pdocker clean install docker:push -Ddocker.image.name="inceptionproject/inception"
+----
+
+== Aborting and re-running a release
+
+If for some reason the release process failed, re-run the maven command during which the process was aborted 
+(i.e. `mvn release:prepare` or `mvn release:perform`). Maven should repeat any failed steps of the respective process.
+
+If you need to abort the release process use `mvn release:rollback`. However, in this case, you also need to check
+if the release tag was already created. You then might need to manually remove it. You might also need to revert the commits 
+that were created during the release to re-set the version to the previous state. 
+This can be done with `git revert <commit>`.
