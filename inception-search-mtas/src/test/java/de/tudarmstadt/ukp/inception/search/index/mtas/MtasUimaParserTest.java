@@ -17,8 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -142,7 +144,7 @@ public class MtasUimaParserTest
         builder.add(".", Token.class);
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, AnchoringMode.TOKENS);
+                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -182,7 +184,7 @@ public class MtasUimaParserTest
         zeroWidthNe.addToIndexes();
         
         AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(),
-                "Named Entity", WebAnnoConst.SPAN_TYPE, project, true, TOKENS);
+                "Named Entity", SPAN_TYPE, project, true, TOKENS, NO_OVERLAP);
         when(annotationSchemaService.listAnnotationLayer(any(Project.class)))
                 .thenReturn(asList(layer));
 
@@ -235,19 +237,19 @@ public class MtasUimaParserTest
         
         // Set up annotation schema with POS and Dependency
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token",
-                WebAnnoConst.SPAN_TYPE, project, true, SINGLE_TOKEN);
+                SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
         AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
                 POS.class.getName());
         
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS",
-                WebAnnoConst.SPAN_TYPE, project, true, SINGLE_TOKEN);
+                SPAN_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
         AnnotationFeature posLayerValue = new AnnotationFeature(1l, posLayer, "PosValue",
                 CAS.TYPE_NAME_STRING);
         
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(),
-                "Dependency", WebAnnoConst.RELATION_TYPE, project, true, SINGLE_TOKEN);
+                "Dependency", RELATION_TYPE, project, true, SINGLE_TOKEN, NO_OVERLAP);
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);

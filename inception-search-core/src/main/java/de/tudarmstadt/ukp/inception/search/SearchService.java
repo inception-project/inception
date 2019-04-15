@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.search;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -44,9 +44,9 @@ public interface SearchService
 
     boolean isIndexValid(Project aProject);
     
-    void indexDocument(SourceDocument aSourceDocument, JCas aJCas);
+    void indexDocument(SourceDocument aSourceDocument, CAS aJCas);
 
-    void indexDocument(AnnotationDocument aAnnotationDocument, JCas aJCas);
+    void indexDocument(AnnotationDocument aAnnotationDocument, CAS aJCas);
 
     boolean isIndexInProgress(Project aProject);
 }

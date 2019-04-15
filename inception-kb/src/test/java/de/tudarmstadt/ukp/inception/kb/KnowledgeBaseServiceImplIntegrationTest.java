@@ -271,7 +271,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.clear(kb);
 
         List<KBHandle> handles = new ArrayList<>();
-        handles.addAll(sut.listConcepts(kb, false));
+        handles.addAll(sut.listAllConcepts(kb, false));
         handles.addAll(sut.listProperties(kb, false));
         assertThat(handles)
             .as("Check that no custom entities are found after clearing")
@@ -287,7 +287,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.clear(kb);
 
         List<KBHandle> handles = new ArrayList<>();
-        handles.addAll(sut.listConcepts(kb, true));
+        handles.addAll(sut.listAllConcepts(kb, true));
         handles.addAll(sut.listProperties(kb, true));
         assertThat(handles)
             .as("Check that only entities with implicit namespace are found after clearing")
@@ -565,7 +565,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBHandle handle = sut.createConcept(kb, concept);
 
-        List<KBHandle> concepts = sut.listConcepts(kb, false);
+        List<KBHandle> concepts = sut.listAllConcepts(kb, false);
 
         assertThat(concepts)
             .as("Check that concepts contain the one, saved item")
@@ -580,7 +580,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     public void listConcepts_WithNoSavedConceptAndAll_ShouldFindRdfConcepts() {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        List<KBHandle> concepts = sut.listConcepts(kb, true);
+        List<KBHandle> concepts = sut.listAllConcepts(kb, true);
 
         assertThat(concepts)
             .as("Check that all concepts have implicit namespaces")
@@ -1536,13 +1536,13 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
         String instanceId = sut.createInstance(kb, buildInstance()).getIdentifier();
         String propertyId = sut.createProperty(kb, buildProperty()).getIdentifier();
 
-        assertThat(sut.readKBIdentifier(kb, conceptId).get())
+        assertThat(sut.readItem(kb, conceptId).get())
             .as("Check that reading a concept id returns an instance of KBConcept")
             .isInstanceOf(KBConcept.class);
-        assertThat(sut.readKBIdentifier(kb, instanceId).get())
+        assertThat(sut.readItem(kb, instanceId).get())
             .as("Check that reading an instance id returns an instance of KBInstance")
             .isInstanceOf(KBInstance.class);
-        assertThat(sut.readKBIdentifier(kb, propertyId).get())
+        assertThat(sut.readItem(kb, propertyId).get())
             .as("Check that reading a property id returns an instance of KBProperty")
             .isInstanceOf(KBProperty.class);
     }

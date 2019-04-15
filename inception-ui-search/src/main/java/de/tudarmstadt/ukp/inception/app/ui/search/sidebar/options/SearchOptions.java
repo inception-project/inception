@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,12 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.exception;
+package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
-public class NoMatchFoundException extends Exception
+public class SearchOptions extends Options
 {
-    public NoMatchFoundException(String message)
+    private static final long serialVersionUID = 3030323391922717647L;
+
+    private boolean limitedToCurrentDocument = false;
+
+    public boolean isLimitedToCurrentDocument()
     {
-        super(message);
+        return limitedToCurrentDocument;
+    }
+
+    public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
+    {
+        limitedToCurrentDocument = aLimitedToCurrentDocument;
     }
 }

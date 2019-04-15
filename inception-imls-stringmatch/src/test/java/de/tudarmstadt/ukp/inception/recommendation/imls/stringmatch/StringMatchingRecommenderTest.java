@@ -30,8 +30,11 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
@@ -106,6 +109,34 @@ public class StringMatchingRecommenderTest
     }
     
     @Test
+    public void thatPredictionForNoLabelAnnosWorks() throws Exception
+    {
+        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        CAS cas = getTestCasNoLabelLabels();
+
+        sut.train(context, asList(cas));
+
+        sut.predict(context, cas);
+
+        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+
+        assertThat(predictions).as("Has all null labels").extracting(PredictedSpan::getLabel)
+                .containsOnlyNulls();
+    }
+    
+    private CAS getTestCasNoLabelLabels() throws Exception
+    {
+        Dataset ds = loader.load("germeval2014-de");
+        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+        Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+        Feature valFeature = neType.getFeatureByBaseName("value");
+        JCasUtil.select(cas.getJCas(), NamedEntity.class)
+                .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
+        
+        return cas;
+    }
+
+    @Test
     public void thatPredictionWithPretrainigWorks() throws Exception
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
@@ -146,7 +177,7 @@ public class StringMatchingRecommenderTest
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(casList, splitStrategy);
+        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
 
         System.out.printf("Score: %f%n", score);
         
@@ -159,7 +190,7 @@ public class StringMatchingRecommenderTest
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
 
-        double score = sut.evaluate(asList(), splitStrategy);
+        double score = sut.evaluate(asList(), splitStrategy).getDefaultScore();
 
         System.out.printf("Score: %f%n", score);
         
@@ -177,7 +208,7 @@ public class StringMatchingRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy);
+            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
 
             System.out.printf("Score: %f%n", score);
 

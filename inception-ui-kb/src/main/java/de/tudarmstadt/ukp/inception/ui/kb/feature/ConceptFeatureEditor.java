@@ -24,7 +24,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
@@ -107,7 +107,7 @@ public class ConceptFeatureEditor
             // If there is a selection, we try obtaining its text from the CAS and use it as an
             // additional item in the query. Note that there is not always a mention, e.g. when the
             // feature is used in a document-level annotations.
-            JCas jcas = aHandler != null ? aHandler.getEditorCas() : null;
+            CAS cas = aHandler != null ? aHandler.getEditorCas() : null;
             String mention = aStateModel != null ? aStateModel.getObject().getSelection().getText()
                     : null;
             int mentionBegin = aStateModel != null
@@ -116,7 +116,7 @@ public class ConceptFeatureEditor
             
             choices = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
                     traits.getScope(), traits.getAllowedValueType(), aInput, mention, mentionBegin,
-                    jcas, feat.getProject());
+                    cas, feat.getProject());
         }
         catch (Exception e) {
             choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));

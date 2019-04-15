@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
-import static org.apache.commons.lang3.StringUtils.isNoneBlank;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -59,6 +60,7 @@ public class StringMatchingRecommender
     implements RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
+    private static final String UNKNOWN_LABEL = "unknown";
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
@@ -162,8 +164,13 @@ public class StringMatchingRecommender
                     // Need to check that the match actually ends at a token boundary!
                     if (tokens.stream().filter(t -> t.getEnd() == end).findAny().isPresent()) {
                         for (LabelStats lc : node.value.getBest(maxRecommendations)) {
-                            spans.add(new Span(begin, end, text.substring(begin, end),
-                                    lc.getLabel(), lc.getRelFreq()));
+                            String label = lc.getLabel();
+                            // check instance equality to avoid collision with user labels
+                            if (label == UNKNOWN_LABEL) {
+                                label = null;
+                            }
+                            spans.add(new Span(begin, end, text.substring(begin, end), label,
+                                    lc.getRelFreq()));
                         }
                     }
                 }
@@ -177,8 +184,10 @@ public class StringMatchingRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
+        EvaluationResult result = new EvaluationResult();
+        
         List<Sample> data = extractData(aCasses, layerName, featureName);
         List<Sample> trainingSet = new ArrayList<>();
         List<Sample> testSet = new ArrayList<>();
@@ -204,6 +213,9 @@ public class StringMatchingRecommender
             }            
         }
 
+        result.setTestSetSize(testSet.size());
+        result.setTrainingSetSize(trainingSet.size());
+        
         long trainingSetLabeledSamplesCount = trainingSet.stream()
                 .filter(sample -> !sample.getSpans().isEmpty())
                 .count();
@@ -217,7 +229,8 @@ public class StringMatchingRecommender
                     "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
                     trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
                     testSetLabeledSamplesCount, data.size());
-            return 0.0;
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         log.info(
@@ -276,7 +289,8 @@ public class StringMatchingRecommender
         // ... so to avoid confusing the user completely by returning a negative number and
         // not having the recommender activate even if the threshold is set to 0, we just cap
         // the score here at 0.
-        return Math.max(0, score);
+        result.setDefaultScore(Math.max(0, score));
+        return result;
     }
     
     private void addDataToStudy(Collection<Sample> aData, UnitizingAnnotationStudy aStudy,
@@ -302,16 +316,18 @@ public class StringMatchingRecommender
         }
     }
     
-    private void learn(Trie<DictEntry> aDict, String aText, String aLabel) {
-        if (isNoneBlank(aLabel)) {
-            DictEntry entry = aDict.get(aText);
-            if (entry == null) {
-                entry = new DictEntry(aText);
-                aDict.put(aText, entry);
-            }
-            
-            entry.put(aLabel);
+    private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
+    {
+        String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;
+
+        DictEntry entry = aDict.get(aText);
+        if (entry == null) {
+            entry = new DictEntry(aText);
+            aDict.put(aText, entry);
         }
+
+        entry.put(label);
+
     }
     
     private List<Sample> extractData(List<CAS> aCasses, String aLayerName, String aFeatureName)
