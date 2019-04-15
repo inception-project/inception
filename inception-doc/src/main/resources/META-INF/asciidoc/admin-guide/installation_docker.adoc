@@ -22,7 +22,7 @@ If you have Docker installed, you can run {product-name} using
 
 [source,text,subs="+attributes"]
 ----
-docker run -it --name inception -p8080:8080 inception/inception:{revnumber}
+docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
@@ -34,7 +34,7 @@ To run the {product-name} docker in the background use
 
 [source,text,subs="+attributes"]
 ----
-docker run -d --name inception -p8080:8080 inception/inception:{revnumber}
+docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 Logs are accessible by typing 
