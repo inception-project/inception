@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.externalsearch;
 
+import static java.util.Comparator.comparing;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -37,7 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceClusterer;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceExtractor;
-import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExtractedSentence;
+import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExtractedUnit;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -79,10 +80,10 @@ public class ExternalSearchServiceImpl
     {
         log.debug("Running query: {}", aQuery);
         
-        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
+        ExternalSearchProviderFactory<?> factory = externalSearchProviderRegistry
                 .getExternalSearchProviderFactory(aRepository.getType());
         
-        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
+        ExternalSearchProvider<Object> provider = factory.getNewExternalSearchProvider();
 
         Object traits = factory.readTraits(aRepository);
 
@@ -98,36 +99,36 @@ public class ExternalSearchServiceImpl
         // change highlights of results to contain most relevant sentences
         if (sentenceHighlights) {
             try {
-                List<ExtractedSentence> extractedSentences =
-                    new ExternalSearchSentenceExtractor(results, this, aQuery)
-                                .extractSentences();
-                List<Set<ExtractedSentence>> sentenceClusters =
-                    new ExternalSearchSentenceClusterer().getSentenceClusters(extractedSentences);
+                List<ExtractedUnit> extractedSentences = new ExternalSearchSentenceExtractor(
+                        results, this, aQuery).extractSentences();
+                List<Set<ExtractedUnit>> sentenceClusters = new ExternalSearchSentenceClusterer()
+                        .getSentenceClusters(extractedSentences);
     
-                for (ExternalSearchResult result : results) {
-                    List<ExternalSearchHighlight> externalSearchHighlights = new ArrayList<>();
-        
-                    // highlight one sentence from each sentence cluster (maximum 5)
-                    for (Set<ExtractedSentence> sentenceCluster : sentenceClusters) {
-                        List<ExtractedSentence> filteredSentenceCluster =
-                                new ArrayList<>(sentenceCluster).stream()
-                                    .filter(s -> s.getSourceDoc().equals(result.getDocumentId()))
-                                    .collect(Collectors.toList());
-    
-                        if (filteredSentenceCluster.size() > 0) {
-                            filteredSentenceCluster.sort(Comparator.comparing(
-                                    ExtractedSentence::getScore).reversed());
-                            externalSearchHighlights.add(new ExternalSearchHighlight(
-                                    filteredSentenceCluster.get(0).getSentenceText()));
-                        }
-    
-                        if (externalSearchHighlights.size() >= 5) {
-                            break;
-                        }
-                    }
-        
-                    result.setHighlights(externalSearchHighlights);
+                results.clear();
+                
+                for (Set<ExtractedUnit> cluster : sentenceClusters) {
+                    // Sort the cluster according to score
+                    List<ExtractedUnit> sortedCluster = new ArrayList<>(cluster);
+                    sortedCluster.sort(comparing(ExtractedUnit::getScore).reversed());
+
+                    // Use the result with the best score to create the cluster representative
+                    ExternalSearchResult best = sortedCluster.get(0).getResult();
+                    ExternalSearchResult representative = new ExternalSearchResult(aRepository,
+                            best.getCollectionId(), best.getDocumentId());
+                    results.add(representative);
+                    
+                    // Add other cluster items as highlights to the representative
+                    representative.setHighlights(sortedCluster.stream()
+                            .map(unit -> new ExternalSearchHighlight(String.format("%s [%s]",
+                                    unit.getText(), unit.getResult().getDocumentId())))
+                            .collect(Collectors.toList()));
+                    
+                    representative.setScore(sortedCluster.stream()
+                            .mapToDouble(ExtractedUnit::getScore)
+                            .average().getAsDouble());
                 }
+                
+                results.sort(comparing(ExternalSearchResult::getScore).reversed());
             } catch (Exception e) {
                 log.error("Error occurred while extracting relevant sentences: " + e.getMessage());
             }

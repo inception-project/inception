@@ -53,12 +53,12 @@ public class ExternalSearchSentenceExtractor {
     private AnalysisEngine marker;
     private AnalysisEngine scorer;
     
-    public ExternalSearchSentenceExtractor(List<ExternalSearchResult> externalSearchResults,
-                                           ExternalSearchService externalSearchService,
-                                           String query) throws Exception
+    public ExternalSearchSentenceExtractor(List<ExternalSearchResult> aExternalSearchResults,
+            ExternalSearchService aExternalSearchService, String query)
+        throws Exception
     {
-        this.externalSearchResults = externalSearchResults;
-        this.externalSearchService = externalSearchService;
+        externalSearchResults = aExternalSearchResults;
+        externalSearchService = aExternalSearchService;
         
         // Set up custom type system
         TypeSystemDescription customTypes = getResourceSpecifierFactory()
@@ -77,11 +77,11 @@ public class ExternalSearchSentenceExtractor {
         doc = createJCas(mergeTypeSystems(asList(customTypes, createTypeSystemDescription())));
     }
     
-    public List<ExtractedSentence> extractSentences()
+    public List<ExtractedUnit> extractSentences()
             throws Exception
     {
         // Process text files
-        List<ExtractedSentence> relevantSentences = new ArrayList<>();
+        List<ExtractedUnit> relevantSentences = new ArrayList<>();
         for (ExternalSearchResult result: externalSearchResults) {
             // Clear contents so we can process the next file
             doc.reset();
@@ -101,10 +101,8 @@ public class ExternalSearchSentenceExtractor {
             Type tUnit = doc.getTypeSystem().getType(TYPE_NAME_UNIT);
             Feature fScore = tUnit.getFeatureByBaseName(FEATURE_NAME_SCORE);
             for (AnnotationFS unit : CasUtil.select(doc.getCas(), tUnit)) {
-                relevantSentences.add(new ExtractedSentence(
-                        unit.getCoveredText(),
-                        unit.getDoubleValue(fScore),
-                        result.getDocumentId()));
+                relevantSentences.add(new ExtractedUnit(unit.getCoveredText(),
+                        unit.getDoubleValue(fScore), result));
             }
         }
         return relevantSentences;

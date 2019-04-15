@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceClusterer;
 import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExternalSearchSentenceExtractor;
-import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExtractedSentence;
+import de.tudarmstadt.ukp.inception.externalsearch.cluster.ExtractedUnit;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
 public class ProcessTest
@@ -73,11 +73,11 @@ public class ProcessTest
     @Test
     public void test() throws Exception {
         // Extract sentences relevant to query from external results
-        List<ExtractedSentence> relevantSentences = extractor.extractSentences();
+        List<ExtractedUnit> relevantSentences = extractor.extractSentences();
     
         // Assertions checking that relevant sentences have been extracted correctly
         assertThat(relevantSentences).hasSize(5);
-        assertThat(relevantSentences).extracting(ExtractedSentence::getScore).
+        assertThat(relevantSentences).extracting(ExtractedUnit::getScore).
                 allMatch(score -> score > 0.0);
     
         // Assertion checking that clustering of relevant sentences works correctly
