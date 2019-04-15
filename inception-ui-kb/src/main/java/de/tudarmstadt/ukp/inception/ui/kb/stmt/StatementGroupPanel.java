@@ -70,13 +70,15 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
-public class StatementGroupPanel extends Panel {
-
+public class StatementGroupPanel
+    extends Panel
+{
     private static final long serialVersionUID = 2431747012293487976L;
+    
     private static final Logger LOG = LoggerFactory.getLogger(StatementGroupPanel.class);
 
-    
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -109,18 +111,22 @@ public class StatementGroupPanel extends Panel {
 
     /**
      * Add a new prototype statement using this group's instance and its current property
-     * @param aStmtGroupBean a {@link StatementGroupBean}
+     * 
+     * @param aStmtGroupBean
+     *            a {@link StatementGroupBean}
      */
-    private void addStatementProto(StatementGroupBean aStmtGroupBean) {
-        KBStatement statementProto = new KBStatement(
-            aStmtGroupBean.getInstance(),
-            aStmtGroupBean.getProperty());
+    private void addStatementProto(StatementGroupBean aStmtGroupBean)
+    {
+        KBStatement statementProto = new KBStatement(aStmtGroupBean.getInstance(),
+                aStmtGroupBean.getProperty());
 
         aStmtGroupBean.getStatements().add(statementProto);
     }
-    
-    private class NewStatementGroupFragment extends Fragment implements Focusable {
 
+    private class NewStatementGroupFragment
+        extends Fragment
+        implements Focusable
+    {
         private static final long serialVersionUID = 7617846171917989652L;
         
         private Component focusComponent;
@@ -148,10 +154,9 @@ public class StatementGroupPanel extends Panel {
         /**
          * Returns the list of properties in the knowledge base for which the current instance does
          * not have statements for yet.
-         * 
-         * @return
          */
-        private List<KBHandle> getUnusedProperties() {
+        private List<KBHandle> getUnusedProperties()
+        {
             StatementGroupBean bean = groupModel.getObject(); 
             StatementDetailPreference detailPreference = bean.getDetailPreference();
             Set<KBHandle> existingPropertyHandles = Collections.emptySet();
@@ -197,7 +202,8 @@ public class StatementGroupPanel extends Panel {
             return KBHandle.distinctByIri(properties);
         }
 
-        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
+        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form)
+        {
             groupModel.getObject().setProperty(form.getModelObject());
 
             // replace content to show existing statement group with a new, empty statement
@@ -222,13 +228,15 @@ public class StatementGroupPanel extends Panel {
         }
     }
     
-    public class ExistingStatementGroupFragment extends Fragment {
-        
+    public class ExistingStatementGroupFragment
+        extends Fragment
+    {
         private static final long serialVersionUID = 5054250870556101031L;
         
         private WebMarkupContainer statementListWrapper;
         
-        public ExistingStatementGroupFragment(String aId) {
+        public ExistingStatementGroupFragment(String aId)
+        {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
 
             StatementGroupBean statementGroupBean = groupModel.getObject();
@@ -328,7 +336,8 @@ public class StatementGroupPanel extends Panel {
         }
         
         @OnEvent
-        public void actionStatementChanged(AjaxStatementChangedEvent event) {
+        public void actionStatementChanged(AjaxStatementChangedEvent event)
+        {
             // event is not relevant if the statement in the event has a different property|subject
             // than the property|subject of this statement group
             KBStatement statement = event.getStatement();
@@ -365,7 +374,8 @@ public class StatementGroupPanel extends Panel {
             event.getTarget().add(statementListWrapper);
         }
 
-        private void actionAddValue(AjaxRequestTarget target) {
+        private void actionAddValue(AjaxRequestTarget target)
+        {
             addStatementProto(groupModel.getObject());
             target.add(statementListWrapper);
         }

@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class PropertyPanel extends Panel {
 

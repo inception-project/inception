@@ -53,8 +53,8 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 /**
  * An {@code AbstractInfoPanel} offers functionality to create, display and edit instances of a

@@ -350,7 +350,7 @@ public interface KnowledgeBaseService
 
     /**
      * List the properties for a specific accepted domain identifier and also 
-     * include properties which do not have any domain specified. 
+     * include properties which do not have any domain specified.
      * 
      * @param kb
      *            The knowledge base

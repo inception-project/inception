@@ -34,7 +34,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
 

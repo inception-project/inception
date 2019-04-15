@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class StatementsPanel
     extends Panel
@@ -79,16 +81,14 @@ public class StatementsPanel
     /**
      * {@code StatementsPanel} creator.
      * 
-     * @param aId
-     * @param aKbModel
-     * @param aInstance
      * @param aDetailPreference
      *            if {@code null}, the statement detail preference can be changed in the UI; if
      *            {@code !null} the statement detail preference is fixed to the given value and
      *            can't be changed in the UI
      */
     public StatementsPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> aInstance,
-            StatementDetailPreference aDetailPreference) {
+            StatementDetailPreference aDetailPreference)
+    {
         super(aId, aInstance);
 
         setOutputMarkupPlaceholderTag(true);
@@ -98,7 +98,7 @@ public class StatementsPanel
 
         // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
-            .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
+                .of(() -> comparing(sgb -> sgb.getProperty().getUiLabel()));
         
         setUpDetailPreference(aDetailPreference);
 
@@ -155,11 +155,11 @@ public class StatementsPanel
         addLink.add(new Label("label", new ResourceModel("statement.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
-
     }
     
     @OnEvent
-    public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event) {
+    public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event)
+    {
         // event is irrelevant if it is concerned with a different knowledge base instance
         boolean isEventForThisStatementsPanel = instance.getObject()
                 .equals(event.getBean().getInstance());
@@ -175,7 +175,8 @@ public class StatementsPanel
         event.getTarget().add(this);
     }
     
-    private void setUpDetailPreference(StatementDetailPreference aDetailPreference) {
+    private void setUpDetailPreference(StatementDetailPreference aDetailPreference)
+    {
         StatementDetailPreference defaultPreference = StatementDetailPreference.BASIC;
         
         boolean isDetailPreferenceUserDefinable = aDetailPreference == null;
@@ -202,18 +203,18 @@ public class StatementsPanel
     
     /**
      * Reload the statement group model if the detail preferences change.
-     * @param target
      */
-    private void actionStatementDetailPreferencesChanged(AjaxRequestTarget target) {
+    private void actionStatementDetailPreferencesChanged(AjaxRequestTarget target)
+    {
         statementGroups.setObject(getStatementGroupBeans());
         target.add(this);
     }
 
     /**
      * Adds an empty statement group to the statement group list.
-     * @param target
      */
-    private void actionAdd(AjaxRequestTarget target) {
+    private void actionAdd(AjaxRequestTarget target)
+    {
         StatementGroupBean proto = new StatementGroupBean();
         proto.setInstance(instance.getObject());
         proto.setKb(kbModel.getObject());
@@ -234,9 +235,9 @@ public class StatementsPanel
                 instance.getObject() != null && isNotEmpty(instance.getObject().getIdentifier()));
     }
 
-    public void setStatementGroupComparator(
-            Comparator<StatementGroupBean> statementGroupComparator) {
-        this.statementGroupComparator.setObject(statementGroupComparator);
+    public void setStatementGroupComparator(Comparator<StatementGroupBean> aComparator)
+    {
+        statementGroupComparator.setObject(aComparator);
     }
 
     private List<StatementGroupBean> getStatementGroupBeans()
@@ -252,6 +253,7 @@ public class StatementsPanel
             error("Unable to list statements: " + e.getLocalizedMessage());
             LOG.error("Unable to list statements.", e);
         }
+        
         if (prefs == StatementDetailPreference.BASIC) {
             statements.removeIf((s) -> s.isInferred());
         }
