@@ -176,22 +176,6 @@ public class StatementGroupPanel
             try {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
-                
-                List<KBHandle> parentConceptList = kbService.getParentConceptList(
-                        groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
-                
-                for (KBHandle parent : parentConceptList) {
-                    properties.addAll(kbService.listDomainProperties(groupModel.getObject().getKb(),
-                            parent.getIdentifier(), true, true));
-                }
-
-                // Condition here to avoid fail case scenario e.g. WikiData : In case the above
-                // domain property doesn't return anything, we consider the complete list of 
-                // properties for now
-                if (properties.isEmpty()) {
-                    properties = kbService.listProperties(groupModel.getObject().getKb(),
-                            detailPreference == StatementDetailPreference.ALL);
-                } 
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list properties: " + e.getLocalizedMessage());

@@ -97,6 +97,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf;
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfBlankNode.LabeledBlankNode;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue;
 import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
@@ -281,8 +282,7 @@ public class SPARQLQueryBuilder
             }
             case CLASS: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString() + "+", aContext));
+                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
@@ -635,11 +635,14 @@ public class SPARQLQueryBuilder
 
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri subPropertyProperty = iri(kb.getSubPropertyIri());
+        LabeledBlankNode superClass = Rdf.bNode("superClass");
 
         addPattern(PRIMARY, union(
-                // Either there is a domain which matches the given one
-                VAR_SUBJECT.has(
-                        Path.of(iri(RDFS.DOMAIN), zeroOrMore(subClassProperty)), iri(aIdentifier)),
+                GraphPatterns.and(
+                    // Find all super-classes of the domain type
+                    iri(aIdentifier).has(Path.of(zeroOrMore(subClassProperty)), superClass),
+                    // Either there is a domain which matches the given one
+                    VAR_SUBJECT.has(iri(RDFS.DOMAIN), superClass)),
                 // ... the property does not define or inherit domain
                 isPropertyPattern().and(filterNotExists(VAR_SUBJECT.has(
                         Path.of(zeroOrMore(subPropertyProperty), iri(RDFS.DOMAIN)), bNode())))));

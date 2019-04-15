@@ -498,9 +498,11 @@ public class SPARQLQueryBuilderTest
         assertThat(results)
                 .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder(
-                        // property-2 defines a matching domain
+                        // property-1 is inherited by #subclass1 from #explicitRoot
+                        "http://example.org/#property-1",
+                        // property-2 is declared on #subclass1
                         "http://example.org/#property-2",
-                        // property-2 defines no domain
+                        // property-3 defines no domain
                         "http://example.org/#property-3");
                         // other properties all either define or inherit an incompatible domain
     }
