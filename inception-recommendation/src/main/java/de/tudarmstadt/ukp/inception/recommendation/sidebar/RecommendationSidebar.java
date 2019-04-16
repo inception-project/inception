@@ -93,8 +93,7 @@ public class RecommendationSidebar
             if (!layer.isEnabled()) {
                 continue;
             }
-            for (Recommender recommender : recommendationService.listAllEnabledRecommenders(project,
-                    layer)) {
+            for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
