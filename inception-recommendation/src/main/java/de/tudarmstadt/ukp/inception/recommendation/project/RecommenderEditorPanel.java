@@ -347,12 +347,15 @@ public class RecommenderEditorPanel
     }
     
     /**
-     * Check if the selected recommender still accepts the configured layer and feature.
-     * If not show an error message.
+     * Check if the selected recommender still accepts the configured layer and feature. If not show
+     * an error message.
      */
     private void checkRecommenderLayerMatch(IModel<Pair<String, String>> aToolModel)
     {
-        if (recommenderModel.getObject() != null && aToolModel.getObject() != null) {
+        if (recommenderModel.getObject() == null || aToolModel.getObject() == null) {
+            return;
+        }
+        else {
             Recommender recommender = recommenderModel.getObject();
             // check if recommender and layer still match
             RecommendationEngineFactory factory = recommenderRegistry
