@@ -24,8 +24,8 @@ public class LearningCurve implements Serializable
 {
     private static final long serialVersionUID = 6542281189066805238L;
     
-    Map<String,String> curveData;
-    String xaxis;
+    private Map<String,String> curveData;
+    private String xAxis;
     
     public Map<String, String> getCurveData()
     {
@@ -34,16 +34,16 @@ public class LearningCurve implements Serializable
 
     public void setCurveData(Map<String, String> aCurveData)
     {
-        this.curveData = aCurveData;
+        curveData = aCurveData;
     }
 
     public String getXaxis()
     {
-        return xaxis;
+        return xAxis;
     }
 
-    public void setXaxis(String xaxis)
+    public void setXaxis(String aXAxis)
     {
-        this.xaxis = xaxis;
+        this.xAxis = aXAxis;
     }
 }

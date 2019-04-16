@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -96,6 +96,9 @@ public class EvaluationSimulationPanel
                 String[] scoresAndTrainingSizes = evaluate(_target);
                 
                 if (scoresAndTrainingSizes == null) {
+                    //no warning message here because it has already been shown in the method
+                    //evaluate(_target). There are different scenarios when the score is returned 
+                    //null and each one is handled differently in the method evaluate(_target).
                     return;
                 }
 

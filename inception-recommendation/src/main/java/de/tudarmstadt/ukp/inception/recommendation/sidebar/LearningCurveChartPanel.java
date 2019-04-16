@@ -62,7 +62,7 @@ public class LearningCurveChartPanel
     private static final long serialVersionUID = 4306746527837380863L;
 
     private static final String MID_CHART_CONTAINER = "chart-container";
-    private final static int MAX_POINTS_TO_PLOT = 50;
+    private static final int MAX_POINTS_TO_PLOT = 50;
     private static final Logger LOG = LoggerFactory.getLogger(LearningCurveChartPanel.class);
     
     private @SpringBean EventRepository eventRepo;
@@ -141,7 +141,7 @@ public class LearningCurveChartPanel
         //provide the chart above calculated data to plot the learning curve
         chartPanel.setDefaultModel(Model.of(learningCurve));
 
-        // to avoid the error, A partial update of the page is being rendered
+        // to avoid the error, "A partial update of the page is being rendered"
         try {
             aRequestHandler.add(chartPanel);
         }
