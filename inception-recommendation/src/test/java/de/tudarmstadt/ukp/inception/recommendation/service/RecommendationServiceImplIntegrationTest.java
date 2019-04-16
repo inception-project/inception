@@ -64,6 +64,7 @@ public class RecommendationServiceImplIntegrationTest
         sut = new RecommendationServiceImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
         layer = createAnnotationLayer();
+        layer.setProject(project);
         feature = createAnnotationFeature(layer, "strFeat");
     }
 

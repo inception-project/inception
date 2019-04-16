@@ -352,16 +352,19 @@ public class RecommenderEditorPanel
      */
     private void checkRecommenderLayerMatch(IModel<Pair<String, String>> aToolModel)
     {
-        Recommender recommender = recommenderModel.getObject();
-        // check if recommender and layer still match
-        RecommendationEngineFactory factory = recommenderRegistry
-                .getFactory(aToolModel.getObject().getKey());
-        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-            error(String.format("Recommender %s configured with invalid layer or feature.",
-                    recommender.getName()));
-            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-            if (target.isPresent()) {
-                target.get().addChildren(getPage(), IFeedback.class);
+        if (recommenderModel.getObject() != null && aToolModel.getObject() != null) {
+            Recommender recommender = recommenderModel.getObject();
+            // check if recommender and layer still match
+            RecommendationEngineFactory factory = recommenderRegistry
+                    .getFactory(aToolModel.getObject().getKey());
+            if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                error(String.format("Recommender %s configured with invalid layer or feature.",
+                        recommender.getName()));
+                Optional<AjaxRequestTarget> target = RequestCycle.get()
+                        .find(AjaxRequestTarget.class);
+                if (target.isPresent()) {
+                    target.get().addChildren(getPage(), IFeedback.class);
+                }
             }
         }
     }
