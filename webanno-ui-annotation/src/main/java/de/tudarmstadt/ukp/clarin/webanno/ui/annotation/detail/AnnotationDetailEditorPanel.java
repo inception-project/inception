@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getNextToken;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
@@ -37,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.persistence.NoResultException;
@@ -538,16 +541,18 @@ public abstract class AnnotationDetailEditorPanel
             // FIXME REC I think this whole section which meddles around with the selected
             // annotation layer should be moved out of there to the place where we originally set
             // the annotation layer...!
+            
+            // Fetch the annotation representing the origin endpoint of the relation
             AnnotationFS originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
-            AnnotationLayer spanLayer = annotationService.getLayer(state.getProject(), originFS);
-            if (
-                    state.getPreferences().isRememberLayer() &&
-                    state.getSelection().getAnnotation().isNotSet() && // i.e. new annotation
-                    !spanLayer.equals(state.getDefaultAnnotationLayer())
-            ) {
-                throw new AnnotationException("No relation annotation allowed on layer ["
-                        + state.getDefaultAnnotationLayer().getUiName() + "]");
+            AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
+            
+            if (!originFS.getType().equals(targetFS.getType())) {
+                throw new AnnotationException(
+                        "Cannot create relation between spans on different layers");
             }
+            
+            // Fetch the annotation layer for the origin annotation
+            AnnotationLayer originLayer = annotationService.getLayer(state.getProject(), originFS);
 
             AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
 
@@ -559,31 +564,18 @@ public abstract class AnnotationDetailEditorPanel
 
             // If we drag an arc in a chain layer, then the arc is of the same layer as the span
             // Chain layers consist of arcs and spans
-            if (spanLayer.getType().equals(WebAnnoConst.CHAIN_TYPE)) {
+            if (originLayer.getType().equals(CHAIN_TYPE)) {
                 // one layer both for the span and arc annotation
-                state.setSelectedAnnotationLayer(spanLayer);
+                state.setSelectedAnnotationLayer(originLayer);
             }
             // Otherwise, look up the possible relation layer(s) in the database.
             else {
-                for (AnnotationLayer l : annotationService.listAnnotationLayer(state
-                    .getProject())) {
-                    if (
-                            (l.getAttachType() != null && l.getAttachType().equals(spanLayer)) ||
-                            (l.getAttachFeature() != null && 
-                                    l.getAttachFeature().getType().equals(spanLayer.getName()))
-                    ) {
-                        if (state.getAnnotationLayers().contains(l)) {
-                            state.setSelectedAnnotationLayer(l);
-                        }
-                        else {
-                            state.setSelectedAnnotationLayer(null);
-                        }
-                        break;
-                    }
-                }
+                state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer).orElseThrow(
+                    () -> new AnnotationException("No relation annotation allowed on layer ["
+                            + state.getDefaultAnnotationLayer().getUiName() + "]")));
             }
 
-            state.setDefaultAnnotationLayer(spanLayer);
+            state.setDefaultAnnotationLayer(originLayer);
 
             // If we switched layers, we need to initialize the feature editors for the new layer
             if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
@@ -602,6 +594,28 @@ public abstract class AnnotationDetailEditorPanel
         internalCommitAnnotation(aTarget, aCas);
 
         internalCompleteAnnotation(aTarget, aCas);
+    }
+    
+    private Optional<AnnotationLayer> getRelationLayerFor(AnnotationLayer aSpanLayer)
+    {
+        for (AnnotationLayer l : annotationService.listAnnotationLayer(aSpanLayer.getProject())) {
+            if (!RELATION_TYPE.equals(l.getType())) {
+                continue;
+            }
+            
+            if (aSpanLayer.equals(l.getAttachType())) {
+                return Optional.of(l);
+            }
+            
+            if (
+                    l.getAttachFeature() != null && 
+                    l.getAttachFeature().getType().equals(aSpanLayer.getName())
+            ) {
+                return Optional.of(l);
+            }
+        }
+        
+        return Optional.empty();
     }
     
     public TextField<String> getForwardAnnotationTextField()
