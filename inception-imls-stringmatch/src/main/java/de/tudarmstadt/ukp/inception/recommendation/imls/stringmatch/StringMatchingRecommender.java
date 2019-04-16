@@ -29,7 +29,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -44,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -243,7 +242,7 @@ public class StringMatchingRecommender
         }
 
         // Predict
-        List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        List<LabelPair> labelPairs = new ArrayList<>();
         for (Sample sample : testSet) {
 
             for (TokenSpan token : sample.getTokens()) {
@@ -255,23 +254,23 @@ public class StringMatchingRecommender
                 String predictedLabel = NO_LABEL;
                 if (node != null && sample.hasTokenEndingAt(token.getBegin() + node.level)) {
                     List<LabelStats> labelStats = node.value.getBest(1);
-                    if (!labelStats.isEmpty())
+                    if (!labelStats.isEmpty()) {
                         predictedLabel = labelStats.get(0).getLabel();
+                    }
                 }
                 Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
                 // check there is a gold label here
                 if (coveringSpan.isPresent()) {
                     String goldLabel = coveringSpan.get().getLabel();
-                    predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
+                    labelPairs.add(new LabelPair(goldLabel, predictedLabel));
                 }
             }
         }
 
-        return predictions.stream().collect(EvaluationResult
-                .collector(new HashSet<String>(asList(NO_LABEL)), trainingSetSize, testSetSize));
+        return labelPairs.stream().collect(EvaluationResult
+                .collector(trainingSetSize, testSetSize, NO_LABEL));
     }
 
-    
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)
     {
         String label = isBlank(aLabel) ? UNKNOWN_LABEL : aLabel;

@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
@@ -27,7 +26,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,9 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -184,10 +182,9 @@ public class OpenNlpDoccatRecommender
 
         // Evaluate
         EvaluationResult result = testSet.stream()
-                .map(sample -> new AnnotatedTokenPair(sample.getCategory(),
+                .map(sample -> new LabelPair(sample.getCategory(),
                         doccat.getBestCategory(doccat.categorize(sample.getText()))))
-                .collect(EvaluationResult.collector(new HashSet<String>(asList(NO_CATEGORY)),
-                        trainingSetSize, testSetSize));
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_CATEGORY));
 
         return result;
     }

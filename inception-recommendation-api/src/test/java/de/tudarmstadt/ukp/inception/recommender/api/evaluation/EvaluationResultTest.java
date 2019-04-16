@@ -17,22 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.recommender.api.evaluation;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 
 public class EvaluationResultTest
 {
-    private List<AnnotatedTokenPair> instances;
+    private List<LabelPair> instances;
 
     @Before
     public void setUp()
@@ -44,7 +42,7 @@ public class EvaluationResultTest
                 { "LOC", "LOC" }, { "ORG", "LOC" }, { "PER", "ORG" }, { "ORG", "ORG" },
                 { "LOC", "PER" }, { "ORG", "ORG" }, { "PER", "PER" }, { "ORG", "ORG" } };
         for (String[] labels : instanceLabels) {
-            instances.add(new AnnotatedTokenPair(labels[0], labels[1]));
+            instances.add(new LabelPair(labels[0], labels[1]));
         }
     }
 
@@ -90,7 +88,7 @@ public class EvaluationResultTest
         double expectedPrec = (4.0 / 5 + 2.0 / 5) * 0.5;
         double expectedRecall = 0.5;
         EvaluationResult calc = instances.stream()
-                .collect(EvaluationResult.collector(new HashSet<String>(asList("PER")), 0, 0));
+                .collect(EvaluationResult.collector(0, 0, "PER"));
 
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
                 .isEqualTo(2 * expectedPrec * expectedRecall / (expectedPrec + expectedRecall));
@@ -109,12 +107,12 @@ public class EvaluationResultTest
         assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
 
         calc = instances.stream()
-                .collect(EvaluationResult.collector(new HashSet<String>(asList("PER")), 0, 0));
+                .collect(EvaluationResult.collector(0, 0, "PER"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
                 .isEqualTo(2);
 
         calc = instances.stream().collect(
-                EvaluationResult.collector(new HashSet<String>(asList("PER", "ORG")), 0, 0));
+                EvaluationResult.collector(0, 0, "PER", "ORG"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
     }
@@ -123,9 +121,9 @@ public class EvaluationResultTest
     public void thatMissingClassesWorks()
     {
         // test with classes which are never gold or never predicted
-        List<AnnotatedTokenPair> newInstances = new ArrayList<>(instances);
-        newInstances.add(new AnnotatedTokenPair("PART", "ORG"));
-        newInstances.add(new AnnotatedTokenPair("PER", "PUNC"));
+        List<LabelPair> newInstances = new ArrayList<>(instances);
+        newInstances.add(new LabelPair("PART", "ORG"));
+        newInstances.add(new LabelPair("PER", "PUNC"));
         
         EvaluationResult calc = newInstances.stream().collect(EvaluationResult.collector());
         

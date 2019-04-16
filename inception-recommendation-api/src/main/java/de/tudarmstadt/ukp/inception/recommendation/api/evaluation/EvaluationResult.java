@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -53,8 +52,8 @@ public class EvaluationResult
         testSetSize = 0;
     }
 
-    public EvaluationResult(Collection<String> aIgnoreLabels, ConfusionMatrix aConfMatrix,
-            int aTrainSetSize, int aTestSetSize)
+    public EvaluationResult(ConfusionMatrix aConfMatrix,
+            int aTrainSetSize, int aTestSetSize, Set<String> aIgnoreLabels)
     {
         ignoreLabels = new HashSet<>();
         ignoreLabels.addAll(aIgnoreLabels);
@@ -215,39 +214,28 @@ public class EvaluationResult
     {
         return new EvaluationResultCollector();
     }
-    
-    public static EvaluationResultCollector collector(Set<String> aIgnoreLabels,
-            int aTrainSetSize, int aTestSetSize)
+
+    public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
+            String... aIgnoreLabels)
     {
-        return new EvaluationResultCollector(aIgnoreLabels, aTrainSetSize, aTestSetSize);
-    }
-    
-    public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize) {
-        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize);
+        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aIgnoreLabels);
     }
     
     public static class EvaluationResultCollector
         implements 
-        Collector<AnnotatedTokenPair, ConfusionMatrix, EvaluationResult>
+        Collector<LabelPair, ConfusionMatrix, EvaluationResult>
     {
         private final Set<String> ignoreLabels;
         private final int testSize;
         private final int trainSize;
 
-        public EvaluationResultCollector(Set<String> aIgnoreLabels, int aTrainSetSize,
-                int aTestSetSize)
-        {
-            this(aTrainSetSize, aTestSetSize);
-            if (ignoreLabels != null) {
-                ignoreLabels.addAll(aIgnoreLabels);
-            }
-        }
-
-        public EvaluationResultCollector(int aTrainSetSize, int aTestSetSize)
+        public EvaluationResultCollector(int aTrainSetSize,
+                int aTestSetSize, String... aIgnoreLabels)
         {
             ignoreLabels = new HashSet<>();
             testSize = aTestSetSize;
             trainSize = aTrainSetSize;
+            Collections.addAll(ignoreLabels, aIgnoreLabels);
         }
 
         public EvaluationResultCollector()
@@ -264,7 +252,7 @@ public class EvaluationResult
         }
 
         @Override
-        public BiConsumer<ConfusionMatrix, AnnotatedTokenPair> accumulator()
+        public BiConsumer<ConfusionMatrix, LabelPair> accumulator()
         {
             return (confMatrix, pair) -> {
                 if (!ignoreLabels.contains(pair.getGoldLabel())) {
@@ -285,8 +273,8 @@ public class EvaluationResult
         @Override
         public Function<ConfusionMatrix, EvaluationResult> finisher()
         {
-            return confMatrix -> new EvaluationResult(ignoreLabels, confMatrix, trainSize,
-                    testSize);
+            return confMatrix -> new EvaluationResult(confMatrix, trainSize,
+                    testSize, ignoreLabels);
         }
 
         @Override

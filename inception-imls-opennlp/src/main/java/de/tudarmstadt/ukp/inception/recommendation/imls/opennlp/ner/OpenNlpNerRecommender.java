@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -28,7 +27,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -42,9 +40,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -189,7 +187,7 @@ public class OpenNlpNerRecommender
         NameFinderME nameFinder = new NameFinderME(model);
 
         // Evaluate
-        List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        List<LabelPair> labelPairs = new ArrayList<>();
         for (NameSample sample : testSet) {
             // clear adaptive data from feature generators if necessary
             if (sample.isClearAdaptiveDataSet()) {
@@ -201,38 +199,35 @@ public class OpenNlpNerRecommender
             Span[] predictedNames = nameFinder.find(sentence);
             Span[] goldNames = sample.getNames();
 
-            predictions.addAll(determineLabelsForASentence(sentence, predictedNames,
+            labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames,
                     goldNames));
 
         }
 
-        return predictions.stream().collect(EvaluationResult
-                .collector(new HashSet<String>(asList(NO_NE_TAG)), trainingSetSize, testSetSize));
+        return labelPairs.stream().collect(EvaluationResult
+                .collector(trainingSetSize, testSetSize, NO_NE_TAG));
     }
 
     /**
      * Extract AnnotatedTokenPairs with info on predicted and gold label for each token of the given
      * sentence.
      */
-    private List<AnnotatedTokenPair> determineLabelsForASentence(String[] sentence,
+    private List<LabelPair> determineLabelsForASentence(String[] sentence,
             Span[] predictedNames, Span[] goldNames)
     {
         int predictedNameIdx = 0;
         int goldNameIdx = 0;
-        Span goldName;
-        Span predictedName;
-        String predictedLabel = NO_NE_TAG;
-        String goldLabel = NO_NE_TAG;
-
-        List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        
+        List<LabelPair> predictions = new ArrayList<>();
         // Spans store which tokens are part of it as [begin,end). 
         // Tokens are counted 0 to length of sentence.
         // Therefore go through all tokens, determine which span they are part of 
         // for predictions and gold ones. Assign label accordingly to the annotated-token.
         for (int i = 0; i < sentence.length; i++) {
 
+            String predictedLabel = NO_NE_TAG;
             if (predictedNameIdx < predictedNames.length) {
-                predictedName = predictedNames[predictedNameIdx];
+                Span predictedName = predictedNames[predictedNameIdx];
                 predictedLabel = determineLabel(predictedName, i);
 
                 if (i > predictedName.getEnd()) {
@@ -240,8 +235,9 @@ public class OpenNlpNerRecommender
                 }
             }
 
+            String goldLabel = NO_NE_TAG;
             if (goldNameIdx < goldNames.length) {
-                goldName = goldNames[goldNameIdx];
+                Span goldName = goldNames[goldNameIdx];
                 goldLabel = determineLabel(goldName, i);
                 if (i > goldName.getEnd()) {
                     goldNameIdx++;
@@ -251,7 +247,7 @@ public class OpenNlpNerRecommender
             // check there is a gold label here, check for instance equality to avoid user label
             // collision
             if (goldLabel != NO_NE_TAG)
-                predictions.add(new AnnotatedTokenPair(goldLabel, predictedLabel));
+                predictions.add(new LabelPair(goldLabel, predictedLabel));
 
         }
         return predictions;

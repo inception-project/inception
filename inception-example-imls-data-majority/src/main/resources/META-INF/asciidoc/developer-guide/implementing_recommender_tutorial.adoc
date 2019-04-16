@@ -167,10 +167,11 @@ In code, the evaluation is implemented in the `evaluate` method.
 Evaluation is done on a set of documents. In order to properly divide the annotations into training
 and test set, a `DataSplitter` is given which tells you to which data set an annotation belongs.
 
-For the actual evaluation, we collect the true label and the predicted majority label in an 
-`AnnotatedTokenPair` for each true label. A stream of these instances is then passed to the result 
-of the evaluation - a `EvaluationResult` object. This object provides access to calculations for 
-token-based accuracy, macro-averaged precision, recall and F1-score. This F1-score is later used for 
+For the actual evaluation, we collect the true label and the predicted majority label in a 
+`LabelPair` for each true label. A stream of these instances can then be collected with 
+the use of an `EvaluationResultCollector` as an `EvaluationResult` object - the result of the 
+evaluation. This object provides access to calculations for token-based accuracy, macro-averaged 
+precision, recall and F1-score. This F1-score is later used for 
 comparison with the user-defined threshold to activate the recommender.
  
 

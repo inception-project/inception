@@ -35,9 +35,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -200,7 +200,7 @@ public class DataMajorityNerRecommender
 
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
-                .map(anno -> new AnnotatedTokenPair(anno.label, model.majorityLabel))
+                .map(anno -> new LabelPair(anno.label, model.majorityLabel))
                 .collect(EvaluationResult.collector(trainingSetSize, testSetSize));
         
         return result;

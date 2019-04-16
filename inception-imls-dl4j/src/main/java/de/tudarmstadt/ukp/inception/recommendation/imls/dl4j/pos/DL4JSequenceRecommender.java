@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,9 +61,9 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -517,7 +516,7 @@ public class DL4JSequenceRecommender
             
             int sentNum = 0;
             Iterator<Sample> testSetIterator = testSet.iterator();
-            List<AnnotatedTokenPair> predictions = new ArrayList<>();
+            List<LabelPair> labelPairs = new ArrayList<>();
             while (testSetIterator.hasNext()) {
                 // Prepare a batch of sentences that we want to predict because calling the
                 // prediction is expensive
@@ -537,16 +536,16 @@ public class DL4JSequenceRecommender
                         // evaluation
                         // use instance comparison to not confuse with possible user NO_LABEL label
                         if (expectedLabels.get(i) != NO_LABEL) {
-                            predictions.add(new AnnotatedTokenPair(expectedLabels.get(i),
+                            labelPairs.add(new LabelPair(expectedLabels.get(i),
                                     actualLabels.get(i)));
                         }
                     }
                 }
                 
             }
-            
-            return predictions.stream().collect(EvaluationResult.collector(
-                    new HashSet<String>(asList(NO_LABEL)), trainingSetSize, testSetSize));
+
+            return labelPairs.stream()
+                    .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_LABEL));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

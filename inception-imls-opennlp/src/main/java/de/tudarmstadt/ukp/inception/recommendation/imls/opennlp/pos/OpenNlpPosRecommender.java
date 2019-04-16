@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
-import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -28,7 +27,6 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,9 +43,9 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -198,7 +196,7 @@ public class OpenNlpPosRecommender
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
 
-            EvaluationResult result = new EvaluationResult(null, null, trainingSetSize,
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
                     testSetSize);
             result.setEvaluationSkipped(true);
             return result;
@@ -216,7 +214,7 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
-        List<AnnotatedTokenPair> predictions = new ArrayList<>();
+        List<LabelPair> predictions = new ArrayList<>();
         for (POSSample sample : testSet) {
             String[] predictedTags = tagger.tag(sample.getSentence());
             String[] goldTags = sample.getTags();
@@ -224,13 +222,13 @@ public class OpenNlpPosRecommender
                 // ignore PAD gold annotations  (i.e. no real gold annotations) during evaluation
                 // use instance comparison to not confuse with possible user PAD label
                 if (goldTags[i] != PAD) {
-                    predictions.add(new AnnotatedTokenPair(goldTags[i], predictedTags[i]));
+                    predictions.add(new LabelPair(goldTags[i], predictedTags[i]));
                 }
             }
         }
 
         return predictions.stream().collect(EvaluationResult
-                .collector(new HashSet<String>(asList(PAD)), trainingSetSize, testSetSize));
+                .collector(trainingSetSize, testSetSize, PAD));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

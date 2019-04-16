@@ -25,12 +25,12 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.AnnotatedTokenPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.ConfusionMatrix;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 
 public class ConfusionMatrixTest
 {
-    private List<AnnotatedTokenPair> instances;
+    private List<LabelPair> instances;
     
     @Before
     public void setUp()
@@ -41,7 +41,7 @@ public class ConfusionMatrixTest
                 { "neutral", "neutral" }, { "neg", "neutral" }, { "neg", "pos" }, { "pos", "pos" },
                 { "pos", "pos" }, { "neutral", "pos" }, { "neg", "pos" }, { "pos", "pos" },};
         for (String[] labels : instanceLabels) {
-            instances.add(new AnnotatedTokenPair(labels[0], labels[1]));
+            instances.add(new LabelPair(labels[0], labels[1]));
         }
     }
 

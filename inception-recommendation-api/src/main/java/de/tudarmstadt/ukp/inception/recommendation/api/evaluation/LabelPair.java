@@ -18,14 +18,14 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
 /**
- * Holds information on an annotated token: its gold label and its predicted label.
+ * Holds information on an annotated unit: its gold label and its predicted label.
  */
-public class AnnotatedTokenPair
+public class LabelPair
 {
     private final String goldLabel;
     private final String predictedLabel;
 
-    public AnnotatedTokenPair(String aGoldLabel, String aPredictedLabel)
+    public LabelPair(String aGoldLabel, String aPredictedLabel)
     {
         goldLabel = aGoldLabel;
         predictedLabel = aPredictedLabel;
