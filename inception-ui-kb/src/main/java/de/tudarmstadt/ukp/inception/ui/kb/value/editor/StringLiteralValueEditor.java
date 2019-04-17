@@ -38,6 +38,8 @@ public class StringLiteralValueEditor
 
         value = new TextArea<>("value");
         value.setOutputMarkupId(true);
+        // Statement values cannot be null/empty - well, in theory they could be the empty string,
+        // but we treat the empty string as null
         value.setRequired(true);
         add(value);
 
