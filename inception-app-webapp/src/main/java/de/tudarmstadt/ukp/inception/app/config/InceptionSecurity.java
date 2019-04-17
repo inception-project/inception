@@ -147,7 +147,9 @@ public class InceptionSecurity
                 .exceptionHandling()
                     .defaultAuthenticationEntryPointFor(
                             new LoginUrlAuthenticationEntryPoint("/login.html"), 
-                            new AntPathRequestMatcher("/**"));
+                            new AntPathRequestMatcher("/**"))
+                .and()
+                    .headers().frameOptions().sameOrigin();
         }
     }
 

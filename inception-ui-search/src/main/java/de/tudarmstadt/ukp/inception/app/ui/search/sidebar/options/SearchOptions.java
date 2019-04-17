@@ -15,11 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.conceptlinking.service.feature;
+package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
-import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
-
-public interface EntityRankingFeatureGenerator
+public class SearchOptions extends Options
 {
-    void apply(CandidateEntity aCandidate);
+    private static final long serialVersionUID = 3030323391922717647L;
+
+    private boolean limitedToCurrentDocument = false;
+
+    public boolean isLimitedToCurrentDocument()
+    {
+        return limitedToCurrentDocument;
+    }
+
+    public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
+    {
+        limitedToCurrentDocument = aLimitedToCurrentDocument;
+    }
 }
