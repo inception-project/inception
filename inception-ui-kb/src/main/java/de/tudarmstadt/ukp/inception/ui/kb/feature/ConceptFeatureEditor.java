@@ -23,6 +23,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -32,6 +33,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -50,6 +52,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -73,6 +76,10 @@ public class ConceptFeatureEditor
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
+        add(new IriInfoBadge("iriInfoBadge", LoadableDetachableModel
+                .of(() -> Optional.ofNullable((KBHandle) getModelObject().value)
+                        .map(KBHandle::getIdentifier)
+                        .orElse(""))));
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 

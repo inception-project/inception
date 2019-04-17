@@ -29,8 +29,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
@@ -45,7 +45,7 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     private List<String> labelProperties;
 
     public InstanceInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
+            IModel<KBObject> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
         super(aId, aKbModel, selectedInstanceHandle, selectedInstanceModel);
     }
 
@@ -54,10 +54,11 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
         KBInstance instance = kbObjectModel.getObject();
 
         assert isEmpty(instance.getIdentifier());
-        KBHandle handle = kbService.createInstance(kbModel.getObject(), instance);
+        kbService.createInstance(kbModel.getObject(), instance);
 
         // select newly created property right away to show the statements
-        send(getPage(), Broadcast.BREADTH, new AjaxInstanceSelectionEvent(aTarget, handle));
+        send(getPage(), Broadcast.BREADTH,
+                new AjaxInstanceSelectionEvent(aTarget, instance.toKBHandle()));
     }
 
     @Override

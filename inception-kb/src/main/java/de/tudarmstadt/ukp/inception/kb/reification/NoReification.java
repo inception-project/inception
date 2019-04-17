@@ -62,7 +62,7 @@ public class NoReification
     public Set<Statement> reify(KnowledgeBase kb, KBStatement aStatement)
     {
         KBHandle instance = aStatement.getInstance();
-        KBHandle property = aStatement.getProperty();
+        KBProperty property = aStatement.getProperty();
 
         ValueFactory vf = SimpleValueFactory.getInstance();
         IRI subject = vf.createIRI(instance.getIdentifier());
@@ -116,7 +116,6 @@ public class NoReification
                 conn.remove(predStmts);
                 conn.remove(objStmts);
             }
-            return null;
         });
     }
 
@@ -126,7 +125,6 @@ public class NoReification
         kbService.update(kb, (conn) -> {
             conn.remove(aStatement.getOriginalStatements());
             aStatement.setOriginalStatements(Collections.emptySet());
-            return null;
         });
     }
 
@@ -140,8 +138,6 @@ public class NoReification
             Set<Statement> statements = reify(kb, aStatement);
             conn.add(statements);
             aStatement.setOriginalStatements(statements);
-
-            return null;
         });
     }
 

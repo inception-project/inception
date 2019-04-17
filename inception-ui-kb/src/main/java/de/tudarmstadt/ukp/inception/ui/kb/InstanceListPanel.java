@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewInstanceEvent;
@@ -53,11 +54,11 @@ public class InstanceListPanel extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> conceptModel;
+    private IModel<KBObject> conceptModel;
     private IModel<Boolean> showAll;
 
-    public InstanceListPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> aConcept,
-            IModel<KBHandle> aInstance) {
+    public InstanceListPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBObject> aConcept,
+            IModel<KBObject> aInstance) {
         super(aId, aInstance);
 
         setOutputMarkupId(true);
@@ -68,7 +69,7 @@ public class InstanceListPanel extends Panel {
         
         IModel<List<KBHandle>> instancesModel = LoadableDetachableModel.of(this::getInstances);
 
-        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<KBHandle>("instances") {
+        OverviewListChoice<KBObject> overviewList = new OverviewListChoice<KBObject>("instances") {
             private static final long serialVersionUID = -122960232588575731L;
 
             @Override

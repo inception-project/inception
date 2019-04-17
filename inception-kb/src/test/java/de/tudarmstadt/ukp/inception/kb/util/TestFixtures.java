@@ -137,15 +137,15 @@ public class TestFixtures
         return instance;
     }
 
-    public KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value)
+    public KBStatement buildStatement(KBHandle conceptHandle, KBProperty aProperty, String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBStatement statement = new KBStatement(conceptHandle, propertyHandle,
+        KBStatement statement = new KBStatement(conceptHandle, aProperty,
             vf.createLiteral(value));
         return statement;
     }
 
-    public KBQualifier buildQualifier(KBStatement kbStatement, KBHandle propertyHandle,
+    public KBQualifier buildQualifier(KBStatement kbStatement, KBProperty propertyHandle,
         String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();

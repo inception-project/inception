@@ -46,7 +46,7 @@ public class KBStatement implements Serializable
     private KBHandle instance;
 
     // Predicate
-    private KBHandle property;
+    private KBProperty property;
 
     // Object
     private Object value;
@@ -61,13 +61,17 @@ public class KBStatement implements Serializable
     private List<KBQualifier> qualifiers;
 
     /**
-     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
-     * after constructing this in order to allow upserting.
-     * @param aInstance {@link KBHandle} for the statement instance
-     * @param aProperty {@link KBHandle} for the statement property
-     * @param aValue Defines value for the statement
+     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)} after
+     * constructing this in order to allow upserting.
+     * 
+     * @param aInstance
+     *            {@link KBHandle} for the statement instance
+     * @param aProperty
+     *            {@link KBHandle} for the statement property
+     * @param aValue
+     *            Defines value for the statement
      */
-    public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
+    public KBStatement(KBHandle aInstance, KBProperty aProperty, Value aValue)
     {
         instance = aInstance;
         property = aProperty;
@@ -93,7 +97,7 @@ public class KBStatement implements Serializable
         qualifiers = new ArrayList<>();
     }
 
-    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    public KBStatement(KBHandle aInstance, KBProperty aProperty)
     {
         instance = aInstance;
         property = aProperty;
@@ -134,12 +138,12 @@ public class KBStatement implements Serializable
         instance = aInstance;
     }
 
-    public KBHandle getProperty()
+    public KBProperty getProperty()
     {
         return property;
     }
 
-    public void setProperty(KBHandle aProperty)
+    public void setProperty(KBProperty aProperty)
     {
         property = aProperty;
     }

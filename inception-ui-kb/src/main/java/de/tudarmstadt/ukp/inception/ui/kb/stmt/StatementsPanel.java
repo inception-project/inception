@@ -55,7 +55,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
@@ -71,7 +72,7 @@ public class StatementsPanel
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> instance;
+    private IModel<? extends KBObject> instance;
     private IModel<StatementDetailPreference> detailPreference;
     private WebMarkupContainer statementGroupListWrapper;
     private IModel<Comparator<StatementGroupBean>> statementGroupComparator;
@@ -86,8 +87,8 @@ public class StatementsPanel
      *            {@code !null} the statement detail preference is fixed to the given value and
      *            can't be changed in the UI
      */
-    public StatementsPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> aInstance,
-            StatementDetailPreference aDetailPreference)
+    public StatementsPanel(String aId, IModel<KnowledgeBase> aKbModel,
+            IModel<? extends KBObject> aInstance, StatementDetailPreference aDetailPreference)
     {
         super(aId, aInstance);
 
@@ -216,9 +217,9 @@ public class StatementsPanel
     private void actionAdd(AjaxRequestTarget target)
     {
         StatementGroupBean proto = new StatementGroupBean();
-        proto.setInstance(instance.getObject());
+        proto.setInstance(instance.getObject().toKBHandle());
         proto.setKb(kbModel.getObject());
-        proto.setProperty(new KBHandle());
+        proto.setProperty(new KBProperty());
         proto.setStatements(new ArrayList<>());
         proto.setDetailPreference(detailPreference.getObject());
         statementGroups.getObject().add(proto);
@@ -246,8 +247,8 @@ public class StatementsPanel
         StatementDetailPreference prefs = detailPreference.getObject();
         List<KBStatement> statements = new ArrayList<>();
         try {
-            statements = kbService.listStatements(kbModel.getObject(), instance.getObject(),
-                    prefs == StatementDetailPreference.ALL);
+            statements = kbService.listStatements(kbModel.getObject(),
+                    instance.getObject().toKBHandle(), prefs == StatementDetailPreference.ALL);
         }
         catch (QueryEvaluationException e) {
             error("Unable to list statements: " + e.getLocalizedMessage());
@@ -259,14 +260,14 @@ public class StatementsPanel
         }
         
         // group statements by property
-        Map<KBHandle, List<KBStatement>> groupedStatements = statements.stream()
+        Map<KBProperty, List<KBStatement>> groupedStatements = statements.stream()
                 .collect(Collectors.groupingBy(KBStatement::getProperty));
         
         // for each property and associated statements, create one StatementGroupBean 
         List<StatementGroupBean> beans = groupedStatements.entrySet().stream().map(entry -> {
             StatementGroupBean bean = new StatementGroupBean();
             bean.setKb(kbModel.getObject());
-            bean.setInstance(instance.getObject());
+            bean.setInstance(instance.getObject().toKBHandle());
             bean.setProperty(entry.getKey());
             bean.setStatements(entry.getValue());
             return bean;

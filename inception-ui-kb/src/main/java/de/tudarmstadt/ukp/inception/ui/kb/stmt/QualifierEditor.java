@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
@@ -115,7 +115,7 @@ public class QualifierEditor
             IModel<KBQualifier> compoundModel = CompoundPropertyModel.of(aQualifier);
 
             Form<KBQualifier> form = new Form<>("form", compoundModel);
-            DropDownChoice<KBHandle> type = new BootstrapSelect<>("kbProperty");
+            DropDownChoice<KBProperty> type = new BootstrapSelect<>("kbProperty");
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(kbService.listProperties(kbModel.getObject(), false));
             type.setRequired(true);

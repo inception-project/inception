@@ -134,10 +134,10 @@ public class StatementGroupPanel
         public NewStatementGroupFragment(String aId) {
             super(aId, "newStatementGroup", StatementGroupPanel.this, groupModel);
                         
-            IModel<KBHandle> property = Model.of();
+            IModel<KBProperty> property = Model.of();
             
-            Form<KBHandle> form = new Form<>("form", property);
-            DropDownChoice<KBHandle> type = new BootstrapSelect<>("property");
+            Form<KBProperty> form = new Form<>("form", property);
+            DropDownChoice<KBProperty> type = new BootstrapSelect<>("property");
             type.setModel(property);
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));            
             type.setChoices(getUnusedProperties());
@@ -155,16 +155,17 @@ public class StatementGroupPanel
          * Returns the list of properties in the knowledge base for which the current instance does
          * not have statements for yet.
          */
-        private List<KBHandle> getUnusedProperties()
+        private List<KBProperty> getUnusedProperties()
         {
             StatementGroupBean bean = groupModel.getObject(); 
             StatementDetailPreference detailPreference = bean.getDetailPreference();
-            Set<KBHandle> existingPropertyHandles = Collections.emptySet();
+            Set<KBProperty> existingPropertyHandles = Collections.emptySet();
             try {
                 existingPropertyHandles = kbService
                         .listStatements(bean.getKb(), bean.getInstance(),
                                 detailPreference == StatementDetailPreference.ALL)
-                        .stream().map(stmt -> stmt.getProperty()).collect(Collectors.toSet());
+                        .stream().map(stmt -> stmt.getProperty())
+                        .collect(Collectors.toSet());
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list statements: " + e.getLocalizedMessage());
@@ -172,7 +173,7 @@ public class StatementGroupPanel
 
             }
 
-            List<KBHandle> properties = new ArrayList<KBHandle>();
+            List<KBProperty> properties = new ArrayList<KBProperty>();
             try {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
@@ -186,7 +187,7 @@ public class StatementGroupPanel
             return KBHandle.distinctByIri(properties);
         }
 
-        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form)
+        private void actionNewProperty(AjaxRequestTarget target, Form<KBProperty> form)
         {
             groupModel.getObject().setProperty(form.getModelObject());
 

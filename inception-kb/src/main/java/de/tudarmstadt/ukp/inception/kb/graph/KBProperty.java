@@ -55,11 +55,6 @@ public class KBProperty
     {
     }
 
-    public KBProperty(String aName)
-    {
-        name = aName;
-    }
-    
     public KBProperty(String aName, String aIdentifier)
     {
         name = aName;

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.UUID;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
@@ -48,7 +49,7 @@ public class StatementGroupBean
     
     private KnowledgeBase kb;
     private KBHandle instance;
-    private KBHandle property;
+    private KBProperty property;
     private List<KBStatement> statements;
     private StatementDetailPreference detailPreference;
     
@@ -77,12 +78,12 @@ public class StatementGroupBean
         instance = aInstance;
     }
 
-    public KBHandle getProperty()
+    public KBProperty getProperty()
     {
         return property;
     }
 
-    public void setProperty(KBHandle aProperty)
+    public void setProperty(KBProperty aProperty)
     {
         property = aProperty;
     }

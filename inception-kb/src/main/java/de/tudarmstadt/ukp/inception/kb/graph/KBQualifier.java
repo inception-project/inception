@@ -38,13 +38,13 @@ public class KBQualifier
 
     private String language;
 
-    private KBHandle kbProperty;
+    private KBProperty kbProperty;
 
     private Object value;
 
     private Set<Statement> originalStatements;
 
-    public KBQualifier(KBStatement aKbStatement, KBHandle aKbProperty, Object aValue)
+    public KBQualifier(KBStatement aKbStatement, KBProperty aKbProperty, Object aValue)
     {
         kbStatement = aKbStatement;
         kbProperty = aKbProperty;
@@ -92,12 +92,12 @@ public class KBQualifier
         this.kbStatement = kbStatement;
     }
 
-    public KBHandle getKbProperty()
+    public KBProperty getKbProperty()
     {
         return kbProperty;
     }
 
-    public void setKbProperty(KBHandle kbProperty)
+    public void setKbProperty(KBProperty kbProperty)
     {
         this.kbProperty = kbProperty;
     }

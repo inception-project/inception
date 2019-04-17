@@ -52,6 +52,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
@@ -153,15 +155,21 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getIdentifier);
         String expectedInstances = "http://www.wikidata.org/entity/Q35120";
         
-        assertThat(rootConcepts).as("Check that root concepts have been found").contains(expectedInstances);
+        assertThat(rootConcepts)
+            .as("Check that root concepts have been found")
+            .contains(expectedInstances);
     }
 
     
     @Test
     public void listProperties() {
-        Stream<String> properties = sut.listProperties(kb, true).stream().map(KBHandle::getIdentifier);
+        Stream<String> properties = sut.listProperties(kb, true)
+            .stream()
+            .map(KBObject::getIdentifier);
         
-        assertThat(properties).as("Check that properties have been found").hasSize(kb.getMaxResults());
+        assertThat(properties)
+            .as("Check that properties have been found")
+            .hasSize(kb.getMaxResults());
     }
     
     @Test
@@ -189,7 +197,8 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         KBHandle handle = new KBHandle("http://www.wikidata.org/entity/Q50556889");
 
         Stream<String> properties = sut.listStatements(kb, handle, true).stream()
-                .map(KBStatement::getProperty).map(KBHandle::getIdentifier);
+                .map(KBStatement::getProperty)
+                .map(KBProperty::getIdentifier);
 
         String[] expectedInstances = { "http://www.wikidata.org/prop/P2894",
                 "http://www.wikidata.org/prop/direct/P2894",

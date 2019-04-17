@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +48,6 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
@@ -126,17 +126,17 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.addQualifier(kb, qualifier);
 
-            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
             assertThat(statements.get(0).getQualifiers())
                 .hasSize(1)
                 .element(0)
@@ -152,10 +152,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
 
@@ -163,10 +163,11 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
             int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
 
-            sut.addQualifier(kb, qualifier);
+            assertThatExceptionOfType(ReadOnlyException.class)
+                .isThrownBy(() -> sut.addQualifier(kb, qualifier));
 
             int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
             assertThat(qualifierCountBeforeDeletion)
@@ -182,18 +183,18 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.addQualifier(kb, qualifier);
 
             sut.deleteQualifier(kb, qualifier);
-            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
             List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 
             assertThat(statements.get(0).getQualifiers())
@@ -212,12 +213,12 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
 
             assertThatCode(() -> {
@@ -233,20 +234,21 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
             KBStatement statement = testFixtures
-                .buildStatement(conceptHandle, propertyHandle, "Test statement");
+                .buildStatement(concept.toKBHandle(), property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
             KBQualifier qualifier = testFixtures
-                .buildQualifier(statement, propertyHandle, "Test " + "qualifier");
+                .buildQualifier(statement, property, "Test " + "qualifier");
             sut.addQualifier(kb, qualifier);
             kb.setReadOnly(true);
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
             int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-            sut.deleteQualifier(kb, qualifier);
+            assertThatExceptionOfType(ReadOnlyException.class)
+                .isThrownBy(() -> sut.deleteQualifier(kb, qualifier));
 
             int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
             assertThat(qualifierCountBeforeDeletion).as("Check that statement was not deleted")
@@ -261,19 +263,19 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.addQualifier(kb, qualifier);
 
             sut.deleteStatement(kb, statement);
 
-            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
             List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
             assertThat(statements)
                 .as("Check that the statement was deleted correctly")
@@ -291,13 +293,13 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.upsertQualifier(kb, qualifier);
             assertThat(qualifier.getKbStatement().getQualifiers())
@@ -307,7 +309,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
                 .hasFieldOrProperty("kbProperty")
                 .hasFieldOrPropertyWithValue("value", "Test qualifier");
 
-            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
             assertThat(statements.get(0).getQualifiers())
                 .as("Check that Knowledge Base has updated correctly")
                 .hasSize(1)
@@ -324,13 +326,13 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.upsertQualifier(kb, qualifier);
 
@@ -343,7 +345,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
                 .hasFieldOrProperty("kbProperty")
                 .hasFieldOrPropertyWithValue("value", "changed Qualifier");
 
-            List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
+            List<KBStatement> statements = sut.listStatements(kb, concept.toKBHandle(), false);
             assertThat(statements.get(0).getQualifiers())
                 .as("Check that Knowledge Base has updated correctly")
                 .hasSize(1)
@@ -360,10 +362,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
 
@@ -371,9 +373,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
             sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
             int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-            KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
+            KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
-            sut.upsertQualifier(kb, qualifier);
+            assertThatExceptionOfType(ReadOnlyException.class)
+                .isThrownBy(() -> sut.upsertQualifier(kb, qualifier));
 
             int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
             assertThat(qualifierCountBeforeDeletion)
@@ -389,14 +392,14 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
             KBStatement statement = testFixtures
-                .buildStatement(conceptHandle, propertyHandle, "Test statement");
+                .buildStatement(concept.toKBHandle(), property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
             KBQualifier qualifier = testFixtures
-                .buildQualifier(statement, propertyHandle, "Test " + "qualifier");
+                .buildQualifier(statement, property, "Test " + "qualifier");
             sut.addQualifier(kb, qualifier);
 
             List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
@@ -413,10 +416,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         if (kb.getReification().equals(Reification.WIKIDATA)) {
             KBConcept concept = testFixtures.buildConcept();
             KBProperty property = testFixtures.buildProperty();
-            KBHandle conceptHandle = sut.createConcept(kb, concept);
-            KBHandle propertyHandle = sut.createProperty(kb, property);
-            KBStatement statement = testFixtures.buildStatement(conceptHandle,
-                propertyHandle, "Test statement");
+            sut.createConcept(kb, concept);
+            sut.createProperty(kb, property);
+            KBStatement statement = testFixtures.buildStatement(concept.toKBHandle(),
+                    property, "Test statement");
             sut.initStatement(kb, statement);
             sut.upsertStatement(kb, statement);
 
@@ -426,5 +429,4 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
                 .isEmpty();
         }
     }
-
 }

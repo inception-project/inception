@@ -105,6 +105,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -1620,7 +1621,7 @@ public class SPARQLQueryBuilder
             }
 
             KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
-            KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
+            KBProperty predicate = new KBProperty(null, stmt.getPredicate().stringValue());
             
             KBStatement kbStatement = new KBStatement(subject, predicate, value);
             kbStatement.setInferred(!explicitStmts.contains(stmt));

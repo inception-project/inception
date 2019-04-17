@@ -166,7 +166,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         kb = buildLocalKnowledgeBase(project, "Wine");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        KBHandle subpropertylabel = createSubPropertyLabel(kb);
+        KBProperty subpropertylabel = createSubPropertyLabel(kb);
 
         KBProperty property = testFixtures.buildProperty();
         //set name to null so that the subproperty label becomes the main label
@@ -223,22 +223,22 @@ public class KnowledgeBaseSubPropertyLabelTest
         return wine;
     }
 
-    private KBHandle createSubPropertyLabel(KnowledgeBase aKB)
+    private KBProperty createSubPropertyLabel(KnowledgeBase aKB)
     {
         KBProperty subLabel = testFixtures.buildProperty();
-        KBHandle subLabelHandle = sut.createProperty(aKB, subLabel);
+        sut.createProperty(aKB, subLabel);
 
-        KBHandle subPropertyHandle = new KBHandle(aKB.getSubPropertyIri().stringValue());
+        KBProperty subPropertyHandle = new KBProperty(null, aKB.getSubPropertyIri().stringValue());
 
-        KBStatement subPropertyStmt = new KBStatement(subLabelHandle, subPropertyHandle,
+        KBStatement subPropertyStmt = new KBStatement(subLabel.toKBHandle(), subPropertyHandle,
             aKB.getLabelIri());
 
         upsertStatement(aKB, subPropertyStmt);
 
-        return subLabelHandle;
+        return subLabel;
     }
 
-    private void createStmtWithLiteral(KnowledgeBase aKB, KBHandle aSubject, KBHandle aProperty,
+    private void createStmtWithLiteral(KnowledgeBase aKB, KBHandle aSubject, KBProperty aProperty,
         String aLiteral)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();

@@ -105,7 +105,7 @@ public class IRIValuePresenter
             }
             else if (aKbObject instanceof KBProperty) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+                    new AjaxPropertySelectionEvent(aTarget, (KBProperty) aKbObject, true));
             }
             else {
                 throw new IllegalArgumentException(String.format(

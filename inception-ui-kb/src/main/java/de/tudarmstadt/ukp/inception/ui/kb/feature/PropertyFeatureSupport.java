@@ -47,7 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 @Component
@@ -134,9 +133,9 @@ public class PropertyFeatureSupport
     @Override
     public String unwrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
-        // Normally, we get KBHandles back from the feature editors
-        if (aValue instanceof KBHandle) {
-            return ((KBHandle) aValue).getIdentifier();
+        // Normally, we get KBProperty back from the feature editors
+        if (aValue instanceof KBProperty) {
+            return ((KBProperty) aValue).getIdentifier();
         }
         // When used in a recommendation context, we might get the concept identifier as a string
         // value.
@@ -150,11 +149,11 @@ public class PropertyFeatureSupport
     }
 
     @Override
-    public KBHandle wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
+    public KBProperty wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            return new KBHandle(identifier, renderFeatureValue(aFeature, identifier));
+            return new KBProperty(renderFeatureValue(aFeature, identifier), identifier);
         }
         else if (aValue == null ) {
             return null;

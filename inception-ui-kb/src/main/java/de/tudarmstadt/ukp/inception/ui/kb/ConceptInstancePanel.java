@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
@@ -59,15 +60,15 @@ public class ConceptInstancePanel
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> selectedInstanceHandle;
-    private IModel<KBHandle> selectedConceptHandle;
+    private IModel<KBObject> selectedInstanceHandle;
+    private IModel<KBObject> selectedConceptHandle;
 
     private Component instanceInfoPanel;
 
     private List<String> labelProperties;
 
     public ConceptInstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aSelectedConceptHandle, IModel<KBConcept> aSelectedConceptModel)
+            IModel<KBObject> aSelectedConceptHandle, IModel<KBConcept> aSelectedConceptModel)
     {
         super(aId, aSelectedConceptModel);
         setOutputMarkupId(true);
@@ -108,7 +109,7 @@ public class ConceptInstancePanel
             {
                 if (selectedConceptHandle.getObject() != null) {
                     return new AnnotatedListIdentifiers(panelId, kbModel,
-                            selectedConceptHandle, selectedInstanceHandle,false);
+                            selectedConceptHandle, selectedInstanceHandle, false);
                 }
                 else {
                     return new EmptyPanel(panelId);
@@ -128,7 +129,7 @@ public class ConceptInstancePanel
     public void actionStatementChanged(AjaxStatementChangedEvent event)
     {
         KBStatement statement = event.getStatement();
-        KBHandle instanceHandle = selectedInstanceHandle.getObject();
+        KBObject instanceHandle = selectedInstanceHandle.getObject();
 
         boolean isRelevantToSelectedInstance = instanceHandle != null
                 && instanceHandle.getIdentifier().equals(statement.getInstance().getIdentifier());
