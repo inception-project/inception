@@ -20,13 +20,10 @@ package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -42,59 +39,43 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 
-
 public class IRIValuePresenter
     extends ValuePresenter
 {
     private static final long serialVersionUID = -2127902473859929221L;
 
-    private static final Logger LOG = LoggerFactory.getLogger(IRIValuePresenter.class);
-
-    @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private CompoundPropertyModel<KBObject> kbObject;
 
     public IRIValuePresenter(String id, IModel<KBStatement> aModel, IModel<KnowledgeBase> aKBModel)
     {
         super(id, aModel);
         
         kbModel = aKBModel;
-        kbObject = CompoundPropertyModel.of(LoadableDetachableModel.of(this::getKBObject));
 
         add(new IriInfoBadge("iriInfoBadge", LoadableDetachableModel
                 .of(() -> ((IRI) getModelObject().getValue()).stringValue())));
         
         LambdaAjaxLink link = new LambdaAjaxLink("link",
-            t -> actionIRILinkClicked(t, kbObject.getObject()));
-        link.add(new Label("label",
-                LoadableDetachableModel.of(() -> getLabel(kbObject.getObject()))));
+            t -> actionIRILinkClicked(t, (IRI) aModel.getObject().getValue()));
+        link.add(
+                new Label("label", LoadableDetachableModel.of(() -> getLabel(aModel.getObject()))));
         add(link);
     }
 
-    private KBObject getKBObject()
+    private String getLabel(KBStatement aStatement)
     {
-        Object stmtValue = getModelObject().getValue();
-        if (stmtValue != null) {
-            return kbService.readHandle(kbModel.getObject(), stmtValue.toString())
-                    .orElse(null);
+        if (aStatement != null && aStatement.getValueLabel() != null) {
+            return aStatement.getValueLabel();
         }
-        else {
-            return null;
-        }
-    }
-
-    private String getLabel(KBObject aKbObject)
-    {
-        if (aKbObject != null) {
-            return aKbObject.getUiLabel();
-        }
+        
         return ((IRI) getModelObject().getValue()).getLocalName();
     }
 
-    private void actionIRILinkClicked(AjaxRequestTarget aTarget, KBObject aKbObject)
+    private void actionIRILinkClicked(AjaxRequestTarget aTarget, IRI aIdentifier)
     {
-        KBObject item =  kbService.readItem(kbModel.getObject(), aKbObject.getIdentifier())
+        KBObject item =  kbService.readItem(kbModel.getObject(), aIdentifier.stringValue())
                 .orElse(null);
         
         if (item != null) {
@@ -113,7 +94,7 @@ public class IRIValuePresenter
             else {
                 throw new IllegalArgumentException(String.format(
                     "KBObject must be an instance of one of the following types: [KBConcept, KBInstance, KBProperty], not [%s]",
-                    kbObject.getClass().getSimpleName()));
+                    item.getClass().getSimpleName()));
             }
         }
         else {

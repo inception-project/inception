@@ -104,6 +104,7 @@ import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
@@ -1602,21 +1603,8 @@ public class SPARQLQueryBuilder
         List<Statement> explicitStmts = listStatements(tupleQuery, false);
         List<Statement> allStmts = listStatements(tupleQuery, true);
         
-        String[] propertyIris = allStmts.stream()
-            .map(Statement::getPredicate)
-            .map(IRI::stringValue)
-            .distinct()
-            .toArray(String[]::new);
-        
-        Map<String, KBProperty> propertyMap = SPARQLQueryBuilder.forProperties(kb)
-            .withIdentifier(propertyIris)
-            .retrieveLabel()
-            .retrieveDescription()
-            .retrieveDomainAndRange()
-            .asHandles(aConnection, true)
-            .stream()
-            .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
-            .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
+        Map<String, KBProperty> propertyMap = fetchProperties(aConnection, allStmts);
+        Map<String, KBHandle> labelMap = fetchLabelsForIriValues(aConnection, allStmts);
         
         List<KBStatement> results = new ArrayList<>();
         for (Statement stmt : allStmts) {
@@ -1641,6 +1629,9 @@ public class SPARQLQueryBuilder
                 propertyIri -> new KBProperty(propertyIri));
             
             KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
+            if (value instanceof IRI) {
+                kbStatement.setValueLabel(labelMap.get(value.stringValue()).getUiLabel());
+            }
             kbStatement.setInferred(!explicitStmts.contains(stmt));
             kbStatement.setOriginalTriples(singleton(stmt));
 
@@ -1651,6 +1642,48 @@ public class SPARQLQueryBuilder
                 currentTimeMillis() - startTime);
  
         return results;
+    }
+    
+    private Map<String, KBProperty> fetchProperties(RepositoryConnection aConn,
+            List<Statement> aStmts)
+    {
+        try (StopWatch watch = new StopWatch(LOG, "fetchProperties(%d)", aStmts.size())) {
+            String[] propertyIris = aStmts.stream()
+                    .map(Statement::getPredicate)
+                    .map(IRI::stringValue)
+                    .distinct()
+                    .toArray(String[]::new);
+                
+            return SPARQLQueryBuilder.forProperties(kb)
+                    .withIdentifier(propertyIris)
+                    .retrieveLabel()
+                    .retrieveDescription()
+                    .retrieveDomainAndRange()
+                    .asHandles(aConn, true)
+                    .stream()
+                    .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
+                    .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
+        }
+    }
+    
+    private Map<String, KBHandle> fetchLabelsForIriValues(RepositoryConnection aConn,
+            List<Statement> aStmts)
+    {
+        try (StopWatch watch = new StopWatch(LOG, "fetchLabelsForIriValues(%d)", aStmts.size())) {
+            String[] iriValues = aStmts.stream()
+                    .map(Statement::getObject)
+                    .filter(v -> v instanceof IRI)
+                    .map(v -> ((IRI) v).stringValue())
+                    .distinct()
+                    .toArray(String[]::new);
+                
+            return SPARQLQueryBuilder.forItems(kb)
+                    .withIdentifier(iriValues)
+                    .retrieveLabel()
+                    .asHandles(aConn, true)
+                    .stream()
+                    .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
+        }
     }
     
     private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
@@ -1667,7 +1700,7 @@ public class SPARQLQueryBuilder
                     continue;
                 }
                 
-                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
                 
                 Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
                 Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
@@ -1706,7 +1739,7 @@ public class SPARQLQueryBuilder
                     continue;
                 }
                 
-                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
     
                 String id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
                 if (!id.contains(":") || (!aAll && hasImplicitNamespace(kb, id))) {

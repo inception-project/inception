@@ -47,6 +47,8 @@ public class KBStatement implements Serializable
 
     // Object
     private Object value;
+    
+    private String valueLabel;
 
     // Language
     private String language;
@@ -218,6 +220,16 @@ public class KBStatement implements Serializable
     public void setQualifiers(List<KBQualifier> qualifierList)
     {
         qualifiers = qualifierList;
+    }
+    
+    public String getValueLabel()
+    {
+        return valueLabel;
+    }
+
+    public void setValueLabel(String aValueLabel)
+    {
+        valueLabel = aValueLabel;
     }
 
     @Override
