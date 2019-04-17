@@ -1603,7 +1603,6 @@ public class SPARQLQueryBuilder
         
         List<KBStatement> results = new ArrayList<>();
         for (Statement stmt : allStmts) {
-
             Value value = stmt.getObject();
             if (value == null) {
                 // Can this really happen?
@@ -1623,9 +1622,9 @@ public class SPARQLQueryBuilder
             KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
             KBProperty predicate = new KBProperty(null, stmt.getPredicate().stringValue());
             
-            KBStatement kbStatement = new KBStatement(subject, predicate, value);
+            KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
             kbStatement.setInferred(!explicitStmts.contains(stmt));
-            kbStatement.setOriginalStatements(singleton(stmt));
+            kbStatement.setOriginalTriples(singleton(stmt));
 
             results.add(kbStatement);
         }

@@ -85,7 +85,7 @@ public class StatementEditor extends Panel
         statement = aStatement;
 
         // new statements start with edit mode right away
-        boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
+        boolean isNewStatement = statement.getObject().getOriginalTriples().isEmpty();
         if (isNewStatement) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 

@@ -19,64 +19,55 @@ package de.tudarmstadt.ukp.inception.kb.graph;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
+import org.eclipse.rdf4j.model.Value;
 
 public class KBQualifier
     implements Serializable
 {
     private static final long serialVersionUID = 4648563545691138244L;
 
-    private KBStatement kbStatement;
+    private KBStatement statement;
 
     private String language;
 
-    private KBProperty kbProperty;
+    private KBProperty property;
 
     private Object value;
 
     private Set<Statement> originalTriples;
 
-    public KBQualifier(KBStatement aKbStatement, KBProperty aKbProperty, Object aValue)
+    public KBQualifier(String aKbProperty, Object aValue)
     {
-        kbStatement = aKbStatement;
-        kbProperty = aKbProperty;
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
+        this(null, new KBProperty(null, aKbProperty), aValue);
+    }
 
-        if (aValue instanceof Literal) {
-            Literal litValue = (Literal) aValue;
-            language = litValue.getLanguage().orElse(null);
-            value = mapper.getJavaObject(litValue);
-        }
-        else if (aValue instanceof IRI) {
-            value = aValue;
-        }
-        else if (aValue instanceof BNode) {
-            value = null;
-        }
-        else {
-            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
-        }
+    public KBQualifier(KBStatement aStatement, KBProperty aKbProperty, Object aValue)
+    {
+        statement = aStatement;
+        property = aKbProperty;
+        setValue(aValue);
         originalTriples = new HashSet<>();
     }
 
     public KBQualifier(KBStatement aKbStatement)
     {
-        kbStatement = aKbStatement;
+        statement = aKbStatement;
         originalTriples = new HashSet<>();
     }
 
     public KBQualifier(KBQualifier other)
     {
-        kbStatement = other.kbStatement;
-        kbProperty = other.kbProperty;
+        statement = other.statement;
+        property = other.property;
         value = other.value;
         language = other.language;
         originalTriples = other.originalTriples;
@@ -84,22 +75,22 @@ public class KBQualifier
 
     public KBStatement getStatement()
     {
-        return kbStatement;
+        return statement;
     }
 
     public void setStatement(KBStatement aKBStatement)
     {
-        kbStatement = aKBStatement;
+        statement = aKBStatement;
     }
 
     public KBProperty getProperty()
     {
-        return kbProperty;
+        return property;
     }
 
     public void setProperty(KBProperty aKBProperty)
     {
-        kbProperty = aKBProperty;
+        property = aKBProperty;
     }
 
     public Object getValue()
@@ -109,7 +100,30 @@ public class KBQualifier
 
     public void setValue(Object aValue)
     {
-        value = aValue;
+        if (aValue instanceof Value) {
+            if (aValue instanceof Literal) {
+                Literal litValue = (Literal) aValue;
+                try {
+                    language = litValue.getLanguage().orElse(null);
+                    value = new DefaultDatatypeMapper().getJavaObject(litValue);
+                }
+                catch (Exception e) {
+                    value = "ERROR converting [" + litValue + "]: " + e.getMessage();
+                }
+            }
+            else if (aValue instanceof IRI) {
+                value = aValue;
+            }
+            else if (aValue instanceof BNode) {
+                value = null;
+            }
+            else {
+                value = "ERROR: Unknown object type: " + aValue.getClass();
+            }
+        }
+        else {
+            value = aValue;
+        }
     }
 
     public String getLanguage()
@@ -127,28 +141,17 @@ public class KBQualifier
         return originalTriples;
     }
 
-    public void setOriginalTriples(Set<Statement> statements)
+    public void setOriginalTriples(Set<Statement> aOriginalStatements)
     {
-        originalTriples = statements;
+        originalTriples = aOriginalStatements;
     }
 
-    public int getQualifierIndexByOriginalStatements()
+    @Override
+    public String toString()
     {
-        List<KBQualifier> qualifiers = kbStatement.getQualifiers();
-        for (KBQualifier qualifier : qualifiers) {
-            if (qualifier.getOriginalTriples().size() == originalTriples.size()) {
-                boolean flag = true;
-                for (Statement statement : qualifier.getOriginalTriples()) {
-                    if (!originalTriples.contains(statement)) {
-                        flag = false;
-                        break;
-                    }
-                }
-                if (flag) {
-                    return qualifiers.indexOf(qualifier);
-                }
-            }
-        }
-        return -1;
+        return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE)
+                .append("kbStatement", statement).append("language", language)
+                .append("kbProperty", property).append("value", value)
+                .append("originalStatements", originalTriples).toString();
     }
 }

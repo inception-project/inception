@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeFalse;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -608,6 +609,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     @Test
     public void createProperty_WithCustomBasePrefix_ShouldCreateNewPropertyWithCustomPrefix()
     {
+        assumeFalse("Wikidata reification has hardcoded property prefix", 
+                Reification.WIKIDATA.equals(kb.getReification()));
+        
         KBProperty property = buildProperty();
 
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -817,8 +821,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .hasSize(1)
             .element(0)
             .hasFieldOrPropertyWithValue("identifier", property.getIdentifier())
-            .hasFieldOrProperty("name")
-            .matches(h -> h.getIdentifier().startsWith(IriConstants.INCEPTION_NAMESPACE));
+            .hasFieldOrProperty("name");
     }
 
     @Test
@@ -1219,9 +1222,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             .element(0)
             .hasFieldOrPropertyWithValue("value", "Test statement");
 
-        assertThat(statements.get(0).getOriginalStatements())
+        assertThat(statements.get(0).getOriginalTriples())
             .as("Check that original statements are recreated")
-            .containsExactlyInAnyOrderElementsOf(statement.getOriginalStatements());
+            .containsExactlyInAnyOrderElementsOf(statement.getOriginalTriples());
     }
 
     @Test
@@ -1404,7 +1407,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Test
-    public void statementsMatchSPO_WithMatchedStatement_ShouldReturnTrue()
+    public void thatExistsFindsExistingStatement()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
@@ -1415,12 +1418,13 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         sut.upsertStatement(kb, statement);
 
-        KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
-        assertTrue(sut.statementsMatchSPO(kb, mockStatement));
+        KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
+                "Test statement");
+        assertTrue(sut.exists(kb, mockStatement));
     }
 
     @Test
-    public void statementsMatchSPO_WithMissmatchedStatement_ShouldReturnFalse()
+    public void thatExistsDoesNotFindNonExistingStatement()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         KBConcept concept = buildConcept();
@@ -1431,8 +1435,9 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
 
         sut.upsertStatement(kb, statement);
 
-        KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property, "Test statement");
-        assertFalse(sut.statementsMatchSPO(kb, mockStatement));
+        KBStatement mockStatement = buildStatement(kb, concept.toKBHandle(), property,
+                "Test statement");
+        assertFalse(sut.exists(kb, mockStatement));
     }
 
     @Test
@@ -1612,7 +1617,6 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
             KBProperty aProperty, String value)
     {
         KBStatement stmt = testFixtures.buildStatement(conceptHandle, aProperty, value);
-        sut.initStatement(knowledgeBase, stmt);
         return stmt;
     }
 

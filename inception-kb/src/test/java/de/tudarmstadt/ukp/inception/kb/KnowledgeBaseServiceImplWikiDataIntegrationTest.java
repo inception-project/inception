@@ -88,7 +88,9 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
-    public KnowledgeBaseServiceImplWikiDataIntegrationTest(Reification aReification) {
+
+    public KnowledgeBaseServiceImplWikiDataIntegrationTest(Reification aReification)
+    {
         reification = aReification;
     }
 
@@ -96,16 +98,18 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public static Collection<Object[]> data()
     {
         return Arrays.stream(Reification.values()).map(r -> new Object[] { r })
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
     }
 
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce()
+    {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws Exception
+    {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
@@ -120,39 +124,45 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() throws Exception
+    {
         testEntityManager.clear();
         sut.destroy();
     }
 
     @Test
-    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult() {
-        Optional<KBConcept> savedConcept = sut.readConcept(kb, "https://nonexistent.identifier.test", true);
-        assertThat(savedConcept.isPresent())
-            .as("Check that no concept was read")
-            .isFalse();
+    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult()
+    {
+        Optional<KBConcept> savedConcept = sut.readConcept(kb,
+                "https://nonexistent.identifier.test", true);
+        assertThat(savedConcept.isPresent()).as("Check that no concept was read").isFalse();
     }
     
     @Test
-    public void readConcept_WithExistentConcept_ShouldReturnResult() {
-        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644", true);
-        assertThat(concept.get().getName())
-            .as("Check that concept has the same UI label")
-            .isIn("12 Hours of Reims");
+    public void readConcept_WithExistentConcept_ShouldReturnResult()
+    {
+        Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644",
+                true);
+        assertThat(concept.get().getName()).as("Check that concept has the same UI label")
+                .isIn("12 Hours of Reims");
     }
     
     @Test
-    public void listChildConcept_WithExistentConcept_ShouldReturnResult() {
-        List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644", true);
-        
+    public void listChildConcept_WithExistentConcept_ShouldReturnResult()
+    {
+        List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644",
+                true);
+
         assertThat(concept.iterator().next().getUiLabel())
-            .as("Check that concept has the same UI label")
-            .isIn("12-Stunden-Rennen von Reims 1965","1965 12 Hours of Reims");
+                .as("Check that concept has the same UI label")
+                .isIn("12-Stunden-Rennen von Reims 1965", "1965 12 Hours of Reims");
     }
     
     @Test
-    public void listRootConcepts() {
-        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream().map(KBHandle::getIdentifier);
+    public void listRootConcepts()
+    {
+        Stream<String> rootConcepts = sut.listRootConcepts(kb, false).stream()
+                .map(KBHandle::getIdentifier);
         String expectedInstances = "http://www.wikidata.org/entity/Q35120";
         
         assertThat(rootConcepts)
@@ -173,23 +183,28 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
     
     @Test
-    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult() {
+    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
+    {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
-        Optional<KBInstance> savedInstance = sut.readInstance(kb, "https://nonexistent.identifier.test");
+        Optional<KBInstance> savedInstance = sut.readInstance(kb,
+                "https://nonexistent.identifier.test");
 
-        assertThat(savedInstance.isPresent())
-            .as("Check that no instance was read")
-            .isFalse();
+        assertThat(savedInstance.isPresent()).as("Check that no instance was read").isFalse();
     }
 
     @Test
-    public void listInstances() {
-        Stream<String> instances = sut.listInstances(kb, "http://www.wikidata.org/entity/Q2897", true).stream().map(KBHandle::getIdentifier);
-        String[] expectedInstances = {
-                "http://www.wikidata.org/entity/Q22663448" , "http://www.wikidata.org/entity/Q22663448", "http://www.wikidata.org/entity/Q30059050"};
-        assertThat(instances).as("Check that instances have been found").hasSize(17).contains(expectedInstances);
-        
+    public void listInstances()
+    {
+        Stream<String> instances = sut
+                .listInstances(kb, "http://www.wikidata.org/entity/Q2897", true).stream()
+                .map(KBHandle::getIdentifier);
+        String[] expectedInstances = { "http://www.wikidata.org/entity/Q22663448",
+                "http://www.wikidata.org/entity/Q22663448",
+                "http://www.wikidata.org/entity/Q30059050" };
+        assertThat(instances).as("Check that instances have been found").hasSize(17)
+                .contains(expectedInstances);
+
     }
     
     @Test
@@ -200,26 +215,37 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
                 .map(KBStatement::getProperty)
                 .map(KBProperty::getIdentifier);
 
-        String[] expectedInstances = { "http://www.wikidata.org/prop/P2894",
-                "http://www.wikidata.org/prop/direct/P2894",
-                "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/prop/P31" };
         if (reification == Reification.NONE) {
+            String[] expectedInstances = { 
+                    "http://www.wikidata.org/prop/P2894",
+                    "http://www.wikidata.org/prop/direct/P2894",
+                    "http://www.wikidata.org/prop/direct/P31", 
+                    "http://www.wikidata.org/prop/P31" };
             assertThat(properties).as("Check that properties have been found")
                     .contains(expectedInstances);
         }
         else {
-            assertThat(properties).as("Check that no statements are returned for now").hasSize(0);
+            String[] expectedInstances = { 
+                    "http://www.wikidata.org/prop/P585",
+                    "http://www.wikidata.org/prop/P31",
+                    "http://www.wikidata.org/prop/P361", 
+                    "http://www.wikidata.org/prop/P2894",
+                    "http://www.wikidata.org/prop/P31" };
+            assertThat(properties).as("Check that properties have been found")
+                    .contains(expectedInstances);
         }
     }
     
     
     // Helper
 
-    private Project createProject(String name) {
+    private Project createProject(String name)
+    {
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException {
+    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
+    {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
@@ -230,10 +256,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
         kb_wikidata_direct.setMaxResults(1000);
-       
+
         return kb_wikidata_direct;
     }
-    
-    
-    
 }

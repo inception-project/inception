@@ -125,7 +125,7 @@ public class SubclassCreationDialog
 
             // create the subclassof statement and add it to the knowledge base
             ValueFactory vf = SimpleValueFactory.getInstance();
-            KBStatement subclassOfStmt = new KBStatement(newConcept.toKBHandle(), property,
+            KBStatement subclassOfStmt = new KBStatement(null, newConcept.toKBHandle(), property,
                     vf.createIRI(parentConceptId));
             //set reification to NONE just for "upserting" the statement, then restore old value
             Reification kbReification = kb.getReification();

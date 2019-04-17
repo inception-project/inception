@@ -181,7 +181,7 @@ public class PropertyFeatureEditor
             mockStatement.setValue(object.getUiLabel());
             KnowledgeBase kb = factService.findKnowledgeBaseContainingProperty(predicate, project,
                     traits);
-            existStatements = kbService.statementsMatchSPO(kb, mockStatement);
+            existStatements = kbService.exists(kb, mockStatement);
         }
     }
 
