@@ -16,26 +16,36 @@
 #limitations under the License.
 */
 
-function OnSuccess(a) {
-    var b = [];
-    for (var c = 0; c < a.length; c++) b.push(a[c]);
-    var d = "category";
-    if (a.length > 2) var d = "";
+/*
+ * The method renders a c3 chart with the help of the data it receives from the server side.
+ * 
+ * the arrayOfLeaningCurves also includes x-axis.
+ */
+function updateLearningCurveDiagram(arrayOfLearningCurves) {
+	
+    var xAxixType = "";
+    
+	//make the type of x-axis "category" when we have more than one learning curves. i.e when the request is from annotation recommender side bar. It is for better visualization when the x-axis represents test data size
+    if (arrayOfLearningCurves.length <= 2) 
+    	xAxixType = "category";
+    
+    //draw the chart with the help of the arrayOfLearningCurves. The type of the graph is "step".
     var e = c3.generate({
         bindto: "#" + $("#canvas").attr("my:canvas.chartid"),
         data: {
             x: "x",
-            columns: b,
+            columns: arrayOfLearningCurves,
             type: "step"
         },
         axis: {
             x: {
-                type: d,
+                type: xAxixType,
                 tick: {
                     rotate: 0,
                     multiline: true
                 }
             },
+            //to round off the decimal points of the y-axis values to 4 if it is a decimal number.
             y: {
                 tick: {
                     format: function(a) {

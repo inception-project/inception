@@ -102,7 +102,7 @@ public class ChartPanel
 
         String chartTriggerJavascript = "$(document).ready(function() {$.ajax({url:'"
                 + chartAjaxBejavior.getCallbackUrl().toString()
-                + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){OnSuccess(result)}})})";
+                + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){updateLearningCurveDiagram(result)}})})";
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }
