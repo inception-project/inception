@@ -119,8 +119,8 @@ public class WikiDataReification
 
     private Set<Statement> reifyQualifier(KnowledgeBase kb, KBQualifier aQualifier)
     {
-        Resource statementId = vf.createBNode(aQualifier.getKbStatement().getStatementId());
-        KBProperty qualifierProperty = aQualifier.getKbProperty();
+        Resource statementId = vf.createBNode(aQualifier.getStatement().getStatementId());
+        KBProperty qualifierProperty = aQualifier.getProperty();
         IRI qualifierPredicate = vf.createIRI(qualifierProperty.getIdentifier());
         Value qualifierValue = valueMapper.mapQualifierValue(aQualifier, vf);
 
@@ -395,15 +395,15 @@ public class WikiDataReification
     @Override
     public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
     {
-        if (newQualifier.getKbStatement().getStatementId() == null) {
+        if (newQualifier.getStatement().getStatementId() == null) {
             // FIXME: REC: This should probably be an exception?
             log.error("No statementId");
             return;
         }
         
         kbService.update(kb, (conn) -> {
-            Resource id = vf.createBNode(newQualifier.getKbStatement().getStatementId());
-            IRI predicate = vf.createIRI(newQualifier.getKbProperty().getIdentifier());
+            Resource id = vf.createBNode(newQualifier.getStatement().getStatementId());
+            IRI predicate = vf.createIRI(newQualifier.getProperty().getIdentifier());
             Value value = valueMapper.mapQualifierValue(newQualifier, vf);
             Statement qualifierStatement = vf.createStatement(id, predicate, value);
             conn.add(qualifierStatement);
@@ -411,14 +411,14 @@ public class WikiDataReification
             Set<Statement> statements = new HashSet<>();
             statements.add(qualifierStatement);
             newQualifier.setOriginalStatements(statements);
-            newQualifier.getKbStatement().getQualifiers().add(newQualifier);
+            newQualifier.getStatement().getQualifiers().add(newQualifier);
         });
     }
 
     @Override
     public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
     {
-        if (oldQualifier.getKbStatement().getStatementId() == null) {
+        if (oldQualifier.getStatement().getStatementId() == null) {
             // FIXME: REC: This should probably be an exception?
             log.error("No statementId");
             return;
@@ -427,7 +427,7 @@ public class WikiDataReification
         kbService.update(kb, (conn) -> {
             conn.remove(oldQualifier.getOriginalStatements());
 
-            oldQualifier.getKbStatement().getQualifiers().remove(oldQualifier);
+            oldQualifier.getStatement().getQualifiers().remove(oldQualifier);
             oldQualifier.setOriginalStatements(Collections.emptySet());
         });
     }
@@ -441,12 +441,12 @@ public class WikiDataReification
             conn.add(statements);
             if (index == -1) {
                 aQualifier.setOriginalStatements(statements);
-                aQualifier.getKbStatement().getQualifiers().add(aQualifier);
+                aQualifier.getStatement().getQualifiers().add(aQualifier);
             }
             else {
                 conn.remove(aQualifier.getOriginalStatements());
                 aQualifier.setOriginalStatements(statements);
-                aQualifier.getKbStatement().getQualifiers().set(index, aQualifier);
+                aQualifier.getStatement().getQualifiers().set(index, aQualifier);
             }
         });
     }

@@ -69,7 +69,7 @@ public class QualifierEditor
         kbModel = aKbModel;
         qualifier = aQualifier;
 
-        boolean isNewQualifier = qualifier.getObject().getKbProperty() == null;
+        boolean isNewQualifier = qualifier.getObject().getProperty() == null;
         if (isNewQualifier) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, qualifier, isNewQualifier);
             RequestCycle.get()
@@ -160,7 +160,7 @@ public class QualifierEditor
             super(aId, "viewMode", QualifierEditor.this, aQualifier);
             CompoundPropertyModel<KBQualifier> compoundModel = new CompoundPropertyModel<>(
                 aQualifier);
-            add(new Label("property", aQualifier.getObject().getKbProperty().getUiLabel()));
+            add(new Label("property", aQualifier.getObject().getProperty().getUiLabel()));
             add(new Label("language", compoundModel.bind("language")).add(
                     LambdaBehavior.onConfigure(_this -> 
                             _this.setVisible(isNotEmpty(aQualifier.getObject().getLanguage())))));

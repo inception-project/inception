@@ -302,7 +302,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
             KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test "
                 + "qualifier");
             sut.upsertQualifier(kb, qualifier);
-            assertThat(qualifier.getKbStatement().getQualifiers())
+            assertThat(qualifier.getStatement().getQualifiers())
                 .as("Check that KBStatement has updated correctly")
                 .hasSize(1)
                 .element(0)
@@ -338,7 +338,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
             qualifier.setValue("changed Qualifier");
             sut.upsertQualifier(kb, qualifier);
-            assertThat(qualifier.getKbStatement().getQualifiers())
+            assertThat(qualifier.getStatement().getQualifiers())
                 .as("Check that KBStatement has updated correctly")
                 .hasSize(1)
                 .element(0)

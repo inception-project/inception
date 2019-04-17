@@ -73,33 +73,33 @@ public class KBQualifier
         originalStatements = new HashSet<>();
     }
 
-    public KBQualifier(KBQualifier other)
+    public KBQualifier(KBQualifier aOther)
     {
-        kbStatement = other.kbStatement;
-        kbProperty = other.kbProperty;
-        value = other.value;
-        language = other.language;
-        originalStatements = other.originalStatements;
+        kbStatement = aOther.kbStatement;
+        kbProperty = aOther.kbProperty;
+        value = aOther.value;
+        language = aOther.language;
+        originalStatements = aOther.originalStatements;
     }
 
-    public KBStatement getKbStatement()
+    public KBStatement getStatement()
     {
         return kbStatement;
     }
 
-    public void setKbStatement(KBStatement kbStatement)
+    public void setStatement(KBStatement aKBStatement)
     {
-        this.kbStatement = kbStatement;
+        kbStatement = aKBStatement;
     }
 
-    public KBProperty getKbProperty()
+    public KBProperty getProperty()
     {
         return kbProperty;
     }
 
-    public void setKbProperty(KBProperty kbProperty)
+    public void setProperty(KBProperty aKBProperty)
     {
-        this.kbProperty = kbProperty;
+        kbProperty = aKBProperty;
     }
 
     public Object getValue()
@@ -107,17 +107,19 @@ public class KBQualifier
         return value;
     }
 
-    public void setValue(Object value)
+    public void setValue(Object aValue)
     {
-        this.value = value;
+        value = aValue;
     }
 
-    public String getLanguage() {
+    public String getLanguage()
+    {
         return language;
     }
 
-    public void setLanguage(String aLanguage) {
-        language = language;
+    public void setLanguage(String aLanguage)
+    {
+        language = aLanguage;
     }
 
     public Set<Statement> getOriginalStatements()
@@ -125,9 +127,9 @@ public class KBQualifier
         return originalStatements;
     }
 
-    public void setOriginalStatements(Set<Statement> originalStatements)
+    public void setOriginalStatements(Set<Statement> aOriginalStatements)
     {
-        this.originalStatements = originalStatements;
+        originalStatements = aOriginalStatements;
     }
 
     public int getQualifierIndexByOriginalStatements()
@@ -149,5 +151,4 @@ public class KBQualifier
         }
         return -1;
     }
-
 }
