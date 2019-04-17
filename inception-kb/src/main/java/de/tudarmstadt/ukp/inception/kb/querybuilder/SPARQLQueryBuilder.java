@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -1601,6 +1602,22 @@ public class SPARQLQueryBuilder
         List<Statement> explicitStmts = listStatements(tupleQuery, false);
         List<Statement> allStmts = listStatements(tupleQuery, true);
         
+        String[] propertyIris = allStmts.stream()
+            .map(Statement::getPredicate)
+            .map(IRI::stringValue)
+            .distinct()
+            .toArray(String[]::new);
+        
+        Map<String, KBProperty> propertyMap = SPARQLQueryBuilder.forProperties(kb)
+            .withIdentifier(propertyIris)
+            .retrieveLabel()
+            .retrieveDescription()
+            .retrieveDomainAndRange()
+            .asHandles(aConnection, true)
+            .stream()
+            .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
+            .collect(Collectors.toMap(KBObject::getIdentifier, Function.identity()));
+        
         List<KBStatement> results = new ArrayList<>();
         for (Statement stmt : allStmts) {
             Value value = stmt.getObject();
@@ -1620,7 +1637,8 @@ public class SPARQLQueryBuilder
             }
 
             KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
-            KBProperty predicate = new KBProperty(stmt.getPredicate().stringValue());
+            KBProperty predicate = propertyMap.computeIfAbsent(stmt.getPredicate().stringValue(),
+                propertyIri -> new KBProperty(propertyIri));
             
             KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
             kbStatement.setInferred(!explicitStmts.contains(stmt));

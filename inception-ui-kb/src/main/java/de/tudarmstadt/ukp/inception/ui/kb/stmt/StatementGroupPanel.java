@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -234,9 +233,7 @@ public class StatementGroupPanel
             // TODO what about handling type intersection when multiple range statements are
             // present?
             // obtain IRI of property range, if existent
-            Optional<KBProperty> property = kbService.readProperty(statementGroupBean.getKb(),
-                statementGroupBean.getProperty().getIdentifier());
-            IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
+            IModel<KBProperty> propertyModel = Model.of(statementGroupBean.getProperty());
 
             form.add(new IriInfoBadge("statementIdtext", groupModel.bind("property.identifier")));
                         

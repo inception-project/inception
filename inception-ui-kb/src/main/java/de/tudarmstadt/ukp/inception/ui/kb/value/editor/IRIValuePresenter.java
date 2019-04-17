@@ -76,7 +76,7 @@ public class IRIValuePresenter
     {
         Object stmtValue = getModelObject().getValue();
         if (stmtValue != null) {
-            return kbService.readItem(kbModel.getObject(), stmtValue.toString())
+            return kbService.readHandle(kbModel.getObject(), stmtValue.toString())
                     .orElse(null);
         }
         else {
@@ -94,18 +94,21 @@ public class IRIValuePresenter
 
     private void actionIRILinkClicked(AjaxRequestTarget aTarget, KBObject aKbObject)
     {
-        if (aKbObject != null) {
-            if (aKbObject instanceof KBConcept) {
+        KBObject item =  kbService.readItem(kbModel.getObject(), aKbObject.getIdentifier())
+                .orElse(null);
+        
+        if (item != null) {
+            if (item instanceof KBConcept) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+                    new AjaxConceptSelectionEvent(aTarget, KBHandle.of(item), true));
             }
-            else if (aKbObject instanceof KBInstance) {
+            else if (item instanceof KBInstance) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
+                    new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(item)));
             }
-            else if (aKbObject instanceof KBProperty) {
+            else if (item instanceof KBProperty) {
                 send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(aTarget, (KBProperty) aKbObject, true));
+                    new AjaxPropertySelectionEvent(aTarget, (KBProperty) item, true));
             }
             else {
                 throw new IllegalArgumentException(String.format(

@@ -413,20 +413,27 @@ public interface KnowledgeBaseService
 
     /**
      * Read an identifier value to return {@link KBObject}
-     * @param aProject Project to read the KB identifier
-     * @param aIdentifier String value for IRI
+     * 
+     * @param aProject
+     *            Project to read the KB identifier
+     * @param aIdentifier
+     *            String value for IRI
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readItem(Project aProject, String aIdentifier);
 
     /**
      * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param akb
-     * @param aIdentifier
+     * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readItem(KnowledgeBase akb, String aIdentifier);
 
+    /**
+     * Obtain basic information about the given identifier.
+     */
+    Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier);
+    
     /**
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept

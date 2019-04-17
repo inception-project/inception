@@ -52,7 +52,8 @@ public class NoReification
     public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase aKB,
             KBHandle aItem, boolean aAll)
     {
-        return SPARQLQueryBuilder.forItems(aKB).withIdentifier(aItem.getIdentifier())
+        return SPARQLQueryBuilder.forItems(aKB)
+                .withIdentifier(aItem.getIdentifier())
                 .asStatements(aConnection, aAll);
     }
 

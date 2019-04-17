@@ -804,9 +804,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        try (StopWatch watch = new StopWatch(log, "listChildConcepts(%s)", aParentIdentifier)) {
-            return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
-        }
+        return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
     }
     
     @Override
@@ -968,6 +966,19 @@ public class KnowledgeBaseServiceImpl
                 return kbInstance.flatMap((i) -> Optional.of(i));
             }
             return Optional.empty();
+        }
+    }
+    
+    @Override
+    public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
+    {
+        try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
+            return read(aKB, conn -> { 
+                return SPARQLQueryBuilder.forItems(aKB)
+                    .withIdentifier(aIdentifier)
+                    .retrieveLabel()
+                    .asHandle(conn, true);
+            });
         }
     }
 
