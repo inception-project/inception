@@ -111,7 +111,7 @@ public class WikiDataReification
 
         for (KBQualifier aQualifier : aStatement.getQualifiers()) {
             Set<Statement> qualifierStatement = reifyQualifier(kb, aQualifier);
-            aQualifier.setOriginalStatements(qualifierStatement);
+            aQualifier.setOriginalTriples(qualifierStatement);
         }
 
         return statements;
@@ -410,7 +410,7 @@ public class WikiDataReification
 
             Set<Statement> statements = new HashSet<>();
             statements.add(qualifierStatement);
-            newQualifier.setOriginalStatements(statements);
+            newQualifier.setOriginalTriples(statements);
             newQualifier.getStatement().getQualifiers().add(newQualifier);
         });
     }
@@ -425,10 +425,10 @@ public class WikiDataReification
         }
         
         kbService.update(kb, (conn) -> {
-            conn.remove(oldQualifier.getOriginalStatements());
+            conn.remove(oldQualifier.getOriginalTriples());
 
             oldQualifier.getStatement().getQualifiers().remove(oldQualifier);
-            oldQualifier.setOriginalStatements(Collections.emptySet());
+            oldQualifier.setOriginalTriples(Collections.emptySet());
         });
     }
 
@@ -440,12 +440,12 @@ public class WikiDataReification
             Set<Statement> statements = reifyQualifier(kb, aQualifier);
             conn.add(statements);
             if (index == -1) {
-                aQualifier.setOriginalStatements(statements);
+                aQualifier.setOriginalTriples(statements);
                 aQualifier.getStatement().getQualifiers().add(aQualifier);
             }
             else {
-                conn.remove(aQualifier.getOriginalStatements());
-                aQualifier.setOriginalStatements(statements);
+                conn.remove(aQualifier.getOriginalTriples());
+                aQualifier.setOriginalTriples(statements);
                 aQualifier.getStatement().getQualifiers().set(index, aQualifier);
             }
         });
@@ -483,7 +483,7 @@ public class WikiDataReification
     
                         Set<Statement> statements = new HashSet<>();
                         statements.add(qualifierStatement);
-                        qualifier.setOriginalStatements(statements);
+                        qualifier.setOriginalTriples(statements);
     
                         qualifiers.add(qualifier);
                     }

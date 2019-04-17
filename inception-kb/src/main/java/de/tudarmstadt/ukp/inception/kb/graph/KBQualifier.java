@@ -42,7 +42,7 @@ public class KBQualifier
 
     private Object value;
 
-    private Set<Statement> originalStatements;
+    private Set<Statement> originalTriples;
 
     public KBQualifier(KBStatement aKbStatement, KBProperty aKbProperty, Object aValue)
     {
@@ -64,22 +64,22 @@ public class KBQualifier
         else {
             throw new IllegalStateException("Unknown object type: " + aValue.getClass());
         }
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
     }
 
     public KBQualifier(KBStatement aKbStatement)
     {
         kbStatement = aKbStatement;
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
     }
 
-    public KBQualifier(KBQualifier aOther)
+    public KBQualifier(KBQualifier other)
     {
-        kbStatement = aOther.kbStatement;
-        kbProperty = aOther.kbProperty;
-        value = aOther.value;
-        language = aOther.language;
-        originalStatements = aOther.originalStatements;
+        kbStatement = other.kbStatement;
+        kbProperty = other.kbProperty;
+        value = other.value;
+        language = other.language;
+        originalTriples = other.originalTriples;
     }
 
     public KBStatement getStatement()
@@ -122,24 +122,24 @@ public class KBQualifier
         language = aLanguage;
     }
 
-    public Set<Statement> getOriginalStatements()
+    public Set<Statement> getOriginalTriples()
     {
-        return originalStatements;
+        return originalTriples;
     }
 
-    public void setOriginalStatements(Set<Statement> aOriginalStatements)
+    public void setOriginalTriples(Set<Statement> statements)
     {
-        originalStatements = aOriginalStatements;
+        originalTriples = statements;
     }
 
     public int getQualifierIndexByOriginalStatements()
     {
         List<KBQualifier> qualifiers = kbStatement.getQualifiers();
         for (KBQualifier qualifier : qualifiers) {
-            if (qualifier.getOriginalStatements().size() == originalStatements.size()) {
+            if (qualifier.getOriginalTriples().size() == originalTriples.size()) {
                 boolean flag = true;
-                for (Statement statement : qualifier.getOriginalStatements()) {
-                    if (!originalStatements.contains(statement)) {
+                for (Statement statement : qualifier.getOriginalTriples()) {
+                    if (!originalTriples.contains(statement)) {
                         flag = false;
                         break;
                     }
