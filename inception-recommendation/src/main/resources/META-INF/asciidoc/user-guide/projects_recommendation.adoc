@@ -36,7 +36,7 @@ To save a recommender, click *Save*. To abort, click *Cancel*. To edit an existi
 can be selected from the left pane, edited and then saved. Recommenders can be deleted by clicking on
 *Delete*. This also removes all predictions by this recommender.
 
-image::recommendation_sidebar.png[align="center"]
+image::recommender_settings.png[align="center"]
 
 = Evaluation Simulation
 

@@ -19,7 +19,7 @@ maximum number of recommendations that are displayed for each token. Also, by ti
 all recommendations are shown, even if an annotation at the given position already exists. In order
 to save the new values, press *Apply*.
 
-image::recommendation3.png[align="center"]
+image::recommendation_sidebar.png[align="center"]
 
 === Learning Curve Diagram
 
