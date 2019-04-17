@@ -153,7 +153,7 @@ public class PropertyFeatureSupport
     {
         if (aValue instanceof String) {
             String identifier = (String) aValue;
-            return new KBProperty(renderFeatureValue(aFeature, identifier), identifier);
+            return new KBProperty(identifier, renderFeatureValue(aFeature, identifier));
         }
         else if (aValue == null ) {
             return null;

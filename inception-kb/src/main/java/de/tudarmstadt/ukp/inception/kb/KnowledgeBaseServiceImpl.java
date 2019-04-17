@@ -248,16 +248,16 @@ public class KnowledgeBaseServiceImpl
     {
         // KB will initialize base properties with base IRI schema properties defined by user
         if (akb.getType() == RepositoryType.LOCAL) {
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
-                    akb.getSubclassIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
-                    akb.getLabelIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
-                    akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
-                    akb.getTypeIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().getLocalName(),
-                    akb.getSubPropertyIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().stringValue(),
+                    akb.getSubclassIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getLabelIri().stringValue(),
+                    akb.getLabelIri().getLocalName(),null,XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().stringValue(),
+                    akb.getDescriptionIri().getLocalName(),null,XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri().stringValue(),
+                    akb.getTypeIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().stringValue(),
+                    akb.getSubPropertyIri().getLocalName()));
         }
     }
 

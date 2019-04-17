@@ -47,7 +47,7 @@ public class KBQualifier
 
     public KBQualifier(String aKbProperty, Object aValue)
     {
-        this(null, new KBProperty(null, aKbProperty), aValue);
+        this(null, new KBProperty(aKbProperty), aValue);
     }
 
     public KBQualifier(KBStatement aStatement, KBProperty aKbProperty, Object aValue)

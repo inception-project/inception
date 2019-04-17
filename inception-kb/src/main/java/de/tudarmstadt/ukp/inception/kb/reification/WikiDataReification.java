@@ -155,7 +155,7 @@ public class WikiDataReification
                 KBStatement statement = statements.get(priStatement);
                 if (statement == null) {
                     statement = new KBStatement(stmt.stringValue(), subject.stringValue());
-                    statement.setProperty(new KBProperty(null, pred1.stringValue()));
+                    statement.setProperty(new KBProperty(pred1.stringValue()));
                     statements.put(priStatement, statement);
                 }
                 
@@ -174,7 +174,7 @@ public class WikiDataReification
                         .startsWith(PREFIX_PROP_QUALIFIER)) {
                     // Qualifier
                     KBQualifier qualifier = new KBQualifier(statement,
-                            new KBProperty(null, pred2.stringValue()), value);
+                            new KBProperty(pred2.stringValue()), value);
 
                     // Store the secondary original triples in the qualifier
                     qualifier.getOriginalTriples().add(secStatement);
@@ -465,7 +465,7 @@ public class WikiDataReification
 
                 // Qualifier
                 KBQualifier qualifier = new KBQualifier(aStatement,
-                        new KBProperty(null, pred2.stringValue()), value);
+                        new KBProperty(pred2.stringValue()), value);
 
                 // Store the secondary original triples in the qualifier
                 qualifier.getOriginalTriples().add(secStatement);

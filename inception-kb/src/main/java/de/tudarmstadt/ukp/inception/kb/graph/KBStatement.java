@@ -64,7 +64,7 @@ public class KBStatement implements Serializable
 
     public KBStatement(String aId, String aInstance, String aProperty, Object aValue)
     {
-        this(aId, new KBHandle(aInstance), new KBProperty(null, aProperty), aValue);
+        this(aId, new KBHandle(aInstance), new KBProperty(aProperty), aValue);
     }
 
     /**

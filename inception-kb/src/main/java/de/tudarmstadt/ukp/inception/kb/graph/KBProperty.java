@@ -55,13 +55,17 @@ public class KBProperty
     {
     }
 
-    public KBProperty(String aName, String aIdentifier)
+    public KBProperty(String aIdentifier)
     {
-        name = aName;
-        identifier = aIdentifier;
+        this(aIdentifier, null);
     }
 
-    public KBProperty(String aName, String aIdentifier,String aDomain, String aRange)
+    public KBProperty(String aIdentifier, String aName)
+    {
+        this(aIdentifier, aName, null, null);
+    }
+
+    public KBProperty(String aIdentifier, String aName,String aDomain, String aRange)
     {
         name = aName;
         identifier = aIdentifier;
