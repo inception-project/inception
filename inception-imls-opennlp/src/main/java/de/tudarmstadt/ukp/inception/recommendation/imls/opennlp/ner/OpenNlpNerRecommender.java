@@ -218,7 +218,7 @@ public class OpenNlpNerRecommender
         int predictedNameIdx = 0;
         int goldNameIdx = 0;
         
-        List<LabelPair> predictions = new ArrayList<>();
+        List<LabelPair> labelPairs = new ArrayList<>();
         // Spans store which tokens are part of it as [begin,end). 
         // Tokens are counted 0 to length of sentence.
         // Therefore go through all tokens, determine which span they are part of 
@@ -244,13 +244,10 @@ public class OpenNlpNerRecommender
                 }
             }
 
-            // check there is a gold label here, check for instance equality to avoid user label
-            // collision
-            if (goldLabel != NO_NE_TAG)
-                predictions.add(new LabelPair(goldLabel, predictedLabel));
+            labelPairs.add(new LabelPair(goldLabel, predictedLabel));
 
         }
-        return predictions;
+        return labelPairs;
     }
 
     /**

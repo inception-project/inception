@@ -532,18 +532,10 @@ public class DL4JSequenceRecommender
                     List<String> expectedLabels = outcome.getSample().getTags();
                     List<String> actualLabels = outcome.getLabels();
                     for (int i = 0; i < expectedLabels.size(); i++) {
-                        // ignore NO_LABEL gold annotations (i.e. no real gold annotations) during
-                        // evaluation
-                        // use instance comparison to not confuse with possible user NO_LABEL label
-                        if (expectedLabels.get(i) != NO_LABEL) {
-                            labelPairs.add(new LabelPair(expectedLabels.get(i),
-                                    actualLabels.get(i)));
-                        }
+                        labelPairs.add(new LabelPair(expectedLabels.get(i), actualLabels.get(i)));
                     }
                 }
-                
             }
-
             return labelPairs.stream()
                     .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_LABEL));
         }

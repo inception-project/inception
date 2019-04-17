@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -46,7 +47,7 @@ public class EvaluationResult
 
     
     public EvaluationResult() {
-        ignoreLabels = new HashSet<>();
+        ignoreLabels = new LinkedHashSet<>();
         confusionMatrix = new ConfusionMatrix();
         trainingSetSize = 0;
         testSetSize = 0;
@@ -55,7 +56,7 @@ public class EvaluationResult
     public EvaluationResult(ConfusionMatrix aConfMatrix,
             int aTrainSetSize, int aTestSetSize, Set<String> aIgnoreLabels)
     {
-        ignoreLabels = new HashSet<>();
+        ignoreLabels = new LinkedHashSet<>();
         ignoreLabels.addAll(aIgnoreLabels);
         
         confusionMatrix = aConfMatrix;
@@ -91,13 +92,28 @@ public class EvaluationResult
     public double computeAccuracyScore()
     {
         double tp = 0.0;
+        double ignoreLabelAsGold = 0;
         for (String label : confusionMatrix.getLabels()) {
             if (!ignoreLabels.contains(label)) {
                 tp += confusionMatrix.getEntryCount(label, label);
             }
+            ignoreLabelAsGold += countIgnoreLabelsAsGold(label);
         }
-        int total = confusionMatrix.getTotal();
-        return (total > 0) ? tp / (double) total : 0.0;
+        double total = confusionMatrix.getTotal() - ignoreLabelAsGold;
+        return (total > 0) ? tp / total : 0.0;
+    }
+
+    /**
+     * Count how many times the given label was predicted incorrectly for a label that should be
+     * ignored.
+     */
+    private double countIgnoreLabelsAsGold(String label)
+    {
+        double ignoreLabelAsGold = 0.0; 
+        for (String ignoreLabel : ignoreLabels) {
+            ignoreLabelAsGold += confusionMatrix.getEntryCount(label, ignoreLabel);
+        }
+        return ignoreLabelAsGold;
     }
 
     /**
@@ -108,8 +124,9 @@ public class EvaluationResult
     public double computePrecisionScore()
     {
         // precision divides tp by (tp + fp) i.e num of instances predicted as the goldlabel
-        return calcMetricAverage((goldLabel, predictedLabel) -> confusionMatrix
-                .getEntryCount(goldLabel, predictedLabel));
+        return calcMetricAverage((goldLabel, predictedLabel) -> 
+                    ignoreLabels.contains(predictedLabel) ? 0.0 :
+                        confusionMatrix.getEntryCount(goldLabel, predictedLabel));
     }
 
     /**
@@ -120,8 +137,9 @@ public class EvaluationResult
     public double computeRecallScore()
     {
         // recall divides tp by (tp + fn) i.e num of instances that are the goldlabel
-        return calcMetricAverage((goldLabel, predictedLabel) -> confusionMatrix
-                .getEntryCount(predictedLabel, goldLabel));
+        return calcMetricAverage((goldLabel, predictedLabel) -> 
+                    ignoreLabels.contains(goldLabel) ? 0.0 : 
+                        confusionMatrix.getEntryCount(predictedLabel, goldLabel));
     }
 
     /**
@@ -136,7 +154,9 @@ public class EvaluationResult
         if (numOfLabels > 0) {
             Set<String> labels = confusionMatrix.getLabels();
             for (String label : labels) {
-                double tp = confusionMatrix.getEntryCount(label, label);
+                double tp = 0.0;
+                if (!ignoreLabels.contains(label))
+                    tp = confusionMatrix.getEntryCount(label, label);
                 double numIsLabel = 0.0;
                 for (String predictedLabel : labels) {
                     numIsLabel += countFunction.applyAsDouble(label, predictedLabel);
@@ -254,11 +274,8 @@ public class EvaluationResult
         @Override
         public BiConsumer<ConfusionMatrix, LabelPair> accumulator()
         {
-            return (confMatrix, pair) -> {
-                if (!ignoreLabels.contains(pair.getGoldLabel())) {
-                    confMatrix.incrementCounts(pair.getPredictedLabel(), pair.getGoldLabel());
-                }
-            };
+            return (confMatrix, pair) -> confMatrix.incrementCounts(pair.getPredictedLabel(),
+                    pair.getGoldLabel());
         }
 
         @Override

@@ -214,20 +214,16 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
-        List<LabelPair> predictions = new ArrayList<>();
+        List<LabelPair> labelPairs = new ArrayList<>();
         for (POSSample sample : testSet) {
             String[] predictedTags = tagger.tag(sample.getSentence());
             String[] goldTags = sample.getTags();
             for (int i = 0; i < predictedTags.length; i++) {
-                // ignore PAD gold annotations  (i.e. no real gold annotations) during evaluation
-                // use instance comparison to not confuse with possible user PAD label
-                if (goldTags[i] != PAD) {
-                    predictions.add(new LabelPair(goldTags[i], predictedTags[i]));
-                }
+                labelPairs.add(new LabelPair(goldTags[i], predictedTags[i]));
             }
         }
 
-        return predictions.stream().collect(EvaluationResult
+        return labelPairs.stream().collect(EvaluationResult
                 .collector(trainingSetSize, testSetSize, PAD));
     }
 

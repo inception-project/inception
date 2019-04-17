@@ -259,11 +259,11 @@ public class StringMatchingRecommender
                     }
                 }
                 Optional<Span> coveringSpan = sample.getCoveringSpan(begin, end);
-                // check there is a gold label here
+                String goldLabel = NO_LABEL;
                 if (coveringSpan.isPresent()) {
-                    String goldLabel = coveringSpan.get().getLabel();
-                    labelPairs.add(new LabelPair(goldLabel, predictedLabel));
+                    goldLabel = coveringSpan.get().getLabel();
                 }
+                labelPairs.add(new LabelPair(goldLabel, predictedLabel));
             }
         }
 
