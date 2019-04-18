@@ -215,8 +215,14 @@ async function displayViewer () {
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
     window.pageRender = 1;
-    getAnnotations()
 
+// BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
+    let initAnnotations = function(e) {
+      getAnnotations()
+      document.removeEventListener('pagerendered', initAnnotations)
+    }
+    document.addEventListener('pagerendered', initAnnotations)
+// END INCEpTION EXTENSION - #1089
     document.addEventListener('pagechange', function(e) {
       pagechangeEventCounter++
       if (e.pageNumber !== window.pageRender) {
@@ -230,7 +236,7 @@ async function displayViewer () {
         }, renderTimeout)
       }
     })
-// END INCEpTION EXTENSION
+// END INCEpTION EXTENSION - #802
 
   } catch (err) {
 
