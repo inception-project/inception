@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.conceptlinking.service.feature;
+package de.tudarmstadt.ukp.inception.conceptlinking.feature;
 
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 
