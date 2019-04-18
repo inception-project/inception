@@ -355,19 +355,17 @@ public class RecommenderEditorPanel
         if (recommenderModel.getObject() == null || aToolModel.getObject() == null) {
             return;
         }
-        else {
-            Recommender recommender = recommenderModel.getObject();
-            // check if recommender and layer still match
-            RecommendationEngineFactory factory = recommenderRegistry
-                    .getFactory(aToolModel.getObject().getKey());
-            if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                error(String.format("Recommender %s configured with invalid layer or feature.",
-                        recommender.getName()));
-                Optional<AjaxRequestTarget> target = RequestCycle.get()
-                        .find(AjaxRequestTarget.class);
-                if (target.isPresent()) {
-                    target.get().addChildren(getPage(), IFeedback.class);
-                }
+        
+        Recommender recommender = recommenderModel.getObject();
+        // check if recommender and layer still match
+        RecommendationEngineFactory factory = recommenderRegistry
+                .getFactory(aToolModel.getObject().getKey());
+        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+            error(String.format("Recommender %s configured with invalid layer or feature.",
+                    recommender.getName()));
+            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target.isPresent()) {
+                target.get().addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -378,14 +376,10 @@ public class RecommenderEditorPanel
                 || aRecommender.getTool() == null) {
             return null;
         }
-        else {
-            RecommendationEngineFactory factory = recommenderRegistry
-                    .getFactory(aRecommender.getTool());
-            return String.format(Locale.US, "[%s@%s] %s",
-                    aRecommender.getLayer().getUiName(),
-                    aRecommender.getFeature().getUiName(), 
-                    factory.getName());
-        }
+        RecommendationEngineFactory factory = recommenderRegistry
+                .getFactory(aRecommender.getTool());
+        return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
+                aRecommender.getFeature().getUiName(), factory.getName());
     }
     
     @Override
@@ -465,9 +459,7 @@ public class RecommenderEditorPanel
                 .map(f -> Pair.of(f.getId(), f.getName()))
                 .collect(Collectors.toList());
         }
-        else {
-            return Collections.emptyList();
-        }
+        return Collections.emptyList();
     }
 
     private void actionSave(AjaxRequestTarget aTarget)
