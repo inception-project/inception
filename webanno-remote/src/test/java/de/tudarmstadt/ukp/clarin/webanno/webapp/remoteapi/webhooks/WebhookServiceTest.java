@@ -32,11 +32,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.security.SecurityAutoConfiguration;
-import org.springframework.boot.context.embedded.EmbeddedWebApplicationContext;
-import org.springframework.boot.context.embedded.LocalServerPort;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -66,7 +65,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.webhooks.json.ProjectS
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class WebhookServiceTest
 {
-    private @Autowired EmbeddedWebApplicationContext server;
     private @LocalServerPort int port;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired WebhooksConfiguration webhooksConfiguration;
@@ -164,12 +162,6 @@ public class WebhookServiceTest
         public ApplicationContextProvider contextProvider()
         {
             return new ApplicationContextProvider();
-        }
-        
-        @Bean
-        public WebhooksConfiguration webhooksConfiguration()
-        {
-            return new WebhooksConfiguration();
         }
     }
 }

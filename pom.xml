@@ -60,26 +60,26 @@
     <uima.version>2.10.3</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
     <spring.version>5.1.5.RELEASE </spring.version>
-    <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.10.RELEASE</spring.security.version>
+    <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.1.5.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
     <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.7</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>2.0.4</wicket-jquery-selectors.version>
-    <wicket-webjars.version>2.0.11</wicket-webjars.version>    
+    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>2.0.9</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>2.0.5</wicket-jquery-selectors.version>
+    <wicket-webjars.version>2.0.14</wicket-webjars.version>    
     <wicket-spring-boot.version>2.1.5</wicket-spring-boot.version>
-    <hibernate.version>5.3.7.Final</hibernate.version>
+    <hibernate.version>5.3.10.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.10.0</dkpro.version>
-    <springfox.version>2.7.0</springfox.version>
+    <springfox.version>2.9.2</springfox.version>
     <batik.version>1.9.1</batik.version>
     <json.version>20180130</json.version>
-    <mockito.version>2.23.4</mockito.version>
-    <assertj.version>3.11.1</assertj.version>
+    <mockito.version>2.27.0</mockito.version>
+    <assertj.version>3.12.2</assertj.version>
   </properties>
   <repositories>
     <repository>
@@ -729,6 +729,11 @@
         <version>5.3.5.Final</version>
       </dependency>
       <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>2.0.1.Final</version>
+      </dependency>
+      <dependency>
         <groupId>javax.persistence</groupId>
         <artifactId>javax.persistence-api</artifactId>
         <version>2.2</version>
@@ -741,7 +746,7 @@
       <dependency>
         <groupId>net.bytebuddy</groupId>
         <artifactId>byte-buddy</artifactId>
-        <version>1.8.17</version>
+        <version>1.9.12</version>
       </dependency>
 
       <!-- SPRING -->

@@ -50,13 +50,6 @@
       class="de.tudarmstadt.ukp.clarin.webanno.api.dao.migration.FixAttachFeature330"
       lazy-init="false"></bean>
 
-  <bean id="passwordEncoder" 
-        class="org.springframework.security.crypto.password.StandardPasswordEncoder" />
-
-  <beans profile="auto-mode-builtin">
-    <import resource="security-context.xml"/>
-  </beans>
-  
   <beans profile="auto-mode-preauth">
     <import resource="preAuthSecurity-context.xml"/>
   </beans>
