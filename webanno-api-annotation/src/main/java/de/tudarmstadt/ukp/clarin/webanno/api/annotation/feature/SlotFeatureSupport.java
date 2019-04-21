@@ -28,7 +28,6 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -204,7 +203,7 @@ public class SlotFeatureSupport
     }
     
     @Override
-    public void setFeatureValue(JCas aJcas, AnnotationFeature aFeature, int aAddress, Object aValue)
+    public void setFeatureValue(CAS aCas, AnnotationFeature aFeature, int aAddress, Object aValue)
     {
         if (
                 aValue instanceof List &&
@@ -226,7 +225,7 @@ public class SlotFeatureSupport
             }
         }
         
-        FeatureSupport.super.setFeatureValue(aJcas, aFeature, aAddress, aValue);
+        FeatureSupport.super.setFeatureValue(aCas, aFeature, aAddress, aValue);
     }
     
     @Override

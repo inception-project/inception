@@ -15,25 +15,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -48,19 +44,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
 public abstract class AnnotationPageBase
     extends ApplicationPageBase
@@ -69,15 +60,12 @@ public abstract class AnnotationPageBase
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserPreferencesService userPreferenceService;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
-    private NumberTextField<Integer> gotoPageTextField;
-    private Label numberOfPages;
-    
-    protected AnnotationPageBase()
+
+    public AnnotationPageBase()
     {
         super();
     }
@@ -107,37 +95,6 @@ public abstract class AnnotationPageBase
     {
         return (AnnotatorState) getDefaultModelObject();
     }
-    
-    protected Label getOrCreatePositionInfoLabel()
-    {
-        if (numberOfPages == null) {
-            numberOfPages = new Label("numberOfPages",
-                    new StringResourceModel("PositionInfo.text", this).setModel(getModel())
-                            .setParameters(
-                                    PropertyModel.of(getModel(), "firstVisibleUnitIndex"),
-                                    PropertyModel.of(getModel(), "lastVisibleUnitIndex"),
-                                    PropertyModel.of(getModel(), "unitCount"),
-                                    LambdaModel.of(() -> getModelObject().getDocumentIndex() + 1),
-                                    PropertyModel.of(getModel(), "numberOfDocuments")))
-            {
-                private static final long serialVersionUID = 7176610419683776917L;
-
-                {
-                    setOutputMarkupId(true);
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    
-                    setVisible(getModelObject().getDocument() != null);
-                }
-            };
-        }
-        return numberOfPages;
-    }    
     
     protected ChallengeResponseDialog createOrGetResetDocumentDialog()
     {
@@ -185,38 +142,6 @@ public abstract class AnnotationPageBase
         actionLoadDocument(aTarget);
     }
 
-    protected void actionShowPreviousPage(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        JCas jcas = getEditorCas();
-        getModelObject().moveToPreviousPage(jcas);
-        actionRefreshDocument(aTarget);
-    }
-
-    protected void actionShowNextPage(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        JCas jcas = getEditorCas();
-        getModelObject().moveToNextPage(jcas);
-        actionRefreshDocument(aTarget);
-    }
-
-    protected void actionShowFirstPage(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        JCas jcas = getEditorCas();
-        getModelObject().moveToFirstPage(jcas);
-        actionRefreshDocument(aTarget);
-    }
-
-    protected void actionShowLastPage(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        JCas jcas = getEditorCas();
-        getModelObject().moveToLastPage(jcas);
-        actionRefreshDocument(aTarget);
-    }
-    
     protected void actionResetDocument(AjaxRequestTarget aTarget)
         throws Exception
     {
@@ -243,35 +168,6 @@ public abstract class AnnotationPageBase
     }
     
     /**
-     * Show the next document if it exists, starting in a certain token position
-     */
-    @Deprecated
-    public void actionShowSelectedDocumentByTokenPosition(AjaxRequestTarget aTarget,
-            SourceDocument aDocument, int aTokenNumber)
-        throws IOException
-    {
-        actionShowSelectedDocument(aTarget, aDocument);
-
-        AnnotatorState state = getModelObject();
-
-        JCas jCas = getEditorCas();
-
-        Collection<Token> tokenCollection = JCasUtil.select(jCas, Token.class);
-        Token[] tokens = tokenCollection.toArray(new Token[tokenCollection.size()]);
-
-        int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas,
-                tokens[aTokenNumber].getBegin());
-        Sentence sentence = WebAnnoCasUtil.getSentence(jCas, tokens[aTokenNumber].getBegin());
-
-        getGotoPageTextField().setModelObject(sentenceNumber);
-
-        state.setFirstVisibleUnit(sentence);
-        state.setFocusUnitIndex(sentenceNumber);
-
-        actionRefreshDocument(aTarget);
-    }
-
-    /**
      * Show the next document if it exists, starting in a certain begin offset
      */
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
@@ -286,14 +182,9 @@ public abstract class AnnotationPageBase
         // then there is no need to change the screen contents
         if (switched || !(state.getWindowBeginOffset() <= aBegin
                 && aEnd <= state.getWindowEndOffset())) {
-            JCas jCas = getEditorCas();
-            int sentenceNumber = WebAnnoCasUtil.getSentenceNumber(jCas, aBegin);
-            Sentence sentence = WebAnnoCasUtil.getSentence(jCas, aBegin);
-
-            getGotoPageTextField().setModelObject(sentenceNumber);
-
-            state.setFirstVisibleUnit(sentence);
-            state.setFocusUnitIndex(sentenceNumber);
+            CAS cas = getEditorCas();
+            state.setFirstVisibleUnit(selectSentenceCovering(cas, aBegin));
+            state.setFocusUnitIndex(getSentenceNumber(cas, aBegin));
         }
         
         actionRefreshDocument(aTarget);
@@ -308,37 +199,11 @@ public abstract class AnnotationPageBase
         }
     }
 
-    protected abstract NumberTextField<Integer> getGotoPageTextField();
-    
     protected abstract List<SourceDocument> getListOfDocs();
 
-    protected abstract JCas getEditorCas() throws IOException;
+    public abstract CAS getEditorCas() throws IOException;
     
-    public void writeEditorCas(JCas aJCas) throws IOException
-    {
-        AnnotatorState state = getModelObject();
-        if (state.getMode().equals(Mode.ANNOTATION) || state.getMode().equals(Mode.AUTOMATION)
-                || state.getMode().equals(Mode.CORRECTION)) {
-            documentService.writeAnnotationCas(aJCas, state.getDocument(), state.getUser(), true);
-
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
-        }
-        else if (state.getMode().equals(Mode.CURATION)) {
-            curationDocumentService.writeCurationCas(aJCas, state.getDocument(), true);
-
-            // Update timestamp in state
-            Optional<Long> diskTimestamp = curationDocumentService
-                    .getCurationCasTimestamp(state.getDocument());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
-        }
-    }
+    public abstract void writeEditorCas(CAS aCas) throws IOException;
     
     /**
      * Open a document or to a different document. This method should be used only the first time
@@ -352,19 +217,19 @@ public abstract class AnnotationPageBase
      * This method should be used while the editing process is ongoing. It does not upgrade the CAS
      * and it does not reset the annotator state.
      */
-    protected abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
+    public abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
 
     /**
      * Checks if all required features on all annotations are set. If a required feature value is
      * missing, then the method scrolls to that location and schedules a re-rendering. In such
      * a case, an {@link IllegalStateException} is thrown.
      */
-    protected void validateRequiredFeatures(AjaxRequestTarget aTarget, JCas aJcas,
+    protected void validateRequiredFeatures(AjaxRequestTarget aTarget, CAS aCas,
             TypeAdapter aAdapter)
     {
         AnnotatorState state = getModelObject();
         
-        CAS editorCas = aJcas.getCas();
+        CAS editorCas = aCas;
         AnnotationLayer layer = aAdapter.getLayer();
         List<AnnotationFeature> features = annotationService.listAnnotationFeature(layer);
         
@@ -379,7 +244,7 @@ public abstract class AnnotationPageBase
                 if (WebAnnoCasUtil.isRequiredFeatureMissing(f, fs)) {
                     // Find the sentence that contains the annotation with the missing
                     // required feature value
-                    Sentence s = WebAnnoCasUtil.getSentence(aJcas, fs.getBegin());
+                    AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
                     // Put this sentence into the focus
                     state.setFirstVisibleUnit(s);
                     actionRefreshDocument(aTarget);
@@ -394,7 +259,7 @@ public abstract class AnnotationPageBase
         }
     }
     
-    protected void actionValidateDocument(AjaxRequestTarget aTarget, JCas aJCas)
+    protected void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {
@@ -411,16 +276,16 @@ public abstract class AnnotationPageBase
             
             TypeAdapter adapter = annotationService.getAdapter(layer);
             
-            validateRequiredFeatures(aTarget, aJCas, adapter);
+            validateRequiredFeatures(aTarget, aCas, adapter);
             
-            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aJCas);
+            List<Pair<LogMessage, AnnotationFS>> messages = adapter.validate(aCas);
             if (!messages.isEmpty()) {
                 LogMessage message = messages.get(0).getLeft();
                 AnnotationFS fs = messages.get(0).getRight();
                 
                 // Find the sentence that contains the annotation with the missing
                 // required feature value and put this sentence into the focus
-                Sentence s = WebAnnoCasUtil.getSentence(aJCas, fs.getBegin());
+                AnnotationFS s = WebAnnoCasUtil.selectSentenceCovering(aCas, fs.getBegin());
                 state.setFirstVisibleUnit(s);
                 actionRefreshDocument(aTarget);
                 

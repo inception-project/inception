@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -89,10 +88,10 @@ public class CurationDocumentServiceImpl
     @Override
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
     @Transactional
-    public void writeCurationCas(JCas aJcas, SourceDocument aDocument, boolean aUpdateTimestamp)
+    public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aJcas, CURATION_USER);
+        casStorageService.writeCas(aDocument, aCas, CURATION_USER);
         if (aUpdateTimestamp) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);
@@ -100,7 +99,7 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    public JCas readCurationCas(SourceDocument aDocument)
+    public CAS readCurationCas(SourceDocument aDocument)
         throws IOException
     {
         return casStorageService.readCas(aDocument, CURATION_USER);

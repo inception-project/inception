@@ -51,19 +51,19 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
 import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
 
-public class DiffUtils
+public class DiffTestUtils
 {
 
     public static final String HOST_TYPE = "LinkHost";
     public static final String LINK_TYPE = "LinkType";
 
-    public static Map<String, List<JCas>> load(String... aPaths)
+    public static Map<String, List<CAS>> load(String... aPaths)
         throws UIMAException, IOException
     {
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         int n = 1;
         for (String path : aPaths) {
-            JCas cas = read(path);
+            CAS cas = read(path);
             casByUser.put("user" + n, asList(cas));
             n++;
         }
@@ -97,17 +97,17 @@ public class DiffUtils
         return casByUser;
     }
 
-    public static JCas read(String aPath)
+    public static CAS read(String aPath)
         throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2006Reader.class,
                 Conll2006Reader.PARAM_SOURCE_LOCATION, "src/test/resources/" + aPath);
 
-        JCas jcas = JCasFactory.createJCas();
+        CAS cas = JCasFactory.createJCas().getCas();
 
-        reader.getNext(jcas.getCas());
+        reader.getNext(cas);
 
-        return jcas;
+        return cas;
     }
 
     public static JCas readWebAnnoTSV(String aPath, TypeSystemDescription aType)
@@ -229,38 +229,38 @@ public class DiffUtils
         return type;
     }
 
-    public static void makeLinkHostFS(JCas aJCas, int aBegin, int aEnd, FeatureStructure... aLinks)
+    public static void makeLinkHostFS(JCas aCas, int aBegin, int aEnd, FeatureStructure... aLinks)
     {
-        Type hostType = aJCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
-        aJCas.getCas().addFsToIndexes(hostA1);
+                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
+        aCas.getCas().addFsToIndexes(hostA1);
     }
 
-    public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aJCas, int aBegin, int aEnd,
+    public static AnnotationFS makeLinkHostMultiSPanFeatureFS(JCas aCas, int aBegin, int aEnd,
             Feature aSpanFeature, String aValue, FeatureStructure... aLinks)
     {
-        Type hostType = aJCas.getTypeSystem().getType(HOST_TYPE);
-        AnnotationFS hostA1 = aJCas.getCas().createAnnotation(hostType, aBegin, aEnd);
+        Type hostType = aCas.getTypeSystem().getType(HOST_TYPE);
+        AnnotationFS hostA1 = aCas.getCas().createAnnotation(hostType, aBegin, aEnd);
         hostA1.setFeatureValue(hostType.getFeatureByBaseName("links"),
-                FSCollectionFactory.createFSArray(aJCas, asList(aLinks)));
+                FSCollectionFactory.createFSArray(aCas, asList(aLinks)));
         hostA1.setStringValue(aSpanFeature, aValue);
-        aJCas.getCas().addFsToIndexes(hostA1);
+        aCas.getCas().addFsToIndexes(hostA1);
         return hostA1;
     }
 
-    public static FeatureStructure makeLinkFS(JCas aJCas, String aSlotLabel, int aTargetBegin,
+    public static FeatureStructure makeLinkFS(JCas aCas, String aSlotLabel, int aTargetBegin,
             int aTargetEnd)
     {
-        Token token1 = new Token(aJCas, aTargetBegin, aTargetEnd);
+        Token token1 = new Token(aCas, aTargetBegin, aTargetEnd);
         token1.addToIndexes();
 
-        Type linkType = aJCas.getTypeSystem().getType(LINK_TYPE);
-        FeatureStructure linkA1 = aJCas.getCas().createFS(linkType);
+        Type linkType = aCas.getTypeSystem().getType(LINK_TYPE);
+        FeatureStructure linkA1 = aCas.getCas().createFS(linkType);
         linkA1.setStringValue(linkType.getFeatureByBaseName("role"), aSlotLabel);
         linkA1.setFeatureValue(linkType.getFeatureByBaseName("target"), token1);
-        aJCas.getCas().addFsToIndexes(linkA1);
+        aCas.getCas().addFsToIndexes(linkA1);
 
         return linkA1;
     }

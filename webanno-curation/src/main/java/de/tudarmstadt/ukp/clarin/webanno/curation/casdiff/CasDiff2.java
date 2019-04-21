@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -52,20 +52,19 @@ import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
-import org.apache.uima.jcas.cas.TOP;
+import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 
@@ -114,12 +113,12 @@ public class CasDiff2
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType,
+    public static DiffResult doDiff(Type aEntryType,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap)
+            Map<String, CAS> aCasMap)
     {
-        Map<String, List<JCas>> map2 = new LinkedHashMap<>();
-        for (Entry<String, JCas> e : aCasMap.entrySet()) {
+        Map<String, List<CAS>> map2 = new LinkedHashMap<>();
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
             map2.put(e.getKey(), asList(e.getValue()));
         }
         return doDiff(asList(aEntryType.getName()), aAdapters, aLinkCompareBehavior, map2);
@@ -138,11 +137,10 @@ public class CasDiff2
      *            a set of CASes, each associated with an ID
      * @return a diff result.
      */
-    public static <T extends TOP> DiffResult doDiff(Class<T> aEntryType, DiffAdapter aAdapter,
-            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<JCas>> aCasMap)
+    public static DiffResult doDiff(String aEntryType, DiffAdapter aAdapter,
+            LinkCompareBehavior aLinkCompareBehavior, Map<String, List<CAS>> aCasMap)
     {
-        return doDiff(asList(aEntryType.getName()), asList(aAdapter), aLinkCompareBehavior,
-                aCasMap);
+        return doDiff(asList(aEntryType), asList(aAdapter), aLinkCompareBehavior, aCasMap);
     }
 
     /**
@@ -158,13 +156,13 @@ public class CasDiff2
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, List<JCas>> aCasMap)
+            Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
             return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
         
-        List<JCas> casList = aCasMap.values().iterator().next();
+        List<CAS> casList = aCasMap.values().iterator().next();
         if (casList.isEmpty()) {
             return new DiffResult(new CasDiff2(0,0, aAdapters, aLinkCompareBehavior));
         }
@@ -192,7 +190,7 @@ public class CasDiff2
      */
     public static DiffResult doDiffSingle(AnnotationSchemaService aService, Project aProject,
             List<Type> aEntryTypes, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd)
+            Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
         List<DiffAdapter> adapters = CasDiff2.getAdapters(aService, aProject);
         
@@ -218,15 +216,15 @@ public class CasDiff2
      */
     public static DiffResult doDiffSingle(List<Type> aEntryTypes,
             Collection<? extends DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior,
-            Map<String, JCas> aCasMap, int aBegin, int aEnd)
+            Map<String, CAS> aCasMap, int aBegin, int aEnd)
     {
         List<String> entryTypes = new ArrayList<>();
         for (Type t : aEntryTypes) {
             entryTypes.add(t.getName());
         }
         
-        Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-        for (Entry<String, JCas> e : aCasMap.entrySet()) {
+        Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+        for (Entry<String, CAS> e : aCasMap.entrySet()) {
             casMap.put(e.getKey(), asList(e.getValue()));
         }
         
@@ -251,7 +249,7 @@ public class CasDiff2
      * @return a diff result.
      */
     public static DiffResult doDiff(List<String> aEntryTypes,
-            Collection<? extends DiffAdapter> aAdapters, Map<String, List<JCas>> aCasMap,
+            Collection<? extends DiffAdapter> aAdapters, Map<String, List<CAS>> aCasMap,
             int aBegin, int aEnd, LinkCompareBehavior aLinkCompareBehavior)
     {
         long startTime = System.currentTimeMillis();
@@ -260,12 +258,12 @@ public class CasDiff2
         
         CasDiff2 diff = new CasDiff2(aBegin, aEnd, aAdapters, aLinkCompareBehavior);
         
-        for (Entry<String, List<JCas>> e : aCasMap.entrySet()) {
+        for (Entry<String, List<CAS>> e : aCasMap.entrySet()) {
             int casId = 0;
-            for (JCas jcas : e.getValue()) {
+            for (CAS cas : e.getValue()) {
                 for (String type : aEntryTypes) {
                     // null elements in the list can occur if a user has never worked on a CAS
-                    diff.addCas(e.getKey(), casId, jcas != null ? jcas.getCas() : null, type);
+                    diff.addCas(e.getKey(), casId, cas != null ? cas : null, type);
                 }
                 casId++;
             }
@@ -279,7 +277,7 @@ public class CasDiff2
     /**
      * Sanity check - all CASes should have the same text.
      */
-    private static void sanityCheck(Map<String, List<JCas>> aCasMap)
+    private static void sanityCheck(Map<String, List<CAS>> aCasMap)
     {
         if (aCasMap.isEmpty()) {
             return;
@@ -289,15 +287,15 @@ public class CasDiff2
         boolean assertsEnabled = false;
         assert assertsEnabled = true; // Intentional side effect!
         if (assertsEnabled) {
-            Iterator<List<JCas>> i = aCasMap.values().iterator();
+            Iterator<List<CAS>> i = aCasMap.values().iterator();
             
-            List<JCas> ref = i.next();
+            List<CAS> ref = i.next();
             while (i.hasNext()) {
-                List<JCas> cur = i.next();
+                List<CAS> cur = i.next();
                 assert ref.size() == cur.size();
                 for (int n = 0; n < ref.size(); n++) {
-                    JCas refCas = ref.get(n);
-                    JCas curCas = cur.get(n);
+                    CAS refCas = ref.get(n);
+                    CAS curCas = cur.get(n);
                     // null elements in the list can occur if a user has never worked on a CAS
                     assert !(refCas != null && curCas != null)
                             || StringUtils.equals(refCas.getDocumentText(),
@@ -365,10 +363,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aCas);
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
-                
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aCas);
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
                 LOG.debug("User [" + collectionId + "] - Document [" + documentId + "]");
             }
             catch (IllegalArgumentException e) {
@@ -1274,7 +1271,8 @@ public class CasDiff2
         private FeatureStructure getRepresentative()
         {
             Entry<String, AID> e = fsAddresses.entrySet().iterator().next();
-            return selectByAddr(cases.get(e.getKey()).get(position.getCasId()), e.getValue().addr);
+            return selectFsByAddr(cases.get(e.getKey()).get(position.getCasId()),
+                    e.getValue().addr);
         }
 
         private AID getRepresentativeAID()
@@ -1293,38 +1291,38 @@ public class CasDiff2
             return fsAddresses.get(aCasGroupId);
         }
 
-        public <T extends FeatureStructure> T getFs(String aCasGroupId, int aCasId,
-                Class<T> aClass, Map<String, List<JCas>> aCasMap)
+        public <T extends FeatureStructure> FeatureStructure getFs(String aCasGroupId, int aCasId,
+                Class<T> aClass, Map<String, List<CAS>> aCasMap)
         {
             AID aid = fsAddresses.get(aCasGroupId);
             if (aid == null) {
                 return null;
             }
             
-            List<JCas> cases = aCasMap.get(aCasGroupId);
-            if (cases == null) {
+            List<CAS> casses = aCasMap.get(aCasGroupId);
+            if (casses == null) {
                 return null;
             }
             
-            JCas cas = cases.get(aCasId);
+            CAS cas = casses.get(aCasId);
             if (cas == null) {
                 return null;
             }
             
-            return selectByAddr(cas, aClass, aid.addr);
+            return selectFsByAddr(cas, aid.addr);
         }
 
         // FIXME aCasId parameter should not be required as we can get it from the position
         public FeatureStructure getFs(String aCasGroupId, int aCasId,
-                Map<String, List<JCas>> aCasMap)
+                Map<String, List<CAS>> aCasMap)
         {
             return getFs(aCasGroupId, aCasId, FeatureStructure.class, aCasMap);
         }
 
-        public FeatureStructure getFs(String aCasGroupId, Map<String, JCas> aCasMap)
+        public FeatureStructure getFs(String aCasGroupId, Map<String, CAS> aCasMap)
         {
-            Map<String, List<JCas>> casMap = new LinkedHashMap<>();
-            for (Entry<String, JCas> e : aCasMap.entrySet()) {
+            Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+            for (Entry<String, CAS> e : aCasMap.entrySet()) {
                 casMap.put(e.getKey(), asList(e.getValue()));
             }
             return getFs(aCasGroupId, 0, FeatureStructure.class, casMap);
@@ -1688,7 +1686,7 @@ public class CasDiff2
         public static final SpanDiffAdapter NER = new SpanDiffAdapter(NamedEntity.class.getName(),
                 "value");
         
-        public <T extends TOP> SpanDiffAdapter(Class<T> aType, String... aLabelFeatures)
+        public SpanDiffAdapter(Type aType, String... aLabelFeatures)
         {
             this(aType.getName(), new HashSet<>(asList(aLabelFeatures)));
         }
@@ -1712,9 +1710,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
             }
             catch (IllegalArgumentException e) {
                 // We use this information only for debugging - so we can ignore if the information
@@ -1742,7 +1740,7 @@ public class CasDiff2
         private String sourceFeature;
         private String targetFeature;
         
-        public <T extends TOP> ArcDiffAdapter(Class<T> aType, String aSourceFeature,
+        public ArcDiffAdapter(Type aType, String aSourceFeature,
                 String aTargetFeature, String... aLabelFeatures)
         {
             this(aType.getName(), aSourceFeature, aTargetFeature,
@@ -1786,9 +1784,9 @@ public class CasDiff2
             String collectionId = null;
             String documentId = null;
             try {
-                DocumentMetaData dmd = DocumentMetaData.get(aFS.getCAS());
-                collectionId = dmd.getCollectionId();
-                documentId = dmd.getDocumentId();
+                FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(aFS.getCAS());
+                collectionId = FSUtil.getFeature(dmd, "collectionId", String.class);
+                documentId = FSUtil.getFeature(dmd, "documentId", String.class);
             }
             catch (IllegalArgumentException e) {
                 // We use this information only for debugging - so we can ignore if the information

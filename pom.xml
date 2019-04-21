@@ -21,7 +21,7 @@
   <parent>
     <groupId>org.dkpro</groupId>
     <artifactId>dkpro-parent-pom</artifactId>
-    <version>20</version>
+    <version>22</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
@@ -58,7 +58,7 @@
   <properties>
     <jackson.version>2.9.8</jackson.version>
     <uima.version>3.0.2</uima.version>
-    <uimafit.version>3.0.0-SNAPSHOT</uimafit.version>
+    <uimafit.version>3.0.0</uimafit.version>
     <spring.version>5.1.5.RELEASE </spring.version>
     <spring.boot.version>1.5.19.RELEASE</spring.boot.version>
     <spring.security.version>4.2.10.RELEASE</spring.security.version>

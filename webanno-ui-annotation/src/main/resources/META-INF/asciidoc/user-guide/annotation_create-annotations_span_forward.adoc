@@ -42,8 +42,8 @@ annotation and moves on. Otherwise the current annotation is removed if the feat
 
 Press *ENTER* to complete the annotation and to move on to the next token. In the general case, 
 a new annotation is created on the next token and it is loaded into the feature editor. However, 
-if stacking is disabled and if there is already an annotation on that token, this would naturally
-fail. In this case, no new annotation is created and instead an existing annotation is opened for
+if stacking or overlapping annotations not permitted and if there is already an annotation on that
+token, this would naturally fail. In this case, no new annotation is created and instead an existing annotation is opened for
 editing. 
 
 image::key_binding_POS.png[align="center"]

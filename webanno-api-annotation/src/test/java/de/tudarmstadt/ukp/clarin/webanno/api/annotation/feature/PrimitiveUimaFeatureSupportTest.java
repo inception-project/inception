@@ -79,7 +79,8 @@ public class PrimitiveUimaFeatureSupportTest
         when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
         
         assertThatExceptionOfType(IllegalArgumentException.class)
-            .isThrownBy(() -> sut.setFeatureValue(jcas, valueFeature, getAddr(spanFS), tag))
+            .isThrownBy(() -> sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), 
+                    tag))
             .withMessageContaining("is not in the tag list");
     }
     
@@ -93,7 +94,7 @@ public class PrimitiveUimaFeatureSupportTest
         
         when(schemaService.existsTag(tag, valueTagset)).thenReturn(false);
         
-        sut.setFeatureValue(jcas, valueFeature, getAddr(spanFS), tag);
+        sut.setFeatureValue(jcas.getCas(), valueFeature, getAddr(spanFS), tag);
         
         verify(schemaService).createTag(new Tag(valueTagset, tag));
     }

@@ -199,9 +199,9 @@ public class ValuesGenerator
 
     }
 
-    public static List<AnnotationFS> selectAt(CAS aJcas, final Type type, int aBegin, int aEnd)
+    public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
     {
-        List<AnnotationFS> covered = CasUtil.selectCovered(aJcas, type, aBegin, aEnd);
+        List<AnnotationFS> covered = CasUtil.selectCovered(aCas, type, aBegin, aEnd);
 
         // Remove all that do not have the exact same offset
         covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));

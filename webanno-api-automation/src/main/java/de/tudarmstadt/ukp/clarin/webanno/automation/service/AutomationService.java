@@ -22,8 +22,8 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
-import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
@@ -77,7 +77,7 @@ public interface AutomationService
     void removeTrainingDocument(TrainingDocument aDocument)
         throws IOException;
     
-    JCas readTrainingAnnotationCas(TrainingDocument trainingAnnotationDocument)
+    CAS readTrainingAnnotationCas(TrainingDocument trainingAnnotationDocument)
             throws IOException;
     
     void createTrainingDocument(TrainingDocument document) throws IOException;
@@ -176,13 +176,13 @@ public interface AutomationService
     AutomationStatus getAutomationStatus(MiraTemplate template);
     
     
-    JCas createInitialCas(TrainingDocument aDocument)
+    CAS createInitialCas(TrainingDocument aDocument)
         throws UIMAException, IOException, ClassNotFoundException;
     File getTrainingDocumentFile(TrainingDocument aDocument);
-    JCas readInitialCas(TrainingDocument aDocument)
+    CAS readInitialCas(TrainingDocument aDocument)
         throws CASException, ResourceInitializationException, IOException;
     
-    JCas createOrReadInitialCas(TrainingDocument aDocument)
+    CAS createOrReadInitialCas(TrainingDocument aDocument)
         throws IOException, UIMAException, ClassNotFoundException;
     boolean existsInitialCas(TrainingDocument aDocument)
             throws IOException;

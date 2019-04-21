@@ -17,6 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SENTENCES;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -41,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
@@ -89,15 +95,15 @@ public class LayerExporterTest
     private List<AnnotationLayer> layers()
     {
         AnnotationLayer layer1 = new AnnotationLayer("webanno.custom.Span", "Span",
-                WebAnnoConst.SPAN_TYPE, project, false, AnchoringMode.SINGLE_TOKEN);
+                SPAN_TYPE, project, false, SINGLE_TOKEN, NO_OVERLAP);
         layer1.setValidationMode(ValidationMode.ALWAYS);
 
         AnnotationLayer layer2 = new AnnotationLayer("webanno.custom.Span2", "Span2",
-                WebAnnoConst.SPAN_TYPE, project, false, AnchoringMode.SENTENCES);
+                SPAN_TYPE, project, false, SENTENCES, NO_OVERLAP);
         layer2.setValidationMode(ValidationMode.NEVER);
 
         AnnotationLayer layer3 = new AnnotationLayer("webanno.custom.Relation", "Relation",
-                WebAnnoConst.RELATION_TYPE, project, true, AnchoringMode.TOKENS);
+                RELATION_TYPE, project, true, TOKENS, ANY_OVERLAP);
         
         return asList(layer1, layer2, layer3);
     }

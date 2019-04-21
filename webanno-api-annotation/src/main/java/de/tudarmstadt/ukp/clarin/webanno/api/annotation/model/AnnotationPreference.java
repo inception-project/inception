@@ -57,8 +57,6 @@ public class AnnotationPreference
     
     private int windowSize;
 
-    private int curationWindowSize = 10;
-
     private boolean scrollPage = true;
     
     // if a default layer is to be set
@@ -126,24 +124,7 @@ public class AnnotationPreference
     {
         windowSize = aWindowSize;
     }
-
-    /**
-     * Get the number of sentences curation window display at the left side.
-     */
-    public int getCurationWindowSize()
-    {
-        return curationWindowSize;
-    }
-
-    /**
-     * set the number of sentences curation window display at the left side
-     *
-     */
-    public void setCurationWindowSize(int curationWindowSize)
-    {
-        this.curationWindowSize = curationWindowSize;
-    }
-
+    
     /**
      * Used to enable/disable auto-scrolling while annotation
      */

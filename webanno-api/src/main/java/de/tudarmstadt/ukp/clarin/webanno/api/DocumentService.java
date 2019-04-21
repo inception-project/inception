@@ -27,7 +27,7 @@ import java.util.Optional;
 import javax.persistence.NoResultException;
 
 import org.apache.uima.UIMAException;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -195,15 +195,15 @@ public interface DocumentService
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param annotationDocument
      *            the annotation document.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, AnnotationDocument annotationDocument,
+    void writeAnnotationCas(CAS aCas, AnnotationDocument annotationDocument,
             boolean aUpdateTimestamp)
         throws IOException;
     
@@ -212,8 +212,8 @@ public interface DocumentService
      * webanno.home/project/Project.id/document/document.id/annotation/username.ser. annotated
      * documents are stored per project, user and document
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param document
      *            the source document.
      * @param user
@@ -222,7 +222,7 @@ public interface DocumentService
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeAnnotationCas(JCas jCas, SourceDocument document, User user, boolean aUpdateTimestamp)
+    void writeAnnotationCas(CAS aCas, SourceDocument document, User user, boolean aUpdateTimestamp)
         throws IOException;
 
     /**
@@ -267,7 +267,7 @@ public interface DocumentService
     boolean existsAnnotationDocument(SourceDocument document, String aUsername);
 
     /**
-     * check if the JCAS for the {@link User} and {@link SourceDocument} in this {@link Project}
+     * check if the CAS for the {@link User} and {@link SourceDocument} in this {@link Project}
      * exists It is important as {@link AnnotationDocument} entry can be populated as
      * {@link AnnotationDocumentState#NEW} from the MonitoringPage before the user actually open the
      * document for annotation.
@@ -329,11 +329,11 @@ public interface DocumentService
      *
      * @param annotationDocument
      *            the annotation document.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
-    JCas readAnnotationCas(AnnotationDocument annotationDocument)
+    CAS readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
@@ -348,7 +348,7 @@ public interface DocumentService
      *            the source document.
      * @param user
      *            the user.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      * @deprecated use {@link #createOrGetAnnotationDocument(SourceDocument, User)} and
@@ -357,7 +357,7 @@ public interface DocumentService
      *             {@link #readAnnotationCas(SourceDocument, String)}
      */
     @Deprecated
-    JCas readAnnotationCas(SourceDocument document, User user)
+    CAS readAnnotationCas(SourceDocument document, User user)
         throws IOException;
 
     /**
@@ -368,11 +368,11 @@ public interface DocumentService
      *            the source document.
      * @param userName
      *            the username.
-     * @return the JCas.
+     * @return the CAS.
      * @throws IOException
      *             if there was an I/O error.
      */
-    JCas readAnnotationCas(SourceDocument document, String userName)
+    CAS readAnnotationCas(SourceDocument document, String userName)
         throws IOException;
 
     /**
@@ -384,7 +384,7 @@ public interface DocumentService
      * @throws IOException
      *             if there was a problem loading the CAS.
      */
-    JCas createOrReadInitialCas(SourceDocument aDocument)
+    CAS createOrReadInitialCas(SourceDocument aDocument)
         throws IOException;
 
     /**

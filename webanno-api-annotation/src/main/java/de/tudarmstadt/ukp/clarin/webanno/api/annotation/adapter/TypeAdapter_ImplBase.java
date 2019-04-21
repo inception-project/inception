@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.util.Collection;
 import java.util.List;
@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.jcas.JCas;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -78,14 +78,14 @@ public abstract class TypeAdapter_ImplBase
     }
     
     @Override
-    public void setFeatureValue(SourceDocument aDocument, String aUsername, JCas aJcas,
+    public void setFeatureValue(SourceDocument aDocument, String aUsername, CAS aCas,
             int aAddress, AnnotationFeature aFeature, Object aValue)
     {
-        FeatureStructure fs = selectByAddr(aJcas, FeatureStructure.class, aAddress);
+        FeatureStructure fs = selectFsByAddr(aCas, aAddress);
 
         Object oldValue = getValue(fs, aFeature);
         
-        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aJcas, aFeature,
+        featureSupportRegistry.getFeatureSupport(aFeature).setFeatureValue(aCas, aFeature,
                 aAddress, aValue);
 
         Object newValue = getValue(fs, aFeature);

@@ -921,33 +921,9 @@ public class MonitoringPage
                 SourceDocument document = documentService.getSourceDocument(project,
                         value.substring(value.indexOf(":") + 1));
                 SourceDocumentState state = document.getState();
-                // #770 - Disable per-document progress on account of slowing down monitoring page
-//                if (iconNameForState.equals(AnnotationDocumentState.IN_PROGRESS.toString())
-//                        && document.getSentenceAccessed() != 0) {
-//                    JCas jCas = null;
-//                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
-//                                user);                
-//                    }
-//                    catch (UIMAException e) {
-//                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
-//                    }
-//                    catch (ClassNotFoundException e) {
-//                        LOG.info(e.getMessage());
-//                    }
-//                    catch (IOException e) {
-//                        LOG.info(e.getMessage());
-//                    }
-//                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                   aCellItem.add(new Label(componentId, document.getSentenceAccessed() + "/"
-//                            + totalSN));
-//                }
-//                else {
-                
                 EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
                 icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
                 aCellItem.add(icon);
-//                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
                 {
@@ -1005,33 +981,9 @@ public class MonitoringPage
                     documentService.createAnnotationDocument(annotationDocument);
                 }
 
-                // if state is in progress, add the last sentence number accessed
-                // #770 - Disable per-document progress on account of slowing down monitoring page
-//                if (annoDoc != null && (annoDoc.getSentenceAccessed() != 0)
-//                        && annoDoc.getState().equals(AnnotationDocumentState.IN_PROGRESS)) {
-//                    JCas jCas = null;
-//                    try {
-//                        jCas = projectRepositoryService.readJCas(document, document.getProject(),
-//                                annotator);
-//                    }
-//                    catch (UIMAException e) {
-//                        LOG.info(ExceptionUtils.getRootCauseMessage(e));
-//                    }
-//                    catch (ClassNotFoundException e) {
-//                        LOG.info(e.getMessage());
-//                    }
-//                    catch (IOException e) {
-//                        LOG.info(e.getMessage());
-//                    }
-//                   int totalSN = BratAjaxCasUtil.getNumberOfPages(jCas);
-//                   aCellItem.add(new Label(componentId, annoDoc.getSentenceAccessed() + 
-//                           "/" + totalSN));
-//                }
-//                else {
                 EmbeddableImage icon = new EmbeddableImage(componentId, ICONS.get(state));
                 icon.add(new AttributeAppender("style", "cursor: pointer", ";"));
                 aCellItem.add(icon);
-//                }
                 aCellItem.add(AttributeModifier.append("class", "centering"));
                 aCellItem.add(new AjaxEventBehavior("click")
                 {

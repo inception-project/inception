@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 
 public class TypeSystemAnalysis
 {
@@ -200,7 +201,7 @@ public class TypeSystemAnalysis
         
         // We cannot determine good values for these without looking at actual annotations, thus
         // we choose the most relaxed/permissive configuration here.
-        layer.setAllowStacking(true);
+        layer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         layer.setCrossSentence(true);
         layer.setAnchoringMode(AnchoringMode.CHARACTERS);
         layer.setLinkedListBehavior(false);

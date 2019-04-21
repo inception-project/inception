@@ -18,7 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -37,7 +38,6 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -82,7 +82,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -206,7 +205,7 @@ public class AnnotationFeatureForm
     {
         Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
-                return String.valueOf(WebAnnoCasUtil.selectByAddr(editorPanel.getEditorCas(),
+                return String.valueOf(selectFsByAddr(editorPanel.getEditorCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
             catch (IOException e) {
@@ -276,34 +275,34 @@ public class AnnotationFeatureForm
         
         // If "remember layer" is set, the we really just update the selected layer...
         // we do not touch the selected annotation not the annotation detail panel
-        if (state.getPreferences().isRememberLayer()) {
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-        }
-        // If "remember layer" is not set, then changing the layer means that we
-        // want to change the type of the currently selected annotation
-        else if (!Objects.equals(state.getSelectedAnnotationLayer(), 
-                state.getDefaultAnnotationLayer())
-            && state.getSelection().getAnnotation().isSet()) {
-            try {
-                if (state.getSelection().isArc()) {
-                    editorPanel.actionClear(aTarget);
+        if (!state.getPreferences().isRememberLayer()) {
+
+            // If "remember layer" is not set, then changing the layer means that we
+            // want to change the type of the currently selected annotation
+            if (!Objects
+                    .equals(state.getSelectedAnnotationLayer(), state.getDefaultAnnotationLayer())
+                    && state.getSelection().getAnnotation().isSet()) {
+                try {
+                    if (state.getSelection().isArc()) {
+                        editorPanel.actionClear(aTarget);
+                    }
+                    else {
+                        actionReplace(aTarget);
+                    }
                 }
-                else {
-                    actionReplace(aTarget);
+                catch (Exception e) {
+                    handleException(this, aTarget, e);
                 }
             }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
+            // If no annotation is selected, then prime the annotation detail panel for the new type
+            else {
+                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
+                selectedAnnotationLayer.setDefaultModelObject(
+                        Optional.ofNullable(state.getDefaultAnnotationLayer())
+                                .map(AnnotationLayer::getUiName).orElse(null));
+                aTarget.add(selectedAnnotationLayer);
+                editorPanel.clearFeatureEditorModels(aTarget);
             }
-        }
-        // If no annotation is selected, then prime the annotation detail panel for the new type
-        else {
-            state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-            selectedAnnotationLayer
-                    .setDefaultModelObject(Optional.ofNullable(state.getDefaultAnnotationLayer())
-                            .map(AnnotationLayer::getUiName).orElse(null));
-            aTarget.add(selectedAnnotationLayer);
-            editorPanel.clearFeatureEditorModels(aTarget);
         }
         
         // Save the currently selected layer as a user preference so it is remains active when a
@@ -389,8 +388,9 @@ public class AnnotationFeatureForm
         AnnotationLayer layer = state.getSelectedAnnotationLayer();
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
-        JCas jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        CAS cas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(cas,
+                state.getSelection().getAnnotation().getId());
         
         if (layer.isReadonly()) {
             error("Cannot replace an annotation on a read-only layer.");
@@ -425,8 +425,9 @@ public class AnnotationFeatureForm
 
         AnnotationLayer newLayer = layerSelector.getModelObject();
 
-        JCas jCas = editorPanel.getEditorCas();
-        AnnotationFS fs = selectByAddr(jCas, state.getSelection().getAnnotation().getId());
+        CAS cas = editorPanel.getEditorCas();
+        AnnotationFS fs = selectAnnotationByAddr(cas,
+                state.getSelection().getAnnotation().getId());
         AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
         
         if (currentLayer.isReadonly()) {
@@ -853,16 +854,16 @@ public class AnnotationFeatureForm
                         // re-focus after rendering
                         getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
                         
-                        JCas jCas = editorPanel.getEditorCas();
+                        CAS cas = editorPanel.getEditorCas();
                         AnnotationLayer layer = state.getSelectedAnnotationLayer();
                         if (
                                 state.isForwardAnnotation() &&
                                 layer != null &&
                                 layer.equals(state.getDefaultAnnotationLayer())
                         ) {
-                            editorPanel.actionCreateForward(aTarget, jCas);
+                            editorPanel.actionCreateForward(aTarget, cas);
                         } else {
-                            editorPanel.actionCreateOrUpdate(aTarget, jCas);
+                            editorPanel.actionCreateOrUpdate(aTarget, cas);
                         }
                     }
                     catch (Exception e) {

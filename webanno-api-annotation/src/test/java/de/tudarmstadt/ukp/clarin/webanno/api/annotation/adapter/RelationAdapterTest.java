@@ -23,9 +23,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AN
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.ANY_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.ArrayList;
@@ -44,8 +49,10 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSentenceCoveredException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -88,17 +95,17 @@ public class RelationAdapterTest
         
         // Set up annotation schema with POS and Dependency
         AnnotationLayer tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         tokenLayer.setId(1l);
         AnnotationFeature tokenLayerPos = new AnnotationFeature(1l, tokenLayer, "pos",
                 POS.class.getName());
 
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setId(2l);
 
         depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency", RELATION_TYPE,
-                project, true, SINGLE_TOKEN);
+                project, true, SINGLE_TOKEN, OVERLAP_ONLY);
         depLayer.setId(3l);
         depLayer.setAttachType(tokenLayer);
         depLayer.setAttachFeature(tokenLayerPos);
@@ -109,7 +116,7 @@ public class RelationAdapterTest
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
         
-        behaviors = asList(new RelationAttachmentBehavior(), new RelationStackingBehavior(),
+        behaviors = asList(new RelationAttachmentBehavior(), new RelationOverlapBehavior(),
                 new RelationCrossSentenceBehavior());
     }    
     
@@ -135,7 +142,7 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        AnnotationFS dep = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
 
         assertThat(FSUtil.getFeature(dep, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
@@ -166,7 +173,7 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         assertThatExceptionOfType(MultipleSentenceCoveredException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
                 .withMessageContaining("multiple sentences");
     }
@@ -193,17 +200,18 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
         depLayer.setCrossSentence(false);
-        assertThat(sut.validate(jcas))
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
                 .usingElementComparatorIgnoringFields("source", "message")
                 .containsExactly(LogMessage.error(null, ""));
     }
     
     @Test
-    public void thatRelationStackingBehaviorOnCreateDoesNotThrowException() throws Exception
+    public void thatCreatingRelationWorks() throws Exception
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
@@ -224,23 +232,16 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        depLayer.setAllowStacking(true);
-        AnnotationFS dep1 = sut.add(document, username, source, target, jcas, 0,
-                jcas.getDocumentText().length());
-        AnnotationFS dep2 = sut.add(document, username, source, target, jcas, 0,
+        AnnotationFS dep1 = sut.add(document, username, source, target, jcas.getCas(), 0,
                 jcas.getDocumentText().length());
         
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
         assertThat(FSUtil.getFeature(dep1, FEAT_REL_TARGET, Token.class)).isEqualTo(tokens.get(1));
-        assertThat(FSUtil.getFeature(dep2, FEAT_REL_SOURCE, Token.class)).isEqualTo(tokens.get(0));
-        assertThat(FSUtil.getFeature(dep2, FEAT_REL_TARGET, Token.class)).isEqualTo(tokens.get(1));
     } 
     
     @Test
-    public void thatRelationStackingBehaviorOnCreateThrowsException() throws Exception
+    public void thatRelationOverlapBehaviorOnCreateWorks() throws Exception
     {
-        depLayer.setAllowStacking(false);
-        
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
 
@@ -260,17 +261,37 @@ public class RelationAdapterTest
         POS target = posAnnotations.get(1);
 
         // First annotation should work
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
-        // Second one at the same location should cause an error
+        // Adding another annotation at the same place DOES NOT work
+        depLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
-                .isThrownBy(() -> sut.add(document, username, source, target, jcas, 0, 
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
                         jcas.getDocumentText().length()))
-                .withMessageContaining("stacking is not enabled");
+                .withMessageContaining("no overlap or stacking");
+
+        depLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
+        assertThatExceptionOfType(AnnotationException.class)
+                .isThrownBy(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
+                        jcas.getDocumentText().length()))
+                .withMessageContaining("stacking is not allowed");
+        
+        // Adding another annotation at the same place DOES work
+        depLayer.setOverlapMode(OverlapMode.STACKING_ONLY);
+        assertThatCode(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
+                        jcas.getDocumentText().length()))
+                .doesNotThrowAnyException();
+
+        depLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        assertThatCode(() -> sut.add(document, username, source, target, jcas.getCas(), 0, 
+                        jcas.getDocumentText().length()))
+                .doesNotThrowAnyException();
     }
     
     @Test
-    public void thatRelationStackingBehaviorOnValidateGeneratesErrors() throws Exception
+    public void thatRelationOverlapBehaviorOnValidateGeneratesErrors() throws Exception
     {
         TokenBuilder<Token, Sentence> builder = new TokenBuilder<>(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test .\nThis is sentence two .");
@@ -290,14 +311,49 @@ public class RelationAdapterTest
         POS source = posAnnotations.get(0);
         POS target = posAnnotations.get(1);
 
-        depLayer.setAllowStacking(true);
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
-        sut.add(document, username, source, target, jcas, 0, jcas.getDocumentText().length());
+        // Create two annotations stacked annotations
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
+        AnnotationFS rel2 = sut.add(document, username, source, target, jcas.getCas(), 0,
+                jcas.getDocumentText().length());
         
-        depLayer.setAllowStacking(false);
-        assertThat(sut.validate(jcas))
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .isEmpty();
+
+        depLayer.setOverlapMode(STACKING_ONLY);
+        assertThat(sut.validate(jcas.getCas()))
+                .isEmpty();
+
+        depLayer.setOverlapMode(OVERLAP_ONLY);
+        assertThat(sut.validate(jcas.getCas()))
                 .extracting(Pair::getLeft)
-                .usingElementComparatorIgnoringFields("source", "message")
-                .containsExactly(LogMessage.error(null, ""));
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked relation at [5-7]"), 
+                        LogMessage.error(null, "Stacked relation at [5-7]"));
+
+        depLayer.setOverlapMode(NO_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked relation at [5-7]"), 
+                        LogMessage.error(null, "Stacked relation at [5-7]"));
+
+        // Remove the stacked annotation and introduce one that is purely overlapping
+        sut.delete(document, username, jcas.getCas(), new VID(rel2));
+        depLayer.setOverlapMode(ANY_OVERLAP);
+        sut.add(document, username, source, posAnnotations.get(2), jcas.getCas(), 0,
+                jcas.getDocumentText().length());
+        
+        depLayer.setOverlapMode(NO_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Overlapping relation at [5-7]"), 
+                        LogMessage.error(null, "Overlapping relation at [8-9]"));
     }
 }

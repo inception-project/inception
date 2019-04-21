@@ -75,7 +75,7 @@ public class CurationContainer
         return state;
     }
 
-    public void setBratAnnotatorModel(AnnotatorState bratAnnotatorModel)
+    public void setState(AnnotatorState bratAnnotatorModel)
     {
         this.state = bratAnnotatorModel;
     }

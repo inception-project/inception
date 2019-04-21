@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao.initializers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -28,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -66,7 +67,7 @@ public class MorphologicalFeaturesLayerInitializer
         annotationSchemaService.createFeature(tokenMorphFeature);
 
         AnnotationLayer morphLayer = new AnnotationLayer(MorphologicalFeatures.class.getName(),
-                "Morphological features", SPAN_TYPE, aProject, true, AnchoringMode.SINGLE_TOKEN);
+                "Morphological features", SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
         morphLayer.setAttachType(tokenLayer);
         morphLayer.setAttachFeature(tokenMorphFeature);
         annotationSchemaService.createLayer(morphLayer);

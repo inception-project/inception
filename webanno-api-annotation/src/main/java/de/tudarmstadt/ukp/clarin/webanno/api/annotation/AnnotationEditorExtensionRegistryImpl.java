@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -99,21 +99,22 @@ public class AnnotationEditorExtensionRegistryImpl
     
     @Override
     public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, JCas aJCas, VID aParamId, String aAction, int aBegin,
+            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin,
             int aEnd)
         throws IOException, AnnotationException
     {
         for (AnnotationEditorExtension ext : getExtensions()) {
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aJCas, aParamId, aAction,
+            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction,
                     aBegin, aEnd);
         }
     }
     
     @Override
-    public void fireRender(JCas aJCas, AnnotatorState aModelObject, VDocument aVdoc)
+    public void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
+            int aWindowBeginOffset, int aWindowEndOffset)
     {
-        for (AnnotationEditorExtension ext: getExtensions()) {
-            ext.render(aJCas, aModelObject, aVdoc);
+        for (AnnotationEditorExtension ext : getExtensions()) {
+            ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
         }
     }
 }

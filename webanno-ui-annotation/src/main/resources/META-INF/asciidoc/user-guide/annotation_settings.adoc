@@ -21,26 +21,43 @@
 Once the document is opened, a default of 5 sentences is loaded on the annotation  page.  The  
 *Settings*  button will  allow  you  to specify the settings of the annotation layer.
 
-image::annotation_settings.png[align="center"]
+image::annotation_settings.png[align="center",width="50%"]
 
-Next to *Annotation layers*, you to select the annotation layer which is displayed during annotation.
-This is useful to reduce clutter if there are many annotation layers. Mind that hiding a layer which
-has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
-no dependency relations will be visible anymore.
-
-The *Remember layer* checkbox controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
+The *Editor* setting can be used to switch between different modes of presentation. It is currently
+only available on the annotation page.
 
 The *Sidebar size* controls the width of the sidebar containing the annotation detail edtior and 
 actions box. In particular on small screens, increasing this can be useful. The sidebar can be 
 configured to take between 10% and 50% of the screen.
 
-The *Number of sentences* controls how many sentences are visible in the annotation area. The more
+The *Font zoom* setting controls the font size in the annotation area. 
+
+The *Page size* controls how many sentences are visible in the annotation area. The more
 sentences are visible, the slower the user interface will react.
+
+The *Remember layer* checkbox controls if the annotation layer selected in the *Actions* box. It will work as main layer during the annotation process. Only instances of this layer will be created, even if an annotation in another layer is selected. If necessary, it is possible to change active instances. Still, if a new instance is selected, the main layer is automatically activated.
 
 The *Auto-scroll* setting controls if the annotation view is centered on the sentence in which the
 last annotation was made. This can be useful to avoid manual navigation.
 
-If *Use the same color for all tags in a layer* is chosen, annotations are colored per layer. If this option
-is off, then annotations are colored by their labels (all annotations with the same label also have
-the same color). Mind that there is a limited number of colors such that eventually colors will
-be reused.
+The *Read-only palette* controls the coloring of annotations on read-only layers. This setting
+overrides any per-layer preferences.
+
+== Layer perferences
+
+In this section you can select which annotation layers are displayed during annotation and how
+they are displayed.
+
+Hiding layers is useful to reduce clutter if there are many annotation layers. Mind that hiding a layer which has relations attached to it will also hide the respective relations. E.g. if you disable POS, then
+no dependency relations will be visible anymore.
+
+The *Palette* setting for each layer controls how the layer is colored. There are the following
+options:
+
+* *static / static pastelle* - all annotations receive the same color
+* *dynamic / dynamic pastelle* - all annotations with the same label receive the same color. Note
+  that this does not imply that annotations with different labels receive different colors. 
+* *static grey* - all annotations are grey.
+
+Mind that there is a limited number of colors such that eventually colors will be reused.
+Annotations on chain layers always receive one color per chain.

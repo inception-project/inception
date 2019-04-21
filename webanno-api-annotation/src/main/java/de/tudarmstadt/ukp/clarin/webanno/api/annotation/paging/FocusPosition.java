@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,17 +15,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
-import java.io.IOException;
-import java.io.Serializable;
-
-import org.apache.uima.jcas.JCas;
-
-@FunctionalInterface
-public interface JCasProvider
-    extends Serializable
+public enum FocusPosition
 {
-    JCas get()
-        throws IOException;
+    /**
+     * Scroll viewport such that the given unit is at the top of the viewport.
+     */
+    TOP,
+
+    /**
+     * Scroll viewport such that the given unit is in the center of the viewport.
+     */
+    CENTERED;
 }

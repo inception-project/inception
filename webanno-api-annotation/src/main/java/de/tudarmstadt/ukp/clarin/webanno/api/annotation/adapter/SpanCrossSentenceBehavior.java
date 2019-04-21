@@ -19,10 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectOverlapping;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +36,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -74,7 +73,7 @@ public class SpanCrossSentenceBehavior
             return aRequest;
         }
         
-        if (!isBeginEndInSameSentence(aRequest.getJcas(), aRequest.getBegin(), aRequest.getEnd())) {
+        if (!isBeginEndInSameSentence(aRequest.getCas(), aRequest.getBegin(), aRequest.getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation covers multiple sentences, "
                     + "limit your annotation to single sentence!");
         }
@@ -84,36 +83,53 @@ public class SpanCrossSentenceBehavior
     
     @Override
     public void onRender(TypeAdapter aAdapter, VDocument aResponse,
-            Map<AnnotationFS, VSpan> annoToSpanIdx)
+            Map<AnnotationFS, VSpan> annoToSpanIdx, int aPageBegin, int aPageEnd)
     {
-        if (aAdapter.getLayer().isCrossSentence()) {
+        if (aAdapter.getLayer().isCrossSentence() || annoToSpanIdx.isEmpty()) {
             return;
         }
         
-        // Since we split spans into multiple ranges at sentence boundaries, we can simply check
-        // if there are multiple ranges for a given span. This is cheaper than checking for
-        // every annotation whether the begin/end offset is in the same sentence.
-        for (Entry<AnnotationFS, VSpan> e : annoToSpanIdx.entrySet()) {
-            if (e.getValue().getRanges().size() > 1) {
-                aResponse.add(new VComment(new VID(e.getKey()), ERROR,
+        CAS cas = annoToSpanIdx.entrySet().iterator().next().getKey().getCAS();
+        
+        // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
+        // The indexes are navigable, we can also find the sentences starting/ending closes to a
+        // particular offset, even if it is not the start/end offset of a sentence.
+        NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
+        NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
+        for (AnnotationFS sent : selectOverlapping(cas, getType(cas, Sentence.class), aPageBegin,
+                aPageEnd)) {
+            sentBeginIdx.put(sent.getBegin(), sent);
+            sentEndIdx.put(sent.getEnd(), sent);
+        }
+        
+        for (AnnotationFS fs : annoToSpanIdx.keySet()) {
+            Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(fs.getBegin());
+            Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
+            
+            if (s1 == null || s2 == null) {
+                // Unable to determine any sentences overlapping with the annotation
+                continue;
+            }
+            
+            if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
+                aResponse.add(new VComment(new VID(fs), ERROR,
                         "Crossing sentence bounardies is not permitted."));
             }
         }
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         // If crossing sentence boundaries is permitted, then there is nothing to validate here
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
         }
         
-        CAS cas = aJCas.getCas();
-        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         
         // If there are no annotations on this layer, nothing to do
-        Collection<AnnotationFS> annotations = select(cas, type);
+        Collection<AnnotationFS> annotations = select(aCas, type);
         if (annotations.isEmpty()) {
             return emptyList();
         }
@@ -124,16 +140,16 @@ public class SpanCrossSentenceBehavior
         // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
         // The indexes are navigable, we can also find the sentences starting/ending closes to a
         // particular offset, even if it is not the start/end offset of a sentence.
-        NavigableMap<Integer, Sentence> sentBeginIdx = new TreeMap<>();
-        NavigableMap<Integer, Sentence> sentEndIdx = new TreeMap<>();
-        for (Sentence sent : select(aJCas, Sentence.class)) {
+        NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
+        NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
+        for (AnnotationFS sent : select(aCas, getType(aCas, Sentence.class))) {
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }
         
         for (AnnotationFS fs : annotations) {
-            Entry<Integer, Sentence> s1 = sentBeginIdx.floorEntry(fs.getBegin());
-            Entry<Integer, Sentence> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
+            Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(fs.getBegin());
+            Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(fs.getEnd());
             
             if (s1 == null || s2 == null) {
                 messages.add(Pair.of(LogMessage.error(this,

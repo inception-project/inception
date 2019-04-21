@@ -23,10 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
+import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.DiffTestUtils.HOST_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
-import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
 
@@ -66,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -97,7 +101,7 @@ public class CopyAnnotationTest
         project = new Project();
         
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
-                SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         
         tokenPosFeature = new AnnotationFeature();
         tokenPosFeature.setName("pos");
@@ -109,7 +113,7 @@ public class CopyAnnotationTest
         tokenPosFeature.setVisible(true);
         
         posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE, project, true,
-                SINGLE_TOKEN);
+                SINGLE_TOKEN, NO_OVERLAP);
         posLayer.setAttachType(tokenLayer);
         posLayer.setAttachFeature(tokenPosFeature);
         
@@ -123,7 +127,7 @@ public class CopyAnnotationTest
         posFeature.setVisible(true);
         
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity", SPAN_TYPE,
-                project, true, TOKENS);
+                project, true, TOKENS, OVERLAP_ONLY);
         
         neFeature = new AnnotationFeature();
         neFeature.setName("value");
@@ -134,8 +138,8 @@ public class CopyAnnotationTest
         neFeature.setProject(project);
         neFeature.setVisible(true);
         
-        slotLayer = new AnnotationLayer(DiffUtils.HOST_TYPE, DiffUtils.HOST_TYPE, SPAN_TYPE,
-                project, false, SINGLE_TOKEN);
+        slotLayer = new AnnotationLayer(HOST_TYPE, HOST_TYPE, SPAN_TYPE, project, false,
+                SINGLE_TOKEN, NO_OVERLAP);
         slotFeature = new AnnotationFeature();
         slotFeature.setName("links");
         slotFeature.setEnabled(true);
@@ -165,7 +169,7 @@ public class CopyAnnotationTest
                 if (type.getName().equals(NamedEntity.class.getName())) {
                     return asList(neFeature);
                 }
-                if (type.getName().equals(DiffUtils.HOST_TYPE)) {
+                if (type.getName().equals(DiffTestUtils.HOST_TYPE)) {
                     return asList(slotFeature, stringFeature);
                 }
                 throw new IllegalStateException("Unknown layer type: " + type.getName());
@@ -204,44 +208,44 @@ public class CopyAnnotationTest
         AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCas = createJCas();
+        CAS mergeCas = createJCas().getCas();
         createTokenAnno(mergeCas, 0, 0);
 
         MergeCas.addSpanAnnotation(state, annotationSchemaService,
                 neLayer, mergeCas, clickedFs, false);
 
-        assertEquals(1, selectCovered(mergeCas, NamedEntity.class, 0, 0).size());
+        assertEquals(1, selectCovered(mergeCas, getType(mergeCas, NamedEntity.class), 0, 0).size());
     }
 
-    private AnnotationFS createNEAnno(JCas aJCas, String aValue, int aBegin, int aEnd)
+    private AnnotationFS createNEAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
-        AnnotationFS clickedFs = aJCas.getCas().createAnnotation(type, aBegin, aEnd);
+        Type type = aCas.getTypeSystem().getType(NamedEntity.class.getTypeName());
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
         Feature value = type.getFeatureByBaseName("value");
         clickedFs.setStringValue(value, aValue);
-        aJCas.addFsToIndexes(clickedFs);
+        aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
 
-    private AnnotationFS createPOSAnno(JCas aJCas, String aValue, int aBegin, int aEnd)
+    private AnnotationFS createPOSAnno(CAS aCas, String aValue, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(POS.class.getTypeName());
+        Type type = aCas.getTypeSystem().getType(POS.class.getTypeName());
         
-        AnnotationFS clickedFs = aJCas.getCas().createAnnotation(type, aBegin, aEnd);
+        AnnotationFS clickedFs = aCas.createAnnotation(type, aBegin, aEnd);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         clickedFs.setStringValue(posValue, aValue);
-        aJCas.addFsToIndexes(clickedFs);
+        aCas.addFsToIndexes(clickedFs);
         return clickedFs;
     }
 
-    private AnnotationFS createTokenAnno(JCas aJCas, int aBegin, int aEnd)
+    private AnnotationFS createTokenAnno(CAS aCas, int aBegin, int aEnd)
     {
-        Type type = aJCas.getTypeSystem().getType(Token.class.getTypeName());
-        AnnotationFS token = aJCas.getCas().createAnnotation(type, aBegin, aEnd);
-        aJCas.addFsToIndexes(token);
+        Type type = aCas.getTypeSystem().getType(Token.class.getTypeName());
+        AnnotationFS token = aCas.createAnnotation(type, aBegin, aEnd);
+        aCas.addFsToIndexes(token);
         return token;
     }
 
@@ -249,12 +253,12 @@ public class CopyAnnotationTest
     public void simpleCopyToSameExistingAnnoTest()
         throws Exception
     {
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
         AnnotationFS clickedFs = createPOSAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCas = createJCas();
-        AnnotationFS existingFs = mergeCas.getCas().createAnnotation(type, 0, 0);
+        CAS mergeCas = createJCas().getCas();
+        AnnotationFS existingFs = mergeCas.createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         existingFs.setStringValue(posValue, "NN");
         mergeCas.addFsToIndexes(existingFs);
@@ -269,12 +273,12 @@ public class CopyAnnotationTest
     public void simpleCopyToDiffExistingAnnoWithNoStackingTest()
         throws Exception
     {
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(POS.class.getTypeName());
         AnnotationFS clickedFs = createPOSAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = createJCas();
-        AnnotationFS existingFs = mergeCAs.getCas().createAnnotation(type, 0, 0);
+        CAS mergeCAs = createJCas().getCas();
+        AnnotationFS existingFs = mergeCAs.createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("PosValue");
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
@@ -282,7 +286,7 @@ public class CopyAnnotationTest
         MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
                 posLayer, mergeCAs, clickedFs, false);
 
-        assertEquals(1, CasUtil.selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(1, CasUtil.selectCovered(mergeCAs, type, 0, 0).size());
     }
 
     @Test
@@ -292,15 +296,15 @@ public class CopyAnnotationTest
         AnnotatorState state = new AnnotatorStateImpl(CURATION);
         state.setUser(new User());
         
-        neLayer.setAllowStacking(true);
+        neLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
 
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(NamedEntity.class.getTypeName());
         AnnotationFS clickedFs = createNEAnno(jcas, "NN", 0, 0);
 
-        JCas mergeCAs = createJCas();
+        CAS mergeCAs = createJCas().getCas();
         createTokenAnno(mergeCAs, 0, 0);
-        AnnotationFS existingFs = mergeCAs.getCas().createAnnotation(type, 0, 0);
+        AnnotationFS existingFs = mergeCAs.createAnnotation(type, 0, 0);
         Feature posValue = type.getFeatureByBaseName("value");
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
@@ -308,30 +312,30 @@ public class CopyAnnotationTest
         MergeCas.addSpanAnnotation(state, annotationSchemaService, neLayer, mergeCAs, clickedFs,
                 true);
 
-        assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
+        assertEquals(2, selectCovered(mergeCAs, type, 0, 0).size());
     }
 
     @Test
     public void copySpanWithSlotNoStackingTest()
         throws Exception
     {
-        slotLayer.setAllowStacking(false);
+        slotLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
         
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
 
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
-                DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
+                DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
         MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
-                slotLayer, mergeCAs, clickedFs, false);
+                slotLayer, mergeCAs.getCas(), clickedFs, false);
 
         assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -344,23 +348,23 @@ public class CopyAnnotationTest
         state.setUser(new User());
         
         slotLayer.setAnchoringMode(TOKENS);
-        slotLayer.setAllowStacking(true);
+        slotLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = jcasA.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = jcasA.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS clickedFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        AnnotationFS clickedFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
 
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
-                DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
+                DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs, clickedFs,
-                true);
+        MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs.getCas(),
+                clickedFs, true);
 
         assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -369,30 +373,30 @@ public class CopyAnnotationTest
     public void copyLinkToEmptyTest()
         throws Exception
     {
-        JCas mergeCAs = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = mergeCAs.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas mergeCas = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS mergeFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature,
+        AnnotationFS mergeFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
                 "A");
 
-        FeatureStructure copyFS = DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0);
+        FeatureStructure copyFS = DiffTestUtils.makeLinkFS(mergeCas, "slot1", 0, 0);
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(mergeCAs));
-        casByUser.put("user2", asList(jcasA));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(mergeCas.getCas()));
+        casByUser.put("user2", asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends CasDiff2.DiffAdapter> diffAdapters = asList(adapter);
 
@@ -408,31 +412,31 @@ public class CopyAnnotationTest
         throws Exception
     {
 
-        JCas mergeCAs = JCasFactory
-                .createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        Type type = mergeCAs.getTypeSystem().getType(DiffUtils.HOST_TYPE);
+        JCas mergeCas = JCasFactory
+                .createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        Type type = mergeCas.getTypeSystem().getType(DiffTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
-        AnnotationFS mergeFs = DiffUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature,
-                "A", DiffUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
+        AnnotationFS mergeFs = DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCas, 0, 0, feature,
+                "A", DiffTestUtils.makeLinkFS(mergeCas, "slot1", 0, 0));
 
-        FeatureStructure copyFS = DiffUtils.makeLinkFS(mergeCAs, "slot2", 0, 0);
+        FeatureStructure copyFS = DiffTestUtils.makeLinkFS(mergeCas, "slot2", 0, 0);
 
         List<FeatureStructure> linkFs = new ArrayList<>();
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(DiffUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
-        DiffUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
-                DiffUtils.makeLinkFS(jcasA, "slot1", 0, 0));
+        JCas jcasA = createJCas(DiffTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        DiffTestUtils.makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
+                DiffTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
-        Map<String, List<JCas>> casByUser = new LinkedHashMap<>();
-        casByUser.put("user1", asList(mergeCAs));
-        casByUser.put("user2", asList(jcasA));
+        Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
+        casByUser.put("user1", asList(mergeCas.getCas()));
+        casByUser.put("user2", asList(jcasA.getCas()));
 
-        List<String> entryTypes = asList(DiffUtils.HOST_TYPE);
+        List<String> entryTypes = asList(DiffTestUtils.HOST_TYPE);
 
-        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffUtils.HOST_TYPE);
+        CasDiff2.SpanDiffAdapter adapter = new CasDiff2.SpanDiffAdapter(DiffTestUtils.HOST_TYPE);
         adapter.addLinkFeature("links", "role", "target");
         List<? extends CasDiff2.DiffAdapter> diffAdapters = asList(adapter);
 
@@ -447,7 +451,7 @@ public class CopyAnnotationTest
     public void simpleCopyRelationToEmptyAnnoTest()
         throws Exception
     {
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
@@ -467,12 +471,12 @@ public class CopyAnnotationTest
         Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
         Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
-        AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
+        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = createJCas();
+        CAS mergeCAs = createJCas().getCas();
         AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
         AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
@@ -490,14 +494,14 @@ public class CopyAnnotationTest
         MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true, false, originToken,
                 targetToken);
         
-        assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 1).size());
+        assertEquals(1, selectCovered(mergeCAs, type, 0, 1).size());
     }
 
     @Test
     public void simpleCopyRelationToStackedTargetsTest()
         throws Exception
     {
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
@@ -517,12 +521,12 @@ public class CopyAnnotationTest
         Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
         Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
-        AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
+        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = createJCas();
+        CAS mergeCAs = createJCas().getCas();
         AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
         AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
@@ -561,7 +565,7 @@ public class CopyAnnotationTest
     public void thatMergingRelationIsRejectedIfAlreadyExists()
         throws Exception
     {
-        JCas jcas = createJCas();
+        CAS jcas = createJCas().getCas();
         Type type = jcas.getTypeSystem().getType(Dependency.class.getTypeName());
 
         AnnotationFS originClickedToken = createTokenAnno(jcas, 0, 0);
@@ -581,12 +585,12 @@ public class CopyAnnotationTest
         Feature sourceFeature = type.getFeatureByBaseName(FEAT_REL_SOURCE);
         Feature targetFeature = type.getFeatureByBaseName(FEAT_REL_TARGET);
 
-        AnnotationFS clickedFs = jcas.getCas().createAnnotation(type, 0, 1);
+        AnnotationFS clickedFs = jcas.createAnnotation(type, 0, 1);
         clickedFs.setFeatureValue(sourceFeature, originClickedToken);
         clickedFs.setFeatureValue(targetFeature, targetClickedToken);
         jcas.addFsToIndexes(clickedFs);
 
-        JCas mergeCAs = createJCas();
+        CAS mergeCAs = createJCas().getCas();
         AnnotationFS origin = createPOSAnno(mergeCAs, "NN", 0, 0);
         AnnotationFS target = createPOSAnno(mergeCAs, "NN", 1, 1);
 
@@ -601,7 +605,7 @@ public class CopyAnnotationTest
         mergeCAs.addFsToIndexes(originToken);
         mergeCAs.addFsToIndexes(targetToken);
 
-        AnnotationFS existing = mergeCAs.getCas().createAnnotation(type, 0, 1);
+        AnnotationFS existing = mergeCAs.createAnnotation(type, 0, 1);
         existing.setFeatureValue(sourceFeature, originToken);
         existing.setFeatureValue(targetFeature, targetToken);
         mergeCAs.addFsToIndexes(existing);

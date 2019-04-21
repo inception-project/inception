@@ -20,11 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType.ERROR;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginEndInSameSentence;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isBeginInSameSentence;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.JCasUtil.select;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,11 +35,9 @@ import java.util.TreeMap;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -69,7 +66,7 @@ public class RelationCrossSentenceBehavior
             return aRequest;
         }
         
-        if (!isBeginEndInSameSentence(aRequest.getJcas(), aRequest.getOriginFs().getBegin(),
+        if (!isBeginEndInSameSentence(aRequest.getCas(), aRequest.getOriginFs().getBegin(),
                 aRequest.getTargetFs().getEnd())) {
             throw new MultipleSentenceCoveredException("Annotation coveres multiple sentences, "
                     + "limit your annotation to single sentence!");
@@ -86,40 +83,34 @@ public class RelationCrossSentenceBehavior
             return;
         }
         
-        try {
-            for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
-                JCas jcas = e.getKey().getCAS().getJCas();
-                
-                if (!isBeginInSameSentence(jcas, 
-                        selectByAddr(jcas, e.getValue().getSource().getId()).getBegin(),
-                        selectByAddr(jcas, e.getValue().getTarget().getId()).getBegin()))
-                {
-                    aResponse.add(new VComment(new VID(e.getKey()), ERROR,
-                            "Crossing sentence bounardies is not permitted."));
-                }
+        for (Entry<AnnotationFS, VArc> e : aAnnoToArcIdx.entrySet()) {
+            CAS cas = e.getKey().getCAS();
+            
+            if (!isBeginInSameSentence(cas, 
+                    selectAnnotationByAddr(cas, e.getValue().getSource().getId()).getBegin(),
+                    selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin()))
+            {
+                aResponse.add(new VComment(new VID(e.getKey()), ERROR,
+                        "Crossing sentence bounardies is not permitted."));
             }
-        }
-        catch (CASException e) {
-            throw new IllegalStateException("Unable to obtain JCas");
         }
     }
     
     @Override
-    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, JCas aJCas)
+    public List<Pair<LogMessage, AnnotationFS>> onValidate(TypeAdapter aAdapter, CAS aCas)
     {
         // If crossing sentence boundaries is permitted, then there is nothing to validate here
         if (aAdapter.getLayer().isCrossSentence()) {
             return emptyList();
         }
         
-        CAS cas = aJCas.getCas();
         RelationAdapter adapter = (RelationAdapter) aAdapter;
-        Type type = getType(cas, aAdapter.getAnnotationTypeName());
+        Type type = getType(aCas, aAdapter.getAnnotationTypeName());
         Feature targetFeature = type.getFeatureByBaseName(adapter.getTargetFeatureName());
         Feature sourceFeature = type.getFeatureByBaseName(adapter.getSourceFeatureName());
         
         // If there are no annotations on this layer, nothing to do
-        Collection<AnnotationFS> annotations = select(cas, type);
+        Collection<AnnotationFS> annotations = select(aCas, type);
         if (annotations.isEmpty()) {
             return emptyList();
         }
@@ -130,9 +121,9 @@ public class RelationCrossSentenceBehavior
         // Build indexes to allow quickly looking up the sentence by its begin/end offsets. Since
         // The indexes are navigable, we can also find the sentences starting/ending closes to a
         // particular offset, even if it is not the start/end offset of a sentence.
-        NavigableMap<Integer, Sentence> sentBeginIdx = new TreeMap<>();
-        NavigableMap<Integer, Sentence> sentEndIdx = new TreeMap<>();
-        for (Sentence sent : select(aJCas, Sentence.class)) {
+        NavigableMap<Integer, AnnotationFS> sentBeginIdx = new TreeMap<>();
+        NavigableMap<Integer, AnnotationFS> sentEndIdx = new TreeMap<>();
+        for (AnnotationFS sent : select(aCas, getType(aCas, Sentence.class))) {
             sentBeginIdx.put(sent.getBegin(), sent);
             sentEndIdx.put(sent.getEnd(), sent);
         }
@@ -141,8 +132,8 @@ public class RelationCrossSentenceBehavior
             AnnotationFS sourceFs = (AnnotationFS) fs.getFeatureValue(sourceFeature);
             AnnotationFS targetFs = (AnnotationFS) fs.getFeatureValue(targetFeature);
 
-            Entry<Integer, Sentence> s1 = sentBeginIdx.floorEntry(sourceFs.getBegin());
-            Entry<Integer, Sentence> s2 = sentEndIdx.ceilingEntry(targetFs.getEnd());
+            Entry<Integer, AnnotationFS> s1 = sentBeginIdx.floorEntry(sourceFs.getBegin());
+            Entry<Integer, AnnotationFS> s2 = sentEndIdx.ceilingEntry(targetFs.getEnd());
             
             if (s1 == null || s2 == null) {
                 messages.add(Pair.of(LogMessage.error(this,

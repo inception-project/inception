@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.dao.JsonImportUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 
@@ -67,9 +68,8 @@ public class CoreferenceLayerInitializer
         
         AnnotationLayer base = new AnnotationLayer(
                 "de.tudarmstadt.ukp.dkpro.core.api.coref.type.Coreference", "Coreference",
-                CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS);
+                CHAIN_TYPE, aProject, true, AnchoringMode.TOKENS, OverlapMode.ANY_OVERLAP);
         base.setCrossSentence(true);
-        base.setAllowStacking(true);
         annotationSchemaService.createLayer(base);
         
         annotationSchemaService.createFeature(new AnnotationFeature(aProject, base, "referenceType",

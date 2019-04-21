@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -20,32 +20,39 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.annotation;
 import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactoryImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.LineOrientedPagingStrategy;
 
-@Component("bratEditor")
-public class BratAnnotationEditorFactory
+@Component("lineOrientedBratEditor")
+public class BratLineOrientedAnnotationEditorFactory
     extends AnnotationEditorFactoryImplBase
 {
     @Override
     public String getDisplayName()
     {
-        return "brat";
+        return "brat (line-oriented)";
     }
     
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider)
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
-        return new BratAnnotationEditor(aId, aModel, aActionHandler, aJCasProvider);
+        return new BratAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
     
     @Override
     public int getOrder()
     {
-        return 0;
+        return 1;
+    }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new LineOrientedPagingStrategy());
     }
 }

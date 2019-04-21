@@ -23,6 +23,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 
 /**
@@ -72,7 +73,10 @@ public class ExportedAnnotationLayer
     
     @JsonProperty("anchoring_mode")
     private AnchoringMode anchoringMode;
-    
+
+    @JsonProperty("overlap_mode")
+    private OverlapMode overlapMode;
+
     @JsonProperty("validation_mode")
     private ValidationMode validationMode;
     
@@ -193,6 +197,16 @@ public class ExportedAnnotationLayer
         return anchoringMode;
     }
     
+    public OverlapMode getOverlapMode()
+    {
+        return overlapMode;
+    }
+
+    public void setOverlapMode(OverlapMode aOverlapMode)
+    {
+        overlapMode = aOverlapMode;
+    }
+
     /**
      * @deprecated Superseded by {@link ExportedAnnotationLayer#getAnchoringMode()} but
      * kept around for the time being to enable backwards compatibility of exported projects with 
@@ -215,11 +229,23 @@ public class ExportedAnnotationLayer
         this.lockToTokenOffset = lockToTokenOffset;
     }
 
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#getOverlapMode} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
+    @Deprecated
     public boolean isAllowStacking()
     {
         return allowStacking;
     }
 
+    /**
+     * @deprecated Superseded by {@link ExportedAnnotationLayer#setOverlapMode} but
+     * kept around for the time being to enable backwards compatibility of exported projects with 
+     * older versions of WebAnno.
+     */
+    @Deprecated
     public void setAllowStacking(boolean allowStacking)
     {
         this.allowStacking = allowStacking;

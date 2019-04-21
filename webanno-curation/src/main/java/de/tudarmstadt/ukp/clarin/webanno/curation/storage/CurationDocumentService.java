@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -40,15 +39,15 @@ public interface CurationDocumentService
     /**
      * Create a curation annotation document under a special user named as "CURATION_USER"
      *
-     * @param jCas
-     *            the JCas.
+     * @param aCas
+     *            the CAS.
      * @param document
      *            the source document.
      * @throws IOException
      *             if an I/O error occurs.
      */
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_USER')")
-    void writeCurationCas(JCas jCas, SourceDocument document, boolean aUpdateTimestamp)
+    void writeCurationCas(CAS aCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
     void upgradeCurationCas(CAS aCurCas, SourceDocument document)
@@ -59,11 +58,11 @@ public interface CurationDocumentService
      *
      * @param document
      *            the source document.
-     * @return the curation JCas.
+     * @return the curation CAS.
      * @throws IOException
      *             if an I/O error occurs.
      */
-    JCas readCurationCas(SourceDocument document)
+    CAS readCurationCas(SourceDocument document)
         throws IOException;
 
     void deleteCurationCas(SourceDocument document)
