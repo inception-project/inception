@@ -78,7 +78,7 @@
     <springfox.version>2.7.0</springfox.version>
     <batik.version>1.9.1</batik.version>
     <json.version>20180130</json.version>
-    <mockito.version>2.23.4</mockito.version>
+    <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.11.1</assertj.version>
   </properties>
   <repositories>

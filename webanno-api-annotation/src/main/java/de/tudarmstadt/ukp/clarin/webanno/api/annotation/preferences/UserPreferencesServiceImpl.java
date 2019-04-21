@@ -42,10 +42,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy.ColoringStrategyType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
@@ -66,15 +66,14 @@ public class UserPreferencesServiceImpl
     
     private final BratProperties defaultPreferences;
     private final AnnotationSchemaService annotationService;
-    
-    @Value(value = "${repository.path}")
-    private File dir;
+    private final RepositoryProperties repositoryProperties;
     
     public UserPreferencesServiceImpl(BratProperties aDefaultPreferences,
-            AnnotationSchemaService aAnnotationService)
+            AnnotationSchemaService aAnnotationService, RepositoryProperties aRepositoryProperties)
     {
         defaultPreferences = aDefaultPreferences;
         annotationService = aAnnotationService;
+        repositoryProperties = aRepositoryProperties;
     }
 
     @Override
@@ -127,8 +126,8 @@ public class UserPreferencesServiceImpl
             props.setProperty(aMode + "." + value.getName(),
                     wrapper.getPropertyValue(value.getName()).toString());
         }
-        String propertiesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
+        String propertiesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername;
         // append existing preferences for the other mode
         if (new File(propertiesPath, ANNOTATION_PREFERENCE_PROPERTIES_FILE).exists()) {
             Properties properties = loadLegacyPreferencesFile(aUsername, aProject);
@@ -235,9 +234,9 @@ public class UserPreferencesServiceImpl
         throws IOException
     {
         Properties property = new Properties();
-        property.load(new FileInputStream(new File(dir.getAbsolutePath() + "/" + PROJECT_FOLDER
-                + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/" + aUsername + "/"
-                + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
+        property.load(new FileInputStream(new File(repositoryProperties.getPath().getAbsolutePath()
+                + "/" + PROJECT_FOLDER + "/" + aProject.getId() + "/" + SETTINGS_FOLDER + "/"
+                + aUsername + "/" + ANNOTATION_PREFERENCE_PROPERTIES_FILE)));
         return property;
     }
 }
