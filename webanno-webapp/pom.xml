@@ -454,9 +454,6 @@
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
-              <!-- Spring Security -->
-              <usedDependency>org.springframework.security:spring-security-config</usedDependency>
-              <usedDependency>org.springframework.security:spring-security-web</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
