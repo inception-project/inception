@@ -119,7 +119,7 @@ public class CandidateEntity
     {
         handle = aHandle;
         
-        if (aHandle.getKB().getDefaultLanguage() == null) {
+        if (aHandle.getKB() == null || aHandle.getKB().getDefaultLanguage() == null) {
             locale = Locale.ENGLISH;
         }
         else {
@@ -176,13 +176,23 @@ public class CandidateEntity
         return Optional.ofNullable((T) features.getOrDefault(aKey.name, aKey.getDefaultValue()));
     }
 
-    public <T> void put(Key<T> aKey, T aValue)
+    /**
+     * Same as {@link #put} except that it is fluent.
+     */
+    public <T> CandidateEntity with(Key<T> aKey, T aValue)
+    {
+        put(aKey, aValue);
+        return this;
+    }
+    
+    @SuppressWarnings("unchecked")
+    public <T> T put(Key<T> aKey, T aValue)
     {
         if (aValue != null) {
-            features.put(aKey.name, aValue);
+            return (T) features.put(aKey.name, aValue);
         }
         else {
-            features.remove(aKey.name);
+            return (T) features.remove(aKey.name);
         }
     }
     
@@ -211,69 +221,6 @@ public class CandidateEntity
         {
             return defaultValue;
         }
-    }
-    
-    /**
-     * @return edit distance between mention and candidate entity label
-     */
-    @Deprecated
-    public int getLevMention()
-    {
-        return get(KEY_LEVENSHTEIN_MENTION).get();
-    }
-
-    /**
-     * @return edit distance between mention + context and candidate entity label
-     */
-    @Deprecated
-    public int getLevContext()
-    {
-        return get(KEY_LEVENSHTEIN_MENTION_CONTEXT).get();
-    }
-
-    @Deprecated
-    public int getLevQuery()
-    {
-        return get(KEY_LEVENSHTEIN_QUERY).get();
-    }
-
-    /**
-     * @return number of distinct relations to other entities
-     */
-    @Deprecated
-    public int getNumRelatedRelations()
-    {
-        return get(KEY_NUM_RELATIONS).get();
-    }
-
-    /**
-     * @return number of related entities whose entity label occurs in <i>content tokens</i>.
-     * <i>Content tokens</i> consist of tokens in mention sentence annotated as nouns, verbs or
-     * adjectives
-     */
-    @Deprecated
-    public int getSignatureOverlapScore()
-    {
-        return get(KEY_SIGNATURE_OVERLAP_SCORE).get();
-    }
-
-    /**
-     * @return logarithm of the wikidata ID - based on the assumption that lower IDs are more
-     * important
-     */
-    @Deprecated
-    public double getIdRank()
-    {
-        return get(KEY_ID_RANK).get();
-    }
-
-    /**
-     * @return in-link count of wikipedia article of IRI
-     */
-    @Deprecated
-    public int getFrequency()
-    {
-        return get(KEY_FREQUENCY).get();
     }
 
     @Override

@@ -51,8 +51,7 @@ public class GenerateDocumentation
     private static void buildDoc(String type, Path outputDir)
     {
         Attributes attributes = AttributesBuilder.attributes()
-                .attribute("source-dir", Paths.get(System.getProperty("user.dir"))
-                        .getParent() + "/")
+                .attribute("source-dir", getInceptionDir() + "/")
                 .attribute("include-dir", outputDir.resolve("asciidoc").resolve(type)
                         .toString() + "/")
                 .attribute("imagesdir", outputDir.resolve("asciidoc").resolve(type)
@@ -81,7 +80,8 @@ public class GenerateDocumentation
 
     public static void main(String... args) throws Exception
     {
-        Path inceptionDir = Paths.get(System.getProperty("user.dir")).getParent();
+
+        Path inceptionDir = getInceptionDir();
         Path webannoDir = inceptionDir.getParent().resolve("webanno");
         Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
                 .resolve("doc-out");
@@ -110,5 +110,16 @@ public class GenerateDocumentation
         buildDoc("admin-guide", outputDir);
         
         System.out.printf("Documentation written to: %s\n", outputDir);
+    }
+
+    private static Path getInceptionDir()
+    {
+        Path userDir = Paths.get(System.getProperty("user.dir"));
+        return runningFromIntelliJ() ? userDir : userDir.getParent();
+    }
+
+    private static boolean runningFromIntelliJ()
+    {
+        return System.getenv().containsKey("INTELLIJ");
     }
 }
