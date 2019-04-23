@@ -27,6 +27,7 @@ import org.apache.wicket.model.IModel;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
 import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
@@ -48,7 +49,17 @@ public class KnowledgeBaseItemAutoCompleteField
         Validate.notNull(aChoiceProvider);
         choiceProvider = aChoiceProvider;
     }
-    
+
+    public KnowledgeBaseItemAutoCompleteField(String aId,
+            SerializableFunction<String, List<KBHandle>> aChoiceProvider,
+            ITextRenderer<KBHandle> aRenderer)
+    {
+        super(aId, aRenderer);
+        
+        Validate.notNull(aChoiceProvider);
+        choiceProvider = aChoiceProvider;
+    }
+
     public KnowledgeBaseItemAutoCompleteField(String aId,
             IModel<KBHandle> aModel,
             SerializableFunction<String, List<KBHandle>> aChoiceProvider)
