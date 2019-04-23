@@ -21,6 +21,7 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.junit.After;
@@ -63,6 +64,7 @@ public class RecommendationServiceImplIntegrationTest
         sut = new RecommendationServiceImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
         layer = createAnnotationLayer();
+        layer.setProject(project);
         feature = createAnnotationFeature(layer, "strFeat");
     }
 
@@ -78,6 +80,22 @@ public class RecommendationServiceImplIntegrationTest
     }
     
     @Test
+    public void listRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
+    {
+        rec = buildRecommender(project, feature);
+        rec.setEnabled(true);
+
+        sut.createOrUpdateRecommender(rec);
+
+        List<Recommender> enabledRecommenders = sut.listEnabledRecommenders(rec.getLayer());
+
+        assertThat(enabledRecommenders)
+        .as("Check that the previously created recommender is found")
+                .hasSize(1)
+                .contains(rec);
+    }
+    
+    @Test
     public void getRecommenders_WithOneEnabledRecommender_ShouldReturnStoredRecommender()
     {
         rec = buildRecommender(project, feature);
@@ -85,10 +103,12 @@ public class RecommendationServiceImplIntegrationTest
 
         sut.createOrUpdateRecommender(rec);
 
-        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
+        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
-        assertThat(enabledRecommenders).as("Check that only the previously created recommender is found")
-                .hasSize(1).contains(rec);
+        assertThat(enabledRecommenders)
+                .as("Check that only the previously created recommender is found")
+                .isPresent()
+                .contains(rec);
     }
 
     @Test
@@ -99,7 +119,7 @@ public class RecommendationServiceImplIntegrationTest
 
         sut.createOrUpdateRecommender(rec);
 
-        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(rec.getId());
+        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
         assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
     }
@@ -112,10 +132,12 @@ public class RecommendationServiceImplIntegrationTest
 
         sut.createOrUpdateRecommender(rec);
 
-        Long otherId = 9999L;
-        List<Recommender> enabledRecommenders = sut.getEnabledRecommenders(otherId );
+        long otherId = 9999L;
+        Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(otherId );
 
-        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
+        assertThat(enabledRecommenders)
+                .as("Check that no recommender is found")
+                .isEmpty();;
     }
 
     private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)

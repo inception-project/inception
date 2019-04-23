@@ -154,6 +154,15 @@ public class PredictionTask
 
                     RecommendationEngineFactory<?> factory = recommendationService
                             .getRecommenderFactory(recommender);
+                    
+                    // Check that configured layer and feature are accepted 
+                    // by this type of recommender
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                + "- skipping recommender", user.getUsername(), r.getName());
+                        continue nextRecommender;
+                    }
+                    
 
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.

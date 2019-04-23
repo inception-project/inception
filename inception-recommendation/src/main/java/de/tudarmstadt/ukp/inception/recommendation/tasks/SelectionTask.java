@@ -126,6 +126,13 @@ public class SelectionTask
                     long start = System.currentTimeMillis();
                     RecommendationEngineFactory factory = recommendationService
                         .getRecommenderFactory(recommender);
+                    
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                + "- skipping recommender", user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     if (recommender.isAlwaysSelected()) {

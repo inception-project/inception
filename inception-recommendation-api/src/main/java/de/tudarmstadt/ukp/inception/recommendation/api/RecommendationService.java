@@ -60,7 +60,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
-    List<Recommender> getEnabledRecommenders(Long aRecommenderId);
+    Optional<Recommender> getEnabledRecommender(long aRecommenderId);
     
     List<Recommender> listEnabledRecommenders(Project aProject);
 
@@ -112,4 +112,6 @@ public interface RecommendationService
         throws AnnotationException;
     
     Boolean showLearningCurveDiagram();
+
+    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 }
