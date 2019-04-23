@@ -83,9 +83,9 @@ public class LearningCurveChartPanel
     }
 
     @Override
-    protected void onRender()
+    protected void onBeforeRender()
     {
-        super.onRender();
+        super.onBeforeRender();
         
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
         
@@ -147,7 +147,6 @@ public class LearningCurveChartPanel
         }
         catch (IllegalStateException e) {
             LOG.warn("Not updating the chart. " + e.toString());
-            setResponsePage(getPage());
         }
     }
 
