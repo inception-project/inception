@@ -215,8 +215,10 @@ async function displayViewer () {
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
     window.pageRender = 1;
-
 // BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
+/*
+    getAnnotations()
+*/
     let initAnnotations = function(e) {
       getAnnotations()
       document.removeEventListener('pagerendered', initAnnotations)
