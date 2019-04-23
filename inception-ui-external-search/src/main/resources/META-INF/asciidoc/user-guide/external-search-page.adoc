@@ -1,7 +1,7 @@
 [[sect_external-search-page]]
 = Search page
 
-If document repositories have been configured in a project, the **Search** page becomes accessible
+If document repositories have been <<sect_external-search-repos,configured>> in a project, the **Search** page becomes accessible
 through the project dashboard.
 On the top left of the search page you can select in a dropdown menu which document repository you want to query.
 All document repositories that were created in the project settings should be selectable here and

@@ -6,10 +6,12 @@ Selecting the **ElasticSearch** repository type allows connecting to remote Elas
 In order to set up a connection to an ElasticSearch repository, the following information needs to
 be provided:
 
-* *Remote URL*: the URL where the ElasicSearch instance is running (e.g. `http://localhost:9200/`)
+* *Remote URL*: the URL where the ElasticSearch instance is running (e.g. `http://localhost:9200/`)
 * *Index Name*: the name of the index within the instance (e.g. `mycorpus`)
 * *Search path*: the suffix used to access the searching endpoint (usually `_search`)
 * *Object type*: the endpoint used to download the full document text (usually `texts`)
+* *Field*: the field of the documents in the ElasticSearch repository that is used for matching
+the search query (default `doc.text`)
 
 From this information, two URLs are constructed:
 
