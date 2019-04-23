@@ -51,6 +51,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
@@ -193,7 +194,7 @@ public class RecommenderEditorPanel
                 return factory != null ? Pair.of(factory.getId(), factory.getName()) : null;
             }, 
             (v) -> recommenderModel.getObject().setTool(v != null ? v.getKey() : null));
-        
+
         toolChoice = new BootstrapSelect<Pair<String, String>>(MID_TOOL, toolModel, this::listTools)
         {
             private static final long serialVersionUID = -1869081847783375166L;
@@ -201,6 +202,7 @@ public class RecommenderEditorPanel
             @Override
             protected void onModelChanged()
             {
+                checkRecommenderLayerMatch(toolModel);
                 // If the feature type has changed, we need to set up a new traits editor
                 Component newTraits;
                 if (form.getModelObject() != null && getModelObject() != null) {
@@ -215,6 +217,7 @@ public class RecommenderEditorPanel
                 traitsContainer.addOrReplace(newTraits);
             }
         };
+        
         // TODO: For a deprecated recommender, show itself in the tool dropdown but unselectable
         toolChoice.setChoiceRenderer(new ChoiceRenderer<>("value"));
         toolChoice.setRequired(true);
@@ -275,7 +278,6 @@ public class RecommenderEditorPanel
                 actionSave(target);
             }
         });
-
 
         // We need to invert the states in documentStates, as the recommender stores the
         // ones to ignore, not the ones to consider
@@ -344,20 +346,40 @@ public class RecommenderEditorPanel
         }
     }
     
+    /**
+     * Check if the selected recommender still accepts the configured layer and feature. If not show
+     * an error message.
+     */
+    private void checkRecommenderLayerMatch(IModel<Pair<String, String>> aToolModel)
+    {
+        if (recommenderModel.getObject() == null || aToolModel.getObject() == null) {
+            return;
+        }
+        
+        Recommender recommender = recommenderModel.getObject();
+        // check if recommender and layer still match
+        RecommendationEngineFactory factory = recommenderRegistry
+                .getFactory(aToolModel.getObject().getKey());
+        if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+            error(String.format("Recommender %s configured with invalid layer or feature.",
+                    recommender.getName()));
+            Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
+            if (target.isPresent()) {
+                target.get().addChildren(getPage(), IFeedback.class);
+            }
+        }
+    }
+    
     private String generateName(Recommender aRecommender)
     {
         if (aRecommender.getFeature() == null || aRecommender.getLayer() == null
                 || aRecommender.getTool() == null) {
             return null;
         }
-        else {
-            RecommendationEngineFactory factory = recommenderRegistry
-                    .getFactory(aRecommender.getTool());
-            return String.format(Locale.US, "[%s@%s] %s",
-                    aRecommender.getLayer().getUiName(),
-                    aRecommender.getFeature().getUiName(), 
-                    factory.getName());
-        }
+        RecommendationEngineFactory factory = recommenderRegistry
+                .getFactory(aRecommender.getTool());
+        return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
+                aRecommender.getFeature().getUiName(), factory.getName());
     }
     
     @Override
@@ -437,9 +459,7 @@ public class RecommenderEditorPanel
                 .map(f -> Pair.of(f.getId(), f.getName()))
                 .collect(Collectors.toList());
         }
-        else {
-            return Collections.emptyList();
-        }
+        return Collections.emptyList();
     }
 
     private void actionSave(AjaxRequestTarget aTarget)
@@ -511,4 +531,5 @@ public class RecommenderEditorPanel
             }
         }
     }
+
 }

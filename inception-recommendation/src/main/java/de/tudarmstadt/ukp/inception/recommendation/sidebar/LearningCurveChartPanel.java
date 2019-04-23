@@ -89,8 +89,9 @@ public class LearningCurveChartPanel
         
         Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
         
-        if (!target.equals(Optional.empty()))
+        if (!target.equals(Optional.empty())) {
             renderChart(target.get());
+        }
     }
     
     @OnEvent
@@ -200,10 +201,16 @@ public class LearningCurveChartPanel
             try {
                 Details detail = fromJsonString(Details.class, detailJson);
 
+                // If the log is inconsistent and we do not have an ID for some reason, then we
+                // have to skip it
+                if (detail.recommenderId == null) {
+                    continue;
+                }
+                
                 //do not include the scores from disabled recommenders
-                List<Recommender> recommenderIfActive = recommendationService
-                        .getEnabledRecommenders(detail.recommenderId);
-                if (recommenderIfActive.isEmpty()) {
+                Optional<Recommender> recommenderIfActive = recommendationService
+                        .getEnabledRecommender(detail.recommenderId);
+                if (recommenderIfActive.isPresent()) {
                     continue;
                 }
 
@@ -213,7 +220,7 @@ public class LearningCurveChartPanel
                 }
                 
                 //recommenderIfActive only has one member
-                recommenderScoreMap.put(recommenderIfActive.get(0).getName(), detail.score);
+                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.score);
             }
             catch (IOException e) {
                 LOG.error("Invalid logged Event detail. Skipping record with logged event id: "
