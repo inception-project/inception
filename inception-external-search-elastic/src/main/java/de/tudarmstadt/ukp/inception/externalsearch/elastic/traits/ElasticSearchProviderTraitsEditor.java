@@ -85,6 +85,10 @@ public class ElasticSearchProviderTraitsEditor
         objectType.setRequired(true);
         form.add(objectType);
     
+        TextField<String> defaultField = new TextField<>("defaultField");
+        objectType.setRequired(true);
+        form.add(defaultField);
+    
         NumberTextField<Integer> resultSize =
                 new NumberTextField<>("resultSize", Integer.class);
         resultSize.setMinimum(1);
