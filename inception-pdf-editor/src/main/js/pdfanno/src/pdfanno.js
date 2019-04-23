@@ -220,8 +220,11 @@ async function displayViewer () {
     getAnnotations()
 */
     let initAnnotations = function(e) {
-      getAnnotations()
-      document.removeEventListener('pagerendered', initAnnotations)
+      try {
+        getAnnotations()
+      } finally {
+        document.removeEventListener('pagerendered', initAnnotations)
+      }
     }
     document.addEventListener('pagerendered', initAnnotations)
 // END INCEpTION EXTENSION - #1089
