@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.ROOT;
-import eu.openminted.share.annotations.api.DocumentationResource;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -67,7 +66,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * @see <a href="http://universaldependencies.github.io/docs/format.html">CoNLL-U Format</a>
  */
 @ResourceMetaData(name = "CoNLL-U Reader")
-@DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({MimeTypes.TEXT_X_CONLL_U})
 @TypeCapability(
         outputs = { 
