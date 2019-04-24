@@ -66,11 +66,15 @@ public class IRIValuePresenter
 
     private String getLabel(KBStatement aStatement)
     {
+        if (aStatement == null) {
+            return null;
+        }
+        
         if (aStatement != null && aStatement.getValueLabel() != null) {
             return aStatement.getValueLabel();
         }
         
-        return ((IRI) getModelObject().getValue()).getLocalName();
+        return ((IRI) aStatement.getValue()).getLocalName();
     }
 
     private void actionIRILinkClicked(AjaxRequestTarget aTarget, IRI aIdentifier)

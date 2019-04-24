@@ -42,6 +42,8 @@ public class KBQualifier
     private KBProperty property;
 
     private Object value;
+    
+    private String valueLabel;
 
     private Set<Statement> originalTriples;
 
@@ -153,5 +155,15 @@ public class KBQualifier
                 .append("kbStatement", statement).append("language", language)
                 .append("kbProperty", property).append("value", value)
                 .append("originalStatements", originalTriples).toString();
+    }
+
+    public String getValueLabel()
+    {
+        return valueLabel;
+    }
+
+    public void setValueLabel(String aValueLabel)
+    {
+        valueLabel = aValueLabel;
     }
 }
