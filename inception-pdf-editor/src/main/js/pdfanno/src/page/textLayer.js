@@ -163,6 +163,19 @@ function withinMargin (x, base, margin) {
   return (base - margin) <= x && x <= (base + margin)
 }
 
+/**
+ * Returns the scaling factor of the PDF. If the PDF has not been drawn yet, a factor of 1 is
+ * assumed.
+ */
 function scale () {
-  return window.PDFView.pdfViewer.getPageView(0).viewport.scale
+// BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
+/*
+  return window.PDFView.pdfViewer.getPageView(0).viewport.scale;
+*/
+  if (window.PDFView.pdfViewer.getPageView(0) === undefined) {
+    return 1;
+  } else {
+    return window.PDFView.pdfViewer.getPageView(0).viewport.scale;
+  }
+// END INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
 }
