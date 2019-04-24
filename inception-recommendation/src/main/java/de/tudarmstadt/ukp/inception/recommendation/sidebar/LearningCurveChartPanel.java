@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -227,10 +228,16 @@ public class LearningCurveChartPanel
             try {
                 Details detail = fromJsonString(Details.class, detailJson);
 
+                // If the log is inconsistent and we do not have an ID for some reason, then we
+                // have to skip it
+                if (detail.recommenderId == null) {
+                    continue;
+                }
+                
                 //do not include the scores from disabled recommenders
-                List<Recommender> recommenderIfActive = recommendationService
-                        .getEnabledRecommenders(detail.recommenderId);
-                if (recommenderIfActive.isEmpty()) {
+                Optional<Recommender> recommenderIfActive = recommendationService
+                        .getEnabledRecommender(detail.recommenderId);
+                if (recommenderIfActive.isPresent()) {
                     continue;
                 }
 
@@ -240,7 +247,7 @@ public class LearningCurveChartPanel
                 }
                 
                 //recommenderIfActive only has one member
-                recommenderScoreMap.put(recommenderIfActive.get(0).getName(), detail.score);
+                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.score);
             }
             catch (IOException e) {
                 log.error("Invalid logged Event detail. Skipping record with logged event id: "
