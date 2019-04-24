@@ -46,7 +46,8 @@ public class EvaluationResult
     private ConfusionMatrix confusionMatrix;
 
     
-    public EvaluationResult() {
+    public EvaluationResult()
+    {
         ignoreLabels = new LinkedHashSet<>();
         confusionMatrix = new ConfusionMatrix();
         trainingSetSize = 0;
@@ -155,8 +156,9 @@ public class EvaluationResult
             Set<String> labels = confusionMatrix.getLabels();
             for (String label : labels) {
                 double tp = 0.0;
-                if (!ignoreLabels.contains(label))
+                if (!ignoreLabels.contains(label)) {
                     tp = confusionMatrix.getEntryCount(label, label);
+                }
                 double numIsLabel = 0.0;
                 for (String predictedLabel : labels) {
                     numIsLabel += countFunction.applyAsDouble(label, predictedLabel);
@@ -242,8 +244,7 @@ public class EvaluationResult
     }
     
     public static class EvaluationResultCollector
-        implements 
-        Collector<LabelPair, ConfusionMatrix, EvaluationResult>
+        implements Collector<LabelPair, ConfusionMatrix, EvaluationResult>
     {
         private final Set<String> ignoreLabels;
         private final int testSize;
@@ -299,7 +300,5 @@ public class EvaluationResult
         {
             return Collections.emptySet();
         }
-
-    }    
-
+    }
 }
