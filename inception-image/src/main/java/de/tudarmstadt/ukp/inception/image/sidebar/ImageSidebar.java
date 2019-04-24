@@ -31,6 +31,9 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.ExternalImage;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -43,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
@@ -94,6 +98,32 @@ public class ImageSidebar
         images.setModel(LoadableDetachableModel.of(this::listImageUrls));
         
         mainContainer.add(images);
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(JavaScriptHeaderItem.forReference(
+                new WebjarsJavaScriptResourceReference("color-thief/current/js/color-thief.js")));
+        aResponse.render(OnDomReadyHeaderItem.forScript(colorScript()));
+    }
+    
+    private String colorScript()
+    {
+        return String.join("\n",
+                "var colorThief = new ColorThief();",
+                "$('#" + getMarkupId() + " .img-thumbnail').each((index, img) => {",
+                "  var dominantColor = colorThief.getColor(img);",
+                "  var r = dominantColor[0];",
+                "  var b = dominantColor[1];",
+                "  var g = dominantColor[2];",
+                "  // http://alienryderflex.com/hsp.html",
+                "  var hsp = Math.sqrt(0.299*r*r + 0.587*g*g + 0.114*b*b);",
+                "  var color = hsp > 127 ? 'black' : 'white';",
+                "  $(img).css('background-color', color);",
+                "});");
     }
     
     private List<String> listImageUrls()
@@ -154,5 +184,6 @@ public class ImageSidebar
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         aEvent.getRequestHandler().add(mainContainer);
+        aEvent.getRequestHandler().appendJavaScript(colorScript());
     }
 }
