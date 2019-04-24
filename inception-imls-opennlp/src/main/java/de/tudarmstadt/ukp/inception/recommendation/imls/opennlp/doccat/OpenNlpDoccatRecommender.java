@@ -42,6 +42,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -50,7 +51,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.doccat.DoccatFactory;
 import opennlp.tools.doccat.DoccatModel;
-import opennlp.tools.doccat.DocumentCategorizerEvaluator;
 import opennlp.tools.doccat.DocumentCategorizerME;
 import opennlp.tools.doccat.DocumentSample;
 import opennlp.tools.ml.BeamSearch;
@@ -143,8 +143,6 @@ public class OpenNlpDoccatRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        EvaluationResult result = new EvaluationResult();
-        
         List<DocumentSample> data = extractSamples(aCasses);
         List<DocumentSample> trainingSet = new ArrayList<>();
         List<DocumentSample> testSet = new ArrayList<>();
@@ -165,11 +163,12 @@ public class OpenNlpDoccatRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        result.setTestSetSize(testSetSize);
-        result.setTrainingSetSize(trainingSetSize);
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
+            
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
+                    testSetSize);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -182,16 +181,12 @@ public class OpenNlpDoccatRecommender
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate
-        try (DocumentSampleStream stream = new DocumentSampleStream(testSet)) {
-            DocumentCategorizerEvaluator evaluator = new DocumentCategorizerEvaluator(doccat);
-            evaluator.evaluate(stream);
-            result.setDefaultScore(evaluator.getAccuracy());
-            return result;
-        }
-        catch (IOException e) {
-            LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
-            throw new RecommendationException("Error while evaluating OpenNlp NER", e);
-        }
+        EvaluationResult result = testSet.stream()
+                .map(sample -> new LabelPair(sample.getCategory(),
+                        doccat.getBestCategory(doccat.categorize(sample.getText()))))
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_CATEGORY));
+
+        return result;
     }
 
     private List<DocumentSample> extractSamples(List<CAS> aCasses)
