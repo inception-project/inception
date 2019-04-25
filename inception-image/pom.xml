@@ -97,6 +97,10 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.agilecoders.wicket.webjars</groupId>
+      <artifactId>wicket-webjars</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.webjars.npm</groupId>
       <artifactId>color-thief</artifactId>
       <version>2.2.1</version>
