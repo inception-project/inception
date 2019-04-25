@@ -47,7 +47,8 @@ public class ConllCoreNlpReaderWriterTest
                 ConllCoreNlpWriter.class,
                 ConllCoreNlpWriter.PARAM_TARGET_LOCATION, "target/test-output/ConllCoreNlpReaderWriterTest-roundTrip",
                 ConllCoreNlpWriter.PARAM_FILENAME_SUFFIX, ".conll",
-                ConllCoreNlpWriter.PARAM_STRIP_EXTENSION, true);
+                ConllCoreNlpWriter.PARAM_STRIP_EXTENSION, true,
+                ConllCoreNlpWriter.PARAM_OVERWRITE, true);
 
         runPipeline(reader, writer);
 

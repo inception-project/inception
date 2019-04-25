@@ -28,8 +28,6 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUWriter;
 
 @Component
 public class ConllUFormatSupport
