@@ -76,6 +76,10 @@ you are currently preparing. GitHub automatically creates a stub release for eve
 and the Maven release process has automatically created such a tag for your release. The issues
 that were solved with this release can be found by filtering issues by milestones.
 
+== Update Github milestones
+
+After the release you will need to close the respective milestone on Github to prevent further issues or pull requests being assigned to it.
+
 == Deploy the new release
 
 In order to deploy the new version, see the <<admin-guide.adoc#sect_upgrade,upgrade process>> 

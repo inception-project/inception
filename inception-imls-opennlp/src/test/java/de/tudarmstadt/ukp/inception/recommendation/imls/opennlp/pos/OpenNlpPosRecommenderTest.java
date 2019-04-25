@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -108,9 +109,22 @@ public class OpenNlpPosRecommenderTest
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
-        double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+        EvaluationResult result = sut.evaluate(casList, splitStrategy);
 
-        assertThat(score).isStrictlyBetween(0.0, 1.0);
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
+
+        System.out.printf("F1-Score: %f%n", fscore);
+        System.out.printf("Accuracy: %f%n", accuracy);
+        System.out.printf("Precision: %f%n", precision);
+        System.out.printf("Recall: %f%n", recall);
+        
+        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
@@ -124,9 +138,9 @@ public class OpenNlpPosRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).getDefaultScore();
+            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
 
-            assertThat(score).isBetween(0.0, 1.0);
+            assertThat(score).isStrictlyBetween(0.0, 1.0);
             
             i++;
         }
