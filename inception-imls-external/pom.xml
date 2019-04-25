@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.8.3</version>
+    <version>0.8.4-SNAPSHOT</version>
   </parent>
 
   <artifactId>inception-imls-external</artifactId>
