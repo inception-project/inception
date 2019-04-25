@@ -1,19 +1,18 @@
 [[sect_external-search-page]]
 = Search page
 
-If document repositories have been <<sect_external-search-repos,configured>> in a project, the **Search** page becomes accessible
-through the project dashboard.
+If document repositories have been <<sect_external-search-repos,configured>> in a project, the **Search** 
+page becomes accessible through the project dashboard.
 On the top left of the search page you can select in a dropdown menu which document repository you want to query.
 All document repositories that were created in the project settings should be selectable here and
-are identified by their *Name*.
+are identified by their **Name**.
 The field next to it is the query text field in which the search queries are entered.
-In order to execute the search for documents after a query has been entered, the search is started
-with Enter or by a click on the `Search` button.
+After entering a query, search by pressing the **Enter** key or by a clicking on the **Search** button.
 The documents in the document repository which
 link:https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html[match]
 the search query are returned as the search results and then shown as a table.
-Since only 10 documents can be displayed in the table, more retrieved documents can be accessed
-through the paging which is located above the table.
+The table displays 10 results at a time and more can be accessed through the paging controls which 
+are located above the table.
 Depending on the repository, you may see a document title or ID, text snippets with highlights
 indicating matches of your query in the document, and a score which represents the relevance of the
 document to the query. If a document has not yet been
@@ -21,9 +20,6 @@ imported into your project, there is an **Import** button which extracts the doc
 repository and adds it to the project, thereby making it available for annotation. If the document
 has already been imported, there is an **Open** button instead. Clicking on the document title or ID
 opens a preview page where the document text can be viewed before importing it.
-Additionally, if you are interested in the display of the most relevant sentences of the returned documents,
-you can append `sentenceHighlights:true` to the end of the query.
-As a result, these sentences will then be displayed in the highlights.
 
 NOTE: Normally the ability to add new documents to a project is limited to project managers and it
       is only possibly via the **Documents** tab in the project settings. However, any user can import a

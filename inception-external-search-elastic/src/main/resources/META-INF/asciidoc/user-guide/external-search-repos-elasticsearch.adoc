@@ -26,3 +26,14 @@ can be customized.
 
 The *Result Size* setting allows to specify the number of document results that should be retrieved
 when querying the document repository. The possible result sizes lie between 1 and 10000 documents.
+
+If the default **Field** setting `doc.text` is used, then the JSON structure for indexed documents 
+should look as follows:
+
+```
+{
+  "doc": {
+    "text": "Here goes the document text."
+  }
+}
+```
