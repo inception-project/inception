@@ -113,17 +113,30 @@ public class ImageSidebar
     private String colorScript()
     {
         return String.join("\n",
+                "var startTime = new Date().getTime();",
+                "var cacheHolder = window;",
+                "if (!cacheHolder.hasOwnProperty('colorCache')) {",
+                "  console.log('Initializing color cache');",
+                "  cacheHolder.colorCache = {};",
+                "}",
                 "var colorThief = new ColorThief();",
                 "$('#" + getMarkupId() + " .img-thumbnail').each((index, img) => {",
-                "  var dominantColor = colorThief.getColor(img);",
-                "  var r = dominantColor[0];",
-                "  var b = dominantColor[1];",
-                "  var g = dominantColor[2];",
-                "  // http://alienryderflex.com/hsp.html",
-                "  var hsp = Math.sqrt(0.299*r*r + 0.587*g*g + 0.114*b*b);",
-                "  var color = hsp > 127 ? 'black' : 'white';",
+                "  var color = cacheHolder.colorCache[img.src];",
+                "  if (color === undefined) {",
+                "    console.log('Recalculating image border color... ' + index);",
+                "    var dominantColor = colorThief.getColor(img);",
+                "    var r = dominantColor[0];",
+                "    var b = dominantColor[1];",
+                "    var g = dominantColor[2];",
+                "    // http://alienryderflex.com/hsp.html",
+                "    var hsp = Math.sqrt(0.299*r*r + 0.587*g*g + 0.114*b*b);",
+                "    color = hsp > 127 ? 'black' : 'white';",
+                "    cacheHolder.colorCache[img.src] = color;",
+                "  }",
                 "  $(img).css('background-color', color);",
-                "});");
+                "});",
+                "console.log('Calculating image border color took ' + ",
+                "  (new Date().getTime() - startTime) + 'ms');");
     }
     
     private List<String> listImageUrls()
