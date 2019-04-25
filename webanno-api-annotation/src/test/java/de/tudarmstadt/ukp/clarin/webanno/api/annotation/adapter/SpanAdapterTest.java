@@ -43,7 +43,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.MultipleSenten
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -82,7 +81,7 @@ public class SpanAdapterTest
         document.setProject(project);
         
         neLayer = new AnnotationLayer(NamedEntity.class.getName(), "NE", SPAN_TYPE, project, true,
-                TOKENS, OverlapMode.ANY_OVERLAP);
+                TOKENS, ANY_OVERLAP);
         neLayer.setId(1l);
 
         featureSupportRegistry = new FeatureSupportRegistryImpl(asList());
@@ -219,12 +218,12 @@ public class SpanAdapterTest
         sut.add(document, username, jcas.getCas(), 0, 4);
         
         // Adding another annotation at the same place DOES NOT work
-        neLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
+        neLayer.setOverlapMode(NO_OVERLAP);
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("no overlap or stacking");
         
-        neLayer.setOverlapMode(OverlapMode.OVERLAP_ONLY);
+        neLayer.setOverlapMode(OVERLAP_ONLY);
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .withMessageContaining("stacking is not allowed");
@@ -237,5 +236,28 @@ public class SpanAdapterTest
         neLayer.setOverlapMode(ANY_OVERLAP);
         assertThatCode(() -> sut.add(document, username, jcas.getCas(), 0, 1))
                 .doesNotThrowAnyException();
+    }
+    
+    @Test
+    public void thatAdjacentAnnotationsDoNotOverlap() throws AnnotationException
+    {
+        jcas.setDocumentText("Test.");
+        new Sentence(jcas, 0, 5).addToIndexes();
+        new Token(jcas, 0, 4).addToIndexes();
+        new Token(jcas, 4, 5).addToIndexes();
+        new NamedEntity(jcas, 0, 4).addToIndexes();
+        new NamedEntity(jcas, 4, 5).addToIndexes();
+        
+        SpanAdapter sut = new SpanAdapter(featureSupportRegistry, null, neLayer, asList(),
+                behaviors);
+
+        neLayer.setOverlapMode(NO_OVERLAP);
+        assertThat(sut.validate(jcas.getCas()))
+                .extracting(Pair::getLeft)
+                .usingElementComparatorIgnoringFields("source")
+                .containsExactly(
+                        LogMessage.error(null, "Stacked annotation at [0-4]"),
+                        LogMessage.error(null, "Stacked annotation at [0-4]"));
+
     }
 }
