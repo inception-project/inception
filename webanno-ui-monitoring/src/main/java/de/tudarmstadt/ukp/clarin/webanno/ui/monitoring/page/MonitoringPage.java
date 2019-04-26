@@ -17,12 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_FINISHED_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.IGNORE_TO_NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.NEW_TO_IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -31,7 +33,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.isNull;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toMap;
 
 import java.awt.Color;
 import java.io.Serializable;
@@ -43,11 +48,14 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.BinaryOperator;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -76,6 +84,7 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
+import org.danekja.java.misc.serializable.SerializableComparator;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -99,6 +108,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
@@ -145,6 +155,7 @@ public class MonitoringPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean CurationDocumentService curationService;
     
     private ProjectSelectionForm projectSelectionForm;
     private MonitoringDetailForm monitoringDetailForm;
@@ -508,57 +519,62 @@ public class MonitoringPage
 
     private Map<String, Integer> getFinishedDocumentsPerUser(Project aProject)
     {
-        Map<String, Integer> annotatorsProgress = new HashMap<>();
-        if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.ANNOTATOR)) {
-                for (SourceDocument document : documentService.listSourceDocuments(aProject)) {
-                    if (documentService.isAnnotationFinished(document, user)) {
-                        if (annotatorsProgress.get(user.getUsername()) == null) {
-                            annotatorsProgress.put(user.getUsername(), 1);
-                        }
-                        else {
-                            int previousValue = annotatorsProgress.get(user.getUsername());
-                            annotatorsProgress.put(user.getUsername(), previousValue + 1);
-                        }
-                    }
-                }
-                if (annotatorsProgress.get(user.getUsername()) == null) {
-                    annotatorsProgress.put(user.getUsername(), 0);
-                }
-            }
+        if (aProject == null) {
+            return emptyMap();
         }
-        return annotatorsProgress;
-    }
 
+        Map<String, List<AnnotationDocument>> docsPerUser = documentService
+                .listFinishedAnnotationDocuments(aProject).stream()
+                .collect(groupingBy(AnnotationDocument::getUser));
+
+        // We explicitly use HashMap::new below since we *really* want a mutable map and 
+        // Collectors.toMap(...) doesn't make guarantees about the mutability of the map type it
+        // internally creates.
+        Map<String, Integer> finishedDocumentsPerUser = docsPerUser.entrySet().stream()
+                .collect(toMap(Entry::getKey, e -> e.getValue().size(), throwingMerger(), 
+                        HashMap::new));
+
+        // Make sure we also have all annotators in the map who have not actually annotated
+        // anything
+        projectService.listProjectUsersWithPermissions(aProject, ANNOTATOR).stream()
+                .map(User::getUsername)
+                .forEach(user -> finishedDocumentsPerUser.computeIfAbsent(user, _it -> 0));
+
+        // Add the finished documents for the curation user
+        List<SourceDocument> curatedDocuments = curationService.listCuratedDocuments(aProject);
+        
+        // Little hack: to ensure that the curation user comes first on screen, add a space
+        finishedDocumentsPerUser.put(CURATION_USER, curatedDocuments.size());
+        
+        return finishedDocumentsPerUser;
+    }
+    
     private Map<String, Integer> getPercentageOfFinishedDocumentsPerUser(Project aProject)
     {
-        Map<String, Integer> annotatorsProgress = new HashMap<>();
-        if (aProject != null) {
-            for (User user : projectService.listProjectUsersWithPermissions(aProject,
-                    PermissionLevel.ANNOTATOR)) {
-                int finished = 0;
-                int ignored = 0;
-                int totalDocs = 0;
-                List<SourceDocument> documents = documentService.listSourceDocuments(aProject);
-                for (SourceDocument document : documents) {
-                    totalDocs++;
-                    if (documentService.isAnnotationFinished(document, user)) {
-                        finished++;
-                    }
-                    else if (documentService.existsAnnotationDocument(document, user)) {
-                        AnnotationDocument annotationDocument = documentService
-                                .getAnnotationDocument(document, user);
-                        if (annotationDocument.getState().equals(AnnotationDocumentState.IGNORE)) {
-                            ignored++;
-                        }
-                    }
-                }
-                annotatorsProgress.put(user.getUsername(),
-                        (int) Math.round((double) (finished * 100) / (totalDocs - ignored)));
-            }
+        if (aProject == null) {
+            return emptyMap();
         }
-        return annotatorsProgress;
+
+        Map<String, Integer> finishedDocumentsPerUser = getFinishedDocumentsPerUser(aProject);
+        
+        Map<String, Integer> percentageFinishedPerUser = new HashMap<>();
+        List<User> annotators = new ArrayList<>(projectService.listProjectUsersWithPermissions(
+                aProject, ANNOTATOR));
+        
+        // Little hack: to ensure that the curation user comes first on screen, add a space
+        annotators.add(new User(CURATION_USER));
+        
+        for (User annotator : annotators) {
+            Map<SourceDocument, AnnotationDocument> docsForUser = documentService
+                    .listAnnotatableDocuments(aProject, annotator);
+            
+            int finished = finishedDocumentsPerUser.get(annotator.getUsername());
+            int annotatableDocs = docsForUser.size();
+            percentageFinishedPerUser.put(annotator.getUsername(),
+                    (int) Math.round((double) (finished * 100) / annotatableDocs));
+        }
+        
+        return percentageFinishedPerUser;
     }
 
     private Map<String, Integer> getOverallProjectProgress()
@@ -578,6 +594,13 @@ public class MonitoringPage
         return overallProjectProgress;
     }
 
+    private static SerializableComparator<String> USER_COMPARATOR = (u1, u2) -> 
+            new CompareToBuilder()
+                    .append(u1, CURATION_USER)
+                    .append(u2, CURATION_USER)
+                    .append(u1, u2)
+                    .toComparison();
+    
     static public class ProjectSelectionModel
         implements Serializable
     {
@@ -586,8 +609,8 @@ public class MonitoringPage
         private static final long serialVersionUID = -1L;
 
         public Project project;
-        public Map<String, Integer> annotatorsProgress = new TreeMap<>();
-        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>();
+        public Map<String, Integer> annotatorsProgress = new TreeMap<>(USER_COMPARATOR);
+        public Map<String, Integer> annotatorsProgressInPercent = new TreeMap<>(USER_COMPARATOR);
     }
 
     private class MonitoringDetailForm
@@ -1107,5 +1130,12 @@ public class MonitoringPage
         catch (NoResultException e) {
             return Optional.empty();
         }
+    }
+    
+    private static <T> BinaryOperator<T> throwingMerger()
+    {
+        return (u, v) -> {
+            throw new IllegalStateException(String.format("Duplicate key %s", u));
+        };
     }
 }
