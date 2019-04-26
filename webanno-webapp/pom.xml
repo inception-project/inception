@@ -90,6 +90,10 @@
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-security</artifactId>
+    </dependency>
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -136,6 +140,10 @@
     </dependency>
 
     <!-- SPRING SECURITY -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-core</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.security</groupId>
       <artifactId>spring-security-config</artifactId>
@@ -459,9 +467,6 @@
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
-              <!-- Spring Security -->
-              <usedDependency>org.springframework.security:spring-security-config</usedDependency>
-              <usedDependency>org.springframework.security:spring-security-web</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
