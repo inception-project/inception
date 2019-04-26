@@ -84,4 +84,13 @@ public interface CurationDocumentService
     List<SourceDocument> listCuratableSourceDocuments(Project aProject);
 
     Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException;
+    
+    /**
+     * List all curated source documents.
+     *
+     * @param project
+     *            the project.
+     * @return the source documents.
+     */
+    List<SourceDocument> listCuratedDocuments(Project project);
 }
