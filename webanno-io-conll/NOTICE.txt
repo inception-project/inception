@@ -1,3 +1,3 @@
-This module contains CoNLL support backported from DKPro Core 1.9.0-SNAPSHOT and is meant to be
-dropped again and replaced by the proper DKPro Core 1.9.0 CoNLL module when it has been released
+This module contains CoNLL support backported from an unreleased DKPro Core version and is meant to
+be dropped again and replaced by the proper DKPro Core CoNLL module when it has been released
 and when WebAnno is able to depend on this version of DKPro Core.
