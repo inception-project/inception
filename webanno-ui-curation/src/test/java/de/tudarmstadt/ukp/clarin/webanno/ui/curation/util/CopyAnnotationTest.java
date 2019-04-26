@@ -32,6 +32,9 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -49,9 +52,9 @@ import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
@@ -76,12 +79,11 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import mockit.Mock;
-import mockit.MockUp;
 
 public class CopyAnnotationTest
 {
-    private AnnotationSchemaService annotationSchemaService;
+    private @Mock AnnotationSchemaService schemaService;
+    
     private LayerSupportRegistryImpl layerSupportRegistry;
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private Project project;
@@ -98,6 +100,8 @@ public class CopyAnnotationTest
     @Before
     public void setup()
     {
+        initMocks(this);
+        
         project = new Project();
         
         tokenLayer = new AnnotationLayer(Token.class.getName(), "Token", SPAN_TYPE, null, true,
@@ -158,45 +162,39 @@ public class CopyAnnotationTest
         stringFeature.setProject(project);
         stringFeature.setVisible(true);
         
-        annotationSchemaService = new MockUp<AnnotationSchemaService>()
-        {
-            @Mock
-            List<AnnotationFeature> listAnnotationFeature(AnnotationLayer type)
-            {
-                if (type.getName().equals(POS.class.getName())) {
-                    return asList(posFeature);
-                }
-                if (type.getName().equals(NamedEntity.class.getName())) {
-                    return asList(neFeature);
-                }
-                if (type.getName().equals(DiffTestUtils.HOST_TYPE)) {
-                    return asList(slotFeature, stringFeature);
-                }
-                throw new IllegalStateException("Unknown layer type: " + type.getName());
+        when(schemaService.listAnnotationFeature(any(AnnotationLayer.class))).thenAnswer(call -> { 
+            AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
+            if (type.getName().equals(POS.class.getName())) {
+                return asList(posFeature);
             }
-            
-            @Mock
-            TypeAdapter getAdapter(AnnotationLayer aLayer)
-            {
-                return layerSupportRegistry.getLayerSupport(aLayer).createAdapter(aLayer);
+            if (type.getName().equals(NamedEntity.class.getName())) {
+                return asList(neFeature);
             }
+            if (type.getName().equals(DiffTestUtils.HOST_TYPE)) {
+                return asList(slotFeature, stringFeature);
+            }
+            throw new IllegalStateException("Unknown layer type: " + type.getName());
+        });
 
-        }.getMockInstance();
+        when(schemaService.getAdapter(any(AnnotationLayer.class))).thenAnswer(call -> { 
+            AnnotationLayer type = call.getArgument(0, AnnotationLayer.class);
+            return layerSupportRegistry.getLayerSupport(type).createAdapter(type);
+        });
         
         featureSupportRegistry = new FeatureSupportRegistryImpl(
                 asList(new PrimitiveUimaFeatureSupport(),
-                        new SlotFeatureSupport(annotationSchemaService)));
+                        new SlotFeatureSupport(schemaService)));
         featureSupportRegistry.init();
 
         LayerBehaviorRegistryImpl layerBehaviorRegistry = new LayerBehaviorRegistryImpl(asList());
         layerBehaviorRegistry.init();
 
         layerSupportRegistry = new LayerSupportRegistryImpl(asList(
-                new SpanLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                new SpanLayerSupport(featureSupportRegistry, null, schemaService,
                         layerBehaviorRegistry),
-                new RelationLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                new RelationLayerSupport(featureSupportRegistry, null, schemaService,
                         layerBehaviorRegistry),
-                new ChainLayerSupport(featureSupportRegistry, null, annotationSchemaService,
+                new ChainLayerSupport(featureSupportRegistry, null, schemaService,
                         layerBehaviorRegistry)));
         layerSupportRegistry.init();
     }
@@ -214,7 +212,7 @@ public class CopyAnnotationTest
         CAS mergeCas = createJCas().getCas();
         createTokenAnno(mergeCas, 0, 0);
 
-        MergeCas.addSpanAnnotation(state, annotationSchemaService,
+        MergeCas.addSpanAnnotation(state, schemaService,
                 neLayer, mergeCas, clickedFs, false);
 
         assertEquals(1, selectCovered(mergeCas, getType(mergeCas, NamedEntity.class), 0, 0).size());
@@ -265,7 +263,7 @@ public class CopyAnnotationTest
 
         Assertions.assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> MergeCas.addSpanAnnotation(new AnnotatorStateImpl(Mode.CURATION),
-                        annotationSchemaService, posLayer, mergeCas, clickedFs, false))
+                        schemaService, posLayer, mergeCas, clickedFs, false))
                 .withMessageContaining("annotation already exists");
     }
 
@@ -283,8 +281,8 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
-                posLayer, mergeCAs, clickedFs, false);
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), schemaService, posLayer,
+                mergeCAs, clickedFs, false);
 
         assertEquals(1, CasUtil.selectCovered(mergeCAs, type, 0, 0).size());
     }
@@ -309,8 +307,7 @@ public class CopyAnnotationTest
         existingFs.setStringValue(posValue, "NE");
         mergeCAs.addFsToIndexes(existingFs);
 
-        MergeCas.addSpanAnnotation(state, annotationSchemaService, neLayer, mergeCAs, clickedFs,
-                true);
+        MergeCas.addSpanAnnotation(state, schemaService, neLayer, mergeCAs, clickedFs, true);
 
         assertEquals(2, selectCovered(mergeCAs, type, 0, 0).size());
     }
@@ -334,8 +331,8 @@ public class CopyAnnotationTest
         DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), annotationSchemaService,
-                slotLayer, mergeCAs.getCas(), clickedFs, false);
+        MergeCas.addSpanAnnotation(new AnnotatorStateImpl(CURATION), schemaService, slotLayer,
+                mergeCAs.getCas(), clickedFs, false);
 
         assertEquals(1, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }
@@ -363,8 +360,8 @@ public class CopyAnnotationTest
         DiffTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 DiffTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
 
-        MergeCas.addSpanAnnotation(state, annotationSchemaService, slotLayer, mergeCAs.getCas(),
-                clickedFs, true);
+        MergeCas.addSpanAnnotation(state, schemaService, slotLayer, mergeCAs.getCas(), clickedFs,
+                true);
 
         assertEquals(2, selectCovered(mergeCAs.getCas(), type, 0, 0).size());
     }

@@ -71,7 +71,6 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
 
 /**
  * Writer for the WebLicht TCF format.
- *
  */
 @TypeCapability(inputs = { 
         "de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData",
@@ -121,9 +120,7 @@ public class TcfWriter
         try {
             boolean writeWithoutMerging = true;
             if (merge) {
-                OutputStream docOS = null;
-                try {
-                    docOS = getOutputStream(aJCas, filenameSuffix);
+                try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
                     // Get the original TCF file and preserve it
                     DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
                     URL filePathUrl = new URL(documentMetadata.getDocumentUri());
@@ -150,9 +147,6 @@ public class TcfWriter
                                 "Cannot open source file to merge with: " + e.getMessage());
                     }
                 }
-                finally {
-                    closeQuietly(docOS);
-                }
             }
             else {
                 getLogger().debug("Merging disabled");
@@ -160,13 +154,8 @@ public class TcfWriter
             
             // If merging failed or is disabled, go on without merging
             if (writeWithoutMerging) {
-                OutputStream docOS = null;
-                try {
-                    docOS = getOutputStream(aJCas, filenameSuffix);
+                try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
                     casToTcfWriter(aJCas, docOS);
-                }
-                finally {
-                    closeQuietly(docOS);
                 }
             }
         }
@@ -246,22 +235,10 @@ public class TcfWriter
             layersToReplace.add(TextCorpusLayerTag.REFERENCES);
         }
                 
-        TextCorpusStreamedWithReplaceableLayers textCorpus = null;
-        try {
-            textCorpus = new TextCorpusStreamedWithReplaceableLayers(
-                aIs, layersToRead, EnumSet.copyOf(layersToReplace), aOs);
-        
+        try (TextCorpusStreamedWithReplaceableLayers textCorpus = 
+                new TextCorpusStreamedWithReplaceableLayers(aIs, layersToRead, 
+                        EnumSet.copyOf(layersToReplace), aOs)) {
             write(aJCas, textCorpus);
-        }
-        finally {
-            if (textCorpus != null) {
-                try {
-                    textCorpus.close();
-                }
-                catch (IOException e) {
-                    // Ignore exception while closing
-                }
-            }
         }
     }
 

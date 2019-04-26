@@ -60,11 +60,10 @@ import eu.clarin.weblicht.wlfxb.xb.WLData;
  * CAS annotation. Hence, addresses are manually calculated per tokens and
  * stored in a map (token_id, token(CAS object)) where later we get can get the
  * offset from the token
- *
  */
-public class TcfReader extends JCasResourceCollectionReader_ImplBase {
-    int j = 0;
-
+public class TcfReader
+    extends JCasResourceCollectionReader_ImplBase
+{
     @Override
     public void getNext(JCas aJCas) throws IOException, CollectionException {
         Resource res = nextFile();
@@ -80,7 +79,6 @@ public class TcfReader extends JCasResourceCollectionReader_ImplBase {
             throw new CollectionException(e);
         } finally {
             closeQuietly(is);
-
         }
     }
 

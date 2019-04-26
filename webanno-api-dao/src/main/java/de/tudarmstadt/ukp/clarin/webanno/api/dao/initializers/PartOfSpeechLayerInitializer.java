@@ -68,8 +68,8 @@ public class PartOfSpeechLayerInitializer
         AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
                 aProject);
 
-        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "POS", SPAN_TYPE,
-                aProject, true, SINGLE_TOKEN, NO_OVERLAP);
+        AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "Part of speech",
+                SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);
 
         AnnotationFeature tokenPosFeature = new AnnotationFeature(aProject, tokenLayer, "pos",
                 "pos", POS.class.getName());
@@ -79,7 +79,16 @@ public class PartOfSpeechLayerInitializer
         posLayer.setAttachFeature(tokenPosFeature);
         annotationSchemaService.createLayer(posLayer);
 
-        annotationSchemaService.createFeature(new AnnotationFeature(aProject, posLayer, "PosValue",
-                "PosValue", CAS.TYPE_NAME_STRING, "Part-of-speech tag", posTagSet));
+        AnnotationFeature xpos = new AnnotationFeature(aProject, posLayer, "PosValue",
+                "XPOS", CAS.TYPE_NAME_STRING, "XPOS", null);
+        xpos.setDescription("Language-specific part-of-speech tag");
+        annotationSchemaService.createFeature(xpos);
+
+        AnnotationFeature upos = new AnnotationFeature(aProject, posLayer, "coarseValue",
+                "UPOS", CAS.TYPE_NAME_STRING, "UPOS", posTagSet);
+        upos.setDescription("Universal part-of-speech tag");
+        annotationSchemaService.createFeature(upos);
+
+                
     }
 }
