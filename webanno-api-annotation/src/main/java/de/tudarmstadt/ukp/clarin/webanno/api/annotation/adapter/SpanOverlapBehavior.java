@@ -256,7 +256,7 @@ public class SpanOverlapBehavior
     public boolean overlapping(AnnotationFS aFS1, AnnotationFS aFS2)
     {
         return (aFS1.getBegin() <= aFS2.getBegin() && aFS2.getBegin() < aFS1.getEnd()) ||
-                (aFS1.getBegin() <= aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
+                (aFS1.getBegin() < aFS2.getEnd() && aFS2.getEnd() <= aFS1.getEnd());
     }
     
     public boolean stacking(CreateSpanAnnotationRequest aRequest, AnnotationFS aSpan)
