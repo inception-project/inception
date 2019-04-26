@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.Logging;
 
 @Component(CurationDocumentService.SERVICE_NAME)
@@ -122,6 +123,8 @@ public class CurationDocumentServiceImpl
     @Override
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
+        Validate.notNull(aProject, "Project must be specified");
+        
         List<SourceDocument> docs = entityManager
                 .createQuery(
                         "SELECT DISTINCT adoc.document FROM AnnotationDocument AS adoc "
@@ -140,5 +143,22 @@ public class CurationDocumentServiceImpl
         Validate.notNull(aDocument, "Source document must be specified");
         
         return casStorageService.getCasTimestamp(aDocument, CURATION_USER);
+    }
+    
+    @Override
+    public List<SourceDocument> listCuratedDocuments(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        
+        String query = String.join("\n",
+                "FROM SourceDocument WHERE",
+                "  project = :project AND",
+                "  state = :state");
+        
+        return entityManager
+                .createQuery(query, SourceDocument.class)
+                .setParameter("project", aProject)
+                .setParameter("state", SourceDocumentState.CURATION_FINISHED)
+                .getResultList();
     }
 }
