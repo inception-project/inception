@@ -33,7 +33,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -52,8 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.config.WebAnnoBanner;
  */
 @SpringBootApplication(scanBasePackages = "de.tudarmstadt.ukp.clarin.webanno")
 @EntityScan(basePackages = "de.tudarmstadt.ukp.clarin.webanno")
-@ImportResource({ 
-        "classpath:/META-INF/application-context.xml"  })
 @EnableAsync
 public class WebAnno
     extends SpringBootServletInitializer

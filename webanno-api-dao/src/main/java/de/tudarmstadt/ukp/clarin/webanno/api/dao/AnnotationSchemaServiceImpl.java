@@ -27,7 +27,6 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,7 +64,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -102,14 +100,13 @@ public class AnnotationSchemaServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @Value(value = "${repository.path}")
-    private File dir;
-
     private @PersistenceContext EntityManager entityManager;
+    
     private @Autowired FeatureSupportRegistry featureSupportRegistry;
     private @Autowired ApplicationEventPublisher applicationEventPublisher;
     private @Autowired LayerSupportRegistry layerSupportRegistry;
     private @Lazy @Autowired(required = false) List<ProjectInitializer> initializerProxy;
+    
     private List<ProjectInitializer> initializers;
 
     public AnnotationSchemaServiceImpl()
