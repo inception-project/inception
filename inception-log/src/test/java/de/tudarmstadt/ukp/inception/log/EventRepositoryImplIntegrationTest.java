@@ -83,8 +83,8 @@ public class EventRepositoryImplIntegrationTest  {
         le = buildRecommenderEvaluationLoggedEvent(project, USERNAME);
 
         sut.create(le);
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that only the previously created logged event is found")
                 .hasSize(1).contains(le);
@@ -93,8 +93,8 @@ public class EventRepositoryImplIntegrationTest  {
     @Test
     public void getLoggedEvents_WithoutLoggedEvent_ShouldReturnEmptyList()
     {
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -106,7 +106,8 @@ public class EventRepositoryImplIntegrationTest  {
 
         sut.create(le);
 
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(),
                 EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
@@ -119,9 +120,9 @@ public class EventRepositoryImplIntegrationTest  {
         le = buildRecommenderEvaluationLoggedEvent(otherProject, user.getUsername());
 
         sut.create(le);
-        
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -133,9 +134,9 @@ public class EventRepositoryImplIntegrationTest  {
         le.setEvent("OTHER_TYPE");
 
         sut.create(le);
-        
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -150,9 +151,9 @@ public class EventRepositoryImplIntegrationTest  {
             le.setCreated(d);
             sut.create(le);
         }
-        
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
 
         assertThat(loggedEvents).as("Check that the number of logged events is 5").hasSize(5);
     }
@@ -171,8 +172,8 @@ public class EventRepositoryImplIntegrationTest  {
             sut.create(le);
         }
         
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, RECOMMENDER_ID);
         
         assertThat(loggedEvents).as("Check that the returned list is not empty").isNotEmpty();
         
@@ -190,9 +191,9 @@ public class EventRepositoryImplIntegrationTest  {
         sut.create(le);
         
         int otherRecommenderId = 6;
-        
-        List<LoggedEvent> loggedEvents = sut.listLoggedEvents(project, user.getUsername(),
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
+
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5, otherRecommenderId);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }

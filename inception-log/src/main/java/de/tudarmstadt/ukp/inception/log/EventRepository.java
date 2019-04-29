@@ -29,8 +29,14 @@ public interface EventRepository
 
     void create(LoggedEvent aE);
 
-    List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
-            int aSize, long recommenderId);
+    List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
+            String aEventType, int aMaxSize, long recommenderId);
 
     void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
+
+    /**
+     * Get the aMaxSize amount of logged events of the given type from the db
+     */
+    List<LoggedEvent> listLoggedEventsForEventType(Project aProject, String aUsername,
+            String aEventType, int aMaxSize);
 }

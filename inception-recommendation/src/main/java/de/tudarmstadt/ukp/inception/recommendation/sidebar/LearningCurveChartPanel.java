@@ -205,7 +205,7 @@ public class LearningCurveChartPanel
         }
         
         for (Recommender recommender : listEnabledRecommenders) {
-            List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEvents(
+            List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEventsForRecommender(
                     model.getObject().getProject(), model.getObject().getUser().getUsername(),
                     eventType, maxPointsToPlot, recommender.getId());
             
