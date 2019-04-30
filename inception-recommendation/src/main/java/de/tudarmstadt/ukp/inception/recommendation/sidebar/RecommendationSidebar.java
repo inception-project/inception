@@ -17,22 +17,30 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
@@ -42,6 +50,7 @@ public class RecommendationSidebar
     private static final String LEARNING_CURVE = "learningCurve";
     
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean AnnotationSchemaService annoService;
 
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -71,5 +80,28 @@ public class RecommendationSidebar
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
         chartContainer.setOutputMarkupId(true);
         add(chartContainer);
+    }
+
+    @OnEvent
+    /**
+     * Inform whether recommender and annotation layers are a valid match.
+     */
+    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    {
+        Project project = getModelObject().getProject();
+        for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
+            if (!layer.isEnabled()) {
+                continue;
+            }
+            for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
+                RecommendationEngineFactory<?> factory = recommendationService
+                        .getRecommenderFactory(recommender);
+                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                    error(String.format("The recommender %s is configured for an invalid layer "
+                            + "and therefore skipped.", recommender.getName()));
+                    aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+                }
+            }
+        }
     }
 }
