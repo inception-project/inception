@@ -33,11 +33,10 @@ public class CurrentProjectDashlet
     
     private final IModel<Project> projectModel;
     
-    public CurrentProjectDashlet(String aId, IModel<Project> aModel)
+    public CurrentProjectDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
-        
-        projectModel = aModel;
+        projectModel = aCurrentProject;
         add(new Label("name", LoadableDetachableModel.of(this::getProjectName)));
         
         add(new Label("description", LoadableDetachableModel.of(this::getProjectDescription))

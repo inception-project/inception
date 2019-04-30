@@ -19,15 +19,15 @@
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
   <wicket:extend>
+    <div wicket:id="activities">
     <h3><wicket:message key="activitiesHeading"/></h3>
-    <div class="scrolling flex-content flex-h-container flex-gutter">
-        <ul wicket:id="activities" >
-          <li wicket:id="activity">
-            <a wicket:id="eventLink">
-              <span wicket:id="eventName"></span>
-            </a>
-          </li>
-         </ul>
+      <ul class="scrolling flex-content flex-h-container flex-gutter">
+        <li wicket:id="activity">
+          <a wicket:id="eventLink">
+            <span wicket:id="eventName"></span>
+          </a>
+        </li>
+      </ul>
     </div>
   </wicket:extend>
 </body>

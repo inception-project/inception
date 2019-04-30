@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.List;
 
@@ -49,17 +50,23 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     private @SpringBean EventRepository eventRepository;
     private @SpringBean UserDao userRepository;
     private @SpringBean DocumentService documentService;
-    
+
     private final IModel<Project> projectModel;
-    
 
     public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
         projectModel = aCurrentProject;
+        
+        if (aCurrentProject == null || aCurrentProject.getObject() == null) {
+            return;
+        }
+        
         WebMarkupContainer activitiesList = new WebMarkupContainer("activities",
                 new StringResourceModel("activitiesHeading", this));
-        ListView<LoggedEvent> listview = new ListView<LoggedEvent>("activity",
+        activitiesList.setOutputMarkupPlaceholderTag(true);
+        
+        ListView<LoggedEvent> listView = new ListView<LoggedEvent>("activity",
                 LoadableDetachableModel.of(this::listActivities))
         {
             private static final long serialVersionUID = -8613360620764882858L;
@@ -73,16 +80,19 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
                 aItem.add(eventLink);
             }
         };
+        
+        add(visibleWhen(() -> !listView.getList().isEmpty())); 
+        setOutputMarkupPlaceholderTag(true);
+        activitiesList.add(listView);
         add(activitiesList);
-        activitiesList.add(listview);
     }
-    
+
     private String getEventDescription(ListItem<LoggedEvent> aItem) {
         //return aItem.getModelObject().getEvent()
         LoggedEvent event = aItem.getModelObject();
         String documentName = documentService.getSourceDocument(projectModel.getObject().getId(), 
                 event.getDocument()).getName();
-        String eventDate = event.getCreated().toString().split(".")[0];
+        String eventDate = event.getCreated().toString();
         return String.format("%s: Annotated in document %s", eventDate, documentName);
     }
     
