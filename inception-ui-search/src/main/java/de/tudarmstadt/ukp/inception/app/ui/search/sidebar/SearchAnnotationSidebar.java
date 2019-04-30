@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchResultsGroupingOperator;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -106,13 +108,13 @@ public class SearchAnnotationSidebar
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
-    private IModel<List<SearchResult>> searchResults;
+    private IModel<Map<String, List<SearchResult>>> groupedSearchResults;
     private Map<String, Boolean> documentLevelSelections = initDocumentLevelSelections();
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
         .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
         .of(new DeleteAnnotationsOptions());
-
+    private SearchResultsGroupingOperator searchResultsGroupingOperator = SearchResultsGroupingOperator.DOCUMENTTITLE;
 
     private SearchResult selectedResult;
 
@@ -146,7 +148,7 @@ public class SearchAnnotationSidebar
             _target.add(searchOptionsForm);
         }));
 
-        searchResults = LambdaModel.of(this::getSearchResults);
+        groupedSearchResults = LambdaModel.of(this::getSearchResultsGrouped);
         
         // Add link for re-indexing the project
         searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
@@ -166,21 +168,13 @@ public class SearchAnnotationSidebar
                 item.add(createDocumentLevelSelectionCheckBox("selectAllInDoc", Model.of(
                     documentLevelSelections.get(item.getModelObject())),
                     item.getModelObject()));
-                item.add(new SearchResultGroup("group", "resultGroup", 
-                        SearchAnnotationSidebar.this,
-                        LambdaModel.of(() -> searchResults.getObject().stream().filter((result) -> {
-                            if (result.getDocumentTitle() == null) {
-                                return true;
-                            }
-                            else {
-                                return result.getDocumentTitle().equals(item.getModelObject());
-                            }
-                        }).collect(Collectors.toList()))));
+                item.add(new SearchResultGroup("group", "resultGroup",
+                    SearchAnnotationSidebar.this,
+                    LambdaModel.of(() -> groupedSearchResults.getObject().get(item.getModelObject()))));
             }
         };
-        searchResultGroups.setModel(LambdaModel.of(() -> 
-                searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
-                        .distinct().collect(Collectors.toList())));
+        searchResultGroups.setModel(
+            LambdaModel.of(() -> new ArrayList<>(groupedSearchResults.getObject().keySet())));
 
         mainContainer.add(searchResultGroups);
 
@@ -223,7 +217,7 @@ public class SearchAnnotationSidebar
         }));
 
         annotationForm.setDefaultButton(annotateButton);
-        annotationForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
+        annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
 
         mainContainer.add(annotationForm);
     }
@@ -246,9 +240,10 @@ public class SearchAnnotationSidebar
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                searchResults.getObject().stream()
-                    .filter(r -> r.getDocumentTitle().equals(aDocumentTitle))
-                    .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                //searchResults.getObject().stream()
+                //    .filter(r -> r.getDocumentTitle().equals(aDocumentTitle))
+                //    .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                //TODO: Adjust to grouped search results
                 documentLevelSelections.put(aDocumentTitle, getModelObject());
                 target.add(mainContainer);
             }
@@ -258,15 +253,15 @@ public class SearchAnnotationSidebar
 
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
         selectedResult = null;
-        searchResults.detach();
+        groupedSearchResults.detach();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
     
-    private List<SearchResult> getSearchResults()
+    private Map<String, List<SearchResult>> getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
         
         try {
@@ -277,12 +272,13 @@ public class SearchAnnotationSidebar
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
-            return searchService.query(currentUser, project, targetQuery.getObject(),
-                    limitToDocument);
+            List<SearchResult> queryResults = searchService
+                .query(currentUser, project, targetQuery.getObject(), limitToDocument);
+            return  queryResults.stream().collect(groupingBy(searchResultsGroupingOperator.getFunction()));
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
     }
 
@@ -311,9 +307,11 @@ public class SearchAnnotationSidebar
             AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
             try {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-                for (SearchResult result : searchResults.getObject()) {
-                    if (result.isSelectedForAnnotation()) {
-                        aConsumer.accept(result, adapter);
+                for (List<SearchResult> results : groupedSearchResults.getObject().values()) {
+                    for (SearchResult result : results) {
+                        if (result.isSelectedForAnnotation()) {
+                            aConsumer.accept(result, adapter);
+                        }
                     }
                 }
             }
