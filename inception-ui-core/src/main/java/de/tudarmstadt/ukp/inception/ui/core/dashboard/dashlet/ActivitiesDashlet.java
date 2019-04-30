@@ -79,9 +79,11 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     
     private String getEventDescription(ListItem<LoggedEvent> aItem) {
         //return aItem.getModelObject().getEvent()
+        LoggedEvent event = aItem.getModelObject();
         String documentName = documentService.getSourceDocument(projectModel.getObject().getId(), 
-                aItem.getModelObject().getDocument()).getName();
-        return String.format("Annotated in document %s", documentName);
+                event.getDocument()).getName();
+        String eventDate = event.getCreated().toString().split(".")[0];
+        return String.format("%s: Annotated in document %s", eventDate, documentName);
     }
     
     private void openDocument(LoggedEvent aEvent)

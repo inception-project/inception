@@ -50,6 +50,7 @@ public class EventRepositoryImplIntegrationTest  {
     private static final int RECOMMENDER_ID = 7;
     private static final String DETAIL_JSON = "{\"recommenderId\":" + RECOMMENDER_ID + "}";
     private static final String EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT = "RecommenderEvaluationResultEvent";
+    private static final String EVENT_TYPE_AFTER_ANNO_EVENT = "AfterAnnotationUpdateEvent";
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -78,9 +79,34 @@ public class EventRepositoryImplIntegrationTest  {
     }
     
     @Test
+    public void getLoggedEventsForType_WithoutLoggedEvent_ShouldReturnEmptyList()
+    {
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForEventType(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 10);
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
+    public void getLoggedEventsForType_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
+    {
+        le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
+        LoggedEvent otherTypeEvent = buildLoggedEvent(project, 
+                USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT);
+
+        sut.create(le);
+        sut.create(otherTypeEvent);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsForEventType(project,
+                user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 5);
+
+        assertThat(loggedEvents).as("Check that only the previously created logged event is found")
+                .hasSize(1).contains(le);
+    }
+
+    @Test
     public void getLoggedEvents_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
     {
-        le = buildRecommenderEvaluationLoggedEvent(project, USERNAME);
+        le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
 
         sut.create(le);
         List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
@@ -102,7 +128,7 @@ public class EventRepositoryImplIntegrationTest  {
     @Test
     public void getLoggedEvents_WithLoggedEventOfOtherUser_ShouldReturnEmptyList()
     {
-        le = buildRecommenderEvaluationLoggedEvent(project, "OtherUser");
+        le = buildLoggedEvent(project, "OtherUser", EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
 
         sut.create(le);
 
@@ -117,7 +143,8 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventOfOtherProject_ShouldReturnEmptyList()
     {
         Project otherProject = createProject("otherProject");
-        le = buildRecommenderEvaluationLoggedEvent(otherProject, user.getUsername());
+        le = buildLoggedEvent(otherProject, user.getUsername(), 
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
 
         sut.create(le);
 
@@ -130,7 +157,7 @@ public class EventRepositoryImplIntegrationTest  {
     @Test
     public void getLoggedEvents_WithLoggedEventOfOtherType_ShouldReturnEmptyList()
     {
-        le = buildLoggedEvent(project, user.getUsername());
+        le = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
         le.setEvent("OTHER_TYPE");
 
         sut.create(le);
@@ -145,7 +172,8 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventsMoreThanGivenSize_ShouldReturnListOfGivenSize()
     {
         for (int i = 0; i < 6; i++) {
-            le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+            le = buildLoggedEvent(project, user.getUsername(), 
+                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
             Date d = new Date();
             d.setHours(i);
             le.setCreated(d);
@@ -162,7 +190,8 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventsCreatedAtDifferentTimes_ShouldReturnSortedList()
     {
         for (int i = 0; i < 5; i++) {
-            le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+            le = buildLoggedEvent(project, user.getUsername(),
+                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
            
             Calendar cal = Calendar.getInstance();
             cal.set(Calendar.HOUR_OF_DAY, i);
@@ -187,7 +216,7 @@ public class EventRepositoryImplIntegrationTest  {
     @Test
     public void getLoggedEvents_WithLoggedEventOfOtherRecommenderId_ShouldReturnEmptyList()
     {
-        le = buildRecommenderEvaluationLoggedEvent(project, user.getUsername());
+        le = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT);
         sut.create(le);
         
         int otherRecommenderId = 6;
@@ -207,22 +236,15 @@ public class EventRepositoryImplIntegrationTest  {
         return testEntityManager.persist(project);
     }
 
-    private LoggedEvent buildRecommenderEvaluationLoggedEvent(Project aProject, String aUsername)
-    {
-        LoggedEvent le = buildLoggedEvent(aProject, aUsername);
-
-        le.setEvent(EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT); 
-
-        return le;
-    }
-
-    private LoggedEvent buildLoggedEvent(Project aProject, String aUsername)
+    private LoggedEvent buildLoggedEvent(Project aProject, String aUsername,
+            String aEventType)
     {
         LoggedEvent le = new LoggedEvent();
         le.setUser(aUsername);
         le.setProject(aProject.getId());
         le.setDetails(DETAIL_JSON);
         le.setCreated(new Date());
+        le.setEvent(aEventType);
         return le;
     }
 
