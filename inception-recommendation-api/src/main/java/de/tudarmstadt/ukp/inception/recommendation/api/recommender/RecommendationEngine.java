@@ -47,7 +47,7 @@ public interface RecommendationEngine {
 
     /**
      * Evaluates the performance of a recommender by splitting the data given in {@code aCasses} in
-     * training and test sets by using {@code aDataSplitter}, training on the training śet and
+     * training and test sets by using {@code aDataSplitter}, training on the training set and
      * measuring performance on unseen data on the training set. This method must not mutate
      * {@code aCasses} in any way.
      * 
@@ -55,7 +55,8 @@ public interface RecommendationEngine {
      *            The CASses containing target annotations
      * @param aDataSplitter
      *            The splitter which determines which annotations belong to which set
-     * @return Score measuring the performance of predicting on the test set
+     * @return Scores available through an EvaluationResult object measuring the performance
+     *         of predicting on the test set
      */
     EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException;
