@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,18 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter.TargetSet.TRAIN;
-
 /**
- * Maps all data to the training set.
+ * Holds information on an annotated unit: its gold label and its predicted label.
  */
-public class TrainOnAllDataSplitter
-    implements DataSplitter
+public class LabelPair
 {
-    @Override
-    public TargetSet getTargetSet(Object aObject)
+    private final String goldLabel;
+    private final String predictedLabel;
+
+    public LabelPair(String aGoldLabel, String aPredictedLabel)
     {
-        return TRAIN; // I changed this from TEST, because we want to declare all data for training
-                      // not testing
+        goldLabel = aGoldLabel;
+        predictedLabel = aPredictedLabel;
     }
+
+    public String getGoldLabel()
+    {
+        return goldLabel;
+    }
+
+    public String getPredictedLabel()
+    {
+        return predictedLabel;
+    }
+
 }

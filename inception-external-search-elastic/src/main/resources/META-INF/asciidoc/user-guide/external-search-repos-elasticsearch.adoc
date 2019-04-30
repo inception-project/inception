@@ -6,18 +6,34 @@ Selecting the **ElasticSearch** repository type allows connecting to remote Elas
 In order to set up a connection to an ElasticSearch repository, the following information needs to
 be provided:
 
-* *URL*: the URL where the ElasicSearch instance is running (e.g. `http://localhost:9200/`
+* *Remote URL*: the URL where the ElasticSearch instance is running (e.g. `http://localhost:9200/`)
 * *Index Name*: the name of the index within the instance (e.g. `mycorpus`)
 * *Search path*: the suffix used to access the searching endpoint (usually `_search`)
-* *Object type*: the endpoint used to download the full document text
+* *Object type*: the endpoint used to download the full document text (usually `texts`)
+* *Field*: the field of the documents in the ElasticSearch repository that is used for matching
+the search query (default `doc.text`)
 
 From this information, two URLs are constructed:
 
 * the search URL: `<URL>/<index name>/<search path>`
 * the document retrieval URL as: `<URL>/<index name>/<object type>/<document id>`
 
-The *remote order* setting allows to switch the ranking of results from the default ranking used by
+The *Random Ordering* setting allows to switch the ranking of results from the default ranking used by
 the ElasticSearch server to a random order. The documents returned will still match the query, but
 the order does not correspond to the matching quality anymore. When random ordering is enabled, no
 score is associated with the search results. If desired, the *random seed* used for the ordering
 can be customized.
+
+The *Result Size* setting allows to specify the number of document results that should be retrieved
+when querying the document repository. The possible result sizes lie between 1 and 10000 documents.
+
+If the default **Field** setting `doc.text` is used, then the JSON structure for indexed documents 
+should look as follows:
+
+```
+{
+  "doc": {
+    "text": "Here goes the document text."
+  }
+}
+```
