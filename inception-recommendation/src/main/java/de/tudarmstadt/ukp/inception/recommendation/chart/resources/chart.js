@@ -26,7 +26,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var xAxixType = "";
     
 	//make the type of x-axis "category" when we have more than one learning curves. i.e when the request is from annotation recommender side bar. It is for better visualization when the x-axis represents test data size
-    if (arrayOfLearningCurves.length <= 2) 
+    if ((arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) > 1) 
     	xAxixType = "category";
     
     //draw the chart with the help of the arrayOfLearningCurves. The type of the graph is "step".

@@ -24,12 +24,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +68,7 @@ public class EvaluationSimulationPanel
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
 
-    private final ChartPanel chartPanel;
+    private final Panel emptyPanel;
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
@@ -83,49 +82,58 @@ public class EvaluationSimulationPanel
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
-        //initially the chart is empty. passing empty model
-        chartPanel = new ChartPanel(MID_CHART_CONTAINER, Model.of());
-        chartPanel.setOutputMarkupId(true);
-        form.add(chartPanel);
-
+        emptyPanel  = new EmptyPanel(MID_CHART_CONTAINER);
+        emptyPanel.setOutputMarkupPlaceholderTag(true);
+        emptyPanel.setOutputMarkupId(true);
+        form.add(emptyPanel);
+        
         // clicking the start button the annotated documents are evaluated and the learning curve
         // for the selected recommender is plotted in the hCart Panel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                String[] scoresAndTrainingSizes = evaluate(_target);
+                 
+                    // replace the empty panel with chart panel on click event so the chard renders
+                    // with the loadable detachable model.
+                ChartPanel chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
+                        LoadableDetachableModel.of(this::renderChart));
+                chartPanel.setOutputMarkupPlaceholderTag(true);
+                chartPanel.setOutputMarkupId(true);
                 
-                if (scoresAndTrainingSizes == null) {
-                    //no warning message here because it has already been shown in the method
-                    //evaluate(_target). There are different scenarios when the score is returned 
-                    //null and each one is handled differently in the method evaluate(_target).
-                    return;
-                }
-
-                String scores = scoresAndTrainingSizes[0];
-                String trainingSizes = scoresAndTrainingSizes[1];
-                
-                if (scores.isEmpty()) {
-                    LOG.warn("There were no evaluation to show");
-                    warn("There were no evaluation to showed");
-                    _target.addChildren(getPage(), IFeedback.class);
-                    
-                    return;
-                }
-                
-                Map<String,String> curveData = new HashMap<String,String>();
-                curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
-                
-                LearningCurve learningCurve = new LearningCurve();
-                learningCurve.setCurveData(curveData);
-                learningCurve.setXaxis(trainingSizes);
-
-                //provide the chart above calculated data to plot the learning curve
-                chartPanel.setDefaultModel(Model.of(learningCurve));
-                _target.add(chartPanel);
+                form.addOrReplace(chartPanel);
+                _target.add(chartPanel);                
             });
         
         form.add(startButton);
+    }
+    
+    private LearningCurve renderChart()
+    {
+        String[] scoresAndTrainingSizes = evaluate();
+
+        if (scoresAndTrainingSizes == null) {
+            // no warning message here because it has already been shown in the method
+            // evaluate(_target). There are different scenarios when the score is returned
+            // null and each one is handled differently in the method evaluate(_target).
+            return null;
+        }
+
+        String scores = scoresAndTrainingSizes[0];
+        String trainingSizes = scoresAndTrainingSizes[1];
+
+        if (scores.isEmpty()) {
+            LOG.warn("There were no evaluation to show");
+            return null;
+        }
+
+        Map<String, String> curveData = new HashMap<String, String>();
+        curveData.put(selectedRecommenderPanel.getObject().getName(), scores);
+
+        LearningCurve learningCurve = new LearningCurve();
+        learningCurve.setCurveData(curveData);
+        learningCurve.setXaxis(trainingSizes);
+
+        return learningCurve;
     }
     
     /**
@@ -135,15 +143,12 @@ public class EvaluationSimulationPanel
      * 
      * @return comma separated string of scores in the first index of the array
      */
-    private String[] evaluate(AjaxRequestTarget aTarget)
-        throws IOException
+    private String[] evaluate()
     {
         //there must be some recommender selected by the user on the UI
         if (selectedRecommenderPanel.getObject() == null
                 || selectedRecommenderPanel.getObject().getTool() == null) {
             LOG.error("Please select a recommender from the list");
-            error("Please select a recommender from the list");
-            aTarget.addChildren(getPage(), IFeedback.class);
             return null;
         }
 
@@ -160,8 +165,6 @@ public class EvaluationSimulationPanel
             }
             catch (IOException e1) {
                 LOG.error("Unable to render chart", e1);
-                error("Unable to render chart: " + e1.getMessage());
-                aTarget.addChildren(getPage(), IFeedback.class);
                 return;
             }
         });
@@ -177,8 +180,6 @@ public class EvaluationSimulationPanel
         if (recommender == null)
         {
             LOG.warn("Unknown Recommender selected");
-            warn("Unknown Recommender selected");
-            aTarget.addChildren(getPage(), IFeedback.class);
             return null;
         }
         
@@ -214,5 +215,4 @@ public class EvaluationSimulationPanel
 
         return new String[] {sbScore.toString(), sbTrainingSize.toString() };
     }
-    
 }

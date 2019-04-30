@@ -27,20 +27,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
-import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,46 +68,38 @@ public class LearningCurveChartPanel
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
-        super(aId);
+        super(aId, aModel);
         model = aModel;
 
         //initially the chart is empty. passing empty model
-        chartPanel = new ChartPanel(MID_CHART_CONTAINER, Model.of());
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER,
+                LoadableDetachableModel.of(this::renderChart));
+        
         chartPanel.setOutputMarkupId(true);
         add(chartPanel);
     }
 
-    @Override
-    protected void onBeforeRender()
-    {
-        super.onBeforeRender();
-        
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-        
-        if (!target.equals(Optional.empty()))
-            renderChart(target.get());
-    }
-    
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         LOG.trace("rendered annotation event");
 
-        renderChart( aEvent.getRequestHandler());
+        aEvent.getRequestHandler().add(this);
     }
-
-    private void renderChart(IPartialPageRequestHandler aRequestHandler)
+    
+    /**
+     * returns chart data wrapped in LearningCurve
+     * 
+     * @return
+     */
+    private LearningCurve renderChart()
     {
-        MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores(aRequestHandler);
+        MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores();
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
-            LOG.error("No evaluation data for the learning curve. Project: {}",
+            LOG.error("Cannot plot the learning curve. Please make some annotations. Project: {}",
                     model.getObject().getProject());
-
-            error("Cannot plot the learning curve. Please make some annotations");
-            aRequestHandler.addChildren(getPage(), IFeedback.class);
-
-            return;
+            return null;
         }
 
         Map<String,String> curveData = new HashMap<String,String>();
@@ -138,16 +125,7 @@ public class LearningCurveChartPanel
             learningCurve.setXaxis(xaxisValues);
         }
 
-        //provide the chart above calculated data to plot the learning curve
-        chartPanel.setDefaultModel(Model.of(learningCurve));
-
-        // to avoid the error, "A partial update of the page is being rendered"
-        try {
-            aRequestHandler.add(chartPanel);
-        }
-        catch (IllegalStateException e) {
-            LOG.warn("Not updating the chart. " + e.toString());
-        }
+        return learningCurve;
     }
 
     /**
@@ -156,8 +134,7 @@ public class LearningCurveChartPanel
      * 
      * @return
      */
-    private MultiValuedMap<String, Double> getLatestScores(
-            IPartialPageRequestHandler aRequestHandler)
+    private MultiValuedMap<String, Double> getLatestScores()
     {
         // we want to plot RecommenderEvaluationResultEvent for the learning curve. The
         // value of the event
@@ -167,13 +144,9 @@ public class LearningCurveChartPanel
         
         List<Recommender> listEnabledRecommenders = recommendationService
                 .listEnabledRecommenders(model.getObject().getProject());
-        
-        if (listEnabledRecommenders.isEmpty())        {
+    
+        if (listEnabledRecommenders.isEmpty()) {
             LOG.warn("The project has no enabled recommender");
-
-            error("Cannot plot the learning curve. There is not recommender in the project.");
-
-            aRequestHandler.addChildren(getPage(), IFeedback.class);
         }
         
         for (Recommender recommender : listEnabledRecommenders) {
@@ -218,15 +191,9 @@ public class LearningCurveChartPanel
             catch (IOException e) {
                 LOG.error("Invalid logged Event detail. Skipping record with logged event id: "
                         + loggedEvent.getId(), e);
-
-                error("Invalid logged Event detail. Skipping record with logged event id: "
-                        + loggedEvent.getId());
-
-                aRequestHandler.addChildren(getPage(), IFeedback.class);
             }
         }
         return recommenderScoreMap;
     }
-    
 }
 

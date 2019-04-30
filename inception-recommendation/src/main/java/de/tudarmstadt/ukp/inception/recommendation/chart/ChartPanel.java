@@ -33,7 +33,7 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
@@ -57,15 +57,15 @@ public class ChartPanel
 
     private static final String MID_CHART_CONTAINER = "chart";
 
-    private IModel<LearningCurve> model;
+    private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
     private final ChartAjaxBejavior chartAjaxBejavior;
 
-    public ChartPanel(String aId, IModel<LearningCurve> aModel)
+    public ChartPanel(String aId, LoadableDetachableModel<LearningCurve> aModel)
     {
-        super(aId);
-        model = (aModel);
-
+        super(aId, aModel);
+        model = aModel;
+        
         chart = new WebMarkupContainer(MID_CHART_CONTAINER);
         chart.setMarkupId("canvas");
         chart.setOutputMarkupId(true);
@@ -74,12 +74,12 @@ public class ChartPanel
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
     }
-
+    
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-
+        
         // import Js
         aResponse.render(JavaScriptHeaderItem
                 .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
@@ -95,18 +95,18 @@ public class ChartPanel
         
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
-        model = getModel();
-
         if (model == null)
             return;
+        
 
         String chartTriggerJavascript = "$(document).ready(function() {$.ajax({url:'"
                 + chartAjaxBejavior.getCallbackUrl().toString()
                 + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){updateLearningCurveDiagram(result)}})})";
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
+        
     }
-
+ 
     @Override
     protected void onBeforeRender()
     {
@@ -133,11 +133,9 @@ public class ChartPanel
             WebApplication app = (WebApplication) getComponent().getApplication();
             AjaxRequestTarget target = app.newAjaxRequestTarget(getComponent().getPage());
 
-            model = getModel();
-
             if (model == null)
                 return;
-
+            
             LearningCurve learningCurve = model.getObject();
 
             try {
@@ -154,12 +152,6 @@ public class ChartPanel
                 target.addChildren(getPage(), IFeedback.class);
             }
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<LearningCurve> getModel()
-    {
-        return (IModel<LearningCurve>) getDefaultModel();
     }
 
     /**

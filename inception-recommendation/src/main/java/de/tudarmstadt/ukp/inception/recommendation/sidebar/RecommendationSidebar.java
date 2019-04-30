@@ -69,6 +69,7 @@ public class RecommendationSidebar
         add(form);
 
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
+        chartContainer.setOutputMarkupId(true);
         add(chartContainer);
     }
 }
