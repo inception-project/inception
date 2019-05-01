@@ -29,3 +29,10 @@ images to {product-name} - the image must be accessible via an URL, e.g. from an
 Open the **images sidebar** to get an overview over all images linked to any of the annotations
 currently visible on screen.
 
+NOTE: The sidebar attempts to add a border of an appropriate color to each image. For light images,
+      a dark border is added and for dark images, a light border is added. However, this is only possible if
+      the image server supports cross-origin resource sharing (CORS). The website
+      link:https://enable-cors.org/server.html[enable-cors.org] provides tips on how to configure your image
+      server to support CORS. If CORS is not supported by the image server, rendering performance will 
+      degrade as there is an attempt to re-load the image without CORS and without trying to determine the
+      border color - but the application should still work and the images should still show.
