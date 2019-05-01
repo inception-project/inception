@@ -136,15 +136,17 @@ public class Tsv3XCasDocumentBuilder
                 
                 Entry<Integer, TsvToken> beginTokenEntry = tokenBeginIndex.floorEntry(begin);
                 if (beginTokenEntry == null) {
-                    throw new IllegalStateException("Unable to find begin token for near " + begin
-                            + " (first token starts at " + tokenBeginIndex.pollFirstEntry().getKey()
-                            + ") for annotation: " + annotation);
+                    throw new IllegalStateException(
+                            "Unable to find begin token starting at or before " + begin
+                                    + " (first token starts at "
+                                    + tokenBeginIndex.pollFirstEntry().getKey()
+                                    + ") for annotation: " + annotation);
                 }
-                
+
                 Entry<Integer, TsvToken> endTokenEntry = tokenEndIndex.ceilingEntry(end);
                 if (endTokenEntry == null) {
-                    throw new IllegalStateException("Unable to find end token for near " + end
-                            + " (last token ends at " + tokenEndIndex.pollLastEntry().getKey()
+                    throw new IllegalStateException("Unable to find end token ending at or after "
+                            + end + " (last token ends at " + tokenEndIndex.pollLastEntry().getKey()
                             + ") for annotation: " + annotation);
                 }
                 
