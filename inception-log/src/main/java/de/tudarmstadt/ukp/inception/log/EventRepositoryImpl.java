@@ -82,14 +82,17 @@ public class EventRepositoryImpl
     
     @Override
     @Transactional
-    public List<LoggedEvent> listLoggedEventsForEventType(Project aProject, String aUsername,
+    public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String aEventType, int aMaxSize)
     {
-        String query = String.join("\n", 
-                "FROM LoggedEvent WHERE ", 
-                "user=:user AND ",
-                "project = :project AND ",
-                "event = :event ", 
+        String query = String.join("\n",
+                "FROM LoggedEvent WHERE",
+                "created IN ",
+                "(SELECT MAX(created) FROM LoggedEvent WHERE",
+                "user=:user AND",
+                "project=:project AND",
+                "event =:event",
+                "GROUP BY document)",
                 "ORDER BY created DESC");
 
         return entityManager.createQuery(query, LoggedEvent.class)

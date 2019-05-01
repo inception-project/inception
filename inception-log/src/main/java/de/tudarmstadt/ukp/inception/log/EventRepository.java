@@ -37,6 +37,6 @@ public interface EventRepository
     /**
      * Get the aMaxSize amount of logged events of the given type from the db
      */
-    List<LoggedEvent> listLoggedEventsForEventType(Project aProject, String aUsername,
+    List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String aEventType, int aMaxSize);
 }

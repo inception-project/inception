@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -32,6 +33,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -45,7 +48,12 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
+    private static final int MAX_NUM_ACTIVITIES = 2;
+    public static final String AFTER_ANNOTATION_UPDATE_EVENT = "AfterAnnotationUpdateEvent";
+
     private static final long serialVersionUID = -2010294259619748756L;
+    
+    private static final Logger log = LoggerFactory.getLogger(ActivitiesDashlet.class);
     
     private @SpringBean EventRepository eventRepository;
     private @SpringBean UserDao userRepository;
@@ -75,7 +83,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             protected void populateItem(ListItem<LoggedEvent> aItem)
             {
                 LambdaStatelessLink eventLink = new LambdaStatelessLink("eventLink",
-                    () -> openDocument(aItem.getModelObject()));
+                    () -> openLastActivity(aItem.getModelObject()));
                 eventLink.add(new Label("eventName", getEventDescription(aItem)));
                 aItem.add(eventLink);
             }
@@ -88,14 +96,48 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     }
 
     private String getEventDescription(ListItem<LoggedEvent> aItem) {
-        //return aItem.getModelObject().getEvent()
         LoggedEvent event = aItem.getModelObject();
-        String documentName = documentService.getSourceDocument(projectModel.getObject().getId(), 
-                event.getDocument()).getName();
-        String eventDate = event.getCreated().toString();
+        String documentName = getDocumentName(event);
+        String eventDate = formatDateStr(event);
+        
+        if (documentName == null) {
+            return "";
+        }
+        
         return String.format("%s: Annotated in document %s", eventDate, documentName);
     }
+
+    private String getDocumentName(LoggedEvent event)
+    {
+        long docId = event.getDocument();
+        if (docId == -1) {
+            return null;
+        }
+        return documentService.getSourceDocument(projectModel.getObject().getId(), docId).getName();
+    }
+
+    private String formatDateStr(LoggedEvent event)
+    {
+        String eventDate = event.getCreated().toString();
+        String[] times = eventDate.split(":");
+        if (times.length >= 2) {
+            eventDate = String.join(":", times[0], times[1]);
+        }
+        return eventDate;
+    }
     
+    private void openLastActivity(LoggedEvent aEvent)
+    {
+        String eventName = aEvent.getEvent();
+        switch (eventName) {
+        case AFTER_ANNOTATION_UPDATE_EVENT:
+            openDocument(aEvent);
+            break;
+        default:
+            log.info(String.format("Unknown last activties event: %s", eventName));
+        }
+    }
+
     private void openDocument(LoggedEvent aEvent)
     {
         PageParameters params = new PageParameters();
@@ -106,11 +148,12 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
 
     private List<LoggedEvent> listActivities()
     {
+        List<LoggedEvent> events = new ArrayList<>();
         User user = userRepository.getCurrentUser();
         Project project = projectModel.getObject();
-        String annotationEvent = "AfterAnnotationUpdateEvent";
-        List<LoggedEvent> events = eventRepository.listLoggedEventsForEventType(project,
-                user.getUsername(), annotationEvent, 1);
+        String annotationEvent = AFTER_ANNOTATION_UPDATE_EVENT;
+        events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project,
+                user.getUsername(), annotationEvent, MAX_NUM_ACTIVITIES));
         return events;
     }
     
