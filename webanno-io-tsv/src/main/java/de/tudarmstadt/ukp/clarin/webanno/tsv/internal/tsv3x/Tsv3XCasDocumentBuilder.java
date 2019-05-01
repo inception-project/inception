@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Set;
 import java.util.TreeMap;
@@ -133,8 +134,22 @@ public class Tsv3XCasDocumentBuilder
                     end = targetFS.getEnd();
                 }
                 
-                TsvToken beginToken = tokenBeginIndex.floorEntry(begin).getValue();
-                TsvToken endToken = tokenEndIndex.ceilingEntry(end).getValue();
+                Entry<Integer, TsvToken> beginTokenEntry = tokenBeginIndex.floorEntry(begin);
+                if (beginTokenEntry == null) {
+                    throw new IllegalStateException("Unable to find begin token for near " + begin
+                            + " (first token starts at " + tokenBeginIndex.pollFirstEntry().getKey()
+                            + ") for annotation: " + annotation);
+                }
+                
+                Entry<Integer, TsvToken> endTokenEntry = tokenEndIndex.ceilingEntry(end);
+                if (endTokenEntry == null) {
+                    throw new IllegalStateException("Unable to find end token for near " + end
+                            + " (last token ends at " + tokenEndIndex.pollLastEntry().getKey()
+                            + ") for annotation: " + annotation);
+                }
+                
+                TsvToken beginToken = beginTokenEntry.getValue();
+                TsvToken endToken = endTokenEntry.getValue();
                 
                 // For zero-width annotations, the begin token must match the end token.
                 // Zero-width annotations between two directly adjacent tokens are always
