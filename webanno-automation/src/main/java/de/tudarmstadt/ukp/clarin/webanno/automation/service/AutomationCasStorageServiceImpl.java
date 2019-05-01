@@ -195,7 +195,7 @@ public class AutomationCasStorageServiceImpl
                 detailMsg.append("CAS Doctor found problems for user [").append(aUsername)
                     .append("] in document [")
                     .append(aDocumentName).append("] (").append(aDocumentId)
-                    .append(") in project[")
+                    .append(") in project [")
                     .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
                 e.getDetails().forEach(m -> detailMsg.append(
                         String.format("- [%s] %s%n", m.level, m.message)));
