@@ -159,19 +159,16 @@ public class AnnotationDocumentExporter
             // 
             
             // Determine which format to use for export
-            FormatSupport format;
-            if (FORMAT_AUTO.equals(aRequest.getFormat())) {
-                format = new WebAnnoTsv3FormatSupport();
-            }
-            else {
-                format = importExportService.getWritableFormatById(aRequest.getFormat())
-                        .orElseGet(() -> {
-                            aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
-                                    + "format [%s] - exporting as WebAnno TSV instead.",
-                                    sourceDocument.getName(), aRequest.getFormat()));
-                            return new WebAnnoTsv3FormatSupport();
-                        });
-            }
+            String formatId = FORMAT_AUTO.equals(aRequest.getFormat()) ? sourceDocument.getFormat()
+                    : aRequest.getFormat();
+            
+            FormatSupport format = importExportService.getWritableFormatById(formatId)
+                    .orElseGet(() -> {
+                        aRequest.addMessage(LogMessage.error(this,"[%s] No writer found for "
+                                + "format [%s] - exporting as WebAnno TSV instead.",
+                                sourceDocument.getName(), aRequest.getFormat()));
+                        return new WebAnnoTsv3FormatSupport();
+                    });
 
             // Export annotations from regular users
             for (de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument annotationDocument : 
