@@ -31,6 +31,9 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.ExternalImage;
 import org.apache.wicket.markup.html.link.ExternalLink;
@@ -43,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
+import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -94,6 +98,91 @@ public class ImageSidebar
         images.setModel(LoadableDetachableModel.of(this::listImageUrls));
         
         mainContainer.add(images);
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(JavaScriptHeaderItem.forReference(
+                new WebjarsJavaScriptResourceReference("color-thief/current/js/color-thief.js")));
+        aResponse.render(OnDomReadyHeaderItem.forScript(colorScript()));
+    }
+    
+    private String colorScript()
+    {
+        return String.join("\n",
+                "function getColorCache() {",
+                "  var cacheHolder = window;",
+                "  if (!cacheHolder.hasOwnProperty('colorCache')) {",
+                "    console.debug('Initializing color cache');",
+                "    cacheHolder.colorCache = {};",
+                "  }",
+                "  return cacheHolder.colorCache;",
+                "}",
+                "",
+                "function updateImageBackground(img) {",
+                "  if (!$(img).attr('crossorigin')) return;",
+                "  if (typeof img.naturalWidth != 'undefined' && img.naturalWidth == 0) return;",
+                "  try {",
+                "    var color = getColorCache()[img.src];",
+                "    if (color === undefined) {",
+                "      var dominantColor = colorThief.getColor(img);",
+                "      var r = dominantColor[0];",
+                "      var b = dominantColor[1];",
+                "      var g = dominantColor[2];",
+                "      // http://alienryderflex.com/hsp.html",
+                "      var hsp = Math.sqrt(0.299*r*r + 0.587*g*g + 0.114*b*b);",
+                "      color = hsp > 127 ? 'black' : 'white';",
+                "      getColorCache()[img.src] = color;",
+                "    }",
+                "    $(img).css('background-color', color);",
+                "  }",
+                "  catch (err) {",
+                "    console.error('Cannot determine image background color for ' + img.src, err)",
+                "    $('canvas').remove();",
+                "  }",
+                "}",
+                "",
+                "function fallbackToNonCors(img) {",
+                "  $(img).removeAttr('crossorigin');",
+                "  var x = img.src;",
+                "  img.src = '';",
+                "  img.src = x;",
+                "  var warning = `",
+                "    <div style='position: absolute; top: 5px; left: 5px;' class='showOnHover'>", 
+                "      <span class='btn btn-xs btn-default'>",
+                "        <i class='fa fa-exclamation-triangle' style='color: orange;' aria-hidden='true'",
+                "          title='Remote server may not permit cross-domain resource access which prevents automatic setting of image border color.'>",
+                "        </i>", 
+                "      </span>", 
+                "    </div>",
+                "  `",
+                "  $(warning).insertAfter(img);",
+                "}",
+                "var startTime = new Date().getTime();",
+                "var colorThief = new ColorThief();",
+                "$('#" + getMarkupId() + " .img-thumbnail').each((index, img) => {",
+                // Make sure image data is actually available before trying to fetch it to calculate
+                // the background color
+                "  if (img.complete) {",
+                //   Check if the image has been properly loaded and if not try without CORS
+                "    if (typeof img.naturalWidth != 'undefined' && img.naturalWidth == 0) {",
+                "      fallbackToNonCors(img);",
+                "    }",
+                "    else {",
+                "      updateImageBackground(img);",
+                "    }",
+                "  }",
+                "  else {",
+                "    img.addEventListener('load', () => updateImageBackground(img));",
+                //   If the image cannot be loaded it may be due to CORS - so try without
+                "    img.addEventListener('error', () => fallbackToNonCors(img));",
+                "  }",
+                "});",
+                "console.debug('Calculating image border color took ' + ",
+                "  (new Date().getTime() - startTime) + 'ms');");
     }
     
     private List<String> listImageUrls()
@@ -154,5 +243,6 @@ public class ImageSidebar
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
         aEvent.getRequestHandler().add(mainContainer);
+        aEvent.getRequestHandler().appendJavaScript(colorScript());
     }
 }
