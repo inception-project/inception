@@ -46,13 +46,13 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
+import org.dkpro.core.api.parameter.ComponentParameters;
 
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceLink;
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
-import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
@@ -182,9 +182,9 @@ public class WebannoTsv2Writer
             }
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)) {
                     continue;
                 }
                 spanFeatures.put(feature, type);
@@ -197,9 +197,9 @@ public class WebannoTsv2Writer
         for (Type type : relationTypes) {
             IOUtils.write(" # " + type.getName(), aOs, aEncoding);
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                         || feature.getShortName().equals(GOVERNOR)
                         || feature.getShortName().equals(DEPENDENT)) {
                     continue;
@@ -222,9 +222,9 @@ public class WebannoTsv2Writer
                 }
             }
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")) {
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)) {
                     continue;
                 }
 
@@ -238,9 +238,9 @@ public class WebannoTsv2Writer
         Map<Feature, Map<Integer, String>> relAnnos = new HashMap<>();
         for (Type type : relationTypes) {
             for (Feature feature : type.getFeatures()) {
-                if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                        || feature.toString().equals("uima.tcas.Annotation:begin")
-                        || feature.toString().equals("uima.tcas.Annotation:end")
+                if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                        || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                         || feature.getShortName().equals(GOVERNOR)
                         || feature.getShortName().equals(DEPENDENT)) {
                     continue;
@@ -289,9 +289,9 @@ public class WebannoTsv2Writer
 
                 for (Type type : relationTypes) {
                     for (Feature feature : type.getFeatures()) {
-                        if (feature.toString().equals("uima.cas.AnnotationBase:sofa")
-                                || feature.toString().equals("uima.tcas.Annotation:begin")
-                                || feature.toString().equals("uima.tcas.Annotation:end")
+                        if (feature.getName().equals(CAS.FEATURE_FULL_NAME_SOFA)
+                                || feature.getName().equals(CAS.FEATURE_FULL_NAME_BEGIN)
+                                || feature.getName().equals(CAS.FEATURE_FULL_NAME_END)
                                 || feature.getShortName().equals(GOVERNOR)
                                 || feature.getShortName().equals(DEPENDENT)) {
                             continue;

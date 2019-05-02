@@ -605,7 +605,7 @@ public class CopyAnnotationTest
         AnnotationFS existing = mergeCAs.createAnnotation(type, 0, 1);
         existing.setFeatureValue(sourceFeature, originToken);
         existing.setFeatureValue(targetFeature, targetToken);
-        mergeCAs.addFsToIndexes(clickedFs);
+        mergeCAs.addFsToIndexes(existing);
 
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> MergeCas.addRelationArcAnnotation(mergeCAs, clickedFs, true,

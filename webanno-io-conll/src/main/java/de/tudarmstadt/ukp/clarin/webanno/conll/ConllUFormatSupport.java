@@ -24,6 +24,8 @@ import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.dkpro.core.io.conll.ConllUReader;
+import org.dkpro.core.io.conll.ConllUWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;

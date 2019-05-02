@@ -63,12 +63,12 @@
       <artifactId>webanno-constraints</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.metadata-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-metadata-asl</artifactId>
     </dependency>
 
     <dependency>
@@ -185,23 +185,23 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.syntax-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-syntax-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.lexmorph-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.coref-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-coref-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>

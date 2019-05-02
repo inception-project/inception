@@ -47,13 +47,13 @@ import org.apache.uima.collection.CollectionException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import org.dkpro.core.api.parameter.ComponentParameters;
 
 import de.tudarmstadt.ukp.clarin.webanno.tsv.util.AnnotationUnit;
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
@@ -330,11 +330,9 @@ public class WebannoTsv3Reader
                                 if (isMultitoken) {
                                     Feature endF = type
                                             .getFeatureByBaseName(CAS.FEATURE_BASE_NAME_END);
-                                    
                                     prevAnnoFs.getCAS().removeFsFromIndexes(prevAnnoFs);
                                     prevAnnoFs.setIntValue(endF, end);
                                     prevAnnoFs.getCAS().addFsToIndexes(prevAnnoFs);
-                                    
                                     mAnno = getEscapeChars(mAnno);
                                     prevAnnoFs.setFeatureValueFromString(feat, mAnno);
                                     if (feat.getShortName().equals(REF_LINK)) {
@@ -484,9 +482,10 @@ public class WebannoTsv3Reader
                                         if (depFs.getBegin() <= annos.get(i).getBegin()) {
                                             Feature beginF = type.getFeatureByBaseName(
                                                     CAS.FEATURE_BASE_NAME_BEGIN);
-                                            annos.get(i).getCAS().removeFsFromIndexes(annos.get(i));
-                                            annos.get(i).setIntValue(beginF, depFs.getBegin());
-                                            annos.get(i).getCAS().addFsToIndexes(annos.get(i));
+                                            AnnotationFS ann = annos.get(i);
+                                            ann.getCAS().removeFsFromIndexes(ann);
+                                            ann.setIntValue(beginF, depFs.getBegin());
+                                            ann.getCAS().addFsToIndexes(ann);
                                         }
                                         else {
                                             Feature endF = type.getFeatureByBaseName(

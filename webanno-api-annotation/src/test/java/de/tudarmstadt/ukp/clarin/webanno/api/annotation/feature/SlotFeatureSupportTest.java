@@ -102,7 +102,7 @@ public class SlotFeatureSupportTest
         CAS cas = jcas.getCas();
         
         List<LinkWithRoleModel> links = new ArrayList<>();
-        links.add(new LinkWithRoleModel("role", "label", 13));
+        links.add(new LinkWithRoleModel("role", "label", 3));
                 
         AnnotationFS targetFS = cas.createAnnotation(targetType, 0, cas.getDocumentText().length());
         

@@ -44,11 +44,11 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.jcas.tcas.Annotation;
+import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import org.dkpro.core.api.parameter.ComponentParameters;
 
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
-import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -291,6 +291,7 @@ public class WebannoTsv2Reader
                         ((Annotation) relationAnno).setBegin(governorAnno.getBegin());
                         ((Annotation) relationAnno).setEnd(dependentAnno.getEnd());
                     }
+                    relationAnno.getCAS().addFsToIndexes(relationAnno);
 
                     relationAnno.setFeatureValue(dependentFeature, dependentAnno);
                     relationAnno.setFeatureValue(governorFeature, governorAnno);
@@ -508,9 +509,8 @@ public class WebannoTsv2Reader
                         Map<Integer, AnnotationFS> indexedAnnos = aAnnotations.get(layer);
                         AnnotationFS newAnnotation = indexedAnnos.get(index);
                         newAnnotation.getCAS().removeFsFromIndexes(newAnnotation);
-                        ((Annotation) newAnnotation).setEnd(aTokenStart + aToken.length());
+                        newAnnotation.setEnd(aTokenStart + aToken.length());
                         newAnnotation.getCAS().addFsToIndexes(newAnnotation);
-
                         index++;
                     }
                     else {
