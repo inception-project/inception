@@ -30,10 +30,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -86,9 +85,9 @@ public class WebAnno
     }
     
     @Bean
-    public EmbeddedServletContainerFactory servletContainer()
+    public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
+        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
@@ -118,7 +117,7 @@ public class WebAnno
         // Traditionally, the WebAnno configuration file is called settings.properties and is
         // either located in webanno.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.properties file.
-        aBuilder.properties("spring.config.location="
+        aBuilder.properties("spring.config.additional-location="
                 + "${webanno.home:${user.home}/.webanno}/settings.properties");
     }
     

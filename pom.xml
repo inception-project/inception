@@ -60,8 +60,8 @@
     <uima.version>3.0.2</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
     <spring.version>5.1.6.RELEASE </spring.version>
-    <spring.boot.version>1.5.20.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.10.RELEASE</spring.security.version>
+    <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
+    <spring.security.version>5.1.5.RELEASE</spring.security.version>
     <slf4j.version>1.7.26</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
@@ -746,6 +746,11 @@
         <groupId>org.hibernate</groupId>
         <artifactId>hibernate-validator</artifactId>
         <version>5.3.5.Final</version>
+      </dependency>
+      <dependency>
+        <groupId>javax.validation</groupId>
+        <artifactId>validation-api</artifactId>
+        <version>2.0.1.Final</version>
       </dependency>
       <dependency>
         <groupId>javax.persistence</groupId>

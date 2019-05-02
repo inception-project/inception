@@ -6,17 +6,16 @@ image::project_export.jpg[align="center"]
 Two modes of exporting projects are supported:
 
    * *Export the whole project* for the purpose of creating a backup, of migrating it to a new {product-name} version, of migrating to a different {product-name} instance, or simply in order to re-import it as a duplicate copy.
-   * *Export curated documents* for the purpose of getting an easy access to the final annotation results. If you do not have any curated documents in your project, this export option is not offered.
+   * *Export curated documents* for the purpose of getting an easy access to the final annotation results. If you do not have any curated documents in your project, this export option is not offered. A re-import
+of these archives is not possible.
 
-The format of the exported annotations is selected using the *Format* drop-down field. When *AUTO*
-is selected, the file format corresponds to the format of the source document. If there is no
-write support for the source format, the file is exported in the WebAnno TSV3 format instead.
+A *whole project* export always serves as an archive which can be re-imported again since it includes
+the annotations in the format internally used by the application. In addition to the internal format, the annotations can be included in a secondary format in the export. This format is controlled by the *Format* drop-down field. When *AUTO* is selected, the file format corresponds to the format of the source document. If there is no write support for the source format, the file is exported in the WebAnno TSV3 format instead.
 
-NOTE: Some browsers automatically extract ZIP files into a folder after the download. Zipping this
-      folder and trying to re-import it into the application will generally not work because the process
-      introduces an additional folder level within the archive. The
-      best option is to disable the automatic extraction in your browser. E.g. in Safari, go to
-      *Preferences* -> *General* and disable the setting *Open "safe" files after downloading*.
+NOTE: The *AUTO* format export annotated files in the format of the originally imported file. If
+      the original file format did not contain any annotations (e.g. plain text files) or only specific 
+      types of annotations (e.g. CoNLL files), the secondary annotation files will also have none or limited
+      annotations. 
 
 When exporting a whole project, the structure of the exported ZIP file is as follows:
 
@@ -42,6 +41,12 @@ When exporting a whole project, the structure of the exported ZIP file is as fol
 ** *<project ID>.log* - project log file
 * *source* - folder containing the original source files
 ====
+
+NOTE: Some browsers automatically extract ZIP files into a folder after the download. Zipping this
+      folder and trying to re-import it into the application will generally not work because the process
+      introduces an additional folder level within the archive. The
+      best option is to disable the automatic extraction in your browser. E.g. in Safari, go to
+      *Preferences* -> *General* and disable the setting *Open "safe" files after downloading*.
 
 NOTE: The files under `annotation` and `curation` are provided for convenience only. They are 
       ignored upon import.

@@ -130,7 +130,7 @@ public class CasStorageServiceImpl
             StringBuilder detailMsg = new StringBuilder();
             detailMsg.append("CAS Doctor found problems for user [").append(aUserName)
                     .append("] in source document [").append(aDocument.getName()).append("] (")
-                    .append(aDocument.getId()).append(") in project[")
+                    .append(aDocument.getId()).append(") in project [")
                     .append(aDocument.getProject().getName()).append("] (")
                     .append(aDocument.getProject().getId()).append(")\n");
             e.getDetails().forEach(m -> 
@@ -490,7 +490,7 @@ public class CasStorageServiceImpl
                         .append(aUsername)
                         .append("] in document [")
                         .append(aDocumentName).append("] (").append(aDocumentId)
-                        .append(") in project[")
+                        .append(") in project [")
                         .append(aProject.getName()).append("] (").append(aProject.getId()).append(")\n");
                     e.getDetails().forEach(m -> detailMsg.append(
                             String.format("- [%s] %s%n", m.level, m.message)));
