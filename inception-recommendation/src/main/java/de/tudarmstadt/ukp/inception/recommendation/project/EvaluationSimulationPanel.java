@@ -201,7 +201,7 @@ public class EvaluationSimulationPanel
                     continue;
                 }
                 
-                score = evaluationResult.getDefaultScore();
+                score = evaluationResult.computeAccuracyScore();
                 trainingSize = evaluationResult.getTrainingSetSize();
             }
             catch (RecommendationException e) {

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.chart;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -95,16 +96,11 @@ public class ChartPanel
         
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
-        if (model == null)
-            return;
-        
-
         String chartTriggerJavascript = "$(document).ready(function() {$.ajax({url:'"
                 + chartAjaxBejavior.getCallbackUrl().toString()
                 + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){updateLearningCurveDiagram(result)}})})";
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
-        
     }
  
     @Override
@@ -128,13 +124,7 @@ public class ChartPanel
         @Override
         public void onRequest()
         {
-
             RequestCycle requestCycle = RequestCycle.get();
-            WebApplication app = (WebApplication) getComponent().getApplication();
-            AjaxRequestTarget target = app.newAjaxRequestTarget(getComponent().getPage());
-
-            if (model == null)
-                return;
             
             LearningCurve learningCurve = model.getObject();
 
@@ -148,8 +138,6 @@ public class ChartPanel
             }
             catch (JsonProcessingException e) {
                 LOG.error(e.toString(), e);
-                error("Unable to render chart: " + e.getMessage());
-                target.addChildren(getPage(), IFeedback.class);
             }
         }
     }
@@ -166,17 +154,27 @@ public class ChartPanel
         // add xaxis to the list of lines
         List<String> asList = new ArrayList<>();
         asList.add("x");
-        asList.addAll(Arrays.asList(aLearningCurve.getXaxis().split(",")));
+        
+        //only add the x-axis if it is present (C3 Javascript Library  will handle the "no-data" )
+        if (aLearningCurve != null && aLearningCurve.getXaxis() != null
+                && !aLearningCurve.getXaxis().isEmpty()) {
+            asList.addAll(Arrays.asList(aLearningCurve.getXaxis().split(",")));
+        }
         lines.add(asList);
 
+        // only add the curve data if it is present. (C3 Javascript Library will handle the
+        // "no-data" )
+        if (aLearningCurve != null && aLearningCurve.getCurveData() != null
+                && !aLearningCurve.getCurveData().isEmpty())  
+        {
         // there can be multiple learning curves. add them to te list of lines
-        for (String data : aLearningCurve.getCurveData().keySet()) {
-
-            List<String> newLine = new ArrayList<String>();
-            newLine.add(data);
-
-            newLine.addAll(Arrays.asList(aLearningCurve.getCurveData().get(data).split(",")));
-            lines.add(newLine);
+            for (String data : aLearningCurve.getCurveData().keySet()) {
+    
+                List<String> newLine = new ArrayList<String>();
+                newLine.add(data);
+                newLine.addAll(Arrays.asList(aLearningCurve.getCurveData().get(data).split(",")));
+                lines.add(newLine);
+            }
         }
 
         ObjectMapper mapper = new ObjectMapper();

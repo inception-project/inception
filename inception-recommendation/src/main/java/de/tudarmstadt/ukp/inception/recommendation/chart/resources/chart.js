@@ -35,7 +35,8 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
         data: {
             x: "x",
             columns: arrayOfLearningCurves,
-            type: "step"
+            type: "step",
+            empty:{label:{text:"No Data Available"}}
         },
         axis: {
             x: {
