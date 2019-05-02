@@ -91,7 +91,7 @@ public class RelationCrossSentenceBehavior
                     selectAnnotationByAddr(cas, e.getValue().getTarget().getId()).getBegin()))
             {
                 aResponse.add(new VComment(new VID(e.getKey()), ERROR,
-                        "Crossing sentence bounardies is not permitted."));
+                        "Crossing sentence boundaries is not permitted."));
             }
         }
     }
@@ -144,7 +144,7 @@ public class RelationCrossSentenceBehavior
             
             if (!WebAnnoCasUtil.isSame(s1.getValue(), s2.getValue())) {
                 messages.add(Pair.of(
-                        LogMessage.error(this, "Crossing sentence bounardies is not permitted."),
+                        LogMessage.error(this, "Crossing sentence boundaries is not permitted."),
                         fs));
             }
         }
