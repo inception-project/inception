@@ -865,26 +865,16 @@
 
       <dependency>
         <!-- Import dependency management from DKPro Core -->
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-testing-asl</artifactId>
         <version>${dkpro.version}</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
 
       <dependency>
