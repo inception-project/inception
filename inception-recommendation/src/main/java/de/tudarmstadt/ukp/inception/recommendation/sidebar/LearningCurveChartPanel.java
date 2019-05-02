@@ -237,7 +237,7 @@ public class LearningCurveChartPanel
                 //do not include the scores from disabled recommenders
                 Optional<Recommender> recommenderIfActive = recommendationService
                         .getEnabledRecommender(detail.recommenderId);
-                if (recommenderIfActive.isPresent()) {
+                if (!recommenderIfActive.isPresent()) {
                     continue;
                 }
 
