@@ -161,13 +161,19 @@ include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudar
 
 When configuring a recommender, it can be specified that it needs to achieve a certain score
 before the recommendations are shown to the user. For that, the platform regularly evaluates 
-recommenders in the background. In code, it is implemented in the `evaluate` method.
+recommenders in the background. We use macro-averaged F1-score as an evaluation score.  
+In code, the evaluation is implemented in the `evaluate` method.
 
 Evaluation is done on a set of documents. In order to properly divide the annotations into training
 and test set, a `DataSplitter` is given which tells you to which data set an annotation belongs.
 
-For the actual evaluation, we check whether the labels in the test set are the same to the ones we
-predict via the majority label.
+For the actual evaluation, we collect the true label and the predicted majority label in a 
+`LabelPair` for each true label. A stream of these instances can then be collected with 
+the use of an `EvaluationResultCollector` as an `EvaluationResult` object - the result of the 
+evaluation. This object provides access to calculations for token-based accuracy, macro-averaged 
+precision, recall and F1-score. This F1-score is later used for 
+comparison with the user-defined threshold to activate the recommender.
+ 
 
 .Evaluating the recommender
 [source,java,indent=0]

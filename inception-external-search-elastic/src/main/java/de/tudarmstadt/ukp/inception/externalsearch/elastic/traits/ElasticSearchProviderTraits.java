@@ -34,6 +34,8 @@ public class ElasticSearchProviderTraits
     
     private String objectType = "texts";
     
+    private String defaultField = "doc.text";
+    
     /**
      *  Number of results retrieved from the server
      */
@@ -81,6 +83,16 @@ public class ElasticSearchProviderTraits
     public void setObjectType(String aObjectType)
     {
         objectType = aObjectType;
+    }
+    
+    public String getDefaultField()
+    {
+        return defaultField;
+    }
+    
+    public void setDefaultField(String aDefaultField)
+    {
+        defaultField = aDefaultField;
     }
 
     public int getResultSize()

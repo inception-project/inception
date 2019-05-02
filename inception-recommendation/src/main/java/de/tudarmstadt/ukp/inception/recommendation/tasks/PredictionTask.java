@@ -65,6 +65,6 @@ public class PredictionTask
         log.info("[{}]: Prediction complete ({} ms)", user.getUsername(),
                 (System.currentTimeMillis() - startTime));
 
-        recommendationService.putIncomingPredictions(getUser(), project, model);
+        recommendationService.putIncomingPredictions(user, project, model);
     }
 }
