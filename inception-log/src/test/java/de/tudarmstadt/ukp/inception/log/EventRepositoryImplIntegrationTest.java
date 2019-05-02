@@ -52,8 +52,10 @@ public class EventRepositoryImplIntegrationTest  {
     private static final String USERNAME = "Test user";
     private static final int RECOMMENDER_ID = 7;
     private static final String DETAIL_JSON = "{\"recommenderId\":" + RECOMMENDER_ID + "}";
+    private static final String DETAIL_DOC_JSON = "{\"state\":\"CURATION_INPROGRESS\"}";
     private static final String EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT = "RecommenderEvaluationResultEvent";
     private static final String EVENT_TYPE_AFTER_ANNO_EVENT = "AfterAnnotationUpdateEvent";
+    private static final String EVENT_AFTER_DOCSTATE_CHANGED_EVENT = "DocumentStateChangedEvent";
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -91,18 +93,28 @@ public class EventRepositoryImplIntegrationTest  {
     }
     
     @Test
+    public void getLoggedEventsForDocState_WithoutLoggedEvent_ShouldReturnEmptyList()
+    {
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsDocumentState(project,
+                user.getUsername(), EVENT_TYPE_AFTER_ANNO_EVENT, 10, "ANNOTATION_INPROGRESS");
+
+        assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
+    }
+    
+    @Test
     public void getLoggedEventsForDoc_WithStoredLoggedEvent_ShouldReturnStoredLoggedEvent() 
             throws ParseException
     {
         DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT, 
-                df.parse("19-04-03 10:00:00"), 1);
+                df.parse("19-04-03 10:00:00"), 1, DETAIL_JSON);
         LoggedEvent otherTypeEvent = buildLoggedEvent(project, USERNAME, 
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, df.parse("19-04-03 11:00:00"), 1);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, df.parse("19-04-03 11:00:00"), 1, 
+                DETAIL_JSON);
         LoggedEvent le2 = buildLoggedEvent(project, USERNAME, 
-                EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 9:00:00"), 1);
+                EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 9:00:00"), 1, DETAIL_JSON);
         LoggedEvent le3 = buildLoggedEvent(project, USERNAME, 
-                EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 8:00:00"), 2);
+                EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 8:00:00"), 2, DETAIL_JSON);
 
         sut.create(le);
         sut.create(otherTypeEvent);
@@ -114,12 +126,32 @@ public class EventRepositoryImplIntegrationTest  {
         assertThat(loggedEvents).as("Check that last created logged events are found")
                 .hasSize(2).contains(le, le3);
     }
+    
+    @Test
+    public void getLoggedEventsDocumentState_WithStoredLoggedEvent_ShouldReturnStoredLoggedEvent() 
+            throws ParseException
+    {
+        DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
+        le = buildLoggedEvent(project, USERNAME, EVENT_AFTER_DOCSTATE_CHANGED_EVENT, 
+                df.parse("19-04-03 10:00:00"), 1, DETAIL_DOC_JSON);
+        LoggedEvent otherTypeEvent = buildLoggedEvent(project, USERNAME, 
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, df.parse("19-04-03 11:00:00"), 1, 
+                DETAIL_DOC_JSON);
+
+        sut.create(le);
+        sut.create(otherTypeEvent);
+        List<LoggedEvent> loggedEvents = sut.listLoggedEventsDocumentState(project, USERNAME, 
+                EVENT_AFTER_DOCSTATE_CHANGED_EVENT, 5, "CURATION_INPROGRESS");
+
+        assertThat(loggedEvents).as("Check that last created logged events are found")
+                .hasSize(1).contains(le);
+    }
 
     @Test
     public void getLoggedEvents_WithOneStoredLoggedEvent_ShouldReturnStoredLoggedEvent()
     {
         le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 
-                new Date(), -1);
+                new Date(), -1, DETAIL_JSON);
 
         sut.create(le);
         List<LoggedEvent> loggedEvents = sut.listLoggedEventsForRecommender(project,
@@ -142,7 +174,7 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventOfOtherUser_ShouldReturnEmptyList()
     {
         le = buildLoggedEvent(project, "OtherUser", EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 
-                new Date(), -1);
+                new Date(), -1, DETAIL_JSON);
 
         sut.create(le);
 
@@ -158,7 +190,7 @@ public class EventRepositoryImplIntegrationTest  {
     {
         Project otherProject = createProject("otherProject");
         le = buildLoggedEvent(otherProject, user.getUsername(), 
-                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1);
+                EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
 
         sut.create(le);
 
@@ -172,7 +204,7 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventOfOtherType_ShouldReturnEmptyList()
     {
         le = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT,
-                new Date(), -1);
+                new Date(), -1, DETAIL_JSON);
         le.setEvent("OTHER_TYPE");
 
         sut.create(le);
@@ -188,7 +220,7 @@ public class EventRepositoryImplIntegrationTest  {
     {
         for (int i = 0; i < 6; i++) {
             le = buildLoggedEvent(project, user.getUsername(), 
-                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1);
+                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
             Date d = new Date();
             d.setHours(i);
             le.setCreated(d);
@@ -206,7 +238,7 @@ public class EventRepositoryImplIntegrationTest  {
     {
         for (int i = 0; i < 5; i++) {
             le = buildLoggedEvent(project, user.getUsername(),
-                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1);
+                    EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, new Date(), -1, DETAIL_JSON);
            
             Calendar cal = Calendar.getInstance();
             cal.set(Calendar.HOUR_OF_DAY, i);
@@ -232,7 +264,7 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEvents_WithLoggedEventOfOtherRecommenderId_ShouldReturnEmptyList()
     {
         le = buildLoggedEvent(project, user.getUsername(), EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, 
-                new Date(), -1);
+                new Date(), -1, DETAIL_JSON);
         sut.create(le);
         
         int otherRecommenderId = 6;
@@ -253,12 +285,12 @@ public class EventRepositoryImplIntegrationTest  {
     }
 
     private LoggedEvent buildLoggedEvent(Project aProject, String aUsername,
-            String aEventType, Date aDate, long aDocId)
+            String aEventType, Date aDate, long aDocId, String aDetails)
     {
         LoggedEvent le = new LoggedEvent();
         le.setUser(aUsername);
         le.setProject(aProject.getId());
-        le.setDetails(DETAIL_JSON);
+        le.setDetails(aDetails);
         le.setCreated(aDate);
         le.setEvent(aEventType);
         le.setDocument(aDocId);

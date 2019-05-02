@@ -58,11 +58,31 @@ public class EventRepositoryImpl
         log.info("{}", aEvent);
         entityManager.persist(aEvent);
     }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEventsDocumentState(Project aProject, String aUsername,
+            String aEventType, int aMaxSize, String aState)
+    {
+        String detailStr = "%\"state\":\"" + aState + "\"%";
+
+        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
+    }
 
     @Override
     @Transactional
     public List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, long recommenderId)
+            String aEventType, int aMaxSize, long aRecommenderId)
+    {
+        String detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
+
+        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
+            String aEventType, int aMaxSize, String aDetail)
     {
         String query = String.join("\n", 
                 "FROM LoggedEvent WHERE ", 
@@ -76,7 +96,7 @@ public class EventRepositoryImpl
                 .setParameter("user", aUsername)
                 .setParameter("project", aProject.getId())
                 .setParameter("event", aEventType)
-                .setParameter("details", "%\"recommenderId\":" + recommenderId + "%")
+                .setParameter("details", aDetail)
                 .setMaxResults(aMaxSize).getResultList();
     }
     
@@ -87,6 +107,9 @@ public class EventRepositoryImpl
     {
         String query = String.join("\n",
                 "FROM LoggedEvent WHERE",
+                "user=:user AND",
+                "project=:project AND",
+                "event =:event AND",
                 "created IN ",
                 "(SELECT MAX(created) FROM LoggedEvent WHERE",
                 "user=:user AND",

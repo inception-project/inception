@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -42,14 +43,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
-    private static final int MAX_NUM_ACTIVITIES = 2;
     public static final String AFTER_ANNOTATION_UPDATE_EVENT = "AfterAnnotationUpdateEvent";
+    private static final String CURATION_INPROGRESS = "CURATION_INPROGRESS";
+    public static final String DOCUMENT_STATE_CHANGED_EVENT = "DocumentStateChangedEvent";
+    private static final int MAX_NUM_ACTIVITIES = 2;
 
     private static final long serialVersionUID = -2010294259619748756L;
     
@@ -99,12 +103,16 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         LoggedEvent event = aItem.getModelObject();
         String documentName = getDocumentName(event);
         String eventDate = formatDateStr(event);
+        String eventName = event.getEvent();
         
-        if (documentName == null) {
+        switch (eventName) {
+        case AFTER_ANNOTATION_UPDATE_EVENT:
+            return String.format("%s: Annotated in document %s", eventDate, documentName);
+        case DOCUMENT_STATE_CHANGED_EVENT:
+            return String.format("%s: Curated document %s", eventDate, documentName);
+        default:
             return "";
         }
-        
-        return String.format("%s: Annotated in document %s", eventDate, documentName);
     }
 
     private String getDocumentName(LoggedEvent event)
@@ -126,24 +134,30 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         return eventDate;
     }
     
+    //FIXME what about documents that were deleted?
     private void openLastActivity(LoggedEvent aEvent)
     {
         String eventName = aEvent.getEvent();
         switch (eventName) {
+        // FIXME afterannotationupdateevent is an event that is always used, 
+        // in annotation and curation :(
         case AFTER_ANNOTATION_UPDATE_EVENT:
-            openDocument(aEvent);
+            openDocument(aEvent, AnnotationPage.class);
+            break;
+        case DOCUMENT_STATE_CHANGED_EVENT:
+            openDocument(aEvent, CurationPage.class);
             break;
         default:
             log.info(String.format("Unknown last activties event: %s", eventName));
         }
     }
 
-    private void openDocument(LoggedEvent aEvent)
+    private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
     {
         PageParameters params = new PageParameters();
         params.add(PAGE_PARAM_PROJECT_ID, projectModel.getObject().getId());
         params.add(PAGE_PARAM_DOCUMENT_ID, aEvent.getDocument());
-        setResponsePage(AnnotationPage.class, params);
+        setResponsePage(aPage, params);
     }
 
     private List<LoggedEvent> listActivities()
@@ -151,12 +165,18 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         List<LoggedEvent> events = new ArrayList<>();
         User user = userRepository.getCurrentUser();
         Project project = projectModel.getObject();
+        String username = user.getUsername();
+        
+        // get last annotation events
         String annotationEvent = AFTER_ANNOTATION_UPDATE_EVENT;
         events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project,
-                user.getUsername(), annotationEvent, MAX_NUM_ACTIVITIES));
+                username, annotationEvent, MAX_NUM_ACTIVITIES));
+        
+        // get last curation events
+        String curationEvent = DOCUMENT_STATE_CHANGED_EVENT;
+        List<LoggedEvent> curations = eventRepository.listLoggedEventsDocumentState(project, 
+                username, curationEvent, MAX_NUM_ACTIVITIES, CURATION_INPROGRESS);
+        events.addAll(curations);
         return events;
     }
-    
-
-
 }
