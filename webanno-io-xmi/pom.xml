@@ -30,6 +30,10 @@
       <artifactId>webanno-api-formats</artifactId>
     </dependency>
     <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-model</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
@@ -42,10 +46,6 @@
       <artifactId>uimafit-core</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-model</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-bincas-asl</artifactId>
     </dependency>
@@ -53,35 +53,5 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-xmi-asl</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-parameter-asl</artifactId>
-    </dependency>
   </dependencies>
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-dependency-plugin</artifactId>
-          <configuration>
-            <ignoredUsedUndeclaredDependencies>
-              <!--
-                - Maven wrongly detects this as being used.
-              -->
-              <ignoredUsedUndeclaredDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</ignoredUsedUndeclaredDependency>
-            </ignoredUsedUndeclaredDependencies>
-            <usedDependencies combine.children="append">
-              <!--
-                - Maven doesn't detect the parameters module to be used, be we actually
-                - do require it as a compile dependency and also at runtime, so we
-                - cannot set it to scope provided. Need to tell Maven to ignore it here.
-              -->
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</usedDependency>
-            </usedDependencies>
-          </configuration>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
 </project>
