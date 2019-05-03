@@ -140,8 +140,8 @@ public class TestFixtures
     public KBStatement buildStatement(KBHandle conceptHandle, KBHandle propertyHandle, String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBStatement statement = new KBStatement(conceptHandle, propertyHandle,
-            vf.createLiteral(value));
+        KBStatement statement = new KBStatement(null, conceptHandle, propertyHandle,
+                vf.createLiteral(value));
         return statement;
     }
 
