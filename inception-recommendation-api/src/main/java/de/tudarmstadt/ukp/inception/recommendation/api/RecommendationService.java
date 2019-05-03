@@ -62,7 +62,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
-    List<Recommender> getEnabledRecommenders(Long aRecommenderId);
+    Optional<Recommender> getEnabledRecommender(long aRecommenderId);
     
     List<Recommender> listEnabledRecommenders(Project aProject);
 
@@ -117,4 +117,6 @@ public interface RecommendationService
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
+
+    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 }
