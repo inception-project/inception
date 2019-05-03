@@ -168,12 +168,12 @@
       <artifactId>webanno-io-xmi</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-conll-asl</artifactId>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.lif-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-lif-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
@@ -361,8 +361,8 @@
     <!-- <artifactId>hibernate-entitymanager</artifactId> -->
     <!-- </dependency> -->
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
@@ -672,7 +672,7 @@
               <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
+              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>

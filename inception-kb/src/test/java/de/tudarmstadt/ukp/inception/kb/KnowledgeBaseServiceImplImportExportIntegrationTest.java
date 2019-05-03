@@ -46,8 +46,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;

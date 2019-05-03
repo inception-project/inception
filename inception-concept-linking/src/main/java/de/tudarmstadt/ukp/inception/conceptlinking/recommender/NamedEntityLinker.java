@@ -105,9 +105,9 @@ public class NamedEntityLinker
             Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
             Type sentenceType = getType(cas, Sentence.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                tokenType);
-            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                    tokenType);
+            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
                     // If the identifier has not been set
                     .filter(a -> a.getStringValue(feature) == null)

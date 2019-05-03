@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ApplicationContextEvent;
 import org.springframework.security.access.event.AbstractAuthorizationEvent;
@@ -41,6 +41,6 @@ public class GenericEventAdapter
                 aEvent instanceof SessionDestroyedEvent ||
                 aEvent instanceof AbstractAuthorizationEvent ||
                 aEvent instanceof AbstractAuthenticationEvent ||
-                aEvent instanceof EmbeddedServletContainerInitializedEvent);
+                aEvent instanceof WebServerInitializedEvent);
     }
 }

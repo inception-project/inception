@@ -196,9 +196,9 @@ public class OpenNlpDoccatRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
                     cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 AnnotationFS sentence = e.getKey();
                 Collection<AnnotationFS> tokens = e.getValue();
                 String[] tokenTexts = tokens.stream()
