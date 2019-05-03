@@ -140,7 +140,7 @@ public class ChartPanel
                 // return the chart data back to the UI with the JSON. JSON define te learning
                 // curves and the xaxis
                 requestCycle.scheduleRequestHandlerAfterCurrent(
-                        new TextRequestHandler("application/json", "UTF-8", "\r\n" + json));
+                        new TextRequestHandler("application/json", "UTF-8", json));
             }
             catch (JsonProcessingException e) {
                 LOG.error(e.toString(), e);
