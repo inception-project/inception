@@ -92,9 +92,19 @@ public class ChartPanel
         
         aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
-        String chartTriggerJavascript = "$(document).ready(function() {$.ajax({url:'"
-                + chartAjaxBejavior.getCallbackUrl().toString()
-                + "',type:'post',cache:!1,contentType:'application/json',dataType:'json',success:function(result){updateLearningCurveDiagram(result)}})})";
+        String chartTriggerJavascript = String.join("\n",
+                "$(document).ready(function(){", 
+                "   $.ajax({",
+                "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
+                "       type:'post',",
+                "       cache:!1,",
+                "       contentType:'application/json',",
+                "       dataType:'json',",
+                "       success : function(result){",
+                "           updateLearningCurveDiagram(result)",
+                "       }",
+                "   })",
+                "})");
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }
@@ -150,8 +160,8 @@ public class ChartPanel
         // add xaxis to the list of lines
         List<String> asList = new ArrayList<>();
         asList.add("x");
-        
-        //only add the x-axis if it is present (C3 Javascript Library  will handle the "no-data" )
+
+        // only add the x-axis if it is present (C3 Javascript Library will handle the "no-data" )
         if (aLearningCurve != null && aLearningCurve.getXaxis() != null
                 && !aLearningCurve.getXaxis().isEmpty()) {
             asList.addAll(Arrays.asList(aLearningCurve.getXaxis().split(",")));
@@ -161,11 +171,9 @@ public class ChartPanel
         // only add the curve data if it is present. (C3 Javascript Library will handle the
         // "no-data" )
         if (aLearningCurve != null && aLearningCurve.getCurveData() != null
-                && !aLearningCurve.getCurveData().isEmpty())  
-        {
-        // there can be multiple learning curves. add them to te list of lines
+                && !aLearningCurve.getCurveData().isEmpty()) {
+            // there can be multiple learning curves. add them to te list of lines
             for (String data : aLearningCurve.getCurveData().keySet()) {
-    
                 List<String> newLine = new ArrayList<String>();
                 newLine.add(data);
                 newLine.addAll(Arrays.asList(aLearningCurve.getCurveData().get(data).split(",")));

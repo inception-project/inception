@@ -92,9 +92,8 @@ public class EvaluationSimulationPanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                 
-                    // replace the empty panel with chart panel on click event so the chard renders
-                    // with the loadable detachable model.
+                // replace the empty panel with chart panel on click event so the chard renders
+                // with the loadable detachable model.
                 ChartPanel chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
                         LoadableDetachableModel.of(this::renderChart));
                 chartPanel.setOutputMarkupPlaceholderTag(true);
@@ -177,8 +176,7 @@ public class EvaluationSimulationPanel
                 .getFactory(selectedRecommenderPanel.getObject().getTool());
         RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
         
-        if (recommender == null)
-        {
+        if (recommender == null) {
             LOG.warn("Unknown Recommender selected");
             return null;
         }
@@ -196,7 +194,7 @@ public class EvaluationSimulationPanel
             try {
                 EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
                 
-                if (evaluationResult.isEvaluationSkipped())                {
+                if (evaluationResult.isEvaluationSkipped()) {
                     LOG.warn("Evaluation skipped. Chart cannot to be shown");
                     continue;
                 }
@@ -209,8 +207,8 @@ public class EvaluationSimulationPanel
                 continue;
             }
 
-            sbScore.append(score + ",");
-            sbTrainingSize.append(trainingSize + ",");
+            sbScore.append(score).append(",");
+            sbTrainingSize.append(trainingSize).append(",");
         }
 
         return new String[] {sbScore.toString(), sbTrainingSize.toString() };
