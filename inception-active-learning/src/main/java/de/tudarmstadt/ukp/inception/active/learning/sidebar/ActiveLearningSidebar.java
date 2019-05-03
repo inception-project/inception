@@ -89,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -708,29 +707,8 @@ public class ActiveLearningSidebar
             aTarget.add((Component) getActionHandler());
         }
 
-        // Fetch the next suggestion to present to the user (if there is any)
-        long startTimer = System.currentTimeMillis();
-        List<SuggestionGroup> suggestions = alState.getSuggestions();
-        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-        LOG.debug("Getting recommendations from recommender system costs {} ms.",
-                (getRecommendationsFromRecommendationService - startTimer));
-
-        // remove duplicate recommendations
-        suggestions = suggestions.stream()
-                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
-        long removeDuplicateRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing duplicate recommendations costs {} ms.",
-                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
-
-        // hide rejected recommendations
-        hideRejectedOrSkippedAnnotations(learningRecordService, state.getUser(), 
-                alState.getLayer(), true, suggestions, activeLearningService);
-        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-        LOG.debug("Removing rejected or skipped ones costs {} ms.",
-                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
-        Optional<Delta> recommendationDifference = alState.getStrategy().generateNextSuggestion
-                (suggestions);
-
+        Optional<Delta> recommendationDifference = activeLearningService
+                .generateNextSuggestion(state.getUser(), alState);
         Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
         
@@ -823,45 +801,6 @@ public class ActiveLearningSidebar
         }
     }
     
-    private void hideRejectedOrSkippedAnnotations(LearningRecordService aRecordService, User aUser,
-            AnnotationLayer aLayer, boolean aFilterSkippedRecommendation,
-            List<SuggestionGroup> aSuggestionGroups, ActiveLearningService aActiveLearningService)
-    {
-        aActiveLearningService.hideRejectedOrSkippedAnnotations(aUser, aLayer,
-                aFilterSkippedRecommendation, aSuggestionGroups);
-    }
-
-    private static SuggestionGroup removeDuplicateRecommendations(
-            SuggestionGroup unmodifiedRecommendationList)
-    {
-        SuggestionGroup cleanRecommendationList = new SuggestionGroup();
-
-        unmodifiedRecommendationList.forEach(recommendationItem -> {
-            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
-                cleanRecommendationList.add(recommendationItem);
-            }
-        });
-
-        return cleanRecommendationList;
-    }
-
-    private static boolean isAlreadyInCleanList(SuggestionGroup cleanRecommendationList,
-            AnnotationSuggestion recommendationItem)
-    {
-        String source = recommendationItem.getRecommenderName();
-        String annotation = recommendationItem.getLabel();
-        String documentName = recommendationItem.getDocumentName();
-            
-        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) 
-        {
-            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
-            if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
-                && existingRecommendation.getDocumentName().equals(documentName)) {
-                return true;
-            }
-        }
-        return false;
-    }
     private Form<?> createLearningHistory()
     {
         Form<?> learningHistoryForm = new Form<Void>(CID_LEARNING_HISTORY_FORM)

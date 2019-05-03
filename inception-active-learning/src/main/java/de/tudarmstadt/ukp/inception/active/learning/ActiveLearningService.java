@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.active.learning;
 
 import java.util.List;
+import java.util.Optional;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningServiceImpl.ActiveLearningUserState;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public interface ActiveLearningService
 {
@@ -48,4 +51,6 @@ public interface ActiveLearningService
 
     void hideRejectedOrSkippedAnnotations(User aUser, AnnotationLayer aLayer,
             boolean aFilterSkippedRecommendation, List<SuggestionGroup> aSuggestionGroups);
+
+    Optional<Delta> generateNextSuggestion(User aUser, ActiveLearningUserState aAlState);
 }

@@ -22,50 +22,18 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
 
 public class UncertaintySamplingStrategy
     implements Serializable, ActiveLearningStrategy
 {
-    private static final Logger LOG = LoggerFactory.getLogger(UncertaintySamplingStrategy.class);
+    private static final long serialVersionUID = 5664120040399862552L;
 
     @Override
     public Optional<Delta> generateNextSuggestion(List<SuggestionGroup> suggestions)
     {
-//        long startTimer = System.currentTimeMillis();
-//        List<SuggestionGroup> suggestions = aListOfRecommendationsForEachToken;
-//        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
-//        LOG.debug("Getting recommendations from recommender system costs {} ms.",
-//                (getRecommendationsFromRecommendationService - startTimer));
-//
-//        // remove duplicate recommendations
-//        suggestions = suggestions.stream()
-//                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
-//        long removeDuplicateRecommendation = System.currentTimeMillis();
-//        LOG.debug("Removing duplicate recommendations costs {} ms.",
-//                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
-//
-//        // hide rejected recommendations
-//        hideRejectedOrSkippedAnnotations(aRecordService, aUser, aLayer, true, suggestions,
-//                aALService);
-//        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
-//        LOG.debug("Removing rejected or skipped ones costs {} ms.",
-//                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
-
-        return calculateDifferencesAndReturnLowestVisible(suggestions);
-    }
-
-    
-    
-
-    private Optional<Delta> calculateDifferencesAndReturnLowestVisible(
-            List<SuggestionGroup> aGroups)
-    {
-        return aGroups.stream()
+        return suggestions.stream()
             // Fetch the top deltas per recommender
             .flatMap(group -> group.getTopDeltas().values().stream())
             // ... sort them in ascending order (smallest delta first)
