@@ -2,7 +2,7 @@ pdfanno = "0.5.0"
 pdfextract = "0.3.2"
 
 [[spans]]
-id = "163"
+id = "15"
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -10,7 +10,7 @@ text = "Karin"
 textrange = [3,7]
 
 [[spans]]
-id = "169"
+id = "16"
 page = 1
 label = "VVFIN"
 color = "#8dd3c7"
@@ -18,7 +18,7 @@ text = "fliegt"
 textrange = [8,13]
 
 [[spans]]
-id = "175"
+id = "17"
 page = 1
 label = "APPR"
 color = "#8dd3c7"
@@ -26,7 +26,7 @@ text = "nach"
 textrange = [14,17]
 
 [[spans]]
-id = "181"
+id = "18"
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -34,7 +34,7 @@ text = "New"
 textrange = [18,20]
 
 [[spans]]
-id = "187"
+id = "19"
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -42,7 +42,7 @@ text = "York"
 textrange = [21,24]
 
 [[spans]]
-id = "193"
+id = "20"
 page = 1
 label = "$."
 color = "#8dd3c7"
@@ -50,7 +50,7 @@ text = "."
 textrange = [25,25]
 
 [[spans]]
-id = "199"
+id = "21"
 page = 1
 label = "PPER"
 color = "#8dd3c7"
@@ -58,7 +58,7 @@ text = "Sie"
 textrange = [28,30]
 
 [[spans]]
-id = "205"
+id = "22"
 page = 2
 label = "VMFIN"
 color = "#8dd3c7"
@@ -66,7 +66,7 @@ text = "will"
 textrange = [31,34]
 
 [[spans]]
-id = "211"
+id = "23"
 page = 2
 label = "ADV"
 color = "#8dd3c7"
@@ -74,7 +74,7 @@ text = "dort"
 textrange = [35,38]
 
 [[spans]]
-id = "217"
+id = "24"
 page = 2
 label = "NN"
 color = "#8dd3c7"
@@ -82,7 +82,7 @@ text = "Urlaub"
 textrange = [39,44]
 
 [[spans]]
-id = "223"
+id = "25"
 page = 2
 label = "VVINF"
 color = "#8dd3c7"
@@ -90,9 +90,10 @@ text = "machen"
 textrange = [45,50]
 
 [[spans]]
-id = "229"
+id = "26"
 page = 2
 label = "$."
 color = "#8dd3c7"
 text = "."
 textrange = [51,51]
+
