@@ -235,9 +235,9 @@ public class OpenNlpPosRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
-                    cas, sentenceType, tokenType);
-            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+                    tokenType);
+            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }

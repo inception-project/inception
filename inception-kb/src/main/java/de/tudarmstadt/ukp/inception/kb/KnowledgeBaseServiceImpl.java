@@ -96,8 +96,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
@@ -444,7 +444,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
             aConcept.setIdentifier(identifier);
             aConcept.write(conn, kb);
             return new KBHandle(identifier, aConcept.getName());
@@ -495,9 +495,12 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void deleteConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void deleteConcept(KnowledgeBase aKB, KBConcept aConcept)
     {
-        getReificationStrategy(kb).deleteConcept(kb, aConcept);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept);
+            return null;
+        });
     }
 
     @Override
@@ -521,7 +524,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
             return new KBHandle(identifier, aProperty.getName());
@@ -559,9 +562,12 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void deleteProperty(KnowledgeBase kb, KBProperty aType)
+    public void deleteProperty(KnowledgeBase aKB, KBProperty aType)
     {
-        getReificationStrategy(kb).deleteProperty(kb, aType);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).deleteProperty(conn, aKB, aType);
+            return null;
+        });
     }
 
     @Override
@@ -592,7 +598,7 @@ public class KnowledgeBaseServiceImpl
         }
 
         return update(kb, (conn) -> {
-            String identifier = generateIdentifier(conn, kb);
+            String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
 
@@ -644,9 +650,12 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public void deleteInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void deleteInstance(KnowledgeBase aKB, KBInstance aInstance)
     {
-        getReificationStrategy(kb).deleteInstance(kb, aInstance);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance);
+            return null;
+        });
     }
 
     @Override
@@ -665,22 +674,23 @@ public class KnowledgeBaseServiceImpl
     // Statements
 
     @Override
-    public void initStatement(KnowledgeBase kb, KBStatement aStatement)
+    public void upsertStatement(KnowledgeBase aKB, KBStatement aStatement)
+        throws RepositoryException
     {
-        Set<Statement> statements = getReificationStrategy(kb).reify(kb, aStatement);
-        aStatement.setOriginalStatements(statements);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement);
+            return null;
+        });
     }
 
     @Override
-    public void upsertStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
+    public void deleteStatement(KnowledgeBase aKB, KBStatement aStatement)
+        throws RepositoryException
     {
-        getReificationStrategy(kb).upsertStatement(kb, aStatement);
-    }
-
-    @Override
-    public void deleteStatement(KnowledgeBase kb, KBStatement aStatement) throws RepositoryException
-    {
-        getReificationStrategy(kb).deleteStatement(kb, aStatement);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement);
+            return null;
+        });
     }
 
     @Override
@@ -688,7 +698,8 @@ public class KnowledgeBaseServiceImpl
     {
         try (StopWatch watch = new StopWatch(log, "listStatements(%s)",
                 aInstance.getIdentifier())) {
-            return getReificationStrategy(kb).listStatements(kb, aInstance, aAll);
+            return read(kb, conn -> 
+                    getReificationStrategy(kb).listStatements(conn, kb, aInstance, aAll));
         }
     }
 
@@ -718,14 +729,6 @@ public class KnowledgeBaseServiceImpl
                 }
             }
         }
-    }
-
-    private String generateIdentifier(RepositoryConnection conn, KnowledgeBase kb)
-    {
-        ValueFactory vf = conn.getValueFactory();
-        // default value of basePrefix is IriConstants.INCEPTION_NAMESPACE
-        String basePrefix = kb.getBasePrefix();
-        return basePrefix + vf.createBNode().getID();
     }
 
     @Override
@@ -862,10 +865,10 @@ public class KnowledgeBaseServiceImpl
     {
         switch (kb.getReification()) {
         case WIKIDATA:
-            return new WikiDataReification(this);
+            return new WikiDataReification();
         case NONE: // Fallthrough
         default:
-            return new NoReification(this);
+            return new NoReification();
         }
     }
     
@@ -886,36 +889,46 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public void addQualifier(KnowledgeBase kb, KBQualifier newQualifier)
+    public void addQualifier(KnowledgeBase aKB, KBQualifier newQualifier)
     {
-        getReificationStrategy(kb).addQualifier(kb, newQualifier);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier);
+            return null;
+        });
     }
 
     @Override
-    public void deleteQualifier(KnowledgeBase kb, KBQualifier oldQualifier)
+    public void deleteQualifier(KnowledgeBase aKB, KBQualifier oldQualifier)
     {
-        getReificationStrategy(kb).deleteQualifier(kb, oldQualifier);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier);
+            return null;
+        });
     }
 
     @Override
-    public void upsertQualifier(KnowledgeBase kb, KBQualifier aQualifier)
+    public void upsertQualifier(KnowledgeBase aKB, KBQualifier aQualifier)
     {
-        getReificationStrategy(kb).upsertQualifier(kb, aQualifier);
+        update(aKB, conn -> {
+            getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier);
+            return null;
+        });
     }
 
     @Override
-    public List<KBQualifier> listQualifiers(KnowledgeBase kb, KBStatement aStatement)
+    public List<KBQualifier> listQualifiers(KnowledgeBase aKB, KBStatement aStatement)
     {
         try (StopWatch watch = new StopWatch(log, "listQualifiers(%s)",
                 aStatement.getStatementId())) {
-            return getReificationStrategy(kb).listQualifiers(kb, aStatement);
+            return read(aKB, conn -> 
+                    getReificationStrategy(aKB).listQualifiers(conn, aKB, aStatement));
         }
     }
 
     @Override
-    public boolean statementsMatchSPO(KnowledgeBase akb, KBStatement mockStatement)
+    public boolean exists(KnowledgeBase aKB, KBStatement mockStatement)
     {
-        return getReificationStrategy(akb).statementsMatchSPO(akb, mockStatement);
+        return read(aKB, conn -> getReificationStrategy(aKB).exists(conn, aKB, mockStatement));
     }
 
     @Override

@@ -35,19 +35,19 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.datasets.Dataset;
+import org.dkpro.core.api.datasets.DatasetFactory;
+import org.dkpro.core.io.conll.Conll2000Reader;
+import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2000Reader;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -122,7 +122,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("C");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -159,7 +159,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -187,7 +187,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -215,7 +215,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -243,7 +243,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
