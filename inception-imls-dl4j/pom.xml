@@ -252,7 +252,7 @@
             <ignoredDependencies>
               <!-- ND4J plugins - used via reflection -->
               <dependency>org.nd4j:nd4j-native:*:*</dependency>
-              <dependency>org.bytedeco.javacpp-presets:*:*:*</dependency>
+              <dependency>org.bytedeco:*:*:*</dependency>
             </ignoredDependencies>
           </configuration>
         </plugin>
