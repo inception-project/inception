@@ -355,6 +355,10 @@ public class MtasDocumentIndex
                                 int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
                                 int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
                                 
+                                // Retrieve all indexed objects within the matching range
+//                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
+//                                        field, spans.docID(), windowStart, windowEnd);
+                                
                                 List<MtasTokenString> tokens = mtasCodecInfo
                                         .getPrefixFilteredObjectsByPositions(field, spans.docID(),
                                                 prefixes, windowStart, windowEnd);

@@ -20,11 +20,11 @@ package de.tudarmstadt.ukp.inception.app.ui.search.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchResultsGroupingOperator.DOCUMENTTITLE;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -32,8 +32,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchResultsGroupingOperator;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -85,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchResultsGroupingOperator;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -114,7 +115,7 @@ public class SearchAnnotationSidebar
         .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
         .of(new DeleteAnnotationsOptions());
-    private SearchResultsGroupingOperator searchResultsGroupingOperator = SearchResultsGroupingOperator.DOCUMENTTITLE;
+    private SearchResultsGroupingOperator searchResultsGroupingOperator = DOCUMENTTITLE;
 
     private SearchResult selectedResult;
 
@@ -169,16 +170,15 @@ public class SearchAnnotationSidebar
                     documentLevelSelections.get(item.getModelObject())),
                     item.getModelObject()));
                 item.add(new SearchResultGroup("group", "resultGroup",
-                    SearchAnnotationSidebar.this,
-                    LambdaModel.of(() -> groupedSearchResults.getObject().get(item.getModelObject()))));
+                    SearchAnnotationSidebar.this, LambdaModel.of(() -> 
+                            groupedSearchResults.getObject().get(item.getModelObject()))));
             }
         };
-        searchResultGroups.setModel(
-            LambdaModel.of(() -> new ArrayList<>(groupedSearchResults.getObject().keySet())));
-
+        searchResultGroups.setModel(LambdaModel.of(() -> groupedSearchResults.getObject().keySet()
+                .stream().sorted().collect(Collectors.toList())));
         mainContainer.add(searchResultGroups);
 
-        Form<Void> annotationForm = new Form("annotateForm");
+        Form<Void> annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
         LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
@@ -274,7 +274,8 @@ public class SearchAnnotationSidebar
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
             List<SearchResult> queryResults = searchService
                 .query(currentUser, project, targetQuery.getObject(), limitToDocument);
-            return  queryResults.stream().collect(groupingBy(searchResultsGroupingOperator.getFunction()));
+            return queryResults.stream()
+                    .collect(groupingBy(searchResultsGroupingOperator.getFunction()));
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
