@@ -230,7 +230,7 @@ public class KnowledgeBaseSubPropertyLabelTest
 
         KBHandle subPropertyHandle = new KBHandle(aKB.getSubPropertyIri().stringValue());
 
-        KBStatement subPropertyStmt = new KBStatement(subLabelHandle, subPropertyHandle,
+        KBStatement subPropertyStmt = new KBStatement(null, subLabelHandle, subPropertyHandle,
             aKB.getLabelIri());
 
         upsertStatement(aKB, subPropertyStmt);
@@ -242,7 +242,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         String aLiteral)
     {
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        KBStatement stmt = new KBStatement(aSubject, aProperty, vf.createLiteral(aLiteral));
+        KBStatement stmt = new KBStatement(null, aSubject, aProperty, vf.createLiteral(aLiteral));
         upsertStatement(aKB, stmt);
     }
 
