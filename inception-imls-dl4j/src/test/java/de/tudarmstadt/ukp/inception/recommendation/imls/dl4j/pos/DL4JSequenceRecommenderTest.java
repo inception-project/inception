@@ -122,7 +122,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("C");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -159,7 +159,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -187,7 +187,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -215,7 +215,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -243,7 +243,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
