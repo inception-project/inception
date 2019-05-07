@@ -194,6 +194,8 @@ public class LoggedEventExporter implements ProjectExporter
                 else {
                     event.setDocument(-1);
                 }
+                
+                batch.add(event);
 
                 eventCount++;
             }
