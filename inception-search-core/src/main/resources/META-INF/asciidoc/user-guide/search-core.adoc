@@ -15,7 +15,7 @@ image::search-core-search.png[Search sidebar]
 The search only considers documents in the current project and only matches annotations made by
 the current user.
 
-NOTE: Very long annotations and tokens (longer than several thousand characters) are not index and 
+NOTE: Very long annotations and tokens (longer than several thousand characters) are not indexed and 
        cannot be found by the search.
 
 Clicking on the search settings button (cog wheel) shows additional options:
