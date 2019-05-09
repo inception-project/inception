@@ -103,26 +103,40 @@ public class EventRepositoryImpl
     @Override
     @Transactional
     public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
-            String aEventType, int aMaxSize)
+            String[] aEventTypes, int aMaxSize)
     {
+        String eventsQuery = buildEventsCondition(aEventTypes);
         String query = String.join("\n",
                 "FROM LoggedEvent WHERE",
                 "user=:user AND",
                 "project=:project AND",
-                "event =:event AND",
-                "created IN ",
-                "(SELECT MAX(created) FROM LoggedEvent WHERE",
+                eventsQuery,
+                "AND created in",
+                "(SELECT max(created) ",
+                "FROM LoggedEvent WHERE",
                 "user=:user AND",
                 "project=:project AND",
-                "event =:event",
+                eventsQuery,
                 "GROUP BY document)",
                 "ORDER BY created DESC");
 
         return entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("user", aUsername)
                 .setParameter("project", aProject.getId())
-                .setParameter("event", aEventType)
                 .setMaxResults(aMaxSize).getResultList();
+    }
+
+    private String buildEventsCondition(String[] aEventTypes)
+    {
+        StringBuilder events = new StringBuilder();
+        if (aEventTypes.length > 0) {
+            events.append("(event='").append(aEventTypes[0]).append("'");
+            for (int i = 1; i < aEventTypes.length; i++) {
+                events.append(" OR event='").append(aEventTypes[i]).append("'");
+            }
+            events.append(") ");
+        }
+        return events.toString();
     }
     
     @Override

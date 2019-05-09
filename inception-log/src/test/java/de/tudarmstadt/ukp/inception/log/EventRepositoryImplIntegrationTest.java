@@ -56,6 +56,7 @@ public class EventRepositoryImplIntegrationTest  {
     private static final String EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT = "RecommenderEvaluationResultEvent";
     private static final String EVENT_TYPE_AFTER_ANNO_EVENT = "AfterAnnotationUpdateEvent";
     private static final String EVENT_AFTER_DOCSTATE_CHANGED_EVENT = "DocumentStateChangedEvent";
+    private static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
 
     @Autowired
     private TestEntityManager testEntityManager;
@@ -87,7 +88,7 @@ public class EventRepositoryImplIntegrationTest  {
     public void getLoggedEventsForDoc_WithoutLoggedEvent_ShouldReturnEmptyList()
     {
         List<LoggedEvent> loggedEvents = sut.listUniqueLoggedEventsForDoc(project,
-                user.getUsername(), EVENT_TYPE_AFTER_ANNO_EVENT, 10);
+                user.getUsername(), new String[] {EVENT_TYPE_AFTER_ANNO_EVENT}, 10);
 
         assertThat(loggedEvents).as("Check that no logged event is found").isEmpty();
     }
@@ -108,8 +109,11 @@ public class EventRepositoryImplIntegrationTest  {
         DateFormat df = new SimpleDateFormat("yy-MM-dd HH:mm:ss");
         le = buildLoggedEvent(project, USERNAME, EVENT_TYPE_AFTER_ANNO_EVENT, 
                 df.parse("19-04-03 10:00:00"), 1, DETAIL_JSON);
-        LoggedEvent otherTypeEvent = buildLoggedEvent(project, USERNAME, 
+        LoggedEvent excludeTypeEvent = buildLoggedEvent(project, USERNAME, 
                 EVENT_TYPE_RECOMMENDER_EVALUATION_EVENT, df.parse("19-04-03 11:00:00"), 1, 
+                DETAIL_JSON);
+        LoggedEvent includeTypeEvent = buildLoggedEvent(project, USERNAME, 
+                SPAN_CREATED_EVENT, df.parse("19-04-03 07:00:00"), 1, 
                 DETAIL_JSON);
         LoggedEvent le2 = buildLoggedEvent(project, USERNAME, 
                 EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 9:00:00"), 1, DETAIL_JSON);
@@ -117,11 +121,13 @@ public class EventRepositoryImplIntegrationTest  {
                 EVENT_TYPE_AFTER_ANNO_EVENT, df.parse("19-04-03 8:00:00"), 2, DETAIL_JSON);
 
         sut.create(le);
-        sut.create(otherTypeEvent);
+        sut.create(includeTypeEvent);
+        sut.create(excludeTypeEvent);
         sut.create(le2);
         sut.create(le3);
         List<LoggedEvent> loggedEvents = sut.listUniqueLoggedEventsForDoc(project,
-                user.getUsername(), EVENT_TYPE_AFTER_ANNO_EVENT, 5);
+                user.getUsername(), new String[] {EVENT_TYPE_AFTER_ANNO_EVENT, SPAN_CREATED_EVENT}, 
+                5);
 
         assertThat(loggedEvents).as("Check that last created logged events are found")
                 .hasSize(2).contains(le, le3);

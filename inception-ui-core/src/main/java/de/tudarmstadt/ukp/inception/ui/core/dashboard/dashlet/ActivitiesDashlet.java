@@ -22,7 +22,10 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
@@ -43,14 +46,15 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
-    public static final String AFTER_ANNOTATION_UPDATE_EVENT = "AfterAnnotationUpdateEvent";
+    public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
+    public static final String FEATURE_UPDATED_EVENT = "FeatureValueUpdatedEvent";
+    public static final String RELATION_CREATED_EVENT = "";
     private static final String CURATION_INPROGRESS = "CURATION_INPROGRESS";
     public static final String DOCUMENT_STATE_CHANGED_EVENT = "DocumentStateChangedEvent";
     private static final int MAX_NUM_ACTIVITIES = 2;
@@ -64,6 +68,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     private @SpringBean DocumentService documentService;
 
     private final IModel<Project> projectModel;
+    private Set<String> annotationEvents;
 
     public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
     {
@@ -73,6 +78,10 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         if (aCurrentProject == null || aCurrentProject.getObject() == null) {
             return;
         }
+        
+        annotationEvents = new HashSet<>();
+        Collections.addAll(annotationEvents, SPAN_CREATED_EVENT, FEATURE_UPDATED_EVENT, 
+                RELATION_CREATED_EVENT);
         
         WebMarkupContainer activitiesList = new WebMarkupContainer("activities",
                 new StringResourceModel("activitiesHeading", this));
@@ -106,12 +115,10 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         String eventName = event.getEvent();
         
         switch (eventName) {
-        case AFTER_ANNOTATION_UPDATE_EVENT:
-            return String.format("%s: Annotated in document %s", eventDate, documentName);
         case DOCUMENT_STATE_CHANGED_EVENT:
             return String.format("%s: Curated document %s", eventDate, documentName);
         default:
-            return "";
+            return String.format("%s: Annotated in document %s", eventDate, documentName);
         }
     }
 
@@ -134,22 +141,16 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         return eventDate;
     }
     
-    //FIXME what about documents that were deleted?
+    //FIXME what about documents that were deleted? what about mismatch of user-doc rights?
     private void openLastActivity(LoggedEvent aEvent)
     {
         String eventName = aEvent.getEvent();
-        switch (eventName) {
-        // FIXME afterannotationupdateevent is an event that is always used, 
-        // in annotation and curation :(
-        case AFTER_ANNOTATION_UPDATE_EVENT:
-            openDocument(aEvent, AnnotationPage.class);
-            break;
-        case DOCUMENT_STATE_CHANGED_EVENT:
-            openDocument(aEvent, CurationPage.class);
-            break;
-        default:
-            log.info(String.format("Unknown last activties event: %s", eventName));
+        if (!annotationEvents.contains(eventName)) {
+            log.info(String.format("Unknown last activities event: %s", eventName));
+            return;
         }
+        // TODO: curation page
+        openDocument(aEvent, AnnotationPage.class);
     }
 
     private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
@@ -168,15 +169,15 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         String username = user.getUsername();
         
         // get last annotation events
-        String annotationEvent = AFTER_ANNOTATION_UPDATE_EVENT;
         events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project,
-                username, annotationEvent, MAX_NUM_ACTIVITIES));
+                username, annotationEvents.toArray(new String[annotationEvents.size()]), 
+                MAX_NUM_ACTIVITIES));
         
         // get last curation events
-        String curationEvent = DOCUMENT_STATE_CHANGED_EVENT;
+        /*String curationEvent = DOCUMENT_STATE_CHANGED_EVENT;
         List<LoggedEvent> curations = eventRepository.listLoggedEventsDocumentState(project, 
                 username, curationEvent, MAX_NUM_ACTIVITIES, CURATION_INPROGRESS);
-        events.addAll(curations);
+        events.addAll(curations);*/
         return events;
     }
 }

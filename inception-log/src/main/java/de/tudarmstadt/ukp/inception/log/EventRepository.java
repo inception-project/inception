@@ -39,11 +39,11 @@ public interface EventRepository
     void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
 
     /**
-     * Get the aMaxSize amount of logged events of the given type, user name and project
+     * Get the aMaxSize amount of logged events of the given types, user name and project
      * for every document from the db.
      */
     List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
-            String aEventType, int aMaxSize);
+            String[] aEventType, int aMaxSize);
 
     /**
      * Get the aMaxSize amount of logged events of the given type, user name, project and 
