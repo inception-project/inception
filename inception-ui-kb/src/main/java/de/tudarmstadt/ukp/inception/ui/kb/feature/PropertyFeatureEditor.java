@@ -179,7 +179,7 @@ public class PropertyFeatureEditor
             KBStatement mockStatement = new KBStatement(subject, predicate);
             mockStatement.setValue(object.getUiLabel());
             KnowledgeBase kb = factService.getKBByKBHandleAndTraits(predicate, project, traits);
-            existStatements = kbService.statementsMatchSPO(kb, mockStatement);
+            existStatements = kbService.exists(kb, mockStatement);
         }
     }
 

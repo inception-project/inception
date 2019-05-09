@@ -316,7 +316,7 @@ public class RecommendationServiceImpl
     
     @Override
     @Transactional
-    public List<Recommender> getEnabledRecommenders(Long aRecommenderId)
+    public Optional<Recommender> getEnabledRecommender(long aRecommenderId)
     {
         String query = String.join("\n",
                 "FROM Recommender WHERE ",
@@ -326,16 +326,37 @@ public class RecommendationServiceImpl
         return entityManager.createQuery(query, Recommender.class)
                 .setParameter("id", aRecommenderId)
                 .setParameter("enabled", true)
+                .getResultStream()
+                .findFirst();
+    }
+    
+    @Override
+    @Transactional
+    public List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer)
+    {
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "project = :project AND",
+                "layer = :layer AND",
+                "enabled = :enabled",
+                "ORDER BY name ASC" );
+
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("project", aLayer.getProject())
+                .setParameter("layer", aLayer)
+                .setParameter("enabled", true)
                 .getResultList();
     }
     
     @Override
+    @Transactional
     public List<Recommender> listEnabledRecommenders(Project aProject)
     {
         String query = String.join("\n",
-                "FROM Recommender WHERE ",
-                "project = :project AND ",
-                "enabled = :enabled" );
+                "FROM Recommender WHERE",
+                "project = :project AND",
+                "enabled = :enabled",
+                "ORDER BY name ASC" );
 
         return entityManager.createQuery(query, Recommender.class)
                 .setParameter("project", aProject)
@@ -347,11 +368,14 @@ public class RecommendationServiceImpl
     @Transactional
     public List<Recommender> listRecommenders(AnnotationLayer aLayer)
     {
-        List<Recommender> settings = entityManager
-                .createQuery("FROM Recommender WHERE layer = :layer ORDER BY name ASC",
-                        Recommender.class)
-                .setParameter("layer", aLayer).getResultList();
-        return settings;
+        String query = String.join("\n",
+                "FROM Recommender WHERE ",
+                "layer = :layer",
+                "ORDER BY name ASC" );
+        
+        return entityManager.createQuery(query, Recommender.class)
+                .setParameter("layer", aLayer)
+                .getResultList();
     }
 
     /**
@@ -701,6 +725,15 @@ public class RecommendationServiceImpl
                     }
 
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
+                    
+                    // Check that configured layer and feature are accepted 
+                    // by this type of recommender
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                + "- skipping recommender", user.getUsername(), r.getName());
+                        continue nextRecommender;
+                    }
+                    
 
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.

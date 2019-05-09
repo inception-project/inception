@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2000Reader;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -121,7 +122,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("C");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -158,7 +159,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -186,7 +187,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -214,7 +215,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -242,7 +243,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -300,11 +301,22 @@ public class DL4JSequenceRecommenderTest
                 cache);
         JCas cas = loadPosDevelopmentData();
 
-        double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
+        EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
-        System.out.printf("Score: %f%n", score);
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
+
+        System.out.printf("POS F1-Score: %f%n", fscore);
+        System.out.printf("POS Accuracy: %f%n", accuracy);
+        System.out.printf("POS Precision: %f%n", precision);
+        System.out.printf("POS Recall: %f%n", recall);
         
-        assertThat(score).isBetween(0.0, 1.0);
+        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
@@ -355,11 +367,23 @@ public class DL4JSequenceRecommenderTest
                 cache);
         JCas cas = loadNerDevelopmentData();
 
-        double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
+        EvaluationResult result = sut.evaluate(asList(cas.getCas()), splitStrategy);
 
-        System.out.printf("Score: %f%n", score);
+        double fscore = result.computeF1Score();
+        double accuracy = result.computeAccuracyScore();
+        double precision = result.computePrecisionScore();
+        double recall = result.computeRecallScore();
+
+        System.out.printf("NER F1-Score: %f%n", fscore);
+        System.out.printf("NER Accuracy: %f%n", accuracy);
+        System.out.printf("NER Precision: %f%n", precision);
+        System.out.printf("NER Recall: %f%n", recall);
         
-        assertThat(score).isBetween(0.0, 1.0);
+        // FIXME is always zero
+        assertThat(fscore).isBetween(0.0, 1.0);
+        assertThat(precision).isBetween(0.0, 1.0);
+        assertThat(recall).isBetween(0.0, 1.0);
+        assertThat(accuracy).isBetween(0.0, 1.0);
     }
 
     @Test
@@ -374,7 +398,7 @@ public class DL4JSequenceRecommenderTest
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(asList(cas.getCas()), splitStrategy).getDefaultScore();
+            double score = sut.evaluate(asList(cas.getCas()), splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
