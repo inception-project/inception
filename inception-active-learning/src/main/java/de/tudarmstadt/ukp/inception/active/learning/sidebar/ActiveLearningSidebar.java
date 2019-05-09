@@ -707,10 +707,8 @@ public class ActiveLearningSidebar
             aTarget.add((Component) getActionHandler());
         }
 
-        // Fetch the next suggestion to present to the user (if there is any)
-        Optional<Delta> recommendationDifference = alState.getStrategy().generateNextSuggestion(
-                activeLearningService, learningRecordService, state.getUser(), alState.getLayer(),
-                alState.getSuggestions());
+        Optional<Delta> recommendationDifference = activeLearningService
+                .generateNextSuggestion(state.getUser(), alState);
         Optional<AnnotationSuggestion> prevSuggestion = alState.getSuggestion();
         alState.setCurrentDifference(recommendationDifference);
         

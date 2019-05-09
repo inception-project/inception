@@ -485,7 +485,7 @@ public class MtasDocumentIndex
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
                 doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                        Field.Store.YES));
+                        Field.Store.NO));
     
                 // Add document to the Lucene index
                 indexWriter.addDocument(doc);
