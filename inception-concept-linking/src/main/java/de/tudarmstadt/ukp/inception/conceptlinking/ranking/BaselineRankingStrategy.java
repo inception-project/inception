@@ -41,12 +41,12 @@ public class BaselineRankingStrategy
             // candidate matches the query which causes the next ranking criteria to be evaluated
             .append(e1.get(KEY_QUERY).map(q -> q.equals(e1.getIRI()) ? 0 : 1).orElse(1), 
                     e2.get(KEY_QUERY).map(q -> q.equals(e2.getIRI()) ? 0 : 1).orElse(1))
-            // The edit distance between query and label is given high importance
-            // Comparing simultaneously against the edit distance to the query and to the 
-            // mention causes items similar to either to be ranked up
-            .append(Math.min(e1.get(KEY_LEVENSHTEIN_QUERY).get(),
-                            e1.get(KEY_LEVENSHTEIN_MENTION).get()),
-                    Math.min(e2.get(KEY_LEVENSHTEIN_QUERY).get(),
+            // Compare geometric mean of the Levenshtein distance to query and mention
+            // since both are important and a very close similarity in say the mention outweighs
+            // a not so close similarity in the query
+            .append(Math.sqrt(e1.get(KEY_LEVENSHTEIN_QUERY).get() * 
+                            e1.get(KEY_LEVENSHTEIN_MENTION).get()), 
+                    Math.sqrt(e2.get(KEY_LEVENSHTEIN_QUERY).get() * 
                             e2.get(KEY_LEVENSHTEIN_MENTION).get()))
             // A high signature overlap score is preferred.
             .append(e2.get(KEY_SIGNATURE_OVERLAP_SCORE).get(),
