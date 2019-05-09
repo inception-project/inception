@@ -95,7 +95,6 @@ public class ChartPanel
                 "   $.ajax({",
                 "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
                 "       type:'post',",
-                "       cache:1,",
                 "       contentType:'application/json',",
                 "       dataType:'json',",
                 "       success : function(result){",
