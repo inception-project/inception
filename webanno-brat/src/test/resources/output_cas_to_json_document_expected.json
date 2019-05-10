@@ -11,6 +11,7 @@
   "attributes" : [ ],
   "equivs" : [ ],
   "comments" : [ ],
+  "normalizations" : [ ],
   "args" : { },
   "rtl_mode" : false,
   "font_zoom" : 100,
