@@ -30,6 +30,8 @@ public class ProjectRecommendersPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 3042218455285633439L;
+    
+    private static final String EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
@@ -58,6 +60,12 @@ public class ProjectRecommendersPanel
             _target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
+        
+        EvaluationSimulationPanel evaluationSimulationPanel = new EvaluationSimulationPanel(
+                EVALUATION_SIMULATION_CONTAINER, projectModel.getObject(),
+                selectedRecommenderModel);
+        evaluationSimulationPanel.setOutputMarkupId(true);
+        add(evaluationSimulationPanel);
     }
 
     @Override
