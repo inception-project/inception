@@ -19,10 +19,12 @@
  */
 .dashboard-sidebar { background-color: darkgray; }
 .dashboard-sidebar .nav-pills a { font-size: 18px; color: white; }
+.dashboard-sidebar .nav-stacked > li + li {  margin-top: 0px; }
 .dashboard-sidebar .nav-pills a:hover { color: black; }
+.dashboard-sidebar .hvr-fade:hover, .hvr-fade:focus, .hvr-fade:active { background-color: #e7e7e7; }
 .dashboard-content .flex-tile { 
-  background: #FFFFFF; border: 
-  1px solid #EAEAEA;
+  background: #FFFFFF; 
+  border: 1px solid #EAEAEA;
   margin: 10px; 
   padding: 10px 20px 30px 20px; 
   min-height: 10em;

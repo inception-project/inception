@@ -135,7 +135,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
     public ConceptFeatureTraits getFeatureTraits(Project aProject)
     {
         AnnotationLayer linkedLayer = annotationService
-            .getLayer(NamedEntity.class.getName(), aProject);
+            .findLayer(aProject, NamedEntity.class.getName());
         AnnotationFeature linkedFeature = annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
