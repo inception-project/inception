@@ -56,4 +56,11 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
             }
         }
     });
+    $('#slider').show();
+    $('#slider').BootSideMenu({
+        side: "left",
+        pushBody: true,
+        duration: 200,
+        autoClose: true
+    });
 }
