@@ -30,8 +30,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -300,11 +298,9 @@ public class ConceptFeatureSupport
     }
     
     @Override
-    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
     {
-        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        return asList(new VLazyDetailQuery(aFeature.getName(),
-                aFs.getFeatureValueAsString(labelFeature)));
+        return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
     }
     
     @Override

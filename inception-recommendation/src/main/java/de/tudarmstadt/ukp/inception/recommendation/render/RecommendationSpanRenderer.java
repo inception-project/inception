@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -194,9 +195,10 @@ public class RecommendationSpanRenderer
                         AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
                         // Retrieve the UI display label for the given feature value
-                        String annotation = aFsRegistry.getFeatureSupport(feature)
-                            .renderFeatureValue(feature, ao.getLabel());
-
+                        FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
+                        String annotation = featureSupport.renderFeatureValue(feature,
+                                ao.getLabel());
+                        
                         Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
 
@@ -204,6 +206,7 @@ public class RecommendationSpanRenderer
                                 new VRange(ao.getBegin() - aWindowBeginOffset,
                                         ao.getEnd() - aWindowBeginOffset),
                                 featureAnnotation, Collections.emptyMap(), color);
+                        v.setLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                         vdoc.add(v);
                         first = false;
                     }
