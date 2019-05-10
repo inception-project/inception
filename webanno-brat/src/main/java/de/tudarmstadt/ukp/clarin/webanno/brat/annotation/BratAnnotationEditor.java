@@ -197,7 +197,7 @@ public class BratAnnotationEditor
                     if (NormDataResponse.is(action)) {
                         result = actionLookupNormData(aTarget, request, paramId);
                     }
-                    if (DoActionResponse.is(action)) {
+                    else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
