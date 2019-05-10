@@ -18,8 +18,10 @@
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -28,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -47,11 +51,14 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBErrorHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
@@ -72,7 +79,7 @@ public class ConceptFeatureSupport
 
     private final KnowledgeBaseService kbService;
     
-    private LoadingCache<Key, String> labelCache = Caffeine.newBuilder()
+    private LoadingCache<Key, KBHandle> labelCache = Caffeine.newBuilder()
         .maximumSize(10_000)
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .refreshAfterWrite(1, TimeUnit.MINUTES)
@@ -135,12 +142,12 @@ public class ConceptFeatureSupport
     {
         String renderValue = null;
         if (aLabel != null) {
-            renderValue = labelCache.get(new Key(aFeature, aLabel));
+            return labelCache.get(new Key(aFeature, aLabel)).getUiLabel();
         }
         return renderValue;
     }
     
-    private String loadLabelValue(Key aKey)
+    private KBHandle loadLabelValue(Key aKey)
     {
         try {
             ConceptFeatureTraits t = readTraits(aKey.getAnnotationFeature());
@@ -160,15 +167,15 @@ public class ConceptFeatureSupport
                         aKey.getLabel());
 
             }
-            return kbObject.map(KBObject::getUiLabel).orElseThrow(NoSuchElementException::new);
+            return kbObject.map(KBObject::toKBHandle).orElseThrow(NoSuchElementException::new);
         }
         catch (NoSuchElementException e) {
             LOG.error("No label for feature value [{}]", aKey.getLabel());
-            return "NO LABEL (" + aKey.getLabel() + ")";
+            return new KBErrorHandle("NO LABEL (" + aKey.getLabel() + ")", e);
         }
         catch (Exception e) {
             LOG.error("Unable to obtain label value for feature value [{}]", aKey.getLabel(), e);
-            return "ERROR (" + aKey.getLabel() + ")";
+            return new KBErrorHandle("ERROR (" + aKey.getLabel() + ")", e);
         }
     }
 
@@ -290,6 +297,30 @@ public class ConceptFeatureSupport
             AnnotationFeature aFeature)
     {
         aTD.addFeature(aFeature.getName(), "", CAS.TYPE_NAME_STRING);
+    }
+    
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
+        return asList(new VLazyDetailQuery(aFeature.getName(),
+                aFs.getFeatureValueAsString(labelFeature)));
+    }
+    
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    {
+        List<VLazyDetailResult> result = new ArrayList<>();
+        
+        KBHandle handle = labelCache.get(new Key(aFeature, aQuery));
+
+        result.add(new VLazyDetailResult("Label", handle.getUiLabel()));
+
+        if (isNotBlank(handle.getDescription())) {
+            result.add(new VLazyDetailResult("Description", handle.getDescription()));
+        }
+        
+        return result;
     }
 
     private class Key
