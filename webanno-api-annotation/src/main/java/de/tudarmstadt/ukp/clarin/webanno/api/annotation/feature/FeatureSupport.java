@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
@@ -208,6 +211,11 @@ public interface FeatureSupport<T>
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
         return renderFeatureValue(aFeature, aFs.getFeatureValueAsString(labelFeature));
     }
+    
+    default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        return Collections.emptyList();
+    }
 
     /**
      * Gets the label that should be displayed for the given feature value in the UI. {@code null}
@@ -222,6 +230,11 @@ public interface FeatureSupport<T>
     default String renderFeatureValue(AnnotationFeature aFeature, String aLabel)
     {
         return aLabel;
+    }
+    
+    default List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    {
+        return Collections.emptyList();
     }
 
     /**

@@ -72,8 +72,8 @@ public class DependencyLayerInitializer
         // Dependency Layer
         AnnotationLayer depLayer = new AnnotationLayer(Dependency.class.getName(), "Dependency",
                 RELATION_TYPE, aProject, true, SINGLE_TOKEN, OVERLAP_ONLY);
-        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
-                aProject);
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+                Token.class.getName());
         List<AnnotationFeature> tokenFeatures = annotationSchemaService
                 .listAnnotationFeature(tokenLayer);
         AnnotationFeature tokenPosFeature = null;

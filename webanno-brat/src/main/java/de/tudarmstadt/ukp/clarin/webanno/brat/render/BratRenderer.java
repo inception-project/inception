@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Argument;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Comment;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Entity;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.EntityType;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Normalization;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Relation;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.RelationType;
@@ -168,6 +169,10 @@ public class BratRenderer
                 
                 aResponse.addEntity(new Entity(vspan.getVid(), vspan.getType(), offsets,
                         bratLabelText, color, bratHoverText));
+                
+                vspan.getLazyDetails().stream()
+                        .map(d ->  new Normalization(vspan.getVid(), d.getFeature(), d.getQuery()))
+                        .forEach(aResponse::addNormalization);
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
@@ -465,8 +470,8 @@ public class BratRenderer
         // determine which layers attach to with other layers. Currently we only use attachType,
         // but do not follow attachFeature if it is set.
         if (aTarget.isBuiltIn() && aTarget.getName().equals(POS.class.getName())) {
-            attachingLayers.add(aAnnotationService.getLayer(Dependency.class.getName(),
-                    aTarget.getProject()));
+            attachingLayers.add(aAnnotationService.findLayer(aTarget.getProject(),
+                    Dependency.class.getName()));
         }
 
         // Custom layers

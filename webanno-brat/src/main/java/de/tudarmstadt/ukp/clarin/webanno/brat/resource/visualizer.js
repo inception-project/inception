@@ -444,8 +444,8 @@ var Visualizer = (function($, window, undefined) {
         if (!$.browser.chrome) return; // not needed
 */
 // WEBANNO EXTENSION END
-        $svg.css('margin-bottom', 1);
-        setTimeout(function() { $svg.css('margin-bottom', 0); }, 0);
+//        $svg.css('margin-bottom', 1);
+//        setTimeout(function() { $svg.css('margin-bottom', 0); }, 0);
       }
 
       var rowBBox = function(span) {

@@ -428,7 +428,7 @@ public class AnnotationFeatureForm
         CAS cas = editorPanel.getEditorCas();
         AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
-        AnnotationLayer currentLayer = annotationService.getLayer(state.getProject(), fs);
+        AnnotationLayer currentLayer = annotationService.findLayer(state.getProject(), fs);
         
         if (currentLayer.isReadonly()) {
             error("Cannot replace an annotation on a read-only layer.");

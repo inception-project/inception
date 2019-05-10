@@ -607,8 +607,8 @@ public class SuggestionViewPanel
 
                     FeatureStructure fs = c.getFs(u, aCasMap);
                     
-                    AnnotationLayer layer = annotationService.getLayer(fs.getType().getName(),
-                            aProject);
+                    AnnotationLayer layer = annotationService.findLayer(aProject,
+                            fs.getType().getName());
                     TypeAdapter typeAdapter = annotationService.getAdapter(layer);
                     
                     VID vid;
