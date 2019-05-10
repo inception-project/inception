@@ -308,6 +308,7 @@ var VisualizerUI = (function($, window, undefined) {
                         } else {
                             commentLabel = '<b>' + Util.escapeHTML(commentType) + ':</b> ';
                         }
+                        comment += "<hr/>";
                         comment += commentLabel + Util.escapeHTMLwithNewlines(commentText);
                         idtype = 'comment_' + commentType;
                     }
@@ -395,14 +396,22 @@ var VisualizerUI = (function($, window, undefined) {
                             // no DB, just attach "human-readable" text provided
                             // with the annotation, if any
                             if (cateogory) {
-                              comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(cateogory) + '</span>');
+                              comment += ```
+                                  <hr/>
+                                  <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
+                                  ```;
                             }
                             
                             if (key) {
-                              comment += ('<span class="norm_info_label">' + Util.escapeHTML(key) + '</span>');
+                              comment += ```
+                                  <span class="norm_info_label">${Util.escapeHTML(key)}</span>
+                                  ```;
                             }
                             
-                            comment += ('<span class="norm_info_value">' + Util.escapeHTML(value) + '</span><br/>');
+                            comment += ```
+                                  <span class="norm_info_value">${Util.escapeHTML(value)}</span>
+                                  <br/>
+                                  ```;
                         } else {
                             // DB available, add drop-off point to HTML and store
                             // query parameters
