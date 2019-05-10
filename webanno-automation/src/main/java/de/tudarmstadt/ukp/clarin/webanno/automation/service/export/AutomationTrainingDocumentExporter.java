@@ -162,7 +162,7 @@ public class AutomationTrainingDocumentExporter
             trainingDocument.setSentenceAccessed(importedTrainingDocument.getSentenceAccessed());
             if (importedTrainingDocument.getFeature() != null) {
                 AnnotationLayer trainingLayer = annotationService
-                        .getLayer(importedTrainingDocument.getFeature().getLayer(), aProject);
+                        .findLayer(aProject, importedTrainingDocument.getFeature().getLayer());
                 AnnotationFeature trainingFeature = annotationService
                         .getFeature(importedTrainingDocument.getFeature().getName(), trainingLayer);
                 trainingDocument.setFeature(trainingFeature);

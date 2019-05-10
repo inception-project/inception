@@ -65,8 +65,8 @@ public class PartOfSpeechLayerInitializer
                 new ClassPathResource("/tagsets/mul-pos-ud.json").getInputStream(),
                 annotationSchemaService);
 
-        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
-                aProject);
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+                Token.class.getName());
 
         AnnotationLayer posLayer = new AnnotationLayer(POS.class.getName(), "Part of speech",
                 SPAN_TYPE, aProject, true, SINGLE_TOKEN, NO_OVERLAP);

@@ -485,7 +485,7 @@ public abstract class AnnotationDetailEditorPanel
         if (aVID.isNotSet()) {
             if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().getType())) {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
-                        .getLayer(state.getArmedFeature().getType(), state.getProject()));
+                        .findLayer(state.getProject(), state.getArmedFeature().getType()));
 
                 id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aCas,
                         aBegin, aEnd));
@@ -552,7 +552,7 @@ public abstract class AnnotationDetailEditorPanel
             }
             
             // Fetch the annotation layer for the origin annotation
-            AnnotationLayer originLayer = annotationService.getLayer(state.getProject(), originFS);
+            AnnotationLayer originLayer = annotationService.findLayer(state.getProject(), originFS);
 
             AnnotationLayer previousLayer = state.getSelectedAnnotationLayer();
 
@@ -892,13 +892,13 @@ public abstract class AnnotationDetailEditorPanel
     public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
             AnnotationFS aFS)
     {
-        AnnotationLayer layer = annotationService.getLayer(aProject, aFS);
+        AnnotationLayer layer = annotationService.findLayer(aProject, aFS);
         
         AttachStatus attachStatus = new AttachStatus();
         
         Set<AnnotationFS> attachedRels = getAttachedRels(aFS, layer);
         boolean attachedToReadOnlyRels = attachedRels.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
         });
         if (attachedToReadOnlyRels) {
@@ -922,7 +922,7 @@ public abstract class AnnotationDetailEditorPanel
 
         Set<AnnotationFS> attachedLinks = getAttachedLinks(aFS, layer);
         boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
-            AnnotationLayer relLayer = annotationService.getLayer(aProject, relFS);
+            AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
         });
         if (attachedToReadOnlyLinks) {
@@ -943,7 +943,7 @@ public abstract class AnnotationDetailEditorPanel
 
         AnnotationFS fs = selectAnnotationByAddr(cas,
                 state.getSelection().getAnnotation().getId());
-        AnnotationLayer layer = annotationService.getLayer(state.getProject(), fs);
+        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
 
         if (layer.isReadonly()) {
@@ -998,7 +998,7 @@ public abstract class AnnotationDetailEditorPanel
             for (AnnotationFS attachedFs : getAttachedRels(fs, layer)) {
                 aCas.removeFsFromIndexes(attachedFs);
                 info("The attached annotation for relation type [" + annotationService
-                    .getLayer(attachedFs.getType().getName(), state.getProject()).getUiName()
+                    .findLayer(state.getProject(), attachedFs.getType().getName()).getUiName()
                     + "] is deleted");
             }
         }
@@ -1215,7 +1215,7 @@ public abstract class AnnotationDetailEditorPanel
                 // Try obtaining the layer from the feature structure
                 AnnotationLayer layer;
                 try {
-                    layer = annotationService.getLayer(state.getProject(), annoFs);
+                    layer = annotationService.findLayer(state.getProject(), annoFs);
                     state.setSelectedAnnotationLayer(layer);
                     LOG.trace(String.format(
                         "loadFeatureEditorModels() selectedLayer set from selection: %s",

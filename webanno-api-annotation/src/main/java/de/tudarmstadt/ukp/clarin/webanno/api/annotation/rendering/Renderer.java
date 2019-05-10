@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.defaultString;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -35,6 +36,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 
@@ -81,6 +83,17 @@ public interface Renderer
         }
         
         return features;
+    }
+    
+    default List<VLazyDetailQuery> getLazyDetails(TypeAdapter aAdapter, AnnotationFS aFs,
+            List<AnnotationFeature> aFeatures)
+    {
+        FeatureSupportRegistry fsr = getFeatureSupportRegistry();
+        
+        return aFeatures.stream()
+                .filter(AnnotationFeature::isEnabled)
+                .flatMap(f -> fsr.getFeatureSupport(f).getLazyDetails(f, aFs).stream())
+                .collect(Collectors.toList());
     }
     
     default Map<String, String> getHoverFeatures(TypeAdapter aAdapter, AnnotationFS aFs,

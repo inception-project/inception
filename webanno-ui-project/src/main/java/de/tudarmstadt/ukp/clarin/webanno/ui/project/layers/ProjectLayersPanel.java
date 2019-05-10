@@ -185,7 +185,7 @@ public class ProjectLayersPanel
                                 List<AnnotationLayer> _layers = annotationService
                                         .listAnnotationLayer(project);
                                 AnnotationLayer tokenLayer = annotationService
-                                        .getLayer(Token.class.getName(), project);
+                                        .findLayer(project, Token.class.getName());
                                 _layers.remove(tokenLayer);
                                 for (AnnotationLayer layer : _layers) {
                                     if (layer.isBuiltIn() && layer.isEnabled()) {
@@ -328,8 +328,8 @@ public class ProjectLayersPanel
                     layer.setAttachType(layersMap.get(exLayer.getAttachType().getName()));
                 }
                 if (exLayer.getAttachFeature() != null) {
-                    AnnotationLayer attachLayer = annotationService.getLayer(
-                            exLayer.getAttachType().getName(), project);
+                    AnnotationLayer attachLayer = annotationService.findLayer(
+                            project, exLayer.getAttachType().getName());
                     AnnotationFeature attachFeature = annotationService
                             .getFeature(exLayer.getAttachFeature().getName(), attachLayer);
                     layer.setAttachFeature(attachFeature);
@@ -347,7 +347,7 @@ public class ProjectLayersPanel
             AnnotationLayer layer;
             
             if (annotationService.existsLayer(aExLayer.getName(), aExLayer.getType(), project)) {
-                layer = annotationService.getLayer(aExLayer.getName(), project);
+                layer = annotationService.findLayer(project, aExLayer.getName());
                 ImportUtil.setLayer(annotationService, layer, aExLayer, project, aUser);
             }
             else {

@@ -211,7 +211,7 @@ public class LayerExporter
         // Round 1: layers and features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
             if (annotationService.existsLayer(exLayer.getName(), exLayer.getType(), aProject)) {
-                AnnotationLayer layer = annotationService.getLayer(exLayer.getName(), aProject);
+                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
                 importLayer(layer, exLayer, aProject);
                 for (ExportedAnnotationFeature exfeature : exLayer.getFeatures()) {
                     if (annotationService.existsFeature(exfeature.getName(), layer)) {
@@ -239,9 +239,9 @@ public class LayerExporter
         // Round 2: attach-layers, attach-features
         for (ExportedAnnotationLayer exLayer : aExProject.getLayers()) {
             if (exLayer.getAttachType() != null) {
-                AnnotationLayer layer = annotationService.getLayer(exLayer.getName(), aProject);
-                AnnotationLayer attachLayer = annotationService.getLayer(exLayer.getAttachType()
-                        .getName(), aProject);
+                AnnotationLayer layer = annotationService.findLayer(aProject, exLayer.getName());
+                AnnotationLayer attachLayer = annotationService.findLayer(aProject,
+                        exLayer.getAttachType().getName());
                 layer.setAttachType(attachLayer);
                 if (exLayer.getAttachFeature() != null) {
                     AnnotationFeature attachFeature = annotationService

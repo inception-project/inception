@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -27,8 +30,9 @@ public abstract class VObject
     private AnnotationLayer layer;
     private VID vid;
     private String type;
-    private Map<String, String> features;
-    private Map<String, String> hoverFeatures;
+    private Map<String, String> features = new HashMap<>();
+    private Map<String, String> hoverFeatures = new HashMap<>();
+    private List<VLazyDetailQuery> lazyDetails = new ArrayList<>();
     private int equivalenceSet;
 
     public VObject(AnnotationLayer aLayer, VID aVid, String aType, Map<String, String> aFeatures, 
@@ -78,8 +82,28 @@ public abstract class VObject
         return hoverFeatures;
     }
 
-    public void setHoverFeatures(Map<String, String> hoverFeatures)
+    public void setHoverFeatures(Map<String, String> aHoverFeatures)
     {
-        this.hoverFeatures = hoverFeatures;
+        hoverFeatures = aHoverFeatures;
+    }
+    
+    public void addHoverFeature(String aFeature, String aValue)
+    {
+        hoverFeatures.put(aFeature, aValue);
+    }
+
+    public List<VLazyDetailQuery> getLazyDetails()
+    {
+        return lazyDetails;
+    }
+
+    public void setLazyDetails(List<VLazyDetailQuery> aLazyDetails)
+    {
+        lazyDetails = aLazyDetails;
+    }
+
+    public void addLazyDetail(VLazyDetailQuery aDetail)
+    {
+        lazyDetails.add(aDetail);
     }
 }

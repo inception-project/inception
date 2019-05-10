@@ -59,8 +59,8 @@ public class MorphologicalFeaturesLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
-                aProject);
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+                Token.class.getName());
 
         AnnotationFeature tokenMorphFeature = new AnnotationFeature(aProject, tokenLayer, "morph",
                 "morph", Lemma.class.getName());

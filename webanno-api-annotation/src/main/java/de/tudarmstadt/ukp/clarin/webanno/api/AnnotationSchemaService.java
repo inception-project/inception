@@ -196,17 +196,31 @@ public interface AnnotationSchemaService
     AnnotationLayer getLayer(long id);
 
     /**
-     * Get an {@link AnnotationLayer}
+     * Get an annotation layer using its id. This method additionally ensures that the retrieved
+     * layer is part of the given project. For security reasons, this method should be preferred
+     * over {@link #getLayer(long)} if a project context is available.
      * 
-     * @param name
-     *            the layer name.
-     * @param project
+     * @param aProject
      *            the project.
+     * @param aLayerId
+     *            the layer id.
      * @return the layer.
      */
-    AnnotationLayer getLayer(String name, Project project);
+    Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId);
 
-    AnnotationLayer getLayer(Project aProject, FeatureStructure aFS);
+    /**
+     * Get an {@link AnnotationLayer}
+     * 
+     * @param aProject
+     *            the project.
+     * @param aName
+     *            the layer name.
+     * 
+     * @return the layer.
+     */
+    AnnotationLayer findLayer(Project aProject, String aName);
+
+    AnnotationLayer findLayer(Project aProject, FeatureStructure aFS);
     
     /**
      * Get a {@link AnnotationFeature} name using its ID.
