@@ -191,7 +191,7 @@ public class PropertyFeatureEditor
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
         AnnotationActionHandler actionHandler, AnnotatorState aState)
     {
-        AnnotationLayer factLayer = annotationService.getLayer(FACT_LAYER, aState.getProject());
+        AnnotationLayer factLayer = annotationService.findLayer(aState.getProject(), FACT_LAYER);
         KBHandle kbHandle = null;
         AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
         List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
