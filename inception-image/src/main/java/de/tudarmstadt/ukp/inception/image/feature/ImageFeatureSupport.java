@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
@@ -40,6 +41,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailQuery;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VLazyDetailResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
@@ -186,5 +189,17 @@ public class ImageFeatureSupport
     public Object wrapFeatureValue(AnnotationFeature aFeature, CAS aCAS, Object aValue)
     {
         return aValue;
+    }
+    
+    @Override
+    public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
+    {
+        return asList(new VLazyDetailQuery(aFeature.getName(), renderFeatureValue(aFeature, aFs)));
+    }
+    
+    @Override
+    public List<VLazyDetailResult> renderLazyDetails(AnnotationFeature aFeature, String aQuery)
+    {
+        return asList(new VLazyDetailResult("<img>", aQuery));
     }
 }
