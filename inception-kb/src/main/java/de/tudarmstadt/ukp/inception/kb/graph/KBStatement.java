@@ -64,9 +64,11 @@ public class KBStatement implements Serializable
         this(aId, new KBHandle(aInstance), null, null);
     }
 
-    public KBStatement(String aId, String aInstance, String aProperty, Object aValue)
+    public KBStatement(String aId, String aInstance, String aProperty, Object aValue,
+            String aValueLabel)
     {
         this(aId, new KBHandle(aInstance), new KBProperty(aProperty), aValue);
+        setValueLabel(aValueLabel);
     }
 
     /**
@@ -236,9 +238,14 @@ public class KBStatement implements Serializable
     public String toString()
     {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
-                .append("statementId", statementId).append("instance", instance)
-                .append("property", property).append("value", value).append("language", language)
-                .append("inferred", inferred).append("originalTriples", originalTriples)
+                .append("statementId", statementId)
+                .append("instance", instance)
+                .append("property", property)
+                .append("value", value)
+                .append("valueLabel", valueLabel)
+                .append("language", language)
+                .append("inferred", inferred)
+                .append("originalTriples", originalTriples)
                 .append("qualifiers", qualifiers).toString();
     }
 }
