@@ -75,7 +75,7 @@ public class RecommenderExporterTest
         project.setName("Test Project");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
         
-        when(annotationService.getLayer(layer.getName(), project)).thenReturn(layer);
+        when(annotationService.findLayer(project, layer.getName())).thenReturn(layer);
         when(annotationService.getFeature(eq("Feature 1"), any(AnnotationLayer.class)))
                 .thenReturn(buildFeature("1"));
         when(annotationService.getFeature(eq("Feature 2"), any(AnnotationLayer.class)))
