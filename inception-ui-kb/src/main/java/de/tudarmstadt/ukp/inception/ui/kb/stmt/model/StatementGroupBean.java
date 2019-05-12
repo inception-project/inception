@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.stmt;
+package de.tudarmstadt.ukp.inception.ui.kb.stmt.model;
 
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -24,11 +24,15 @@ import java.util.List;
 import java.util.UUID;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
 
-public class StatementGroupBean implements Serializable {
-
+public class StatementGroupBean
+    implements Serializable
+{
     private static final long serialVersionUID = -2187168839723008724L;
 
     /**
@@ -45,60 +49,73 @@ public class StatementGroupBean implements Serializable {
     
     private KnowledgeBase kb;
     private KBHandle instance;
-    private KBHandle property;
+    private KBProperty property;
     private List<KBStatement> statements;
     private StatementDetailPreference detailPreference;
     
-    public StatementGroupBean() {
-        this.id = UUID.randomUUID();
+    public StatementGroupBean()
+    {
+        id = UUID.randomUUID();
     }
 
-    public KnowledgeBase getKb() {
+    public KnowledgeBase getKb()
+    {
         return kb;
     }
 
-    public void setKb(KnowledgeBase kb) {
-        this.kb = kb;
+    public void setKb(KnowledgeBase aKB)
+    {
+        kb = aKB;
     }
 
-    public KBHandle getInstance() {
+    public KBHandle getInstance()
+    {
         return instance;
     }
 
-    public void setInstance(KBHandle instance) {
-        this.instance = instance;
+    public void setInstance(KBHandle aInstance)
+    {
+        instance = aInstance;
     }
 
-    public KBHandle getProperty() {
+    public KBProperty getProperty()
+    {
         return property;
     }
 
-    public void setProperty(KBHandle property) {
-        this.property = property;
+    public void setProperty(KBProperty aProperty)
+    {
+        property = aProperty;
     }
 
-    public List<KBStatement> getStatements() {
+    public List<KBStatement> getStatements()
+    {
         return statements;
     }
 
-    public void setStatements(List<KBStatement> statements) {
-        this.statements = statements;
-    }
-    
-    public StatementDetailPreference getDetailPreference() {
-        return detailPreference;
-    }
-    
-    public void setDetailPreference(StatementDetailPreference detailPreference) {
-        this.detailPreference = detailPreference;
+    public void setStatements(List<KBStatement> aStatements)
+    {
+        statements = aStatements;
     }
 
-    public boolean isNew() {
+    public StatementDetailPreference getDetailPreference()
+    {
+        return detailPreference;
+    }
+
+    public void setDetailPreference(StatementDetailPreference aDetailPreference)
+    {
+        detailPreference = aDetailPreference;
+    }
+
+    public boolean isNew()
+    {
         return isEmpty(property.getIdentifier());
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         final int prime = 31;
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
@@ -106,20 +123,26 @@ public class StatementGroupBean implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(Object obj)
+    {
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         StatementGroupBean other = (StatementGroupBean) obj;
         if (id == null) {
-            if (other.id != null)
+            if (other.id != null) {
                 return false;
-        } else if (!id.equals(other.id))
+            }
+        }
+        else if (!id.equals(other.id)) {
             return false;
+        }
         return true;
     }
-
 }
