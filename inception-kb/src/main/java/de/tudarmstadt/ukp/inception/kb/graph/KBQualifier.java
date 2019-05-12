@@ -39,28 +39,24 @@ public class KBQualifier
 
     private String language;
 
-    private KBHandle property;
+    private KBProperty property;
 
     private Object value;
+    
+    private String valueLabel;
 
     private Set<Statement> originalTriples;
 
     public KBQualifier(String aKbProperty, Object aValue)
     {
-        this(null, new KBHandle(aKbProperty), aValue);
+        this(null, new KBProperty(aKbProperty), aValue);
     }
 
-    public KBQualifier(KBHandle aProperty, Object aValue)
-    {
-        this(null, aProperty, aValue);
-    }
-
-    public KBQualifier(KBStatement aStatement, KBHandle aKbProperty, Object aValue)
+    public KBQualifier(KBStatement aStatement, KBProperty aKbProperty, Object aValue)
     {
         statement = aStatement;
         property = aKbProperty;
         setValue(aValue);
-
         originalTriples = new HashSet<>();
     }
 
@@ -89,14 +85,14 @@ public class KBQualifier
         statement = aKBStatement;
     }
 
-    public KBHandle getProperty()
+    public KBProperty getProperty()
     {
         return property;
     }
 
-    public void setProperty(KBHandle kbProperty)
+    public void setProperty(KBProperty aKBProperty)
     {
-        this.property = kbProperty;
+        property = aKBProperty;
     }
 
     public Object getValue()
@@ -159,5 +155,15 @@ public class KBQualifier
                 .append("kbStatement", statement).append("language", language)
                 .append("kbProperty", property).append("value", value)
                 .append("originalStatements", originalTriples).toString();
+    }
+
+    public String getValueLabel()
+    {
+        return valueLabel;
+    }
+
+    public void setValueLabel(String aValueLabel)
+    {
+        valueLabel = aValueLabel;
     }
 }

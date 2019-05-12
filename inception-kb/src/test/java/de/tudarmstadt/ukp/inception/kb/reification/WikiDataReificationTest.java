@@ -142,17 +142,18 @@ public class WikiDataReificationTest
             result = sut.listStatements(conn, kb, new KBHandle(MONA_LISA), true);
         }
         
-        KBStatement stmt1 = new KBStatement(STMT1, MONA_LISA, MATERIAL_USED, OIL_PAINT);
+        KBStatement stmt1 = new KBStatement(STMT1, MONA_LISA, MATERIAL_USED, OIL_PAINT, "Q296955");
 
-        KBStatement stmt2 = new KBStatement(STMT2, MONA_LISA, MATERIAL_USED, POPLAR_WOOD);
+        KBStatement stmt2 = new KBStatement(STMT2, MONA_LISA, MATERIAL_USED, POPLAR_WOOD,
+                "Q291034");
         stmt2.addQualifier(new KBQualifier(APPLIES_TO_PART, PAINTING_SURFACE));
 
-        KBStatement stmt3 = new KBStatement(STMT3, MONA_LISA, MATERIAL_USED, WOOD);
+        KBStatement stmt3 = new KBStatement(STMT3, MONA_LISA, MATERIAL_USED, WOOD, "Q287");
         stmt3.addQualifier(new KBQualifier(APPLIES_TO_PART, STRETCHER_BAR));
         stmt3.addQualifier(new KBQualifier(START_TIME, vf.createLiteral(1951)));
 
         KBStatement stmt4 = new KBStatement(STMT4, MONA_LISA, COMMONS_CATEGORY,
-                vf.createLiteral("Mona Lisa"));
+                vf.createLiteral("Mona Lisa"), null);
         
         assertThat(result)
                 .extracting(stmt -> stmt.getInstance().getIdentifier())

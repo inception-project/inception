@@ -130,13 +130,15 @@ public interface KnowledgeBaseService
         throws RepositoryConfigException, RepositoryException;
 
     /**
-     * Creates a new concept in the given knowledge base. Does nothing 
-     * if the knowledge base is read only.
-     * @param kb The knowledge base to which the new concept will be added
-     * @param aType The concept to add
-     * @return the KBHandle for the created concept 
+     * Creates a new concept in the given knowledge base. Does nothing if the knowledge base is read
+     * only.
+     * 
+     * @param kb
+     *            The knowledge base to which the new concept will be added
+     * @param aType
+     *            The concept to add
      */
-    KBHandle createConcept(KnowledgeBase kb, KBConcept aType);
+    void createConcept(KnowledgeBase kb, KBConcept aType);
 
     /**
      * Find the specified concept form the first KB in the project which provides it.
@@ -167,13 +169,15 @@ public interface KnowledgeBaseService
     void deleteConcept(KnowledgeBase kb, KBConcept aType);
 
     /**
-     * Creates a new property in the given knowledge base. Does nothing
-     * if the knowledge base is read only.
-     * @param kb The knowledge base to which the new property will be added
-     * @param aProperty The property to add
-     * @return the KBHandle for the created concept 
+     * Creates a new property in the given knowledge base. Does nothing if the knowledge base is
+     * read only.
+     * 
+     * @param kb
+     *            The knowledge base to which the new property will be added
+     * @param aProperty
+     *            The property to add
      */
-    KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty);
+    void createProperty(KnowledgeBase kb, KBProperty aProperty);
 
     Optional<KBProperty> readProperty(KnowledgeBase kb, String aIdentifier)
         throws QueryEvaluationException;
@@ -196,19 +200,25 @@ public interface KnowledgeBaseService
 
     /**
      * List the properties from the knowledge base
-     * @param kb The knowledge base from which the new concept will be deleted
-     * @param aAll indicates whether to include base properties or not
-     * @return list of all the properties {@link KBHandle} 
+     * 
+     * @param kb
+     *            The knowledge base from which the new concept will be deleted
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return list of all the properties {@link KBHandle}
      */
-    List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll) throws QueryEvaluationException;
+    List<KBProperty> listProperties(KnowledgeBase kb, boolean aAll);
 
     /**
      * List the properties from the knowledge base
-     * @param kb The knowledge base from which the new concept will be deleted
+     * 
+     * @param kb
+     *            The knowledge base from which the new concept will be deleted
      * @param aIncludeInferred
-     *        indicates whether inferred statements should be included in the result.
-     * @param aAll indicates whether to include base properties or not
-     * @return list of all the properties {@link KBHandle} 
+     *            indicates whether inferred statements should be included in the result.
+     * @param aAll
+     *            indicates whether to include base properties or not
+     * @return list of all the properties {@link KBHandle}
      */
     List<KBHandle> listProperties(KnowledgeBase kb, boolean aIncludeInferred, boolean aAll);
 
@@ -220,9 +230,8 @@ public interface KnowledgeBaseService
      *            The knowledge base to which the new instance will be added
      * @param aInstance
      *            The instance to add
-     * @return the instance {@link KBHandle}
      */
-    KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance);
+    void createInstance(KnowledgeBase kb, KBInstance aInstance);
 
     /**
      * Read the instance with the given identifier from the given knowledge base.
@@ -333,16 +342,16 @@ public interface KnowledgeBaseService
 
     <T> T read(KnowledgeBase kb, ReadAction<T> aAction);
 
-    KBHandle update(KnowledgeBase kb, UpdateAction aAction);
+    void update(KnowledgeBase kb, UpdateAction aAction);
 
     interface UpdateAction
     {
-        KBHandle accept(RepositoryConnection aConnection);
+        void accept(RepositoryConnection aConnection);
     }
 
     /**
      * List the properties for a specific accepted domain identifier and also 
-     * include properties which do not have any domain specified. 
+     * include properties which do not have any domain specified.
      * 
      * @param kb
      *            The knowledge base
@@ -354,8 +363,8 @@ public interface KnowledgeBaseService
      *            indicates whether to include base properties or not
      * @return All properties for a specific accepted domain identifier
      */
-    List<KBHandle> listDomainProperties(KnowledgeBase kb, String aDomain, boolean aIncludeInferred,
-            boolean aAll);
+    List<KBProperty> listDomainProperties(KnowledgeBase kb, String aDomain,
+            boolean aIncludeInferred, boolean aAll);
 
     /**
      * Adds a new qualifier in the given knowledge base. Does
@@ -403,20 +412,27 @@ public interface KnowledgeBaseService
 
     /**
      * Read an identifier value to return {@link KBObject}
-     * @param aProject Project to read the KB identifier
-     * @param aIdentifier String value for IRI
+     * 
+     * @param aProject
+     *            Project to read the KB identifier
+     * @param aIdentifier
+     *            String value for IRI
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readItem(Project aProject, String aIdentifier);
 
     /**
      * Read an identifier value from a particular kb to return {@link KBObject}
-     * @param akb
-     * @param aIdentifier
+     * 
      * @return {@link Optional} of {@link KBObject} of type {@link KBConcept} or {@link KBInstance}
      */
     Optional<KBObject> readItem(KnowledgeBase akb, String aIdentifier);
 
+    /**
+     * Obtain basic information about the given identifier.
+     */
+    Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier);
+    
     /**
      * Retrieves the distinct parent concepts till the root element for an identifier regardless of
      * it being an instance or concept

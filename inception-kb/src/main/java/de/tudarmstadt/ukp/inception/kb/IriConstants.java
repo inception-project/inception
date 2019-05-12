@@ -35,7 +35,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class IriConstants
@@ -147,7 +147,7 @@ public class IriConstants
         return false;
     }
 
-    public static boolean isFromImplicitNamespace(KBHandle handle) {
+    public static boolean isFromImplicitNamespace(KBObject handle) {
         return IMPLICIT_NAMESPACES.stream()
                 .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
