@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import org.apache.wicket.Component;
@@ -166,8 +167,9 @@ public class QualifierEditor
                             _this.setVisible(isNotEmpty(aQualifier.getObject().getLanguage())))));
             add(new Label("value", compoundModel.bind("value")));
 
-            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor
-                .this::actionEdit);
+            LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor.this::actionEdit);
+            editLink.add(visibleWhen(() -> kbModel.map(kb -> !kb.isReadOnly())
+                    .orElse(false).getObject()));
             add(editLink);
         }
     }
