@@ -21,9 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptContentHeaderItem;
@@ -53,6 +51,7 @@ public class ChartPanel
     private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
 
     private static final String MID_CHART_CONTAINER = "chart";
+    private static final String OUTPUT_MARKUP_ID_CHART = "canvas"; 
 
     private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
@@ -64,8 +63,7 @@ public class ChartPanel
         model = aModel;
         
         chart = new WebMarkupContainer(MID_CHART_CONTAINER);
-        chart.setMarkupId("canvas");
-        chart.setOutputMarkupId(true);
+        chart.setMarkupId(OUTPUT_MARKUP_ID_CHART);
         add(chart);
 
         chartAjaxBejavior = new ChartAjaxBejavior();
@@ -97,7 +95,6 @@ public class ChartPanel
                 "   $.ajax({",
                 "       url:'" + chartAjaxBejavior.getCallbackUrl().toString() + "',",
                 "       type:'post',",
-                "       cache:!1,",
                 "       contentType:'application/json',",
                 "       dataType:'json',",
                 "       success : function(result){",
@@ -109,23 +106,10 @@ public class ChartPanel
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }
  
-    @Override
-    protected void onBeforeRender()
-    {
-        chart.add(new AttributeModifier("my:canvas.chartid", getMarkupId()));
-        super.onBeforeRender();
-    }
-
     private final class ChartAjaxBejavior
         extends AbstractAjaxBehavior
     {
         private static final long serialVersionUID = 1L;
-
-        @Override
-        protected void onComponentTag(final ComponentTag tag)
-        {
-            tag.put("my:canvas.chartid", getMarkupId());
-        }
 
         @Override
         public void onRequest()

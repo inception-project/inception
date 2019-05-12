@@ -641,7 +641,10 @@ public class ActiveLearningSidebar
         // Upsert an annotation based on the suggestion
         String selectedValue = (String) featureSupport.unwrapFeatureValue(feat, cas,
                 editor.getModelObject().value);
-        AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
+        AnnotationLayer layer = annotationService
+                .getLayer(state.getProject(), suggestion.getLayerId())
+                .orElseThrow(() -> new IllegalArgumentException("No such layer: [" + 
+                        suggestion.getLayerId() + "]"));
         AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(), layer);
         recommendationService.upsertFeature(annotationService, sourceDoc, username, cas, layer,
                 feature, selectedValue, suggestion.getBegin(), suggestion.getEnd());
