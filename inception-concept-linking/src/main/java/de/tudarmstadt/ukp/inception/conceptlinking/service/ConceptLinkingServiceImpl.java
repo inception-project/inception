@@ -28,6 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -41,6 +42,7 @@ import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -161,6 +163,32 @@ public class ConceptLinkingServiceImpl
         Set<KBHandle> result = new HashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            ParsedIRI iri = null;
+            try {
+                iri = new ParsedIRI(aQuery);
+            }
+            catch (URISyntaxException | NullPointerException e) {
+                // Skip match by IRI.
+            }
+            if (iri != null && iri.isAbsolute()) {
+                SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
+                        .withIdentifier(aQuery);
+                
+                if (aConceptScope != null) {
+                    iriMatchBuilder.childrenOf(aConceptScope);
+                }
+                
+                List<KBHandle> exactMatches = iriMatchBuilder
+                        .retrieveLabel()
+                        .retrieveDescription()
+                        .asHandles(conn, true);
+
+                log.debug("Found [{}] candidates exactly matching IRI {}",
+                        exactMatches.size(), asList(aQuery));
+
+                result.addAll(exactMatches);
+            }
+            
             // Collect exact matches - although exact matches are theoretically contained in the
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
@@ -172,7 +200,7 @@ public class ConceptLinkingServiceImpl
                     .toArray(String[]::new);
             SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
                     .withLabelMatchingExactlyAnyOf(exactLabels);
-            
+                        
             if (aConceptScope != null) {
                 exactBuilder.childrenOf(aConceptScope);
             }
