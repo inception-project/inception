@@ -308,6 +308,7 @@ var VisualizerUI = (function($, window, undefined) {
                         } else {
                             commentLabel = '<b>' + Util.escapeHTML(commentType) + ':</b> ';
                         }
+                        comment += "<hr/>";
                         comment += commentLabel + Util.escapeHTMLwithNewlines(commentText);
                         idtype = 'comment_' + commentType;
                     }
@@ -369,6 +370,10 @@ var VisualizerUI = (function($, window, undefined) {
                     $.each(normalizations, function(normNo, norm) {
                         var dbName = norm[0],
                             dbKey = norm[1];
+// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
+/*
+                        var dbName = norm[0],
+                            dbKey = norm[1];
                         comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ':' + Util.escapeHTML(dbKey) + '</span>');
                         if (dbName in normServerDbByNormDbName && normServerDbByNormDbName[dbName] != '<NONE>') {
                             // DB available, add drop-off point to HTML and store
@@ -383,6 +388,41 @@ var VisualizerUI = (function($, window, undefined) {
                                 comment += ('<br/><span class="norm_info_value">' + Util.escapeHTML(norm[2]) + '</span>');
                             }
                         }
+*/
+                        if (norm[2]) {
+                            var cateogory = norm[0],
+                                key = norm[1];
+                                value = norm[2];
+                            // no DB, just attach "human-readable" text provided
+                            // with the annotation, if any
+                            if (cateogory) {
+                              comment += ```
+                                  <hr/>
+                                  <span class="comment_id">${Util.escapeHTML(cateogory)}</span>'
+                                  ```;
+                            }
+                            
+                            if (key) {
+                              comment += ```
+                                  <span class="norm_info_label">${Util.escapeHTML(key)}</span>
+                                  ```;
+                            }
+                            
+                            comment += ```
+                                  <span class="norm_info_value">${Util.escapeHTML(value)}</span>
+                                  <br/>
+                                  ```;
+                        } else {
+                            // DB available, add drop-off point to HTML and store
+                            // query parameters
+                            var dbName = norm[0],
+                                dbKey = norm[1];
+                            commentPopupNormInfoSeqId++;
+                            comment += ('<hr/>' + '<span class="comment_id">' + Util.escapeHTML(dbName) + ':' + Util.escapeHTML(dbKey) + '</span>');
+                            comment += ('<br/><div id="norm_info_drop_point_' + commentPopupNormInfoSeqId + '"/>');
+                            normsToQuery.push([dbName, dbKey, commentPopupNormInfoSeqId]);
+                        }
+// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
                     });
 
                     // display initial comment HTML 
@@ -399,15 +439,26 @@ var VisualizerUI = (function($, window, undefined) {
                             database: dbName,
                             key: dbKey,
                             collection: coll,
+// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
+                            id: spanId,
+                            type: spanType,
+// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
                         }, function(response) {
                             if (response.exception) {; // TODO: response to error
+// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
+/*
                             } else if (!response.value) {; // TODO: response to missing key
+*/
+                            } else if (!response.results) {; // TODO: response to missing key
+// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
                             } else {
                                 // extend comment popup with normalization data
                                 norminfo = '';
                                 // flatten outer (name, attr, info) array (idx for sort)
                                 infos = [];
                                 var idx = 0;
+// WEBANNO EXTENSION BEGIN - #1293 Display information via the brat "normalization" mechanism
+/*
                                 for (var i = 0; i < response.value.length; i++) {
                                     for (var j = 0; j < response.value[i].length; j++) {
                                         var label = response.value[i][j][0];
@@ -415,6 +466,13 @@ var VisualizerUI = (function($, window, undefined) {
                                         infos.push([label, value, idx++]);
                                     }
                                 }
+*/
+                                for (var j = 0; j < response.results.length; j++) {
+                                    var label = response.results[j][0];
+                                    var value = response.results[j][1];
+                                    infos.push([label, value, idx++]);
+                                }
+// WEBANNO EXTENSION END - #1293 Display information via the brat "normalization" mechanism
                                 // sort, prioritizing images (to get floats right)
                                 infos = infos.sort(normInfoSortFunction);
                                 // generate HTML

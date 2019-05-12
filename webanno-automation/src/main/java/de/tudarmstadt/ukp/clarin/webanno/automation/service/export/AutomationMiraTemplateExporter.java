@@ -100,14 +100,14 @@ public class AutomationMiraTemplateExporter
             template.setCurrentLayer(exTemplate.isCurrentLayer());
             template.setResult("---");
             AnnotationLayer trainingLayer = annotationService
-                    .getLayer(exTemplate.getTrainFeature().getLayer(), aProject);
+                    .findLayer(aProject, exTemplate.getTrainFeature().getLayer());
             AnnotationFeature trainingFeature = annotationService
                     .getFeature(exTemplate.getTrainFeature().getName(), trainingLayer);
             template.setTrainFeature(trainingFeature);
             Set<AnnotationFeature> otherFeatures = new HashSet<>();
             if (exTemplate.getOtherFeatures() != null) {
                 for (ExportedAnnotationFeatureReference other : exTemplate.getOtherFeatures()) {
-                    AnnotationLayer layer = annotationService.getLayer(other.getLayer(), aProject);
+                    AnnotationLayer layer = annotationService.findLayer(aProject, other.getLayer());
                     AnnotationFeature feature = annotationService.getFeature(other.getName(),
                             layer);
                     otherFeatures.add(feature);

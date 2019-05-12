@@ -361,14 +361,33 @@ public class AnnotationSchemaServiceImpl
     @Transactional
     public AnnotationLayer getLayer(long aId)
     {
-        return entityManager
-                .createQuery("FROM AnnotationLayer WHERE id = :id", AnnotationLayer.class)
-                .setParameter("id", aId).getSingleResult();
+        String query = String.join("\n",
+                "FROM AnnotationLayer",
+                "WHERE id = :id");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("id", aId)
+                .getSingleResult();
     }
 
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationLayer getLayer(String aName, Project aProject)
+    public Optional<AnnotationLayer> getLayer(Project aProject, long aLayerId)
+    {
+        String query = String.join("\n",
+                "FROM AnnotationLayer",
+                "WHERE id = :id",
+                "AND project = :project");
+        
+        return entityManager.createQuery(query, AnnotationLayer.class)
+                .setParameter("id", aLayerId)
+                .setParameter("project", aProject)
+                .getResultStream().findFirst();
+    }
+    
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public AnnotationLayer findLayer(Project aProject, String aName)
     {
         // If there is a layer definition for the given name, then return it immediately
         Optional<AnnotationLayer> layer = getLayerInternal(aName, aProject);
@@ -439,12 +458,12 @@ public class AnnotationSchemaServiceImpl
     
     @Override
     @Transactional(noRollbackFor = NoResultException.class)
-    public AnnotationLayer getLayer(Project aProject, FeatureStructure aFS)
+    public AnnotationLayer findLayer(Project aProject, FeatureStructure aFS)
     {
         String layerName = aFS.getType().getName();
         AnnotationLayer layer;
         try {
-            layer = getLayer(layerName, aProject);
+            layer = findLayer(aProject, layerName);
         }
         catch (NoResultException e) {
             if (layerName.endsWith("Chain")) {
@@ -453,7 +472,7 @@ public class AnnotationSchemaServiceImpl
             if (layerName.endsWith("Link")) {
                 layerName = layerName.substring(0, layerName.length() - 4);
             }
-            layer = getLayer(layerName, aProject);
+            layer = findLayer(aProject, layerName);
         }
 
         return layer;
@@ -1022,8 +1041,8 @@ public class AnnotationSchemaServiceImpl
                     AnnotationLayer attachLayer;
                     try {
                         // First check if this type is already in the project
-                        attachLayer = getLayer(relDetails.getAttachLayer(),
-                                aProject);
+                        attachLayer = findLayer(aProject,
+                                relDetails.getAttachLayer());
                     }
                     catch (NoResultException e) {
                         // If it does not exist in the project yet, then we create it
@@ -1042,7 +1061,7 @@ public class AnnotationSchemaServiceImpl
             // We must not touch the built-in layers because WebAnno may rely on their
             // structure. This is a conservative measure for now any may be relaxed in the
             // future.
-            AnnotationLayer persistedLayer = getLayer(l.getName(), aProject);
+            AnnotationLayer persistedLayer = findLayer(aProject, l.getName());
             if (!persistedLayer.isBuiltIn()) {
                 for (AnnotationFeature f : analysis.getFeatures(l.getName())) {
                     if (!existsFeature(f.getName(), persistedLayer)) {

@@ -96,7 +96,7 @@ public class SpanRendererTest
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
                 .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR, 
-                        "Crossing sentence bounardies is not permitted."));
+                        "Crossing sentence boundaries is not permitted."));
     }
 
     @Test

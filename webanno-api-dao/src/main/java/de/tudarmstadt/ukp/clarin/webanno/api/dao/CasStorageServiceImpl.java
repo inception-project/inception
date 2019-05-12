@@ -225,12 +225,26 @@ public class CasStorageServiceImpl
                 FileUtils.forceDelete(oldVersion);
             }
         }
-        catch (IOException e) {
+        catch (Exception e) {
+            log.info(
+                    "Restoring previous annotations due exception when trying to write new annotations: "
+                            + oldVersion);
             // If we could not save the new version, restore the old one.
-            FileUtils.forceDelete(currentVersion);
+            try {
+                FileUtils.forceDelete(currentVersion);
+            }
+            catch (Exception ex) {
+                log.error("Unable to delete incompletely saved annotations: " + currentVersion, ex);
+            }
+            
             // If this is the first version, there is no old version, so do not restore anything
             if (oldVersion.exists()) {
-                renameFile(oldVersion, currentVersion);
+                try {
+                    renameFile(oldVersion, currentVersion);
+                }
+                catch (IOException ex) {
+                    log.error("Unable to restore previous annotations: " + oldVersion, ex);
+                }
             }
             // Now abort anyway
             throw e;
@@ -414,28 +428,50 @@ public class CasStorageServiceImpl
                 aDocument.getName(), aDocument.getId(), aUsername, aDocument.getProject().getName(),
                 aDocument.getProject().getId());
         
+        File casFile = getCasFile(aDocument, aUsername);
+        File oldCasFile = new File(casFile.getPath() + ".old");
         
-        File serializedCasFile = getCasFile(aDocument, aUsername);
+        String msgOldExists = "";
+        if (oldCasFile.exists()) {
+            msgOldExists = String.format(
+                    "Existance of temporary annotation file [%s] indicates that a previous "
+                            + "annotation storage process did not successfully complete. Contact "
+                            + "your server administator and request renaming the '.ser.old' file "
+                            + "to '.ser' manually on the command line. Advise the administrator to "
+                            + "check for sufficient disk space and that the application has the "
+                            + "necessary permissions to save files in its data folder.",
+                    oldCasFile);
+        }
         
         CAS cas;
         try {
             cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-            if (!serializedCasFile.exists()) {
-                throw new FileNotFoundException("Annotation document of user [" + aUsername
-                        + "] for source document [" + aDocument.getName() + "] ("
-                        + aDocument.getId() + ") not found in project["
-                        + aDocument.getProject().getName() + "] ("
-                        + aDocument.getProject().getId() + ")");
-            }
-            
-            CasPersistenceUtils.readSerializedCas(cas, serializedCasFile);
-
-            if (aAnalyzeAndRepair) {
-                analyzeAndRepair(aDocument, aUsername, cas);
-            }
         }
         catch (UIMAException e) {
-            throw new DataRetrievalFailureException("Unable to parse annotation", e);
+            throw new IOException("Unable to create empty CAS", e);
+        }
+        
+        if (!casFile.exists()) {
+            throw new FileNotFoundException("Annotation document of user [" + aUsername
+                    + "] for source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") not found in project ["
+                    + aDocument.getProject().getName() + "] ("
+                    + aDocument.getProject().getId() + "). " + msgOldExists);
+        }
+        
+        try {
+            CasPersistenceUtils.readSerializedCas(cas, casFile);
+        }
+        catch (Exception e) {
+            throw new IOException("Annotation document of user [" + aUsername
+                    + "] for source document [" + aDocument.getName() + "] ("
+                    + aDocument.getId() + ") in project ["
+                    + aDocument.getProject().getName() + "] (" + aDocument.getProject().getId()
+                    + ") cannot be read from file [" + casFile + "]. " + msgOldExists, e);
+        }
+
+        if (aAnalyzeAndRepair) {
+            analyzeAndRepair(aDocument, aUsername, cas);
         }
         
         return cas;

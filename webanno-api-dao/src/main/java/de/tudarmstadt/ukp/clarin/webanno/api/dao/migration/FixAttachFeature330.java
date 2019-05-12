@@ -118,8 +118,8 @@ public class FixAttachFeature330
 
             for (Project project : projectService.listProjects()) {
                 try {
-                    AnnotationLayer tokenLayer = annotationSchemaService.getLayer(
-                            Token.class.getName(), project);
+                    AnnotationLayer tokenLayer = annotationSchemaService.findLayer(
+                            project, Token.class.getName());
                     
                     // Set attach-feature of Dependency layer to Token.pos if necessary
                     fix(project, Dependency.class, RELATION_TYPE, tokenLayer, "pos");
@@ -154,7 +154,7 @@ public class FixAttachFeature330
             AnnotationLayer aTokenLayer, String aFeature)
     {
         if (annotationSchemaService.existsLayer(aLayer.getName(), aLayerType, aProject)) {
-            AnnotationLayer layer = annotationSchemaService.getLayer(aLayer.getName(), aProject);
+            AnnotationLayer layer = annotationSchemaService.findLayer(aProject, aLayer.getName());
 
             if (layer.getAttachFeature() == null) {
                 layer.setAttachFeature(annotationSchemaService.getFeature(aFeature, aTokenLayer));

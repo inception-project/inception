@@ -156,7 +156,7 @@ public class RelationRendererTest
         assertThat(vdoc.comments())
                 .usingFieldByFieldElementComparator()
                 .contains(new VComment(dep, ERROR, 
-                        "Crossing sentence bounardies is not permitted."));
+                        "Crossing sentence boundaries is not permitted."));
     }
 
     @Test

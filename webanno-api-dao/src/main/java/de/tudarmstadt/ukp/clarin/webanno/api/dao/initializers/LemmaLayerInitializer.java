@@ -58,8 +58,8 @@ public class LemmaLayerInitializer
     @Override
     public void configure(Project aProject) throws IOException
     {
-        AnnotationLayer tokenLayer = annotationSchemaService.getLayer(Token.class.getName(),
-                aProject);
+        AnnotationLayer tokenLayer = annotationSchemaService.findLayer(aProject,
+                Token.class.getName());
 
         AnnotationFeature tokenLemmaFeature = new AnnotationFeature(aProject, tokenLayer, "lemma",
                 "lemma", Lemma.class.getName());

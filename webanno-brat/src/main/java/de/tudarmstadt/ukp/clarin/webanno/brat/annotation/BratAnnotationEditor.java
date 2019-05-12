@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -58,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -70,10 +72,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.message.DoActionResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetDocumentResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.LoadConfResponse;
+import de.tudarmstadt.ukp.clarin.webanno.brat.message.NormDataResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics;
 import de.tudarmstadt.ukp.clarin.webanno.brat.metrics.BratMetrics.RenderType;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.NormalizationQueryResult;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.Offsets;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.model.OffsetsList;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -114,6 +118,7 @@ public class BratAnnotationEditor
     private @SpringBean PreRenderer preRenderer;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     private @SpringBean BratMetrics metrics;
     private @SpringBean BratProperties bratProperties;
     
@@ -189,7 +194,10 @@ public class BratAnnotationEditor
                 try {
                     // Whenever an action should be performed, do ONLY perform this action and
                     // nothing else, and only if the item actually is an action item
-                    if (DoActionResponse.is(action)) {
+                    if (NormDataResponse.is(action)) {
+                        result = actionLookupNormData(aTarget, request, paramId);
+                    }
+                    else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
                             Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
                             extensionRegistry.fireAction(getActionHandler(), getModelObject(),
@@ -271,6 +279,45 @@ public class BratAnnotationEditor
         };
 
         add(requestHandler);
+    }
+
+    private Object actionLookupNormData(AjaxRequestTarget aTarget, IRequestParameters request,
+            VID paramId)
+        throws IOException
+    {
+        NormDataResponse response = new NormDataResponse();
+
+        // We interpret the databaseParam as the feature which we need to look up the feature
+        // support
+        StringValue databaseParam = request.getParameterValue("database");
+        
+        // We interpret the key as the feature value or as a kind of query to be handled by the
+        // feature support
+        StringValue keyParam = request.getParameterValue("key");
+        
+        StringValue layerParam = request.getParameterValue(PARAM_SPAN_TYPE);
+        
+        if (layerParam.isEmpty() || keyParam.isEmpty() || databaseParam.isEmpty()) {
+            return response;
+        }
+
+        long layerId = Long.parseLong(layerParam.beforeFirst('_'));
+        try {
+            AnnotationLayer layer = annotationService.getLayer(layerId);
+            AnnotationFeature feature = annotationService.getFeature(databaseParam.toString(),
+                    layer);
+            
+            response.setResults(featureSupportRegistry.getFeatureSupport(feature)
+                    .renderLazyDetails(feature, keyParam.toString()).stream()
+                    .map(d -> new NormalizationQueryResult(d.getLabel(), d.getValue()))
+                    .collect(Collectors.toList()));
+        }
+        catch (Exception e) {
+            LOG.error("Unable to load data", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+        }
+        
+        return response;
     }
 
     private Object actionDoAction(AjaxRequestTarget aTarget, IRequestParameters request, CAS aCas,

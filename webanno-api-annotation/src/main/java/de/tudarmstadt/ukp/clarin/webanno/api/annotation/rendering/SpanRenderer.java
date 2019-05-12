@@ -95,6 +95,7 @@ public class SpanRenderer
             VRange range = new VRange(fs.getBegin() - aWindowBegin, fs.getEnd() - aWindowBegin);
             VSpan span = new VSpan(typeAdapter.getLayer(), fs, bratTypeName, range, features,
                     hoverFeatures);
+            span.setLazyDetails(getLazyDetails(typeAdapter, fs, aFeatures));
             
             annoToSpanIdx.put(fs, span);
             
