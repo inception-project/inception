@@ -51,11 +51,4 @@ public interface EventRepository
      */
     List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
             String aEventType, int aMaxSize, String aDetail);
-
-    /**
-     * Get the aMaxSize amount of logged events of the given type, user name, project and 
-     * document state from the db.
-     */
-    List<LoggedEvent> listLoggedEventsDocumentState(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, String aState);
 }

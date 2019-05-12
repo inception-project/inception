@@ -58,16 +58,6 @@ public class EventRepositoryImpl
         log.info("{}", aEvent);
         entityManager.persist(aEvent);
     }
-    
-    @Override
-    @Transactional
-    public List<LoggedEvent> listLoggedEventsDocumentState(Project aProject, String aUsername,
-            String aEventType, int aMaxSize, String aState)
-    {
-        String detailStr = "%\"state\":\"" + aState + "\"%";
-
-        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
-    }
 
     @Override
     @Transactional
@@ -105,34 +95,50 @@ public class EventRepositoryImpl
     public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventTypes, int aMaxSize)
     {
-        String eventsQuery = buildEventsCondition(aEventTypes);
-        String query = String.join("\n",
+        String eventsQuery = buildEventsCondition(aEventTypes.length);
+        String query = String.join("\n", 
                 "FROM LoggedEvent WHERE",
-                "user=:user AND",
-                "project=:project AND",
-                eventsQuery,
-                "AND created in",
-                "(SELECT max(created) ",
-                "FROM LoggedEvent WHERE",
-                "user=:user AND",
-                "project=:project AND",
-                eventsQuery,
-                "GROUP BY document)",
+                "id IN",
+                // select one event when time-stamps are the same per document
+                "   (SELECT max(id)",
+                "   FROM LoggedEvent WHERE",
+                "   user=:user AND",
+                "   project=:project AND",
+                    eventsQuery,
+                "   AND created in",
+                // select last created events per document
+                "       (SELECT max(created) ",
+                "       FROM LoggedEvent WHERE",
+                "       user=:user AND",
+                "       project=:project AND",
+                        eventsQuery,
+                "       GROUP BY document)",
+                "   GROUP BY document)",
                 "ORDER BY created DESC");
 
-        return entityManager.createQuery(query, LoggedEvent.class)
+        TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("user", aUsername)
-                .setParameter("project", aProject.getId())
-                .setMaxResults(aMaxSize).getResultList();
+                .setParameter("project", aProject.getId());
+        typedQuery = setEventsParams(typedQuery, aEventTypes);
+        return typedQuery.setMaxResults(aMaxSize).getResultList();
     }
 
-    private String buildEventsCondition(String[] aEventTypes)
+    private TypedQuery<LoggedEvent> setEventsParams(TypedQuery<LoggedEvent> aTypedQuery,
+            String[] aEventTypes)
+    {
+        for (int i = 0; i < aEventTypes.length; i++) {
+            aTypedQuery.setParameter(String.format("event%d", i), aEventTypes[i]);
+        }
+        return aTypedQuery;
+    }
+
+    private String buildEventsCondition(int aNumEvents)
     {
         StringBuilder events = new StringBuilder();
-        if (aEventTypes.length > 0) {
-            events.append("(event='").append(aEventTypes[0]).append("'");
-            for (int i = 1; i < aEventTypes.length; i++) {
-                events.append(" OR event='").append(aEventTypes[i]).append("'");
+        if (aNumEvents > 0) {
+            events.append("(event=:event0").append(" ");
+            for (int i = 1; i < aNumEvents; i++) {
+                events.append(" OR event=:event").append(i).append(" ");
             }
             events.append(") ");
         }

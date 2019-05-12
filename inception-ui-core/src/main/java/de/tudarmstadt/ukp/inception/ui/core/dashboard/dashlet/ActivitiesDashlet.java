@@ -52,11 +52,14 @@ import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
+    // annotation events
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
     public static final String FEATURE_UPDATED_EVENT = "FeatureValueUpdatedEvent";
-    public static final String RELATION_CREATED_EVENT = "";
-    private static final String CURATION_INPROGRESS = "CURATION_INPROGRESS";
-    public static final String DOCUMENT_STATE_CHANGED_EVENT = "DocumentStateChangedEvent";
+    public static final String RELATION_CREATED_EVENT = "RelationCreatedEvent";
+    
+    // curation event
+    public static final String CURATION_EVENT = "CurationEvent";
+
     private static final int MAX_NUM_ACTIVITIES = 2;
 
     private static final long serialVersionUID = -2010294259619748756L;
@@ -114,12 +117,13 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         String eventDate = formatDateStr(event);
         String eventName = event.getEvent();
         
-        switch (eventName) {
-        case DOCUMENT_STATE_CHANGED_EVENT:
+        /*switch (eventName) {
+        case CURATION_EVENT:
             return String.format("%s: Curated document %s", eventDate, documentName);
         default:
             return String.format("%s: Annotated in document %s", eventDate, documentName);
-        }
+        }*/
+        return event.toString();
     }
 
     private String getDocumentName(LoggedEvent event)
@@ -168,16 +172,11 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         Project project = projectModel.getObject();
         String username = user.getUsername();
         
-        // get last annotation events
+        // get last annotation events, TODO curation event
         events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project,
                 username, annotationEvents.toArray(new String[annotationEvents.size()]), 
                 MAX_NUM_ACTIVITIES));
         
-        // get last curation events
-        /*String curationEvent = DOCUMENT_STATE_CHANGED_EVENT;
-        List<LoggedEvent> curations = eventRepository.listLoggedEventsDocumentState(project, 
-                username, curationEvent, MAX_NUM_ACTIVITIES, CURATION_INPROGRESS);
-        events.addAll(curations);*/
         return events;
     }
 }
