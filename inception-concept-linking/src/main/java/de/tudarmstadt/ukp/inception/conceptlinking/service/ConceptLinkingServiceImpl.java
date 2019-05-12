@@ -163,30 +163,32 @@ public class ConceptLinkingServiceImpl
         Set<KBHandle> result = new HashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
-            ParsedIRI iri = null;
-            try {
-                iri = new ParsedIRI(aQuery);
-            }
-            catch (URISyntaxException | NullPointerException e) {
-                // Skip match by IRI.
-            }
-            if (iri != null && iri.isAbsolute()) {
-                SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
-                        .withIdentifier(aQuery);
-                
-                if (aConceptScope != null) {
-                    iriMatchBuilder.childrenOf(aConceptScope);
+            if (aQuery != null) {
+                ParsedIRI iri = null;
+                try {
+                    iri = new ParsedIRI(aQuery);
                 }
-                
-                List<KBHandle> exactMatches = iriMatchBuilder
-                        .retrieveLabel()
-                        .retrieveDescription()
-                        .asHandles(conn, true);
-
-                log.debug("Found [{}] candidates exactly matching IRI {}",
-                        exactMatches.size(), asList(aQuery));
-
-                result.addAll(exactMatches);
+                catch (URISyntaxException | NullPointerException e) {
+                    // Skip match by IRI.
+                }
+                if (iri != null && iri.isAbsolute()) {
+                    SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
+                            .withIdentifier(aQuery);
+                    
+                    if (aConceptScope != null) {
+                        iriMatchBuilder.childrenOf(aConceptScope);
+                    }
+                    
+                    List<KBHandle> exactMatches = iriMatchBuilder
+                            .retrieveLabel()
+                            .retrieveDescription()
+                            .asHandles(conn, true);
+    
+                    log.debug("Found [{}] candidates exactly matching IRI {}",
+                            exactMatches.size(), asList(aQuery));
+    
+                    result.addAll(exactMatches);
+                }
             }
             
             // Collect exact matches - although exact matches are theoretically contained in the
