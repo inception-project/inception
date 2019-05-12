@@ -22,7 +22,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.FormComponent;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -39,7 +39,7 @@ public abstract class TextFeatureEditorBase
     private static final Logger LOG = LoggerFactory.getLogger(TextFeatureEditorBase.class);
     
     @SuppressWarnings("rawtypes")
-    private AbstractTextComponent field;
+    private FormComponent field;
     private boolean hideUnconstrainedFeature;
     
     public TextFeatureEditorBase(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
@@ -56,7 +56,7 @@ public abstract class TextFeatureEditorBase
         add(createConstraintsInUseIndicatorContainer());
     }
 
-    protected abstract AbstractTextComponent createInputField();
+    protected abstract FormComponent createInputField();
 
     private Component createConstraintsInUseIndicatorContainer()
     {
