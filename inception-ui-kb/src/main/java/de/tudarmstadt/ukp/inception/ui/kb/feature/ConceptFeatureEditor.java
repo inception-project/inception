@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
@@ -65,6 +67,7 @@ public class ConceptFeatureEditor
     private static final long serialVersionUID = 7763348613632105600L;
 
     private Component focusComponent;
+    private IriInfoBadge iriBadge;
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -74,12 +77,11 @@ public class ConceptFeatureEditor
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
+        add(iriBadge = new IriInfoBadge("iriInfoBadge",
+                LoadableDetachableModel.of(this::iriTooltipValue)));
+        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
-        add(new IriInfoBadge("iriInfoBadge", LoadableDetachableModel
-                .of(() -> Optional.ofNullable((KBHandle) getModelObject().value)
-                        .map(KBHandle::getIdentifier)
-                        .orElse(""))));
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
     }
 
@@ -89,6 +91,13 @@ public class ConceptFeatureEditor
         super.renderHead(aResponse);
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+    }
+    
+    private String iriTooltipValue()
+    {
+        return Optional.ofNullable((KBHandle) getModelObject().value)
+                .map(KBHandle::getIdentifier)
+                .orElse("");
     }
 
     private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,

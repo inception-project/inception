@@ -186,12 +186,19 @@ public class KnowledgeBasePanel
                 new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
         }
         else if (aKbObject instanceof KBInstance) {
-            KBHandle conceptForInstance = kbService
+            List<KBHandle> conceptsForInstance = kbService
                 .getConceptForInstance(kbModel.getObject(),
-                    aKbObject.getIdentifier(), true).get(0);
+                    aKbObject.getIdentifier(), true);
 
-            send(getPage(), Broadcast.BREADTH,
-                new AjaxConceptSelectionEvent(aTarget, conceptForInstance, true));
+            if (!conceptsForInstance.isEmpty()) {
+                send(getPage(), Broadcast.BREADTH,
+                    new AjaxConceptSelectionEvent(aTarget, conceptsForInstance.get(0), true));
+            }
+            else {
+                error("Unable to find the concept to which the the instance ["
+                        + aKbObject.getUiLabel() + "] belongs.");
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
 
             send(getPage(), Broadcast.BREADTH,
                 new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
