@@ -137,7 +137,6 @@ public interface KnowledgeBaseService
      *            The knowledge base to which the new concept will be added
      * @param aType
      *            The concept to add
-     * @return the KBHandle for the created concept
      */
     void createConcept(KnowledgeBase kb, KBConcept aType);
 
