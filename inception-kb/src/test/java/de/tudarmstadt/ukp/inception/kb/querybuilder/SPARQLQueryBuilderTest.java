@@ -39,6 +39,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
@@ -1471,12 +1472,34 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder(
                         new KBHandle("http://mbugert.de/pets#socke", "Socke"));
     }
+    
+    @Test
+    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
+    {
+        importDataFromFile("src/test/resources/data/wordnet-ontolex-ontology.owl");
+        
+        initOwlMapping();
+
+        List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
+                .forClasses(kb)
+                .roots()
+                .retrieveLabel());
+        
+        assertThat(results).isNotEmpty();
+        
+        assertThat(results)
+                .extracting(KBHandle::getUiLabel)
+                .contains("Adjective position", "Lexical domain", "Part of speech", "Phrase type",
+                        "Synset");
+    }
 
     private void importDataFromFile(String aFilename) throws IOException
     {
         // Detect the file format
         RDFFormat format = Rio.getParserFormatForFileName(aFilename).orElse(RDFFormat.RDFXML);
 
+        System.out.printf("Loading %s data fron %s%n", format, aFilename);
+        
         // Load files into the repository
         try (InputStream is = new FileInputStream(aFilename)) {
             importData(format, is);
@@ -1520,6 +1543,19 @@ public class SPARQLQueryBuilderTest
         // We are intentionally not using RDFS.COMMENT here to ensure we can test the description
         // and property description separately
         kb.setPropertyDescriptionIri(vf.createIRI("http://schema.org/description"));
+        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+    }
+    
+    private void initOwlMapping()
+    {
+        kb.setClassIri(OWL.CLASS);
+        kb.setSubclassIri(RDFS.SUBCLASSOF);
+        kb.setTypeIri(RDF.TYPE);
+        kb.setLabelIri(RDFS.LABEL);
+        kb.setPropertyTypeIri(RDF.PROPERTY);
+        kb.setDescriptionIri(RDFS.COMMENT);
+        kb.setPropertyLabelIri(RDF.PROPERTY);        
+        kb.setPropertyDescriptionIri(RDFS.COMMENT);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
     }
     
