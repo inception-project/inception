@@ -316,7 +316,7 @@ public class QualifierFeatureEditor
     private AnnotationFeature getLinkedAnnotationFeature() {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
+            .findLayer(this.stateModel.getObject().getProject(), linkedType);
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;

@@ -952,7 +952,7 @@ public class KnowledgeBaseServiceImpl
      */
     @Override public Optional<KBObject> readItem(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBObject> handle = readItem(kb, aIdentifier);
             if (handle.isPresent()) {
                 return handle;

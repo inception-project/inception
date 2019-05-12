@@ -215,7 +215,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.getLayer(proj, fs);
+        AnnotationLayer layer = annotationService.findLayer(proj, fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
         
         // Populate from feature structure
@@ -294,7 +294,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
-            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
             // Update the features of the selected annotation from the values presently in
@@ -316,7 +316,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             // Load the boiler-plate
             CAS cas = jcasProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
-            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             
             // Perform actual actions
