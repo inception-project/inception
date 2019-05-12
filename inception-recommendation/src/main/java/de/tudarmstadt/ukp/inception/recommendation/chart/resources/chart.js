@@ -31,7 +31,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     
     //draw the chart with the help of the arrayOfLearningCurves. The type of the graph is "step".
     var e = c3.generate({
-        bindto: "#" + $("#canvas").attr("my:canvas.chartid"),
+        bindto: "#canvas",
         data: {
             x: "x",
             columns: arrayOfLearningCurves,
