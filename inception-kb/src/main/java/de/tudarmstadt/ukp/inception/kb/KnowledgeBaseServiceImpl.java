@@ -248,16 +248,16 @@ public class KnowledgeBaseServiceImpl
     {
         // KB will initialize base properties with base IRI schema properties defined by user
         if (akb.getType() == RepositoryType.LOCAL) {
-            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().getLocalName(),
-                    akb.getSubclassIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getLabelIri().getLocalName(),
-                    akb.getLabelIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().getLocalName(),
-                    akb.getDescriptionIri().stringValue(),null,XMLSchema.STRING.stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getTypeIri().getLocalName(),
-                    akb.getTypeIri().stringValue()));
-            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().getLocalName(),
-                    akb.getSubPropertyIri().stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getSubclassIri().stringValue(),
+                    akb.getSubclassIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getLabelIri().stringValue(),
+                    akb.getLabelIri().getLocalName(),null,XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getDescriptionIri().stringValue(),
+                    akb.getDescriptionIri().getLocalName(),null,XMLSchema.STRING.stringValue()));
+            createBaseProperty(akb, new KBProperty(akb.getTypeIri().stringValue(),
+                    akb.getTypeIri().getLocalName()));
+            createBaseProperty(akb, new KBProperty(akb.getSubPropertyIri().stringValue(),
+                    akb.getSubPropertyIri().getLocalName()));
         }
     }
 
@@ -437,17 +437,16 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public KBHandle createConcept(KnowledgeBase kb, KBConcept aConcept)
+    public void createConcept(KnowledgeBase kb, KBConcept aConcept)
     {
         if (StringUtils.isNotEmpty(aConcept.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
+        update(kb, (conn) -> {
             String identifier = getReificationStrategy(kb).generateConceptIdentifier(conn, kb);
             aConcept.setIdentifier(identifier);
             aConcept.write(conn, kb);
-            return new KBHandle(identifier, aConcept.getName());
         });
     }
     
@@ -490,7 +489,6 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aConcept.getOriginalStatements());
             aConcept.write(conn, kb);
-            return null;
         });
     }
 
@@ -499,7 +497,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).deleteConcept(conn, aKB, aConcept);
-            return null;
         });
     }
 
@@ -517,17 +514,16 @@ public class KnowledgeBaseServiceImpl
     }
     
     @Override
-    public KBHandle createProperty(KnowledgeBase kb, KBProperty aProperty)
+    public void createProperty(KnowledgeBase kb, KBProperty aProperty)
     {
         if (StringUtils.isNotEmpty(aProperty.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
+        update(kb, (conn) -> {
             String identifier = getReificationStrategy(kb).generatePropertyIdentifier(conn, kb);
             aProperty.setIdentifier(identifier);
             aProperty.write(conn, kb);
-            return new KBHandle(identifier, aProperty.getName());
         });
     }
 
@@ -557,7 +553,6 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aProperty.getOriginalStatements());
             aProperty.write(conn, kb);
-            return null;
         });
     }
 
@@ -566,14 +561,15 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).deleteProperty(conn, aKB, aType);
-            return null;
         });
     }
 
     @Override
-    public List<KBHandle> listProperties(KnowledgeBase kb, boolean aAll)
+    public List<KBProperty> listProperties(KnowledgeBase kb, boolean aAll)
     {
-        return listProperties(kb, true, aAll);
+        return listProperties(kb, true, aAll).stream()
+                .map(h -> KBHandle.convertTo(KBProperty.class, h))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -585,24 +581,23 @@ public class KnowledgeBaseServiceImpl
                     .forProperties(aKB)
                     .retrieveLabel()
                     .retrieveDescription()
+                    .retrieveDomainAndRange()
                     .includeInferred(aIncludeInferred)
                     .asHandles(conn, aAll));
         }
     }
     
     @Override
-    public KBHandle createInstance(KnowledgeBase kb, KBInstance aInstance)
+    public void createInstance(KnowledgeBase kb, KBInstance aInstance)
     {
         if (StringUtils.isNotEmpty(aInstance.getIdentifier())) {
             throw new IllegalArgumentException("Identifier must be empty on create");
         }
 
-        return update(kb, (conn) -> {
+        update(kb, (conn) -> {
             String identifier = getReificationStrategy(kb).generateInstanceIdentifier(conn, kb);
             aInstance.setIdentifier(identifier);
             aInstance.write(conn, kb);
-
-            return new KBHandle(identifier, aInstance.getName());
         });
     }
     
@@ -645,7 +640,6 @@ public class KnowledgeBaseServiceImpl
         update(kb, (conn) -> {
             conn.remove(aInstance.getOriginalStatements());
             aInstance.write(conn ,kb);
-            return null;
         });
     }
 
@@ -654,7 +648,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).deleteInstance(conn, aKB, aInstance);
-            return null;
         });
     }
 
@@ -679,7 +672,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).upsertStatement(conn, aKB, aStatement);
-            return null;
         });
     }
 
@@ -689,7 +681,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).deleteStatement(conn, aKB, aStatement);
-            return null;
         });
     }
 
@@ -732,19 +723,18 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public KBHandle update(KnowledgeBase kb, UpdateAction aAction)
+    public void update(KnowledgeBase kb, UpdateAction aAction)
     {
         if (kb.isReadOnly()) {
-            log.warn("Knowledge base [{}] is read only, will not alter!", kb.getName());
-            return null;
+            throw new ReadOnlyException(
+                    "Knowledge base [" + kb.getName() + "] is read only, will not alter!");
         }
 
-        KBHandle result = null;
         try (RepositoryConnection conn = getConnection(kb)) {
             boolean error = true;
             try {
                 conn.begin();
-                result = aAction.accept(conn);
+                aAction.accept(conn);
                 conn.commit();
                 error = false;
             }
@@ -754,7 +744,6 @@ public class KnowledgeBaseServiceImpl
                 }
             }
         }
-        return result;
     }
 
     @Override
@@ -766,7 +755,7 @@ public class KnowledgeBaseServiceImpl
     }
 
     @Override
-    public List<KBHandle> listDomainProperties(KnowledgeBase aKB, String aDomain,
+    public List<KBProperty> listDomainProperties(KnowledgeBase aKB, String aDomain,
             boolean aIncludeInferred, boolean aAll)
         throws QueryEvaluationException
     {
@@ -776,8 +765,12 @@ public class KnowledgeBaseServiceImpl
                     .matchingDomain(aDomain)
                     .retrieveLabel()
                     .retrieveDescription()
+                    .retrieveDomainAndRange()
                     .includeInferred(aIncludeInferred)
-                    .asHandles(conn, aAll));
+                    .asHandles(conn, aAll))
+                    .stream()
+                    .map(handle -> KBHandle.convertTo(KBProperty.class, handle))
+                    .collect(Collectors.toList());
         }
     }
     
@@ -811,9 +804,7 @@ public class KnowledgeBaseServiceImpl
             boolean aAll)
         throws QueryEvaluationException
     {
-        try (StopWatch watch = new StopWatch(log, "listChildConcepts(%s)", aParentIdentifier)) {
-            return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
-        }
+        return listChildConcepts(aKB, aParentIdentifier, aAll, DEFAULT_LIMIT);
     }
     
     @Override
@@ -880,11 +871,10 @@ public class KnowledgeBaseServiceImpl
      * @param aProperty
      *            Property to be created for KB
      */
-    public KBHandle createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
+    public void createBaseProperty(KnowledgeBase akb, KBProperty aProperty)
     {
-        return update(akb, (conn) -> {
+        update(akb, (conn) -> {
             aProperty.write(conn, akb);
-            return new KBHandle(aProperty.getIdentifier(), aProperty.getName());
         });
     }
     
@@ -893,7 +883,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).upsertQualifier(conn, aKB, newQualifier);
-            return null;
         });
     }
 
@@ -902,7 +891,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).deleteQualifier(conn, aKB, oldQualifier);
-            return null;
         });
     }
 
@@ -911,7 +899,6 @@ public class KnowledgeBaseServiceImpl
     {
         update(aKB, conn -> {
             getReificationStrategy(aKB).upsertQualifier(conn, aKB, aQualifier);
-            return null;
         });
     }
 
@@ -952,7 +939,7 @@ public class KnowledgeBaseServiceImpl
      */
     @Override public Optional<KBObject> readItem(Project aProject, String aIdentifier)
     {
-        for (KnowledgeBase kb : getKnowledgeBases(aProject)) {
+        for (KnowledgeBase kb : getEnabledKnowledgeBases(aProject)) {
             Optional<KBObject> handle = readItem(kb, aIdentifier);
             if (handle.isPresent()) {
                 return handle;
@@ -979,6 +966,19 @@ public class KnowledgeBaseServiceImpl
                 return kbInstance.flatMap((i) -> Optional.of(i));
             }
             return Optional.empty();
+        }
+    }
+    
+    @Override
+    public Optional<KBHandle> readHandle(KnowledgeBase aKB, String aIdentifier)
+    {
+        try (StopWatch watch = new StopWatch(log, "readHandle(%s)", aIdentifier)) {
+            return read(aKB, conn -> { 
+                return SPARQLQueryBuilder.forItems(aKB)
+                    .withIdentifier(aIdentifier)
+                    .retrieveLabel()
+                    .asHandle(conn, true);
+            });
         }
     }
 
