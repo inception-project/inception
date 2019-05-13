@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -142,9 +143,13 @@ public class RelationAdapter
         for (RelationLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
-        
-        return createRelationAnnotation(request.getCas(), request.getOriginFs(),
-                request.getTargetFs());
+
+        AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
+                request.getOriginFs(), request.getTargetFs());
+        publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
+                relationAnno));
+
+        return relationAnno;
     }
 
     private AnnotationFS createRelationAnnotation(CAS cas, AnnotationFS originFS,
