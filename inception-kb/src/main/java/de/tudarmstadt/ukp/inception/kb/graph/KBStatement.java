@@ -43,10 +43,12 @@ public class KBStatement implements Serializable
     private KBHandle instance;
 
     // Predicate
-    private KBHandle property;
+    private KBProperty property;
 
     // Object
     private Object value;
+    
+    private String valueLabel;
 
     // Language
     private String language;
@@ -62,9 +64,11 @@ public class KBStatement implements Serializable
         this(aId, new KBHandle(aInstance), null, null);
     }
 
-    public KBStatement(String aId, String aInstance, String aProperty, Object aValue)
+    public KBStatement(String aId, String aInstance, String aProperty, Object aValue,
+            String aValueLabel)
     {
-        this(aId, new KBHandle(aInstance), new KBHandle(aProperty), aValue);
+        this(aId, new KBHandle(aInstance), new KBProperty(aProperty), aValue);
+        setValueLabel(aValueLabel);
     }
 
     /**
@@ -75,7 +79,7 @@ public class KBStatement implements Serializable
      * @param aValue
      *            Defines value for the statement
      */
-    public KBStatement(String aId, KBHandle aInstance, KBHandle aProperty, Object aValue)
+    public KBStatement(String aId, KBHandle aInstance, KBProperty aProperty, Object aValue)
     {
         statementId = aId;
         instance = aInstance;
@@ -87,7 +91,7 @@ public class KBStatement implements Serializable
         qualifiers = new ArrayList<>();
     }
 
-    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    public KBStatement(KBHandle aInstance, KBProperty aProperty)
     {
         instance = aInstance;
         property = aProperty;
@@ -133,12 +137,12 @@ public class KBStatement implements Serializable
         instance = aInstance;
     }
 
-    public KBHandle getProperty()
+    public KBProperty getProperty()
     {
         return property;
     }
 
-    public void setProperty(KBHandle aProperty)
+    public void setProperty(KBProperty aProperty)
     {
         property = aProperty;
     }
@@ -219,14 +223,29 @@ public class KBStatement implements Serializable
     {
         qualifiers = qualifierList;
     }
+    
+    public String getValueLabel()
+    {
+        return valueLabel;
+    }
+
+    public void setValueLabel(String aValueLabel)
+    {
+        valueLabel = aValueLabel;
+    }
 
     @Override
     public String toString()
     {
         return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
-                .append("statementId", statementId).append("instance", instance)
-                .append("property", property).append("value", value).append("language", language)
-                .append("inferred", inferred).append("originalTriples", originalTriples)
+                .append("statementId", statementId)
+                .append("instance", instance)
+                .append("property", property)
+                .append("value", value)
+                .append("valueLabel", valueLabel)
+                .append("language", language)
+                .append("inferred", inferred)
+                .append("originalTriples", originalTriples)
                 .append("qualifiers", qualifiers).toString();
     }
 }

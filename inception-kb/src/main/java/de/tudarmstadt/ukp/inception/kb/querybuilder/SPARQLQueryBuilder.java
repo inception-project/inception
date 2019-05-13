@@ -33,7 +33,6 @@ import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.Pr
 import static java.lang.Integer.toHexString;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singleton;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.and;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.function;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.notEquals;
@@ -67,13 +66,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.rdf4j.model.BNode;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.Literal;
-import org.eclipse.rdf4j.model.Statement;
-import org.eclipse.rdf4j.model.Value;
-import org.eclipse.rdf4j.model.ValueFactory;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
@@ -97,6 +91,7 @@ import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPattern;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Rdf;
+import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfBlankNode.LabeledBlankNode;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.RdfValue;
 import org.eclipse.rdf4j.sparqlbuilder.util.SparqlBuilderUtils;
 import org.slf4j.Logger;
@@ -104,7 +99,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 /**
@@ -281,8 +275,7 @@ public class SPARQLQueryBuilder
             }
             case CLASS: {
                 List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString() + "+", aContext));
+                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
                 if (OWL.CLASS.equals(aKB.getClassIri())) {
                     classPatterns.add(VAR_SUBJECT.has(
                             Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
@@ -635,11 +628,14 @@ public class SPARQLQueryBuilder
 
         Iri subClassProperty = iri(kb.getSubclassIri());
         Iri subPropertyProperty = iri(kb.getSubPropertyIri());
+        LabeledBlankNode superClass = Rdf.bNode("superClass");
 
         addPattern(PRIMARY, union(
-                // Either there is a domain which matches the given one
-                VAR_SUBJECT.has(
-                        Path.of(iri(RDFS.DOMAIN), zeroOrMore(subClassProperty)), iri(aIdentifier)),
+                GraphPatterns.and(
+                    // Find all super-classes of the domain type
+                    iri(aIdentifier).has(Path.of(zeroOrMore(subClassProperty)), superClass),
+                    // Either there is a domain which matches the given one
+                    VAR_SUBJECT.has(iri(RDFS.DOMAIN), superClass)),
                 // ... the property does not define or inherit domain
                 isPropertyPattern().and(filterNotExists(VAR_SUBJECT.has(
                         Path.of(zeroOrMore(subPropertyProperty), iri(RDFS.DOMAIN)), bNode())))));
@@ -1565,103 +1561,7 @@ public class SPARQLQueryBuilder
                     currentTimeMillis() - startTime);
         }
 
-        return result;    
-    }
-    
-    @Override
-    public List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll)
-    {
-        long startTime = currentTimeMillis();
-        String queryId = toHexString(hashCode());
-        
-        projections.add(VAR_PREDICATE);
-        projections.add(VAR_OBJECT);
-        addPattern(PRIMARY, VAR_SUBJECT.has(VAR_PREDICATE, VAR_OBJECT));
-
-        String queryString = selectQuery().getQueryString();
-        LOG.trace("[{}] Query: {}", queryId, queryString);
-
-        if (returnEmptyResult) {
-            LOG.debug("[{}] Query was skipped because it would not return any results anyway",
-                    queryId);
-            
-            return emptyList();
-            
-        }
-        
-        TupleQuery tupleQuery = aConnection.prepareTupleQuery(queryString);
-        
-        // The only way to tell if a statement was inferred or not is by running the same query
-        // twice, once with and once without inference being enabled. Those that are in the
-        // first but not in the second were the inferred statements.
-        List<Statement> explicitStmts = listStatements(tupleQuery, false);
-        List<Statement> allStmts = listStatements(tupleQuery, true);
-        
-        List<KBStatement> results = new ArrayList<>();
-        for (Statement stmt : allStmts) {
-            Value value = stmt.getObject();
-            if (value == null) {
-                // Can this really happen?
-                LOG.warn("Property with null value detected.");
-                continue;
-            }
-
-            if (value instanceof BNode) {
-                LOG.warn("Properties with blank node values are not supported");
-                continue;
-            }
-            
-            if ((!aAll && hasImplicitNamespace(kb, stmt.getPredicate().stringValue()))) {
-                continue;
-            }
-
-            KBHandle subject = new KBHandle(stmt.getSubject().stringValue());
-            KBHandle predicate = new KBHandle(stmt.getPredicate().stringValue());
-            
-            KBStatement kbStatement = new KBStatement(null, subject, predicate, value);
-            kbStatement.setInferred(!explicitStmts.contains(stmt));
-            kbStatement.setOriginalTriples(singleton(stmt));
-
-            results.add(kbStatement);
-        }
-        
-        LOG.debug("[{}] Query returned {} results in {}ms", queryId, results.size(),
-                currentTimeMillis() - startTime);
- 
-        return results;
-    }
-    
-    private List<Statement> listStatements(TupleQuery aQuery, boolean aIncludeInferred)
-    {
-        aQuery.setIncludeInferred(aIncludeInferred);
-        
-        try (TupleQueryResult result = aQuery.evaluate()) {
-            ValueFactory vf = SimpleValueFactory.getInstance();
-            
-            List<Statement> statements = new ArrayList<>();
-            while (result.hasNext()) {
-                BindingSet bindings = result.next();
-                if (bindings.size() == 0) {
-                    continue;
-                }
-                
-                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
-                
-                Binding subj = bindings.getBinding(VAR_SUBJECT_NAME);
-                Binding pred = bindings.getBinding(VAR_PREDICATE_NAME);
-                Binding obj = bindings.getBinding(VAR_OBJECT_NAME);
-    
-                IRI subject = vf.createIRI(subj.getValue().stringValue());
-                IRI predicate = vf.createIRI(pred.getValue().stringValue());
-                Statement stmt = vf.createStatement(subject, predicate, obj.getValue());
-                
-                // Avoid duplicate statements
-                if (!statements.contains(stmt)) {
-                    statements.add(stmt);
-                }
-            }
-            return statements;
-        }
+        return result;
     }
     
     /**
@@ -1684,7 +1584,7 @@ public class SPARQLQueryBuilder
                     continue;
                 }
                 
-                LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                // LOG.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
     
                 String id = bindings.getBinding(VAR_SUBJECT_NAME).getValue().stringValue();
                 if (!id.contains(":") || (!aAll && hasImplicitNamespace(kb, id))) {

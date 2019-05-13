@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asStatements;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -59,7 +58,6 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderTest
@@ -243,22 +241,6 @@ public class SPARQLQueryBuilderTest
         // http://collection.britishmuseum.org/sparql
         britishMuseum = new SPARQLRepository("http://collection.britishmuseum.org/sparql");
         britishMuseum.init();
-    }
-    
-    @Test
-    public void thatItemCanBeObtainedAsStatements() throws Exception
-    {
-        importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
-                DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
-
-        List<KBStatement> result = asStatements(rdf4jLocalRepo, SPARQLQueryBuilder
-                .forItems(kb)
-                .withIdentifier("http://example.org/#green-goblin"));
-        
-        assertThat(result)
-                .extracting(stmt -> stmt.getInstance().getIdentifier())
-                .allMatch(id -> id.equals("http://example.org/#green-goblin"));
-        assertThat(result).hasSize(7);
     }
     
     /**
@@ -498,9 +480,11 @@ public class SPARQLQueryBuilderTest
         assertThat(results)
                 .extracting(KBHandle::getIdentifier)
                 .containsExactlyInAnyOrder(
-                        // property-2 defines a matching domain
+                        // property-1 is inherited by #subclass1 from #explicitRoot
+                        "http://example.org/#property-1",
+                        // property-2 is declared on #subclass1
                         "http://example.org/#property-2",
-                        // property-2 defines no domain
+                        // property-3 defines no domain
                         "http://example.org/#property-3");
                         // other properties all either define or inherit an incompatible domain
     }

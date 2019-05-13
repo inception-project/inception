@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,17 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.event;
+package de.tudarmstadt.ukp.inception.kb;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
-
-public class AjaxInstanceSelectionEvent
-    extends AjaxSelectionEvent
+/**
+ * Exception indicating that a modification was attempted on a read-only knowledge base.
+ */
+public class ReadOnlyException
+    extends RuntimeException
 {
-    public AjaxInstanceSelectionEvent(AjaxRequestTarget aTarget, KBObject newSelection)
+    private static final long serialVersionUID = 4240186735045775177L;
+
+    public ReadOnlyException(String aMessage)
     {
-        super(aTarget, newSelection);
+        super(aMessage);
     }
 }

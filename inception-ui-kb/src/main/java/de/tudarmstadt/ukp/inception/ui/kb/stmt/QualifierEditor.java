@@ -33,16 +33,18 @@ import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.eclipse.rdf4j.model.IRI;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
@@ -116,7 +118,7 @@ public class QualifierEditor
             IModel<KBQualifier> compoundModel = CompoundPropertyModel.of(aQualifier);
 
             Form<KBQualifier> form = new Form<>("form", compoundModel);
-            DropDownChoice<KBHandle> type = new BootstrapSelect<>("kbProperty");
+            DropDownChoice<KBProperty> type = new BootstrapSelect<>("property");
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
             type.setChoices(kbService.listProperties(kbModel.getObject(), false));
             type.setRequired(true);
@@ -165,7 +167,8 @@ public class QualifierEditor
             add(new Label("language", compoundModel.bind("language")).add(
                     LambdaBehavior.onConfigure(_this -> 
                             _this.setVisible(isNotEmpty(aQualifier.getObject().getLanguage())))));
-            add(new Label("value", compoundModel.bind("value")));
+            add(new Label("value",
+                    LoadableDetachableModel.of(() -> getLabel(compoundModel.getObject()))));
 
             LambdaAjaxLink editLink = new LambdaAjaxLink("edit", QualifierEditor.this::actionEdit);
             editLink.add(visibleWhen(() -> kbModel.map(kb -> !kb.isReadOnly())
@@ -174,6 +177,23 @@ public class QualifierEditor
         }
     }
 
+    private String getLabel(KBQualifier aKbQualifier)
+    {
+        if (aKbQualifier == null) {
+            return null;
+        }
+        
+        if (aKbQualifier != null && aKbQualifier.getValueLabel() != null) {
+            return aKbQualifier.getValueLabel();
+        }
+        
+        if (aKbQualifier.getValue() instanceof IRI) {
+            return ((IRI) aKbQualifier.getValue()).getLocalName();
+        }
+        
+        return String.valueOf(aKbQualifier.getValue());
+    }
+    
     private void actionDelete(AjaxRequestTarget aTarget) {
         kbService.deleteQualifier(kbModel.getObject(), qualifier.getObject());
 

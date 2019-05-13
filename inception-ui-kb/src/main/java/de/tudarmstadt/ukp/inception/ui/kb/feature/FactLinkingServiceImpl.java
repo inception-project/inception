@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 @Component(FactLinkingService.SERVICE_NAME)
@@ -56,9 +57,9 @@ public class FactLinkingServiceImpl implements FactLinkingService
     private final Logger LOG = LoggerFactory.getLogger(getClass());
 
     @Override
-    public List<KBHandle> getPredicatesFromKB(Project aProject, ConceptFeatureTraits traits)
+    public List<KBProperty> listProperties(Project aProject, ConceptFeatureTraits traits)
     {
-        List<KBHandle> handles = new ArrayList<>();
+        List<KBProperty> handles = new ArrayList<>();
         if (traits.getRepositoryId() != null) {
             // If a specific KB is selected, get its properties
             Optional<KnowledgeBase> kb = kbService
@@ -114,7 +115,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
     }
 
     @Override
-    public KnowledgeBase getKBByKBHandleAndTraits(KBHandle kbHandle, Project aProject,
+    public KnowledgeBase findKnowledgeBaseContainingProperty(KBProperty aProperty, Project aProject,
         ConceptFeatureTraits traits)
     {
         if (traits.getRepositoryId() != null) {
@@ -122,7 +123,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
         }
         else {
             for (KnowledgeBase kb : kbService.getKnowledgeBases(aProject)) {
-                if (kbService.listProperties(kb, false).contains(kbHandle)) {
+                if (kbService.listProperties(kb, false).contains(aProperty)) {
                     return kb;
                 }
             }

@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -61,10 +62,10 @@ public class SubclassCreationDialog
     
     private IModel<KBConcept> newSubclassConceptModel;
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> parentConceptHandleModel;
+    private IModel<? extends KBObject> parentConceptHandleModel;
     
     public SubclassCreationDialog(String id, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aParentConceptHandleModel)
+            IModel<? extends KBObject> aParentConceptHandleModel)
     {
         super(id);
 
@@ -100,8 +101,6 @@ public class SubclassCreationDialog
             KnowledgeBase kb = kbModel.getObject();
             KBProperty property = kbService.readProperty(kb, kb.getSubclassIri().stringValue())
                     .get();
-            KBHandle propertyHandle = new KBHandle(property.getIdentifier(), property.getName(),
-                    property.getDescription());
 
             // check whether the subclass name already exists for this superclass
             List<KBHandle> existingSubclasses = kbService.listChildConcepts(kb,
@@ -119,14 +118,14 @@ public class SubclassCreationDialog
             }
             
             // create the new concept
-            KBHandle newConceptHandle = kbService.createConcept(kb,
-                    newSubclassConceptModel.getObject());
+            KBConcept newConcept = newSubclassConceptModel.getObject();
+            kbService.createConcept(kb, newConcept);
 
             String parentConceptId = parentConceptHandleModel.getObject().getIdentifier();
 
             // create the subclassof statement and add it to the knowledge base
             ValueFactory vf = SimpleValueFactory.getInstance();
-            KBStatement subclassOfStmt = new KBStatement(null, newConceptHandle, propertyHandle,
+            KBStatement subclassOfStmt = new KBStatement(null, newConcept.toKBHandle(), property,
                     vf.createIRI(parentConceptId));
             //set reification to NONE just for "upserting" the statement, then restore old value
             Reification kbReification = kb.getReification();
@@ -145,7 +144,7 @@ public class SubclassCreationDialog
 
             // select newly created concept right away to show the statements
             send(SubclassCreationDialog.this.getPage(), Broadcast.BREADTH,
-                    new AjaxConceptSelectionEvent(aTarget, newConceptHandle,true));
+                    new AjaxConceptSelectionEvent(aTarget, newConcept.toKBHandle(), true));
         }
         catch (Exception e) {
             error("Unable to find property subclassof: " + e.getLocalizedMessage());

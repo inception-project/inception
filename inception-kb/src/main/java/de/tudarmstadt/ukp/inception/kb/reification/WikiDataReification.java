@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.reification;
 
 import static java.lang.Integer.toHexString;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toList;
@@ -57,9 +58,7 @@ import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.RepositoryResult;
-import org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder;
 import org.eclipse.rdf4j.sparqlbuilder.core.Variable;
-import org.eclipse.rdf4j.sparqlbuilder.core.query.Queries;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
 import org.eclipse.rdf4j.sparqlbuilder.graphpattern.GraphPatterns;
 import org.eclipse.rdf4j.sparqlbuilder.rdf.Iri;
@@ -75,6 +74,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.Queries;
 import de.tudarmstadt.ukp.inception.kb.querybuilder.ValuesPattern;
 
 /**
@@ -103,8 +103,8 @@ public class WikiDataReification
     private static final String PREFIX_PROP_QUALIFIER = "http://www.wikidata.org/prop/qualifier/P";
     private static final String PREFIX_WDS = "http://www.wikidata.org/entity/statement/";
     
-    private static final Variable VAR_SUBJECT = SparqlBuilder.var("s");
-    private static final Variable VAR_PRED1 = SparqlBuilder.var("p1");
+    private static final Variable VAR_SUBJECT = var("s");
+    private static final Variable VAR_PRED1 = var("p1");
     private static final Variable VAR_STATEMENT = var("st");
     private static final Variable VAR_PRED2 = var("p2");
     private static final Variable VAR_VALUE = var("v");
@@ -112,21 +112,25 @@ public class WikiDataReification
     private final InceptionValueMapper valueMapper = new InceptionValueMapper();
 
     @Override
-    public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase kb,
-            KBHandle aInstance, boolean aAll)
+    public List<KBStatement> listStatements(RepositoryConnection aConnection, KnowledgeBase aKB,
+            KBHandle aItem, boolean aAll)
     {
+        long startTime = currentTimeMillis();
+        
         SelectQuery query = SELECT(VAR_SUBJECT, VAR_PRED1, VAR_STATEMENT, VAR_PRED2, VAR_VALUE);
         query.where(
-            new ValuesPattern(VAR_SUBJECT, iri(aInstance.getIdentifier())),
+            new ValuesPattern(VAR_SUBJECT, iri(aItem.getIdentifier())),
             GraphPatterns.and(VAR_SUBJECT.has(VAR_PRED1, VAR_STATEMENT),
             VAR_STATEMENT.has(VAR_PRED2, VAR_VALUE)).filter(and(
                 function(STRSTARTS, function(STR, VAR_PRED1), literalOf(PREFIX_PROP)),or(
                     function(STRSTARTS, function(STR, VAR_PRED2), literalOf(PREFIX_PROP_STATEMENT)),
                     function(STRSTARTS, function(STR, VAR_PRED2), literalOf(PREFIX_PROP_QUALIFIER)))
                     .parenthesize())));
-        query.limit(kb.getMaxResults());
-        
-        log.trace("[{}] Query: {}", toHexString(hashCode()), query.getQueryString());
+        query.limit(aKB.getMaxResults());
+
+        String queryId = toHexString(query.getQueryString().hashCode());
+
+        log.trace("[{}] Query: {}", queryId, query.getQueryString());
         
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(query.getQueryString());
         
@@ -136,7 +140,7 @@ public class WikiDataReification
             while (result.hasNext()) {
                 BindingSet bindings = result.next();
                 
-                log.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                log.trace("[{}] Bindings: {}", queryId, bindings);
                 
                 IRI subject = (IRI) bindings.getBinding("s").getValue();
                 IRI pred1 = (IRI) bindings.getBinding("p1").getValue();
@@ -155,7 +159,7 @@ public class WikiDataReification
                 KBStatement statement = statements.get(priStatement);
                 if (statement == null) {
                     statement = new KBStatement(stmt.stringValue(), subject.stringValue());
-                    statement.setProperty(new KBHandle(pred1.stringValue()));
+                    statement.setProperty(new KBProperty(pred1.stringValue()));
                     statements.put(priStatement, statement);
                 }
                 
@@ -172,9 +176,10 @@ public class WikiDataReification
                 }
                 else if (secStatement.getPredicate().stringValue()
                         .startsWith(PREFIX_PROP_QUALIFIER)) {
-                    // Qualifier
+                    // Qualifier - the property we add here is temporary and will be replaced
+                    // with a richer property below
                     KBQualifier qualifier = new KBQualifier(statement,
-                            new KBHandle(pred2.stringValue()), value);
+                            new KBProperty(pred2.stringValue()), value);
 
                     // Store the secondary original triples in the qualifier
                     qualifier.getOriginalTriples().add(secStatement);
@@ -182,9 +187,74 @@ public class WikiDataReification
                     statement.addQualifier(qualifier);
                 }
             }
-            
-            return statements.values().stream().collect(Collectors.toList());
         }
+        
+        
+        // For all values of KBStatements and KBQualifiers collect the property IRIs (as strings)
+        Set<String> propertyIris = new HashSet<>();
+        statements.values().stream()
+            .map(stmt -> stmt.getProperty().getIdentifier())
+            .forEach(propertyIris::add);
+        statements.values().stream()
+            .flatMap(stmt -> stmt.getQualifiers().stream())
+            .map(qualifier -> qualifier.getProperty().getIdentifier())
+            .forEach(propertyIris::add);
+        
+        Map<String, KBProperty> propertyMap = Queries.fetchProperties(aKB, aConnection,
+                propertyIris);
+
+        // For all values of KBStatements and KBQualifiers that are IRIs, collect the IRIs so we
+        // can resolve them to their label
+        Set<Object> iriValues = new HashSet<>();
+        statements.values().stream()
+            .map(stmt -> stmt.getValue())
+            .filter(value -> value instanceof IRI)
+            .map(value -> (IRI) value)
+            .forEach(iriValues::add);
+        statements.values().stream()
+            .flatMap(stmt -> stmt.getQualifiers().stream())
+            .map(KBQualifier::getValue)
+            .filter(value -> value instanceof IRI)
+            .map(value -> (IRI) value)
+            .forEach(iriValues::add);
+        
+        Map<String, KBHandle> labelMap = Queries.fetchLabelsForIriValues(aKB, aConnection,
+                iriValues);
+        
+        // Fill in property information and labels
+        for (KBStatement stmt : statements.values()) {
+            // Fill in property information in statement
+            KBProperty property = propertyMap.computeIfAbsent(stmt.getProperty().getIdentifier(),
+                _it -> new KBProperty(_it));
+            stmt.setProperty(property);
+            
+            // Fill in label information for IRI-valued statements
+            Object value = stmt.getValue();
+            if (value instanceof IRI) {
+                stmt.setValueLabel(labelMap
+                        .computeIfAbsent(((IRI) value).stringValue(), KBHandle::new).getUiLabel());
+            }
+            
+            for (KBQualifier qualifier : stmt.getQualifiers()) {
+                // Fill in property information in qualifier
+                KBProperty qualifierProperty = propertyMap.computeIfAbsent(
+                        qualifier.getProperty().getIdentifier(), _it -> new KBProperty(_it));
+                qualifier.setProperty(qualifierProperty);
+                
+                // Fill in label information for IRI-valued qualifiers
+                Object qualifierValue = qualifier.getValue();
+                if (qualifierValue instanceof IRI) {
+                    qualifier.setValueLabel(labelMap
+                            .computeIfAbsent(((IRI) qualifierValue).stringValue(), KBHandle::new)
+                            .getUiLabel());
+                }
+            }
+        }        
+        
+        log.debug("[{}] Query returned {} statements in {}ms", queryId, statements.size(),
+                currentTimeMillis() - startTime);
+
+        return statements.values().stream().collect(Collectors.toList());
     }
 
     private List<Statement> getStatementsById(RepositoryConnection aConnection, KnowledgeBase kb,
@@ -436,14 +506,16 @@ public class WikiDataReification
     public List<KBQualifier> listQualifiers(RepositoryConnection aConnection, KnowledgeBase kb,
             KBStatement aStatement)
     {
-        SelectQuery query = Queries.SELECT(VAR_STATEMENT, VAR_PRED2, VAR_VALUE);
+        SelectQuery query = SELECT(VAR_STATEMENT, VAR_PRED2, VAR_VALUE);
         query.where(
             new ValuesPattern(VAR_STATEMENT, iri(aStatement.getStatementId())),
             GraphPatterns.and(VAR_STATEMENT.has(VAR_PRED2, VAR_VALUE).filter(
                 function(STRSTARTS, function(STR, VAR_PRED2), literalOf(PREFIX_PROP_QUALIFIER)))));
         query.limit(kb.getMaxResults());
         
-        log.trace("[{}] Query: {}", toHexString(hashCode()), query.getQueryString());
+        String queryId = toHexString(query.getQueryString().hashCode());
+        
+        log.trace("[{}] Query: {}", queryId, query.getQueryString());
         
         TupleQuery tupleQuery = aConnection.prepareTupleQuery(query.getQueryString());
 
@@ -453,7 +525,7 @@ public class WikiDataReification
             while (result.hasNext()) {
                 BindingSet bindings = result.next();
                 
-                log.trace("[{}] Bindings: {}", toHexString(hashCode()), bindings);
+                log.trace("[{}] Bindings: {}", queryId, bindings);
                 
                 Resource stmt = (Resource) bindings.getBinding("st").getValue();
                 IRI pred2 = (IRI) bindings.getBinding("p2").getValue();
@@ -465,7 +537,7 @@ public class WikiDataReification
 
                 // Qualifier
                 KBQualifier qualifier = new KBQualifier(aStatement,
-                        new KBHandle(pred2.stringValue()), value);
+                        new KBProperty(pred2.stringValue()), value);
 
                 // Store the secondary original triples in the qualifier
                 qualifier.getOriginalTriples().add(secStatement);
