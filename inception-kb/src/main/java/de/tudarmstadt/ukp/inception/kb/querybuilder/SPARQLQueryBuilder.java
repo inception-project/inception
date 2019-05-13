@@ -429,19 +429,23 @@ public class SPARQLQueryBuilder
                         classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF, bNode()));
                     }
                     
-                    rootPatterns.add(union(new GraphPattern[] {
+                    rootPatterns.add(union(
                             // ... it is explicitly defined as being a class
                             VAR_SUBJECT.has(typeOfProperty, classIri),
+                            // ... it is used as the type of some instance
+                            // This can be a very slow condition - so we have to skip it
+                            // bNode().has(typeOfProperty, VAR_SUBJECT),
                             // ... it has any subclass
-                            Rdf.bNode().has(subClassProperty, VAR_SUBJECT) }).filterNotExists(
-                                    union(classPatterns.stream().toArray(GraphPattern[]::new))));
+                            bNode().has(subClassProperty, VAR_SUBJECT) )
+                        .filterNotExists(
+                            union(classPatterns.stream().toArray(GraphPattern[]::new))));
                 }
                 
                 return GraphPatterns
                         .and(rootPatterns.toArray(new GraphPattern[rootPatterns.size()]));
             }
             default:
-                throw new IllegalStateException("Can only root classes");
+                throw new IllegalStateException("Can only query for root classes");
             }            
         }
     }
@@ -1267,6 +1271,9 @@ public class SPARQLQueryBuilder
         classPatterns.add(bNode().has(subClassProperty, VAR_SUBJECT));
         // ... it has any superclass
         classPatterns.add(VAR_SUBJECT.has(subClassProperty, bNode()));
+        // ... it is used as the type of some instance
+        // This can be a very slow condition - so we have to skip it
+        // classPatterns.add(bNode().has(typeOfProperty, VAR_SUBJECT));
         // ... it participates in an owl:intersectionOf
         if (OWL.CLASS.equals(kb.getClassIri())) {
             classPatterns.add(VAR_SUBJECT.has(
