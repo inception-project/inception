@@ -17,14 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import org.apache.wicket.feedback.IFeedback;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
+
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -52,6 +60,9 @@ public class RecommendationSidebar
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annoService;
 
+    private WebMarkupContainer warning;
+    private StringResourceModel tipModel;
+    
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
@@ -63,6 +74,13 @@ public class RecommendationSidebar
             (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject(), v));
 
+        warning = new WebMarkupContainer("warning");
+        add(warning);
+        tipModel = new StringResourceModel("mismatch", this);
+        TooltipBehavior tip = new TooltipBehavior(tipModel);
+        tip.setOption("width", Options.asString("300px"));
+        warning.add(tip);
+        
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
@@ -82,26 +100,47 @@ public class RecommendationSidebar
         add(chartContainer);
     }
 
+    @Override
+    protected void onConfigure()
+    {
+        // using onConfigure as last state in lifecycle to configure visibility
+        super.onConfigure();
+        List<String> mismatchedRecommenders = findMismatchedRecommenders();
+        
+        if (mismatchedRecommenders.isEmpty()) {
+            warning.setVisible(false);
+            return;
+        }
+        
+        String recommendersStr = mismatchedRecommenders.stream()
+                .collect(Collectors.joining(", "));
+        tipModel.setParameters(recommendersStr);
+        warning.setVisible(true);
+    }
+    
     @OnEvent
-    /**
-     * Inform whether recommender and annotation layers are a valid match.
-     */
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
+        aEvent.getRequestHandler().add(warning);
+    }
+
+    private List<String> findMismatchedRecommenders()
+    {
+        List<String> mismatchedRecommenderNames = new ArrayList<>();
         Project project = getModelObject().getProject();
         for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
             if (!layer.isEnabled()) {
                 continue;
             }
-            for (Recommender recommender : recommendationService.listEnabledRecommenders(layer)) {
+            for (Recommender recommender : recommendationService
+                    .listEnabledRecommenders(layer)) {
                 RecommendationEngineFactory<?> factory = recommendationService
                         .getRecommenderFactory(recommender);
                 if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                    error(String.format("The recommender %s is configured for an invalid layer "
-                            + "and therefore skipped.", recommender.getName()));
-                    aEvent.getRequestHandler().addChildren(getPage(), IFeedback.class);
+                    mismatchedRecommenderNames.add(recommender.getName());
                 }
             }
         }
+        return mismatchedRecommenderNames;
     }
 }

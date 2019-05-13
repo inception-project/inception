@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.kb;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.util.List;
 
@@ -44,7 +45,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBQualifier;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -76,6 +79,8 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     private KnowledgeBase kb;
     private TestFixtures testFixtures;
 
+    private KBConcept concept;
+    private KBProperty property;
     private KBHandle conceptHandle;
     private KBHandle propertyHandle;
     private KBStatement statement;
@@ -98,9 +103,13 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         kb = testFixtures.buildKnowledgeBase(project, KB_NAME, Reification.WIKIDATA);
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         
-        conceptHandle = sut.createConcept(kb, testFixtures.buildConcept());
-        propertyHandle = sut.createProperty(kb, testFixtures.buildProperty());
-        statement = testFixtures.buildStatement(conceptHandle, propertyHandle, "Test statement");
+        concept = testFixtures.buildConcept();
+        property = testFixtures.buildProperty();
+        sut.createConcept(kb, concept);
+        sut.createProperty(kb, property);
+        conceptHandle = concept.toKBHandle();
+        propertyHandle = property.toKBHandle();
+        statement = testFixtures.buildStatement(conceptHandle, property, "Test statement");
         sut.upsertStatement(kb, statement);
     }
 
@@ -114,8 +123,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void addQualifier_WithUnsavedQualifier_shouldCreateQualifier()
     {
-        sut.addQualifier(kb,
-                testFixtures.buildQualifier(statement, propertyHandle, "Test qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
         List<KBStatement> statements = sut.listStatements(kb, conceptHandle, false);
 
@@ -137,8 +145,9 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
 
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         
-        sut.addQualifier(kb,
-                testFixtures.buildQualifier(statement, propertyHandle, "Test qualifier"));
+        assertThatExceptionOfType(ReadOnlyException.class)
+            .isThrownBy(() -> sut.addQualifier(kb,
+                testFixtures.buildQualifier(statement, property, "Test qualifier")));
 
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         
@@ -150,8 +159,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void upsertQualifier_withUnsavedQualifier_shouldCreateQualifier()
     {
-        KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle,
-                "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
         sut.upsertQualifier(kb, qualifier);
 
@@ -182,8 +190,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void upsertQualifier_withExistingQualifier_shouldUpdateQualifier()
     {
-        KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle,
-                "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
         sut.upsertQualifier(kb, qualifier);
     
@@ -217,10 +224,10 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
         
-        KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle,
-                "Test qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
-        sut.upsertQualifier(kb, qualifier);
+        assertThatExceptionOfType(ReadOnlyException.class)
+            .isThrownBy(() -> sut.upsertQualifier(kb, qualifier));
     
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         assertThat(qualifierCountBeforeDeletion)
@@ -231,8 +238,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteQualifier_WithExistingQualifier_ShouldDeleteQualifier()
     {
-        KBQualifier qualifier = testFixtures.buildQualifier(statement, propertyHandle, "Test "
-                + "qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
         sut.addQualifier(kb, qualifier);
         
@@ -254,15 +260,14 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     {
         assertThatCode(() -> {
             sut.deleteQualifier(kb,
-                    testFixtures.buildQualifier(statement, propertyHandle, "Test " + "qualifier"));
+                    testFixtures.buildQualifier(statement, property, "Test qualifier"));
         }).doesNotThrowAnyException();
     }
 
     @Test
     public void deleteQualifier__WithReadOnlyKnowledgeBase_ShouldDoNothing()
     {
-        KBQualifier qualifier = testFixtures
-            .buildQualifier(statement, propertyHandle, "Test " + "qualifier");
+        KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
         sut.addQualifier(kb, qualifier);
         kb.setReadOnly(true);
@@ -270,7 +275,8 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
         sut.updateKnowledgeBase(kb, sut.getKnowledgeBaseConfig(kb));
 
         int qualifierCountBeforeDeletion = sut.listQualifiers(kb, statement).size();
-        sut.deleteQualifier(kb, qualifier);
+        assertThatExceptionOfType(ReadOnlyException.class)
+            .isThrownBy(() -> sut.deleteQualifier(kb, qualifier));
 
         int qualifierCountAfterDeletion = sut.listQualifiers(kb, statement).size();
         assertThat(qualifierCountBeforeDeletion).as("Check that statement was not deleted")
@@ -280,8 +286,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void deleteStatement_WithExistingStatementAndQualifier_ShouldDeleteAll()
     {
-        sut.addQualifier(kb,
-                testFixtures.buildQualifier(statement, propertyHandle, "Test " + "qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
         sut.deleteStatement(kb, statement);
 
@@ -298,8 +303,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     @Test
     public void listQualifiers_WithExistentQualifier_ShouldReturnOnlyThisQualifier()
     {
-        sut.addQualifier(kb,
-                testFixtures.buildQualifier(statement, propertyHandle, "Test qualifier"));
+        sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 

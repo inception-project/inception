@@ -98,7 +98,9 @@ public interface SPARQLQueryPrimaryConditions
     SPARQLQueryPrimaryConditions parentsOf(String aClassIri);
     
     /**
-     * Limits results to properties with the given domain or without any domain.
+     * Limits results to properties with the given domain or without any domain. Considers the
+     * inheritance hierarchy, so if A has a property x and B is a subclass of A, then B also has
+     * the property x.
      * 
      * @return the builder (fluent API)
      */
