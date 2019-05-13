@@ -26,6 +26,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.NoResultException;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
@@ -41,7 +44,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
@@ -69,6 +76,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     private @SpringBean EventRepository eventRepository;
     private @SpringBean UserDao userRepository;
     private @SpringBean DocumentService documentService;
+    private @SpringBean ProjectService projectService;
 
     private final IModel<Project> projectModel;
     private Set<String> annotationEvents;
@@ -98,22 +106,61 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             @Override
             protected void populateItem(ListItem<LoggedEvent> aItem)
             {
+                SourceDocument document = getSourceDocument(aItem.getModelObject());
                 LambdaStatelessLink eventLink = new LambdaStatelessLink("eventLink",
-                    () -> openLastActivity(aItem.getModelObject()));
-                eventLink.add(new Label("eventName", getEventDescription(aItem)));
+                    () -> openLastActivity(aItem.getModelObject(), document));
+                eventLink.add(new Label("eventName", getEventDescription(aItem, document)));
                 aItem.add(eventLink);
             }
         };
-        
-        add(visibleWhen(() -> !listView.getList().isEmpty())); 
+
+        add(visibleWhen(() -> !listView.getList().isEmpty()));
         setOutputMarkupPlaceholderTag(true);
         activitiesList.add(listView);
         add(activitiesList);
     }
+   
+    /**
+     * Check that user still has the rights to access the document from the given event
+     */
+    private boolean isStillAccessibleToUser(LoggedEvent aEvent)
+    {
+        Project project = projectModel.getObject();
+        SourceDocument aDocument = getSourceDocument(aEvent);
+        if (aDocument == null || project == null) {
+            return false;
+        }
+        
+        User user = userRepository.getCurrentUser();
+        
+        // annotation:
+        // check user is still part of the project 
+        if (!projectService.isAnnotator(project, user)) {
+            return false;
+        }
+        // check that anno doc still exists and user has not finished annotating it
+        if (documentService.existsAnnotationDocument(aDocument, user)) {
+            AnnotationDocument annoDocument = documentService.getAnnotationDocument(aDocument,
+                    user);
+            AnnotationDocumentState annoDocState = annoDocument.getState();
+            if (AnnotationDocumentState.IGNORE.equals(annoDocState) || 
+                    AnnotationDocumentState.FINISHED.equals(annoDocState)) {
+                log.info(String.format(
+                        "Annotation document [%s] in project [%d]] is locked for user [%s]",
+                        aDocument.getName(), project.getId(), user.getUsername()));
+                return false;
+            }
+        }
+        return true;
+    }
 
-    private String getEventDescription(ListItem<LoggedEvent> aItem) {
+    private String getEventDescription(ListItem<LoggedEvent> aItem, SourceDocument aDocument) {
+        
+        if (aItem == null || aDocument == null) {
+            return null;
+        }
         LoggedEvent event = aItem.getModelObject();
-        String documentName = getDocumentName(event);
+        String documentName = aDocument.getName();
         String eventDate = formatDateStr(event);
         String eventName = event.getEvent();
         
@@ -125,14 +172,28 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         }*/
         return event.toString();
     }
-
-    private String getDocumentName(LoggedEvent event)
+    
+    private SourceDocument getSourceDocument(LoggedEvent aEvent)
     {
-        long docId = event.getDocument();
+        if (aEvent == null) {
+            return null;
+        }
+
+        long docId = aEvent.getDocument();
         if (docId == -1) {
             return null;
         }
-        return documentService.getSourceDocument(projectModel.getObject().getId(), docId).getName();
+
+        SourceDocument document = null;
+        try {
+            document = documentService.getSourceDocument(projectModel.getObject().getId(), docId);
+        }
+        catch (NoResultException e) {
+            log.info(String.format("Source document [%d] no longer exists.", docId));
+            return document;
+        }
+
+        return document;
     }
 
     private String formatDateStr(LoggedEvent event)
@@ -145,16 +206,19 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         return eventDate;
     }
     
-    //FIXME what about documents that were deleted? what about mismatch of user-doc rights?
-    private void openLastActivity(LoggedEvent aEvent)
+    private void openLastActivity(LoggedEvent aEvent, SourceDocument aDocument)
     {
+        if (aEvent == null || aDocument == null) {
+            return;
+        }
+        
         String eventName = aEvent.getEvent();
         if (!annotationEvents.contains(eventName)) {
             log.info(String.format("Unknown last activities event: %s", eventName));
             return;
-        }
-        // TODO: curation page
+        }        
         openDocument(aEvent, AnnotationPage.class);
+        // TODO: curation page
     }
 
     private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
@@ -171,12 +235,13 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         User user = userRepository.getCurrentUser();
         Project project = projectModel.getObject();
         String username = user.getUsername();
-        
+
         // get last annotation events, TODO curation event
-        events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project,
-                username, annotationEvents.toArray(new String[annotationEvents.size()]), 
-                MAX_NUM_ACTIVITIES));
-        
-        return events;
+        events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project, username,
+                annotationEvents.toArray(new String[annotationEvents.size()]), MAX_NUM_ACTIVITIES));
+
+        // return filtered by user rights and document state
+        return events.stream().filter(event -> isStillAccessibleToUser(event))
+                .collect(Collectors.toList());
     }
 }
