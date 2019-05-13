@@ -47,7 +47,11 @@
       <groupId>org.eclipse.rdf4j</groupId>
       <artifactId>rdf4j-query</artifactId>
     </dependency>
-  
+    <dependency>
+      <groupId>org.eclipse.rdf4j</groupId>
+      <artifactId>rdf4j-util</artifactId>
+    </dependency>
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>

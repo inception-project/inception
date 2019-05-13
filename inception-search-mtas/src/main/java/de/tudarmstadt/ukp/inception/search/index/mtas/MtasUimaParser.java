@@ -74,6 +74,13 @@ import mtas.analysis.util.MtasTokenizerFactory;
 public class MtasUimaParser
     extends MtasParser
 {
+    /** 
+     * Lucene can only index terms of a size of up to 32k characters - so we filter out
+     * very long annotations to avoid getting exceptions from Lucene later on. This constant
+     * determines what we consider as an oversized annotation that should be filtered.
+     */
+    private static final int OVERSIZED_ANNOTATION_LIMIT = 30000;
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     public static final String MTAS_TOKEN_LABEL = "Token";
@@ -155,7 +162,7 @@ public class MtasUimaParser
         throws MtasParserException, MtasConfigException
     {
         long start = System.currentTimeMillis();
-        log.debug("DEBUG - Starting creation of token collection");
+        log.debug("Starting creation of token collection");
 
         JCas jcas;
         try {
@@ -248,6 +255,14 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
+        
+        if (aAnnotation.getEnd() - aAnnotation.getBegin() > OVERSIZED_ANNOTATION_LIMIT) {
+            log.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
+                    aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
+                    aAnnotation.getBegin(), aAnnotation.getEnd());
+            
+            return mtasId;
+        }
         
         // Special case: token values must be indexed
         if (aAnnotation instanceof Token) {

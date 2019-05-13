@@ -64,7 +64,6 @@
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
-    <dl4j.version>1.0.0-beta3</dl4j.version>
     <rdf4j.version>2.5.0-inception-1</rdf4j.version>
     <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.12.2</assertj.version>
@@ -79,7 +78,6 @@
     <module>inception-app-webapp</module>
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
-    <!-- >module>inception-search-mimir</module -->
     <module>inception-search-mtas</module>
     <module>inception-external-search-core</module>
     <module>inception-external-search-elastic</module>
@@ -94,7 +92,6 @@
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
     <module>inception-concept-linking</module>
-    <!-- module>inception-imls-mira</module -->
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
@@ -592,79 +589,6 @@
         <groupId>com.github.ben-manes.caffeine</groupId>
         <artifactId>caffeine</artifactId>
         <version>2.7.0</version>
-      </dependency>
-      <dependency>
-        <groupId>it.unimi.dsi</groupId>
-        <artifactId>dsiutils</artifactId>
-        <version>2.1.10</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>uk.ac.gate</groupId>
-        <artifactId>mimir-core</artifactId>
-        <version>5.5-SNAPSHOT</version>
-        <exclusions>
-          <exclusion>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>servlet-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.mortbay.jetty</groupId>
-            <artifactId>jetty</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <artifactId>slf4j-log4j12</artifactId>
-            <groupId>org.slf4j</groupId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-      <dependency>
-        <groupId>uk.ac.gate</groupId>
-        <artifactId>mimir-plugin-db-h2</artifactId>
-        <version>5.5-SNAPSHOT</version>
-        <exclusions>
-          <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-          </exclusion>
-        </exclusions>
       </dependency>
       <dependency>
         <groupId>com.h2database</groupId>
@@ -1446,6 +1370,9 @@
                 </dependency>
               </dependencies>
               <configuration>
+                <!-- See: https://github.com/m2e-code-quality/m2e-code-quality/issues/117#issuecomment-380022879 -->
+                <sourceDirectories>${project.compileSourceRoots}</sourceDirectories>
+                <testSourceDirectories>${project.testCompileSourceRoots}</testSourceDirectories>
                 <configLocation>inception/checkstyle.xml</configLocation>
                 <propertyExpansion>basedir=${project.basedir}</propertyExpansion>
                 <consoleOutput>true</consoleOutput>

@@ -20,19 +20,21 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 
-public class AjaxSelectionEvent extends AbstractAjaxAwareEvent {
+public class AjaxSelectionEvent
+    extends AbstractAjaxAwareEvent
+{
+    private KBObject selection;
 
-    private KBHandle selection;
-
-    public AjaxSelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection) {
+    public AjaxSelectionEvent(AjaxRequestTarget aTarget, KBObject newSelection)
+    {
         super(aTarget);
         selection = newSelection;
     }
 
-    public KBHandle getSelection() {
+    public KBObject getSelection()
+    {
         return selection;
     }
-
 }

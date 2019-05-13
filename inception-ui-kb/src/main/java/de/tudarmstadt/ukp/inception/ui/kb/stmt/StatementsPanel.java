@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.stmt;
 
+import static java.util.Comparator.comparing;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -54,20 +55,24 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
-public class StatementsPanel extends Panel {
+public class StatementsPanel
+    extends Panel
+{
     private static final long serialVersionUID = -6655528906388195399L;
     private static final Logger LOG = LoggerFactory.getLogger(StatementsPanel.class);
 
     private @SpringBean KnowledgeBaseService kbService;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> instance;
+    private IModel<? extends KBObject> instance;
     private IModel<StatementDetailPreference> detailPreference;
     private WebMarkupContainer statementGroupListWrapper;
     private IModel<Comparator<StatementGroupBean>> statementGroupComparator;
@@ -77,16 +82,14 @@ public class StatementsPanel extends Panel {
     /**
      * {@code StatementsPanel} creator.
      * 
-     * @param aId
-     * @param aKbModel
-     * @param aInstance
      * @param aDetailPreference
      *            if {@code null}, the statement detail preference can be changed in the UI; if
      *            {@code !null} the statement detail preference is fixed to the given value and
      *            can't be changed in the UI
      */
-    public StatementsPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> aInstance,
-            StatementDetailPreference aDetailPreference) {
+    public StatementsPanel(String aId, IModel<KnowledgeBase> aKbModel,
+            IModel<? extends KBObject> aInstance, StatementDetailPreference aDetailPreference)
+    {
         super(aId, aInstance);
 
         setOutputMarkupPlaceholderTag(true);
@@ -96,7 +99,7 @@ public class StatementsPanel extends Panel {
 
         // default ordering for statement groups: lexical ordering by UI label
         statementGroupComparator = LambdaModel
-            .of(() -> Comparator.comparing(sgb -> sgb.getProperty().getUiLabel()));
+                .of(() -> comparing(sgb -> sgb.getProperty().getUiLabel()));
         
         setUpDetailPreference(aDetailPreference);
 
@@ -153,11 +156,11 @@ public class StatementsPanel extends Panel {
         addLink.add(new Label("label", new ResourceModel("statement.add")));
         addLink.add(new WriteProtectionBehavior(kbModel));
         add(addLink);
-
     }
     
     @OnEvent
-    public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event) {
+    public void actionStatementGroupChanged(AjaxStatementGroupChangedEvent event)
+    {
         // event is irrelevant if it is concerned with a different knowledge base instance
         boolean isEventForThisStatementsPanel = instance.getObject()
                 .equals(event.getBean().getInstance());
@@ -173,7 +176,8 @@ public class StatementsPanel extends Panel {
         event.getTarget().add(this);
     }
     
-    private void setUpDetailPreference(StatementDetailPreference aDetailPreference) {
+    private void setUpDetailPreference(StatementDetailPreference aDetailPreference)
+    {
         StatementDetailPreference defaultPreference = StatementDetailPreference.BASIC;
         
         boolean isDetailPreferenceUserDefinable = aDetailPreference == null;
@@ -200,22 +204,22 @@ public class StatementsPanel extends Panel {
     
     /**
      * Reload the statement group model if the detail preferences change.
-     * @param target
      */
-    private void actionStatementDetailPreferencesChanged(AjaxRequestTarget target) {
+    private void actionStatementDetailPreferencesChanged(AjaxRequestTarget target)
+    {
         statementGroups.setObject(getStatementGroupBeans());
         target.add(this);
     }
 
     /**
      * Adds an empty statement group to the statement group list.
-     * @param target
      */
-    private void actionAdd(AjaxRequestTarget target) {
+    private void actionAdd(AjaxRequestTarget target)
+    {
         StatementGroupBean proto = new StatementGroupBean();
-        proto.setInstance(instance.getObject());
+        proto.setInstance(instance.getObject().toKBHandle());
         proto.setKb(kbModel.getObject());
-        proto.setProperty(new KBHandle());
+        proto.setProperty(new KBProperty());
         proto.setStatements(new ArrayList<>());
         proto.setDetailPreference(detailPreference.getObject());
         statementGroups.getObject().add(proto);
@@ -232,37 +236,38 @@ public class StatementsPanel extends Panel {
                 instance.getObject() != null && isNotEmpty(instance.getObject().getIdentifier()));
     }
 
-    public void setStatementGroupComparator(
-            Comparator<StatementGroupBean> statementGroupComparator) {
-        this.statementGroupComparator.setObject(statementGroupComparator);
+    public void setStatementGroupComparator(Comparator<StatementGroupBean> aComparator)
+    {
+        statementGroupComparator.setObject(aComparator);
     }
 
-    private List<StatementGroupBean> getStatementGroupBeans() {        
+    private List<StatementGroupBean> getStatementGroupBeans()
+    {
         // obtain list of statements according to the detail preferences
         StatementDetailPreference prefs = detailPreference.getObject();
         List<KBStatement> statements = new ArrayList<>();
         try {
-
-            statements = kbService.listStatements(kbModel.getObject(), instance.getObject(),
-                    prefs == StatementDetailPreference.ALL);
+            statements = kbService.listStatements(kbModel.getObject(),
+                    instance.getObject().toKBHandle(), prefs == StatementDetailPreference.ALL);
         }
         catch (QueryEvaluationException e) {
             error("Unable to list statements: " + e.getLocalizedMessage());
             LOG.error("Unable to list statements.", e);
         }
+        
         if (prefs == StatementDetailPreference.BASIC) {
             statements.removeIf((s) -> s.isInferred());
         }
         
         // group statements by property
-        Map<KBHandle, List<KBStatement>> groupedStatements = statements.stream()
+        Map<KBProperty, List<KBStatement>> groupedStatements = statements.stream()
                 .collect(Collectors.groupingBy(KBStatement::getProperty));
         
         // for each property and associated statements, create one StatementGroupBean 
         List<StatementGroupBean> beans = groupedStatements.entrySet().stream().map(entry -> {
             StatementGroupBean bean = new StatementGroupBean();
             bean.setKb(kbModel.getObject());
-            bean.setInstance(instance.getObject());
+            bean.setInstance(instance.getObject().toKBHandle());
             bean.setProperty(entry.getKey());
             bean.setStatements(entry.getValue());
             return bean;

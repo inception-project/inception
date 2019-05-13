@@ -77,6 +77,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -316,7 +317,7 @@ public class QualifierFeatureEditor
     private AnnotationFeature getLinkedAnnotationFeature() {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
+            .findLayer(this.stateModel.getObject().getProject(), linkedType);
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;
@@ -412,23 +413,23 @@ public class QualifierFeatureEditor
         return aHandler.getEditorCas();
     }
 
-    private AutoCompleteTextField<KBHandle> createSelectPropertyAutoCompleteTextField()
+    private AutoCompleteTextField<KBProperty> createSelectPropertyAutoCompleteTextField()
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("newRole",
-            new PropertyModel<KBHandle>(this, "selectedRole"),
-            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+        AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("newRole",
+            new PropertyModel<KBProperty>(this, "selectedRole"),
+            new TextRenderer<KBProperty>("uiLabel"), KBProperty.class)
         {
 
             private static final long serialVersionUID = 1458626823154651501L;
 
-            @Override protected List<KBHandle> getChoices(String input)
+            @Override protected List<KBProperty> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 String repoId = traits.getRepositoryId();
                 if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
                     return Collections.emptyList();
                 }
-                return factService.getPredicatesFromKB(project, traits);
+                return factService.listProperties(project, traits);
             }
 
             @Override

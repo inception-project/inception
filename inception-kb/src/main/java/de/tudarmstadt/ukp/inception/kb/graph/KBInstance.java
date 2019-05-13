@@ -104,11 +104,13 @@ public class KBInstance
         type = aType;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -174,7 +176,7 @@ public class KBInstance
             aConn.add(descStmt);
         }
     }
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

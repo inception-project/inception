@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 /**
@@ -27,18 +26,20 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
  */
 public class AjaxPropertySelectionEvent extends AjaxSelectionEvent {
 
-    boolean redrawConceptandPropertyListPanels;
+    private boolean redrawConceptandPropertyListPanels;
+    private KBProperty newSelection;
     
-    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection)
+    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBProperty aNewSelection)
     {
-        this(aTarget, newSelection, false);
+        this(aTarget, aNewSelection, false);
     }
     
-    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBHandle newSelection,
+    public AjaxPropertySelectionEvent(AjaxRequestTarget aTarget, KBProperty aNewSelection,
             boolean aRedrawConceptandPropertyListPanels)
     {
-        super(aTarget, newSelection);
+        super(aTarget, aNewSelection.toKBHandle());
         redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
+        newSelection = aNewSelection;
     }
 
     public boolean isRedrawConceptandPropertyListPanels()
@@ -50,11 +51,9 @@ public class AjaxPropertySelectionEvent extends AjaxSelectionEvent {
     {
         redrawConceptandPropertyListPanels = aRedrawConceptandPropertyListPanels;
     }
-
     
-
-    
-
-    
-
+    public KBProperty getNewSelection()
+    {
+        return newSelection;
+    }
 }

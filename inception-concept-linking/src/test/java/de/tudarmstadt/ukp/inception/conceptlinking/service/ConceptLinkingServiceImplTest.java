@@ -106,7 +106,9 @@ public class ConceptLinkingServiceImplTest
         kbService.registerKnowledgeBase(kb, kbService.getNativeConfig());
         importKnowledgeBase("data/pets.ttl");
 
-        kbService.createConcept(kb, new KBConcept("manatee"));
+        KBConcept concept = new KBConcept();
+        concept.setName("manatee");
+        kbService.createConcept(kb, concept);
         List<KBHandle> handles = sut.disambiguate(kb, null,
                 ConceptFeatureValueType.ANY_OBJECT, null, "man", 0, null);
 

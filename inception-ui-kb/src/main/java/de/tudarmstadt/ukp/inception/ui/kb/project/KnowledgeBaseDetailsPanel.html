@@ -21,7 +21,7 @@
 <body>
 <wicket:panel>
   <form wicket:id="form" class="flex-content panel panel-default panel-flex">
-    <div class="panel-heading">
+    <div class="panel-heading flex-h-container">
       <wicket:container wicket:id="title"></wicket:container>
     </div>
 
@@ -52,7 +52,7 @@
 </wicket:panel>
 
 <wicket:fragment wicket:id="kbSettingsTitle">
-  <input type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
+  <input class="flex-content" type="text" wicket:id="name" wicket:message="placeholder:kb.name.placeholder"/>
 </wicket:fragment>
 
 <wicket:fragment wicket:id="kbSettingsContent">
