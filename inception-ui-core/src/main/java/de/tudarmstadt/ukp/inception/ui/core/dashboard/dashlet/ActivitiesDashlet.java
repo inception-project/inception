@@ -49,10 +49,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
@@ -63,9 +65,6 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
     public static final String FEATURE_UPDATED_EVENT = "FeatureValueUpdatedEvent";
     public static final String RELATION_CREATED_EVENT = "RelationUpdateEvent";
-    
-    // curation event
-    public static final String CURATION_EVENT = "CurationEvent";
 
     private static final int MAX_NUM_ACTIVITIES = 2;
 
@@ -133,44 +132,54 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         
         User user = userRepository.getCurrentUser();
         
-        // annotation:
-        // check user is still part of the project 
-        if (!projectService.isAnnotator(project, user)) {
+        // the document is in curation and the user is a curator
+        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState()) 
+                && projectService.isCurator(project, user)) {
+            return true;
+        }
+        
+        return isAnnotationStillPossible(project, aDocument, user);
+    }
+
+    /**
+     * Check document state and user rights are still valid for annotation
+     */
+    private boolean isAnnotationStillPossible(Project project, SourceDocument aDocument, User user)
+    {
+        if (!documentService.existsAnnotationDocument(aDocument, user) 
+                || !projectService.isAnnotator(project, user)) {
             return false;
         }
-        // check that anno doc still exists and user has not finished annotating it
-        if (documentService.existsAnnotationDocument(aDocument, user)) {
-            AnnotationDocument annoDocument = documentService.getAnnotationDocument(aDocument,
-                    user);
-            AnnotationDocumentState annoDocState = annoDocument.getState();
-            if (AnnotationDocumentState.IGNORE.equals(annoDocState) || 
-                    AnnotationDocumentState.FINISHED.equals(annoDocState)) {
-                log.info(String.format(
-                        "Annotation document [%s] in project [%d]] is locked for user [%s]",
-                        aDocument.getName(), project.getId(), user.getUsername()));
-                return false;
-            }
+        
+        AnnotationDocument annoDocument = documentService.getAnnotationDocument(aDocument, user);
+        AnnotationDocumentState annoDocState = annoDocument.getState();
+
+        // check that anno doc exists and user has not finished annotating it
+        if (!AnnotationDocumentState.IN_PROGRESS.equals(annoDocState)) {
+            log.info(String.format(
+                    "Annotation document [%s] in project [%d]] is locked for user [%s]",
+                    aDocument.getName(), project.getId(), user.getUsername()));
+            return false;
         }
+        
         return true;
     }
 
     private String getEventDescription(ListItem<LoggedEvent> aItem, SourceDocument aDocument) {
-        
+
         if (aItem == null || aDocument == null) {
             return null;
         }
-        LoggedEvent event = aItem.getModelObject();
         String documentName = aDocument.getName();
-        String eventDate = formatDateStr(event);
-        String eventName = event.getEvent();
-        
-        /*switch (eventName) {
-        case CURATION_EVENT:
+        String eventDate = formatDateStr(aItem.getModelObject());
+
+        // the annotation event was fired while curating
+        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
             return String.format("%s: Curated document %s", eventDate, documentName);
-        default:
+        }
+        else {
             return String.format("%s: Annotated in document %s", eventDate, documentName);
-        }*/
-        return event.toString();
+        }
     }
     
     private SourceDocument getSourceDocument(LoggedEvent aEvent)
@@ -217,8 +226,13 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             log.info(String.format("Unknown last activities event: %s", eventName));
             return;
         }        
-        openDocument(aEvent, AnnotationPage.class);
-        // TODO: curation page
+       
+        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
+            openDocument(aEvent, CurationPage.class);
+        }
+        else {
+            openDocument(aEvent, AnnotationPage.class);
+        }
     }
 
     private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
@@ -236,7 +250,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         Project project = projectModel.getObject();
         String username = user.getUsername();
 
-        // get last annotation events, TODO curation event
+        // get last annotation events
         events.addAll(eventRepository.listUniqueLoggedEventsForDoc(project, username,
                 annotationEvents.toArray(new String[annotationEvents.size()]), MAX_NUM_ACTIVITIES));
 

@@ -156,6 +156,10 @@
       <artifactId>hover</artifactId>
       <version>2.0.2</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-curation</artifactId>
+    </dependency>
   </dependencies>
   
   <build>
