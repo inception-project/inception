@@ -62,7 +62,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     // annotation events
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";
     public static final String FEATURE_UPDATED_EVENT = "FeatureValueUpdatedEvent";
-    public static final String RELATION_CREATED_EVENT = "RelationCreatedEvent";
+    public static final String RELATION_CREATED_EVENT = "RelationUpdateEvent";
     
     // curation event
     public static final String CURATION_EVENT = "CurationEvent";

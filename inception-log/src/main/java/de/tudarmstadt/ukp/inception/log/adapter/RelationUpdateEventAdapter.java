@@ -23,23 +23,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 
 @Component
-public class RelationCreatedEventAdapter implements EventLoggingAdapter<RelationCreatedEvent>
+public class RelationUpdateEventAdapter implements EventLoggingAdapter<RelationUpdateEvent>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof RelationCreatedEvent;
+        return aEvent instanceof RelationUpdateEvent;
     }
 
     @Override
-    public String getDetails(RelationCreatedEvent aEvent)
+    public String getDetails(RelationUpdateEvent aEvent)
     {
         try {
             AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
@@ -52,19 +52,19 @@ public class RelationCreatedEventAdapter implements EventLoggingAdapter<Relation
     }
 
     @Override
-    public long getDocument(RelationCreatedEvent aEvent)
+    public long getDocument(RelationUpdateEvent aEvent)
     {
         return aEvent.getDocument().getId();
     }
 
     @Override
-    public String getAnnotator(RelationCreatedEvent aEvent)
+    public String getAnnotator(RelationUpdateEvent aEvent)
     {
         return aEvent.getUser();
     }
 
     @Override
-    public long getProject(RelationCreatedEvent aEvent)
+    public long getProject(RelationUpdateEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
