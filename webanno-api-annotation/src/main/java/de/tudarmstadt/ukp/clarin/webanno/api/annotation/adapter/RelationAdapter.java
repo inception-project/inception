@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
@@ -37,7 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -146,7 +147,7 @@ public class RelationAdapter
 
         AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
                 request.getOriginFs(), request.getTargetFs());
-        publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
+        publishEvent(new RelationUpdateEvent(this, request.getDocument(), request.getUsername(),
                 relationAnno));
 
         return relationAnno;
@@ -180,8 +181,12 @@ public class RelationAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
+        int addr = aVid.getId();
+        FeatureStructure fs = selectFsByAddr(aCas, addr);
         aCas.removeFsFromIndexes(fs);
+        AnnotationFS anno = selectAnnotationByAddr(aCas, addr);
+        publishEvent(new RelationUpdateEvent(this, aDocument, aUsername,
+                anno));
     }
 
     public String getSourceFeatureName()

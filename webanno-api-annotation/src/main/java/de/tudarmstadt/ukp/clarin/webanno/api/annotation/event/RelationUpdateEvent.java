@@ -24,7 +24,7 @@ import org.springframework.context.ApplicationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class RelationCreatedEvent extends ApplicationEvent
+public class RelationUpdateEvent extends ApplicationEvent
 {
     private static final long serialVersionUID = -8621413642390759892L;
     
@@ -32,7 +32,7 @@ public class RelationCreatedEvent extends ApplicationEvent
     private final String user;
     private final AnnotationFS annotation;
 
-    public RelationCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
+    public RelationUpdateEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationFS aAnnotation)
     {
         super(aSource);
