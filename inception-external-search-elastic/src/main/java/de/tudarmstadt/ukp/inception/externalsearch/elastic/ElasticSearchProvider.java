@@ -21,24 +21,27 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.text.Text;
+import org.elasticsearch.common.transport.TransportAddress;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
@@ -46,7 +49,6 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -61,64 +63,69 @@ public class ElasticSearchProvider
     {
         List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
-        RestTemplate restTemplate = new RestTemplate();
-
-        ElasticSearchResult queryResult;
-
-        String remoteUrl = aTraits.getRemoteUrl();
         String indexName = aTraits.getIndexName();
-        String searchPath = aTraits.getSearchPath();
+        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
+                .replaceFirst("www.", "")
+                .split(":")[0];
         
-        // Set headers
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        Settings settings = Settings.builder()
+                .put("client.transport.ignore_cluster_name", "true")
+                .build();
 
-        // Set query
-        String body;
+        TransportClient client = new PreBuiltTransportClient(settings);
         try {
-            body = prepareQuery(aTraits, aQuery);
+            client.addTransportAddress(
+                    new TransportAddress(
+                            InetAddress.getByName(hostUrl),
+                            9300));
         }
-        catch (JsonProcessingException e) {
-            log.error("Invalid JSON while building search query");
-            return Collections.emptyList();
+        catch (UnknownHostException e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
         }
 
-        // Set http entity
-        HttpEntity<String> entity = new HttpEntity<String>(body, headers);
+        HighlightBuilder highlightBuilder = new HighlightBuilder();
+        HighlightBuilder.Field highlightField =
+                new HighlightBuilder.Field(aTraits.getDefaultField());
+        highlightField.highlighterType("unified");
+        highlightBuilder.field(highlightField);
 
-        // Prepare search URL
-        String searchUrl = remoteUrl + "/" + indexName + "/" + searchPath;
+        SearchResponse response = client.prepareSearch(indexName)
+                .setQuery(QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery))
+                .highlighter(highlightBuilder)
+                .setSize(aTraits.getResultSize())
+                .get();
 
-        // Send post query
-        queryResult = restTemplate.postForObject(searchUrl, entity,
-                ElasticSearchResult.class);
-
-        for (ElasticSearchHit hit : queryResult.getHits().getHits()) {
-            if (hit.get_source() == null || hit.get_source().getMetadata() == null) {
+        for (SearchHit hit: response.getHits().getHits()) {
+            if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get("metadata") == null) {
                 log.warn("Result has no document metadata: " + hit);
                 continue;
             }
             
             ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
-                    hit.get_id());
+                    hit.getId());
 
             // The title will be filled with the hit id, since there is no title in the
             // ElasticSearch hit
-            result.setDocumentTitle(hit.get_id());
+            result.setDocumentTitle(hit.getId());
             
-            // If the order is random, then the score doesn't reflect the quality, so we do not 
+            // If the order is random, then the score doesn't reflect the quality, so we do not
             // forward it to the user
             if (!aTraits.isRandomOrder()) {
-                result.setScore(hit.get_score());
+                result.setScore((double) hit.getScore());
             }
 
-            // Set the metadata fields
-            result.setOriginalSource(hit.get_source().getMetadata().getSource());
-            result.setOriginalUri(hit.get_source().getMetadata().getUri());
-            result.setLanguage(hit.get_source().getMetadata().getLanguage());
-            result.setTimestamp(hit.get_source().getMetadata().getTimestamp());
+            Map<String, Object> hitSource = hit.getSourceAsMap();
+            Map<String, String> metadata = (Map) hitSource.get("metadata");
+            Map<String, String> doc = (Map) hitSource.get("doc");
 
-            if (hit.getHighlight() != null) {
+            // Set the metadata fields
+            result.setOriginalSource(metadata.get("source"));
+            result.setOriginalUri(metadata.get("uri"));
+            result.setLanguage(metadata.get("language"));
+            result.setTimestamp(metadata.get("timestamp"));
+
+            if (hit.getHighlightFields().size() != 0) {
 
                 // Highlights from elastic search are small sections of the document text
                 // with the keywords surrounded by the <em> tags.
@@ -128,14 +135,14 @@ public class ElasticSearchProvider
                 // Until this feature is implemented, we currently try to find
                 // the keywords offsets by finding the matching highlight in the document text,
                 // then the keywords offset within highlight using <em> tags.
-                String originalText = hit.get_source().getDoc().getText();
+                String originalText = doc.get("text");
 
                 // There are highlights, set them in the result
                 List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                if (hit.getHighlight().getDoctext() != null) {
-                    for (String highlight : hit.getHighlight().getDoctext()) {
+                if (hit.getHighlightFields().get("doc.text") != null) {
+                    for (Text highlight : hit.getHighlightFields().get("doc.text").getFragments()) {
                         Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
-                                .parseHighlight(highlight, originalText);
+                                .parseHighlight(highlight.toString(), originalText);
                     
                         exHighlight.ifPresent(highlights::add);
                     }
@@ -146,49 +153,6 @@ public class ElasticSearchProvider
         }
 
         return results;
-    }
-
-    private String prepareQuery(ElasticSearchProviderTraits aTraits, String aQuery)
-        throws JsonProcessingException
-    {
-        ObjectMapper mapper = new ObjectMapper();
-
-        ObjectNode bodyNode = mapper.createObjectNode();
-        bodyNode.put("size", aTraits.getResultSize());
-
-        ObjectNode queryString = mapper.createObjectNode();
-        queryString.put("default_field", aTraits.getDefaultField());
-        queryString.put("query", aQuery);
-        
-        ObjectNode queryBody = mapper.createObjectNode();
-        queryBody.putPOJO("query_string", queryString);
-        
-        if (aTraits.isRandomOrder()) {
-            ObjectNode query = mapper.createObjectNode();
-
-            ObjectNode functionScore = mapper.createObjectNode();
-            functionScore.putPOJO("query", queryBody);
-
-            ObjectNode randomScore = mapper.createObjectNode();
-            randomScore.put("seed", aTraits.getSeed());
-            randomScore.put("field", "_id");
-            functionScore.putPOJO("random_score", randomScore);
-
-            query.putPOJO("function_score", functionScore);
-            bodyNode.putPOJO("query", query);
-
-        } else {
-            bodyNode.putPOJO("query", queryBody);
-        }
-
-        ObjectNode highlightNode = mapper.createObjectNode();
-        ObjectNode emptyNode = mapper.createObjectNode();
-        highlightNode.putPOJO("fields", mapper.createObjectNode()
-            .putPOJO(aTraits.getDefaultField(), emptyNode));
-        bodyNode.putPOJO("highlight", highlightNode);
-
-        // Render JSON to string
-        return mapper.writeValueAsString(bodyNode);
     }
 
     @Override
