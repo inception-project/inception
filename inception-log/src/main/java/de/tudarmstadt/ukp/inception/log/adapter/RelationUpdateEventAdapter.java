@@ -42,7 +42,7 @@ public class RelationUpdateEventAdapter implements EventLoggingAdapter<RelationU
     public String getDetails(RelationUpdateEvent aEvent)
     {
         try {
-            AnnotationDetails details = new AnnotationDetails(aEvent.getAnnotation());
+            AnnotationDetails details = new AnnotationDetails(aEvent.getTargetAnnotation());
             return JSONUtil.toJsonString(details);
         }
         catch (IOException e) {
