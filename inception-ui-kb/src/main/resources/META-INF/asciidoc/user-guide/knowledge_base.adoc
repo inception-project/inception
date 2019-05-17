@@ -5,6 +5,10 @@ The knowledge base (KB) module of INCEpTION enables the user to create a KB from
 
 This section briefly describes how to set up a KB in the KB management page on *Projects Settings*, explains the functionalities provided by the *Knowledge Base* page and covers the *concept* and *property* feature types.
 
+NOTE: In order for a knowledge base to be searchable (e.g. from the Knowledge Base page), 
+     the configured knowledge base needs to have labels for all items 
+     (e.g. concepts, instances, properties) that should be found.
+
 === Knowledge Base Page
 
 The knowledge base page provides a concept tree hierarchy with a list of instances and statements, together with the list of properties as shown in the figure below. For local knowledge bases, the user can edit the KB contents here, which includes adding, editing and deleting concepts, properties, statements and instances.

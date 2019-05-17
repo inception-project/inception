@@ -63,6 +63,10 @@ public interface KBObject
      * @param label the label of this element
      */
     void setName(String label);
+    
+    String getDescription();
+    
+    void setDescription(String label);
 
     /**
      * Returns the language (e.g. of label and description) of this element.
@@ -109,6 +113,8 @@ public interface KBObject
         KBHandle handle = new KBHandle();
         handle.setIdentifier(getIdentifier());
         handle.setName(getName());
+        handle.setLanguage(getLanguage());
+        handle.setDescription(getDescription());
         return handle;
     }
 }

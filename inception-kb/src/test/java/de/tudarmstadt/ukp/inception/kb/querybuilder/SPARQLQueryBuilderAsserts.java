@@ -28,7 +28,6 @@ import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class SPARQLQueryBuilderAsserts
@@ -71,27 +70,6 @@ public class SPARQLQueryBuilderAsserts
                 System.out.printf("          ... and %d more ...%n", results.size() - 10);
             }
             
-            return results;
-        }
-        catch (MalformedQueryException e) {
-            throw handleParseException(aBuilder, e);
-        }
-    }
-    
-    public static List<KBStatement> asStatements(Repository aRepo, SPARQLQuery aBuilder)
-        throws Exception
-    {
-        try (RepositoryConnection conn = aRepo.getConnection()) {
-            printQuery(aBuilder);
-
-            long startTime = System.currentTimeMillis();
-
-            List<KBStatement> results = aBuilder.asStatements(conn, true);
-
-            System.out.printf("Results : %d in %dms%n", results.size(),
-                    System.currentTimeMillis() - startTime);
-            results.forEach(r -> System.out.printf("          %s%n", r));
-
             return results;
         }
         catch (MalformedQueryException e) {

@@ -50,8 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -111,8 +111,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
             .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
@@ -128,8 +128,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that no concepts have been imported")
             .isEmpty();
@@ -146,8 +146,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
 
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
@@ -169,8 +169,8 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         }
 
         KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBHandle::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBHandle::getName);
+        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
         Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
             .stream()
             .map(KBStatement::getValue);
@@ -187,8 +187,10 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception {
-        KBConcept concept = new KBConcept("TestConcept");
-        KBProperty property = new KBProperty("TestProperty");
+        KBConcept concept = new KBConcept();
+        concept.setName("TestConcept");
+        KBProperty property = new KBProperty();
+        property.setName("TestProperty");
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         sut.createConcept(kb, concept);
         sut.createProperty(kb, property);
@@ -205,11 +207,11 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         }
         List<String> conceptLabels = sut.listAllConcepts(importedKb, false)
             .stream()
-            .map(KBHandle::getName)
+            .map(KBObject::getName)
             .collect(Collectors.toList());
         List<String> propertyLabels = sut.listProperties(importedKb, false)
             .stream()
-            .map(KBHandle::getName)
+            .map(KBObject::getName)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
         assertThat(conceptLabels)
