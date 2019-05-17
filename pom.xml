@@ -63,6 +63,7 @@
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>8.1.0</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
+    <elasticsearch.version>6.7.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.0-inception-1</rdf4j.version>
     <mockito.version>2.23.4</mockito.version>
@@ -1008,6 +1009,18 @@
         <groupId>com.github.jsonld-java</groupId>
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
+      </dependency>
+        
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+  
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>transport</artifactId>
+        <version>${elasticsearch.version}</version>
       </dependency>
         
       <dependency>
