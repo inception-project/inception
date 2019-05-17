@@ -24,8 +24,6 @@ public class ElasticSearchSource
 {
     private ElasticSearchDoc doc;
     
-    private ElasticSearchMetadata metadata;
-
     public ElasticSearchDoc getDoc()
     {
         return doc;
@@ -34,15 +32,5 @@ public class ElasticSearchSource
     public void setDoc(ElasticSearchDoc doc)
     {
         this.doc = doc;
-    }
-
-    public ElasticSearchMetadata getMetadata()
-    {
-        return metadata;
-    }
-
-    public void setMetadata(ElasticSearchMetadata metadata)
-    {
-        this.metadata = metadata;
     }
 }

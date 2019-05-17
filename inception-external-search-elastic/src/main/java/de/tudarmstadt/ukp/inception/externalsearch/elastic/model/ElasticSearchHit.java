@@ -27,17 +27,6 @@ public class ElasticSearchHit
     private String _id;
     private Double _score;
     private ElasticSearchSource _source;
-    private ElasticSearchHighlight highlight;
-
-    public ElasticSearchHighlight getHighlight()
-    {
-        return highlight;
-    }
-
-    public void setHighlight(ElasticSearchHighlight highlight)
-    {
-        this.highlight = highlight;
-    }
 
     public String get_index()
     {
@@ -89,6 +78,7 @@ public class ElasticSearchHit
         this._source = _source;
     }
 
+    @Override
     public String toString()
     {
         return String.format("{index: %s, type: %s, id: %s, score: %f}", this._index, this._type,
