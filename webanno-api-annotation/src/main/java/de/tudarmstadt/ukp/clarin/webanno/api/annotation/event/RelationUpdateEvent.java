@@ -17,28 +17,29 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class RelationUpdateEvent extends ApplicationEvent
+public class RelationUpdateEvent extends ApplicationEvent implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -8621413642390759892L;
     
     private final SourceDocument document;
     private final String user;
-    private final AnnotationFS annotation;
+    private final AnnotationFS targetAnno;
+    private final AnnotationFS sourceAnno;
 
     public RelationUpdateEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFS aAnnotation)
+            AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
     {
         super(aSource);
         document = aDocument;
         user = aUser;
-        annotation = aAnnotation;
+        targetAnno = aTargetAnnotation;
+        sourceAnno = aSourceAnnotation;
     }
 
     public SourceDocument getDocument()
@@ -51,18 +52,19 @@ public class RelationUpdateEvent extends ApplicationEvent
         return user;
     }
 
-    public AnnotationFS getAnnotation()
+    public AnnotationFS getTargetAnnotation()
     {
-        return annotation;
+        return targetAnno;
     }
     
+    public AnnotationFS getSourceAnno()
+    {
+        return sourceAnno;
+    }
+
     @Override
     public String toString()
-    {
-        String govFeatureName = ((RelationAdapter) getSource()).getSourceFeatureName();
-        Feature govFeature = annotation.getType().getFeatureByBaseName(govFeatureName);
-        AnnotationFS govToken = (AnnotationFS) annotation.getFeatureValue(govFeature);
-        
+    {   
         StringBuilder builder = new StringBuilder();
         builder.append("RelationCreatedEvent [");
         if (document != null) {
@@ -73,17 +75,17 @@ public class RelationUpdateEvent extends ApplicationEvent
             builder.append(", ");
         }
         builder.append("relation=[");
-        builder.append(annotation.getBegin());
+        builder.append(targetAnno.getBegin());
         builder.append("-");
-        builder.append(annotation.getEnd());
+        builder.append(targetAnno.getEnd());
         builder.append("](");
-        builder.append(annotation.getCoveredText());
+        builder.append(targetAnno.getCoveredText());
         builder.append(") <-[");
-        builder.append(govToken.getBegin());
+        builder.append(sourceAnno.getBegin());
         builder.append("-");
-        builder.append(govToken.getEnd());
+        builder.append(sourceAnno.getEnd());
         builder.append("](");
-        builder.append(govToken.getCoveredText());
+        builder.append(sourceAnno.getCoveredText());
         builder.append(")]");
         return builder.toString();
     }
