@@ -666,6 +666,9 @@ public class CurationPage
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
             }
+            else {
+                throw new IllegalStateException("There are no finished annotation documents!");
+            }
     
             // upgrade CASes for each user, what if new type is added once the user finished
             // annotation
