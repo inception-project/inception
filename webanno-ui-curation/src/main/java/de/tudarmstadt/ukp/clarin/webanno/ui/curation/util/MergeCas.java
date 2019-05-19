@@ -305,9 +305,10 @@ public class MergeCas
     {
         for (String user : aAnnosPerUser.keySet()) {
             boolean agree = false;
-            for (FeatureStructure usrFs : aAnnosPerUser.get(user)) {
+            
+            for (FeatureStructure userFs : aAnnosPerUser.get(user)) {
                 // same on all non slot feature values
-                if (isSameAnno(aMergeFs, usrFs)) {
+                if (isSameAnno(aMergeFs, userFs)) {
                     if (!agree) { // this anno is the same with the others
                         agree = true;
                     }
@@ -316,6 +317,7 @@ public class MergeCas
                     }
                 }
             }
+            
             // do not match in at least one user annotation in this position
             if (!agree) {
                 return false;
@@ -329,17 +331,20 @@ public class MergeCas
     {
         for (String user : aAnnosPerUser.keySet()) {
             boolean agree = false;
+            
             if (aAnnosPerUser.get(user) == null) {
                 return false;
             }
-            for (FeatureStructure usrFs : aAnnosPerUser.get(user).toArray()) {
+            
+            for (FeatureStructure userFs : aAnnosPerUser.get(user).toArray()) {
                 // same on all non slot feature values
-                if (isSameAnno(aMergeFs, usrFs)) {
+                if (isSameAnno(aMergeFs, userFs)) {
                     if (!agree) { // this anno is the same with the others
                         agree = true;
                     }
                 }
             }
+            
             // do not match in at least one user annotation in this position
             if (!agree) {
                 return false;
@@ -360,7 +365,7 @@ public class MergeCas
             }
 
             if (!isLinkMode(aFirstFS, f)) {
-                // check if attache type exists
+                // check if attach type exists
                 try {
                     FeatureStructure attachFs1 = aFirstFS.getFeatureValue(f);
                     FeatureStructure attachFs2 = aSeconFS.getFeatureValue(f);

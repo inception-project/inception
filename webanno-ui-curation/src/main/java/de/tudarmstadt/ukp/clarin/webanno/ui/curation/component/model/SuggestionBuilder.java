@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -433,19 +436,16 @@ public class SuggestionBuilder
         }
         // Create JCas, if it could not be loaded from the file system
         catch (Exception e) {
-            if (aState.getMode().equals(Mode.AUTOMATION)
-                    || aState.getMode().equals(Mode.CORRECTION)) {
-                mergeCas = createCorrectionCas(mergeCas, aState,
-                        randomAnnotationDocument);
-                updateDocumentTimestampAfterWrite(aState, correctionDocumentService
-                        .getCorrectionCasTimestamp(aState.getDocument()));
+            if (aState.getMode().equals(AUTOMATION) || aState.getMode().equals(CORRECTION)) {
+                mergeCas = createCorrectionCas(mergeCas, aState, randomAnnotationDocument);
+                updateDocumentTimestampAfterWrite(aState,
+                        correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
             }
             else {
-                mergeCas = createCurationCas(aState.getProject(),
-                        randomAnnotationDocument, aCasses,
+                mergeCas = createCurationCas(aState.getProject(), randomAnnotationDocument, aCasses,
                         aState.getAnnotationLayers());
-                updateDocumentTimestampAfterWrite(aState, curationDocumentService
-                        .getCurationCasTimestamp(aState.getDocument()));
+                updateDocumentTimestampAfterWrite(aState,
+                        curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
             }
         }
         return mergeCas;
@@ -503,7 +503,7 @@ public class SuggestionBuilder
      *
      * @param aProject
      *            the project
-     * @param randomAnnotationDocument
+     * @param aRandomAnnotationDocument
      *            an annotation document.
      * @param aCasses
      *            the CASes
@@ -513,16 +513,19 @@ public class SuggestionBuilder
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public CAS createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
+    public CAS createCurationCas(Project aProject, AnnotationDocument aRandomAnnotationDocument,
             Map<String, CAS> aCasses, List<AnnotationLayer> aAnnotationLayers)
         throws IOException
     {
+        Validate.notNull(aProject, "Project must be specified");
+        Validate.notNull(aRandomAnnotationDocument, "Annotation document must be specified");
+        
         CAS mergeCas;
         boolean cacheEnabled = false;
         try {
             cacheEnabled = casStorageService.isCacheEnabled();
             casStorageService.disableCache();
-            mergeCas = documentService.readAnnotationCas(randomAnnotationDocument);
+            mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument);
         }
         finally {
             if (cacheEnabled) {
@@ -539,7 +542,7 @@ public class SuggestionBuilder
 
         mergeCas = MergeCas.reMergeCas(diff, aCasses);
 
-        curationDocumentService.writeCurationCas(mergeCas, randomAnnotationDocument.getDocument(),
+        curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
                 false);
         
         return mergeCas;

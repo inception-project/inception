@@ -87,8 +87,7 @@ public class MergeCasTest
         casByUser.put("actual", asList(actual));
         casByUser.put("merge", asList(mergeCas));
 
-        result = doDiff(entryTypes, diffAdapters, LinkCompareBehavior.LINK_TARGET_AS_LABEL,
-                casByUser);
+        result = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
