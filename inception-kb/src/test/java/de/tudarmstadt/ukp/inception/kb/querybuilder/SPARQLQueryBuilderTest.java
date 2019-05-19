@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_FUSEKI;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_VIRTUOSO;
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.FTS_WIKIDATA;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.REMOTE;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder.sanitizeQueryStringForFTS;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.assertThatChildrenOfExplicitRootCanBeRetrieved;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.exists;
@@ -1475,6 +1476,13 @@ public class SPARQLQueryBuilderTest
                 .extracting(KBHandle::getUiLabel)
                 .contains("Adjective position", "Lexical domain", "Part of speech", "Phrase type",
                         "Synset");
+    }
+    
+    @Test
+    public void thatLineBreaksAreSanitized() throws Exception
+    {
+        assertThat(sanitizeQueryStringForFTS("Green\n\rGoblin"))
+                .isEqualTo("Green Goblin");
     }
 
     private void importDataFromFile(String aFilename) throws IOException
