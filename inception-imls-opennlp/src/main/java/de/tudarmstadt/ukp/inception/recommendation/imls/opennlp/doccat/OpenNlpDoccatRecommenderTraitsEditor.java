@@ -25,6 +25,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class OpenNlpDoccatRecommenderTraitsEditor
     extends Panel
@@ -33,7 +34,7 @@ public class OpenNlpDoccatRecommenderTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean OpenNlpDoccatRecommenderFactory toolFactory;
+    private @SpringBean RecommendationEngineFactory<OpenNlpDoccatRecommenderTraits> toolFactory;
     
     private final OpenNlpDoccatRecommenderTraits traits;
 
