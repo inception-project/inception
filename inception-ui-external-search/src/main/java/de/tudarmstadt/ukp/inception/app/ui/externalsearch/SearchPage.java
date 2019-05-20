@@ -255,7 +255,7 @@ public class SearchPage extends ApplicationPageBase
             
             String url = "";
             if (existsSourceDocument) {
-                long docId = documentService.getSourceDocument(project, result.getDocumentTitle())
+                long docId = documentService.getSourceDocument(project, result.getDocumentId())
                         .getId();
                 url = String.format("%s#!p=%d&d=%d",
                         getRequestCycle().urlFor(AnnotationPage.class, new PageParameters()),
