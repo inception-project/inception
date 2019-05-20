@@ -18,8 +18,9 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.service;
 
 import java.util.List;
+import java.util.Set;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
@@ -46,13 +47,13 @@ public interface ConceptLinkingService
      *            Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset
      *            the offset where the mention begins in the text.
-     * @param aJcas
+     * @param aCas
      *            used to extract information about mention sentence tokens.
      * @return a ranked list of entities.
      */
     List<KBHandle> disambiguate(KnowledgeBase aKB, String aConceptScope,
             ConceptFeatureValueType aValueType, String aTypedString, String aMention,
-            int aMentionBeginOffset, JCas aJcas);
+            int aMentionBeginOffset, CAS aCas);
 
     /**
      * Get all linking instances within the scope of a given knowledge base. If null is passed for
@@ -62,14 +63,16 @@ public interface ConceptLinkingService
      * for a single knowledge base
      *
      * @param aRepositoryId
-     *            the RepositoryId of the knowledge base that defines the scope
+     *            the RepositoryId of the knowledge base that defines the scope. If this
+     *            parameter is {@code null}, then all enabled knowledge bases are searched.
+     *            If the specified knowledge base is disabled, an empty list is returned.
      * @param aTypedString
      *            What the user has typed so far in the text field. Might be null.
      * @param aMention
      *            Marked Surface form of an entity to be linked.
      * @param aMentionBeginOffset
      *            the offset where the mention begins in the text.
-     * @param aJCas
+     * @param aCas
      *            used to extract information about mention sentence tokens.
      * @param aProject
      *            the project where the knowledge bases are configured
@@ -77,7 +80,7 @@ public interface ConceptLinkingService
      */
     List<KBHandle> getLinkingInstancesInKBScope(String aRepositoryId, String aConceptScope,
             ConceptFeatureValueType aValueType, String aTypedString,
-            String aMention, int aMentionBeginOffset, JCas aJCas, Project aProject);
+            String aMention, int aMentionBeginOffset, CAS aCas, Project aProject);
 
     /**
      * Finds entities in a knowledge base according to a typed string using full text search.
@@ -86,6 +89,14 @@ public interface ConceptLinkingService
      * @param aTypedString What the user has typed so far in the text field. Might be null.
      * @return a list of entities
      */
-    List<KBHandle> searchEntitiesFullText(KnowledgeBase aKB, String aTypedString);
+    List<KBHandle> searchItems(KnowledgeBase aKB, String aTypedString);
 
+    /**
+     * This method does the actual ranking of the candidate entities.
+     * First the candidates from full-text matching are sorted by frequency cutoff after a
+     * threshold because they are more numerous.
+     * Then the candidates from exact matching are added and sorted by multiple keys.
+     */
+    List<KBHandle> rankCandidates(String aTypedString, String aMention, Set<KBHandle> aCandidates,
+            CAS aCas, int aBegin);
 }

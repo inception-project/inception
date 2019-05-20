@@ -17,20 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentTitle;
+
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -42,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
@@ -50,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 
 /**
  * Render spans.
@@ -69,8 +71,8 @@ public class RecommendationSpanRenderer
      * Add annotations from the CAS, which is controlled by the window size, to the VDocument
      * {@link VDocument}
      *
-     * @param aJcas
-     *            The JCAS object containing annotations
+     * @param aCas
+     *            The CAS object containing annotations
      * @param vdoc
      *            A VDocument containing annotations for the given layer
      * @param aState
@@ -79,18 +81,15 @@ public class RecommendationSpanRenderer
      *            the coloring strategy to render this layer
      */
     @Override
-    public void render(JCas aJcas, VDocument vdoc, AnnotatorState aState,
+    public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
         ColoringStrategy aColoringStrategy, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
         AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService)
+        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
     {
-        if (aJcas == null || recommendationService == null) {
+        if (aCas == null || recommendationService == null) {
             return;
         }
-
-        int windowBegin = aState.getWindowBeginOffset();
-        int windowEnd = aState.getWindowEndOffset();
 
         Predictions model = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
@@ -100,8 +99,8 @@ public class RecommendationSpanRenderer
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup groups = model.getPredictions(
-                DocumentMetaData.get(aJcas).getDocumentTitle(), layer, windowBegin, windowEnd);
+        SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
+                aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
         if (groups.isEmpty()) {
@@ -110,16 +109,15 @@ public class RecommendationSpanRenderer
         
         String color = aColoringStrategy.getColor(null, null);
         String bratTypeName = TypeUtil.getUiTypeName(typeAdapter);
-
-        PredictionTask.calculateVisibility(learningRecordService, aAnnotationService,
-                aJcas.getCas(), aState.getUser().getUsername(), layer, groups, windowBegin,
-                windowEnd);
+        
+        recommendationService.calculateVisibility(aCas, aState.getUser().getUsername(), layer,
+                groups, aWindowBeginOffset, aWindowEndOffset);
 
         Preferences pref = recommendationService.getPreferences(aState.getUser(),
                 layer.getProject());
 
         for (SuggestionGroup suggestion : groups) {
-            Map<String, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
+            Map<LabelMapKey, Map<Long, AnnotationSuggestion>> labelMap = new HashMap<>();
  
             // For recommendations with the same label by the same classifier,
             // show only the confidence of the highest one
@@ -129,28 +127,30 @@ public class RecommendationSpanRenderer
                 if (!pref.isShowAllPredictions() && !ao.isVisible()) {
                     continue;
                 }
+                
+                LabelMapKey label = new LabelMapKey(ao);
 
-                if (!labelMap.containsKey(ao.getLabel())
-                        || !labelMap.get(ao.getLabel())
+                if (!labelMap.containsKey(label)
+                        || !labelMap.get(label)
                                 .containsKey(ao.getRecommenderId())
-                        || labelMap.get(ao.getLabel()).get(ao.getRecommenderId())
+                        || labelMap.get(label).get(ao.getRecommenderId())
                                 .getConfidence() < ao.getConfidence()) {
 
                     Map<Long, AnnotationSuggestion> confidencePerClassifier;
-                    if (labelMap.get(ao.getLabel()) == null) {
+                    if (labelMap.get(label) == null) {
                         confidencePerClassifier = new HashMap<>();
                     } else {
-                        confidencePerClassifier = labelMap.get(ao.getLabel());
+                        confidencePerClassifier = labelMap.get(label);
                     }
 
                     confidencePerClassifier.put(ao.getRecommenderId(), ao);
-                    labelMap.put(ao.getLabel(), confidencePerClassifier);
+                    labelMap.put(label, confidencePerClassifier);
                 }
             }
             
-            // Determine the maximum confidence for per Label
-            Map<String, Double> maxConfidencePerLabel = new HashMap<>();
-            for (String label : labelMap.keySet()) {
+            // Determine the maximum confidence per Label
+            Map<LabelMapKey, Double> maxConfidencePerLabel = new HashMap<>();
+            for (LabelMapKey label : labelMap.keySet()) {
                 double maxConfidence = 0;
                 for (Entry<Long, AnnotationSuggestion> classifier : labelMap.get(label)
                         .entrySet()) {
@@ -162,20 +162,21 @@ public class RecommendationSpanRenderer
             }
             
             // Sort and filter labels under threshold value
-            List<String> filtered = maxConfidencePerLabel.entrySet().stream()
+            List<LabelMapKey> filtered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
-            for (String label : labelMap.keySet()) {
+            for (LabelMapKey label : labelMap.keySet()) {
                 if (!filtered.contains(label)) {
                     continue;
                 }
 
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
-                        .filter(p -> p.getLabel().equals(label))
+                        // check for label or feature for no-label annotations as key
+                        .filter(p -> label.equalsAnnotationSuggestion(p))
                         .max(Comparator.comparingInt(AnnotationSuggestion::getId)).orElse(null);
 
                 if (canonicalRecommendation == null) {
@@ -194,15 +195,18 @@ public class RecommendationSpanRenderer
                         AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
                         // Retrieve the UI display label for the given feature value
-                        String annotation = aFsRegistry.getFeatureSupport(feature)
-                            .renderFeatureValue(feature, ao.getLabel());
-
+                        FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
+                        String annotation = featureSupport.renderFeatureValue(feature,
+                                ao.getLabel());
+                        
                         Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
 
                         VSpan v = new VSpan(layer, vid, bratTypeName,
-                                new VRange(ao.getBegin() - windowBegin, ao.getEnd() - windowBegin),
+                                new VRange(ao.getBegin() - aWindowBeginOffset,
+                                        ao.getEnd() - aWindowBeginOffset),
                                 featureAnnotation, Collections.emptyMap(), color);
+                        v.setLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                         vdoc.add(v);
                         first = false;
                     }
@@ -211,10 +215,6 @@ public class RecommendationSpanRenderer
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                                 String.format("Confidence: %.2f", ao.getConfidence())));
                     }
-                    if (ao.getUiLabel() != null && !ao.getUiLabel().isEmpty()) {
-                        vdoc.add(new VComment(vid, VCommentType.INFO,
-                                "Description: " + ao.getUiLabel()));
-                    }
                     if (pref.isShowAllPredictions() && !ao.isVisible()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                                 "Hidden: " + ao.getReasonForHiding()));
@@ -222,5 +222,69 @@ public class RecommendationSpanRenderer
                 }
             }
         }
+    }
+
+
+    /**
+     * 
+     * A Key identifying an AnnotationSuggestion by its label or as a suggestion without label.
+     *
+     */
+    protected class LabelMapKey
+    {
+
+        private String label;
+
+        private boolean hasNoLabel;
+
+        public LabelMapKey(AnnotationSuggestion aSuggestion)
+        {
+            if (aSuggestion.getLabel() == null) {
+                hasNoLabel = true;
+                label = aSuggestion.getFeature();
+            }
+            else {
+                label = aSuggestion.getLabel();
+            }
+        }
+
+        @Override
+        public boolean equals(Object aObj)
+        {
+            if (aObj == null || getClass() != aObj.getClass()) {
+                return false;
+            }
+
+            LabelMapKey aKey = (LabelMapKey) aObj;
+            return label.equals(aKey.getLabel()) && hasNoLabel == aKey.hasNoLabel();
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(label, hasNoLabel);
+        }
+
+        public String getLabel()
+        {
+            return label;
+        }
+
+        public boolean hasNoLabel()
+        {
+            return hasNoLabel;
+        }
+        
+        public boolean equalsAnnotationSuggestion(AnnotationSuggestion aSuggestion)
+        {
+            // annotation is label-less
+            if (aSuggestion.getLabel() == null) {
+                return hasNoLabel && label.equals(aSuggestion.getFeature());
+            }
+            else {
+                return !hasNoLabel && label.equals(aSuggestion.getLabel());
+            }
+        }
+
     }
 }

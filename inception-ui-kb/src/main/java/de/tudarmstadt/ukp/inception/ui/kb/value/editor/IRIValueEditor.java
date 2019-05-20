@@ -17,114 +17,128 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.value.editor;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Component;
-import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.eclipse.rdf4j.model.IRI;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.model.util.URIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.googlecode.wicket.jquery.core.JQueryBehavior;
+import com.googlecode.wicket.jquery.core.renderer.ITextRenderer;
 import com.googlecode.wicket.jquery.core.renderer.TextRenderer;
-import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.form.autocomplete.AutoCompleteTextField;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoChoiceDescriptionScriptReference;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
+import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
+import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilder;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.KnowledgeBaseItemAutoCompleteField;
 
 public class IRIValueEditor
     extends ValueEditor
 {
+    private static final Logger LOG = LoggerFactory.getLogger(IRIValueEditor.class);
+    
     private static final long serialVersionUID = -1646737090861147804L;
     
     private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean ConceptLinkingService clService;
     
-    private AutoCompleteTextField<KBHandle> value;
-    private IModel<KBStatement> aStmtModel;
-    private IModel<KBProperty> aStmtProperty;
-    private IModel<KnowledgeBase> aKbModel;
+    private KnowledgeBaseItemAutoCompleteField value;
+    private IModel<KBStatement> statement;
+    private IModel<KBProperty> property;
+    private IModel<KnowledgeBase> kb;
 
     public IRIValueEditor(String aId, IModel<KBStatement> aModel, IModel<KBProperty> aProperty,
-            IModel<KnowledgeBase> kbModel)
+            IModel<KnowledgeBase> aKB)
     {   
         super(aId, CompoundPropertyModel.of(aModel));
-        aStmtModel = aModel;
-        aStmtProperty = aProperty;
-        aKbModel = kbModel;
-
-        value = new AutoCompleteTextField<KBHandle>("value",
-            LambdaModelAdapter.of(this::getKBHandleModel, this::setKBHandleModel),
-            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+        statement = aModel;
+        property = aProperty;
+        kb = aKB;
+        
+        ITextRenderer<KBHandle> renderer = new TextRenderer<KBHandle>("uiLabel")
         {
-            private static final long serialVersionUID = -1955006051950156603L;
-            
+            private static final long serialVersionUID = 6523122841966543569L;
+
             @Override
-            protected List<KBHandle> getChoices(String input)
+            public String getText(KBHandle aObject)
             {
-                List<KBHandle> values = new ArrayList<KBHandle>();
-                if (aProperty.getObject().getRange() != null) {
-                    values.addAll(kbService.listInstances(kbModel.getObject(),
-                            aProperty.getObject().getRange(), true));
-                    // List of instances for subclasses
-                    List<KBHandle> childConcepts = kbService.listChildConcepts(kbModel.getObject(),
-                            aProperty.getObject().getRange(), true, 10000);
-                    values.addAll(childConcepts);
-                    for (KBHandle childConcept : childConcepts) {
-                        values.addAll(kbService.listInstances(kbModel.getObject(),
-                                childConcept.getIdentifier(), true));
-                    }
-                    values.add(kbService.readKBIdentifier(kbModel.getObject().getProject(),
-                            aProperty.getObject().getRange()).get().toKBHandle());
+                // For the feature value editor, we do *not* want IRIs to be abbreviated to a human
+                // readable name.
+                if (aObject != null && StringUtils.isBlank(aObject.getName())) {
+                    return aObject.getIdentifier();
                 }
                 
-                if (values.isEmpty()) {
-                    values = kbService.listConcepts(kbModel.getObject(), true);
-                }
-                // Filter for input string
-                values = values.stream().filter(
-                    handle -> handle.getUiLabel().toLowerCase().startsWith(input.toLowerCase()))
-                    .collect(Collectors.toList());
-                return values;
-            }
-
-            @Override
-            protected void onSelected(AjaxRequestTarget target)
-            {
-                SimpleValueFactory vf = SimpleValueFactory.getInstance();
-                aModel.getObject().setValue(vf.createIRI(this.getModelObject().getIdentifier()));
-                super.onSelected(target);
-            }
-
-            @Override
-            public void onConfigure(JQueryBehavior behavior)
-            {
-                super.onConfigure(behavior);
-                
-                behavior.setOption("autoWidth", true);
-            }
-
-            @Override
-            protected IJQueryTemplate newTemplate()
-            {
-                return KendoChoiceDescriptionScriptReference.template();
+                return super.getText(aObject);
             }
         };
+        
+        value = new KnowledgeBaseItemAutoCompleteField("value", this::listChoices, renderer);
+        // Explicitly constructing this as a LambdaModelAdapter<Object> is necessary to avoid
+        // a ClassCastException when the AutoCompleteField sends a String value which it (for
+        // whatever reason sometimes) fails to map to a KBHandle.
+        value.setDefaultModel(
+                new LambdaModelAdapter<Object>(this::getKBHandleModel, this::setKBHandleModel));
         value.setOutputMarkupId(true);
-        value.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> t.add(getParent())));
+        // Statement values cannot be null/empty - well, in theory they could be the empty string,
+        // but we treat the empty string as null
+        value.setRequired(true);
         add(value);
+    }
+    
+    private List<KBHandle> listChoices(String aInput)
+    {
+        if (aInput == null) {
+            return emptyList();
+        }
+        
+        List<KBHandle> choices;
+        try {
+            KnowledgeBase kbase = kb.getObject();
+            
+            choices = clService.getLinkingInstancesInKBScope(kbase.getRepositoryId(),
+                    property.getObject().getRange(), ConceptFeatureValueType.ANY_OBJECT, aInput,
+                    null, -1, null, kbase.getProject());
+        }
+        catch (Exception e) {
+            choices = asList(new KBHandle("http://ERROR", "ERROR", e.getMessage(), "en"));
+            error("An error occurred while retrieving entity candidates: " + e.getMessage());
+            LOG.error("An error occurred while retrieving entity candidates", e);
+            RequestCycle.get()
+                .find(IPartialPageRequestHandler.class)
+                .ifPresent(target -> target.addChildren(getPage(), IFeedback.class));
+        }
+        
+        // In case the user is entering a IRI, add that as the first choice - maybe the user wants
+        // to manually enter an IRI
+        try {
+            if (URIUtil.isValidURIReference(aInput)) {
+                choices.add(0, new KBHandle(aInput));
+            }
+        }
+        catch (IllegalArgumentException e) {
+            // Ignore
+        }
+        
+        
+        return choices;
     }
 
     @Override
@@ -133,54 +147,34 @@ public class IRIValueEditor
         return value;
     }
 
-    private void setKBHandleModel(KBHandle value)
+    private void setKBHandleModel(Object aValue)
     {
+        if (aValue == null ) {
+            statement.getObject().setValue(null);
+            return;
+        }
+        
+        if (!(aValue instanceof KBHandle)) {
+            return;
+        }
+        
+        KBHandle handle = (KBHandle) aValue;
         SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        if (value != null) {
-            aStmtModel.getObject().setValue(vf.createIRI(value.getIdentifier()));
-        }
-        else {
-            aStmtModel.getObject().setValue(null);
-        }
-
+        statement.getObject().setValue(vf.createIRI(handle.getIdentifier()));
     }
 
     private KBHandle getKBHandleModel()
     {
-        // If the value is an IRI, try to create a corresponding
-        // KBHandle as model for the editor, otherwise clear the field (i.e. use empty KBHandle)
-        Object statementValue = aStmtModel.getObject().getValue();
-        KBHandle handleModel = new KBHandle("","","");
+        Object statementValue = statement.getObject().getValue();
         if (statementValue instanceof IRI) {
-            Optional<KBObject> kbObject = kbService
-                .readKBIdentifier(aKbModel.getObject(), ((IRI) statementValue).stringValue());
-            if (kbObject.isPresent()) {
-                handleModel = new KBHandle(kbObject.get().getIdentifier(),
-                    kbObject.get().getUiLabel());
-            }
-            else {
-                // Check if it is any of the pre-defined IRIs
-                if ((statementValue).equals(aKbModel.getObject().getClassIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Class");
-                }
-                else if ((statementValue).equals(aKbModel.getObject().getSubclassIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Subclass");
-                }
-                else if ((statementValue).equals(aKbModel.getObject().getDescriptionIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Description");
-                }
-                else if ((statementValue).equals(aKbModel.getObject().getLabelIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Label");
-                }
-                else if ((statementValue).equals(aKbModel.getObject().getPropertyTypeIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "PropertyType");
-                }
-                else if ((statementValue).equals(aKbModel.getObject().getTypeIri())) {
-                    handleModel = new KBHandle(((IRI) statementValue).stringValue(), "Type");
-                }
-            }
+            String iri = ((IRI) statementValue).stringValue();
+            return kbService.read(kb.getObject(), conn -> 
+                SPARQLQueryBuilder.forItems(kb.getObject())
+                        .withIdentifier(iri)
+                        .retrieveLabel()
+                        .asHandle(conn, false)
+            ).orElse(new KBHandle(iri));
         }
-        return  handleModel;
+        return null;
     }
-
 }

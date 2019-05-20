@@ -108,6 +108,24 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 })
 
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+function getAnnotations() {
+  var data = {
+    "action": "getAnnotations",
+    "page": window.pageRender
+  }
+  parent.Wicket.Ajax.ajax({
+    "m": "POST",
+    "ep": data,
+    "u": window.apiUrl,
+    "sh": [],
+    "fh": [function () {
+      alert('Something went wrong on requesting annotations from inception backend.')
+    }]
+  });
+}
+// END INCEpTION EXTENSION
+
 async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
@@ -165,6 +183,8 @@ async function displayViewer () {
           }, 500)
         }
 */
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+/*
         parent.Wicket.Ajax.ajax({
           "m" : "GET",
           "u" : annoURL,
@@ -173,7 +193,9 @@ async function displayViewer () {
               console.log('Something went wrong on requesting annotations from inception backend.')
           }]
         });
-// END INCEpTION EXTENSION
+*/
+// END INCEpTION EXTENSION - #802
+// END INCEpTION EXTENSION - #627
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
@@ -188,6 +210,38 @@ async function displayViewer () {
     // Init textLayers.
     textLayer.setup(analyzeResult)
     window.annoPage.pdftxt = analyzeResult
+
+// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
+    const renderTimeout = 500
+    window.pagechangeEventCounter = 0
+    window.pageRender = 1;
+// BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
+/*
+    getAnnotations()
+*/
+    let initAnnotations = function(e) {
+      try {
+        getAnnotations()
+      } finally {
+        document.removeEventListener('pagerendered', initAnnotations)
+      }
+    }
+    document.addEventListener('pagerendered', initAnnotations)
+// END INCEpTION EXTENSION - #1089
+    document.addEventListener('pagechange', function(e) {
+      pagechangeEventCounter++
+      if (e.pageNumber !== window.pageRender) {
+        const snapshot = window.pagechangeEventCounter
+        setTimeout(() => {
+          if (snapshot === pagechangeEventCounter && e.pageNumber != window.pageRender) {
+            window.pageRender = e.pageNumber
+            window.pagechangeEventCounter = 0
+            getAnnotations()
+          }
+        }, renderTimeout)
+      }
+    })
+// END INCEpTION EXTENSION - #802
 
   } catch (err) {
 

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -28,12 +29,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
 
@@ -41,8 +42,10 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     
     private @SpringBean KnowledgeBaseService kbService;    
 
+    private List<String> labelProperties;
+
     public InstanceInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
+            IModel<KBObject> selectedInstanceHandle, IModel<KBInstance> selectedInstanceModel) {
         super(aId, aKbModel, selectedInstanceHandle, selectedInstanceModel);
     }
 
@@ -51,10 +54,11 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
         KBInstance instance = kbObjectModel.getObject();
 
         assert isEmpty(instance.getIdentifier());
-        KBHandle handle = kbService.createInstance(kbModel.getObject(), instance);
+        kbService.createInstance(kbModel.getObject(), instance);
 
         // select newly created property right away to show the statements
-        send(getPage(), Broadcast.BREADTH, new AjaxInstanceSelectionEvent(aTarget, handle));
+        send(getPage(), Broadcast.BREADTH,
+                new AjaxInstanceSelectionEvent(aTarget, instance.toKBHandle()));
     }
 
     @Override
@@ -90,11 +94,22 @@ public class InstanceInfoPanel extends AbstractInfoPanel<KBInstance> {
     }
 
     @Override
+    public List<String> getLabelProperties()
+    {
+        if (labelProperties == null) {
+            labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties;
+    }
+    
+    
+    @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator()
     {
         return new ImportantStatementComparator<>(
             sgb -> sgb.getProperty().getIdentifier(),
             identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
-                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
+                    || getLabelProperties().contains(identifier));
     }
 }

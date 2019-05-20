@@ -17,14 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static de.tudarmstadt.ukp.inception.kb.graph.RdfUtils.readFirst;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.eclipse.rdf4j.model.IRI;
@@ -106,11 +104,13 @@ public class KBInstance
         type = aType;
     }
 
+    @Override
     public String getDescription()
     {
         return description;
     }
 
+    @Override
     public void setDescription(String aDescription)
     {
         description = aDescription;
@@ -176,41 +176,7 @@ public class KBInstance
             aConn.add(descStmt);
         }
     }
-
-    public static KBInstance read(RepositoryConnection aConn, Statement aStmt, KnowledgeBase aKb)
-    {
-        KBInstance kbInst = new KBInstance();
-        kbInst.setType(URI.create(aStmt.getObject().stringValue()));
-        kbInst.setIdentifier(aStmt.getSubject().stringValue());
-        kbInst.setKB(aKb);
-        kbInst.originalStatements.add(aStmt);
-
-        readFirst(aConn, aStmt.getSubject(), aKb.getLabelIri(), null, aKb.getDefaultLanguage(), aKb)
-            .ifPresent((stmt) -> {
-                kbInst.setName(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
-
-        readFirst(aConn, aStmt.getSubject(), aKb.getDescriptionIri(), null, 
-                aKb.getDefaultLanguage(), aKb)
-            .ifPresent((stmt) -> {
-                kbInst.setDescription(stmt.getObject().stringValue());
-                kbInst.originalStatements.add(stmt);
-                if (stmt.getObject() instanceof Literal) {
-                    Literal literal = (Literal) stmt.getObject();
-                    Optional<String> language = literal.getLanguage();
-                    language.ifPresent(kbInst::setLanguage);
-                }
-            });
-
-        return kbInst;
-    }
-
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

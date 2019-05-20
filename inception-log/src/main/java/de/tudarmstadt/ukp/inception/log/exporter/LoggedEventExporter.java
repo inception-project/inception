@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -164,9 +165,17 @@ public class LoggedEventExporter implements ProjectExporter
 
         try (JsonParser jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
-            
+
+            // Persist events in batches to speed up import process
+            List<LoggedEvent> batch = new ArrayList<>();
+
             Iterator<ExportedLoggedEvent> i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
+                // Flush events
+                if (batch.size() > 500) {
+                    eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
+                }
+                
                 ExportedLoggedEvent exportedEvent = i.next();
                 
                 LoggedEvent event = new LoggedEvent();
@@ -185,11 +194,15 @@ public class LoggedEventExporter implements ProjectExporter
                 else {
                     event.setDocument(-1);
                 }
-
-                eventRepository.create(event);
                 
+                batch.add(event);
+
                 eventCount++;
             }
+
+            // Flush remaining events
+            eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
+
         }
         
         LOG.info("Imported [{}] logged events for project [{}]", eventCount, aProject.getName());

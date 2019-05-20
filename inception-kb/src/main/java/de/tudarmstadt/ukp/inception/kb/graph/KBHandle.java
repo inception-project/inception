@@ -38,10 +38,15 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
+    
+    private String debugInfo;
+    
     // domain and range for cases in which the KBHandle represents a property
+    @Deprecated
     private String domain;
+    
+    @Deprecated
     private String range;
-
 
     public KBHandle()
     {
@@ -65,21 +70,45 @@ public class KBHandle
         description = aDescription;
     }
 
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+    }
+
+    @Deprecated
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
+            String aDomain, String aRange)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+        domain = aDomain;
+        range = aRange;
+    }
+
+    @Deprecated
     public String getDomain()
     {
         return domain;
     }
 
+    @Deprecated
     public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
+    @Deprecated
     public String getRange()
     {
         return range;
     }
 
+    @Deprecated
     public void setRange(String aRange)
     {
         range = aRange;
@@ -90,9 +119,9 @@ public class KBHandle
         return description;
     }
 
-    public void setDescription(String description)
+    public void setDescription(String aDescription)
     {
-        this.description = description;
+        description = aDescription;
     }
 
     @Override
@@ -142,6 +171,16 @@ public class KBHandle
     {
         language = aLanguage;
     }
+    
+    public void setDebugInfo(String aDebugInfo)
+    {
+        debugInfo = aDebugInfo;
+    }
+    
+    public String getDebugInfo()
+    {
+        return debugInfo;
+    }
 
     public static KBHandle of(KBObject aObject)
     {
@@ -188,16 +227,18 @@ public class KBHandle
         }
     }
 
-    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles) {
-        Map<String, KBHandle> hMap = new LinkedHashMap<>();
-        for (KBHandle h : aHandles) {
+    public static <T extends KBObject> List<T> distinctByIri(List<T> aHandles)
+    {
+        Map<String, T> hMap = new LinkedHashMap<>();
+        for (T h : aHandles) {
             hMap.put(h.getIdentifier(), h);
         }
         return new ArrayList<>(hMap.values());
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(Object o)
+    {
         if (this == o) {
             return true;
         }
@@ -209,15 +250,29 @@ public class KBHandle
     }
 
     @Override
-    public int hashCode() {
+    public int hashCode()
+    {
         return Objects.hash(identifier);
     }
 
     @Override
-    public String toString() {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE)
-            .append("identifier", identifier)
-            .append("name", name)
-            .toString();
+    public String toString()
+    {
+        ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
+        builder.append("identifier", identifier);
+        builder.append("name", name);
+        if (description != null) {
+            builder.append("description", description);
+        }
+        if (language != null) {
+            builder.append("language", language);
+        }
+        if (domain != null) {
+            builder.append("domain", domain);
+        }
+        if (range != null) {
+            builder.append("range", range);
+        }
+        return builder.toString();
     }
 }

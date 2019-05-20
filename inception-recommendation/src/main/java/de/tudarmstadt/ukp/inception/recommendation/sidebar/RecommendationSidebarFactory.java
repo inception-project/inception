@@ -22,7 +22,7 @@ import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -39,7 +39,7 @@ public class RecommendationSidebarFactory
     @Override
     public String getDisplayName()
     {
-        return "recommendationSidebar";
+        return "Recommendation";
     }
 
     @Override
@@ -50,10 +50,10 @@ public class RecommendationSidebarFactory
 
     @Override
     public AnnotationSidebar_ImplBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        return new RecommendationSidebar(aId, aModel, aActionHandler, aJCasProvider,
+        return new RecommendationSidebar(aId, aModel, aActionHandler, aCasProvider,
                 aAnnotationPage);
     }
 }

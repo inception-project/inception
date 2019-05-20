@@ -30,19 +30,21 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistr
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProviderRegistryImpl;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchServiceImpl;
+import de.tudarmstadt.ukp.inception.externalsearch.exporter.DocumentRepositoryExporter;
 
 /**
  * Provides all back-end Spring beans for the external search functionality.
  */
 @Configuration
 @ConditionalOnProperty(prefix = "external-search", name = "enabled", havingValue = "true", 
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class ExternalSearchAutoConfiguration
 {
     @Bean
-    public ExternalSearchService externalSearchService()
+    @Autowired
+    public ExternalSearchService externalSearchService(ExternalSearchProviderRegistry aRegistry)
     {
-        return new ExternalSearchServiceImpl();
+        return new ExternalSearchServiceImpl(aRegistry);
     }
     
     @Bean
@@ -50,5 +52,12 @@ public class ExternalSearchAutoConfiguration
             @Lazy @Autowired(required = false) List<ExternalSearchProviderFactory> aProviders)
     {
         return new ExternalSearchProviderRegistryImpl(aProviders);
+    }
+    
+    @Bean
+    public DocumentRepositoryExporter documentRepositoryExporter(
+            @Autowired ExternalSearchService aSearchService)
+    {
+        return new DocumentRepositoryExporter(aSearchService);
     }
 }

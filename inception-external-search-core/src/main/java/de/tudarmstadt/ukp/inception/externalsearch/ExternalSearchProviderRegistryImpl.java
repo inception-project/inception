@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConf
  * Implementation of the external search provider registry API.
  * <p>
  * This class is exposed as a Spring Component via
- * {@link ExternalSearchAutoConfiguration#externalSearchService()}.
+ * {@link ExternalSearchAutoConfiguration#externalSearchService}.
  * </p>
  */
 public class ExternalSearchProviderRegistryImpl

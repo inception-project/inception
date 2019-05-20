@@ -42,7 +42,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.deeplearning4j.datasets.iterator.impl.ListDataSetIterator;
 import org.deeplearning4j.nn.conf.MultiLayerConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.layers.GravesLSTM;
+import org.deeplearning4j.nn.conf.layers.LSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.recurrent.Bidirectional;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
@@ -62,6 +62,8 @@ import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -263,14 +265,20 @@ public class DL4JSequenceRecommender
     
                 featureVec.put(new INDArrayIndex[] { point(sampleIdx), all(), point(t) }, vector);
                 featureMask.putScalar(new int[] { sampleIdx, t }, 1.0);
-                labelMask.putScalar(new int[] { sampleIdx, t }, 1.0);
-    
-                if (aIncludeLabels) {
+
+                // exclude padding labels from training
+                // compare instances to avoid collision with possible no_label user label
+                if (labels != null && labels.get(t) != NO_LABEL) {
+                    labelMask.putScalar(new int[] { sampleIdx, t }, 1.0);
+                }
+
+                if (aIncludeLabels && labels != null) {
                     String label = labels.get(t);
-                    if (!aTagset.containsKey(label)) {
-                        aTagset.put(label, aTagset.size());
+                    // do not add padding label no_label as predictable label
+                    if (label != NO_LABEL) {
+                        aTagset.computeIfAbsent(label, key -> aTagset.size());
+                        labelVec.putScalar(sampleIdx, aTagset.get(label), t, 1.0);
                     }
-                    labelVec.putScalar(sampleIdx, aTagset.get(label), t, 1.0);
                 }
             }
             
@@ -365,7 +373,7 @@ public class DL4JSequenceRecommender
             Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
             Feature labelFeature = predictionType.getFeatureByBaseName("label");
     
-            final int limit = Integer.MAX_VALUE;
+            final int limit = traits.getPredictionLimit();
             final int batchSize = traits.getBatchSize();
 
             Collection<AnnotationFS> sentences = select(aCas, sentenceType);
@@ -457,7 +465,7 @@ public class DL4JSequenceRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCas, DataSplitter aDataSplitter)
     {
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
         // which index in the label vector represents which label
@@ -483,9 +491,15 @@ public class DL4JSequenceRecommender
             }            
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             log.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
+                    testSetSize);
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         log.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -501,9 +515,8 @@ public class DL4JSequenceRecommender
             final int batchSize = 250;
             
             int sentNum = 0;
-            double total = 0;
-            double correct = 0;
             Iterator<Sample> testSetIterator = testSet.iterator();
+            List<LabelPair> labelPairs = new ArrayList<>();
             while (testSetIterator.hasNext()) {
                 // Prepare a batch of sentences that we want to predict because calling the
                 // prediction is expensive
@@ -514,20 +527,17 @@ public class DL4JSequenceRecommender
                 }
                 
                 List<Outcome<Sample>> outcomes = predict(classifier, tagset, batch);
-                
+
                 for (Outcome<Sample> outcome : outcomes) {
                     List<String> expectedLabels = outcome.getSample().getTags();
                     List<String> actualLabels = outcome.getLabels();
                     for (int i = 0; i < expectedLabels.size(); i++) {
-                        total++;
-                        if (expectedLabels.get(i).equals(actualLabels.get(i))) {
-                            correct++;
-                        }
+                        labelPairs.add(new LabelPair(expectedLabels.get(i), actualLabels.get(i)));
                     }
                 }
             }
-            
-            return correct / total;
+            return labelPairs.stream()
+                    .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_LABEL));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);
@@ -551,7 +561,7 @@ public class DL4JSequenceRecommender
                 .gradientNormalization(aTraits.getGradientNormalization())
                 .gradientNormalizationThreshold(aTraits.getGradientNormalizationThreshold())
                 .list()
-                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new GravesLSTM.Builder()
+                .layer(0, new Bidirectional(Bidirectional.Mode.ADD, new LSTM.Builder()
                         .nIn(aEmbeddingsDim)
                         .nOut(200)
                         .activation(aTraits.getActivationL0())
@@ -562,8 +572,6 @@ public class DL4JSequenceRecommender
                         .activation(aTraits.getActivationL1())
                         .lossFunction(aTraits.getLossFunction())
                         .build())
-                .pretrain(false)
-                .backprop(true)
                 .build();
         
         // log.info("Network configuration: {}", conf.toYaml());

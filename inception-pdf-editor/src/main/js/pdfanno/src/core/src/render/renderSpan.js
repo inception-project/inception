@@ -56,7 +56,19 @@ export function renderSpan (a) {
     $base.append(renderKnob({
       x : rectangles[0].x,
       y : rectangles[0].y,
+// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
+/*
       readOnly
+*/
+      readOnly,
+// BEGIN INCEpTION EXTENSION - #1056 - Knob color in PDF editor
+/*
+      text : a.text
+*/
+      text : a.text,
+      color : a.color
+// END INCEpTION EXTENSION - #1056
+// END INCEpTION EXTENSION - #981
     }))
   }
 

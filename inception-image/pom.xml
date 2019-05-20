@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.8.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-image</artifactId>
   <name>INCEpTION - Image Support</name>
@@ -87,8 +87,53 @@
       <artifactId>wicketstuff-annotationeventdispatcher</artifactId>
     </dependency>
     <dependency>
+      <groupId>com.googlecode.wicket-jquery-ui</groupId>
+      <artifactId>wicket-kendo-ui</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket.webjars</groupId>
+      <artifactId>wicket-webjars</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>color-thief</artifactId>
+      <version>2.2.1</version>
+      <exclusions>
+        <!-- The versions of canvas referenced by color-thief are not available on Maven Central -->
+        <exclusion>
+          <groupId>org.webjars.npm</groupId>
+          <artifactId>canvas</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars.npm</groupId>
+      <artifactId>canvas</artifactId>
+      <version>1.4.0</version>
+    </dependency>
   </dependencies>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <!--
+                - Maven doesn't detect the the webjar dependencies because there is
+                - no actual code dependency
+              -->
+              <usedDependency>org.webjars.npm:color-thief</usedDependency>
+              <usedDependency>org.webjars.npm:canvas</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>

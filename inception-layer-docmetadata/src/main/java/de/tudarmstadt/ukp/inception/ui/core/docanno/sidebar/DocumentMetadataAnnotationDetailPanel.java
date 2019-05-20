@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -27,9 +27,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -50,7 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -70,23 +69,30 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 public class DocumentMetadataAnnotationDetailPanel extends Panel
 {
+    private static final long serialVersionUID = 2713520228348549734L;
+
     private static final Logger LOG = LoggerFactory
             .getLogger(DocumentMetadataAnnotationDetailPanel.class);
-    
+
+    private static final String CID_EDITOR = "editor";
+    private static final String CID_FEATURE_VALUES = "featureValues";
+    private static final String CID_CLOSE = "close";
+    private static final String CID_DELETE = "delete";
+
     public static final String ID_PREFIX = "metaFeatureEditorHead";
     
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     
     private final AnnotationPage annotationPage;
-    private final JCasProvider jcasProvider;
+    private final CasProvider jcasProvider;
     private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final ListView<FeatureState> featureList;
     
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            IModel<SourceDocument> aDocument, IModel<String> aUsername, JCasProvider aJCasProvider,
+            IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage)
     {
         super(aId, aModel);
@@ -96,12 +102,13 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         sourceDocument = aDocument;
         username = aUsername;
         annotationPage = aAnnotationPage;
-        jcasProvider = aJCasProvider;
+        jcasProvider = aCasProvider;
         project = aProject;
         
         add(featureList = createFeaturesList());
         
-        add(new LambdaAjaxLink("delete", this::actionDelete));
+        add(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
+        add(new LambdaAjaxLink(CID_CLOSE, this::actionClose));
         
         add(LambdaBehavior.visibleWhen(() -> getModelObject() != null && getModelObject().isSet()));
     }
@@ -118,7 +125,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
     private ListView<FeatureState> createFeaturesList()
     {
-        return new ListView<FeatureState>("featureValues",
+        return new ListView<FeatureState>(CID_FEATURE_VALUES,
                 LoadableDetachableModel.of(this::listFeatures))
         {
             private static final long serialVersionUID = -1139622234318691941L;
@@ -136,7 +143,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 // Look up a suitable editor and instantiate it
                 FeatureSupport featureSupport = featureSupportRegistry
                         .getFeatureSupport(featureState.feature);
-                editor = featureSupport.createEditor("editor",
+                editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, null, null, item.getModel());
 
                 if (!featureState.feature.getLayer().isReadonly()) {
@@ -191,24 +198,24 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             return emptyList();
         }
             
-        JCas jcas;
+        CAS cas;
         try {
-            jcas = jcasProvider.get();
+            cas = jcasProvider.get();
         }
         catch (IOException e) {
             LOG.error("Unable to load CAS", e);
             return emptyList();
         }
         
-        AnnotationBaseFS fs;
+        FeatureStructure fs;
         try {
-            fs = selectByAddr(jcas, AnnotationBaseFS.class, vid.getId());
+            fs = selectFsByAddr(cas, vid.getId());
         }
         catch (Exception e) {
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.getLayer(proj, fs);
+        AnnotationLayer layer = annotationService.findLayer(proj, fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
         
         // Populate from feature structure
@@ -285,18 +292,17 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
             
             // Load the boiler-plate
-            JCas jCas = jcasProvider.get();
-            AnnotationBaseFS fs = selectByAddr(jCas, AnnotationBaseFS.class,
-                    getModelObject().getId());
-            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            CAS cas = jcasProvider.get();
+            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
+            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
 
             // Update the features of the selected annotation from the values presently in
             // the feature editors
-            writeFeatureEditorModelsToCas(adapter, jCas);
+            writeFeatureEditorModelsToCas(adapter, cas);
             
             // persist changes
-            annotationPage.writeEditorCas(jCas);
+            annotationPage.writeEditorCas(cas);
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
@@ -308,17 +314,16 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     {
         try {
             // Load the boiler-plate
-            JCas jCas = jcasProvider.get();
-            AnnotationBaseFS fs = selectByAddr(jCas, AnnotationBaseFS.class,
-                    getModelObject().getId());
-            AnnotationLayer layer = annotationService.getLayer(project.getObject(), fs);
+            CAS cas = jcasProvider.get();
+            FeatureStructure fs = selectFsByAddr(cas, getModelObject().getId());
+            AnnotationLayer layer = annotationService.findLayer(project.getObject(), fs);
             TypeAdapter adapter = annotationService.getAdapter(layer);
             
             // Perform actual actions
-            adapter.delete(sourceDocument.getObject(), username.getObject(), jCas, new VID(fs));
+            adapter.delete(sourceDocument.getObject(), username.getObject(), cas, new VID(fs));
             
             // persist changes
-            annotationPage.writeEditorCas(jCas);
+            annotationPage.writeEditorCas(cas);
             
             setModelObject(null);
             
@@ -327,9 +332,17 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
                 aTarget, e);
-        }    }
+        }
+    }
     
-    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, JCas aJCas)
+    private void actionClose(AjaxRequestTarget aTarget)
+    {
+        setModelObject(null);
+        
+        aTarget.add(getParent());
+    }
+
+    private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas)
             throws IOException
     {
         List<FeatureState> featureStates = featureList.getModelObject();
@@ -355,7 +368,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             LOG.trace("writeFeatureEditorModelsToCas() " + featureState.feature.getUiName() + " = "
                     + featureState.value);
-            aAdapter.setFeatureValue(sourceDocument.getObject(), username.getObject(), aJCas,
+            aAdapter.setFeatureValue(sourceDocument.getObject(), username.getObject(), aCas,
                     getModelObject().getId(), featureState.feature, featureState.value);
         }
     }

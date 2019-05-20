@@ -22,8 +22,9 @@ import java.io.Serializable;
 public class ElasticSearchProviderTraits
     implements Serializable
 {
-
     private static final long serialVersionUID = -3109239605741337123L;
+
+    private static final int ARBITRARY_FIXED_SEED = 5;
 
     private String remoteUrl = "http://localhost:9200";
 
@@ -32,6 +33,17 @@ public class ElasticSearchProviderTraits
     private String searchPath = "_search";
     
     private String objectType = "texts";
+    
+    private String defaultField = "doc.text";
+    
+    /**
+     *  Number of results retrieved from the server
+     */
+    private int resultSize = 1000;
+
+    private boolean randomOrder = false;
+
+    private int seed = ARBITRARY_FIXED_SEED;
 
     public String getRemoteUrl()
     {
@@ -48,9 +60,9 @@ public class ElasticSearchProviderTraits
         return indexName;
     }
 
-    public void setIndexName(String indexName)
+    public void setIndexName(String aIndexName)
     {
-        this.indexName = indexName;
+        indexName = aIndexName;
     }
 
     public String getSearchPath()
@@ -58,9 +70,9 @@ public class ElasticSearchProviderTraits
         return searchPath;
     }
 
-    public void setSearchPath(String searchPath)
+    public void setSearchPath(String aSearchPath)
     {
-        this.searchPath = searchPath;
+        searchPath = aSearchPath;
     }
 
     public String getObjectType()
@@ -68,8 +80,48 @@ public class ElasticSearchProviderTraits
         return objectType;
     }
 
-    public void setObjectType(String objectType)
+    public void setObjectType(String aObjectType)
     {
-        this.objectType = objectType;
+        objectType = aObjectType;
+    }
+    
+    public String getDefaultField()
+    {
+        return defaultField;
+    }
+    
+    public void setDefaultField(String aDefaultField)
+    {
+        defaultField = aDefaultField;
+    }
+
+    public int getResultSize()
+    {
+        return resultSize;
+    }
+
+    public void setResultSize(int aResultSize)
+    {
+        resultSize = aResultSize;
+    }
+
+    public boolean isRandomOrder()
+    {
+        return randomOrder;
+    }
+
+    public void setRandomOrder(boolean aRandomOrder)
+    {
+        randomOrder = aRandomOrder;
+    }
+
+    public int getSeed()
+    {
+        return seed;
+    }
+
+    public void setSeed(int seed)
+    {
+        this.seed = seed;
     }
 }

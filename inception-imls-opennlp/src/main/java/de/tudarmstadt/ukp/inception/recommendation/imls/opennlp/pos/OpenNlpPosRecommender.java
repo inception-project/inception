@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -51,7 +53,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.ml.BeamSearch;
-import opennlp.tools.postag.POSEvaluator;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerFactory;
@@ -119,7 +120,13 @@ public class OpenNlpPosRecommender
         Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
         Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
+        int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
+            if (predictionCount >= traits.getPredictionLimit()) {
+                break;
+            }
+            predictionCount++;
+            
             List<AnnotationFS> tokenAnnotations = selectCovered(tokenType, sentence);
             String[] tokens = tokenAnnotations.stream()
                 .map(AnnotationFS::getCoveredText)
@@ -162,9 +169,9 @@ public class OpenNlpPosRecommender
     }
 
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
-    {
+    {        
         List<POSSample> data = extractPosSamples(aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
@@ -183,9 +190,16 @@ public class OpenNlpPosRecommender
             }
         }
 
-        if (trainingSet.size() < 2 || testSet.size() < 2) {
+        int testSetSize = testSet.size();
+        int trainingSetSize = trainingSet.size();
+        
+        if (trainingSetSize < 2 || testSetSize < 2) {
             LOG.info("Not enough data to evaluate, skipping!");
-            return 0.0;
+
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
+                    testSetSize);
+            result.setEvaluationSkipped(true);
+            return result;
         }
 
         LOG.info("Training on [{}] items, predicting on [{}] of total [{}]", trainingSet.size(),
@@ -200,26 +214,34 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
-        try (POSSampleStream stream = new POSSampleStream(testSet)) {
-            POSEvaluator evaluator = new POSEvaluator(tagger);
-            evaluator.evaluate(stream);
-            return evaluator.getWordAccuracy();
+        List<LabelPair> labelPairs = new ArrayList<>();
+        for (POSSample sample : testSet) {
+            String[] predictedTags = tagger.tag(sample.getSentence());
+            String[] goldTags = sample.getTags();
+            for (int i = 0; i < predictedTags.length; i++) {
+                labelPairs.add(new LabelPair(goldTags[i], predictedTags[i]));
+            }
         }
-        catch (IOException e) {
-            throw new RecommendationException("Error while evaluating", e);
-        }
+
+        return labelPairs.stream().collect(EvaluationResult
+                .collector(trainingSetSize, testSetSize, PAD));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)
     {
         List<POSSample> posSamples = new ArrayList<>();
-        for (CAS cas : aCasses) {
+        
+        casses: for (CAS cas : aCasses) {
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences =
-                indexCovered(cas, sentenceType, tokenType);
+            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+                    cas, sentenceType, tokenType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+                if (posSamples.size() >= traits.getTrainingSetSizeLimit()) {
+                    break casses;
+                }
+                
                 AnnotationFS sentence = e.getKey();
 
                 Collection<AnnotationFS> tokens = e.getValue();

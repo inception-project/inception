@@ -47,12 +47,12 @@ See https://github.com/adobe-type-tools/cmap-resources
 </head>
 
 <body>
-<!-- BEGIN PDFANNO EXTENSION - #620 - Exclude PDFAnno UI -->
+<!-- BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI -->
 <!--
 <nav class="navbar navbar-inverse navbar-static-top">
 -->
 <nav class="navbar navbar-inverse navbar-static-top" hidden>
-<!-- END PDFANNO EXTENSION -->
+<!-- END INCEpTION EXTENSION -->
   <div class="container-fluid">
     <div class="navbar-header">
       <a class="navbar-brand" href="#">PDFAnno</a>
@@ -65,12 +65,12 @@ See https://github.com/adobe-type-tools/cmap-resources
 </nav>
 <div class="main">
   <div class="container-fluid">
-<!-- BEGIN PDFANNO EXTENSION - #620 - Exclude PDFAnno UI -->
+<!-- BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI -->
 <!--
     <div class="row anno-ui">
 -->
     <div class="row anno-ui" hidden>
-<!-- END PDFANNO EXTENSION -->
+<!-- END INCEpTION EXTENSION -->
       <div class="btn-group" role="group" style="display: inline-block; margin-right: 5px;">
         <a id="downloadPDFExtractButton" class="btn btn-default" href="#" title="download PDFExtract.jar">
           <i class="fa fa-download"></i> PDFExtract
@@ -138,12 +138,12 @@ See https://github.com/adobe-type-tools/cmap-resources
 
     <!-- Annotation Tools -->
     <div class="row">
-<!-- BEGIN PDFANNO EXTENSION - #620 - Exclude PDFAnno UI -->
+<!-- BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI -->
 <!--
       <div id="tools" class="col-md-3 col-sm-3 col-xs-3" style="padding-left: 0; padding-right: 0;">
 -->
       <div id="tools" class="col-md-0 col-sm-0 col-xs-0" style="padding-left: 0; padding-right: 0;" hidden>
-<!-- END PDFANNO EXTENSION -->
+<!-- END INCEpTION EXTENSION -->
         <div style="padding-left: 15px; padding-right: 15px;">
 
           <ul class="nav nav-tabs">
@@ -221,14 +221,14 @@ See https://github.com/adobe-type-tools/cmap-resources
           </div>
         </div>
       </div>
-<!-- BEGIN PDFANNO EXTENSION - #620 - Exclude PDFAnno UI -->
+<!-- BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI -->
 <!--
       <div id="viewerWrapper" class="col-md-9 col-sm-9 col-xs-9" style="padding-left: 0; padding-right: 0; position: relative;">
         <div style="padding-right: 15px;">
 -->
       <div id="viewerWrapper" class="col-md-12 col-sm-12 col-xs-12" style="padding-left: 0; padding-right: 0; position: relative;">
         <div>
-<!-- END PDFANNO EXTENSION -->
+<!-- END INCEpTION EXTENSION -->
           <div id="viewerInner" class="viewer">
             <div tabindex="1" class="loadingInProgress">
               <div id="outerContainer">
@@ -266,8 +266,12 @@ See https://github.com/adobe-type-tools/cmap-resources
                       <button id="secondaryPrint" class="secondaryToolbarButton print visibleMediumView" title="Print" tabindex="53" data-l10n-id="print">
                         <span data-l10n-id="print_label">Print</span>
                       </button>
-
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                       <button id="secondaryDownload" class="secondaryToolbarButton download visibleMediumView" title="Download" tabindex="54" data-l10n-id="download">
+-->
+                      <button hidden id="secondaryDownload" class="secondaryToolbarButton download visibleMediumView" title="Download" tabindex="54" data-l10n-id="download">
+<!-- END INCEpTION EXTENSION -->
                         <span data-l10n-id="download_label">Download</span>
                       </button>
 
@@ -283,18 +287,26 @@ See https://github.com/adobe-type-tools/cmap-resources
                       <button id="lastPage" class="secondaryToolbarButton lastPage" title="Go to Last Page" tabindex="57" data-l10n-id="last_page">
                         <span data-l10n-id="last_page_label">Go to Last Page</span>
                       </button>
-
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                       <div class="horizontalToolbarSeparator"></div>
 
                       <button id="pageRotateCw" class="secondaryToolbarButton rotateCw" title="Rotate Clockwise" tabindex="58" data-l10n-id="page_rotate_cw">
+-->
+                      <button hidden id="pageRotateCw" class="secondaryToolbarButton rotateCw" title="Rotate Clockwise" tabindex="58" data-l10n-id="page_rotate_cw">
+<!-- END INCEpTION EXTENSION -->
                         <span data-l10n-id="page_rotate_cw_label">Rotate Clockwise</span>
                       </button>
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                       <button id="pageRotateCcw" class="secondaryToolbarButton rotateCcw" title="Rotate Counterclockwise" tabindex="59" data-l10n-id="page_rotate_ccw">
+-->
+                      <button hidden id="pageRotateCcw" class="secondaryToolbarButton rotateCcw" title="Rotate Counterclockwise" tabindex="59" data-l10n-id="page_rotate_ccw">
+<!-- END INCEpTION EXTENSION -->
                         <span data-l10n-id="page_rotate_ccw_label">Rotate Counterclockwise</span>
                       </button>
 
                       <div class="horizontalToolbarSeparator"></div>
-
                       <button id="toggleHandTool" class="secondaryToolbarButton handTool" title="Enable hand tool" tabindex="60" data-l10n-id="hand_tool_enable">
                         <span data-l10n-id="hand_tool_enable_label">Enable hand tool</span>
                       </button>
@@ -311,7 +323,12 @@ See https://github.com/adobe-type-tools/cmap-resources
                     <div id="toolbarContainer">
                       <div id="toolbarViewer">
                         <div id="toolbarViewerLeft">
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <button id="viewFind" class="toolbarButton group hiddenSmallView" title="Find in Document" tabindex="12" data-l10n-id="findbar">
+-->
+                          <button hidden id="viewFind" class="toolbarButton group hiddenSmallView" title="Find in Document" tabindex="12" data-l10n-id="findbar">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="findbar_label">Find</span>
                           </button>
                           <div class="splitToolbarButton">
@@ -328,21 +345,46 @@ See https://github.com/adobe-type-tools/cmap-resources
                           <span id="numPages" class="toolbarLabel"></span>
                         </div>
                         <div id="toolbarViewerRight">
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <button id="presentationMode" class="toolbarButton presentationMode hiddenLargeView" title="Switch to Presentation Mode" tabindex="31" data-l10n-id="presentation_mode">
+-->
+                          <button hidden id="presentationMode" class="toolbarButton presentationMode hiddenLargeView" title="Switch to Presentation Mode" tabindex="31" data-l10n-id="presentation_mode">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
                           </button>
 
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <button id="openFile" class="toolbarButton openFile hiddenLargeView" title="Open File" tabindex="32" data-l10n-id="open_file">
+-->
+                          <button hidden id="openFile" class="toolbarButton openFile hiddenLargeView" title="Open File" tabindex="32" data-l10n-id="open_file">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="open_file_label">Open</span>
                           </button>
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <button id="print" class="toolbarButton print hiddenMediumView" title="Print" tabindex="33" data-l10n-id="print">
+-->
+                          <button hidden id="print" class="toolbarButton print hiddenMediumView" title="Print" tabindex="33" data-l10n-id="print">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="print_label">Print</span>
                           </button>
 
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <button id="download" class="toolbarButton download hiddenMediumView" title="Download" tabindex="34" data-l10n-id="download">
+-->
+                          <button hidden id="download" class="toolbarButton download hiddenMediumView" title="Download" tabindex="34" data-l10n-id="download">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="download_label">Download</span>
                           </button>
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                           <a href="#" id="viewBookmark" class="toolbarButton bookmark hiddenSmallView" title="Current view (copy or open in new window)" tabindex="35" data-l10n-id="bookmark">
+-->
+                          <a hidden href="#" id="viewBookmark" class="toolbarButton bookmark hiddenSmallView" title="Current view (copy or open in new window)" tabindex="35" data-l10n-id="bookmark">
+<!-- END INCEpTION EXTENSION -->
                             <span data-l10n-id="bookmark_label">Current View</span>
                           </a>
 
@@ -397,10 +439,18 @@ See https://github.com/adobe-type-tools/cmap-resources
                               data-l10n-id="first_page"></menuitem>
                     <menuitem id="contextLastPage" label="Last Page"
                               data-l10n-id="last_page"></menuitem>
+<!-- BEGIN INCEpTION EXTENSION - #885 - Clean PDF.js UI -->
+<!--
                     <menuitem id="contextPageRotateCw" label="Rotate Clockwise"
                               data-l10n-id="page_rotate_cw"></menuitem>
                     <menuitem id="contextPageRotateCcw" label="Rotate Counter-Clockwise"
                               data-l10n-id="page_rotate_ccw"></menuitem>
+-->
+                    <menuitem hidden id="contextPageRotateCw" label="Rotate Clockwise"
+                              data-l10n-id="page_rotate_cw"></menuitem>
+                    <menuitem hidden id="contextPageRotateCcw" label="Rotate Counter-Clockwise"
+                              data-l10n-id="page_rotate_ccw"></menuitem>
+<!-- END INCEpTION EXTENSION -->
                   </menu>
 
                   <div id="viewerContainer" tabindex="0">

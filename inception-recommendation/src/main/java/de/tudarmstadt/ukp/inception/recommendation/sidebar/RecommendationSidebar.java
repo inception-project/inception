@@ -17,22 +17,38 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.NumberTextField;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
+import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.kendo.ui.widget.tooltip.TooltipBehavior;
+
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class RecommendationSidebar
     extends AnnotationSidebar_ImplBase
@@ -42,18 +58,29 @@ public class RecommendationSidebar
     private static final String LEARNING_CURVE = "learningCurve";
     
     private @SpringBean RecommendationService recommendationService;
+    private @SpringBean AnnotationSchemaService annoService;
 
+    private WebMarkupContainer warning;
+    private StringResourceModel tipModel;
+    
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
             () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
             (v) -> recommendationService.setPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject(), v));
 
+        warning = new WebMarkupContainer("warning");
+        add(warning);
+        tipModel = new StringResourceModel("mismatch", this);
+        TooltipBehavior tip = new TooltipBehavior(tipModel);
+        tip.setOption("width", Options.asString("300px"));
+        warning.add(tip);
+        
         Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
@@ -69,7 +96,51 @@ public class RecommendationSidebar
         add(form);
 
         LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
-        chartContainer.setVisibilityAllowed(recommendationService.showLearningCurveDiagram());
+        chartContainer.setOutputMarkupId(true);
         add(chartContainer);
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        // using onConfigure as last state in lifecycle to configure visibility
+        super.onConfigure();
+        List<String> mismatchedRecommenders = findMismatchedRecommenders();
+        
+        if (mismatchedRecommenders.isEmpty()) {
+            warning.setVisible(false);
+            return;
+        }
+        
+        String recommendersStr = mismatchedRecommenders.stream()
+                .collect(Collectors.joining(", "));
+        tipModel.setParameters(recommendersStr);
+        warning.setVisible(true);
+    }
+    
+    @OnEvent
+    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
+    {
+        aEvent.getRequestHandler().add(warning);
+    }
+
+    private List<String> findMismatchedRecommenders()
+    {
+        List<String> mismatchedRecommenderNames = new ArrayList<>();
+        Project project = getModelObject().getProject();
+        for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
+            if (!layer.isEnabled()) {
+                continue;
+            }
+            for (Recommender recommender : recommendationService
+                    .listEnabledRecommenders(layer)) {
+                RecommendationEngineFactory<?> factory = recommendationService
+                        .getRecommenderFactory(recommender);
+                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                    mismatchedRecommenderNames.add(recommender.getName());
+                }
+            }
+        }
+        return mismatchedRecommenderNames;
     }
 }

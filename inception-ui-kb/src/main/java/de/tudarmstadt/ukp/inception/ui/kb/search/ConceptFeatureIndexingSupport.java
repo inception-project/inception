@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.search;
 
+import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
+
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
@@ -101,7 +103,7 @@ public class ConceptFeatureIndexingSupport
         }
 
         // Get object from the KB
-        Optional<KBObject> kbObject = kbService.readKBIdentifier(aFeature.getProject(),
+        Optional<KBObject> kbObject = kbService.readItem(aFeature.getProject(),
                 WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName()));
 
         if (!kbObject.isPresent()) {
@@ -131,10 +133,10 @@ public class ConceptFeatureIndexingSupport
         
         // Indexing super concepts with type super.concept 
         KBObject kbObj = kbObject.get();
-        Set<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
+        List<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
                 kbObj.getIdentifier(), false);
         for (KBHandle parentConcept : listParentConcepts) {
-            if (kbService.hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
+            if (hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
                 continue;
             }
             values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),

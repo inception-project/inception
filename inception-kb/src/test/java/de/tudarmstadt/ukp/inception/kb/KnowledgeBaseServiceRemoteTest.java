@@ -53,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
@@ -221,7 +222,7 @@ public class KnowledgeBaseServiceRemoteTest
             parentChildConcepts.put("http://www.wikidata.org/entity/Q35120",
                     "http://www.wikidata.org/entity/Q24229398");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_wikidata_direct,
-                    "http://www.wikidata.org/entity/Q19576436", rootConcepts, parentChildConcepts));
+                    "http://www.wikidata.org/entity/Q5", rootConcepts, parentChildConcepts));
         }
 
         // {
@@ -249,36 +250,36 @@ public class KnowledgeBaseServiceRemoteTest
             kb_dbpedia.applyRootConcepts(profile);
             kb_dbpedia.setDefaultLanguage(profile.getDefaultLanguage());
             kb_dbpedia.setMaxResults(maxResults);
+            kb_dbpedia.setDefaultDatasetIri(profile.getDefaultDataset());
             rootConcepts = new HashSet<String>();
             rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
             parentChildConcepts = new HashMap<String, String>();
             parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
                     "http://dbpedia.org/ontology/Biomolecule");
             kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_dbpedia,
-                    "http://www.wikidata.org/entity/Q20280393", rootConcepts, parentChildConcepts));
+                    "http://dbpedia.org/ontology/Organisation", rootConcepts, parentChildConcepts));
         }
 
-        // 2019-01-21: temporarily turning off YAGO because the service is currently not reachable
-//        {
-//            KnowledgeBaseProfile profile = PROFILES.get("yago");
-//            KnowledgeBase kb_yago = new KnowledgeBase();
-//            kb_yago.setName(profile.getName());
-//            kb_yago.setType(profile.getType());
-//            kb_yago.setReification(profile.getReification());
-//            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
-//            kb_yago.applyMapping(profile.getMapping());
-//            kb_yago.applyRootConcepts(profile);
-//            kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
-//            kb_yago.setMaxResults(maxResults);
-//            rootConcepts = new HashSet<String>();
-//            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
-//            parentChildConcepts = new HashMap<String, String>();
-//            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
-//                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
-//            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
-//                    "http://www.wikidata.org/entity/Q21445637S003fc070-45f0-80bd-ae2d-072cde5aad89",
-//                    rootConcepts, parentChildConcepts));
-//        }
+        {
+            KnowledgeBaseProfile profile = PROFILES.get("yago");
+            KnowledgeBase kb_yago = new KnowledgeBase();
+            kb_yago.setName(profile.getName());
+            kb_yago.setType(profile.getType());
+            kb_yago.setReification(profile.getReification());
+            kb_yago.setFullTextSearchIri(profile.getAccess().getFullTextSearchIri());
+            kb_yago.applyMapping(profile.getMapping());
+            kb_yago.applyRootConcepts(profile);
+            kb_yago.setDefaultLanguage(profile.getDefaultLanguage());
+            kb_yago.setMaxResults(maxResults);
+            rootConcepts = new HashSet<String>();
+            rootConcepts.add("http://www.w3.org/2002/07/owl#Thing");
+            parentChildConcepts = new HashMap<String, String>();
+            parentChildConcepts.put("http://www.w3.org/2002/07/owl#Thing",
+                    "http://yago-knowledge.org/resource/wikicat_Alleged_UFO-related_entities");
+            kbList.add(new TestConfiguration(profile.getAccess().getAccessUrl(), kb_yago,
+                    "http://yago-knowledge.org/resource/wikicat_Alkaloids",
+                    rootConcepts, parentChildConcepts));
+        }
 
         {
             KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
@@ -342,33 +343,12 @@ public class KnowledgeBaseServiceRemoteTest
     }
     
     @Test
-    public void thatChildConceptsCanBeRetrieved()
-    {
-        KnowledgeBase kb = sutConfig.getKnowledgeBase();
-        long duration = System.currentTimeMillis();
-        for (String parentConcept : sutConfig.getParentChildIdentifier().keySet()) {
-            List<KBHandle> childConceptKBHandle = sut.listChildConcepts(kb, parentConcept, true);
-            duration = System.currentTimeMillis() - duration;
-
-            System.out.printf("Child concepts retrieved for %s : %d%n", parentConcept, childConceptKBHandle.size());
-            System.out.printf("Time required           : %d ms%n", duration);
-            childConceptKBHandle.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
-
-            assertThat(childConceptKBHandle).as("Check that root concept list is not empty")
-                    .isNotEmpty();
-            assertThat(childConceptKBHandle.stream().map(KBHandle::getIdentifier))
-                    .as("Check that child concept is retreived")
-                    .contains(sutConfig.getParentChildIdentifier().get(parentConcept));
-        }
-    }
-
-    @Test
     public void thatPropertyListCanBeRetrieved()
     {
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
 
         long duration = System.currentTimeMillis();
-        List<KBHandle> propertiesKBHandle = sut.listProperties(kb, true);
+        List<KBProperty> propertiesKBHandle = sut.listProperties(kb, true);
         duration = System.currentTimeMillis() - duration;
 
         System.out.printf("Properties retrieved : %d%n", propertiesKBHandle.size());
@@ -384,17 +364,18 @@ public class KnowledgeBaseServiceRemoteTest
         KnowledgeBase kb = sutConfig.getKnowledgeBase();
 
         long duration = System.currentTimeMillis();
-        Set<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(),
+        List<KBHandle> parentList = sut.getParentConceptList(kb, sutConfig.getTestIdentifier(),
                 true);
         duration = System.currentTimeMillis() - duration;
 
-        System.out.printf("Parent List retrieved : %d%n", parentList.size());
+        System.out.printf("Parents for          : %s%n", sutConfig.getTestIdentifier());
+        System.out.printf("Parents retrieved    : %d%n", parentList.size());
         System.out.printf("Time required        : %d ms%n", duration);
         parentList.stream().limit(10).forEach(h -> System.out.printf("   %s%n", h));
 
         assertThat(parentList).as("Check that parent list is not empty").isNotEmpty();
     }
-
+    
     // Helper
 
     private void importKnowledgeBase(String resourceName) throws Exception

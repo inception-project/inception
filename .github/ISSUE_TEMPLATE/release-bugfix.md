@@ -28,5 +28,8 @@ about: Release checklist for feature releases (first or second digit increase)
 - [ ] *stable instance*: Update to release version
 - [ ] *testing instance*: Update auto-deployment script to match new SNAPSHOT version
 
+**Docker**
+- [ ] Push the release to Docker
+
 **Mailing list**
 - [ ] Send release announcement to mailing list

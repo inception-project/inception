@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.kb;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
@@ -29,20 +30,22 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
 
     private static final long serialVersionUID = -8328024977043837787L;
     
     private @SpringBean KnowledgeBaseService kbService;
+    
+    private List<String> labelProperties;
 
     public ConceptInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> handleModel, IModel<KBConcept> aModel) {
+            IModel<KBObject> handleModel, IModel<KBConcept> aModel) {
         super(aId, aKbModel, handleModel, aModel);
     }
 
@@ -51,10 +54,11 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
         KBConcept concept = kbObjectModel.getObject();
 
         assert isEmpty(concept.getIdentifier());
-        KBHandle handle = kbService.createConcept(kbModel.getObject(), concept);
+        kbService.createConcept(kbModel.getObject(), concept);
 
         // select newly created property right away to show the statements
-        send(getPage(), Broadcast.BREADTH, new AjaxConceptSelectionEvent(aTarget, handle, true));
+        send(getPage(), Broadcast.BREADTH,
+                new AjaxConceptSelectionEvent(aTarget, concept.toKBHandle(), true));
     }
 
     @Override
@@ -90,11 +94,21 @@ public class ConceptInfoPanel extends AbstractInfoPanel<KBConcept> {
     }
 
     @Override
+    public List<String> getLabelProperties()
+    {
+        if (labelProperties == null) {
+            labelProperties = kbService.listConceptOrInstanceLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties;
+    }
+    
+    @Override
     protected Comparator<StatementGroupBean> getStatementGroupComparator()
     {
         return new ImportantStatementComparator<>(
             sgb -> sgb.getProperty().getIdentifier(),
             identifier -> kbService.isBaseProperty(identifier, kbModel.getObject())
-                    || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
+                    || getLabelProperties().contains(identifier));
     }
 }

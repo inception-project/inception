@@ -22,6 +22,7 @@ import static org.apache.commons.lang3.StringUtils.isEmpty;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -32,12 +33,12 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 public class PropertyPanel extends Panel {
 
@@ -50,7 +51,9 @@ public class PropertyPanel extends Panel {
 
     private @SpringBean KnowledgeBaseService kbService;
 
-    public PropertyPanel(String id, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> handleModel,
+    private List<String> labelProperties;
+    
+    public PropertyPanel(String id, IModel<KnowledgeBase> aKbModel, IModel<KBProperty> handleModel,
             IModel<KBProperty> selectedPropertyModel) {
         super(id, selectedPropertyModel);
         add(new PropertyInfoPanel("info", aKbModel, handleModel, selectedPropertyModel));
@@ -61,7 +64,7 @@ public class PropertyPanel extends Panel {
         private static final long serialVersionUID = -1413622323011843523L;
 
         public PropertyInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-                IModel<KBHandle> handleModel, IModel<KBProperty> aModel) {
+                IModel<? extends KBObject> handleModel, IModel<KBProperty> aModel) {
             super(aId, aKbModel, handleModel, aModel);
         }
 
@@ -70,11 +73,11 @@ public class PropertyPanel extends Panel {
             KBProperty prop = kbObjectModel.getObject();
 
             assert isEmpty(prop.getIdentifier());
-            KBHandle handle = kbService.createProperty(kbModel.getObject(), prop);
+            kbService.createProperty(kbModel.getObject(), prop);
 
             // select newly created property right away to show the statements
             send(getPage(), Broadcast.BREADTH,
-                    new AjaxPropertySelectionEvent(aTarget, handle, true));
+                    new AjaxPropertySelectionEvent(aTarget, prop, true));
         }
 
         @Override
@@ -95,13 +98,23 @@ public class PropertyPanel extends Panel {
         }
 
         @Override
+        public List<String> getLabelProperties()
+        {
+            if (labelProperties == null) {
+                labelProperties = kbService.listPropertyLabelProperties(kbModel.getObject());
+            }
+            
+            return labelProperties;
+        }
+        
+        @Override
         protected Comparator<StatementGroupBean> getStatementGroupComparator()
         {
             return new ImportantStatementComparator<>(
                 sgb -> sgb.getProperty().getIdentifier(),
                 identifier -> IMPORTANT_PROPERTY_URIS.contains(identifier)
                         || kbService.isBaseProperty(identifier, kbModel.getObject())
-                        || kbService.isSubpropertyLabel(kbModel.getObject(), identifier));
+                        || getLabelProperties().contains(identifier));
         }
         
         @Override

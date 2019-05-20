@@ -23,6 +23,7 @@ import java.util.Optional;
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 
 public interface RecommendationEngine {
 // tag::methodDefinition[]
@@ -45,15 +46,20 @@ public interface RecommendationEngine {
     void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException;
 
     /**
-     * Evaluates the performance of a recommender by splitting the data given in {@code aCasses}
-     * in training and test sets by using {@code aDataSplitter}, training on the training śet
-     * and measuring performance on unseen data on the training set. This method must not
-     * mutate {@code aCasses} in any way.
-     * @param aCasses The CASses containing target annotations
-     * @param aDataSplitter The splitter which determines which annotations belong to which set
-     * @return Score measuring the performance of predicting on the test set
+     * Evaluates the performance of a recommender by splitting the data given in {@code aCasses} in
+     * training and test sets by using {@code aDataSplitter}, training on the training set and
+     * measuring performance on unseen data on the training set. This method must not mutate
+     * {@code aCasses} in any way.
+     * 
+     * @param aCasses
+     *            The CASses containing target annotations
+     * @param aDataSplitter
+     *            The splitter which determines which annotations belong to which set
+     * @return Scores available through an EvaluationResult object measuring the performance
+     *         of predicting on the test set
      */
-    double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter) throws RecommendationException;
+    EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+        throws RecommendationException;
 // end::methodDefinition[]
 
     /**

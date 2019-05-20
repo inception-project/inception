@@ -28,8 +28,8 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapAjaxTabbedPanel;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class InstancePanel
@@ -38,11 +38,11 @@ public class InstancePanel
     private static final long serialVersionUID = -1413622323011843523L;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> selectedInstanceHandle;
-    private IModel<KBHandle> selectedConceptHandle;
+    private IModel<KBObject> selectedInstanceHandle;
+    private IModel<KBObject> selectedConceptHandle;
     
     public InstancePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aSelectedConceptHandle, IModel<KBHandle> aSelectedInstanceHandle,
+            IModel<KBObject> aSelectedConceptHandle, IModel<KBObject> aSelectedInstanceHandle,
             IModel<KBInstance> aSelectedInstanceModel)
     {
         super(aId, aSelectedInstanceModel);

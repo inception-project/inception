@@ -20,11 +20,9 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchUserStateMetaData.CURRENT_ES_USER_STATE;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -54,9 +52,9 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
-import de.tudarmstadt.ukp.clarin.webanno.api.JCasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -114,10 +112,10 @@ public class ExternalSearchAnnotationSidebar
     private WebMarkupContainer dataTableContainer;
 
     public ExternalSearchAnnotationSidebar(String aId, IModel<AnnotatorState> aModel,
-        AnnotationActionHandler aActionHandler, JCasProvider aJCasProvider,
+        AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
         AnnotationPage aAnnotationPage)
     {
-        super(aId, aModel, aActionHandler, aJCasProvider, aAnnotationPage);
+        super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         // Attach search state to annotation page
         // This state is to maintain persistence of this sidebar so that when user moves to another
@@ -173,9 +171,8 @@ public class ExternalSearchAnnotationSidebar
         });
 
         if (searchState.getDataProvider() == null) {
-            searchState.setDataProvider(
-                new ExternalResultDataProvider(externalSearchService,
-                    userRepository.getCurrentUser(), currentRepository, ""));
+            searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
+                    userRepository.getCurrentUser()));
         }
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
@@ -212,7 +209,7 @@ public class ExternalSearchAnnotationSidebar
         // highlight keywords if a document is selected from result list
         // and it is the current document opened
         if (searchState.getSelectedResult() != null &&
-            (searchState.getSelectedResult().getDocumentTitle().equals(
+            (searchState.getSelectedResult().getDocumentId().equals(
                 getAnnotationPage().getModelObject().getDocument().getName()))) {
             highlightKeywords(aEvent.getState(), aEvent.getVDocument());
         } else {
@@ -244,30 +241,45 @@ public class ExternalSearchAnnotationSidebar
         }
     }
 
-    private void actionImport(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
-            String aDocumentTitle)
+    private void actionImport(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
+        aTarget.addChildren(getPage(), IFeedback.class);
         searchStateModel.getObject().setSelectedResult(aResult);
         try {
-            documentImporter
-                .importDocumentFromDocumentRepository(userRepository.getCurrentUser(), project,
-                    aDocumentTitle, currentRepository);
+            boolean imported = documentImporter.importDocumentFromDocumentRepository(
+                    userRepository.getCurrentUser(), project, aResult.getCollectionId(),
+                    aResult.getDocumentId(), currentRepository);
+            
+            if (imported) {
+                success("Imported document: " + aResult.getDocumentId());
+            }
+            else {
+                info("Document already present: " + aResult.getDocumentId());
+            }
 
             getAnnotationPage().actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(project, aDocumentTitle));
+                    documentService.getSourceDocument(project, aResult.getDocumentId()));
         }
-        catch (IOException e) {
-            LOG.error("{}", e.getMessage(), e);
-            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
+        catch (Exception e) {
+            LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
+            error("Unable to load document " + aResult.getDocumentId() + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
         }
     }
 
-    private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult,
-            String aDocumentTitle)
+    private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
-        searchStateModel.getObject().setSelectedResult(aResult);
-        getAnnotationPage().actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(project, aDocumentTitle));
+        try {
+            searchStateModel.getObject().setSelectedResult(aResult);
+            getAnnotationPage().actionShowSelectedDocument(aTarget,
+                    documentService.getSourceDocument(project, aResult.getDocumentId()));
+        }
+        catch (Exception e) {
+            LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
+            error("Unable to load document " + aResult.getDocumentId() + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
     }
 
     private class DocumentRepositorySelectionForm
@@ -323,7 +335,7 @@ public class ExternalSearchAnnotationSidebar
             return;
         }
         
-        searchState.getDataProvider().searchDocuments(searchState.getQuery());
+        searchState.getDataProvider().searchDocuments(currentRepository, searchState.getQuery());
 
         aTarget.add(dataTableContainer);
 
@@ -343,24 +355,22 @@ public class ExternalSearchAnnotationSidebar
 
             ExternalSearchResult result = (ExternalSearchResult) getDefaultModelObject();
 
-            String documentTitle = result.getDocumentTitle();
-
-            boolean existsSourceDocument = documentService
-                .existsSourceDocument(project, documentTitle);
+            boolean existsSourceDocument = documentService.existsSourceDocument(project,
+                    result.getDocumentId());
 
             // Import and open annotation
             LambdaAjaxLink link;
             if (!existsSourceDocument) {
-                link = new LambdaAjaxLink("docLink", t -> actionImport(t, result, documentTitle));
+                link = new LambdaAjaxLink("docLink", t -> actionImport(t, result));
             }
             else {
                 // open action
-                link = new LambdaAjaxLink("docLink", t -> actionOpen(t, result, documentTitle));
+                link = new LambdaAjaxLink("docLink", t -> actionOpen(t, result));
             }
 
             String title = defaultIfBlank(result.getDocumentTitle(),
                 defaultIfBlank(result.getDocumentId(),
-                    defaultIfBlank(result.getUri(), "<no title>")));
+                    defaultIfBlank(result.getOriginalUri(), "<no title>")));
 
             add(link);
 
@@ -369,11 +379,12 @@ public class ExternalSearchAnnotationSidebar
             link.add(new Label("importStatus",
                 () -> existsSourceDocument ? "imported" : "not imported"));
 
-            Optional<String> highlightOptional = result.getHighlights().get(0).getHighlight();
-            if (highlightOptional.isPresent()) {
-                String highlight = Utilities.cleanHighlight(highlightOptional.get());
-                link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
+            // FIXME: Should display all highlights
+            String highlight = "NO MATCH PREVIEW AVAILABLE";
+            if (!result.getHighlights().isEmpty()) {
+                highlight = Utilities.cleanHighlight(result.getHighlights().get(0).getHighlight());
             }
+            link.add(new Label("highlight", highlight).setEscapeModelStrings(false));
         }
     }
 
