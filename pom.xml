@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
+    <webanno.version>3.6.0-beta-7</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
