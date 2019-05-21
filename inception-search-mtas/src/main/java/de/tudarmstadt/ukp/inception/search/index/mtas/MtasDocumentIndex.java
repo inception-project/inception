@@ -26,18 +26,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.*;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.search.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -73,6 +66,8 @@ import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
@@ -80,14 +75,7 @@ import com.github.openjson.JSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.search.ExecutionException;
-import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
-import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
@@ -146,6 +134,8 @@ public class MtasDocumentIndex
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
+    private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
+
     private final AnnotationSchemaService annotationSchemaService;
     private final DocumentService documentService;
     private final ProjectService projectService;
@@ -163,6 +153,11 @@ public class MtasDocumentIndex
             DocumentService aDocumentService, ProjectService aProjectService, String aDir)
         throws IOException
     {
+        AutowireCapableBeanFactory factory = ApplicationContextProvider.getApplicationContext()
+            .getAutowireCapableBeanFactory();
+        factory.autowireBean(this);
+        factory.initializeBean(this, "transientParser");
+
         annotationSchemaService = aAnnotationSchemaService;
         documentService = aDocumentService;
         projectService = aProjectService;
@@ -172,10 +167,12 @@ public class MtasDocumentIndex
         Set<String> shortNames = new HashSet<>();
         annotationSchemaService.listAnnotationLayer(project).stream()
                 .filter(AnnotationLayer::isEnabled)
-                .map(layer -> getShortName(layer.getName()))
+                .map(layer -> getShortName(layer.getUiName()))
                 .forEach(shortNames::add);
         shortNames.add(MtasUimaParser.MTAS_TOKEN_LABEL);
         shortNames.add(MtasUimaParser.MTAS_SENTENCE_LABEL);
+        shortNames.add("Named_entity");
+        shortNames.add("Part_of_speech");
         annotationShortNames = unmodifiableList(new ArrayList<>(shortNames));
        
         resourceDir = new File(aDir);
@@ -189,7 +186,7 @@ public class MtasDocumentIndex
     }
 
     @Override
-    public List<SearchResult> executeQuery(SearchQueryRequest aRequest)
+    public Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
         throws IOException, ExecutionException
     {
         try {
@@ -253,11 +250,11 @@ public class MtasDocumentIndex
         return result;
     }
 
-    private List<SearchResult> doQuery(IndexReader aIndexReader, SearchQueryRequest aRequest,
+    private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader, SearchQueryRequest aRequest,
             String field, MtasSpanQuery q, List<String> prefixes)
         throws IOException
     {
-        List<SearchResult> results = new ArrayList<>();
+        HashMap<String, List<SearchResult>> results = new HashMap<>();
 
         ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
                 .listIterator();
@@ -356,15 +353,15 @@ public class MtasDocumentIndex
                                 int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
                                 
                                 // Retrieve all indexed objects within the matching range
-//                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
-//                                        field, spans.docID(), windowStart, windowEnd);
+                                List<MtasTokenString> tokens1 = mtasCodecInfo.getObjectsByPositions(
+                                        field, spans.docID(), windowStart, windowEnd);
                                 
                                 List<MtasTokenString> tokens = mtasCodecInfo
                                         .getPrefixFilteredObjectsByPositions(field, spans.docID(),
                                                 prefixes, windowStart, windowEnd);
                                 
                                 tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
-                                
+
                                 if (tokens.isEmpty()) {
                                     continue;
                                 }
@@ -428,7 +425,23 @@ public class MtasDocumentIndex
                                 result.setText(resultText.toString());
                                 result.setLeftContext(leftContext.toString());
                                 result.setRightContext(rightContext.toString());
-                                results.add(result);
+
+                                AnnotationLayer groupingLayer = aRequest.getAnnoationLayer();
+                                AnnotationFeature groupingFeature = aRequest.getAnnotationFeature();
+
+                                if (groupingLayer != null && groupingFeature != null) {
+                                    List<String> featureValues = featureValuesAtMatch(tokens,
+                                        matchStart, matchEnd, groupingLayer, groupingFeature);
+                                    for (String featureValue : featureValues) {
+                                        addToResultsMap(results, featureValue, result);
+                                    }
+                                }
+                                else {
+                                    // if no annotation feature is specified group by document title
+                                    addToResultsMap(results, result.getDocumentTitle(), result);
+                                }
+
+
                             }
                         }
                     }
@@ -440,7 +453,49 @@ public class MtasDocumentIndex
         }
         return results;
     }
-    
+
+    private void addToResultsMap(HashMap<String, List<SearchResult>> aResultsMap, String aKey, SearchResult aSearchResult) {
+        if (aResultsMap.containsKey(aKey)) {
+            aResultsMap.get(aKey).add(aSearchResult);
+        }
+        else {
+            List<SearchResult> searchResultsForKey = new ArrayList<>();
+            searchResultsForKey.add(aSearchResult);
+            aResultsMap.put(aKey, searchResultsForKey);
+        }
+    }
+
+    private List<String> featureValuesAtMatch(List<MtasTokenString> aTokens, int aMatchStart,
+        int aMatchEnd, AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature)
+    {
+        List<String> featureValues = new ArrayList<>();
+
+        Optional<FeatureIndexingSupport> fisOpt = featureIndexingSupportRegistry
+            .getIndexingSupport(aAnnotationFeature);
+        if (fisOpt.isPresent()) {
+            FeatureIndexingSupport fis = fisOpt.get();
+            // a feature prefix is currently only used for target and source of relation-annotations.
+            // however we just look at the feature value of the relation-annotation itself here, so we
+            // can just use "" as feature prefix
+            String featureIndexName = fis
+                .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
+
+            aTokens.stream()
+                .filter(t -> t.getPositionStart() == aMatchStart
+                    && t.getPositionEnd() == aMatchEnd - 1 && t.getValue()
+                    .equals(
+                        MtasUimaParser.getIndexedName(featureIndexName)))
+                .forEach(t -> featureValues.add(extractFeatureValue(t)));
+        }
+        return featureValues;
+    }
+
+    private String extractFeatureValue(MtasTokenString aMtasTokenString) {
+        String tokenValue = aMtasTokenString.getValue();
+        String featureValue = tokenValue.split(MtasTokenString.DELIMITER, 2)[1];
+        return featureValue;
+    }
+
     /**
      * If there is space between the previous token and the current token, then add the 
      * corresponding amount of whitespace the the buffer.

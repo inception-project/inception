@@ -34,17 +34,21 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormChoiceComponentUpdatingBehavior;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -85,7 +89,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
-import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchResultsGroupingOperator;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -115,7 +118,9 @@ public class SearchAnnotationSidebar
         .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
         .of(new DeleteAnnotationsOptions());
-    private SearchResultsGroupingOperator searchResultsGroupingOperator = DOCUMENTTITLE;
+
+    DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>("groupingFeature",
+        Collections.emptyList());
 
     private SearchResult selectedResult;
 
@@ -140,6 +145,16 @@ public class SearchAnnotationSidebar
 
         Form<SearchOptions> searchOptionsForm = new Form<>("searchOptionsForm", searchOptions);
         searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
+        searchOptionsForm.add(new BootstrapSelect<>("groupingLayer",
+            annotationService.listAnnotationLayer(getModelObject().getProject())).add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            @Override protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                groupingFeature.setChoices(annotationService.listAnnotationFeature(searchOptions.getObject().getGroupingLayer()));
+                aTarget.add(searchOptionsForm);
+            }
+        }));
+        searchOptionsForm.add(groupingFeature);
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
         searchForm.add(searchOptionsForm);
@@ -272,10 +287,11 @@ public class SearchAnnotationSidebar
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
-            List<SearchResult> queryResults = searchService
-                .query(currentUser, project, targetQuery.getObject(), limitToDocument);
-            return queryResults.stream()
-                    .collect(groupingBy(searchResultsGroupingOperator.getFunction()));
+            Map<String, List<SearchResult>> queryResults = searchService
+                .query(currentUser, project, targetQuery.getObject(), limitToDocument,
+                    searchOptions.getObject().getGroupingLayer(),
+                    searchOptions.getObject().getGroupingFeature());
+            return queryResults;
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());

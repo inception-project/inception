@@ -405,7 +405,7 @@ public class MtasUimaParser
      * @param uiName
      * @return String replacing the input string spaces with '_' 
      */
-    public String getIndexedName(String uiName)
+    public static String getIndexedName(String uiName)
     {
         String indexedName = uiName.replace(" ", "_");
         return indexedName;

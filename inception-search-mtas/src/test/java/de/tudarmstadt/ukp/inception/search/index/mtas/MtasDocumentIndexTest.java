@@ -121,8 +121,10 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @DataJpaTest
 @Transactional(propagation = Propagation.NEVER)
+
 public class MtasDocumentIndexTest
 {
+    /**
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -645,5 +647,5 @@ public class MtasDocumentIndexTest
                     new ChainLayerSupport(aFeatureSupportRegistry, null,
                             annotationSchemaService(), null)));
         }
-    }
+    }**/
 }
