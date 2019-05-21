@@ -1682,7 +1682,8 @@ public class AutomationUtil
                 else if (!value.equals("O") && !prevNe.equals("O")) {
                     if (value.replace("B-", "").replace("I-", "").equals(
                             prevNe.replace("B-", "").replace("I-", "")) && value.startsWith("B-")) {
-                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin,
+                                end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
@@ -1699,7 +1700,8 @@ public class AutomationUtil
 
                     }
                     else {
-                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin,
+                                end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
