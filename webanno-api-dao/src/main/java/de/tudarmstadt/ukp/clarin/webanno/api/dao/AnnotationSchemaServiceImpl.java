@@ -913,10 +913,8 @@ public class AnnotationSchemaServiceImpl
         return exportCas;
     }
     
-    /**
-     * In-place upgrade of the given CAS to the target type system.
-     */
-    private void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+    @Override
+    public void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
         upgradeCas(aCas, aCas, aTargetTypeSystem);

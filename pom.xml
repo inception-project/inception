@@ -57,9 +57,9 @@
     <jackson.version>2.9.8</jackson.version>
     <uima.version>2.10.3</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>5.1.6.RELEASE </spring.version>
-    <spring.boot.version>1.5.20.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.10.RELEASE</spring.security.version>
+    <spring.version>5.1.7.RELEASE </spring.version>
+    <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
+    <spring.security.version>4.2.12.RELEASE</spring.security.version>
     <slf4j.version>1.7.26</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
