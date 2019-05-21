@@ -713,13 +713,16 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            // Strip single quotes and asterisks because they have special semantics
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
             
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(value))
+                            bNode(LUCENE_QUERY, literalOf(sanitizedValue))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
@@ -736,12 +739,14 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
             
             valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(value)))
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
@@ -1082,11 +1087,14 @@ public class SPARQLQueryBuilder
         
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
-        String queryString = aPrefixQuery.trim();
+        // Strip single quotes and asterisks because they have special semantics
+        String sanitizedValue = sanitizeQueryStringForFTS(aPrefixQuery);
         
-        if (queryString.isEmpty()) {
+        if (StringUtils.isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
+
+        String queryString = sanitizedValue.trim();
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
@@ -1150,7 +1158,8 @@ public class SPARQLQueryBuilder
     {
         String value = aValue;
         // Escape metacharacters 
-        value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\$0");
+        // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
+        value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".+");
         // Replace consecutive whitespace or control chars with a whitespace matcher
         value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\\\\\s+");
         return value;
@@ -1740,7 +1749,7 @@ public class SPARQLQueryBuilder
     {
         return aQuery
                 // character classes to replace with a simple space
-                .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[*]]+", " ")
+                .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[+*(){}\\[\\]]]+", " ")
                 // character classes to remove from the query string
                 // \u00AD : SOFT HYPHEN
                 .replaceAll("[\\u00AD]", "")
