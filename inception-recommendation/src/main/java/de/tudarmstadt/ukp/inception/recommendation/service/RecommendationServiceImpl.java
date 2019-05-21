@@ -681,44 +681,49 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public void getPredictions(Predictions model, List<SourceDocument> documents, User user)
+    public Predictions computePredictions(User aUser, Project aProject,
+                                          List<SourceDocument> aDocuments)
     {
-        nextDocument: for (SourceDocument document : documents) {
+        String username = aUser.getUsername();
+        Predictions predictions = new Predictions(aUser, aProject);
+
+        nextDocument: for (SourceDocument document : aDocuments) {
             Optional<CAS> originalCas = Optional.empty();
-            Optional<CAS> predictionCas = Optional.empty();
+            CAS predictionCas = null;
             nextLayer: for (AnnotationLayer layer : annoService
                     .listAnnotationLayer(document.getProject())) {
                 if (!layer.isEnabled()) {
                     continue nextLayer;
                 }
 
-                List<Recommender> recommenders = getActiveRecommenders(user, layer);
+                List<Recommender> recommenders = getActiveRecommenders(aUser, layer);
 
                 nextRecommender: for (Recommender r : recommenders) {
                     
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
+
                     try {
                         recommender = getRecommender(r.getId());
                     }
                     catch (NoResultException e) {
                         log.info("[{}][{}]: Recommender no longer available... skipping",
-                                user.getUsername(), r.getName());
+                                username, r.getName());
                         continue nextRecommender;
                     }
 
                     if (!recommender.isEnabled()) {
-                        log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        log.debug("[{}][{}]: Disabled - skipping", username, r.getName());
                         continue nextRecommender;
                     }
 
-                    RecommenderContext ctx = getContext(user, recommender);
+                    RecommenderContext ctx = getContext(aUser, recommender);
 
                     if (!ctx.isReadyForPrediction()) {
                         log.info("Context for recommender [{}]({}) for user [{}] on document "
                                 + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
-                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId());
                         continue nextRecommender;
@@ -730,10 +735,9 @@ public class RecommendationServiceImpl
                     // by this type of recommender
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                + "- skipping recommender", user.getUsername(), r.getName());
+                                + "- skipping recommender", username, r.getName());
                         continue nextRecommender;
                     }
-                    
 
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.
@@ -741,37 +745,38 @@ public class RecommendationServiceImpl
                     if (!originalCas.isPresent()) {
                         try {
                             originalCas = Optional.of(documentService.readAnnotationCas(document,
-                                    user.getUsername()));
+                                    username));
                         }
                         catch (IOException e) {
                             log.error(
                                     "Cannot read annotation CAS for user [{}] of document "
                                             + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
                         }
                         try {
                             annoService.upgradeCasIfRequired(originalCas.get(), document,
-                                    user.getUsername());
+                                    username);
                         }
                         catch (UIMAException | IOException e) {
                             log.error(
                                     "Cannot upgrade annotation CAS for user [{}] of document "
                                             + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
                         }
+
                         try {
-                            predictionCas = Optional.of(cloneCAS(originalCas.get()));
+                            predictionCas = cloneCAS(originalCas.get());
                         }
                         catch (UIMAException e) {
                             log.error("Cannot clone annotation CAS for user [{}] of document "
                                     + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
@@ -781,7 +786,7 @@ public class RecommendationServiceImpl
                     try {
                         RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                        Type predictionType = getAnnotationType(predictionCas.get(),
+                        Type predictionType = getAnnotationType(predictionCas,
                                 recommendationEngine.getPredictedType());
                         Feature labelFeature = predictionType
                                 .getFeatureByBaseName(recommendationEngine.getPredictedFeature());
@@ -790,31 +795,31 @@ public class RecommendationServiceImpl
                         
                         // Remove any annotations that will be predicted (either manually created
                         // or from a previous prediction run) from the CAS
-                        removePredictions(predictionCas.get(), predictionType);
+                        removePredictions(predictionCas, predictionType);
                         
                         // Perform the actual prediction
-                        recommendationEngine.predict(ctx, predictionCas.get());
+                        recommendationEngine.predict(ctx, predictionCas);
 
                         // Extract the suggestions from the data which the recommender has written 
                         // into the CAS
-                        List<AnnotationSuggestion> predictions = extractSuggestions(user,
-                                predictionCas.get(), predictionType, labelFeature, scoreFeature,
+                        List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,
+                                predictionCas, predictionType, labelFeature, scoreFeature,
                                 document, recommender);
                         
                         // Calculate the visibility of the suggestions. This happens via the 
                         // original CAS which contains only the manually created annotations and 
                         // *not* the suggestions.
-                        Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
-                        calculateVisibility(originalCas.get(), user.getUsername(), layer, groups, 0,
-                                originalCas.get().getDocumentText().length());
-                        
-                        model.putPredictions(layer.getId(), predictions);
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                        calculateVisibility(originalCas.get(), username, layer,
+                                groups, 0, originalCas.get().getDocumentText().length());
+
+                        predictions.putPredictions(layer.getId(), suggestions);
                     }
                     catch (Throwable e) {
                         log.error(
                                 "Error applying recommender [{}]({}) for user [{}] to document "
                                         + "[{}]({}) in project [{}]({}) - skipping recommender",
-                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId(), e);
                         continue nextRecommender;
@@ -822,6 +827,8 @@ public class RecommendationServiceImpl
                 }
             }
         }
+
+        return predictions;
     }
 
     private void removePredictions(CAS aCas, Type aPredictionType)

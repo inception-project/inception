@@ -200,9 +200,9 @@ public class ActiveLearningSidebar
         // Set up the AL state in the page if it is not already there or if for some reason the
         // suggestions have completely disappeared (e.g. after a system restart)
         AnnotatorState state = getModelObject();
-        Predictions model = recommendationService.getPredictions(state.getUser(),
+        Predictions predictions = recommendationService.getPredictions(state.getUser(),
                 state.getProject());
-        if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || model == null) {
+        if (aAnnotationPage.getMetaData(CURRENT_AL_USER_STATE) == null || predictions == null) {
             ActiveLearningUserState alState = new ActiveLearningUserState();
             alState.setStrategy(new UncertaintySamplingStrategy());
             alStateModel.setObject(alState);;
@@ -530,13 +530,16 @@ public class ActiveLearningSidebar
         List<Tag> tagList = annotationService.listTags(feat.getTagset());
         List<Tag> reorderedTagList = new ArrayList<>();
         if (tagList.size() > 0) {
-            Predictions model = recommendationService.getPredictions(state.getUser(),
+            Predictions predictions = recommendationService.getPredictions(state.getUser(),
                     state.getProject());
             // get all the predictions
-            List<AnnotationSuggestion> allRecommendations = model.getPredictionsByTokenAndFeature(
-                    aCurrentRecommendation.getDocumentName(), alState.getLayer(),
-                    aCurrentRecommendation.getBegin(), aCurrentRecommendation.getEnd(),
-                    aCurrentRecommendation.getFeature());
+            List<AnnotationSuggestion> allRecommendations = predictions
+                    .getPredictionsByTokenAndFeature(
+                            aCurrentRecommendation.getDocumentName(),
+                            alState.getLayer(),
+                            aCurrentRecommendation.getBegin(),
+                            aCurrentRecommendation.getEnd(),
+                            aCurrentRecommendation.getFeature());
             // get all the label of the predictions (e.g. "NN")
             List<String> allRecommendationLabels = allRecommendations.stream()
                     .map(ao -> ao.getLabel())
@@ -1086,7 +1089,7 @@ public class ActiveLearningSidebar
         AnnotatorState annotatorState = getModelObject();
         AnnotatorState eventState = aEvent.getAnnotatorState();
 
-        Predictions model = recommendationService.getPredictions(annotatorState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(annotatorState.getUser(),
                 annotatorState.getProject());
 
         if (
@@ -1094,12 +1097,12 @@ public class ActiveLearningSidebar
                 eventState.getUser().equals(annotatorState.getUser()) && 
                 eventState.getProject().equals(annotatorState.getProject())
         ) {
-            SourceDocument document = eventState.getDocument();
+            SourceDocument doc = eventState.getDocument();
             VID vid = aEvent.getVid();
-            Optional<AnnotationSuggestion> prediction = model.getPredictionByVID(document, vid);
+            Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(doc, vid);
 
             if (!prediction.isPresent()) {
-                LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+                LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
                 error("Could not find prediction");
                 return;
             }
@@ -1109,7 +1112,7 @@ public class ActiveLearningSidebar
                 new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                     rejectedRecommendation, annotatorState.getUser().getUsername(),
                     eventState.getSelectedAnnotationLayer(), rejectedRecommendation.getFeature(),
-                    REJECTED, model.getPredictionsByTokenAndFeature(
+                    REJECTED, predictions.getPredictionsByTokenAndFeature(
                     rejectedRecommendation.getDocumentName(),
                     eventState.getSelectedAnnotationLayer(),
                     rejectedRecommendation.getBegin(),
@@ -1117,7 +1120,7 @@ public class ActiveLearningSidebar
                     rejectedRecommendation.getFeature())));
 
             if (
-                    document.equals(annotatorState.getDocument()) && 
+                    doc.equals(annotatorState.getDocument()) &&
                     vid.getLayerId() == alStateModel.getObject().getLayer().getId() && 
                     prediction.get().equals(
                             alStateModel.getObject().getSuggestion().orElse(null))
@@ -1135,15 +1138,15 @@ public class ActiveLearningSidebar
     public void onRecommendationAcceptEvent(AjaxRecommendationAcceptedEvent aEvent)
     {
         AnnotatorState state = getModelObject();
-        Predictions model = recommendationService.getPredictions(state.getUser(),
+        Predictions predictions = recommendationService.getPredictions(state.getUser(),
                 state.getProject());
         AnnotatorState eventState = aEvent.getAnnotatorState();
-        SourceDocument document = state.getDocument();
+        SourceDocument doc = state.getDocument();
         VID vid = aEvent.getVid();
         
-        Optional<AnnotationSuggestion> oRecommendation = model.getPredictionByVID(document, vid);
+        Optional<AnnotationSuggestion> oRecommendation = predictions.getPredictionByVID(doc, vid);
         if (!oRecommendation.isPresent()) {
-            LOG.error("Could not find prediction in [{}] with id [{}]", document, vid);
+            LOG.error("Could not find prediction in [{}] with id [{}]", doc, vid);
             error("Could not find prediction");
             aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;
@@ -1155,7 +1158,7 @@ public class ActiveLearningSidebar
             new ActiveLearningRecommendationEvent(this, eventState.getDocument(),
                 acceptedSuggestion, state.getUser().getUsername(),
                 eventState.getSelectedAnnotationLayer(), acceptedSuggestion.getFeature(),
-                ACCEPTED, model.getPredictionsByTokenAndFeature(
+                ACCEPTED, predictions.getPredictionsByTokenAndFeature(
                 acceptedSuggestion.getDocumentName(),
                 eventState.getSelectedAnnotationLayer(),
                 acceptedSuggestion.getBegin(),

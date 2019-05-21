@@ -91,15 +91,15 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         // No recommendations available at all
-        if (model == null) {
+        if (predictions == null) {
             return;
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
+        SuggestionDocumentGroup groups = predictions.getPredictions(getDocumentTitle(aCas), layer,
                 aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer

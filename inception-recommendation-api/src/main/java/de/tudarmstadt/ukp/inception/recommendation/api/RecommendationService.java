@@ -113,7 +113,7 @@ public interface RecommendationService
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
     
-    void getPredictions(Predictions model, List<SourceDocument> documents, User user);
+    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
