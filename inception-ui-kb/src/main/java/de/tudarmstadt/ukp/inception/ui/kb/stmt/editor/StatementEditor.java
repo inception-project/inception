@@ -339,7 +339,6 @@ public class StatementEditor extends Panel
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
-            List<ValueType> valueTypes;
             // Set property to the property of the current statement
             if (property.getObject() == null) {
                 Optional<KBProperty> prop = kbService.readProperty(kbModel.getObject(),
@@ -354,12 +353,16 @@ public class StatementEditor extends Panel
                 rangeValue = property.getObject().getRange();
             }
 
-            valueTypes = valueTypeRegistry.getAllTypes();
+            List<ValueType> valueTypes;
             if (rangeValue != null) {
-                Optional<KBObject> rangeKBHandle = kbService
-                        .readItem(kbModel.getObject().getProject(), rangeValue);
+                Optional<KBObject> rangeKBHandle = kbService.readItem(kbModel.getObject(),
+                        rangeValue);
                 valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
+            else {
+                valueTypes = valueTypeRegistry.getAllTypes();
+            }
+            
             valueType = new BootstrapSelect<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(

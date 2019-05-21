@@ -38,10 +38,15 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
-    // domain and range for cases in which the KBHandle represents a property
-    private String domain;
-    private String range;
+    
     private String debugInfo;
+    
+    // domain and range for cases in which the KBHandle represents a property
+    @Deprecated
+    private String domain;
+    
+    @Deprecated
+    private String range;
 
     public KBHandle()
     {
@@ -73,6 +78,7 @@ public class KBHandle
         language = aLanguage;
     }
 
+    @Deprecated
     public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
             String aDomain, String aRange)
     {
@@ -84,21 +90,25 @@ public class KBHandle
         range = aRange;
     }
 
+    @Deprecated
     public String getDomain()
     {
         return domain;
     }
 
+    @Deprecated
     public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
+    @Deprecated
     public String getRange()
     {
         return range;
     }
 
+    @Deprecated
     public void setRange(String aRange)
     {
         range = aRange;
@@ -217,10 +227,10 @@ public class KBHandle
         }
     }
 
-    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles)
+    public static <T extends KBObject> List<T> distinctByIri(List<T> aHandles)
     {
-        Map<String, KBHandle> hMap = new LinkedHashMap<>();
-        for (KBHandle h : aHandles) {
+        Map<String, T> hMap = new LinkedHashMap<>();
+        for (T h : aHandles) {
             hMap.put(h.getIdentifier(), h);
         }
         return new ArrayList<>(hMap.values());

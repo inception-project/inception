@@ -52,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewConceptEvent;
@@ -62,12 +63,12 @@ public class ConceptTreePanel extends Panel {
     
     private @SpringBean KnowledgeBaseService kbService;
     
-    private IModel<KBHandle> selectedConcept;
+    private IModel<KBObject> selectedConcept;
     private IModel<KnowledgeBase> kbModel;
     private IModel<Preferences> preferences;
     
     public ConceptTreePanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> selectedConceptModel) {
+            IModel<KBObject> selectedConceptModel) {
         super(aId, selectedConceptModel);
         
         setOutputMarkupId(true);
@@ -76,19 +77,19 @@ public class ConceptTreePanel extends Panel {
         kbModel = aKbModel;
         preferences = Model.of(new Preferences());
         
-        AbstractTree<KBHandle> tree = new DefaultNestedTree<KBHandle>("tree",
+        AbstractTree<KBObject> tree = new DefaultNestedTree<KBObject>("tree",
                 new ConceptTreeProvider(), Model.ofSet(new HashSet<>()))
         {
             private static final long serialVersionUID = -270550186750480253L;
 
             @Override
-            protected Component newContentComponent(String id, IModel<KBHandle> node)
+            protected Component newContentComponent(String id, IModel<KBObject> node)
             {
-                return new Folder<KBHandle>(id, this, node) {
+                return new Folder<KBObject>(id, this, node) {
                     private static final long serialVersionUID = -2007320226995118959L;
 
                     @Override
-                    protected IModel<String> newLabelModel(IModel<KBHandle> aModel)
+                    protected IModel<String> newLabelModel(IModel<KBObject> aModel)
                     {
                         return Model.of(aModel.getObject().getUiLabel());
                     }
@@ -115,7 +116,7 @@ public class ConceptTreePanel extends Panel {
                     protected boolean isSelected()
                     {
                         return Objects.equals(getModelObject(), selectedConcept.getObject());
-                    }                
+                    }
                 };
             }
         };
@@ -136,7 +137,7 @@ public class ConceptTreePanel extends Panel {
     private void actionSelectionChanged(AjaxRequestTarget aTarget) {
         // if the selection changes, publish an event denoting the change
         AjaxConceptSelectionEvent e = new AjaxConceptSelectionEvent(aTarget,
-                selectedConcept.getObject());
+                selectedConcept.getObject().toKBHandle());
         send(getPage(), Broadcast.BREADTH, e);
     }
     
@@ -153,12 +154,12 @@ public class ConceptTreePanel extends Panel {
         }
     }
     
-    private class ConceptTreeProvider implements ITreeProvider<KBHandle>
+    private class ConceptTreeProvider implements ITreeProvider<KBObject>
     {
         private static final long serialVersionUID = 5318498575532049499L;
 
-        private Map<KBHandle, Boolean> childrenPresentCache = new HashMap<>();
-        private Map<KBHandle, List<KBHandle>> childrensCache = new HashMap<>();
+        private Map<KBObject, Boolean> childrenPresentCache = new HashMap<>();
+        private Map<KBObject, List<KBHandle>> childrensCache = new HashMap<>();
         
         @Override
         public void detach()
@@ -182,7 +183,7 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public boolean hasChildren(KBHandle aNode)
+        public boolean hasChildren(KBObject aNode)
         {
             try {
                 // If the KB is read-only, then we cache the values and re-use the cached values.
@@ -227,7 +228,7 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public Iterator<? extends KBHandle> getChildren(KBHandle aNode)
+        public Iterator<? extends KBObject> getChildren(KBObject aNode)
         {
             try {
                 // If the KB is read-only, then we cache the values and re-use the cached values.
@@ -253,7 +254,7 @@ public class ConceptTreePanel extends Panel {
         }
 
         @Override
-        public IModel<KBHandle> model(KBHandle aObject)
+        public IModel<KBObject> model(KBObject aObject)
         {
             return Model.of(aObject);
         }

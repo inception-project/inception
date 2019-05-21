@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.log;
+package de.tudarmstadt.ukp.inception.kb;
 
-import java.util.List;
-import java.util.function.Consumer;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
-
-public interface EventRepository
+/**
+ * Exception indicating that a modification was attempted on a read-only knowledge base.
+ */
+public class ReadOnlyException
+    extends RuntimeException
 {
-    static final String SERVICE_NAME = "eventRepository";
+    private static final long serialVersionUID = 4240186735045775177L;
 
-    void create(LoggedEvent... aEvents);
-
-    List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
-            int aSize, long recommenderId);
-
-    void forEachLoggedEvent(Project aProject, Consumer<LoggedEvent> aConsumer);
+    public ReadOnlyException(String aMessage)
+    {
+        super(aMessage);
+    }
 }
