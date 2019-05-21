@@ -17,7 +17,7 @@ In order to use **docker-compose**, specify
 export INCEPTION_HOME=/path/on/host/inception
 export INCEPTION_PORT=port-on-host
 
-In the folder where the **docker-compose.yml** is located, call
+In the folder where the **inception-doc/src/main/resources/META-INF/asciidoc/admin-guide/scripts/docker-compose.yml** is located, call
 
     docker-compose up -d
     
