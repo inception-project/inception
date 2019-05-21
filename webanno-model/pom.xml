@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.6.0-beta-7</version>
+    <version>3.6.0-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-model</artifactId>
   <name>WebAnno - Core - Model</name>
