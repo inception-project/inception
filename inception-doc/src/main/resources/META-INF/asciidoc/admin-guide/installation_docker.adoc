@@ -100,7 +100,7 @@ annotations and knowledge bases, these are stored in files on disk). For product
 recommended to use a separate MySQL database instead of the embedded SQL database.
 
 You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download link:https://raw.githubusercontent.com/inception/inception/master/inception-app-webapp/src/main/docker/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
+We provide a docker-compose example file, which combines the two containers. In order to use this, download link:admin-guide/scripts/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
 
 [source,text,subs="+attributes"]
 ----

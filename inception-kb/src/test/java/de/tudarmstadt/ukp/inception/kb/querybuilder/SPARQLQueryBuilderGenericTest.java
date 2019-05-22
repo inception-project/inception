@@ -24,11 +24,13 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -191,6 +193,26 @@ public class SPARQLQueryBuilderGenericTest
         });
     }
     
+    @Test
+    public void thatRegexMetaCharactersAreSafe()
+    {
+        try (RepositoryConnection conn = repo.getConnection()) {
+            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder
+                    .forItems(kb)
+                    .withLabelMatchingExactlyAnyOf(".[]*+{}()lala")
+                    .limit(3);
+            
+            System.out.printf("Query   : %n");
+            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
+                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+            
+            builder.asHandles(conn, true);
+            
+            // We don't need an assertion here since we do not expect any results - it is only important
+            // that the query does not crash
+        }
+    }
+    
     @SuppressWarnings("resource")
     private void importData(Repository aRepo, String aUrl) throws IOException
     {
@@ -223,7 +245,17 @@ public class SPARQLQueryBuilderGenericTest
             return new PathMatchingResourcePatternResolver().getResource(aUrl).getInputStream();
         }
         else {
-            return new URL(aUrl).openStream();
+            if ("https://www.bbc.co.uk/ontologies/wo/1.1.ttl".equals(aUrl)) {
+                return new File("src/test/resources/upstream-data/1.1.ttl").toURI().toURL()
+                        .openStream();
+            }
+            else if ("http://purl.org/olia/penn.owl".equals(aUrl)) {
+                return new File("src/test/resources/upstream-data/penn.owl").toURI().toURL()
+                        .openStream();
+            }
+            else {
+                return new URL(aUrl).openStream();
+            }
         }
     }
     
