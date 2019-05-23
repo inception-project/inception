@@ -112,7 +112,7 @@ public class RecommendationServiceImplIntegrationTest
     }
 
     @Test
-    public void getRecommenders_WithDisabledRecommender_ShouldReturnEmptyList()
+    public void getRecommenders_WithOnlyDisabledRecommender_ShouldReturnEmptyList()
     {
         rec = buildRecommender(project, feature);
         rec.setEnabled(false);
@@ -121,7 +121,7 @@ public class RecommendationServiceImplIntegrationTest
 
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
-        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();;
+        assertThat(enabledRecommenders).as("Check that no recommender is found").isEmpty();
     }
 
     @Test
@@ -137,8 +137,12 @@ public class RecommendationServiceImplIntegrationTest
 
         assertThat(enabledRecommenders)
                 .as("Check that no recommender is found")
-                .isEmpty();;
+                .isEmpty();
     }
+
+
+
+    // Helper
 
     private Recommender buildRecommender(Project aProject, AnnotationFeature aFeature)
     {
@@ -153,7 +157,6 @@ public class RecommendationServiceImplIntegrationTest
         return recommender;
     }
 
-    // Helper
     private Project createProject(String aName)
     {
         Project project = new Project();
@@ -162,7 +165,7 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(project);
     }
 
-    public AnnotationLayer createAnnotationLayer()
+    private AnnotationLayer createAnnotationLayer()
     {
         AnnotationLayer layer = new AnnotationLayer();
         layer.setEnabled(true);
@@ -175,7 +178,7 @@ public class RecommendationServiceImplIntegrationTest
         return testEntityManager.persist(layer);
     }
 
-    public AnnotationFeature createAnnotationFeature(AnnotationLayer aLayer, String aName)
+    private AnnotationFeature createAnnotationFeature(AnnotationLayer aLayer, String aName)
     {
         AnnotationFeature feature = new AnnotationFeature();
         feature.setLayer(aLayer);

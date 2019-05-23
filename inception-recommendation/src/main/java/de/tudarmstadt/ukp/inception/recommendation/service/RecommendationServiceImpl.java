@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -61,9 +62,9 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.FeatureDescription;
+import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
@@ -91,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -772,9 +774,10 @@ public class RecommendationServiceImpl
 
                         try {
                             predictionCas = cloneCAS(originalCas.get());
+                            monkeyPatchTypeSystem(aProject, predictionCas);
                         }
-                        catch (UIMAException e) {
-                            log.error("Cannot clone annotation CAS for user [{}] of document "
+                        catch (UIMAException | IOException e) {
+                            log.error("Cannot create prediction CAS for user [{}] of document "
                                     + "[{}]({}) in project [{}]({}) - skipping document",
                                     username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
@@ -803,7 +806,7 @@ public class RecommendationServiceImpl
                         // Extract the suggestions from the data which the recommender has written 
                         // into the CAS
                         List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,
-                                predictionCas, predictionType, labelFeature, scoreFeature,
+                                predictionCas,
                                 document, recommender);
                         
                         // Calculate the visibility of the suggestions. This happens via the 
@@ -838,27 +841,34 @@ public class RecommendationServiceImpl
         }
     }
 
-    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas, Type predictionType,
-            Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
-            Recommender aRecommender)
+    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas,
+                                                          SourceDocument aDocument,
+                                                          Recommender aRecommender)
     {
+        String typeName = aRecommender.getLayer().getName();
+        String featureName = aRecommender.getFeature().getName();
+
+        Type predictionType = CasUtil.getType(aCas, typeName);
+        Feature predictedFeature = predictionType.getFeatureByBaseName(featureName);
+        Feature scoreFeature = predictionType.getFeatureByBaseName(featureName + "_score");
+
         int predictionCount = 0;
+
+        Type tokenType = getType(aCas, Token.class);
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
-            List<Token> tokens = JCasUtil.selectCovered(Token.class, annotationFS);
-            Token firstToken = tokens.get(0);
-            Token lastToken = tokens.get(tokens.size() - 1);
+            List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
+            AnnotationFS firstToken = tokens.get(0);
+            AnnotationFS lastToken = tokens.get(tokens.size() - 1);
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
-            double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
-                    .orElse(NO_SCORE);
-            String featurename = aRecommender.getFeature().getName();
+            double score = annotationFS.getDoubleValue(scoreFeature);
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featurename, aDocument.getName(),
+                    aRecommender.getLayer().getId(), featureName, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
                     label, score);
 
@@ -994,6 +1004,8 @@ public class RecommendationServiceImpl
             }
         }
     }
+
+
     
     private CAS cloneCAS(CAS aCAS) throws ResourceInitializationException, CASException
     {
@@ -1006,5 +1018,31 @@ public class RecommendationServiceImpl
         clone.getJCas();
         
         return clone;
+    }
+
+    private void monkeyPatchTypeSystem(Project aProject, CAS aCas)
+            throws UIMAException, IOException {
+
+        try (StopWatch watch = new StopWatch(log, "adding score features")) {
+            TypeSystemDescription ts = annoService.getFullProjectTypeSystem(aProject);
+
+            for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
+                TypeDescription type = ts.getType(layer.getName());
+
+                if (type == null) {
+                    log.debug("Could not monkey patch type [{}]", layer.getName());
+                    continue;
+                }
+
+                for (FeatureDescription feature : type.getFeatures()) {
+                    String scoreFeatureName = feature.getName() + "_score";
+                    type.addFeature(scoreFeatureName, "Score feature", "uima.cas.Double");
+                }
+
+                type.addFeature("isPrediction", "Is Prediction", "uima.cas.Boolean");
+            }
+
+            annoService.upgradeCas(aCas, ts);
+        }
     }
 }

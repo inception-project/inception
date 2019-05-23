@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
@@ -131,9 +130,9 @@ public class StringMatchingRecommender
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(() -> 
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
         
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type predictionType = getAnnotationType(aCas, layerName);
+        Feature confidenceFeature = predictionType.getFeatureByBaseName(featureName + "_score");
+        Feature labelFeature = predictionType.getFeatureByBaseName(featureName);
 
         List<Sample> data = predict(0, aCas, dict);
         

@@ -602,7 +602,7 @@ public class MtasDocumentIndex
 
             indexWriter.commit();
 
-            log.info(
+            log.debug(
                     "Removed document from index in project [{}]({}). sourceId: {}, "
                             + "annotationId: {}, user: {}",
                     project.getName(), project.getId(), aSourceDocumentId, aAnnotationDocumentId,
@@ -715,7 +715,7 @@ public class MtasDocumentIndex
         // Delete the index directory
         FileUtils.deleteDirectory(getIndexDir());
 
-        log.info("Index for project [{}]({}) has been deleted", project.getName(),
+        log.debug("Index for project [{}]({}) has been deleted", project.getName(),
                 project.getId());
     }
 
@@ -785,10 +785,10 @@ public class MtasDocumentIndex
                 log.info("Indexing all documents in the project [{}]({})", project.getName(),
                         project.getId());
                 indexAllDocuments();
-                log.info("All documents have been indexed in the project [{}]({})",
+                log.debug("All documents have been indexed in the project [{}]({})",
                         project.getName(), project.getId());
             } else {
-                log.info("Index has not been opened. No documents have been indexed.");
+                log.debug("Index has not been opened. No documents have been indexed.");
             }
         }
         catch (Exception e) {
@@ -839,7 +839,7 @@ public class MtasDocumentIndex
         int sourceDocs = 0;
 
         try {
-            log.info("Indexing all annotation documents of project [{}]({})", project.getName(),
+            log.debug("Indexing all annotation documents of project [{}]({})", project.getName(),
                     project.getId());
 
             for (User user : projectService.listProjectUsersWithPermissions(project)) {
@@ -851,7 +851,7 @@ public class MtasDocumentIndex
                 }
             }
 
-            log.info("Indexing all source documents of project [{}]({})", project.getName(),
+            log.debug("Indexing all source documents of project [{}]({})", project.getName(),
                     project.getId());
 
             for (SourceDocument document : documentService.listSourceDocuments(project)) {
@@ -863,7 +863,7 @@ public class MtasDocumentIndex
             log.error("Unable to index document", e);
         }
 
-        log.info(String.format(
+        log.debug(String.format(
                 "Indexing results: %d source doc(s), %d annotation doc(s) for %d user(s)",
                 sourceDocs, annotationDocs, users));
     }
