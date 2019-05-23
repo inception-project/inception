@@ -493,12 +493,17 @@ public class DL4JSequenceRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
+        double trainRatio = (double) trainingSetSize / (double) (data.size() - testSetSize);
         
         if (trainingSetSize < 2 || testSetSize < 2) {
-            log.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
+                    trainingSetSize, testSetSize, data.size());
+            log.info(info);
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -536,8 +541,8 @@ public class DL4JSequenceRecommender
                     }
                 }
             }
-            return labelPairs.stream()
-                    .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_LABEL));
+            return labelPairs.stream().collect(
+                    EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

@@ -169,13 +169,18 @@ public class OpenNlpNerRecommender
         
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
+        double trainRatio = (double) trainingSetSize / (double) (data.size() - testSetSize);
 
         if (trainingSetSize < 2 || testSetSize < 2) {
-            LOG.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
             
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -205,7 +210,7 @@ public class OpenNlpNerRecommender
         }
 
         return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, NO_NE_TAG));
+                .collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**

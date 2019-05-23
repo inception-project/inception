@@ -36,7 +36,13 @@ public class EvaluationResult
 {
     private final int trainingSetSize;
     private final int testSetSize;
+    
+    /**
+     * Rate of this training data compared to all training data
+     */
+    private final double trainingDataRatio;
     private boolean skippedEvaluation;
+    private String errorMsg;
 
     private final Set<String> ignoreLabels;
 
@@ -52,25 +58,28 @@ public class EvaluationResult
         confusionMatrix = new ConfusionMatrix();
         trainingSetSize = 0;
         testSetSize = 0;
+        trainingDataRatio = 0.0;
     }
 
-    public EvaluationResult(ConfusionMatrix aConfMatrix,
-            int aTrainSetSize, int aTestSetSize, Set<String> aIgnoreLabels)
+    public EvaluationResult(ConfusionMatrix aConfMatrix, int aTrainSetSize, int aTestSetSize,
+            double aTrainDataPercentage, Set<String> aIgnoreLabels)
     {
         ignoreLabels = new LinkedHashSet<>();
         ignoreLabels.addAll(aIgnoreLabels);
-        
+
         confusionMatrix = aConfMatrix;
         trainingSetSize = aTrainSetSize;
         testSetSize = aTestSetSize;
+        trainingDataRatio = aTrainDataPercentage;
     }
     
-    public EvaluationResult(int aTrainSetSize, int aTestSetSize)
+    public EvaluationResult(int aTrainSetSize, int aTestSetSize, double aTrainDataPercentage)
     {
         ignoreLabels = new HashSet<>();
         confusionMatrix = new ConfusionMatrix();
         trainingSetSize = aTrainSetSize;
         testSetSize = aTestSetSize;
+        trainingDataRatio = aTrainDataPercentage;
     }
 
     public int getNumOfLabels()
@@ -212,6 +221,11 @@ public class EvaluationResult
         return testSetSize;
     }
 
+    public double getTrainDataRatio()
+    {
+        return trainingDataRatio;
+    }
+
     public void setEvaluationSkipped(boolean aSkipVal)
     {
         skippedEvaluation = aSkipVal;
@@ -227,6 +241,16 @@ public class EvaluationResult
         return skippedEvaluation;
     }
     
+    public String getErrorMsg()
+    {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String aErrorMsg)
+    {
+        errorMsg = aErrorMsg;
+    }
+
     public void setConfusionMatrix(ConfusionMatrix aConfusionMatrix)
     {
         confusionMatrix = aConfusionMatrix;
@@ -238,9 +262,10 @@ public class EvaluationResult
     }
 
     public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
-            String... aIgnoreLabels)
+            double aTrainDataPercentage, String... aIgnoreLabels)
     {
-        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aIgnoreLabels);
+        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aTrainDataPercentage,
+                aIgnoreLabels);
     }
     
     public static class EvaluationResultCollector
@@ -249,13 +274,15 @@ public class EvaluationResult
         private final Set<String> ignoreLabels;
         private final int testSize;
         private final int trainSize;
+        private final double trainDataRatio;
 
-        public EvaluationResultCollector(int aTrainSetSize,
-                int aTestSetSize, String... aIgnoreLabels)
+        public EvaluationResultCollector(int aTrainSetSize, int aTestSetSize,
+                double aTrainDataPercentage, String... aIgnoreLabels)
         {
             ignoreLabels = new HashSet<>();
             testSize = aTestSetSize;
             trainSize = aTrainSetSize;
+            trainDataRatio = aTrainDataPercentage;
             Collections.addAll(ignoreLabels, aIgnoreLabels);
         }
 
@@ -264,6 +291,7 @@ public class EvaluationResult
             ignoreLabels = new HashSet<>();
             testSize = 0;
             trainSize = 0;
+            trainDataRatio = 0;
         }
 
         @Override
@@ -292,7 +320,7 @@ public class EvaluationResult
         public Function<ConfusionMatrix, EvaluationResult> finisher()
         {
             return confMatrix -> new EvaluationResult(confMatrix, trainSize,
-                    testSize, ignoreLabels);
+                    testSize, trainDataRatio, ignoreLabels);
         }
 
         @Override

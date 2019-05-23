@@ -43,7 +43,10 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
                 type: xAxixType,
                 tick: {
                     rotate: 0,
-                    multiline: true
+                    multiline: true,
+                    format: function(a) {
+                        return Math.round(1e2 * a) / 1e2;
+                    }
                 }
             },
             //to round off the decimal points of the y-axis values to 4 if it is a decimal number.
@@ -53,6 +56,11 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
                         return Math.round(1e4 * a) / 1e4;
                     }
                 }
+            }
+        },
+        tooltip: {
+            format: {
+                title: function (d) { return 'Normalized Traindatasize ' + d.toFixed(2)}
             }
         }
     });
