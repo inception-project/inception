@@ -640,7 +640,6 @@
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-example-imls-data-majority</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>
