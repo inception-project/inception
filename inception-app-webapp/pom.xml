@@ -93,10 +93,14 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
     </dependency>
+
+    <!-- INCEPTION - Example -->
+    <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-example-imls-data-majority</artifactId>
     </dependency>
+    !-->
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
     <dependency>

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentUri;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -56,10 +55,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class NamedEntityLinker
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     private Recommender recommender;
     private NamedEntityLinkerTraits traits;
@@ -76,7 +74,8 @@ public class NamedEntityLinker
             KnowledgeBaseService aKbService, ConceptLinkingService aClService,
             FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
-        recommender = aRecommender;
+        super(aRecommender);
+
         traits = aTraits;
         kbService = aKbService;
         clService = aClService;
@@ -200,14 +199,15 @@ public class NamedEntityLinker
             }
         }
 
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type predictedType = getPredictedType(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
 
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
 
         for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
             .collect(Collectors.toList())) {
-            AnnotationFS annotation = aCas.createAnnotation(predictionType, aBegin, aEnd);
-            annotation.setStringValue(labelFeature, prediction.getIdentifier());
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
+            annotation.setStringValue(predictedFeature, prediction.getIdentifier());
             aCas.addFsToIndexes(annotation);
         }
     }

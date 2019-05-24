@@ -22,48 +22,28 @@
     <artifactId>inception-app</artifactId>
     <version>0.10.0-SNAPSHOT</version>
   </parent>
-  <artifactId>inception-support</artifactId>
-  <name>INCEpTION - Support library</name>
+  <artifactId>inception-testing</artifactId>
+  <name>INCEpTION - Test Support library</name>
   <dependencies>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
 
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-
-    <!-- Wicket -->
-
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-util</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-      <version>2.10.3</version>
-    </dependency>
+    <!-- WebAnno -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
-      <artifactId>webanno-api-annotation</artifactId>
-      <version>3.6.0-SNAPSHOT</version>
+      <artifactId>webanno-api</artifactId>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api-dao</artifactId>
-      <version>3.6.0-SNAPSHOT</version>
+    </dependency>
+
+    <!-- UIMA -->
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
     </dependency>
   </dependencies>
 </project>

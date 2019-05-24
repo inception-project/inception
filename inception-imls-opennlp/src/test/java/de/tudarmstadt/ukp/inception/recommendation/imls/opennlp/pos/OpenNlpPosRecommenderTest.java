@@ -49,7 +49,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class OpenNlpPosRecommenderTest
 {
@@ -96,7 +95,7 @@ public class OpenNlpPosRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<POS> predictions = JCasUtil.select(cas.getJCas(), POS.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

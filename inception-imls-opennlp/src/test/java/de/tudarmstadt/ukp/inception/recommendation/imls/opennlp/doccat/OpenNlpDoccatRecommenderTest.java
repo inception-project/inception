@@ -60,7 +60,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class OpenNlpDoccatRecommenderTest
 {
@@ -107,7 +106,7 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = select(cas.getJCas(), NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

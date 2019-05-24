@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -31,13 +30,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.XMLInputSource;
@@ -49,7 +44,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
@@ -59,12 +53,18 @@ public class RemoteStringMatchingNerRecommender
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
 
+    private final String layerName;
+    private final String featureName;
+
     public RemoteStringMatchingNerRecommender(Recommender aRecommender)
     {
         recommender = aRecommender;
         context = new RecommenderContext();
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         recommendationEngine = new StringMatchingRecommender(recommender, traits);
+
+        layerName = aRecommender.getLayer().getName();
+        featureName = aRecommender.getFeature().getName();
     }
 
     public void train(String aTrainingRequestJson) throws Exception
@@ -98,19 +98,6 @@ public class RemoteStringMatchingNerRecommender
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
         recommendationEngine.predict(context, cas);
-
-        // Convert PredictionSpan to NamedEntity annotations
-        Type predictionType = getType(cas, PredictedSpan.class);
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
-        Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-        Feature valueFeature = neType.getFeatureByBaseName("value");
-
-        for (AnnotationFS fs : CasUtil.select(cas, predictionType)) {
-            AnnotationFS ne = cas.createAnnotation(neType, fs.getBegin(), fs.getEnd());
-            ne.setStringValue(valueFeature, fs.getStringValue(labelFeature));
-            cas.addFsToIndexes(ne);
-            cas.removeFsFromIndexes(fs);
-        }
 
         return buildPredictionResponse(cas);
     }

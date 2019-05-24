@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -789,17 +788,6 @@ public class RecommendationServiceImpl
                     try {
                         RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                        Type predictionType = getAnnotationType(predictionCas,
-                                recommendationEngine.getPredictedType());
-                        Feature labelFeature = predictionType
-                                .getFeatureByBaseName(recommendationEngine.getPredictedFeature());
-                        Optional<Feature> scoreFeature = recommendationEngine.getScoreFeature()
-                                .map(predictionType::getFeatureByBaseName);
-                        
-                        // Remove any annotations that will be predicted (either manually created
-                        // or from a previous prediction run) from the CAS
-                        removePredictions(predictionCas, predictionType);
-                        
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
 
@@ -834,9 +822,9 @@ public class RecommendationServiceImpl
         return predictions;
     }
 
-    private void removePredictions(CAS aCas, Type aPredictionType)
+    private void removePredictions(CAS aCas, Type apredictedType)
     {
-        for (AnnotationFS fs : CasUtil.select(aCas, aPredictionType)) {
+        for (AnnotationFS fs : CasUtil.select(aCas, apredictedType)) {
             aCas.removeFsFromIndexes(fs);
         }
     }
@@ -848,9 +836,9 @@ public class RecommendationServiceImpl
         String typeName = aRecommender.getLayer().getName();
         String featureName = aRecommender.getFeature().getName();
 
-        Type predictionType = CasUtil.getType(aCas, typeName);
-        Feature predictedFeature = predictionType.getFeatureByBaseName(featureName);
-        Feature scoreFeature = predictionType.getFeatureByBaseName(featureName + "_score");
+        Type predictedType = CasUtil.getType(aCas, typeName);
+        Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
+        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
 
         int predictionCount = 0;
 
@@ -858,7 +846,7 @@ public class RecommendationServiceImpl
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
-        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
+        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
             List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
             AnnotationFS firstToken = tokens.get(0);
             AnnotationFS lastToken = tokens.get(tokens.size() - 1);
@@ -1036,10 +1024,10 @@ public class RecommendationServiceImpl
 
                 for (FeatureDescription feature : type.getFeatures()) {
                     String scoreFeatureName = feature.getName() + "_score";
-                    type.addFeature(scoreFeatureName, "Score feature", "uima.cas.Double");
+                    type.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
                 }
 
-                type.addFeature("isPrediction", "Is Prediction", "uima.cas.Boolean");
+                type.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_STRING);
             }
 
             annoService.upgradeCas(aCas, ts);

@@ -25,17 +25,13 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.CASRuntimeException;
-import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.util.TypeSystemUtil;
 import org.apache.uima.util.XMLSerializer;
@@ -62,7 +58,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class ExternalRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
@@ -73,6 +69,8 @@ public class ExternalRecommender
 
     public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
     {
+        super(aRecommender);
+
         recommender = aRecommender;
         traits = aTraits;
         client = new OkHttpClient();
@@ -128,13 +126,6 @@ public class ExternalRecommender
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
     {
-        // External recommender can predict arbitrary annotations, not only PredictedSpans.
-        // In order to support the case where the prediction annotation type is the predicted
-        // annotation type (e.g. recommend named entities, recommender creates named entities),
-        // the predicted annotation has to be removed from the CAS first in order to be able
-        // to differentiate between the two
-        removePredictedAnnotations(aCas);
-
         String typeSystem = serializeTypeSystem(aCas);
 
         PredictionRequest predictionRequest = new PredictionRequest();
@@ -168,14 +159,6 @@ public class ExternalRecommender
         }
         catch (SAXException | IOException e) {
             throw new RecommendationException("Error while deserializing CAS!", e);
-        }
-    }
-
-    private void removePredictedAnnotations(CAS aCas)
-    {
-        Type type = CasUtil.getType(aCas, getPredictedType());
-        for (AnnotationFS annotationFS : CasUtil.select(aCas, type)) {
-            aCas.removeFsFromIndexes(annotationFS);
         }
     }
 
@@ -288,24 +271,6 @@ public class ExternalRecommender
         return result;
     }
 
-    @Override
-    public String getPredictedType()
-    {
-        return recommender.getLayer().getName();
-    }
-
-    @Override
-    public String getPredictedFeature()
-    {
-        return recommender.getFeature().getName();
-    }
-    
-    @Override
-    public Optional<String> getScoreFeature()
-    {
-        return Optional.empty();
-    }
-    
     @Override
     public boolean requiresTraining()
     {

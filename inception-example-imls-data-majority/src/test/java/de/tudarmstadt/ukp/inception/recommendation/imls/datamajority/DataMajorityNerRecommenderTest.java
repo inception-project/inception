@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper.addScoreFeature;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,6 +33,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -52,7 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class DataMajorityNerRecommenderTest
 {
@@ -88,21 +91,22 @@ public class DataMajorityNerRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
+        addScoreFeature(cas, NamedEntity.class.getName(), "value");
         
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         assertThat(predictions).as("Score is positive")
-            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
 
         assertThat(predictions).as("Some score is not perfect")
-            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
 
     @Test
@@ -157,22 +161,6 @@ public class DataMajorityNerRecommenderTest
         assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
         assertThat(result.computeF1Score()).as("correct f1").isEqualTo( (2.0 / 27) / (4.0 / 9));
     }
-
-    private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aIndices) throws Exception
-    {
-        JCas jcas = JCasFactory.createText(aText, "de");
-
-        for (int i = 0; i < aVals.length; i++) {
-            NamedEntity newNE = new NamedEntity(jcas, aIndices[i][0], aIndices[i][1]);
-            newNE.setValue(aVals[i]);
-            newNE.addToIndexes();
-        }
-
-        List<CAS> casses = new ArrayList<>();
-        casses.add(jcas.getCas());
-
-        return casses;
-    }
     
     @Test
     public void thatEvaluationWithNoClassesWorks() throws Exception
@@ -221,6 +209,22 @@ public class DataMajorityNerRecommenderTest
         }
     }
 
+    private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aIndices) throws Exception
+    {
+        JCas jcas = JCasFactory.createText(aText, "de");
+
+        for (int i = 0; i < aVals.length; i++) {
+            NamedEntity newNE = new NamedEntity(jcas, aIndices[i][0], aIndices[i][1]);
+            newNE.setValue(aVals[i]);
+            newNE.addToIndexes();
+        }
+
+        List<CAS> casses = new ArrayList<>();
+        casses.add(jcas.getCas());
+
+        return casses;
+    }
+
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de");
@@ -267,4 +271,11 @@ public class DataMajorityNerRecommenderTest
 
         return recommender;
     }
+
+    private static double getScore(AnnotationFS aAnnotationFS)
+    {
+        return RecommenderHelper.getScore(aAnnotationFS, "value");
+    }
+
+
 }

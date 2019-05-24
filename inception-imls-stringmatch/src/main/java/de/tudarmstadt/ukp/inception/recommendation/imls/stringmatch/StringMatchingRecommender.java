@@ -22,7 +22,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -56,30 +55,22 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
 
 public class StringMatchingRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<Trie<DictEntry>> KEY_MODEL = new Key<>("model");
 
     private static final String UNKNOWN_LABEL = "unknown";
-
     private static final String NO_LABEL = "O";
 
-
     private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private final String layerName;
-    private final String featureName;
-    private final int maxRecommendations;
     private final StringMatchingRecommenderTraits traits;
-    
     private List<GazeteerEntry> pretrainData = emptyList();
 
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
+        super(aRecommender);
+
         traits = aTraits;
     }
 
@@ -110,11 +101,11 @@ public class StringMatchingRecommender
         
         // Learn from the annotated data
         for (CAS cas : aCasses) {
-            Type annotationType = getType(cas, layerName);
-            Feature labelFeature = annotationType.getFeatureByBaseName(featureName);
+            Type predictedType = getPredictedType(cas);
+            Feature predictedFeature = getPredictedFeature(cas);
 
-            for (AnnotationFS ann : select(cas, annotationType)) {
-                learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(labelFeature));
+            for (AnnotationFS ann : select(cas, predictedType)) {
+                learn(dict, ann.getCoveredText(), ann.getFeatureValueAsString(predictedFeature));
             }
         }
         
@@ -129,19 +120,19 @@ public class StringMatchingRecommender
     {
         Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseThrow(() -> 
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
-        
-        Type predictionType = getAnnotationType(aCas, layerName);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName(featureName + "_score");
-        Feature labelFeature = predictionType.getFeatureByBaseName(featureName);
+
+        Type predictedType = getPredictedType(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
 
         List<Sample> data = predict(0, aCas, dict);
         
         for (Sample sample : data) {
             for (Span span : sample.getSpans()) {
-                AnnotationFS annotation = aCas.createAnnotation(predictionType, span.getBegin(),
+                AnnotationFS annotation = aCas.createAnnotation(predictedType, span.getBegin(),
                         span.getEnd());
-                annotation.setDoubleValue(confidenceFeature, span.getScore());
-                annotation.setStringValue(labelFeature, span.getLabel());
+                annotation.setStringValue(predictedFeature, span.getLabel());
+                annotation.setDoubleValue(scoreFeature, span.getScore());
                 aCas.addFsToIndexes(annotation);
             }
         }
@@ -295,17 +286,17 @@ public class StringMatchingRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
             Type annotationType = getType(cas, aLayerName);
-            Feature labelFeature = annotationType.getFeatureByBaseName(aFeatureName);
+            Feature predictedFeature = annotationType.getFeatureByBaseName(aFeatureName);
             
             for (AnnotationFS sentence : select(cas, sentenceType)) {
                 List<Span> spans = new ArrayList<>();
                 
                 for (AnnotationFS annotation : selectCovered(annotationType, sentence)) {
-                    String label = annotation.getFeatureValueAsString(labelFeature);
+                    String label = annotation.getFeatureValueAsString(predictedFeature);
                     if (isNotEmpty(label)) {
                         spans.add(new Span(annotation.getBegin(), annotation.getEnd(),
                                 annotation.getCoveredText(),
-                                annotation.getFeatureValueAsString(labelFeature), -1.0));
+                                annotation.getFeatureValueAsString(predictedFeature), -1.0));
                     }
                 }
                 

@@ -32,6 +32,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -55,7 +56,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
 
 public class StringMatchingRecommenderTest
@@ -99,16 +99,16 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         assertThat(predictions).as("Score is positive")
-            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
 
         assertThat(predictions).as("Some score is not perfect")
-            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
     
     @Test
@@ -121,9 +121,9 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
 
-        assertThat(predictions).as("Has all null labels").extracting(PredictedSpan::getLabel)
+        assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
     }
     
@@ -158,18 +158,18 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         assertThat(predictions)
             .as("Score is positive")
-            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
 
         assertThat(predictions)
             .as("Some score is not perfect")
-            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
 
 
@@ -336,5 +336,12 @@ public class StringMatchingRecommenderTest
         recommender.setMaxRecommendations(3);
 
         return recommender;
+    }
+
+    private static Double getScore(AnnotationFS fs)
+    {
+        String name = fs.getType().getName();
+        Feature feature = fs.getType().getFeatureByBaseName(name + "_score");
+        return fs.getDoubleValue(feature);
     }
 }
