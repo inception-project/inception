@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,9 +17,27 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-public interface RemoteApiProperties
-{
-    public boolean isEnabled();
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
-    public void setEnabled(boolean aRemoteApiEnabled);
+@Component("RemoteApiProperties-secondary")
+@ConfigurationProperties("remote-api")
+public class RemoteApiPropertiesImpl implements RemoteApiProperties
+{
+    private boolean enabled = false;
+
+    @Override
+    public boolean isEnabled()
+    {
+        boolean enabledViaLegacySystemProperty = "true"
+                .equals(System.getProperty("webanno.remote-api.enable"));
+        
+        return enabled || enabledViaLegacySystemProperty;
+    }
+
+    @Override
+    public void setEnabled(boolean aRemoteApiEnabled)
+    {
+        enabled = aRemoteApiEnabled;
+    }
 }
