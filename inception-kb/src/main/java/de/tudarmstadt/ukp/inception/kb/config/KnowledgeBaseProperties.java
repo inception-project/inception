@@ -17,35 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.kb.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("inception.knowledge-base")
-public class KnowledgeBaseProperties
+public interface KnowledgeBaseProperties
 {
-    public static final int HARD_MIN_RESULTS = 10;
+
+    public int getDefaultMaxResults();
     
-    private int defaultMaxResults = 1000;
-    private int hardMaxResults = 10000;
+    public void setDefaultMaxResults(int aDefaultMaxResults);
 
-    public int getDefaultMaxResults()
-    {
-        return defaultMaxResults;
-    }
+    public int getHardMaxResults();
 
-    public void setDefaultMaxResults(int aDefaultMaxResults)
-    {
-        defaultMaxResults = aDefaultMaxResults;
-    }
-
-    public int getHardMaxResults()
-    {
-        return hardMaxResults;
-    }
-
-    public void setHardMaxResults(int aHardMaxResults)
-    {
-        hardMaxResults = aHardMaxResults;
-    }
+    public void setHardMaxResults(int aHardMaxResults);
 }
