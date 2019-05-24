@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +37,6 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
@@ -63,6 +61,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class NamedEntityLinkerTest
 {
@@ -129,9 +128,11 @@ public class NamedEntityLinkerTest
         CAS cas = casList.get(0);
         
         sut.train(context, Collections.singletonList(cas));
+        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

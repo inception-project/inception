@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 public class NamedEntityLinker
     extends RecommendationEngine
 {
-    private Recommender recommender;
     private NamedEntityLinkerTraits traits;
     
     private KnowledgeBaseService kbService;
@@ -95,21 +94,20 @@ public class NamedEntityLinker
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
         List<CAS> aCasList)
     {
-        Type tokenType = org.apache.uima.fit.util.CasUtil
-            .getType(aCasList.get(0), recommender.getLayer().getName());
-        Feature feature = tokenType.getFeatureByBaseName(recommender.getFeature().getName());
-
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples = new HashSet<>();
         for (CAS cas : aCasList) {
+            Type predictedType = getPredictedType(cas);
+            Feature predictedFeature = getPredictedFeature(cas);
+
             Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
             Type sentenceType = getType(cas, Sentence.class);
 
             Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                tokenType);
+                predictedType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
                     // If the identifier has not been set
-                    .filter(a -> a.getStringValue(feature) == null)
+                    .filter(a -> a.getStringValue(predictedFeature) == null)
                     .collect(Collectors.toSet());
                 namesPerDocument.addAll(tokens);
             }
