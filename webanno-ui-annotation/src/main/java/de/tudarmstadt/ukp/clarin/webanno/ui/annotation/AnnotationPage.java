@@ -113,6 +113,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class AnnotationPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private static final Logger LOG = LoggerFactory.getLogger(AnnotationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -343,7 +345,7 @@ public class AnnotationPage
         
         // Use the proper page navigator and position labels for the current paging strategy
         addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
-        addOrReplace(state.getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+        addOrReplace(state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
@@ -610,6 +612,7 @@ public class AnnotationPage
         }
         
         aTarget.addChildren(getPage(), IFeedback.class);
+        aTarget.add(get(MID_NUMBER_OF_PAGES));
         
         // Update URL for current document
         updateUrlFragment(aTarget);

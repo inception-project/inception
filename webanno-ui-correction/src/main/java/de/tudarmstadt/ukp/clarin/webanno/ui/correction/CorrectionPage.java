@@ -110,6 +110,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class CorrectionPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private static final Logger LOG = LoggerFactory.getLogger(CorrectionPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -162,11 +164,11 @@ public class CorrectionPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+        add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
-                        e.getRequestHandler().add(c))));
-
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                    (c, e) -> e.getRequestHandler().add(c))));
         
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
         // Override sidebar width from preferences
@@ -659,6 +661,7 @@ public class CorrectionPage
             curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
+            aTarget.add(get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);
