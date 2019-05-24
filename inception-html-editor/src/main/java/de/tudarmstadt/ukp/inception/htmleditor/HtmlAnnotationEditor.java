@@ -300,8 +300,7 @@ public class HtmlAnnotationEditor
             CAS cas = getCasProvider().get();
 
             VDocument vdoc = new VDocument();
-            preRenderer.render(vdoc, aState.getWindowBeginOffset(), aState.getWindowEndOffset(),
-                    cas, getLayersToRender());
+            preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas, getLayersToRender());
 
             List<Annotation> annotations = new ArrayList<>();
 
