@@ -30,9 +30,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.UIMAFramework;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.XMLInputSource;
@@ -96,6 +100,16 @@ public class RemoteStringMatchingNerRecommender
     {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
+
+        // Only work on real annotations, not on predictions
+        Type predictedType = CasUtil.getType(cas, recommender.getLayer().getName());
+        Feature feature = predictedType.getFeatureByBaseName("predicted");
+
+        for (AnnotationFS fs : CasUtil.select(cas, predictedType)) {
+            if (fs.getBooleanValue(feature)) {
+                cas.removeFsFromIndexes(fs);
+            }
+        }
 
         recommendationEngine.predict(context, cas);
 

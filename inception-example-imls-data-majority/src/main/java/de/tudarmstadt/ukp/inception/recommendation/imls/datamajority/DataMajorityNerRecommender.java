@@ -127,11 +127,13 @@ public class DataMajorityNerRecommender
         Type predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (Annotation ann : predictions) {
             AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
             annotation.setStringValue(predictedFeature, ann.label);
             annotation.setDoubleValue(scoreFeature, ann.score);
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }

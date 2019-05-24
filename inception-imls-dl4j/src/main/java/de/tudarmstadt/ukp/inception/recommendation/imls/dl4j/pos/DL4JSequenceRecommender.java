@@ -370,6 +370,7 @@ public class DL4JSequenceRecommender
 
             Feature scoreFeature = getScoreFeature(aCas);
             Feature predictedFeature = getPredictedFeature(aCas);
+            Feature isPredictionFeature = getIsPredictionFeature(aCas);
     
             final int limit = traits.getPredictionLimit();
             final int batchSize = traits.getBatchSize();
@@ -408,6 +409,7 @@ public class DL4JSequenceRecommender
                         //annotation.setDoubleValue(scoreFeature, prediction.getProb());
                         annotation.setStringValue(predictedFeature,
                                 outcomes.get(outcomeIdx).getLabels().get(tokenIdx));
+                        annotation.setBooleanValue(isPredictionFeature, true);
                         aCas.addFsToIndexes(annotation);
                     }
                     outcomeIdx++;

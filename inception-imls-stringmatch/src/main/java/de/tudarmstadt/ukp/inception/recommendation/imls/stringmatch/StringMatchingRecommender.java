@@ -123,6 +123,7 @@ public class StringMatchingRecommender
 
         Type predictedType = getPredictedType(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
         List<Sample> data = predict(0, aCas, dict);
@@ -133,6 +134,7 @@ public class StringMatchingRecommender
                         span.getEnd());
                 annotation.setStringValue(predictedFeature, span.getLabel());
                 annotation.setDoubleValue(scoreFeature, span.getScore());
+                annotation.setBooleanValue(isPredictionFeature, true);
                 aCas.addFsToIndexes(annotation);
             }
         }

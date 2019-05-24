@@ -109,4 +109,9 @@ public abstract class RecommendationEngine {
         String scoreFeatureName = featureName + "_score";
         return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
     }
+
+    protected Feature getIsPredictionFeature(CAS aCas)
+    {
+        return getPredictedType(aCas).getFeatureByBaseName("predicted");
+    }
 }

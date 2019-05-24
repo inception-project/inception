@@ -27,13 +27,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class DL4JSequenceRecommenderTest
 {
@@ -275,10 +275,10 @@ public class DL4JSequenceRecommenderTest
         
         sut.train(context, asList(cas.getCas()));
 
+        RecommenderHelper.addScoreFeature(cas.getCas(), POS.class, "PosValue");
         sut.predict(context, cas.getCas());
 
-        Collection<POS> predictions = JCasUtil.select(cas, POS.class);
-
+        List<POS> predictions = RecommenderHelper.getPredictions(cas.getCas(), POS.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
@@ -337,25 +337,26 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
-        
-        sut.train(context, asList(cas.getCas()));
+        JCas jCas = loadNerDevelopmentData();
+        CAS cas = jCas.getCas();
 
-        sut.predict(context, cas.getCas());
+        sut.train(context, asList(cas));
 
-        Collection<POS> predictions = JCasUtil.select(cas, POS.class);
+        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        sut.predict(context, cas);
 
+        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         // check how many labels are not padding labels
         long numWithLabel = predictions.stream()
-                .filter(p -> !p.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+                .filter(p -> !p.getValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
         System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
                 predictions.size());
         
         assertThat(predictions).as("There are predictions other than *No_Label*")
-            .anyMatch(l -> !l.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL));
+            .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test

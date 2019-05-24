@@ -108,6 +108,7 @@ public class OpenNlpDoccatRecommender
         Type tokenType = getType(aCas, Token.class);
         Feature scoreFeature = getScoreFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -128,6 +129,7 @@ public class OpenNlpDoccatRecommender
                     sentence.getEnd());
             annotation.setStringValue(predictedFeature, label);
             annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }

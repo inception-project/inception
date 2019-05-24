@@ -111,6 +111,7 @@ public class OpenNlpPosRecommender
 
         Feature scoreFeature = getScoreFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -154,6 +155,7 @@ public class OpenNlpPosRecommender
                     AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
                     annotation.setStringValue(predictedFeature, label);
                     annotation.setDoubleValue(scoreFeature, confidence);
+                    annotation.setBooleanValue(isPredictionFeature, true);
                     aCas.addFsToIndexes(annotation);
                 }
             }

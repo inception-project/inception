@@ -30,7 +30,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
-import org.apache.uima.jcas.cas.TOP;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 
@@ -43,13 +43,20 @@ public class RecommenderHelper
     public static void addScoreFeature(CAS aCas, String aTypeName, String aFeatureName)
             throws IOException, UIMAException
     {
+        String scoreFeatureName = aFeatureName + "_score";
+
         TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
         TypeDescription typeDescription = tsd.getType(aTypeName);
-        typeDescription.addFeature(aFeatureName + "_score", "Confidence feature", CAS.TYPE_NAME_DOUBLE);
+        typeDescription.addFeature(scoreFeatureName, "Confidence feature", CAS.TYPE_NAME_DOUBLE);
         typeDescription.addFeature("predicted", "Is prediction", CAS.TYPE_NAME_BOOLEAN);
 
         AnnotationSchemaService annotationSchemaService = new AnnotationSchemaServiceImpl();
         annotationSchemaService.upgradeCas(aCas, tsd);
+    }
+
+    public static <T extends Annotation> void addScoreFeature(CAS aCas, Class<T> aClass,
+        String aFeatureName) throws IOException, UIMAException {
+        addScoreFeature(aCas, aClass.getName(), aFeatureName);
     }
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)
@@ -58,7 +65,7 @@ public class RecommenderHelper
         return aAnnotationFS.getDoubleValue(feature);
     }
 
-    public static <T extends TOP> List<T> getPredictions(CAS aCas, Class<T> aClass)
+    public static <T extends Annotation> List<T> getPredictions(CAS aCas, Class<T> aClass)
             throws Exception
     {
         Type type = CasUtil.getType(aCas, aClass);

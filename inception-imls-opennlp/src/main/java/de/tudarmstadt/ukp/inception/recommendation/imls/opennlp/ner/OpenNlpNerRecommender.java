@@ -110,6 +110,7 @@ public class OpenNlpNerRecommender
         Type predictedType = getPredictedType(aCas);
 
         Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
 
         int predictionCount = 0;
@@ -134,6 +135,8 @@ public class OpenNlpNerRecommender
                 AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
                 annotation.setStringValue(predictedFeature, label);
                 annotation.setDoubleValue(scoreFeature, prediction.getProb());
+                annotation.setBooleanValue(isPredictionFeature, true);
+
                 aCas.addFsToIndexes(annotation);
             }
         }

@@ -24,14 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class OpenNlpPosRecommenderTest
 {
@@ -90,12 +89,13 @@ public class OpenNlpPosRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        
+        RecommenderHelper.addScoreFeature(cas, POS.class, "PosValue");
+
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<POS> predictions = JCasUtil.select(cas.getJCas(), POS.class);
+        List<POS> predictions = RecommenderHelper.getPredictions(cas, POS.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

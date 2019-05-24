@@ -202,12 +202,13 @@ public class NamedEntityLinker
         Type predictedType = getPredictedType(aCas);
         Feature scoreFeature = getScoreFeature(aCas);
         Feature predictedFeature = getPredictedFeature(aCas);
-
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
             .collect(Collectors.toList())) {
             AnnotationFS annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
             annotation.setStringValue(predictedFeature, prediction.getIdentifier());
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }

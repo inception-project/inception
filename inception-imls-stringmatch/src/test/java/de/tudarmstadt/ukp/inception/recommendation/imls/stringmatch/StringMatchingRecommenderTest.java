@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class StringMatchingRecommenderTest
 {
@@ -94,12 +94,13 @@ public class StringMatchingRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
+        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
         
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -110,23 +111,24 @@ public class StringMatchingRecommenderTest
         assertThat(predictions).as("Some score is not perfect")
             .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
-    
+
     @Test
     public void thatPredictionForNoLabelAnnosWorks() throws Exception
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         CAS cas = getTestCasNoLabelLabels();
+        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
     }
-    
+
     private CAS getTestCasNoLabelLabels() throws Exception
     {
         Dataset ds = loader.load("germeval2014-de");
@@ -135,7 +137,7 @@ public class StringMatchingRecommenderTest
         Feature valFeature = neType.getFeatureByBaseName("value");
         JCasUtil.select(cas.getJCas(), NamedEntity.class)
                 .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
-        
+
         return cas;
     }
 
@@ -144,25 +146,26 @@ public class StringMatchingRecommenderTest
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
-        
+        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
         List<GazeteerEntry> gazeteer = new ArrayList<>();
         gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
 
         sut.pretrain(gazeteer);
-        
+
         sut.train(context, emptyList());
 
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
+        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+             .isNotEmpty();
+
         assertThat(predictions)
             .as("Score is positive")
             .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
@@ -340,8 +343,6 @@ public class StringMatchingRecommenderTest
 
     private static Double getScore(AnnotationFS fs)
     {
-        String name = fs.getType().getName();
-        Feature feature = fs.getType().getFeatureByBaseName(name + "_score");
-        return fs.getDoubleValue(feature);
+        return RecommenderHelper.getScore(fs, "value");
     }
 }
