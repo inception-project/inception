@@ -40,8 +40,7 @@ import static org.eclipse.rdf4j.sparqlbuilder.constraint.Expressions.or;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.CONTAINS;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANG;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LANGMATCHES;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.LCASE;
-import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STR;
+import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.REGEX;
 import static org.eclipse.rdf4j.sparqlbuilder.constraint.SparqlFunction.STRSTARTS;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.prefix;
 import static org.eclipse.rdf4j.sparqlbuilder.core.SparqlBuilder.var;
@@ -714,13 +713,16 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            // Strip single quotes and asterisks because they have special semantics
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
             
             valuePatterns.add(VAR_SUBJECT
                     .has(FTS_LUCENE,
-                            bNode(LUCENE_QUERY, literalOf(value))
+                            bNode(LUCENE_QUERY, literalOf(sanitizedValue))
                             .andHas(LUCENE_PROPERTY, VAR_LABEL_PROPERTY))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
@@ -737,12 +739,14 @@ public class SPARQLQueryBuilder
         
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
-            if (StringUtils.isBlank(value)) {
+            String sanitizedValue = sanitizeQueryStringForFTS(value);
+            
+            if (StringUtils.isBlank(sanitizedValue)) {
                 continue;
             }
             
             valuePatterns.add(VAR_SUBJECT
-                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(value)))
+                    .has(FUSEKI_QUERY, collectionOf(VAR_LABEL_PROPERTY, literalOf(sanitizedValue)))
                     .andHas(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE)
                     .filter(equalsPattern(VAR_LABEL_CANDIDATE, value, kb)));
         }
@@ -1083,11 +1087,14 @@ public class SPARQLQueryBuilder
         
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
-        String queryString = aPrefixQuery.trim();
+        // Strip single quotes and asterisks because they have special semantics
+        String sanitizedValue = sanitizeQueryStringForFTS(aPrefixQuery);
         
-        if (queryString.isEmpty()) {
+        if (StringUtils.isBlank(sanitizedValue)) {
             returnEmptyResult = true;
         }
+
+        String queryString = sanitizedValue.trim();
 
         // If the query string entered by the user does not end with a space character, then
         // we assume that the user may not yet have finished writing the word and add a
@@ -1147,58 +1154,90 @@ public class SPARQLQueryBuilder
         return matchString(CONTAINS, aVariable, aSubstring);
     }
 
-    private Expression<?> equalsPattern(Variable aVariable, String aValue,
-            KnowledgeBase aKB)
+    private String asRegexp(String aValue)
+    {
+        String value = aValue;
+        // Escape metacharacters 
+        // value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]", "\\\\\\\\$0");
+        value = value.replaceAll("[{}()\\[\\].+*?^$\\\\|]+", ".+");
+        // Replace consecutive whitespace or control chars with a whitespace matcher
+        value = value.replaceAll("[\\p{Space}\\p{Cntrl}]+", "\\\\\\\\s+");
+        return value;
+    }
+    
+    private Expression<?> equalsPattern(Variable aVariable, String aValue, KnowledgeBase aKB)
     {
         String language = aKB.getDefaultLanguage();
         
         List<Expression<?>> expressions = new ArrayList<>();
         
-        // If case-insensitive mode is enabled, then lower-case the strings
         Operand variable = aVariable;
-        String value = aValue;
+        
+        String regexFlags = "";
         if (caseInsensitive) {
-            variable = function(LCASE, function(STR, variable));
-            value = value.toLowerCase();
+            regexFlags += "i";
         }
+        
+        // Match using REGEX to be resilient against extra whitespace
+        // Match exactly
+        String value = "^" + asRegexp(aValue) + "$";
         
         // Match with default language
         if (language != null) {
-            expressions.add(Expressions.equals(variable, literalOfLanguage(value, language)));
+            expressions.add(and(
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                    function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
+                            .parenthesize());
         }
         
         // Match without language
-        expressions.add(Expressions.equals(variable, literalOf(value)));
+        expressions.add(and(
+                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
+                function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
+                        .parenthesize());
         
         return or(expressions.toArray(new Expression<?>[expressions.size()]));
     }
 
-    private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable,
-            String aValue)
+    private Expression<?> matchString(SparqlFunction aFunction, Variable aVariable, String aValue)
     {
         String language = kb.getDefaultLanguage();
 
         List<Expression<?>> expressions = new ArrayList<>();
 
-        // If case-insensitive mode is enabled, then lower-case the strings
         Operand variable = aVariable;
-        String value = aValue;
+        
+        String regexFlags = "";
         if (caseInsensitive) {
-            variable = function(LCASE, function(STR, variable));
-            value = value.toLowerCase();
+            regexFlags += "i";
+        }
+        
+        String value;
+        switch (aFunction) {
+        // Match using REGEX to be resilient against extra whitespace
+        case STRSTARTS:
+            // Match at start
+            value = "^" + asRegexp(aValue);
+            break;
+        case CONTAINS:
+            // Match anywhere
+            value = ".*" + asRegexp(aValue) + ".*";
+            break;
+        default:
+            throw new IllegalArgumentException(
+                    "Only STRSTARTS and CONTAINS are supported, but got [" + aFunction + "]");
         }
         
         // Match with default language
         if (language != null) {
             expressions.add(and(
-                    function(aFunction, variable, literalOf(value)),
+                    function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                     function(LANGMATCHES, function(LANG, aVariable), literalOf(language)))
                             .parenthesize());
         }
 
-        // Match without language
         expressions.add(and(
-                function(aFunction, variable, literalOf(value)),
+                function(REGEX, variable, literalOf(value), literalOf(regexFlags)),
                 function(LANGMATCHES, function(LANG, aVariable), EMPTY_STRING))
                         .parenthesize());
 
@@ -1706,8 +1745,14 @@ public class SPARQLQueryBuilder
         }
     }
     
-    private String sanitizeQueryStringForFTS(String aQuery)
+    public static String sanitizeQueryStringForFTS(String aQuery)
     {
-        return aQuery.trim().replaceAll("[*\\p{Punct}]", " ").trim();
+        return aQuery
+                // character classes to replace with a simple space
+                .replaceAll("[\\p{Punct}\\p{Space}\\p{Cntrl}[+*(){}\\[\\]]]+", " ")
+                // character classes to remove from the query string
+                // \u00AD : SOFT HYPHEN
+                .replaceAll("[\\u00AD]", "")
+                .trim();
     }
 }
