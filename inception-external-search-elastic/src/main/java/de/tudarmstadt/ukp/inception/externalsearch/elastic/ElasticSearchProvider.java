@@ -22,7 +22,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,15 +29,16 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
+import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
-import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestTemplate;
@@ -60,6 +60,7 @@ public class ElasticSearchProvider
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aQuery)
+        throws IOException
     {
         List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
 
@@ -68,88 +69,79 @@ public class ElasticSearchProvider
                 .replaceFirst("www.", "")
                 .split(":")[0];
         
-        Settings settings = Settings.builder()
-                .put("client.transport.ignore_cluster_name", "true")
-                .build();
-
-        TransportClient client = new PreBuiltTransportClient(settings);
-        try {
-            client.addTransportAddress(
-                    new TransportAddress(
-                            InetAddress.getByName(hostUrl),
-                            9300));
-        }
-        catch (UnknownHostException e) {
-            System.out.println(e.getMessage());
-            System.exit(1);
-        }
-
-        HighlightBuilder highlightBuilder = new HighlightBuilder();
-        HighlightBuilder.Field highlightField =
-                new HighlightBuilder.Field(aTraits.getDefaultField());
-        highlightField.highlighterType("unified");
-        highlightBuilder.field(highlightField);
-
-        SearchResponse response = client.prepareSearch(indexName)
-                .setQuery(QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery))
-                .highlighter(highlightBuilder)
-                .setSize(aTraits.getResultSize())
-                .get();
-
-        for (SearchHit hit: response.getHits().getHits()) {
-            if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get("metadata") == null) {
-                log.warn("Result has no document metadata: " + hit);
-                continue;
-            }
+        try (RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(new HttpHost(InetAddress.getByName(hostUrl))))) {
+            HighlightBuilder highlightBuilder = new HighlightBuilder();
+            HighlightBuilder.Field highlightField =
+                    new HighlightBuilder.Field(aTraits.getDefaultField());
+            highlightField.highlighterType("unified");
+            highlightBuilder.field(highlightField);
+    
+            SearchRequest searchRequest = new SearchRequest(indexName);
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            searchSourceBuilder.query(QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery));
+            searchSourceBuilder.highlighter(highlightBuilder);
+            searchSourceBuilder.size(aTraits.getResultSize());
+            searchRequest.source(searchSourceBuilder);
             
-            ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
-                    hit.getId());
-
-            // The title will be filled with the hit id, since there is no title in the
-            // ElasticSearch hit
-            result.setDocumentTitle(hit.getId());
-            
-            // If the order is random, then the score doesn't reflect the quality, so we do not
-            // forward it to the user
-            if (!aTraits.isRandomOrder()) {
-                result.setScore((double) hit.getScore());
-            }
-
-            Map<String, Object> hitSource = hit.getSourceAsMap();
-            Map<String, String> metadata = (Map) hitSource.get("metadata");
-            Map<String, String> doc = (Map) hitSource.get("doc");
-
-            // Set the metadata fields
-            result.setOriginalSource(metadata.get("source"));
-            result.setOriginalUri(metadata.get("uri"));
-            result.setLanguage(metadata.get("language"));
-            result.setTimestamp(metadata.get("timestamp"));
-
-            if (hit.getHighlightFields().size() != 0) {
-
-                // Highlights from elastic search are small sections of the document text
-                // with the keywords surrounded by the <em> tags.
-                // There are no offset information for the highlights
-                // or the keywords in the document text. There is a feature
-                // request for it (https://github.com/elastic/elasticsearch/issues/5736).
-                // Until this feature is implemented, we currently try to find
-                // the keywords offsets by finding the matching highlight in the document text,
-                // then the keywords offset within highlight using <em> tags.
-                String originalText = doc.get("text");
-
-                // There are highlights, set them in the result
-                List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                if (hit.getHighlightFields().get("doc.text") != null) {
-                    for (Text highlight : hit.getHighlightFields().get("doc.text").getFragments()) {
-                        Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
-                                .parseHighlight(highlight.toString(), originalText);
-                    
-                        exHighlight.ifPresent(highlights::add);
-                    }
+            SearchResponse response = client.search(searchRequest);
+    
+            for (SearchHit hit: response.getHits().getHits()) {
+                if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get("metadata") == null) {
+                    log.warn("Result has no document metadata: " + hit);
+                    continue;
                 }
-                result.setHighlights(highlights);
+                
+                ExternalSearchResult result = new ExternalSearchResult(aRepository, indexName,
+                        hit.getId());
+    
+                // The title will be filled with the hit id, since there is no title in the
+                // ElasticSearch hit
+                result.setDocumentTitle(hit.getId());
+                
+                // If the order is random, then the score doesn't reflect the quality, so we do not
+                // forward it to the user
+                if (!aTraits.isRandomOrder()) {
+                    result.setScore((double) hit.getScore());
+                }
+    
+                Map<String, Object> hitSource = hit.getSourceAsMap();
+                Map<String, String> metadata = (Map) hitSource.get("metadata");
+                Map<String, String> doc = (Map) hitSource.get("doc");
+    
+                // Set the metadata fields
+                result.setOriginalSource(metadata.get("source"));
+                result.setOriginalUri(metadata.get("uri"));
+                result.setLanguage(metadata.get("language"));
+                result.setTimestamp(metadata.get("timestamp"));
+    
+                if (hit.getHighlightFields().size() != 0) {
+    
+                    // Highlights from elastic search are small sections of the document text
+                    // with the keywords surrounded by the <em> tags.
+                    // There are no offset information for the highlights
+                    // or the keywords in the document text. There is a feature
+                    // request for it (https://github.com/elastic/elasticsearch/issues/5736).
+                    // Until this feature is implemented, we currently try to find
+                    // the keywords offsets by finding the matching highlight in the document text,
+                    // then the keywords offset within highlight using <em> tags.
+                    String originalText = doc.get("text");
+    
+                    // There are highlights, set them in the result
+                    List<ExternalSearchHighlight> highlights = new ArrayList<>();
+                    if (hit.getHighlightFields().get("doc.text") != null) {
+                        for (Text highlight : hit.getHighlightFields().get("doc.text")
+                                .getFragments()) {
+                            Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                                    .parseHighlight(highlight.toString(), originalText);
+                        
+                            exHighlight.ifPresent(highlights::add);
+                        }
+                    }
+                    result.setHighlights(highlights);
+                }
+                results.add(result);
             }
-            results.add(result);
         }
 
         return results;

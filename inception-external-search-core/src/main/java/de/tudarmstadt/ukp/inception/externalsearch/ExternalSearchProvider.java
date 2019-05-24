@@ -26,7 +26,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public interface ExternalSearchProvider<T extends Object>
 {
     List<ExternalSearchResult> executeQuery(DocumentRepository aRepository, T aTraits,
-            String aQuery);
+            String aQuery)
+        throws IOException;
 
     String getDocumentText(DocumentRepository aRepository, T aTraits, String aSource,
             String aDocumentId)
