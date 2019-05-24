@@ -89,6 +89,23 @@ public class CasMetadataUtils
         }
     }
     
+    public static void clearCasMetadata(CAS aCas) throws IllegalStateException
+    {
+        // If the type system of the CAS does not yet support CASMetadata, then we do not add it
+        // and wait for the next regular CAS upgrade before we include this data.
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+            return;
+        }
+        
+        List<AnnotationFS> cmds = new ArrayList<>(
+                CasUtil.select(aCas, getType(aCas, CASMetadata.class)));
+        if (cmds.size() > 1) {
+            throw new IllegalStateException("CAS contains more than one CASMetadata instance");
+        }
+
+        cmds.forEach(aCas::removeFsFromIndexes);
+    }
+    
     public static void addOrUpdateCasMetadata(CAS aCas, File aCasFile, SourceDocument aDocument,
             String aUsername)
         throws IOException

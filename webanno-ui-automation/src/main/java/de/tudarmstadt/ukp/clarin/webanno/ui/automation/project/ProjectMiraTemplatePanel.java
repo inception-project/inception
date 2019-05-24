@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.automation.project;
 
 import static java.util.Objects.isNull;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -47,6 +46,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
@@ -81,6 +82,8 @@ public class ProjectMiraTemplatePanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 2116717853865353733L;
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProjectMiraTemplatePanel.class);
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AutomationService automationService;
@@ -757,27 +760,24 @@ public class ProjectMiraTemplatePanel
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
                         automationService.createTemplate(template);
                         automationService.createAutomationStatus(automationStatus);
-                        aTarget.appendJavaScript("alert('" + ExceptionUtils.getRootCause(e) + "')");
-                    }
-                    catch (ClassNotFoundException | IOException e) {
-                        template.setAutomationStarted(false);
-                        automationStatus.setStatus(Status.INTERRUPTED);
-                        automationStatus.setEndTime(new Timestamp(new Date().getTime()));
-                        automationService.createTemplate(template);
-                        automationService.createAutomationStatus(automationStatus);
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        error("Error during automation: " + ExceptionUtils.getRootCause(e));
+                        LOG.error("Error during automation", e);
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
                     catch (AnnotationException e) {
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        error("Error during automation: " + e.getMessage());
+                        LOG.error("Error during automation", e);
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
-                    // any other exception such as Memmory heap
                     catch (Exception e) {
                         template.setAutomationStarted(false);
                         automationStatus.setStatus(Status.INTERRUPTED);
                         automationStatus.setEndTime(new Timestamp(new Date().getTime()));
                         automationService.createTemplate(template);
                         automationService.createAutomationStatus(automationStatus);
-                        aTarget.appendJavaScript("alert('" + e.getMessage() + "')");
+                        error("Error during automation: " + e.getMessage());
+                        LOG.error("Error during automation", e);
+                        aTarget.addChildren(getPage(), IFeedback.class);
                     }
                     finally {
                         automationStatus.setStatus(Status.COMPLETED);
