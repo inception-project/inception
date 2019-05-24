@@ -68,7 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratPropertiesImpl;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -120,6 +120,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class AutomationPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private static final Logger LOG = LoggerFactory.getLogger(AutomationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -128,7 +130,7 @@ public class AutomationPage
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean ConstraintsService constraintsService;
-    private @SpringBean BratPropertiesImpl defaultPreferences;
+    private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -173,13 +175,14 @@ public class AutomationPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+        add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
-                        e.getRequestHandler().add(c))));
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                    (c, e) -> e.getRequestHandler().add(c))));
 
         WebMarkupContainer rightSidebar = new WebMarkupContainer("rightSidebar");
-        // Override sidebar width from preferences
+        // Override sidebar width from preferencesa
         rightSidebar.add(new AttributeModifier("style", LambdaModel.of(() -> String
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
@@ -758,6 +761,7 @@ public class AutomationPage
             curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
+            aTarget.add(get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);

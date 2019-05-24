@@ -109,6 +109,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class CurationPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -185,10 +187,11 @@ public class CurationPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+        add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
-                        e.getRequestHandler().add(c))));
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                    (c, e) -> e.getRequestHandler().add(c))));
         
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
@@ -684,6 +687,7 @@ public class CurationPage
         try {
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
+            aTarget.add(get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);
