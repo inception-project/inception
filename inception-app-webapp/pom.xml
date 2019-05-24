@@ -177,6 +177,10 @@
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.lif-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.tei-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
