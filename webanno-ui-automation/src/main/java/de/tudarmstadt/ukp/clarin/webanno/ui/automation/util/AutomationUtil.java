@@ -51,6 +51,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.SofaFS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -71,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -95,7 +97,7 @@ public class AutomationUtil
     private static Logger LOG = LoggerFactory.getLogger(AutomationUtil.class);
     private static final String NILL = "__nill__";
 
-    public static void repeateSpanAnnotation(AnnotatorState aState,
+    public static void repeatSpanAnnotation(AnnotatorState aState,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, int aStart, int aEnd,
             AnnotationFeature aFeature, String aValue)
@@ -131,7 +133,7 @@ public class AutomationUtil
         }
     }
 
-    public static void repeateRelationAnnotation(AnnotatorState aState,
+    public static void repeatRelationAnnotation(AnnotatorState aState,
             DocumentService aDocumentService, CorrectionDocumentService aCorrectionDocumentService,
             AnnotationSchemaService aAnnotationService, AnnotationFS fs, AnnotationFeature aFeature,
             String aValue)
@@ -513,6 +515,7 @@ public class AutomationUtil
                         break;
                     case SINGLE_TOKEN:
                         annotations.addAll(getAnnotation(adapter, sentence, aFeature));
+                        break;
                     default:
                         throw new IllegalStateException("Unsupported anchoring mode: ["
                                 + aFeature.getLayer().getAnchoringMode() + "]");
@@ -803,8 +806,10 @@ public class AutomationUtil
             switch (aLayerFeature.getLayer().getAnchoringMode()) {
             case TOKENS:
                 multAnno = getMultipleAnnotation(aAnnotationService, sentence, aLayerFeature);
+                break;
             case SINGLE_TOKEN:
                 annotations = getAnnotation(aAdapter, sentence, aLayerFeature);
+                break;
             default:
                 throw new IllegalStateException("Unsupported anchoring mode: ["
                         + aLayerFeature.getLayer().getAnchoringMode() + "]");
@@ -1651,21 +1656,20 @@ public class AutomationUtil
         String prevNe = "O";
         int begin = 0;
         int end = 0;
-        // remove existing annotations of this type, after all it is an
-        // automation, no care
-        clearAnnotations(aJcas, type);
+        
+        // remove existing annotations of this type, after all it is an automation, no care
+        clearAnnotations(aJcas, aFeature);
 
         switch (aFeature.getLayer().getAnchoringMode()) {
         case TOKENS:
             for (Token token : select(aJcas, Token.class)) {
                 String value = aLabelValues.get(i);
-                AnnotationFS newAnnotation;
                 if (value.equals("O") && prevNe.equals("O")) {
                     i++;
                     continue;
                 }
                 else if (value.equals("O") && !prevNe.equals("O")) {
-                    newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                    AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
                     newAnnotation.setFeatureValueFromString(feature, prevNe.replace("B-", ""));
                     prevNe = "O";
                     aJcas.getCas().addFsToIndexes(newAnnotation);
@@ -1674,12 +1678,12 @@ public class AutomationUtil
                     begin = token.getBegin();
                     end = token.getEnd();
                     prevNe = value;
-
                 }
                 else if (!value.equals("O") && !prevNe.equals("O")) {
                     if (value.replace("B-", "").replace("I-", "").equals(
                             prevNe.replace("B-", "").replace("I-", "")) && value.startsWith("B-")) {
-                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin,
+                                end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
@@ -1696,26 +1700,27 @@ public class AutomationUtil
 
                     }
                     else {
-                        newAnnotation = aJcas.getCas().createAnnotation(type, begin, end);
+                        AnnotationFS newAnnotation = aJcas.getCas().createAnnotation(type, begin,
+                                end);
                         newAnnotation.setFeatureValueFromString(feature,
                                 prevNe.replace("B-", "").replace("I-", ""));
                         prevNe = value;
                         begin = token.getBegin();
                         end = token.getEnd();
                         aJcas.getCas().addFsToIndexes(newAnnotation);
-
                     }
                 }
 
                 i++;
             }
+            break;
         case SINGLE_TOKEN: {
             // check if annotation is on an AttachType
             Feature attachFeature = null;
-            Type attachType;
             if (attachTypeName != null) {
-                attachType = CasUtil.getType(aJcas.getCas(), attachTypeName);
-                attachFeature = attachType.getFeatureByBaseName(attachTypeName);
+                Type attachType = CasUtil.getType(aJcas.getCas(), attachTypeName);
+                attachFeature = attachType
+                        .getFeatureByBaseName(aFeature.getLayer().getAttachFeature().getName());
             }
 
             for (Token token : select(aJcas, Token.class)) {
@@ -1768,7 +1773,7 @@ public class AutomationUtil
             mira.maxPosteriors = maxPosteriors;
             mira.test(input, stream);
 
-            LOG.info("Prediction is wrtten to a MIRA File. To be done is writing back to the CAS");
+            LOG.info("Prediction is written to a MIRA File. To be done is writing back to the CAS");
             LineIterator it = IOUtils.lineIterator(new FileReader(predcitedFile));
             List<String> annotations = new ArrayList<>();
 
@@ -1786,7 +1791,7 @@ public class AutomationUtil
                 annotations.add(tag);
             }
 
-            LOG.info(annotations.size() + " Predictions found to be written to the CAS");
+            LOG.info("[{}] predictions found to be written to the CAS", annotations.size());
             JCas jCas = null;
             User user = aUserDao.getCurrentUser();
             try {
@@ -1794,27 +1799,50 @@ public class AutomationUtil
                         user);
                 jCas = aRepository.readAnnotationCas(annoDocument);
                 automate(jCas, layerFeature, annotations);
-            }
-            catch (DataRetrievalFailureException e) {
-                automate(jCas, layerFeature, annotations);
-                LOG.info("Predictions found are written to the CAS");
+                // We need to clear the timestamp since we read from the annotation CAS and write
+                // to the correction CAS - this makes the comparison between the time stamp
+                // stored in the CAS and the on-disk timestamp of the correction CAS invalid
+                CasMetadataUtils.clearCasMetadata(jCas);
                 aCorrectionDocumentService.writeCorrectionCas(jCas, document);
                 status.setAnnoDocs(status.getAnnoDocs() - 1);
             }
-            automate(jCas, layerFeature, annotations);
-            LOG.info("Predictions found are written to the CAS");
-            aCorrectionDocumentService.writeCorrectionCas(jCas, document);
-            status.setAnnoDocs(status.getAnnoDocs() - 1);
+            catch (DataRetrievalFailureException e) {
+                LOG.error("Error during prediction", e);
+            }
         }
     }
     
-    public static void clearAnnotations(JCas aJCas, Type aType)
+    public static void clearAnnotations(JCas aJCas, AnnotationFeature aFeature)
         throws IOException
     {
+        CAS cas = aJCas.getCas();
+        
+        // Check if annotation layer is attached to another layer
+        String attachTypeName = aFeature.getLayer().getAttachType() == null ? null : aFeature
+                .getLayer().getAttachType().getName();
+        Type attachType = null;
+        Feature attachFeature = null;
+        if (attachTypeName != null) {
+            attachType = CasUtil.getType(cas, attachTypeName);
+            attachFeature = attachType
+                    .getFeatureByBaseName(aFeature.getLayer().getAttachFeature().getName());
+        }
+        
         List<AnnotationFS> annotationsToRemove = new ArrayList<>();
-        annotationsToRemove.addAll(select(aJCas.getCas(), aType));
+        Type type = CasUtil.getType(cas, aFeature.getLayer().getName());
+        annotationsToRemove.addAll(select(cas, type));
+        
         for (AnnotationFS annotation : annotationsToRemove) {
-            aJCas.removeFsFromIndexes(annotation);
+            if (attachFeature != null) {
+                // Unattach the annotation to be removed
+                for (AnnotationFS attach : selectCovered(attachType, annotation)) {
+                    FeatureStructure existing = attach.getFeatureValue(attachFeature);
+                    if (annotation.equals(existing)) {
+                        attach.setFeatureValue(attachFeature, null);
+                    }
+                }
+            }
+            cas.removeFsFromIndexes(annotation);
         }
     }
     

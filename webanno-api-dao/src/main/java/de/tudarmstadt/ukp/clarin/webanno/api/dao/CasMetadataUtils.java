@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
+import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
@@ -80,6 +83,23 @@ public class CasMetadataUtils
                     aCasFile.getName(), aUsername, aDocument.getName(), aDocument.getId(),
                     aDocument.getProject().getName(), aDocument.getProject().getId());
         }
+    }
+    
+    public static void clearCasMetadata(JCas aCas) throws IllegalStateException
+    {
+        // If the type system of the CAS does not yet support CASMetadata, then we do not add it
+        // and wait for the next regular CAS upgrade before we include this data.
+        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
+            return;
+        }
+        
+        List<AnnotationFS> cmds = new ArrayList<>(
+                CasUtil.select(aCas.getCas(), getType(aCas.getCas(), CASMetadata.class)));
+        if (cmds.size() > 1) {
+            throw new IllegalStateException("CAS contains more than one CASMetadata instance");
+        }
+
+        cmds.forEach(aCas::removeFsFromIndexes);
     }
     
     public static void addOrUpdateCasMetadata(JCas aJCas, File aCasFile, SourceDocument aDocument,

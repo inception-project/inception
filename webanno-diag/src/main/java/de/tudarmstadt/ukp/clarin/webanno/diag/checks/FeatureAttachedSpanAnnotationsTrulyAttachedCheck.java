@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -30,7 +31,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
@@ -45,9 +45,9 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         boolean ok = true;
+        int count = 0;
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType())
-                    && layer.getAttachFeature() != null)) {
+            if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
             }
 
@@ -69,16 +69,24 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
                 for (AnnotationFS attach : selectCovered(attachType, anno)) {
                     AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
                             AnnotationFS.class);
-                    if (candidate != anno) {
-                        aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                                "Annotation should be attached to ["
-                                        + layer.getAttachFeature().getName()
-                                        + "] but is not.\nAnnotation: [" + anno
-                                        + "]\nAttach annotation:[" + attach + "]"));
+                    if (!anno.equals(candidate)) {
+                        if (count < 100) {
+                            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                                    "Annotation should be attached to ["
+                                            + layer.getAttachFeature().getName()
+                                            + "] but is not.\nAnnotation: [" + anno
+                                            + "]\nAttach annotation:[" + attach + "]"));
+                        }
+                        count ++;
                         ok = false;
                     }
                 }
             }
+        }
+        
+        if (count >= 100) {
+            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                    "In total [%d] annotations were not properly attached", count));
         }
         
         return ok;
