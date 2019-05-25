@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 
 public class QuerySettingsPanel
     extends Panel
@@ -90,7 +91,7 @@ public class QuerySettingsPanel
         NumberTextField<Integer> queryLimit = new NumberTextField<>(id, aModel, Integer.class);
         queryLimit.setOutputMarkupId(true);
         queryLimit.setRequired(true);
-        queryLimit.setMinimum(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+        queryLimit.setMinimum(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
         queryLimit.setMaximum(kbProperties.getHardMaxResults());
         queryLimit.add(LambdaBehavior.onConfigure(it -> {
             // If not setting, initialize with default
@@ -98,8 +99,8 @@ public class QuerySettingsPanel
                 queryLimit.setModelObject(kbProperties.getDefaultMaxResults());
             }
             // Cap at local min results
-            else if (queryLimit.getModelObject() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
-                queryLimit.setModelObject(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            else if (queryLimit.getModelObject() < KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS) {
+                queryLimit.setModelObject(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
             }
             // Cap at local max results
             else if (queryLimit.getModelObject() > kbProperties.getHardMaxResults()) {
