@@ -27,7 +27,7 @@ public interface EventRepository
 {
     static final String SERVICE_NAME = "eventRepository";
 
-    void create(LoggedEvent aE);
+    void create(LoggedEvent... aEvents);
 
     /**
      * Get the aMaxSize amount of logged events of the given type, user name, project

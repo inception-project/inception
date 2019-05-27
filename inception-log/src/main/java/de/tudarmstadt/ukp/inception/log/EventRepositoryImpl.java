@@ -53,10 +53,12 @@ public class EventRepositoryImpl
 
     @Override
     @Transactional
-    public void create(LoggedEvent aEvent)
+    public void create(LoggedEvent... aEvents)
     {
-        log.info("{}", aEvent);
-        entityManager.persist(aEvent);
+        for (LoggedEvent event : aEvents) {
+            log.trace("{}", event);
+            entityManager.persist(event);
+        }
     }
 
     @Override
