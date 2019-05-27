@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
@@ -133,10 +134,42 @@ public class CasMetadataUtils
         else {
             cmd = aCas.createAnnotation(casMetadataType, 0, 0);
         }
-        FSUtil.setFeature(cmd, "username", aUsername);
-        FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
-        FSUtil.setFeature(cmd, "projectId", aDocument.getProject().getId());
-        FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+        
+        if (cmd.getType().getFeatureByBaseName("username") != null) {
+            FSUtil.setFeature(cmd, "username", aUsername);
+        }
+        
+        if (cmd.getType().getFeatureByBaseName("sourceDocumentId") != null) {
+            FSUtil.setFeature(cmd, "sourceDocumentId", aDocument.getId());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("sourceDocumentName") != null) {
+            FSUtil.setFeature(cmd, "sourceDocumentName", aDocument.getName());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("projectId") != null) {
+            FSUtil.setFeature(cmd, "projectId", aDocument.getProject().getId());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("projectName") != null) {
+            FSUtil.setFeature(cmd, "projectName", aDocument.getProject().getName());
+        }
+
+        if (cmd.getType().getFeatureByBaseName("lastChangedOnDisk") != null) {
+            FSUtil.setFeature(cmd, "lastChangedOnDisk", aCasFile.lastModified());
+        }
+        
         aCas.addFsToIndexes(cmd);
+    }
+    
+    public static Optional<String> getSourceDocumentName(CAS aCas)
+    {
+        try {
+            FeatureStructure fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
+            return Optional.ofNullable(FSUtil.getFeature(fs, "sourceDocumentName", String.class));
+        }
+        catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 }

@@ -74,7 +74,8 @@ public class DocumentServiceImplTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
-        storageService = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
+        storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
+                backupProperties);
 
         sut = new DocumentServiceImpl(repositoryProperties, userRepository, storageService,
                 importExportService, projectService, applicationEventPublisher, entityManager);
