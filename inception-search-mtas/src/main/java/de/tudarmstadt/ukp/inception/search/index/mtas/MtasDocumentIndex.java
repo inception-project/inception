@@ -353,12 +353,8 @@ public class MtasDocumentIndex
                                 int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
                                 
                                 // Retrieve all indexed objects within the matching range
-                                List<MtasTokenString> tokens1 = mtasCodecInfo.getObjectsByPositions(
+                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
                                         field, spans.docID(), windowStart, windowEnd);
-                                
-                                List<MtasTokenString> tokens = mtasCodecInfo
-                                        .getPrefixFilteredObjectsByPositions(field, spans.docID(),
-                                                prefixes, windowStart, windowEnd);
                                 
                                 tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
 
@@ -433,12 +429,12 @@ public class MtasDocumentIndex
                                     List<String> featureValues = featureValuesAtMatch(tokens,
                                         matchStart, matchEnd, groupingLayer, groupingFeature);
                                     for (String featureValue : featureValues) {
-                                        addToResultsMap(results, featureValue, result);
+                                        addToResults(results, featureValue, result);
                                     }
                                 }
                                 else {
                                     // if no annotation feature is specified group by document title
-                                    addToResultsMap(results, result.getDocumentTitle(), result);
+                                    addToResults(results, result.getDocumentTitle(), result);
                                 }
 
 
@@ -454,7 +450,7 @@ public class MtasDocumentIndex
         return results;
     }
 
-    private void addToResultsMap(HashMap<String, List<SearchResult>> aResultsMap, String aKey, SearchResult aSearchResult) {
+    private void addToResults(HashMap<String, List<SearchResult>> aResultsMap, String aKey, SearchResult aSearchResult) {
         if (aResultsMap.containsKey(aKey)) {
             aResultsMap.get(aKey).add(aSearchResult);
         }
@@ -477,14 +473,14 @@ public class MtasDocumentIndex
             // a feature prefix is currently only used for target and source of relation-annotations.
             // however we just look at the feature value of the relation-annotation itself here, so we
             // can just use "" as feature prefix
-            String featureIndexName = fis
+            String groupingFeatureIndexName = fis
                 .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
 
             aTokens.stream()
                 .filter(t -> t.getPositionStart() == aMatchStart
-                    && t.getPositionEnd() == aMatchEnd - 1 && t.getValue()
-                    .equals(
-                        MtasUimaParser.getIndexedName(featureIndexName)))
+                    && t.getPositionEnd() == aMatchEnd - 1
+                    && extractFeatureIndexName(t).equals(
+                        MtasUimaParser.getIndexedName(groupingFeatureIndexName)))
                 .forEach(t -> featureValues.add(extractFeatureValue(t)));
         }
         return featureValues;
@@ -493,6 +489,12 @@ public class MtasDocumentIndex
     private String extractFeatureValue(MtasTokenString aMtasTokenString) {
         String tokenValue = aMtasTokenString.getValue();
         String featureValue = tokenValue.split(MtasTokenString.DELIMITER, 2)[1];
+        return featureValue;
+    }
+
+    private String extractFeatureIndexName(MtasTokenString aMtasTokenString) {
+        String tokenValue = aMtasTokenString.getValue();
+        String featureValue = tokenValue.split(MtasTokenString.DELIMITER, 2)[0];
         return featureValue;
     }
 

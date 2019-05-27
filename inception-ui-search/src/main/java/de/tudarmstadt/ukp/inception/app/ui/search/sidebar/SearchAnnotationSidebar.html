@@ -49,7 +49,7 @@
               </h3>
             </div>
             <div class="panel-body form-horizontal">
-              <div class="col-sm-12">
+              <div class="form-group col-sm-12">
                 <div class="form-group" wicket:enclosure="limitedToCurrentDocument">
                   <div class="col-sm-12">
                     <div class="checkbox">
@@ -60,26 +60,37 @@
                     </div>
                   </div>
                 </div>
-                <div class="form-group" wicket:enclosure="groupingLayer">
+                  <div class="form-group col-sm-12">
+                  <div>
+                      <h5>
+                      <wicket:message key="groupingHeader"/>
+                      </h5>
+                  </div>
+                  <div class="form-group" wicket:enclosure="groupingLayer">
                   <div class="col-sm-12">
                     <div class="form-group">
-                      <label wicket:for="groupingLayer">
+                        <label wicket:for="groupingLayer" class="control-label col-sm-3" style="text-align: left">
+                            <wicket:message key="groupingLayer"/>
+                        </label>
+                    <div class="col-sm-9">
                         <select wicket:id="groupingLayer"></select>
-                        <wicket:label key="groupingLayer"/>
-                      </label>
+                    </div>
                     </div>
                   </div>
                 </div>
                   <div class="form-group" wicket:enclosure="groupingFeature">
                       <div class="col-sm-12">
                           <div class="form-group">
-                              <label wicket:for="groupingFeature">
-                                  <select wicket:id="groupingFeature"></select>
-                                  <wicket:label key="groupingFeature"/>
+                              <label wicket:for="groupingFeature" class="control-label col-sm-3" style="text-align: left">
+                                  <wicket:message key="groupingFeature"/>
                               </label>
+                              <div class="col-sm-9">
+                                  <select wicket:id="groupingFeature"></select>
+                              </div>
                           </div>
                       </div>
                   </div>
+                    </div>
               </div>
             </div>
             <div class="panel-footer text-right">
@@ -96,12 +107,12 @@
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
                 <th class="headers" style="text-align: center; width: 15%" colspan="1">
-                  <label wicket:for="selectAllInDoc">
-                    <input wicket:id="selectAllInDoc" type="checkbox">
+                  <label wicket:for="selectAllInGroup">
+                    <input wicket:id="selectAllInGroup" type="checkbox">
                   </label>
                 </th>
                 <th class="headers" style="text-align: center; padding-left: 1em; width: 85%" colspan="1">
-                  <wicket:container wicket:id="documentTitle" />
+                  <wicket:container wicket:id="groupTitle" />
                 </th>
               </tr>
               <wicket:container wicket:id="group" />
