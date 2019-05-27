@@ -21,7 +21,7 @@
  * 
  * the arrayOfLeaningCurves also includes x-axis.
  */
-function updateLearningCurveDiagram(arrayOfLearningCurves) {
+function updateLearningCurveDiagram(arrayOfLearningCurves, xLabel) {
 	
     var xAxixType = "";
     
@@ -46,7 +46,8 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
                     multiline: true,
                     format: function(a) {
                         return Math.round(1e2 * a) / 1e2;
-                    }
+                    },
+                    fit: false
                 }
             },
             //to round off the decimal points of the y-axis values to 4 if it is a decimal number.
@@ -56,11 +57,6 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
                         return Math.round(1e4 * a) / 1e4;
                     }
                 }
-            }
-        },
-        tooltip: {
-            format: {
-                title: function (d) { return 'Normalized Traindatasize ' + d.toFixed(2)}
             }
         }
     });
