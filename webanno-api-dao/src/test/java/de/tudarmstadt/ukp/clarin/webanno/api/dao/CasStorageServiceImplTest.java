@@ -61,7 +61,7 @@ public class CasStorageServiceImplTest
         
         schemaService = new AnnotationSchemaServiceImpl();
         
-        sut = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
+        sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }
     
     @Test

@@ -92,6 +92,10 @@ public interface CasStorageService
     CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
         throws IOException;
 
+    CAS readOrCreateCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair,
+            CasUpgradeMode aUpgradeMode, CasProvider aSupplier)
+        throws IOException;
+
     boolean deleteCas(SourceDocument aDocument, String aUsername) throws IOException;
     
     File getAnnotationFolder(SourceDocument aDocument) throws IOException;

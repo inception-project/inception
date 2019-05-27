@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
@@ -50,8 +51,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -79,14 +82,24 @@ public class CasStorageServiceImpl
     };
 
     private final CasDoctor casDoctor;
+    private final AnnotationSchemaService schemaService;
     private final RepositoryProperties repositoryProperties;
     private final BackupProperties backupProperties;
     
-    public CasStorageServiceImpl(@Autowired(required = false) CasDoctor aCasDoctor,
+    /**
+     * @param aCasDoctor
+     *            (optional) if present, CAS validation can take place
+     * @param aSchemaService
+     *            (optional) if present, CAS upgrades can be performed
+     */
+    public CasStorageServiceImpl(
+            @Autowired(required = false) CasDoctor aCasDoctor,
+            @Autowired(required = false) AnnotationSchemaService aSchemaService,
             @Autowired RepositoryProperties aRepositoryProperties,
             @Autowired BackupProperties aBackupProperties)
     {
         casDoctor = aCasDoctor;
+        schemaService = aSchemaService;
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;
         
@@ -350,25 +363,26 @@ public class CasStorageServiceImpl
     public CAS readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, true, null);
+        return readCas(aDocument, aUsername, true);
     }
     
     @Override
     public CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, null);
+        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, NO_CAS_UPGRADE, null);
     }
 
     @Override
     public CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, true, aSupplier);
+        return readOrCreateCas(aDocument, aUsername, true, NO_CAS_UPGRADE, aSupplier);
     }
 
-    private CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
-            boolean aAnalyzeAndRepair, CasProvider aSupplier)
+    @Override
+    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
+            boolean aAnalyzeAndRepair, CasUpgradeMode aUpgradeMode, CasProvider aSupplier)
         throws IOException
     {
         synchronized (lock) {
@@ -388,10 +402,24 @@ public class CasStorageServiceImpl
             File casFile = getCasFile(aDocument, aUsername);
             if (casFile.exists()) {
                 cas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
+                if (schemaService != null) {
+                    try {
+                        schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
+                    }
+                    catch (UIMAException e) {
+                        throw new IOException(e);
+                    }
+                }
                 source = "disk";
             }
             else if (aSupplier != null) {
                 cas = aSupplier.get();
+                try {
+                    schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
+                }
+                catch (UIMAException e) {
+                    throw new IOException(e);
+                }
                 source = "importer";
                 realWriteCas(aDocument, aUsername, cas);
             }

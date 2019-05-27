@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
@@ -534,10 +535,9 @@ public class AnnotationPage
                     .createOrGetAnnotationDocument(state.getDocument(), state.getUser());
 
             // Read the CAS
-            CAS editorCas = documentService.readAnnotationCas(annotationDocument);
-
             // Update the annotation document CAS
-            annotationService.upgradeCas(editorCas, annotationDocument);
+            CAS editorCas = documentService.readAnnotationCas(annotationDocument,
+                    FORCE_CAS_UPGRADE);
 
             // After creating an new CAS or upgrading the CAS, we need to save it
             documentService.writeAnnotationCas(editorCas, annotationDocument, false);

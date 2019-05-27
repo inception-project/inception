@@ -446,6 +446,9 @@ public interface AnnotationSchemaService
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
 
+    void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, CasUpgradeMode aMode)
+            throws UIMAException, IOException;
+    
     /**
      * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
      * nicely to the log files. This method here is rather for unconditional bulk use such as
