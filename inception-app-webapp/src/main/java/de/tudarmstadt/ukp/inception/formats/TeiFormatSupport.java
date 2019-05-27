@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -28,15 +28,15 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUWriter;
+import de.tudarmstadt.ukp.dkpro.core.io.tei.TeiReader;
+import de.tudarmstadt.ukp.dkpro.core.io.tei.TeiWriter;
 
 @Component
-public class ConllUFormatSupport
+public class TeiFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "conllu";
-    public static final String NAME = "CoNLL-U";
+    public static final String ID = "dkpro-core-tei";
+    public static final String NAME = "TEI";
     
     @Override
     public String getId()
@@ -55,23 +55,17 @@ public class ConllUFormatSupport
     {
         return true;
     }
-    
-    @Override
-    public boolean isWritable()
-    {
-        return true;
-    }
 
     @Override
     public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
     {
-        return createReaderDescription(ConllUReader.class);
+        return createReaderDescription(TeiReader.class);
     }
     
     @Override
     public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
         throws ResourceInitializationException
     {
-        return createEngineDescription(ConllUWriter.class);
+        return createEngineDescription(TeiWriter.class);
     }
 }
