@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,13 +17,38 @@
  */
 package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
-public interface PdfEditorProperties
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+@Component
+@ConfigurationProperties("ui.pdf")
+public class PdfEditorPropertiesImpl implements PdfEditorProperties
 {
-    public boolean isEnabled();
+    private boolean enabled = false;
 
-    public void setEnabled(boolean aEnabled);
+    private boolean debug = false;
 
-    public boolean isDebug();
+    @Override
+    public boolean isEnabled()
+    {
+        return enabled;
+    }
 
-    public void setDebug(boolean aDebug);
+    @Override
+    public void setEnabled(boolean aEnabled)
+    {
+        enabled = aEnabled;
+    }
+
+    @Override
+    public boolean isDebug()
+    {
+        return debug;
+    }
+
+    @Override
+    public void setDebug(boolean aDebug)
+    {
+        this.debug = aDebug;
+    }
 }
