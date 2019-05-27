@@ -21,7 +21,7 @@
  * 
  * the arrayOfLeaningCurves also includes x-axis.
  */
-function updateLearningCurveDiagram(arrayOfLearningCurves, xLabel) {
+function updateLearningCurveDiagram(arrayOfLearningCurves) {
 	
     var xAxixType = "";
     
