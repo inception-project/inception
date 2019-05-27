@@ -414,11 +414,13 @@ public class CasStorageServiceImpl
             }
             else if (aSupplier != null) {
                 cas = aSupplier.get();
-                try {
-                    schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
-                }
-                catch (UIMAException e) {
-                    throw new IOException(e);
+                if (schemaService != null) {
+                    try {
+                        schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
+                    }
+                    catch (UIMAException e) {
+                        throw new IOException(e);
+                    }
                 }
                 source = "importer";
                 realWriteCas(aDocument, aUsername, cas);
