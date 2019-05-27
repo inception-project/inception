@@ -822,13 +822,6 @@ public class RecommendationServiceImpl
         return predictions;
     }
 
-    private void removePredictions(CAS aCas, Type apredictedType)
-    {
-        for (AnnotationFS fs : CasUtil.select(aCas, apredictedType)) {
-            aCas.removeFsFromIndexes(fs);
-        }
-    }
-
     private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas,
                                                           SourceDocument aDocument,
                                                           Recommender aRecommender)
@@ -839,6 +832,7 @@ public class RecommendationServiceImpl
         Type predictedType = CasUtil.getType(aCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
         Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
+        Feature isPredictionFeature = predictedType.getFeatureByBaseName("predicted");
 
         int predictionCount = 0;
 
@@ -847,6 +841,10 @@ public class RecommendationServiceImpl
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
+            if (!annotationFS.getBooleanValue(isPredictionFeature)) {
+                continue;
+            }
+
             List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
             AnnotationFS firstToken = tokens.get(0);
             AnnotationFS lastToken = tokens.get(tokens.size() - 1);
@@ -1008,7 +1006,7 @@ public class RecommendationServiceImpl
         return clone;
     }
 
-    private void monkeyPatchTypeSystem(Project aProject, CAS aCas)
+    public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
             throws UIMAException, IOException {
 
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
@@ -1027,7 +1025,7 @@ public class RecommendationServiceImpl
                     type.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
                 }
 
-                type.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_STRING);
+                type.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
             annoService.upgradeCas(aCas, ts);
