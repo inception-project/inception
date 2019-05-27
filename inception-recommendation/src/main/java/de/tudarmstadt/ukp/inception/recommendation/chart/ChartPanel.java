@@ -20,22 +20,20 @@ package de.tudarmstadt.ukp.inception.recommendation.chart;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptContentHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.JavaScriptReferenceHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
+import org.jfree.util.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,8 +42,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
-import de.tudarmstadt.ukp.inception.recommendation.chart.resources.BootSideMenuCssReference;
-import de.tudarmstadt.ukp.inception.recommendation.chart.resources.BootSideMenuJSReference;
 import de.tudarmstadt.ukp.inception.recommendation.chart.resources.ChartJsReference;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
@@ -58,19 +54,12 @@ public class ChartPanel
 
     private static final String MID_CHART_CONTAINER = "chart";
     private static final String OUTPUT_MARKUP_ID_CHART = "canvas"; 
-    private static final String MID_METRIC_SELECTOR_SLIDER = "slider";
-    private static final String MID_EVALUATION_METRIC_DROP_DOWN = "evaluation_metrics_drop_down";
+    private static final String MID_DROPDOWN_PANEL = "dropdownPanel"; 
 
     private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
     private final ChartAjaxBejavior chartAjaxBejavior;
-    private final WebMarkupContainer slider ;
-    
-    private static final List<String> EVALUATION_METRICS = Arrays.asList(new String[] {
-            "Accuracy", "Precision", "Recall", "F1"});
-    
-    private String selected = "Accuracy";
-    
+
     public ChartPanel(String aId, LoadableDetachableModel<LearningCurve> aModel)
     {
         super(aId, aModel);
@@ -80,17 +69,22 @@ public class ChartPanel
         chart.setMarkupId(OUTPUT_MARKUP_ID_CHART);
         add(chart);
         
-        slider = new WebMarkupContainer(MID_METRIC_SELECTOR_SLIDER);
-        slider.setMarkupId(MID_METRIC_SELECTOR_SLIDER);
-        add(slider);
-        
-        DropDownChoice<String> dropDownChoice = new DropDownChoice<String>(
-                MID_EVALUATION_METRIC_DROP_DOWN, new PropertyModel<String>(this, "selected"),
-                EVALUATION_METRICS);
-        slider.add(dropDownChoice);
-        
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
+
+        final Panel dropDownPanel = new DropdownPanel(MID_DROPDOWN_PANEL);
+        dropDownPanel.setOutputMarkupId(true);
+        add(dropDownPanel);
+    }
+
+    @Override
+    public void onEvent(IEvent<?> event) {
+        super.onEvent(event);
+        if (event.getPayload() instanceof String) {
+            String selectedMetric = (String) event.getPayload();
+            Log.debug("Option selected: "+selectedMetric);
+            event.stop();
+        }
     }
     
     @Override
@@ -124,26 +118,11 @@ public class ChartPanel
                 "           updateLearningCurveDiagram(result)",
                 "       }",
                 "   })",
-                "$('#" + MID_METRIC_SELECTOR_SLIDER + "').hide()",
                 "})");
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
-        
-        aResponse.render(JavaScriptHeaderItem.forReference(BootSideMenuJSReference.get()));
-        aResponse.render(CssHeaderItem.forReference(BootSideMenuCssReference.get()));
     }
     
-    @Override
-    protected void onAfterRender()
-    {
-        super.onAfterRender();
-        
-        Optional<AjaxRequestTarget> target = RequestCycle.get().find(AjaxRequestTarget.class);
-        
-        if (target.isPresent())
-            target.get().appendJavaScript("$('#" + MID_METRIC_SELECTOR_SLIDER + "').hide()");
-    }
- 
     private final class ChartAjaxBejavior
         extends AbstractAjaxBehavior
     {
