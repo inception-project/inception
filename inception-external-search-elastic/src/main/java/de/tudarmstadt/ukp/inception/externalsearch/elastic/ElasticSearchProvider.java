@@ -22,13 +22,13 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
+import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
@@ -41,14 +41,12 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.client.RestTemplate;
 
 import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.model.ElasticSearchHit;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -71,7 +69,7 @@ public class ElasticSearchProvider
             ElasticSearchProviderTraits aTraits, String aQuery)
         throws IOException
     {
-        List<ExternalSearchResult> results = new ArrayList<ExternalSearchResult>();
+        List<ExternalSearchResult> results = new ArrayList<>();
 
         String indexName = aTraits.getIndexName();
         String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
@@ -104,7 +102,8 @@ public class ElasticSearchProvider
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {
-                if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get(ELASTIC_HIT_METADATA_KEY) == null) {
+                if (hit.getSourceAsMap() == null ||
+                        hit.getSourceAsMap().get(ELASTIC_HIT_METADATA_KEY) == null) {
                     log.warn("Result has no document metadata: " + hit);
                     continue;
                 }
@@ -167,53 +166,42 @@ public class ElasticSearchProvider
     @Override
     public String getDocumentText(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+            throws IOException
     {
         if (!aCollectionId.equals(aTraits.getIndexName())) {
             throw new IllegalArgumentException(
                     "Requested collection name does not match connection collection name");
         }
+    
+        GetRequest getRequest = new GetRequest(
+                aTraits.getIndexName(), aTraits.getObjectType(), aDocumentId
+        );
         
-        Map<String, String> variables = new HashMap<>();
-        variables.put("index", aTraits.getIndexName());
-        variables.put("object", aTraits.getObjectType());
-        variables.put("documentId", aDocumentId);
+        String hostUrl = aTraits.getRemoteUrl().replaceFirst("https?://", "")
+                .replaceFirst("www.", "")
+                .split(":")[0];
         
-        // Send get query
-        RestTemplate restTemplate = new RestTemplate();
-        ElasticSearchHit document = restTemplate.getForObject(
-                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
-                variables);
-
-        return document.get_source().getDoc().getText();
+        try (RestHighLevelClient client = new RestHighLevelClient(
+                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
+            // Send get query
+            Map<String, String> document =
+                    (Map) client.get(getRequest).getSourceAsMap().get(ELASTIC_HIT_DOC_KEY);
+            return (document.get(DOC_TEXT_KEY));
+        }
     }
 
     @Override
     public InputStream getDocumentAsStream(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aCollectionId, String aDocumentId)
+            throws IOException
     {
-        if (!aCollectionId.equals(aTraits.getIndexName())) {
-            throw new IllegalArgumentException(
-                    "Requested collection name does not match connection collection name");
-        }
-        
-        Map<String, String> variables = new HashMap<>();
-        variables.put("index", aTraits.getIndexName());
-        variables.put("object", aTraits.getObjectType());
-        variables.put("documentId", aDocumentId);
-        
-        // Send get query
-        RestTemplate restTemplate = new RestTemplate();
-        ElasticSearchHit document = restTemplate.getForObject(
-                aTraits.getRemoteUrl() + "/{index}/{object}/{documentId}", ElasticSearchHit.class,
-                variables);
-
-        return IOUtils.toInputStream(document.get_source().getDoc().getText(), UTF_8);
+        return IOUtils.toInputStream(
+                getDocumentText(aRepository, aTraits, aCollectionId, aDocumentId), UTF_8);
     }
     
     @Override
     public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
             String aCollectionId, String aDocumentId)
-        throws IOException
     {
         return TextFormatSupport.ID;
     }
