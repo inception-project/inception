@@ -46,7 +46,7 @@ public class LineOrientedPagingStrategy
         for (int i = 0; i < Math.min(lines.length, aLastIndex); i++) {
             
             if (i >= aFirstIndex) {
-                units.add(new Unit(i, beginOffset, beginOffset + lines[i].length()));
+                units.add(new Unit(i + 1, beginOffset, beginOffset + lines[i].length()));
             }
             
             // The +1 below accounts for the line break which is not included in the token

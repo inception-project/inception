@@ -898,6 +898,8 @@ var Visualizer = (function($, window, undefined) {
 
         // find sentence boundaries in relation to chunks
         chunkNo = 0;
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+/*
         var sentenceNo = 0;
         var pastFirst = false;
         $.each(sourceData.sentence_offsets, function() {
@@ -918,6 +920,35 @@ var Visualizer = (function($, window, undefined) {
             pastFirst = true;
           }
         });
+*/
+        var sentenceNo = sourceData.sentence_number_offset-1;
+        
+        $.each(sourceData.sentence_offsets, function() {
+          var from = this[0];
+          var to = this[1];
+          var chunk;
+          // Skip all chunks that belonged to the previous sentence
+          while (chunkNo < numChunks && (chunk = data.chunks[chunkNo]).from < from) {
+            chunkNo++;
+          }
+          
+          // No more chunks
+          if (chunkNo >= numChunks) return false;
+          
+          // If the current chunk is not within the current sentence, then it was an empty sentence
+          if (data.chunks[chunkNo].from >= to) {
+            sentenceNo++;
+            return;
+          }
+
+          sentenceNo++;
+          chunk.sentence = sentenceNo;
+          console.log("ASSIGN: line break ", sentenceNo ," at ", chunk);
+
+          // increase chunkNo counter for next seek iteration
+          chunkNo++;
+        });
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
 
         // assign fragments to appropriate chunks
         var currentChunkId = 0;
@@ -1634,6 +1665,7 @@ Util.profileStart('init');
 
 // WEBANNO EXTENSION BEGIN - #588 - Better handling of setting brat font size 
         $svg.css("font-size", fontZoom+"%");
+        sentNumMargin = 40 * (fontZoom / 100.0);
 // WEBANNO EXTENSION END - #588 - Better handling of setting brat font size 
         
 // WEBANNO EXTENSION BEGIN - Flex-Layout - need to discover scrollbar width programmatically
@@ -1838,6 +1870,8 @@ Util.profileStart('chunks');
         $.each(data.chunks, function(chunkNo, chunk) {
           var spaceWidth = 0;
           if (chunk.lastSpace) {
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+/*
             var spaceLen = chunk.lastSpace.length || 0;
             var spacePos = chunk.lastSpace.lastIndexOf("\n") + 1;
             if (spacePos || !chunkNo || !chunk.sentence) {
@@ -1847,21 +1881,26 @@ Util.profileStart('chunks');
               // * non-first word in a line
               // don't indent if
               // * the first word in a non-paragraph line
-// WEBANNO EXTENSION BEGIN - #564 - Improvements to brat visualization with large font size 
-/*
               for (var i = spacePos; i < spaceLen; i++) spaceWidth += spaceWidths[chunk.lastSpace[i]] || 0;
-*/
-              for (var i = spacePos; i < spaceLen; i++) {
-            	    spaceWidth += spaceWidths[chunk.lastSpace[i]] * (fontZoom / 100.0) || 0;
-              }
-// WEBANNO EXTENSION END - #564 - Improvements to brat visualization with large font size 
-// WEBANNO EXTENSION BEGIN - RTL support - [currentX] adjustment for spaceWidth             
-/*
               currentX += spaceWidth;
-*/
-              currentX += rtlmode ? -spaceWidth : spaceWidth;
-// WEBANNO EXTENSION END
             }
+*/
+            var spaceLen = chunk.lastSpace.length || 0;
+            var spacePos;
+            if (chunk.sentence) {
+              // If this is line-initial spacing, fetch the sentence to which the chunk belongs
+              // so we can determine where it begins
+              var sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+              spacePos = spaceLen - (chunk.from - sentFrom);
+            }
+            else {
+              spacePos = 0;
+            }
+            for (var i = spacePos; i < spaceLen; i++) {
+              spaceWidth += spaceWidths[chunk.lastSpace[i]] * (fontZoom / 100.0) || 0;
+            }
+            currentX += rtlmode ? -spaceWidth : spaceWidth;
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           }
           
           chunk.group = svg.group(row.group);
@@ -2258,7 +2297,12 @@ Util.profileStart('chunks');
           var lastX = currentX;
           var lastRow = row;
 
+          // Is there a sentence break at the current chunk (i.e. it is the first chunk in a new
+          // sentence) - if yes and the current sentence is not the same as the sentence to which 
+          // the chunk belongs, then fill in additional rows
           if (chunk.sentence) {
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+/*
             while (sentenceNumber < chunk.sentence) {
               sentenceNumber++;
               row.arcs = svg.group(row.group, { 'class': 'arcs' });
@@ -2269,6 +2313,21 @@ Util.profileStart('chunks');
               row.index = ++rowIndex;
             }
             sentenceToggle = 1 - sentenceToggle;
+*/
+            while (sentenceNumber < chunk.sentence - 1) {
+              sentenceNumber++;
+              row.arcs = svg.group(row.group, { 'class': 'arcs' });
+              rows.push(row);
+              
+              row = new Row(svg);
+              row.sentence = sentenceNumber;
+              sentenceToggle = 1 - sentenceToggle;
+              row.backgroundIndex = sentenceToggle;
+              row.index = ++rowIndex;
+            }
+            // Not changing row background color here anymore - we do this later now when the next
+            // row is added
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
           }
 
 // WEBANNO EXTENSION BEGIN - RTL support - soft-wrap long sentences
@@ -2278,15 +2337,17 @@ Util.profileStart('chunks');
 */
           var chunkDoesNotFit = false;
           if (rtlmode) {
-        	chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <= 
-        		2 * Configuration.visual.margin.x;
+            chunkDoesNotFit = currentX - boxWidth - leftBorderForArcs <= 
+              2 * Configuration.visual.margin.x;
           }
           else {
-        	chunkDoesNotFit = currentX + boxWidth + rightBorderForArcs >= 
-        		canvasWidth - 2 * Configuration.visual.margin.x
+            chunkDoesNotFit = currentX + boxWidth + rightBorderForArcs >= 
+              canvasWidth - 2 * Configuration.visual.margin.x
           }
           
-          if (chunk.sentence || chunkDoesNotFit) {
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+          if (chunk.sentence > sourceData.sentence_number_offset || chunkDoesNotFit) {
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
 // WEBANNO EXTENSION END
 
             // the chunk does not fit
@@ -2299,17 +2360,38 @@ Util.profileStart('chunks');
                 (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) +
                 spaceWidth;
 */
+
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+            var indent = 0;
+            if (chunk.lastSpace) {
+              var spaceLen = chunk.lastSpace.length || 0;
+              var spacePos;
+              if (chunk.sentence) {
+                // If this is line-initial spacing, fetch the sentence to which the chunk belongs
+                // so we can determine where it begins
+                var sentFrom = sourceData.sentence_offsets[chunk.sentence - sourceData.sentence_number_offset][0];
+                spacePos = spaceLen - (chunk.from - sentFrom);
+              }
+              else {
+                spacePos = 0;
+              }
+              for (var i = spacePos; i < spaceLen; i++) {
+                indent += spaceWidths[chunk.lastSpace[i]] * (fontZoom / 100.0) || 0;
+              }
+            }
+
             if (rtlmode) {
               currentX = canvasWidth - (Configuration.visual.margin.x + sentNumMargin + rowPadding +
 	              (hasRightArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0))/* +
-	              spaceWidth*/);
+	              spaceWidth*/ - indent);
             }
             else {
-	          currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
-	              (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) /*+
-	              spaceWidth*/;
+              currentX = Configuration.visual.margin.x + sentNumMargin + rowPadding +
+                (hasLeftArcs ? arcHorizontalSpacing : (hasInternalArcs ? arcSlant : 0)) /*+
+                spaceWidth*/ + indent;
             }
-// WEBANNO EXTENSION END
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
+// WEBANNO EXTENSION END - RTL support - [currentX] reset after soft-wrap
             if (hasLeftArcs) {
               var adjustedCurTextWidth = sizes.texts.widths[chunk.text] + arcHorizontalSpacing;
               if (adjustedCurTextWidth > maxTextWidth) {
@@ -2331,6 +2413,12 @@ Util.profileStart('chunks');
 
             svg.remove(chunk.group);
             row = new Row(svg);
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+            // Change row background color if a new sentence is starting
+            if (chunk.sentence) {
+              sentenceToggle = 1 - sentenceToggle;
+            }
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
             row.backgroundIndex = sentenceToggle;
             row.index = ++rowIndex;
             svg.add(row.group, chunk.group);
@@ -2394,7 +2482,12 @@ Util.profileStart('chunks');
           // XXX check this - is it used? should it be lastRow?
           if (hasAnnotations) row.hasAnnotations = true;
 
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+/*
           if (chunk.sentence) {
+*/          
+          if (chunk.sentence > sourceData.sentence_number_offset) {
+// WEBANNO EXTENSION END - #1315 - Various issues with line-oriented mode
             row.sentence = ++sentenceNumber;
           }
 
@@ -2436,10 +2529,24 @@ Util.profileStart('chunks');
 // WEBANNO EXTENSION END
         }); // chunks
 
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+        // Add trailing empty rows
+        while (sentenceNumber < (sourceData.sentence_offsets.length + sourceData.sentence_number_offset - 1)) {
+            sentenceNumber++;
+            row.arcs = svg.group(row.group, { 'class': 'arcs' });
+            rows.push(row);
+            row = new Row(svg);
+            row.sentence = sentenceNumber;
+            sentenceToggle = 1 - sentenceToggle;
+            row.backgroundIndex = sentenceToggle;
+            row.index = ++rowIndex;
+        }
+// WEBANNO EXTENSION BEGIN - #1315 - Various issues with line-oriented mode
+
         // finish the last row
         row.arcs = svg.group(row.group, { 'class': 'arcs' });
         rows.push(row);
-
+        
 Util.profileEnd('chunks');
 Util.profileStart('arcsPrep');
 

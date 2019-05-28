@@ -336,6 +336,9 @@ public interface DocumentService
     CAS readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
+    CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
+            throws IOException;
+    
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
     
@@ -373,6 +376,9 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(SourceDocument document, String userName)
+        throws IOException;
+
+    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
     /**

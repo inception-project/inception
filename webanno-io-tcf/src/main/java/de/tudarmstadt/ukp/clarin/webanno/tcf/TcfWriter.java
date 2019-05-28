@@ -22,6 +22,7 @@ import static org.apache.uima.fit.util.JCasUtil.exists;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -33,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.fit.descriptor.ConfigurationParameter;
 import org.apache.uima.fit.descriptor.TypeCapability;
@@ -46,6 +48,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.TagsetDescription;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -91,22 +94,21 @@ public class TcfWriter
      * Specify the suffix of output files. Default value <code>.tcf</code>. If the suffix is not
      * needed, provide an empty string as value.
      */
-    public static final String PARAM_FILENAME_SUFFIX = "filenameSuffix";
-    @ConfigurationParameter(name = PARAM_FILENAME_SUFFIX, mandatory = true, defaultValue = ".tcf")
+    public static final String PARAM_FILENAME_EXTENSION = 
+            ComponentParameters.PARAM_FILENAME_EXTENSION;
+    @ConfigurationParameter(name = PARAM_FILENAME_EXTENSION, mandatory = true, defaultValue = ".tcf")
     private String filenameSuffix;
 
     /**
      * If there are no annotations for a particular layer in the CAS, preserve any potentially
-     * existing annotations in the original TCF.<br>
-     * Default: {@code false}
+     * existing annotations in the original TCF.
      */
     public static final String PARAM_PRESERVE_IF_EMPTY = "preserveIfEmpty";
     @ConfigurationParameter(name = PARAM_PRESERVE_IF_EMPTY, mandatory = true, defaultValue = "false")
     private boolean preserveIfEmpty;
     
     /**
-     * Merge with source TCF file if one is available.<br>
-     * Default: {@code true}
+     * Merge with source TCF file if one is available.
      */
     public static final String PARAM_MERGE = "merge";
     @ConfigurationParameter(name = PARAM_MERGE, mandatory = true, defaultValue = "true")
@@ -120,7 +122,9 @@ public class TcfWriter
         try {
             boolean writeWithoutMerging = true;
             if (merge) {
-                try (OutputStream docOS = getOutputStream(aJCas, filenameSuffix)) {
+                NamedOutputStream docOS = null;
+                try {
+                    docOS = getOutputStream(aJCas, filenameSuffix);
                     // Get the original TCF file and preserve it
                     DocumentMetaData documentMetadata = DocumentMetaData.get(aJCas);
                     URL filePathUrl = new URL(documentMetadata.getDocumentUri());
@@ -146,6 +150,17 @@ public class TcfWriter
                         getLogger().debug(
                                 "Cannot open source file to merge with: " + e.getMessage());
                     }
+                }
+                finally {
+                    if (writeWithoutMerging) {
+                        // Have to delete the output file from this try and will try again without
+                        // merging. Deleting is necessary as not to trigger the overwrite safeguard
+                        // in JCasFileWriter_ImplBase
+                        if ((docOS != null) && (docOS.getName() != null)) {
+                            FileUtils.deleteQuietly(new File(docOS.getName()));
+                        }
+                    }
+                    closeQuietly(docOS);
                 }
             }
             else {

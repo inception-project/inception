@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,11 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
+package de.tudarmstadt.ukp.clarin.webanno.api;
 
-public interface RemoteApiProperties
+public enum CasUpgradeMode
 {
-    public boolean isEnabled();
-
-    public void setEnabled(boolean aRemoteApiEnabled);
+    /**
+     * Do not upgrade the CAS to the current project type system.
+     */
+    NO_CAS_UPGRADE,
+    
+    /**
+     * Try automatically detecting if the CAS type system is not up-to-date and perform
+     * and upgrade if this is the case.
+     */
+    AUTO_CAS_UPGRADE,
+    
+    /**
+     * Require a CAS upgrade.
+     */
+    FORCE_CAS_UPGRADE;
 }

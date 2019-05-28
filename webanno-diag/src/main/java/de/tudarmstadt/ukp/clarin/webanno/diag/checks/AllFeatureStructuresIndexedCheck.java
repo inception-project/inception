@@ -42,10 +42,21 @@ public class AllFeatureStructuresIndexedCheck
             aMessages.add(new LogMessage(this, LogLevel.ERROR, "Unindexed feature structures: %d",
                     nonIndexed.size()));
 
+            int count = 0;
             for (Entry<FeatureStructure, FeatureStructure> e : nonIndexed.entrySet()) {
-                aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                if (count >= 100) {
+                    break;
+                }
+                
+                aMessages.add(LogMessage.error(this,
                         "Non-indexed feature structure [%s] reachable through [%s]", e.getKey(),
                         e.getValue()));
+                count++;
+            }
+            
+            if (count >= 100) {
+                aMessages.add(LogMessage.error(this,
+                        "In total [%d] annotations were reachable but not indexed", count));
             }
         }
         // else {

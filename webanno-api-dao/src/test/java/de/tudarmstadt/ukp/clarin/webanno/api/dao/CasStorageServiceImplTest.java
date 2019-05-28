@@ -47,7 +47,6 @@ public class CasStorageServiceImplTest
     private CasStorageService sut;
     private BackupProperties backupProperties;
     private RepositoryProperties repositoryProperties;
-    private AnnotationSchemaServiceImpl schemaService;
 
     @Rule
     public TemporaryFolder testFolder = new TemporaryFolder();
@@ -60,9 +59,7 @@ public class CasStorageServiceImplTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
         
-        schemaService = new AnnotationSchemaServiceImpl();
-        
-        sut = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
+        sut = new CasStorageServiceImpl(null, null, repositoryProperties, backupProperties);
     }
     
     @Test

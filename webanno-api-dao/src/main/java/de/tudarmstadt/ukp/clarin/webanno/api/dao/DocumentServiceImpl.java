@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
@@ -62,6 +63,7 @@ import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -606,11 +608,21 @@ public class DocumentServiceImpl
     public CAS readAnnotationCas(SourceDocument aDocument, String aUserName)
             throws IOException
     {
+        return readAnnotationCas(aDocument, aUserName, NO_CAS_UPGRADE);
+    }
+
+    @Override
+    @Transactional
+    public CAS readAnnotationCas(SourceDocument aDocument, String aUserName,
+            CasUpgradeMode aUpgradeMode)
+            throws IOException
+    {
         // If there is no CAS yet for the source document, create one.
-        CAS cas  = casStorageService.readOrCreateCas(aDocument, aUserName, () -> {
-            // Convert the source file into an annotation CAS
-            return createOrReadInitialCas(aDocument);
-        });
+        CAS cas = casStorageService.readOrCreateCas(aDocument, aUserName, true, aUpgradeMode,
+            () -> {
+                // Convert the source file into an annotation CAS
+                return createOrReadInitialCas(aDocument);
+            });
 
         // We intentionally do not upgrade the CAS here because in general the IDs
         // must remain stable. If an upgrade is required the caller should do it
@@ -622,12 +634,21 @@ public class DocumentServiceImpl
     public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument)
         throws IOException
     {
+        return readAnnotationCas(aAnnotationDocument, NO_CAS_UPGRADE);
+    }
+
+    @Override
+    @Transactional
+    public CAS readAnnotationCas(AnnotationDocument aAnnotationDocument,
+            CasUpgradeMode aUpgradeMode)
+        throws IOException
+    {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
         
         SourceDocument aDocument = aAnnotationDocument.getDocument();
         String userName = aAnnotationDocument.getUser();
         
-        return readAnnotationCas(aDocument, userName);
+        return readAnnotationCas(aDocument, userName, aUpgradeMode);
     }
     
     @Override

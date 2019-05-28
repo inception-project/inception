@@ -45,6 +45,7 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
     public boolean check(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         boolean ok = true;
+        int count = 0;
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
             if (!(SPAN_TYPE.equals(layer.getType()) && layer.getAttachFeature() != null)) {
                 continue;
@@ -69,15 +70,23 @@ public class FeatureAttachedSpanAnnotationsTrulyAttachedCheck
                     AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
                             AnnotationFS.class);
                     if (!anno.equals(candidate)) {
-                        aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                                "Annotation should be attached to ["
-                                        + layer.getAttachFeature().getName()
-                                        + "] but is not.\nAnnotation: [" + anno
-                                        + "]\nAttach annotation:[" + attach + "]"));
+                        if (count < 100) {
+                            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                                    "Annotation should be attached to ["
+                                            + layer.getAttachFeature().getName()
+                                            + "] but is not.\nAnnotation: [" + anno
+                                            + "]\nAttach annotation:[" + attach + "]"));
+                        }
+                        count ++;
                         ok = false;
                     }
                 }
             }
+        }
+        
+        if (count >= 100) {
+            aMessages.add(new LogMessage(this, LogLevel.ERROR,
+                    "In total [%d] annotations were not properly attached", count));
         }
         
         return ok;

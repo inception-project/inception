@@ -77,7 +77,8 @@ public class ImportExportServiceImplTest
         repositoryProperties = new RepositoryProperties();
         repositoryProperties.setPath(testFolder.newFolder());
 
-        storageService = new CasStorageServiceImpl(null, repositoryProperties, backupProperties);
+        storageService = new CasStorageServiceImpl(null, null, repositoryProperties,
+                backupProperties);
 
         sut = new ImportExportServiceImpl(repositoryProperties, asList(new XmiFormatSupport()),
                 storageService, schemaService);

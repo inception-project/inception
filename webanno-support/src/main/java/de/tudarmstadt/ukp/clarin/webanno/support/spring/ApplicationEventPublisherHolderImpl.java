@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,11 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
+package de.tudarmstadt.ukp.clarin.webanno.support.spring;
 
-public interface RemoteApiProperties
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
+
+@Component
+public class ApplicationEventPublisherHolderImpl implements ApplicationEventPublisherHolder
 {
-    public boolean isEnabled();
+    private @Autowired ApplicationEventPublisher applicationEventPublisher;
 
-    public void setEnabled(boolean aRemoteApiEnabled);
+    @Override
+    public ApplicationEventPublisher get()
+    {
+        return applicationEventPublisher;
+    }
 }
