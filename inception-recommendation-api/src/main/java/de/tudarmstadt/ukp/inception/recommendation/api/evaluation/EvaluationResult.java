@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -241,9 +242,9 @@ public class EvaluationResult
         return skippedEvaluation;
     }
     
-    public String getErrorMsg()
+    public Optional<String> getErrorMsg()
     {
-        return errorMsg;
+        return Optional.ofNullable(errorMsg);
     }
 
     public void setErrorMsg(String aErrorMsg)

@@ -26,9 +26,9 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var xAxixType = 'indexed';
     var plotType = 'step';
     var xTick = {
-    		format : function(a) {
-    			return Math.round(1e2 * a) / 1e2;
-    		}
+    	format : function(a) {
+    		return Math.round(1e2 * a) / 1e2;
+    	}
     };
     
 	// make the type of x-axis "category" (shows x in category intervals of size 1). 
@@ -37,30 +37,37 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     	xAxixType = "category";
     
 
-    // if we just have one value, we cannot visualize a step
-	if (arrayOfLearningCurves[0] && arrayOfLearningCurves[0].length < 3) {
-		plotType = 'scatter';
+    // if we just have one value per data-row, we cannot visualize a step
+    var plotTypes = {};
+	for (i = 0; i < arrayOfLearningCurves.length; i++) {
+		if (arrayOfLearningCurves[i].length < 3) {
+			plotTypes[arrayOfLearningCurves[i][0]] = 'scatter';
+		} else {
+			plotTypes[arrayOfLearningCurves[i][0]] = 'step';
+		}
+	}
+    
+	if (arrayOfLearningCurves[0].length < 3) {
 		xTick["values"] = [ 0.0, 1.0 ];
 	}
     
-    // draw the chart with the help of the arrayOfLearningCurves. The type of
-	// the graph is "step".
+    // draw the chart with the help of the arrayOfLearningCurves
     var e = c3.generate({
         bindto: "#canvas",
         data: {
+        	empty:{label:{text:"No Data Available"}},
             x: "x",
             columns: arrayOfLearningCurves,
-            type: plotType,
-            empty:{label:{text:"No Data Available"}}
+            types: plotTypes
         },
         axis: {
             x: {
                 type: xAxixType,
                 tick : xTick
             },
-            //to round off the decimal points of the y-axis values to 4 if it is a decimal number.
             y: {
             	min: 0,
+            	//to round off the decimal points of the y-axis values to 4 if it is a decimal number.
                 tick: {
                     format: function(a) {
                         return Math.round(1e4 * a) / 1e4;

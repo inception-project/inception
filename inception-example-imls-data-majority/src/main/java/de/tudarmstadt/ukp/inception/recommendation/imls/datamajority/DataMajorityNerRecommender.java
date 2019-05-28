@@ -169,11 +169,11 @@ public class DataMajorityNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
-        List<Annotation> annotations = extractAnnotations(aCasses);
+        List<Annotation> data = extractAnnotations(aCasses);
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
-        for (Annotation ann : annotations) {
+        for (Annotation ann : data) {
             switch (aDataSplitter.getTargetSet(ann)) {
             case TRAIN:
                 trainingData.add(ann);
@@ -188,7 +188,8 @@ public class DataMajorityNerRecommender
         
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
-        double trainRatio = (double) trainingSetSize / (double) (annotations.size() - testSetSize);
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");

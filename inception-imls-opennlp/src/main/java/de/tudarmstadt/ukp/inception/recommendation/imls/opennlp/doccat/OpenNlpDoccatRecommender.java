@@ -163,7 +163,8 @@ public class OpenNlpDoccatRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        double trainRatio = (double) trainingSetSize / (double) (data.size() - testSetSize);
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
