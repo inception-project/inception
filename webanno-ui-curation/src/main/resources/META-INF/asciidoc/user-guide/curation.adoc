@@ -83,3 +83,14 @@ The annotations which were not chosen to be in the merged file are marked dark b
 | Red 
 | rejected; different to the corresponding annotation in the upper *Annotation* pane
 |===
+
+.Anonymized curation
+By default, the curator can see the annotators names on the curation page. However, in some cases,
+it may not be desirable for the curator to see the names. In this case, enable the option
+*Anonymous curation* in the project detail settings. Users with the curator role will then only
+see an anonymous label like *Anonymized annotator 1* instead of the annotator names. Users who are
+project managers can still see the annotator names.
+
+NOTE: The order of the annotators is not randomized - only the names are removed from the UI. Only 
+      annotators who have marked their documents as *finished* are shown. Thus, which annotator recieves 
+      which number may changed depending on documents being marked as finished or put back into progress.

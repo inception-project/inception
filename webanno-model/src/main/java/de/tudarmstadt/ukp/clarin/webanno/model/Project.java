@@ -79,6 +79,9 @@ public class Project
     @Column(nullable = true)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.ProjectStateType")
     private ProjectState state;
+    
+    @Column(nullable = false)
+    private boolean anonymousCuration;
 
     public Project()
     {
@@ -207,6 +210,16 @@ public class Project
     public void setState(ProjectState aState)
     {
         state = aState;
+    }
+    
+    public boolean isAnonymousCuration()
+    {
+        return anonymousCuration;
+    }
+
+    public void setAnonymousCuration(boolean aAnonymousCuration)
+    {
+        anonymousCuration = aAnonymousCuration;
     }
 
     @Override
