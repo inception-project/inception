@@ -26,14 +26,13 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var xAxixType = 'indexed';
     var plotType = 'step';
     var xTick = {
-    		rotate : 0,
-    		multiline : true,
     		format : function(a) {
     			return Math.round(1e2 * a) / 1e2;
     		}
     };
     
-	//make the type of x-axis "category" when we have more than one learning curves. i.e when the request is from annotation recommender side bar. It is for better visualization when the x-axis represents test data size
+	// make the type of x-axis "category" (shows x in category intervals of size 1). 
+    // It is for better visualization when the x-axis represents test data size (annotationpage)
     if ((arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) > 1) 
     	xAxixType = "category";
     
@@ -61,6 +60,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
             },
             //to round off the decimal points of the y-axis values to 4 if it is a decimal number.
             y: {
+            	min: 0,
                 tick: {
                     format: function(a) {
                         return Math.round(1e4 * a) / 1e4;
