@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.RepositoryType;
 import de.tudarmstadt.ukp.inception.kb.SchemaProfile;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBasePropertiesImpl;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
@@ -241,8 +242,8 @@ public class KnowledgeBaseExporter implements ProjectExporter
                 kb.setMaxResults(kbProperties.getDefaultMaxResults());
             }
             // Cap at local min results
-            if (kb.getMaxResults() < KnowledgeBaseProperties.HARD_MIN_RESULTS) {
-                kb.setMaxResults(KnowledgeBaseProperties.HARD_MIN_RESULTS);
+            if (kb.getMaxResults() < KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS) {
+                kb.setMaxResults(KnowledgeBasePropertiesImpl.HARD_MIN_RESULTS);
             }
             // Cap at local max results
             if (kb.getMaxResults() > kbProperties.getHardMaxResults()) {
