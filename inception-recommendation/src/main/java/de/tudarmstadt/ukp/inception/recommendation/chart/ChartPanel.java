@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptContentHeaderItem;
@@ -33,7 +32,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.handler.TextRequestHandler;
-import org.jfree.util.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +51,7 @@ public class ChartPanel
     private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
 
     private static final String MID_CHART_CONTAINER = "chart";
-    private static final String OUTPUT_MARKUP_ID_CHART = "canvas"; 
-    private static final String MID_DROPDOWN_PANEL = "dropdownPanel"; 
+    private static final String OUTPUT_MARKUP_ID_CHART = "canvas";
 
     private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
@@ -64,34 +61,22 @@ public class ChartPanel
     {
         super(aId, aModel);
         model = aModel;
-        
+
         chart = new WebMarkupContainer(MID_CHART_CONTAINER);
         chart.setMarkupId(OUTPUT_MARKUP_ID_CHART);
         add(chart);
-        
+
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
 
-        final Panel dropDownPanel = new DropdownPanel(MID_DROPDOWN_PANEL);
-        dropDownPanel.setOutputMarkupId(true);
-        add(dropDownPanel);
+
     }
 
-    @Override
-    public void onEvent(IEvent<?> event) {
-        super.onEvent(event);
-        if (event.getPayload() instanceof String) {
-            String selectedMetric = (String) event.getPayload();
-            Log.debug("Option selected: "+selectedMetric);
-            event.stop();
-        }
-    }
-    
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         // import Js
         aResponse.render(JavaScriptHeaderItem
                 .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
@@ -104,9 +89,9 @@ public class ChartPanel
 
         aResponse.render(JavaScriptReferenceHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
-        
-        aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
+        aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
+        
         String chartTriggerJavascript = String.join("\n",
                 "$(document).ready(function(){", 
                 "   $.ajax({",
@@ -122,7 +107,7 @@ public class ChartPanel
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }
-    
+
     private final class ChartAjaxBejavior
         extends AbstractAjaxBehavior
     {
@@ -132,7 +117,7 @@ public class ChartPanel
         public void onRequest()
         {
             RequestCycle requestCycle = RequestCycle.get();
-            
+
             LearningCurve learningCurve = model.getObject();
 
             try {
