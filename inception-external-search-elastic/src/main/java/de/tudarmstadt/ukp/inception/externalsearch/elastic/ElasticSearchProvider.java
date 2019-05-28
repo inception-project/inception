@@ -21,7 +21,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +35,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -56,7 +56,16 @@ public class ElasticSearchProvider
     implements ExternalSearchProvider<ElasticSearchProviderTraits>
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-
+    
+    private static final String ELASTIC_HIT_METADATA_KEY = "metadata";
+    private static final String ELASTIC_HIT_DOC_KEY = "doc";
+    private static final String METADATA_SOURCE_KEY = "source";
+    private static final String METADATA_URI_KEY = "uri";
+    private static final String METADATA_LANGUAGE_KEY = "language";
+    private static final String METADATA_TIMESTAMP_KEY = "timestamp";
+    private static final String DOC_TEXT_KEY = "text";
+    private static final String HIGHLIGHT_TEXT_KEY = "doc.text";
+    
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
             ElasticSearchProviderTraits aTraits, String aQuery)
@@ -70,7 +79,7 @@ public class ElasticSearchProvider
                 .split(":")[0];
         
         try (RestHighLevelClient client = new RestHighLevelClient(
-                RestClient.builder(new HttpHost(InetAddress.getByName(hostUrl))))) {
+                RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
             HighlightBuilder highlightBuilder = new HighlightBuilder();
             HighlightBuilder.Field highlightField =
                     new HighlightBuilder.Field(aTraits.getDefaultField());
@@ -79,7 +88,15 @@ public class ElasticSearchProvider
     
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-            searchSourceBuilder.query(QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery));
+            if (aTraits.isRandomOrder()) {
+                searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
+                        QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery),
+                        ScoreFunctionBuilders.randomFunction()));
+            }
+            else {
+                searchSourceBuilder.query(QueryBuilders.termQuery(
+                        aTraits.getDefaultField(), aQuery));
+            }
             searchSourceBuilder.highlighter(highlightBuilder);
             searchSourceBuilder.size(aTraits.getResultSize());
             searchRequest.source(searchSourceBuilder);
@@ -87,7 +104,7 @@ public class ElasticSearchProvider
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {
-                if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get("metadata") == null) {
+                if (hit.getSourceAsMap() == null || hit.getSourceAsMap().get(ELASTIC_HIT_METADATA_KEY) == null) {
                     log.warn("Result has no document metadata: " + hit);
                     continue;
                 }
@@ -106,14 +123,14 @@ public class ElasticSearchProvider
                 }
     
                 Map<String, Object> hitSource = hit.getSourceAsMap();
-                Map<String, String> metadata = (Map) hitSource.get("metadata");
-                Map<String, String> doc = (Map) hitSource.get("doc");
+                Map<String, String> metadata = (Map) hitSource.get(ELASTIC_HIT_METADATA_KEY);
+                Map<String, String> doc = (Map) hitSource.get(ELASTIC_HIT_DOC_KEY);
     
                 // Set the metadata fields
-                result.setOriginalSource(metadata.get("source"));
-                result.setOriginalUri(metadata.get("uri"));
-                result.setLanguage(metadata.get("language"));
-                result.setTimestamp(metadata.get("timestamp"));
+                result.setOriginalSource(metadata.get(METADATA_SOURCE_KEY));
+                result.setOriginalUri(metadata.get(METADATA_URI_KEY));
+                result.setLanguage(metadata.get(METADATA_LANGUAGE_KEY));
+                result.setTimestamp(metadata.get(METADATA_TIMESTAMP_KEY));
     
                 if (hit.getHighlightFields().size() != 0) {
     
@@ -125,12 +142,12 @@ public class ElasticSearchProvider
                     // Until this feature is implemented, we currently try to find
                     // the keywords offsets by finding the matching highlight in the document text,
                     // then the keywords offset within highlight using <em> tags.
-                    String originalText = doc.get("text");
+                    String originalText = doc.get(DOC_TEXT_KEY);
     
                     // There are highlights, set them in the result
                     List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                    if (hit.getHighlightFields().get("doc.text") != null) {
-                        for (Text highlight : hit.getHighlightFields().get("doc.text")
+                    if (hit.getHighlightFields().get(HIGHLIGHT_TEXT_KEY) != null) {
+                        for (Text highlight : hit.getHighlightFields().get(HIGHLIGHT_TEXT_KEY)
                                 .getFragments()) {
                             Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
                                     .parseHighlight(highlight.toString(), originalText);
