@@ -64,7 +64,7 @@
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
     <lucene.version>7.3.0</lucene.version>
     <mtas.version>7.3.0.3</mtas.version>
-    <rdf4j.version>2.5.0-inception-2-SNAPSHOT</rdf4j.version>
+    <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.12.2</assertj.version>
     <okhttp.version>3.13.1</okhttp.version>
