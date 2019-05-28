@@ -62,7 +62,6 @@ public class ElasticSearchProvider
     private static final String METADATA_LANGUAGE_KEY = "language";
     private static final String METADATA_TIMESTAMP_KEY = "timestamp";
     private static final String DOC_TEXT_KEY = "text";
-    private static final String HIGHLIGHT_TEXT_KEY = "doc.text";
     
     @Override
     public List<ExternalSearchResult> executeQuery(DocumentRepository aRepository,
@@ -145,8 +144,9 @@ public class ElasticSearchProvider
     
                     // There are highlights, set them in the result
                     List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                    if (hit.getHighlightFields().get(HIGHLIGHT_TEXT_KEY) != null) {
-                        for (Text highlight : hit.getHighlightFields().get(HIGHLIGHT_TEXT_KEY)
+                    if (hit.getHighlightFields().get(aTraits.getDefaultField()) != null) {
+                        for (Text highlight : hit.getHighlightFields()
+                                .get(aTraits.getDefaultField())
                                 .getFragments()) {
                             Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
                                     .parseHighlight(highlight.toString(), originalText);
