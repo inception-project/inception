@@ -35,6 +35,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.RandomScoreFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -85,12 +86,14 @@ public class ElasticSearchProvider
     
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
+            randomFunc.seed(37);
             if (aTraits.isRandomOrder()) {
                 searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
                         QueryBuilders.constantScoreQuery(
                             QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery)
                         ).boost(1.0f),
-                        ScoreFunctionBuilders.randomFunction()));
+                        randomFunc));
             }
             else {
                 searchSourceBuilder.query(QueryBuilders.termQuery(
