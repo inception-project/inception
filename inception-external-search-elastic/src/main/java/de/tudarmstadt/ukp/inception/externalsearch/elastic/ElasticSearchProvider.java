@@ -87,7 +87,7 @@ public class ElasticSearchProvider
             SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
-            randomFunc.seed(37);
+            randomFunc.seed(aTraits.getSeed());
             if (aTraits.isRandomOrder()) {
                 searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
                         QueryBuilders.constantScoreQuery(
