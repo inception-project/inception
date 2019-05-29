@@ -30,9 +30,11 @@ import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
@@ -47,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQueryJsonResourceReferen
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgDomResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.JQuerySvgResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 /**
  * Wicket panel for visualizing an annotated sentence in brat. When a user clicks on a span or an
@@ -58,9 +62,12 @@ public class BratSuggestionVisualizer
 {
     private static final long serialVersionUID = 6653508018500736430L;
     private AbstractDefaultAjaxBehavior controller;
+    
+    private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userService;
 
     public BratSuggestionVisualizer(String id,
-            IModel<UserAnnotationSegment> aModel)
+            IModel<UserAnnotationSegment> aModel, int aPosition)
     {
         super(id, aModel);
         String username;
@@ -69,7 +76,14 @@ public class BratSuggestionVisualizer
             username = "Suggestion";
         }
         else {
-            username = getModelObject().getUsername();
+            Project project = getModelObject().getAnnotatorState().getProject();
+            if (project.isAnonymousCuration()
+                    && !projectService.isManager(project, userService.getCurrentUser())) {
+                username = "Anonymized annotator " + (aPosition + 1);
+            }
+            else {
+                username = getModelObject().getUsername();
+            }
         }
         Label label = new Label("username", username);
         add(label);
