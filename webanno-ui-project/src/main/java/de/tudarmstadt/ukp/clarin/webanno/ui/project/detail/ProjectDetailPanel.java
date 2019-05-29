@@ -104,7 +104,9 @@ public class ProjectDetailPanel
         form.add(scriptDirection);
         
         form.add(new CheckBox("disableExport"));
-        
+
+        form.add(new CheckBox("anonymousCuration"));
+
         form.add(projectTypes = makeProjectTypeChoice());
         
         form.add(new LambdaAjaxButton<>("save", this::actionSave));

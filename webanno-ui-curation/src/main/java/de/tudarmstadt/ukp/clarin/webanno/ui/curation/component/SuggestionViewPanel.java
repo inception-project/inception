@@ -139,7 +139,7 @@ public class SuggestionViewPanel
             {
                 final UserAnnotationSegment curationUserSegment = aItem.getModelObject();
                 BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
-                        "sentence", new Model<>(curationUserSegment))
+                        "sentence", new Model<>(curationUserSegment), aItem.getIndex())
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
 
