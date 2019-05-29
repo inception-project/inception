@@ -87,7 +87,9 @@ public class ElasticSearchProvider
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
             if (aTraits.isRandomOrder()) {
                 searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
-                        QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery),
+                        QueryBuilders.constantScoreQuery(
+                            QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery)
+                        ).boost(1.0f),
                         ScoreFunctionBuilders.randomFunction()));
             }
             else {
