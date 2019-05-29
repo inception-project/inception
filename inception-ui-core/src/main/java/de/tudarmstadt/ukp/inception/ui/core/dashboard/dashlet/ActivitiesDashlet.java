@@ -58,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
-
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
     // annotation events
@@ -83,6 +82,7 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
     public ActivitiesDashlet(String aId, IModel<Project> aCurrentProject)
     {
         super(aId);
+        
         projectModel = aCurrentProject;
         
         if (aCurrentProject == null || aCurrentProject.getObject() == null) {
@@ -175,10 +175,10 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
 
         // the annotation event was fired while curating
         if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
-            return String.format("%s: Curated document %s", eventDate, documentName);
+            return String.format("%s: Curated \"%s\"", eventDate, documentName);
         }
         else {
-            return String.format("%s: Annotated in document %s", eventDate, documentName);
+            return String.format("%s: Annotated \"%s\"", eventDate, documentName);
         }
     }
     

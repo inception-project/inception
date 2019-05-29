@@ -18,9 +18,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-  <wicket:extend>
-    <div wicket:id="activities">
-    <h3><wicket:message key="activitiesHeading"/></h3>
+  <wicket:panel>
+    <div wicket:id="activities" class="flex-tile" style="flex: 0.5;">
+      <h3><wicket:message key="activitiesHeading"/></h3>
       <ul class="scrolling flex-content flex-v-container flex-gutter">
         <li wicket:id="activity">
           <a wicket:id="eventLink">
@@ -29,6 +29,6 @@
         </li>
       </ul>
     </div>
-  </wicket:extend>
+  </wicket:panel>
 </body>
 </html>
