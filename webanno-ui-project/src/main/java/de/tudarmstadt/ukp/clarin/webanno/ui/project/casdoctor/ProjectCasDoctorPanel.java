@@ -20,6 +20,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.casdoctor;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CORRECTION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_CORRECTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static java.util.Arrays.asList;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasPersistenceUtils;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
@@ -69,6 +74,7 @@ public class ProjectCasDoctorPanel
     private static final long serialVersionUID = 2116717853865353733L;
 
     private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationService;
     private @SpringBean CasStorageService casStorageService;
     private @SpringBean ImportExportService importExportService;
 
@@ -176,7 +182,7 @@ public class ProjectCasDoctorPanel
             }
             
             // Repair CORRECTION_USER CAS if necessary
-            if (WebAnnoConst.PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
+            if (PROJECT_TYPE_CORRECTION.equals(project.getMode())) {
                 LogMessageSet messageSet = new LogMessageSet(
                         sd.getName() + " [" + CORRECTION_USER + "]");
                 try {
@@ -215,10 +221,16 @@ public class ProjectCasDoctorPanel
                             documentService.getCasFile(sd, CURATION_USER));
                 }
                 catch (FileNotFoundException e) {
-                    // If there is no CAS for the curation user, then curation has not started yet.
-                    // This is not a problem, so we can ignore it.
-                    messageSet.messages.add(
-                            LogMessage.info(getClass(), "Curation seems to have not yet started."));
+                    if (asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(sd.getState())) {
+                        messageSet.messages.add(
+                                LogMessage.error(getClass(), "Curation CAS missing."));
+                    }
+                    else {
+                        // If there is no CAS for the curation user, then curation has not started
+                        // yet. This is not a problem, so we can ignore it.
+                        messageSet.messages
+                                .add(LogMessage.info(getClass(), "Curation has not started."));
+                    }
                 }
                 catch (Exception e) {
                     messageSet.messages.add(new LogMessage(getClass(), LogLevel.ERROR,

@@ -119,7 +119,33 @@ public class UserDaoImpl
         return entityManager.createQuery("FROM " + User.class.getName(), User.class)
                 .getResultList();
     }
+
+    @Override
+    @Transactional
+    public List<User> listEnabledUsers()
+    {
+        String query = String.join("\n",
+                "FROM " +  User.class.getName(),
+                "WHERE enabled = :enabled");
+        
+        return entityManager.createQuery(query, User.class)
+                .setParameter("enabled", true)
+                .getResultList();
+    }
     
+    @Override
+    @Transactional
+    public List<User> listDisabledUsers()
+    {
+        String query = String.join("\n",
+                "FROM " +  User.class.getName(),
+                "WHERE enabled = :enabled");
+        
+        return entityManager.createQuery(query, User.class)
+                .setParameter("enabled", false)
+                .getResultList();
+    }
+
     @Override
     @Transactional
     public User getCurrentUser()

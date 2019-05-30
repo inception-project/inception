@@ -88,7 +88,11 @@ public interface UserDao
      * @return the users.
      */
     List<User> list();
-    
+
+    List<User> listEnabledUsers();
+
+    List<User> listDisabledUsers();
+
     /**
      * Returns a role of a user, globally we will have ROLE_ADMIN and ROLE_USER
      *
@@ -101,12 +105,12 @@ public interface UserDao
     /**
      * Check if the user has global administrator permissions.
      */
-    public boolean isAdministrator(User aUser);
+    boolean isAdministrator(User aUser);
 
     /**
      * Check if the user has the permission to create projects.
      */
-    public boolean isProjectCreator(User aUser);
+    boolean isProjectCreator(User aUser);
 
-    public Set<String> getRoles(User aUser);
+    Set<String> getRoles(User aUser);
 }

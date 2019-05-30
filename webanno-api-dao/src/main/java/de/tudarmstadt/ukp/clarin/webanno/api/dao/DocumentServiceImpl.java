@@ -347,9 +347,8 @@ public class DocumentServiceImpl
                 .getSingleResult();
     }
     
-    @Override
     @Transactional
-    public SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
+    private SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
             SourceDocumentState aState)
     {
         Validate.notNull(aDocument, "Source document must be specified");

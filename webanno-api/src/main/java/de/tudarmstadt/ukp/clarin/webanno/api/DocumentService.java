@@ -167,11 +167,7 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    File getDocumentFolder(SourceDocument aDocument)
-        throws IOException;
-
-    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
-            SourceDocumentState aState);
+    File getDocumentFolder(SourceDocument aDocument) throws IOException;
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
