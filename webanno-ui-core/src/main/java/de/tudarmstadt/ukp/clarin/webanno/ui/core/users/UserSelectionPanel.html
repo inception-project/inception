@@ -29,9 +29,15 @@
       <div class="scrolling panel-body fit-child-snug">
         <select wicket:id="user" class="form-control"></select>
       </div>
-      <div class="panel-footer text-right">
-        <input type="button" wicket:id="create" wicket:message="value:create"
-          class="btn btn-primary" />
+      <div class="panel-footer">
+        <span class="form-inline">
+          <input type="checkbox" wicket:id="showDisabled"/> 
+          <wicket:message key="showDisabled"/>
+        </span>
+        <div class="pull-right">
+          <input type="button" wicket:id="create" wicket:message="value:create"
+            class="btn btn-primary" />
+        </div>
       </div>
     </div>
   </wicket:panel>

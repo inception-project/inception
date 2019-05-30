@@ -464,14 +464,14 @@ public class AutomationPage
                         if (automationService.getMiraTemplate(f) != null && isRepeatable) {
 
                             if (layer.getType().endsWith(WebAnnoConst.RELATION_TYPE)) {
-                                AutomationUtil.repeateRelationAnnotation(state, documentService,
+                                AutomationUtil.repeatRelationAnnotation(state, documentService,
                                         correctionDocumentService, annotationService, fs, f,
                                         fs.getFeatureValueAsString(feat));
                                 update(aTarget);
                                 break;
                             }
                             else if (layer.getType().endsWith(WebAnnoConst.SPAN_TYPE)) {
-                                AutomationUtil.repeateSpanAnnotation(state, documentService,
+                                AutomationUtil.repeatSpanAnnotation(state, documentService,
                                         correctionDocumentService, annotationService, fs.getBegin(),
                                         fs.getEnd(), f, fs.getFeatureValueAsString(feat));
                                 update(aTarget);

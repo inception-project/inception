@@ -86,6 +86,9 @@ public class ExportedProject
     @Temporal(TemporalType.TIMESTAMP)
     private Date updated;
     
+    @JsonProperty("anonymous_curation")
+    private boolean anonymousCuration;
+    
     private Map<String, Object> properties = new HashMap<>();
     
     public String getName()
@@ -218,6 +221,16 @@ public class ExportedProject
         updated = aUpdated;
     }
     
+    public boolean isAnonymousCuration()
+    {
+        return anonymousCuration;
+    }
+
+    public void setAnonymousCuration(boolean aAnonymousCuration)
+    {
+        anonymousCuration = aAnonymousCuration;
+    }
+
     @JsonAnySetter
     public void setProperty(String name, Object value)
     {

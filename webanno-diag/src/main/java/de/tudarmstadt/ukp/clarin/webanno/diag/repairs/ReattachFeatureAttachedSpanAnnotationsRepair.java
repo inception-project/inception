@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -26,15 +27,14 @@ import static org.apache.uima.fit.util.FSUtil.setFeature;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.Repair.Safe;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogLevel;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 
 @Safe
@@ -47,37 +47,48 @@ public class ReattachFeatureAttachedSpanAnnotationsRepair
     public void repair(Project aProject, CAS aCas, List<LogMessage> aMessages)
     {
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(aProject)) {
-            if (!(WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+            if (!(SPAN_TYPE.equals(layer.getType())
                     && layer.getAttachFeature() != null)) {
                 continue;
             }
 
+            Type attachType = getType(aCas, layer.getAttachType().getName());
+            String attachFeature = layer.getAttachFeature().getName();
+
             int count = 0;
+            int nonNullCount = 0;
 
             // Go over the layer that has an attach feature (e.g. Token) and make sure that it is
             // filled
-            // anno -> e.g. Lemma
+            // anno   -> e.g. Lemma
             // attach -> e.g. Token
+            // Here we iterate over the attached layer, e.g. Lemma
             for (AnnotationFS anno : select(aCas, getType(aCas, layer.getName()))) {
-                for (AnnotationFS attach : selectCovered(
-                        getType(aCas, layer.getAttachType().getName()), anno)) {
-                    AnnotationFS candidate = getFeature(attach, layer.getAttachFeature().getName(),
-                            AnnotationFS.class);
-                    if (candidate == null) {
+                // Here we fetch all annotations of the layer we attach to at the relevant position,
+                // e.g. Token
+                for (AnnotationFS attach : selectCovered(attachType, anno)) {
+                    AnnotationFS existing = getFeature(attach, attachFeature, AnnotationFS.class);
+                    
+                    if (existing == null) {
                         setFeature(attach, layer.getAttachFeature().getName(), anno);
                         count++;
                     }
-                    else if (candidate != anno) {
-                        aMessages.add(new LogMessage(this, LogLevel.ERROR,
-                                "Cannot attach annotation because attach feature alread non-null"));
+                    else if (!anno.equals(existing)) {
+                        nonNullCount++;
                     }
                 }
             }
 
             if (count > 0) {
-                aMessages.add(new LogMessage(this, LogLevel.INFO,
-                        "Reattached [%d] unattached spans on layer [" + layer.getName() + "].",
-                        count));
+                aMessages.add(LogMessage.info(this,
+                        "Reattached [%d] unattached spans on layer [%s].", count, layer.getName()));
+            }
+            
+            if (nonNullCount > 0) {
+                aMessages.add(LogMessage.error(this,
+                        "Could not attach [%d] annotations on layer [%s] because attach feature "
+                                + "already non-null.",
+                        nonNullCount, layer.getName()));
             }
         }
     }
