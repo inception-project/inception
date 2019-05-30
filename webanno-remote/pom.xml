@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
     <artifactId>webanno</artifactId>
-    <version>3.5.7</version>
+    <version>3.5.8-SNAPSHOT</version>
   </parent>
   <artifactId>webanno-remote</artifactId>
   <name>WebAnno - Core - Remote API</name>
