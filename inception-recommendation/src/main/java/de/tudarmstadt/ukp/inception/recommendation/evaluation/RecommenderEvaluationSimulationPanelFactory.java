@@ -27,7 +27,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelFa
 
 @Component
 @Order(400)
-public class EvaluationSimulationPanelFactory
+public class RecommenderEvaluationSimulationPanelFactory
     implements ProjectSettingsPanelFactory
 {
     @Override
@@ -45,6 +45,6 @@ public class EvaluationSimulationPanelFactory
     @Override
     public Panel createSettingsPanel(String aID, final IModel<Project> aProjectModel)
     {
-        return new EvaluationSimulationPanel(aID, aProjectModel);
+        return new RecommenderEvaluationSimulationPanel(aID, aProjectModel);
     }
 }

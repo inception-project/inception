@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  * 
@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.project;
+package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 
@@ -25,40 +25,39 @@ import org.apache.wicket.model.Model;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.SimulationLearningCurvePanel;
+import de.tudarmstadt.ukp.inception.recommendation.project.RecommenderListPanel;
 
-public class ProjectRecommendersPanel
+
+
+public class RecommenderEvaluationSimulationPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 3042218455285633439L;
     
-    private static final String EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
-
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
+ 
+    private static final String EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
     
-    public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
+    public RecommenderEvaluationSimulationPanel(String aId, IModel<Project> aProject)
     {
         super(aId, aProject);
-
+        
         selectedRecommenderModel = Model.of();
         projectModel = aProject;
-
-        RecommenderEditorPanel recommenderEditorPanel = new RecommenderEditorPanel(
-                "recommenderEditor", projectModel, selectedRecommenderModel);
-        add(recommenderEditorPanel);
-
+        
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel("recommenders",
                 projectModel, selectedRecommenderModel);
         recommenderListPanel.setCreateAction(_target -> {
             Recommender recommender = new Recommender();
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
             selectedRecommenderModel.setObject(recommender);
-            recommenderEditorPanel.modelChanged();
+            //recommenderEditorPanel.modelChanged();
         });
+        recommenderListPanel.getLambdaAjaxLink().setVisible(false);
         recommenderListPanel.setChangeAction(_target -> {
-            recommenderEditorPanel.modelChanged();
-            _target.add(recommenderEditorPanel);
+            //recommenderEditorPanel.modelChanged();
+            //_target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
         
@@ -67,12 +66,5 @@ public class ProjectRecommendersPanel
                 selectedRecommenderModel);
         evaluationSimulationPanel.setOutputMarkupId(true);
         add(evaluationSimulationPanel);
-    }
-
-    @Override
-    protected void onModelChanged()
-    {
-        super.onModelChanged();
-        selectedRecommenderModel.setObject(null);
     }
 }

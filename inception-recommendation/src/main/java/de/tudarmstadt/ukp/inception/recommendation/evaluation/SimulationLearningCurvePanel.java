@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.project;
+package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 
-public class EvaluationSimulationPanel
+public class SimulationLearningCurvePanel
     extends Panel
 {
     private static final long serialVersionUID = 4306746527837380863L;
@@ -62,7 +62,7 @@ public class EvaluationSimulationPanel
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
 
-    private static final Logger LOG = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
@@ -72,7 +72,7 @@ public class EvaluationSimulationPanel
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
-    public EvaluationSimulationPanel(String aId, Project aProject,
+    public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aSelectedRecommenderPanel)
     {
         super(aId);

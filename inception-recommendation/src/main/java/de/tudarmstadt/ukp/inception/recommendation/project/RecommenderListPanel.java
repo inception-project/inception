@@ -32,7 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-class RecommenderListPanel
+public class RecommenderListPanel
     extends ListPanel_ImplBase
 {
     private static final long serialVersionUID = -9151455840010092452L;
@@ -43,6 +43,8 @@ class RecommenderListPanel
     private IModel<Recommender> selectedRecommender;
     
     private OverviewListChoice<Recommender> overviewList;
+    
+    private final LambdaAjaxLink lambdaAjaxLink;
 
     public RecommenderListPanel(String id, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
@@ -61,11 +63,17 @@ class RecommenderListPanel
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
         
-        add(new LambdaAjaxLink("create", this::actionCreate));
+        lambdaAjaxLink = new LambdaAjaxLink("create", this::actionCreate);
+        add(lambdaAjaxLink);
     }
     
     private List<Recommender> listRecommenders()
     {
         return recommendationService.listRecommenders(projectModel.getObject());
+    }
+
+    public LambdaAjaxLink getLambdaAjaxLink()
+    {
+        return lambdaAjaxLink;
     }
 }
