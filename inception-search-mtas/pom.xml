@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.10.0-SNAPSHOT</version>
+    <version>0.10.0-beta-1</version>
   </parent>
   <artifactId>inception-search-mtas</artifactId>
   <name>INCEpTION - Search - MTAS</name>
