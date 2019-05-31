@@ -1,13 +1,40 @@
 package paperai.pdfextract;
 
+import java.awt.Shape;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.fontbox.ttf.TrueTypeFont;
 import org.apache.fontbox.util.BoundingBox;
 import org.apache.pdfbox.contentstream.PDFGraphicsStreamEngine;
-import org.apache.pdfbox.cos.*;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.*;
+import org.apache.pdfbox.pdmodel.font.PDCIDFont;
+import org.apache.pdfbox.pdmodel.font.PDCIDFontType2;
+import org.apache.pdfbox.pdmodel.font.PDFont;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
+import org.apache.pdfbox.pdmodel.font.PDSimpleFont;
+import org.apache.pdfbox.pdmodel.font.PDTrueTypeFont;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.font.PDType3CharProc;
+import org.apache.pdfbox.pdmodel.font.PDType3Font;
+import org.apache.pdfbox.pdmodel.font.PDVectorFont;
 import org.apache.pdfbox.pdmodel.font.encoding.GlyphList;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImage;
 import org.apache.pdfbox.pdmodel.graphics.state.PDGraphicsState;
@@ -15,39 +42,31 @@ import org.apache.pdfbox.text.TextPosition;
 import org.apache.pdfbox.util.Matrix;
 import org.apache.pdfbox.util.Vector;
 
-import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.GZIPOutputStream;
+public class PDFExtractor
+    extends PDFGraphicsStreamEngine
+{
 
-import org.apache.commons.lang3.StringUtils;
-
-public class PDFExtractor extends PDFGraphicsStreamEngine {
-
-    public static void main(String[] args) {
+    public static void main(String[] args)
+    {
         File path = args.length == 0 ? new File(".") : new File(args[0]);
         if (path.isDirectory()) {
             for (File file : path.listFiles()) {
-                if (file.isFile() && file.getName().endsWith(".pdf")) processFile(file);
+                if (file.isFile() && file.getName().endsWith(".pdf"))
+                    processFile(file);
             }
         }
         else {
             // Writer w = new BufferedWriter(new OutputStreamWriter(System.out, "UTF-8"));
             // processFile(path, w);
             // w.close();
-            if (path.isFile()) processFile(path);
+            if (path.isFile())
+                processFile(path);
         }
     }
 
-    public static String processFileToString(File file, boolean writeGlyphCoords) throws IOException {
-        try (StringWriter w = new StringWriter();
-             PDDocument doc = PDDocument.load(file)
-        ) {
+    public static String processFileToString(File file, boolean writeGlyphCoords) throws IOException
+    {
+        try (StringWriter w = new StringWriter(); PDDocument doc = PDDocument.load(file)) {
 
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
@@ -59,12 +78,13 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         }
     }
 
-    static void processFile(File file) {
+    static void processFile(File file)
+    {
         String outPath = String.format("%s.0-3-1.txt.gz", file);
         try (PDDocument doc = PDDocument.load(file);
-             GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(outPath));
-             Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));
-             // Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outPath), "UTF-8"));
+            GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(outPath));
+            Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));
+            // Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outPath), "UTF-8"));
         ) {
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
@@ -90,7 +110,8 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
     AffineTransform rotateAT;
     AffineTransform transAT;
 
-    public PDFExtractor(PDPage page, int pageIndex, Writer output) throws IOException {
+    public PDFExtractor(PDPage page, int pageIndex, Writer output) throws IOException
+    {
         super(page);
         this.pageIndex = pageIndex;
         this.output = output;
@@ -104,8 +125,10 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         this.pageSize = page.getCropBox();
         if (this.pageSize.getLowerLeftX() == 0.0F && this.pageSize.getLowerLeftY() == 0.0F) {
             this.translateMatrix = null;
-        } else {
-            this.translateMatrix = Matrix.getTranslateInstance(-this.pageSize.getLowerLeftX(), -this.pageSize.getLowerLeftY());
+        }
+        else {
+            this.translateMatrix = Matrix.getTranslateInstance(-this.pageSize.getLowerLeftX(),
+                -this.pageSize.getLowerLeftY());
         }
 
         // taken from DrawPrintTextLocations for setting flipAT, rotateAT and transAT
@@ -121,100 +144,127 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         if (rotation != 0) {
             PDRectangle mediaBox = page.getMediaBox();
             switch (rotation) {
-                case 90:
-                    rotateAT.translate(mediaBox.getHeight(), 0);
-                    break;
-                case 270:
-                    rotateAT.translate(0, mediaBox.getWidth());
-                    break;
-                case 180:
-                    rotateAT.translate(mediaBox.getWidth(), mediaBox.getHeight());
-                    break;
-                default:
-                    break;
+            case 90:
+                rotateAT.translate(mediaBox.getHeight(), 0);
+                break;
+            case 270:
+                rotateAT.translate(0, mediaBox.getWidth());
+                break;
+            case 180:
+                rotateAT.translate(mediaBox.getWidth(), mediaBox.getHeight());
+                break;
+            default:
+                break;
             }
             rotateAT.rotate(Math.toRadians(rotation));
         }
         // cropbox
-        transAT = AffineTransform.getTranslateInstance(-cropBox.getLowerLeftX(), cropBox.getLowerLeftY());
+        transAT = AffineTransform
+            .getTranslateInstance(-cropBox.getLowerLeftX(), cropBox.getLowerLeftY());
     }
 
-    float getPageHeight() { return getPage().getCropBox().getHeight(); }
+    float getPageHeight()
+    {
+        return getPage().getCropBox().getHeight();
+    }
 
-    void addDraw(String op, float... values) {
+    void addDraw(String op, float... values)
+    {
         buffer.add(new DrawOperator(op, values));
     }
 
-    void write() throws IOException {
+    void write() throws IOException
+    {
         for (Object obj : buffer) {
             if (obj instanceof TextOperator) {
-                TextOperator t = (TextOperator)obj;
-                output.write(String.format("%s\t%s\t%s %s %s %s", pageIndex, t.unicode, t.fx, t.fy, t.fw, t.fh));
+                TextOperator t = (TextOperator) obj;
+                output.write(String
+                    .format("%s\t%s\t%s %s %s %s", pageIndex, t.unicode, t.fx, t.fy, t.fw, t.fh));
                 if (isWriteGlyphCoords()) {
                     output.write(String.format("\t%s %s %s %s", t.gx, t.gy, t.gw, t.gh));
                 }
-            } else if (obj instanceof DrawOperator) {
-                DrawOperator d = (DrawOperator)obj;
+            }
+            else if (obj instanceof DrawOperator) {
+                DrawOperator d = (DrawOperator) obj;
                 output.write(String.format("%s\t[%s]", pageIndex, d.type));
-                if (d.values.length > 0) output.write(String.format("\t%s", d.values[0]));
-                for (int k = 1; k < d.values.length; k++) output.write(String.format(" %s", d.values[k]));
+                if (d.values.length > 0)
+                    output.write(String.format("\t%s", d.values[0]));
+                for (int k = 1; k < d.values.length; k++)
+                    output.write(String.format(" %s", d.values[k]));
             }
             output.write("\n");
         }
     }
 
-    @Override
-    public void drawImage(PDImage pdImage) throws IOException { }
-
-    @Override
-    public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3) throws IOException {
-        float h = getPageHeight();
-        addDraw("RECTANGLE", (float)p0.getX(), h - (float)p0.getY(), (float)p1.getX(), h - (float)p1.getY(),
-                (float)p2.getX(), h - (float)p2.getY(), (float)p3.getX(), h - (float)p3.getY());
+    @Override public void drawImage(PDImage pdImage) throws IOException
+    {
     }
 
-    @Override
-    public void clip(int i) throws IOException { }
+    @Override public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
+        throws IOException
+    {
+        float h = getPageHeight();
+        addDraw("RECTANGLE", (float) p0.getX(), h - (float) p0.getY(), (float) p1.getX(),
+            h - (float) p1.getY(), (float) p2.getX(), h - (float) p2.getY(), (float) p3.getX(),
+            h - (float) p3.getY());
+    }
 
-    @Override
-    public void moveTo(float x, float y) throws IOException {
+    @Override public void clip(int i) throws IOException
+    {
+    }
+
+    @Override public void moveTo(float x, float y) throws IOException
+    {
         addDraw("MOVE_TO", x, getPageHeight() - y);
     }
 
-    @Override
-    public void lineTo(float x, float y) throws IOException {
+    @Override public void lineTo(float x, float y) throws IOException
+    {
         addDraw("LINE_TO", x, getPageHeight() - y);
     }
 
-    @Override
-    public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3) throws IOException {
+    @Override public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
+        throws IOException
+    {
         float h = getPageHeight();
         addDraw("CURVE_TO", x1, h - y1, x2, h - y2, x3, h - y3);
     }
 
-    @Override
-    public Point2D getCurrentPoint() throws IOException { return new Point2D.Float(0.0f, 0.0f); }
+    @Override public Point2D getCurrentPoint() throws IOException
+    {
+        return new Point2D.Float(0.0f, 0.0f);
+    }
 
-    @Override
-    public void closePath() throws IOException { }
+    @Override public void closePath() throws IOException
+    {
+    }
 
-    @Override
-    public void endPath() throws IOException { }
+    @Override public void endPath() throws IOException
+    {
+    }
 
-    @Override
-    public void strokePath() throws IOException { addDraw("STROKE_PATH"); }
+    @Override public void strokePath() throws IOException
+    {
+        addDraw("STROKE_PATH");
+    }
 
-    @Override
-    public void fillPath(int i) throws IOException { addDraw("FILL_PATH"); }
+    @Override public void fillPath(int i) throws IOException
+    {
+        addDraw("FILL_PATH");
+    }
 
-    @Override
-    public void fillAndStrokePath(int i) throws IOException { addDraw("FILL_STROKE_PATH"); }
+    @Override public void fillAndStrokePath(int i) throws IOException
+    {
+        addDraw("FILL_STROKE_PATH");
+    }
 
-    @Override
-    public void shadingFill(COSName cosName) throws IOException { }
+    @Override public void shadingFill(COSName cosName) throws IOException
+    {
+    }
 
-    @Override
-    public void showFontGlyph(Matrix textRenderingMatrix, PDFont font, int code, String unicode, Vector displacement) throws IOException {
+    @Override public void showFontGlyph(Matrix textRenderingMatrix, PDFont font, int code,
+        String unicode, Vector displacement) throws IOException
+    {
         // taken from LegacyPDFStreamEngine.showGlyph
         PDGraphicsState state = this.getGraphicsState();
         Matrix ctm = state.getCurrentTransformationMatrix();
@@ -243,16 +293,17 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
             displacementX = font.getWidth(code) / 1000.0F;
             TrueTypeFont ttf = null;
             if (font instanceof PDTrueTypeFont) {
-                ttf = ((PDTrueTypeFont)font).getTrueTypeFont();
-            } else if (font instanceof PDType0Font) {
-                PDCIDFont cidFont = ((PDType0Font)font).getDescendantFont();
-                if(cidFont instanceof PDCIDFontType2) {
-                    ttf = ((PDCIDFontType2)cidFont).getTrueTypeFont();
+                ttf = ((PDTrueTypeFont) font).getTrueTypeFont();
+            }
+            else if (font instanceof PDType0Font) {
+                PDCIDFont cidFont = ((PDType0Font) font).getDescendantFont();
+                if (cidFont instanceof PDCIDFontType2) {
+                    ttf = ((PDCIDFontType2) cidFont).getTrueTypeFont();
                 }
             }
 
             if (ttf != null && ttf.getUnitsPerEm() != 1000) {
-                displacementX *= 1000.0F / (float)ttf.getUnitsPerEm();
+                displacementX *= 1000.0F / (float) ttf.getUnitsPerEm();
             }
         }
 
@@ -272,7 +323,8 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         float spaceWidthText = 0.0F;
         try {
             spaceWidthText = font.getSpaceWidth() * glyphSpaceToTextSpaceFactor;
-        } catch (Throwable e) {
+        }
+        catch (Throwable e) {
             //LOG.warn(e, e);
         }
 
@@ -280,37 +332,44 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
             spaceWidthText = font.getAverageFontWidth() * glyphSpaceToTextSpaceFactor;
             spaceWidthText *= 0.8F;
         }
-        if (spaceWidthText == 0.0F) spaceWidthText = 1.0F;
+        if (spaceWidthText == 0.0F)
+            spaceWidthText = 1.0F;
 
         float spaceWidthDisplay = spaceWidthText * textRenderingMatrix.getScalingFactorX();
         unicode = font.toUnicode(code, this.glyphList);
-        if (unicode == null) unicode = "NO_UNICODE";
-        else if (StringUtils.isBlank(unicode)) return;
+        if (unicode == null)
+            unicode = "NO_UNICODE";
+        else if (StringUtils.isBlank(unicode))
+            return;
 
         Matrix translatedTextRenderingMatrix;
         if (this.translateMatrix == null) {
             translatedTextRenderingMatrix = textRenderingMatrix;
-        } else {
-            translatedTextRenderingMatrix = Matrix.concatenate(this.translateMatrix, textRenderingMatrix);
+        }
+        else {
+            translatedTextRenderingMatrix = Matrix
+                .concatenate(this.translateMatrix, textRenderingMatrix);
             nextX -= this.pageSize.getLowerLeftX();
             nextY -= this.pageSize.getLowerLeftY();
         }
 
-        TextPosition text = new TextPosition(pageRotation, pageSize.getWidth(), pageSize.getHeight(), translatedTextRenderingMatrix,
-                nextX, nextY, Math.abs(dyDisplay), dxDisplay, Math.abs(spaceWidthDisplay),
-                unicode, new int[]{code}, font, fontSize, (int)(fontSize * textMatrix.getScalingFactorX()));
+        TextPosition text = new TextPosition(pageRotation, pageSize.getWidth(),
+            pageSize.getHeight(), translatedTextRenderingMatrix, nextX, nextY, Math.abs(dyDisplay),
+            dxDisplay, Math.abs(spaceWidthDisplay), unicode, new int[] { code }, font, fontSize,
+            (int) (fontSize * textMatrix.getScalingFactorX()));
 
         Shape fontShape = calculateFontBounds(text);
-        Rectangle2D.Double f = (Rectangle2D.Double)fontShape.getBounds2D(); // font coordinates
+        Rectangle2D.Double f = (Rectangle2D.Double) fontShape.getBounds2D(); // font coordinates
         Shape glyphShape = calculateGlyphBounds(textRenderingMatrix, font, code);
-        Rectangle2D.Double g = (Rectangle2D.Double)glyphShape.getBounds2D(); // glyph coordinates
-        TextOperator t = new TextOperator(unicode, (float)f.x, (float)f.y, (float)f.width, (float)f.height,
-                (float)g.x, (float)g.y, (float)g.width, (float)g.height);
+        Rectangle2D.Double g = (Rectangle2D.Double) glyphShape.getBounds2D(); // glyph coordinates
+        TextOperator t = new TextOperator(unicode, (float) f.x, (float) f.y, (float) f.width,
+            (float) f.height, (float) g.x, (float) g.y, (float) g.width, (float) g.height);
         buffer.add(t);
     }
 
     // taken from writeString in DrawPrintTextLocations
-    Shape calculateFontBounds(TextPosition text) throws IOException {
+    Shape calculateFontBounds(TextPosition text) throws IOException
+    {
         // glyph space -> user space
         // note: text.getTextMatrix() is *not* the Text Matrix, it's the Text Rendering Matrix
         AffineTransform at = text.getTextMatrix().createAffineTransform();
@@ -321,8 +380,10 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         BoundingBox bbox = font.getBoundingBox();
 
         // advance width, bbox height (glyph space)
-        float xadvance = font.getWidth(text.getCharacterCodes()[0]); // todo: should iterate all chars
-        Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY(), xadvance, bbox.getHeight());
+        float xadvance = font
+            .getWidth(text.getCharacterCodes()[0]); // todo: should iterate all chars
+        Rectangle2D.Float rect = new Rectangle2D.Float(0, bbox.getLowerLeftY(), xadvance,
+            bbox.getHeight());
 
         if (font instanceof PDType3Font) {
             // bbox and font matrix are unscaled
@@ -330,7 +391,7 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         }
         else {
             // bbox and font matrix are already scaled to 1000
-            at.scale(1/1000f, 1/1000f);
+            at.scale(1 / 1000f, 1 / 1000f);
         }
         Shape s = at.createTransformedShape(rect);
         s = flipAT.createTransformedShape(s);
@@ -340,7 +401,8 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
 
     // taken from DrawPrintTextLocations.java
     // this calculates the real (except for type 3 fonts) individual glyph bounds
-    Shape calculateGlyphBounds(Matrix textRenderingMatrix, PDFont font, int code) throws IOException {
+    Shape calculateGlyphBounds(Matrix textRenderingMatrix, PDFont font, int code) throws IOException
+    {
         GeneralPath path = null;
         AffineTransform at = textRenderingMatrix.createAffineTransform();
         at.concatenate(font.getFontMatrix().createAffineTransform());
@@ -355,10 +417,14 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
                 PDRectangle glyphBBox = charProc.getGlyphBBox();
                 if (glyphBBox != null) {
                     // PDFBOX-3850: glyph bbox could be larger than the font bbox
-                    glyphBBox.setLowerLeftX(Math.max(fontBBox.getLowerLeftX(), glyphBBox.getLowerLeftX()));
-                    glyphBBox.setLowerLeftY(Math.max(fontBBox.getLowerLeftY(), glyphBBox.getLowerLeftY()));
-                    glyphBBox.setUpperRightX(Math.min(fontBBox.getUpperRightX(), glyphBBox.getUpperRightX()));
-                    glyphBBox.setUpperRightY(Math.min(fontBBox.getUpperRightY(), glyphBBox.getUpperRightY()));
+                    glyphBBox.setLowerLeftX(
+                        Math.max(fontBBox.getLowerLeftX(), glyphBBox.getLowerLeftX()));
+                    glyphBBox.setLowerLeftY(
+                        Math.max(fontBBox.getLowerLeftY(), glyphBBox.getLowerLeftY()));
+                    glyphBBox.setUpperRightX(
+                        Math.min(fontBBox.getUpperRightX(), glyphBBox.getUpperRightX()));
+                    glyphBBox.setUpperRightY(
+                        Math.min(fontBBox.getUpperRightY(), glyphBBox.getUpperRightY()));
                     path = glyphBBox.toGeneralPath();
                 }
             }
@@ -375,7 +441,8 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
             if (font instanceof PDType0Font) {
                 PDType0Font t0font = (PDType0Font) font;
                 if (t0font.getDescendantFont() instanceof PDCIDFontType2) {
-                    int unitsPerEm = ((PDCIDFontType2) t0font.getDescendantFont()).getTrueTypeFont().getHeader().getUnitsPerEm();
+                    int unitsPerEm = ((PDCIDFontType2) t0font.getDescendantFont()).getTrueTypeFont()
+                        .getHeader().getUnitsPerEm();
                     at.scale(1000d / unitsPerEm, 1000d / unitsPerEm);
                 }
             }
@@ -392,7 +459,8 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
             // shouldn't happen, please open issue in JIRA
             System.out.println("Unknown font class: " + font.getClass());
         }
-        if (path == null) return null;
+        if (path == null)
+            return null;
         Shape s = at.createTransformedShape(path.getBounds2D());
         s = flipAT.createTransformedShape(s);
         s = rotateAT.createTransformedShape(s);
@@ -400,11 +468,13 @@ public class PDFExtractor extends PDFGraphicsStreamEngine {
         return s;
     }
 
-    public boolean isWriteGlyphCoords() {
+    public boolean isWriteGlyphCoords()
+    {
         return writeGlyphCoords;
     }
 
-    public void setWriteGlyphCoords(boolean writeGlyphCoords) {
+    public void setWriteGlyphCoords(boolean writeGlyphCoords)
+    {
         this.writeGlyphCoords = writeGlyphCoords;
     }
 }
