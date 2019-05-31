@@ -56,9 +56,6 @@ public class PDFExtractor
             }
         }
         else {
-            // Writer w = new BufferedWriter(new OutputStreamWriter(System.out, "UTF-8"));
-            // processFile(path, w);
-            // w.close();
             if (path.isFile())
                 processFile(path);
         }
@@ -78,13 +75,12 @@ public class PDFExtractor
         }
     }
 
-    static void processFile(File file)
+    private static void processFile(File file)
     {
         String outPath = String.format("%s.0-3-1.txt.gz", file);
         try (PDDocument doc = PDDocument.load(file);
             GZIPOutputStream gzip = new GZIPOutputStream(new FileOutputStream(outPath));
             Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));
-            // Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outPath), "UTF-8"));
         ) {
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
                 PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
@@ -98,17 +94,17 @@ public class PDFExtractor
     }
 
     private boolean writeGlyphCoords;
-    Writer output;
-    int pageIndex;
-    int pageRotation;
-    PDRectangle pageSize;
-    Matrix translateMatrix;
-    final GlyphList glyphList;
-    List<Object> buffer = new ArrayList<>();
+    private Writer output;
+    private int pageIndex;
+    private int pageRotation;
+    private PDRectangle pageSize;
+    private Matrix translateMatrix;
+    private final GlyphList glyphList;
+    private List<Object> buffer = new ArrayList<>();
 
-    AffineTransform flipAT;
-    AffineTransform rotateAT;
-    AffineTransform transAT;
+    private AffineTransform flipAT;
+    private AffineTransform rotateAT;
+    private AffineTransform transAT;
 
     public PDFExtractor(PDPage page, int pageIndex, Writer output) throws IOException
     {
@@ -168,12 +164,12 @@ public class PDFExtractor
         return getPage().getCropBox().getHeight();
     }
 
-    void addDraw(String op, float... values)
+    private void addDraw(String op, float... values)
     {
         buffer.add(new DrawOperator(op, values));
     }
 
-    void write() throws IOException
+    private void write() throws IOException
     {
         for (Object obj : buffer) {
             if (obj instanceof TextOperator) {
@@ -196,12 +192,11 @@ public class PDFExtractor
         }
     }
 
-    @Override public void drawImage(PDImage pdImage) throws IOException
+    @Override public void drawImage(PDImage pdImage)
     {
     }
 
     @Override public void appendRectangle(Point2D p0, Point2D p1, Point2D p2, Point2D p3)
-        throws IOException
     {
         float h = getPageHeight();
         addDraw("RECTANGLE", (float) p0.getX(), h - (float) p0.getY(), (float) p1.getX(),
@@ -209,56 +204,55 @@ public class PDFExtractor
             h - (float) p3.getY());
     }
 
-    @Override public void clip(int i) throws IOException
+    @Override public void clip(int i)
     {
     }
 
-    @Override public void moveTo(float x, float y) throws IOException
+    @Override public void moveTo(float x, float y)
     {
         addDraw("MOVE_TO", x, getPageHeight() - y);
     }
 
-    @Override public void lineTo(float x, float y) throws IOException
+    @Override public void lineTo(float x, float y)
     {
         addDraw("LINE_TO", x, getPageHeight() - y);
     }
 
     @Override public void curveTo(float x1, float y1, float x2, float y2, float x3, float y3)
-        throws IOException
     {
         float h = getPageHeight();
         addDraw("CURVE_TO", x1, h - y1, x2, h - y2, x3, h - y3);
     }
 
-    @Override public Point2D getCurrentPoint() throws IOException
+    @Override public Point2D getCurrentPoint()
     {
         return new Point2D.Float(0.0f, 0.0f);
     }
 
-    @Override public void closePath() throws IOException
+    @Override public void closePath()
     {
     }
 
-    @Override public void endPath() throws IOException
+    @Override public void endPath()
     {
     }
 
-    @Override public void strokePath() throws IOException
+    @Override public void strokePath()
     {
         addDraw("STROKE_PATH");
     }
 
-    @Override public void fillPath(int i) throws IOException
+    @Override public void fillPath(int i)
     {
         addDraw("FILL_PATH");
     }
 
-    @Override public void fillAndStrokePath(int i) throws IOException
+    @Override public void fillAndStrokePath(int i)
     {
         addDraw("FILL_STROKE_PATH");
     }
 
-    @Override public void shadingFill(COSName cosName) throws IOException
+    @Override public void shadingFill(COSName cosName)
     {
     }
 
@@ -368,7 +362,7 @@ public class PDFExtractor
     }
 
     // taken from writeString in DrawPrintTextLocations
-    Shape calculateFontBounds(TextPosition text) throws IOException
+    private Shape calculateFontBounds(TextPosition text) throws IOException
     {
         // glyph space -> user space
         // note: text.getTextMatrix() is *not* the Text Matrix, it's the Text Rendering Matrix
@@ -401,7 +395,8 @@ public class PDFExtractor
 
     // taken from DrawPrintTextLocations.java
     // this calculates the real (except for type 3 fonts) individual glyph bounds
-    Shape calculateGlyphBounds(Matrix textRenderingMatrix, PDFont font, int code) throws IOException
+    private Shape calculateGlyphBounds(Matrix textRenderingMatrix, PDFont font, int code)
+        throws IOException
     {
         GeneralPath path = null;
         AffineTransform at = textRenderingMatrix.createAffineTransform();
@@ -468,12 +463,12 @@ public class PDFExtractor
         return s;
     }
 
-    public boolean isWriteGlyphCoords()
+    private boolean isWriteGlyphCoords()
     {
         return writeGlyphCoords;
     }
 
-    public void setWriteGlyphCoords(boolean writeGlyphCoords)
+    private void setWriteGlyphCoords(boolean writeGlyphCoords)
     {
         this.writeGlyphCoords = writeGlyphCoords;
     }
