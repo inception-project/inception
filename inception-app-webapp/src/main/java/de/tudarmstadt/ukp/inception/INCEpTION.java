@@ -61,6 +61,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuIte
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
+import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
@@ -79,6 +80,8 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
+                EvaluationSimulationPageMenuItem.class,
+
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,
