@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -97,7 +98,6 @@ public class EventRepositoryImpl
     public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
             String[] aEventTypes, int aMaxSize)
     {
-        String eventsQuery = buildEventsCondition(aEventTypes.length);
         String query = String.join("\n", 
                 "FROM LoggedEvent WHERE",
                 "id IN",
@@ -106,45 +106,23 @@ public class EventRepositoryImpl
                 "   FROM LoggedEvent WHERE",
                 "   user=:user AND",
                 "   project=:project AND",
-                    eventsQuery,
+                "   event in (:eventTypes)",
                 "   AND created in",
                 // select last created events per document
                 "       (SELECT max(created) ",
                 "       FROM LoggedEvent WHERE",
                 "       user=:user AND",
                 "       project=:project AND",
-                        eventsQuery,
+                "       event in (:eventTypes)",
                 "       GROUP BY document)",
                 "   GROUP BY document)",
                 "ORDER BY created DESC");
 
         TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
                 .setParameter("user", aUsername)
-                .setParameter("project", aProject.getId());
-        typedQuery = setEventsParams(typedQuery, aEventTypes);
+                .setParameter("project", aProject.getId())
+                .setParameter("eventTypes", Arrays.asList(aEventTypes));
         return typedQuery.setMaxResults(aMaxSize).getResultList();
-    }
-
-    private TypedQuery<LoggedEvent> setEventsParams(TypedQuery<LoggedEvent> aTypedQuery,
-            String[] aEventTypes)
-    {
-        for (int i = 0; i < aEventTypes.length; i++) {
-            aTypedQuery.setParameter(String.format("event%d", i), aEventTypes[i]);
-        }
-        return aTypedQuery;
-    }
-
-    private String buildEventsCondition(int aNumEvents)
-    {
-        StringBuilder events = new StringBuilder();
-        if (aNumEvents > 0) {
-            events.append("(event=:event0").append(" ");
-            for (int i = 1; i < aNumEvents; i++) {
-                events.append(" OR event=:event").append(i).append(" ");
-            }
-            events.append(") ");
-        }
-        return events.toString();
     }
     
     @Override
