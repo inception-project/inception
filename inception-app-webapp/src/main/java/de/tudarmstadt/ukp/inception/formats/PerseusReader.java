@@ -34,7 +34,6 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 
-import org.apache.lucene.util.packed.DirectMonotonicReader.Meta;
 import org.apache.uima.UimaContext;
 import org.apache.uima.analysis_engine.AnalysisEngineProcessException;
 import org.apache.uima.cas.Type;
@@ -127,7 +126,7 @@ public class PerseusReader
             XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
             XMLEventReader xmlEventReader = xmlInputFactory.createXMLEventReader(is);
 
-            JAXBContext context = JAXBContext.newInstance(Meta.class, PerseusSentence.class);
+            JAXBContext context = JAXBContext.newInstance(PerseusSentence.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
 
             JCasBuilder jb = new JCasBuilder(aJCas);
