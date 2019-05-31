@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderEvaluationResultEvent extends ApplicationEvent
@@ -27,18 +28,18 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     
     private final Recommender recommender;
     private final String user;
-    private final double score;
+    private final EvaluationResult evalResul;
     private final long duration;
     private final boolean active;
     
     public RecommenderEvaluationResultEvent(Object aSource, Recommender aRecommender, String aUser,
-            double aScore, long aDuration, boolean aActive)
+            EvaluationResult aResult, long aDuration, boolean aActive)
     {
         super(aSource);
 
         recommender = aRecommender;
         user = aUser;
-        score = aScore;
+        evalResul = aResult;
         duration = aDuration;
         active = aActive;
     }
@@ -53,9 +54,9 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
         return recommender;
     }
     
-    public double getScore()
+    public EvaluationResult getResult()
     {
-        return score;
+        return evalResul;
     }
     
     public long getDuration()

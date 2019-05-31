@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 
 @Component
@@ -66,7 +67,11 @@ public class RecommenderEvaluationResultEventAdapter
             Details details = new Details();
 
             details.recommenderId = aEvent.getRecommender().getId();
-            details.score = aEvent.getScore();
+            EvaluationResult result = aEvent.getResult();
+            details.accuracy = result.computeAccuracyScore();
+            details.f1 = result.computeF1Score();
+            details.precision = result.computePrecisionScore();
+            details.recall = result.computeRecallScore();
             details.active = aEvent.isActive();
 
             details.duration = aEvent.getDuration();
@@ -98,6 +103,9 @@ public class RecommenderEvaluationResultEventAdapter
 
         // Evaluation results
         public boolean active;
-        public double score;
+        public double accuracy;
+        public double f1;
+        public double precision;
+        public double recall;
     }
 }
