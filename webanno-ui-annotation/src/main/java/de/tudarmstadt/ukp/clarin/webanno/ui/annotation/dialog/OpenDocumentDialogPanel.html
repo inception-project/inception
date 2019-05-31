@@ -35,6 +35,18 @@
                 </div>
               </form>
             </div>
+            <div style="flex: 1;" wicket:enclosure="userSelectionForm">
+              <form wicket:id="userSelectionForm">
+                <div class="form-group">
+                  <label>Users:</label>
+                  <select wicket:id="userSelection" size="18" class="form-control" style="overflow: auto">
+                    <span wicket:id="users">
+                      <option wicket:id="user"></option>
+                    </span>
+                  </select>
+                </div>
+              </form>
+            </div>
             <div style="flex: 1;" wicket:enclosure="documentSelectionForm">
               <form wicket:id="documentSelectionForm">
                 <div class="form-group">

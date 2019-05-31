@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
 import java.io.Serializable;
@@ -52,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -67,24 +69,29 @@ public class OpenDocumentDialogPanel
     extends Panel
 {
     private static final long serialVersionUID = 1299869948010875439L;
+    private static final String CURRENT_USER_COLOR = "blue";
 
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
 
-    // Project list, Document List and buttons List, contained in separet forms
+    // Project list, User list, Document List and buttons List, contained in separate forms
     private final ProjectSelectionForm projectSelectionForm;
+    private final UserSelectionForm userSelectionForm;
     private final DocumentSelectionForm documentSelectionForm;
     private final ButtonsForm buttonsForm;
     private Select<SourceDocument> documentSelection;
+    private Select<User> userSelection;
 
     // The first project - selected by default
     private Project selectedProject;
     // The first document in the project // auto selected in the first time.
     private SourceDocument selectedDocument;
+    private User selectedUser;
 
-    private final User user;
+    private final User currentUser;
+    private final boolean isAdmin;
 
     private final AnnotatorState state;
     
@@ -92,6 +99,7 @@ public class OpenDocumentDialogPanel
     
     private final ModalWindow modalWindow;
     
+ // TODO make other users' docs read-only
     public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
             IModel<List<DecoratedObject<Project>>> aProjects)
     {
@@ -99,7 +107,8 @@ public class OpenDocumentDialogPanel
         
         modalWindow = aModalWindow;
         state = aBModel;
-        user = userRepository.getCurrentUser();
+        currentUser = userRepository.getCurrentUser();
+        selectedUser = currentUser;
         projects = aProjects;
         
         List<DecoratedObject<Project>> allowedProjects = projects.getObject();
@@ -115,14 +124,20 @@ public class OpenDocumentDialogPanel
             projectSelectionForm.setVisible(false);
         }
         
+        isAdmin = userRepository.isAdministrator(currentUser);
+        userSelectionForm = new UserSelectionForm("userSelectionForm", aModalWindow);
         documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
+        userSelectionForm.add(visibleWhen(() -> isAdmin));
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
 
         add(buttonsForm);
+        add(userSelectionForm);
         add(projectSelectionForm);
         add(documentSelectionForm);
     }
 
+    // FIXME: something in the selection is wrong: 
+    // selecting the project again, deletes docs from list
     private class ProjectSelectionForm
         extends Form<SelectionModel>
     {
@@ -171,6 +186,92 @@ public class OpenDocumentDialogPanel
                 protected void onUpdate(AjaxRequestTarget aTarget)
                 {
                     selectedProject = getModelObject().projectSelection;
+                    // Remove selected user and document from other project
+                    selectedUser = null;
+                    selectedDocument = null;
+                    userSelection.setModelObject(selectedUser);
+                    documentSelection.setModelObject(selectedDocument);
+                    aTarget.add(buttonsForm);
+                    aTarget.add(userSelection);
+                    aTarget.add(documentSelection);
+                }
+            }).add(new AjaxEventBehavior("dblclick")
+            {
+
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onEvent(final AjaxRequestTarget aTarget)
+                {
+                    selectedProject = getModelObject().projectSelection;
+                    // Remove selected user and document from other project
+                    selectedUser = null;
+                    selectedDocument = null;
+                    aTarget.add(userSelection.setOutputMarkupId(true));
+                    aTarget.add(documentSelection.setOutputMarkupId(true));
+                }
+            });
+        }
+    }
+
+    private class SelectionModel
+        implements Serializable
+    {
+        private static final long serialVersionUID = -1L;
+
+        private Project projectSelection;
+        private SourceDocument documentSelection;
+        private User userSelection;
+    }
+    
+    private class UserSelectionForm
+        extends Form<SelectionModel>
+    {
+        private static final long serialVersionUID = -1167937647880453820L;
+
+        public UserSelectionForm(String id, final ModalWindow modalWindow)
+        {
+            super(id, new CompoundPropertyModel<>(new SelectionModel()));
+            userSelection = new Select<>("userSelection");
+            
+            ListView<DecoratedObject<User>> lv = new ListView<DecoratedObject<User>>(
+                    "users", LoadableDetachableModel.of(OpenDocumentDialogPanel.this::listUsers))
+            {
+                private static final long serialVersionUID = 8901519963052692214L;
+
+                @Override
+                protected void populateItem(final ListItem<DecoratedObject<User>> aItem)
+                {
+                    DecoratedObject<User> du = aItem.getModelObject();
+                    
+                    String color = defaultIfEmpty(du.getColor(), "#000000");
+                    
+                    aItem.add(new SelectOption<User>("user", new Model<>(du.get()))
+                    {
+                        private static final long serialVersionUID = 3095089418860168215L;
+
+                        @Override
+                        public void onComponentTagBody(MarkupStream markupStream,
+                                ComponentTag openTag)
+                        {
+                            replaceComponentTagBody(markupStream, openTag,
+                                    defaultIfEmpty(du.getLabel(), du.get().getUsername()));
+                        }
+                    }.add(new AttributeModifier("style", "color:" + color + ";")));
+                }
+
+            };
+            
+            add(userSelection.add(lv));
+            userSelection.setOutputMarkupId(true);
+            userSelection.add(new OnChangeAjaxBehavior()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void onUpdate(AjaxRequestTarget aTarget)
+                {
+                    selectedUser = getModelObject().userSelection;
                     // Remove selected document from other project
                     selectedDocument = null;
                     documentSelection.setModelObject(selectedDocument);
@@ -185,22 +286,13 @@ public class OpenDocumentDialogPanel
                 @Override
                 protected void onEvent(final AjaxRequestTarget aTarget)
                 {
-                    selectedProject = getModelObject().projectSelection;
+                    selectedUser = getModelObject().userSelection;
                     // Remove selected document from other project
                     selectedDocument = null;
                     aTarget.add(documentSelection.setOutputMarkupId(true));
                 }
             });
         }
-    }
-
-    private class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -1L;
-
-        private Project projectSelection;
-        private SourceDocument documentSelection;
     }
 
     private class DocumentSelectionForm
@@ -252,10 +344,38 @@ public class OpenDocumentDialogPanel
             add(documentSelection);
         }
     }
+    
+    private List<DecoratedObject<User>> listUsers()
+    {
+        if (selectedProject == null) {
+            return new ArrayList<>();
+        }
+
+        final List<DecoratedObject<User>> users = new ArrayList<>();
+
+        switch (state.getMode()) {
+        case ANNOTATION: {
+            for (User user : projectService.listProjectUsersWithPermissions(selectedProject,
+                    PermissionLevel.ANNOTATOR)) {
+                DecoratedObject<User> du = DecoratedObject.of(user);
+                if (user.equals(currentUser)) {
+                    du.setColor(CURRENT_USER_COLOR);
+                }
+                du.setLabel(user.getUsername());
+                users.add(du);
+            }
+            break;
+        }
+        default:
+            break;
+        }
+
+        return users;
+    }
 
     private List<DecoratedObject<SourceDocument>> listDocuments()
     {
-        if (selectedProject == null) {
+        if (selectedProject == null || selectedUser == null) {
             return new ArrayList<>();
         }
         
@@ -269,7 +389,7 @@ public class OpenDocumentDialogPanel
         case AUTOMATION:
         case CORRECTION: {
             Map<SourceDocument, AnnotationDocument> docs = documentService
-                    .listAnnotatableDocuments(selectedProject, user);
+                    .listAnnotatableDocuments(selectedProject, selectedUser);
 
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
                 DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
@@ -330,6 +450,7 @@ public class OpenDocumentDialogPanel
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         projectSelectionForm.detach();
+        userSelectionForm.detach();
         documentSelectionForm.detach();
         if (Mode.CURATION.equals(state.getMode())) {
             state.setDocument(null, null); // on cancel, go welcomePage
