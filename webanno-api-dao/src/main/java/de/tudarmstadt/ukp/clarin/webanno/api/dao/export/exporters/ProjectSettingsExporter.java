@@ -54,6 +54,7 @@ public class ProjectSettingsExporter
         aExProject.setDisableExport(project.isDisableExport());
         aExProject.setCreated(project.getCreated());
         aExProject.setUpdated(project.getUpdated());
+        aExProject.setAnonymousCuration(project.isAnonymousCuration());
     }
 
     /**
@@ -76,6 +77,7 @@ public class ProjectSettingsExporter
         aProject.setDisableExport(aExProject.isDisableExport());
         aProject.setCreated(aExProject.getCreated());
         aProject.setUpdated(aExProject.getUpdated());
+        aProject.setAnonymousCuration(aExProject.isAnonymousCuration());
         
         // Set default to LTR on import from old WebAnno versions
         if (aExProject.getScriptDirection() == null) {

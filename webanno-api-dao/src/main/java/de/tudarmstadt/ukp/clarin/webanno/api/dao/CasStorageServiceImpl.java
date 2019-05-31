@@ -427,8 +427,9 @@ public class CasStorageServiceImpl
                 realWriteCas(aDocument, aUsername, cas);
             }
             else {
-                throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
-                        + "] does not exist and no initializer is specified.");
+                throw new FileNotFoundException("CAS file for [" + aDocument.getId() + ","
+                        + aUsername + "] does not exist at [" + casFile
+                        + "] and no initializer is specified.");
             }
             
             // Add/update the CAS metadata

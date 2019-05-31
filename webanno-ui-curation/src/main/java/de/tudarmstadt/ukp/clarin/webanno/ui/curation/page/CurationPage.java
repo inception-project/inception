@@ -607,7 +607,9 @@ public class CurationPage
             loadPreferences();
             
             // Re-render whole page as sidebar size preference may have changed
-            aTarget.add(CurationPage.this);
+            if (aTarget != null) {
+                aTarget.add(CurationPage.this);
+            }
     
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
     
@@ -624,6 +626,9 @@ public class CurationPage
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+            }
+            else {
+                throw new IllegalStateException("There are no finished annotation documents!");
             }
     
             // upgrade CASes for each user, what if new type is added once the user finished
@@ -666,9 +671,11 @@ public class CurationPage
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
     
-            aTarget.add(documentNamePanel);
-            aTarget.add(remergeDocumentLink);
-            aTarget.add(finishDocumentLink);
+            if (aTarget != null) {
+                aTarget.add(documentNamePanel);
+                aTarget.add(remergeDocumentLink);
+                aTarget.add(finishDocumentLink);
+            }
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -773,6 +780,8 @@ public class CurationPage
             // If we arrive here and the document is not null, then we have a change of document
             // or a change of focus (or both)
             if (!document.equals(getModelObject().getDocument())) {
+                // do not need to choose document
+                openDocumentsModal.setVisible(false);
                 getModelObject().setDocument(document, getListOfDocs());
                 actionLoadDocument(aTarget, focus);
             }

@@ -1185,4 +1185,17 @@
       </column>
     </addColumn>
   </changeSet>  
+
+  <changeSet author="WebAnno Team" id="20190528-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <columnExists tableName="project" columnName="anonymousCuration"/>
+      </not>
+    </preConditions>
+    <addColumn tableName="project">
+      <column name="anonymousCuration" type="BOOLEAN" defaultValueBoolean="false">
+        <constraints nullable="false" />
+      </column>
+    </addColumn>
+  </changeSet>  
 </databaseChangeLog>
