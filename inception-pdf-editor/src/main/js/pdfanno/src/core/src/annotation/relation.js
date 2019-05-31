@@ -44,12 +44,7 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   static newInstance (annotation) {
     let a            = new RelationAnnotation()
-// BEGIN INCEpTION EXTENSION - #593 - add pdfanno sources
-/*
-    a.uuid           = uuid()
-*/
     a.uuid           = annotation.uuid || uuid()
-// END INCEpTION EXTENSION
     // a.direction      = annotation.direction
     a.direction      = 'relation'
     a.rel1Annotation = AbstractAnnotation.isAnnotation(annotation.rel1) ? annotation.rel1 : window.annotationContainer.findById(annotation.rel1)
@@ -316,7 +311,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
-// BEGIN INCEpTION EXTENSION - #880 - Selection of relations in PDF editor
     if (this.selected) {
       var data = {
         "action": "selectRelation",
@@ -334,7 +328,6 @@ export default class RelationAnnotation extends AbstractAnnotation {
         }]
       });
     }
-// END INCEpTION EXTENSION
   }
 
   /**

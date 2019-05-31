@@ -318,11 +318,6 @@ export default class AnnotationContainer {
 
           if (key === 'spans') {
             const span = SpanAnnotation.newInstanceFromTomlObject(obj)
-// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
-/*
-            span.color = getColor(tomlIndex, 'span', span.text)
-*/
-// END INCEpTION EXTENSION
             span.save()
             span.render()
             span.enableViewMode()
@@ -333,11 +328,6 @@ export default class AnnotationContainer {
             obj.rel1 = span1 ? span1.uuid : null
             obj.rel2 = span2 ? span2.uuid : null
             const relation = RelationAnnotation.newInstanceFromTomlObject(obj)
-// BEGIN INCEpTION EXTENSION - #981 - Labels for Annotations in PDF editor
-/*
-            relation.color = getColor(tomlIndex, relation.direction, relation.text)
-*/
-// END INCEpTION EXTENSION
             relation.save()
             relation.render()
             relation.enableViewMode()

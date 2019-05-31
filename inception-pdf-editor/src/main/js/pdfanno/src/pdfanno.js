@@ -108,7 +108,6 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 })
 
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
 function getAnnotations() {
   var data = {
     "action": "getAnnotations",
@@ -124,35 +123,20 @@ function getAnnotations() {
     }]
   });
 }
-// END INCEpTION EXTENSION
 
 async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
-/*
-  const pdfURL   = q.pdf || getDefaultPDFURL()
-*/
   const pdfURL   = q.pdf
-// END INCEpTION EXTENSION
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
   const pdftxtURL = q.pdftxt
-// END INCEpTION EXTENSION
   const annoURL  = q.anno
   const moveTo   = q.move
-// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
   window.apiUrl = q.api
-// END INCEpTION EXTENSION
 
   // Load a PDF file.
   try {
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
-/*
-    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
-*/
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
-// END INCEpTION EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({
@@ -166,36 +150,6 @@ async function displayViewer () {
 
       // Load and display annotations, if annoURL is set.
       if (annoURL) {
-// BEGIN INCEpTION EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
-/*
-        let anno = await window.annoPage.loadAnnoFileFromServer(annoURL)
-
-        window.annoPage.importAnnotation({
-          primary     : true,
-          annotations : [anno],
-          colorMap    : annoUI.labelInput.getColorMap()
-        }, true)
-
-        // Move to the annotation.
-        if (moveTo) {
-          setTimeout(() => {
-            window.annoPage.scrollToAnnotation(moveTo)
-          }, 500)
-        }
-*/
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
-/*
-        parent.Wicket.Ajax.ajax({
-          "m" : "GET",
-          "u" : annoURL,
-          "sh" : [],
-          "fh": [function() {
-              console.log('Something went wrong on requesting annotations from inception backend.')
-          }]
-        });
-*/
-// END INCEpTION EXTENSION - #802
-// END INCEpTION EXTENSION - #627
       }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
@@ -211,14 +165,9 @@ async function displayViewer () {
     textLayer.setup(analyzeResult)
     window.annoPage.pdftxt = analyzeResult
 
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
     window.pageRender = 1;
-// BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
-/*
-    getAnnotations()
-*/
     let initAnnotations = function(e) {
       try {
         getAnnotations()
@@ -227,7 +176,6 @@ async function displayViewer () {
       }
     }
     document.addEventListener('pagerendered', initAnnotations)
-// END INCEpTION EXTENSION - #1089
     document.addEventListener('pagechange', function(e) {
       pagechangeEventCounter++
       if (e.pageNumber !== window.pageRender) {
@@ -241,7 +189,6 @@ async function displayViewer () {
         }, renderTimeout)
       }
     })
-// END INCEpTION EXTENSION - #802
 
   } catch (err) {
 

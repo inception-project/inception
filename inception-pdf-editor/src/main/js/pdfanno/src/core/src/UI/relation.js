@@ -1,8 +1,6 @@
 import * as textInput from '../utils/textInput'
 import RelationAnnotation from '../annotation/relation'
-// BEGIN INCEpTION EXTENSION - #839 - Creation of rleations in PDF editor
 import { scaleDown } from './utils'
-// END INCEpTION EXTENSION
 
 /**
  * Create a new Relation annotation.
@@ -42,7 +40,6 @@ export function createRelation ({ type, anno1, anno2, text, color }) {
   return annotation
 }
 
-// BEGIN INCEpTION EXTENSION - #839 - Creation of relations in PDF editor
 window.addEventListener('DOMContentLoaded', () => {
 
   const $viewer = $('#viewer')
@@ -112,4 +109,3 @@ let hoveredAnnotation = null
 let mousedownFired = false
 let onAnnotation = false
 let drawing = false
-// END INCEpTION EXTENSION
