@@ -19,11 +19,11 @@ The {product-name} Team
 
 This document targets developers working on {product-name}.
 
-
-
 = Introduction
 
 include::{include-dir}setup.adoc[leveloffset=+1]
+
+include::{include-dir}release.adoc[leveloffset=+1]
 
 <<<
 
@@ -70,7 +70,11 @@ include::{include-dir}concept-linking.adoc[leveloffset=+1]
 
 <<<
 
+= {product-name} Development
 
+include::{include-dir}release.adoc[leveloffset=+1]
+
+<<<
 
 = Appendices 
 

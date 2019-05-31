@@ -27,7 +27,7 @@ public interface EventRepository
 {
     static final String SERVICE_NAME = "eventRepository";
 
-    void create(LoggedEvent aE);
+    void create(LoggedEvent... aEvents);
 
     List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
             int aSize, long recommenderId);

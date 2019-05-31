@@ -35,6 +35,7 @@ import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
 import org.eclipse.rdf4j.model.vocabulary.XMLSchema;
 
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class IriConstants
@@ -46,6 +47,7 @@ public class IriConstants
     public static final String PREFIX_WIKIDATA_DIRECT = "http://www.wikidata.org/prop/direct/";
     public static final String PREFIX_SCHEMA = "http://schema.org/";
     public static final String PREFIX_LUCENE_SEARCH = "http://www.openrdf.org/contrib/lucenesail#";
+    public static final String PREFIX_MWAPI = "https://www.mediawiki.org/ontology#API/";
 
     public static final String UKP_WIKIDATA_SPARQL_ENDPOINT = "http://knowledgebase.ukp.informatik.tu-darmstadt.de:8890/sparql";
     public static final Set<String> IMPLICIT_NAMESPACES = Collections
@@ -82,8 +84,10 @@ public class IriConstants
      */
     public static final IRI SCHEMA_DESCRIPTION;
 
-    public static final IRI FTS_VIRTUOSO;
+    public static final IRI FTS_FUSEKI;
     public static final IRI FTS_LUCENE;
+    public static final IRI FTS_VIRTUOSO;
+    public static final IRI FTS_WIKIDATA;
     public static final IRI FTS_NONE;
 
     public static final List<IRI> CLASS_IRIS;
@@ -106,8 +110,11 @@ public class IriConstants
         WIKIDATA_PROPERTY_TYPE =  vf.createIRI(PREFIX_WIKIDATA_ENTITY, "Q18616576");
         WIKIDATA_SUBPROPERTY = vf.createIRI(PREFIX_WIKIDATA_DIRECT, "P1647");
         SCHEMA_DESCRIPTION = vf.createIRI(PREFIX_SCHEMA, "description");
+        
+        FTS_FUSEKI = vf.createIRI("text:query");
         FTS_VIRTUOSO = vf.createIRI("bif:contains");
         FTS_LUCENE = vf.createIRI(PREFIX_LUCENE_SEARCH, "matches");
+        FTS_WIKIDATA = vf.createIRI(PREFIX_MWAPI, "search");
         FTS_NONE = vf.createIRI("FTS:NONE");
 
         CLASS_IRIS = asList(RDFS.CLASS, OWL.CLASS, WIKIDATA_CLASS, SKOS.CONCEPT);
@@ -119,7 +126,7 @@ public class IriConstants
         PROPERTY_TYPE_IRIS = asList(RDF.PROPERTY, WIKIDATA_PROPERTY_TYPE);
         PROPERTY_LABEL_IRIS = asList(RDFS.LABEL, SKOS.PREF_LABEL);
         PROPERTY_DESCRIPTION_IRIS = asList(RDFS.COMMENT, SCHEMA_DESCRIPTION);
-        FTS_IRIS = asList(FTS_VIRTUOSO, FTS_LUCENE);
+        FTS_IRIS = asList(FTS_FUSEKI, FTS_VIRTUOSO, FTS_WIKIDATA, FTS_LUCENE);
     }
     
     public static boolean hasImplicitNamespace(KnowledgeBase kb, String s)
@@ -138,5 +145,10 @@ public class IriConstants
             }
         }
         return false;
+    }
+
+    public static boolean isFromImplicitNamespace(KBObject handle) {
+        return IMPLICIT_NAMESPACES.stream()
+                .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 }

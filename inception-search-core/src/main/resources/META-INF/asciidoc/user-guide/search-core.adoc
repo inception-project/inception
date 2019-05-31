@@ -15,6 +15,9 @@ image::search-core-search.png[Search sidebar]
 The search only considers documents in the current project and only matches annotations made by
 the current user.
 
+NOTE: Very long annotations and tokens (longer than several thousand characters) are not indexed and 
+       cannot be found by the search.
+
 Clicking on the search settings button (cog wheel) shows additional options:
 
 * **Current document only** limits the search to the document shown in the main annotation editor.
@@ -23,3 +26,30 @@ Clicking on the search settings button (cog wheel) shows additional options:
 * **Rebuild index** may help fixing search issues (e.g. no or only partial results), in particular
   after upgrading to a new version of {product-name}. Note that this process may take quite some
   time depending on the number of documents in the project.
+
+=== Creating/Deleting Annotations for Search Results
+
+The user can also use the search to create and/or delete annotations for a set of selected search
+results.
+
+This means that annotations will be created/deleted at the token offsets of the selected search
+results.
+Search results can be selected via the checkbox on the left. Per default all search
+results are selected.
+
+The currently selected annotation in the annotation editor serves as template for the annotations
+that are to be created/deleted. Note that selecting an annotation first is necessary for
+creating/deleting annotations in this way.
+
+Clicking on the create settings button (cog wheel) shows additional options:
+
+* **Override existing** will override an existing annotation of the same layer at a target location.
+    If this option is disabled, annotations of the same layer will be stacked if stacking is enabled
+    for this layer. Otherwise no annotation will be created.
+
+Clicking on the delete settings button (cog wheel) shows additional options:
+
+* **Delete only matching feature values** will only delete annotations at search results that
+    exactly match the currently selected annotation including all feature values. If this option is
+    disabled all annotations with the same layer as the currently selected annotation will be
+    deleted regardless of their feature values.

@@ -17,10 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -32,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
@@ -60,7 +62,7 @@ public interface RecommendationService
 
     List<Recommender> listRecommenders(AnnotationLayer aLayer);
     
-    List<Recommender> getEnabledRecommenders(Long aRecommenderId);
+    Optional<Recommender> getEnabledRecommender(long aRecommenderId);
     
     List<Recommender> listEnabledRecommenders(Project aProject);
 
@@ -107,9 +109,14 @@ public interface RecommendationService
      * @return the CAS address of the created/updated annotation.
      */
     public int upsertFeature(AnnotationSchemaService annotationService, SourceDocument aDocument,
-            String aUsername, JCas aJCas, AnnotationLayer layer, AnnotationFeature aFeature,
+            String aUsername, CAS aCas, AnnotationLayer layer, AnnotationFeature aFeature,
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
     
-    Boolean showLearningCurveDiagram();
+    void getPredictions(Predictions model, List<SourceDocument> documents, User user);
+    
+    void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
+            Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
+
+    List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
 }

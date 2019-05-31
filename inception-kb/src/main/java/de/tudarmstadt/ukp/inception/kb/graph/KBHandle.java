@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
+import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -36,10 +38,15 @@ public class KBHandle
     private String description;
     private KnowledgeBase kb;
     private String language;
-    // domain and range for cases in which the KBHandle represents a property
-    private String domain;
-    private String range;
+    
     private String debugInfo;
+    
+    // domain and range for cases in which the KBHandle represents a property
+    @Deprecated
+    private String domain;
+    
+    @Deprecated
+    private String range;
 
     public KBHandle()
     {
@@ -71,21 +78,37 @@ public class KBHandle
         language = aLanguage;
     }
 
+    @Deprecated
+    public KBHandle(String aIdentifier, String aLabel, String aDescription, String aLanguage,
+            String aDomain, String aRange)
+    {
+        identifier = aIdentifier;
+        name = aLabel;
+        description = aDescription;
+        language = aLanguage;
+        domain = aDomain;
+        range = aRange;
+    }
+
+    @Deprecated
     public String getDomain()
     {
         return domain;
     }
 
+    @Deprecated
     public void setDomain(String aDomain)
     {
         domain = aDomain;
     }
 
+    @Deprecated
     public String getRange()
     {
         return range;
     }
 
+    @Deprecated
     public void setRange(String aRange)
     {
         range = aRange;
@@ -204,10 +227,10 @@ public class KBHandle
         }
     }
 
-    public static List<KBHandle> distinctByIri(List<KBHandle> aHandles)
+    public static <T extends KBObject> List<T> distinctByIri(List<T> aHandles)
     {
-        Map<String, KBHandle> hMap = new LinkedHashMap<>();
-        for (KBHandle h : aHandles) {
+        Map<String, T> hMap = new LinkedHashMap<>();
+        for (T h : aHandles) {
             hMap.put(h.getIdentifier(), h);
         }
         return new ArrayList<>(hMap.values());
@@ -235,7 +258,21 @@ public class KBHandle
     @Override
     public String toString()
     {
-        return new ToStringBuilder(this).append("identifier", identifier).append("name", name)
-                .append("description", description).append("language", language).toString();
+        ToStringBuilder builder = new ToStringBuilder(this, SHORT_PREFIX_STYLE);
+        builder.append("identifier", identifier);
+        builder.append("name", name);
+        if (description != null) {
+            builder.append("description", description);
+        }
+        if (language != null) {
+            builder.append("language", language);
+        }
+        if (domain != null) {
+            builder.append("domain", domain);
+        }
+        if (range != null) {
+            builder.append("range", range);
+        }
+        return builder.toString();
     }
 }

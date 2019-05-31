@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static java.util.Collections.unmodifiableList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,16 +27,16 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -67,9 +68,9 @@ import org.apache.lucene.search.spans.SpanWeight;
 import org.apache.lucene.search.spans.Spans;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.XmiCasSerializer;
-import org.apache.uima.jcas.JCas;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -99,14 +100,14 @@ import mtas.search.spans.util.MtasSpanQuery;
 /**
  * 
  * The Mtas implementation for a physical index
- *
  */
 public class MtasDocumentIndex
     implements PhysicalIndex
 {
-    private final String MTAS_PARSER = "de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser";
-    private final String MTAS_TOKENIZER = "mtas";
-    private String INDEX = "indexMtas";
+    private static final String MTAS_PARSER = 
+            "de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser";
+    private static final String MTAS_TOKENIZER = "mtas";
+    private static final String INDEX = "indexMtas";
 
     /**
      * Constant for the field which carries the unique identifier for the index document consisting:
@@ -141,22 +142,22 @@ public class MtasDocumentIndex
     // Default prefix for CQL queries
     private static final String DEFAULT_PREFIX = "Token";
 
-    private static final int RESULT_WINDOW_SIZE = 2;
+    private static final int RESULT_WINDOW_SIZE = 3;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    static AnnotationSchemaService annotationSchemaService;
-    static DocumentService documentService;
-    static ProjectService projectService;
-    Project project;
+    private final AnnotationSchemaService annotationSchemaService;
+    private final DocumentService documentService;
+    private final ProjectService projectService;
+    private final Project project;
 
     // The index writers for this index
     private IndexWriter indexWriter;
 
     // The annotations to be indexed
-    private List<String> annotationShortNames;
+    private final List<String> annotationShortNames;
 
-    private File resourceDir;
+    private final File resourceDir;
 
     public MtasDocumentIndex(Project aProject, AnnotationSchemaService aAnnotationSchemaService,
             DocumentService aDocumentService, ProjectService aProjectService, String aDir)
@@ -168,10 +169,14 @@ public class MtasDocumentIndex
         project = aProject;
 
         // Create list with the annotation types of the layer (only the enabled ones)
-        annotationShortNames = annotationSchemaService.listAnnotationLayer(project).stream()
+        Set<String> shortNames = new HashSet<>();
+        annotationSchemaService.listAnnotationLayer(project).stream()
                 .filter(AnnotationLayer::isEnabled)
                 .map(layer -> getShortName(layer.getName()))
-                .collect(Collectors.toList());
+                .forEach(shortNames::add);
+        shortNames.add(MtasUimaParser.MTAS_TOKEN_LABEL);
+        shortNames.add(MtasUimaParser.MTAS_SENTENCE_LABEL);
+        annotationShortNames = unmodifiableList(new ArrayList<>(shortNames));
        
         resourceDir = new File(aDir);
         log.debug("New Mtas/Lucene index instance created...");
@@ -339,128 +344,86 @@ public class MtasDocumentIndex
                             // Retrieve document title
                             String documentTitle = document.get(FIELD_TITLE);
 
-                            String idValue = segmentReader.document(spans.docID())
-                                    .getField(FIELD_ID).stringValue();
-                            log.debug("********  New doc {}-{}", + spans.docID(), idValue);
+                            // String idValue = segmentReader.document(spans.docID())
+                            // .getField(FIELD_ID).stringValue();
+                            // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
 
                             while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
-
-                                int resultWindowStartPosition = spans.startPosition()
-                                        - RESULT_WINDOW_SIZE;
-
-                                // Avoid the window starting before the beginning of the text
-                                if (resultWindowStartPosition < 0) {
-                                    resultWindowStartPosition = 0;
-                                }
-
-                                int resultWindowEndPosition = spans.endPosition()
-                                        + RESULT_WINDOW_SIZE + 1;
-
-                                // Avoid the window ending after the end of the text
-                                if (resultWindowEndPosition > spans.endPosition()) {
-                                    resultWindowEndPosition = spans.endPosition();
-                                }
+                                int matchStart = spans.startPosition();
+                                int matchEnd = spans.endPosition();
+                                
+                                int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
+                                int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
+                                
                                 List<MtasTokenString> tokens = mtasCodecInfo
                                         .getPrefixFilteredObjectsByPositions(field, spans.docID(),
-                                                prefixes, resultWindowStartPosition,
-                                                resultWindowEndPosition);
-
-                                Collections.sort(tokens, new Comparator<MtasTokenString>()
-                                {
-                                    @Override
-                                    public int compare(MtasTokenString token2,
-                                            MtasTokenString token1)
-                                    {
-                                        return token2.getPositionStart() > token1.getPositionStart()
-                                                ? 1
-                                                : -1;
-                                    }
-                                });
+                                                prefixes, windowStart, windowEnd);
+                                
+                                tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
+                                
+                                if (tokens.isEmpty()) {
+                                    continue;
+                                }
 
                                 SearchResult result = new SearchResult();
-                                String resultText = "";
-                                String leftContext = "";
-                                String rightContext = "";
+                                StringBuilder resultText = new StringBuilder();
+                                StringBuilder leftContext = new StringBuilder();
+                                StringBuilder rightContext = new StringBuilder();
                                 result.setDocumentId(sourceDocumentId);
                                 result.setDocumentTitle(documentTitle);
-
-                                int startToken = 0;
-                                while (startToken < tokens.size()) {
-                                    if (tokens.get(startToken).getPositionStart()
-                                            .equals(tokens.get(startToken).getPositionEnd())
-                                            && tokens.get(startToken).getPositionStart() == spans
-                                                    .startPosition()) {
-                                        break;
+                                result.setOffsetStart(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart && 
+                                                t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetStart)
+                                        .min()
+                                        .getAsInt());
+                                result.setOffsetEnd(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart && 
+                                                t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetEnd)
+                                        .max()
+                                        .getAsInt());
+                                result.setTokenStart(matchStart);
+                                result.setTokenLength(matchEnd - matchStart);
+                                
+                                MtasTokenString prevToken = null;
+                                for (MtasTokenString token : tokens) {
+                                    if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
+                                        continue;
                                     }
-                                    startToken++;
-                                }
-
-                                if (startToken >= tokens.size()) {
-                                    startToken = 0;
-                                }
-
-                                int endToken = 0;
-                                while (endToken < tokens.size()) {
-                                    if (tokens.get(endToken).getPositionStart()
-                                            .equals(tokens.get(endToken).getPositionEnd())
-                                            && tokens.get(endToken).getPositionStart() == spans
-                                                    .endPosition()) {
-                                        break;
+                                    
+                                    // When searching for an annotation, we don't get the matching
+                                    // text back... not sure why...
+                                    String tokenText = CodecUtil.termValue(token.getValue());
+                                    if (tokenText == null) {
+                                        continue;
                                     }
-                                    endToken++;
-                                }
-
-                                if (endToken >= tokens.size()) {
-                                    endToken = 0;
-                                }
-
-                                result.setOffsetStart(tokens.get(startToken).getOffsetStart());
-                                result.setOffsetEnd(tokens.get(endToken - 1).getOffsetEnd());
-                                result.setTokenStart(spans.startPosition());
-                                result.setTokenLength(spans.endPosition() - spans.startPosition());
-                                for (int i = 0; i < tokens.size(); i++) {
-                                    MtasTokenString token = tokens.get(i);
-                                    if (token.getPrefix().equals(DEFAULT_PREFIX)) {
-                                        if (token.getPositionStart() < spans.startPosition()) {
-                                            leftContext += CodecUtil.termValue(token.getValue())
-                                                    + " ";
-                                        }
-                                        else if (token.getPositionStart() >= spans.endPosition()) {
-                                            rightContext += CodecUtil.termValue(token.getValue())
-                                                    + " ";
+                                    
+                                    if (token.getPositionStart() < matchStart) {
+                                        fill(leftContext, prevToken, token);
+                                        leftContext.append(tokenText);
+                                    }
+                                    else if (token.getPositionStart() >= matchEnd) {
+                                        fill(rightContext, prevToken, token);
+                                        rightContext.append(tokenText);
+                                    }
+                                    else {
+                                        // Only add the whitespace to the match if we already have
+                                        // added any text to the match - otherwise consider the 
+                                        // whitespace to be part of the left contex
+                                        if (resultText.length() > 0) {
+                                            fill(resultText, prevToken, token);
                                         }
                                         else {
-                                            resultText += CodecUtil.termValue(token.getValue())
-                                                    + " ";
+                                            fill(leftContext, prevToken, token);
                                         }
-
-                                        if (log.isTraceEnabled()) {
-                                            if (token.getPositionEnd() != token
-                                                    .getPositionStart()) {
-                                                log.trace(
-                                                        " doc: {}-{}, mtasID: {} offset: {}-{} position: {}-{}",
-                                                        sourceDocumentId, documentTitle,
-                                                        token.getId(), token.getOffsetStart(),
-                                                        token.getOffsetEnd(),
-                                                        token.getPositionStart(),
-                                                        token.getPositionEnd());
-                                            }
-                                            else {
-                                                log.trace(
-                                                        " doc: {}-{}, mtasID: {} offset: {}-{} position: {} {}:{}",
-                                                        sourceDocumentId, documentTitle,
-                                                        token.getId(), token.getOffsetStart(),
-                                                        token.getOffsetEnd(),
-                                                        token.getPositionStart(), token.getPrefix(),
-                                                        token.getPostfix());
-
-                                            }
-                                        }
+                                        resultText.append(tokenText);
                                     }
+                                    prevToken = token;
                                 }
-                                result.setText(resultText);
-                                result.setLeftContext(leftContext);
-                                result.setRightContext(rightContext);
+                                result.setText(resultText.toString());
+                                result.setLeftContext(leftContext.toString());
+                                result.setRightContext(rightContext.toString());
                                 results.add(result);
                             }
                         }
@@ -473,9 +436,22 @@ public class MtasDocumentIndex
         }
         return results;
     }
+    
+    /**
+     * If there is space between the previous token and the current token, then add the 
+     * corresponding amount of whitespace the the buffer.
+     */
+    private void fill(StringBuilder aBuffer, MtasTokenString aPrevToken, MtasTokenString aToken)
+    {
+        if (aPrevToken != null) {
+            for (int g = aPrevToken.getOffsetEnd(); g < aToken.getOffsetStart(); g++) {
+                aBuffer.append(' ');
+            }
+        }
+    }
 
     private void indexDocument(String aDocumentTitle, long aSourceDocumentId,
-            long aAnnotationDocumentId, String aUser, JCas aJCas)
+            long aAnnotationDocumentId, String aUser, CAS aCas)
         throws IOException
     {
         if (indexWriter != null) {
@@ -488,7 +464,7 @@ public class MtasDocumentIndex
                 
                 // Prepare bytearray with document content to be indexed
                 ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                XmiCasSerializer.serialize(aJCas.getCas(), null, bos, true, null);
+                XmiCasSerializer.serialize(aCas, null, bos, true, null);
                 bos.close();
 
                 // Calculate timestamp that will be indexed
@@ -509,7 +485,7 @@ public class MtasDocumentIndex
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
                 doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                        Field.Store.YES));
+                        Field.Store.NO));
     
                 // Add document to the Lucene index
                 indexWriter.addDocument(doc);
@@ -536,17 +512,17 @@ public class MtasDocumentIndex
     };
 
     @Override
-    public void indexDocument(SourceDocument aDocument, JCas aJCas) throws IOException
+    public void indexDocument(SourceDocument aDocument, CAS aCas) throws IOException
     {
-        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aJCas);
+        indexDocument(aDocument.getName(), aDocument.getId(), -1, "", aCas);
     };
 
     @Override
-    public void indexDocument(AnnotationDocument aDocument, JCas aJCas) throws IOException
+    public void indexDocument(AnnotationDocument aDocument, CAS aCas) throws IOException
     {
         log.debug("***** Indexing annotation document");
         indexDocument(aDocument.getName(), aDocument.getDocument().getId(), aDocument.getId(),
-                aDocument.getUser(), aJCas);
+                aDocument.getUser(), aCas);
         log.debug("***** End of Indexing annotation document");
     };
 

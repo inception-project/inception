@@ -28,7 +28,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -50,6 +53,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Del
 public class ActiveLearningServiceImpl
     implements ActiveLearningService
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final DocumentService documentService;
     private final RecommendationService recommendationService;
     private final UserDao userService;
@@ -91,14 +96,13 @@ public class ActiveLearningServiceImpl
         List<SuggestionGroup> suggestions = getSuggestions(user,
                 aRecord.getLayer());
         for (SuggestionGroup listOfAO : suggestions) {
-            if (listOfAO.stream().anyMatch(suggestion -> 
-                    suggestion.getDocumentName().equals(aRecord.getSourceDocument().getName()) && 
-                    suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName()) && 
-                    suggestion.getLabel().equals(aRecord.getAnnotation()) && 
-                    suggestion.getBegin() == aRecord.getOffsetCharacterBegin() && 
-                    suggestion.getEnd() == aRecord.getOffsetCharacterEnd() &&
-                    suggestion.isVisible())
-            ) {
+            if (listOfAO.stream().anyMatch(suggestion -> suggestion.getDocumentName()
+                    .equals(aRecord.getSourceDocument().getName())
+                    && suggestion.getFeature().equals(aRecord.getAnnotationFeature().getName())
+                    && suggestion.labelEquals(aRecord.getAnnotation())
+                    && suggestion.getBegin() == aRecord.getOffsetCharacterBegin()
+                    && suggestion.getEnd() == aRecord.getOffsetCharacterEnd()
+                    && suggestion.isVisible())) {
                 return true;
             }
         }
@@ -132,7 +136,7 @@ public class ActiveLearningServiceImpl
                             .filter(r -> r.getSourceDocument().getName().equals(s.getDocumentName())
                                     && r.getOffsetCharacterBegin() == s.getBegin()
                                     && r.getOffsetCharacterEnd() == s.getEnd()
-                                    && r.getAnnotation().equals(s.getLabel()))
+                                    && s.labelEquals(r.getAnnotation()))
                             .forEach(record -> {
                                 if (REJECTED.equals(record.getUserAction())) {
                                     s.hide(FLAG_REJECTED);
@@ -145,6 +149,63 @@ public class ActiveLearningServiceImpl
                 }
             }
         }
+    }
+    
+    @Override
+    public Optional<Delta> generateNextSuggestion(User aUser, ActiveLearningUserState alState)
+    {
+        // Fetch the next suggestion to present to the user (if there is any)
+        long startTimer = System.currentTimeMillis();
+        List<SuggestionGroup> suggestions = alState.getSuggestions();
+        long getRecommendationsFromRecommendationService = System.currentTimeMillis();
+        log.trace("Getting recommendations from recommender system costs {} ms.",
+                (getRecommendationsFromRecommendationService - startTimer));
+
+        // remove duplicate recommendations
+        suggestions = suggestions.stream()
+                .map(it -> removeDuplicateRecommendations(it)).collect(Collectors.toList());
+        long removeDuplicateRecommendation = System.currentTimeMillis();
+        log.trace("Removing duplicate recommendations costs {} ms.",
+                (removeDuplicateRecommendation - getRecommendationsFromRecommendationService));
+
+        // hide rejected recommendations
+        hideRejectedOrSkippedAnnotations(aUser, alState.getLayer(), true, suggestions);
+        long removeRejectedSkippedRecommendation = System.currentTimeMillis();
+        log.trace("Removing rejected or skipped ones costs {} ms.",
+                (removeRejectedSkippedRecommendation - removeDuplicateRecommendation));
+        return alState.getStrategy().generateNextSuggestion(suggestions);
+    }
+    
+    private static SuggestionGroup removeDuplicateRecommendations(
+            SuggestionGroup unmodifiedRecommendationList)
+    {
+        SuggestionGroup cleanRecommendationList = new SuggestionGroup();
+
+        unmodifiedRecommendationList.forEach(recommendationItem -> {
+            if (!isAlreadyInCleanList(cleanRecommendationList, recommendationItem)) {
+                cleanRecommendationList.add(recommendationItem);
+            }
+        });
+
+        return cleanRecommendationList;
+    }
+    
+    private static boolean isAlreadyInCleanList(SuggestionGroup cleanRecommendationList,
+            AnnotationSuggestion recommendationItem)
+    {
+        String source = recommendationItem.getRecommenderName();
+        String annotation = recommendationItem.getLabel();
+        String documentName = recommendationItem.getDocumentName();
+            
+        for (AnnotationSuggestion existingRecommendation : cleanRecommendationList) 
+        {
+            boolean areLabelsEqual = existingRecommendation.labelEquals(annotation);
+            if (existingRecommendation.getRecommenderName().equals(source) && areLabelsEqual
+                && existingRecommendation.getDocumentName().equals(documentName)) {
+                return true;
+            }
+        }
+        return false;
     }
     
     public static class ActiveLearningUserState implements Serializable

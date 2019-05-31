@@ -1,6 +1,6 @@
 /*
  * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

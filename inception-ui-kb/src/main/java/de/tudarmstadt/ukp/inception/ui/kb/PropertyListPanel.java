@@ -43,9 +43,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormSubmitting
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
+import de.tudarmstadt.ukp.inception.kb.IriConstants;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxNewPropertyEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -57,11 +57,12 @@ public class PropertyListPanel extends Panel {
 
     private @SpringBean KnowledgeBaseService kbService;
 
-    private IModel<KBHandle> selectedProperty;
+    private IModel<KBProperty> selectedProperty;
     private IModel<KnowledgeBase> kbModel;
     private IModel<Preferences> preferences;
 
-    public PropertyListPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBHandle> aModel) {
+    public PropertyListPanel(String aId, IModel<KnowledgeBase> aKbModel, IModel<KBProperty> aModel)
+    {
         super(aId, aModel);
 
         setOutputMarkupId(true);
@@ -70,7 +71,7 @@ public class PropertyListPanel extends Panel {
         kbModel = aKbModel;
         preferences = Model.of(new Preferences());
 
-        OverviewListChoice<KBHandle> overviewList = new OverviewListChoice<KBHandle>("properties");
+        OverviewListChoice<KBProperty> overviewList = new OverviewListChoice<>("properties");
         overviewList.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));
         overviewList.setModel(selectedProperty);
         overviewList.setChoices(LambdaModel.of(this::getProperties));
@@ -102,7 +103,7 @@ public class PropertyListPanel extends Panel {
         // preferences filtered implicit statements from the list. It is necessary to flip the
         // filter preferences in this case to keep the UI consistent.
         boolean isSelectedPropertyFromImplicitNamespace = selectedProperty.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject());
+                && IriConstants.isFromImplicitNamespace(selectedProperty.getObject());
         if (isSelectedPropertyFromImplicitNamespace) {
             preferences.getObject().showAllProperties = true;
         }
@@ -123,17 +124,17 @@ public class PropertyListPanel extends Panel {
      */
     private void actionPreferenceChanged(AjaxRequestTarget aTarget) {
         if (!preferences.getObject().showAllProperties && selectedProperty.getObject() != null
-                && RdfUtils.isFromImplicitNamespace(selectedProperty.getObject())) {
+                && IriConstants.isFromImplicitNamespace(selectedProperty.getObject())) {
             send(getPage(), Broadcast.BREADTH, new AjaxPropertySelectionEvent(aTarget, null, true));
         } else {
             aTarget.add(this);
         }
     }
 
-    private List<KBHandle> getProperties() {
+    private List<KBProperty> getProperties() {
         if (isVisibleInHierarchy()) {
             Preferences prefs = preferences.getObject();
-            List<KBHandle> statements = new ArrayList<>();
+            List<KBProperty> statements = new ArrayList<>();
             try {
                 statements = kbService.listProperties(kbModel.getObject(),
                         prefs.showAllProperties);
@@ -144,7 +145,9 @@ public class PropertyListPanel extends Panel {
                 //Cannot modify component hierarchy after render phase has started- is thrown.
                 //error("Unable to list properties: " + e.getLocalizedMessage());
                 LOG.debug("Unable to list properties.", e);
-                statements.add(new KBHandle("Unable to list properties."));
+                KBProperty errorPlaceholder = new KBProperty();
+                errorPlaceholder.setName("Unable to list properties.");
+                statements.add(errorPlaceholder);
                 return statements;
             }
         } else {

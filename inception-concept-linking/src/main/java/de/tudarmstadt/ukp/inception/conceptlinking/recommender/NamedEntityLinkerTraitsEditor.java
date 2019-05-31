@@ -25,6 +25,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class NamedEntityLinkerTraitsEditor
     extends Panel
@@ -33,7 +34,7 @@ public class NamedEntityLinkerTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean NamedEntityLinkerFactory toolFactory;
+    private @SpringBean RecommendationEngineFactory<NamedEntityLinkerTraits> toolFactory;
     
     private final NamedEntityLinkerTraits traits;
 

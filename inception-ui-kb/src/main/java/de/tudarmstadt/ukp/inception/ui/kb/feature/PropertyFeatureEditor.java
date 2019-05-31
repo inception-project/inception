@@ -23,7 +23,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
@@ -99,21 +100,21 @@ public class PropertyFeatureEditor
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
     }
 
-    private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
+    private AutoCompleteTextField<KBProperty> createAutoCompleteTextField()
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("value",
-            new TextRenderer<KBHandle>("uiLabel"))
+        AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("value",
+            new TextRenderer<KBProperty>("uiLabel"))
         {
 
             private static final long serialVersionUID = 2499259496065983734L;
 
-            @Override protected List<KBHandle> getChoices(String input)
+            @Override protected List<KBProperty> getChoices(String input)
             {
                 String repoId = traits.getRepositoryId();
                 if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
                     return Collections.emptyList();
                 }
-                return factService.getPredicatesFromKB(project, traits);
+                return factService.listProperties(project, traits);
             }
 
             @Override
@@ -171,15 +172,16 @@ public class PropertyFeatureEditor
         
         KBHandle subject = getHandle(FactLinkingConstants.SUBJECT_ROLE);
         KBHandle object = getHandle(FactLinkingConstants.OBJECT_ROLE);
-        KBHandle predicate = (KBHandle) getModelObject().value;
+        KBProperty predicate = (KBProperty) getModelObject().value;
         if (subject == null || object == null || predicate == null) {
             existStatements = false;
         }
         else {
             KBStatement mockStatement = new KBStatement(subject, predicate);
             mockStatement.setValue(object.getUiLabel());
-            KnowledgeBase kb = factService.getKBByKBHandleAndTraits(predicate, project, traits);
-            existStatements = kbService.statementsMatchSPO(kb, mockStatement);
+            KnowledgeBase kb = factService.findKnowledgeBaseContainingProperty(predicate, project,
+                    traits);
+            existStatements = kbService.exists(kb, mockStatement);
         }
     }
 
@@ -191,7 +193,7 @@ public class PropertyFeatureEditor
     public KBHandle getLinkedSubjectObjectKBHandle(String featureName,
         AnnotationActionHandler actionHandler, AnnotatorState aState)
     {
-        AnnotationLayer factLayer = annotationService.getLayer(FACT_LAYER, aState.getProject());
+        AnnotationLayer factLayer = annotationService.findLayer(aState.getProject(), FACT_LAYER);
         KBHandle kbHandle = null;
         AnnotationFeature annotationFeature = annotationService.getFeature(featureName, factLayer);
         List<LinkWithRoleModel> featureValue = (List<LinkWithRoleModel>) aState
@@ -199,11 +201,11 @@ public class PropertyFeatureEditor
         if (!featureValue.isEmpty()) {
             int targetAddress = featureValue.get(0).targetAddr;
             if (targetAddress != -1) {
-                JCas jCas;
+                CAS cas;
                 try {
-                    jCas = actionHandler.getEditorCas();
+                    cas = actionHandler.getEditorCas();
                     kbHandle = factService
-                        .getKBHandleFromCasByAddr(jCas, targetAddress, aState.getProject(), traits);
+                        .getKBHandleFromCasByAddr(cas, targetAddress, aState.getProject(), traits);
                 }
                 catch (Exception e) {
                     LOG.error("Error: " + e.getMessage(), e);

@@ -39,6 +39,13 @@ public class Span {
 
     private int endPos;
 
+    public Span(String aId, String aLabel, String aColor)
+    {
+        id = aId;
+        label = aLabel;
+        color = aColor;
+    }
+
     public Span(String aId, int aPage, String aLabel, String aColor, String aText,
                 int aStartPos, int aEndPos)
     {
@@ -86,14 +93,34 @@ public class Span {
         return endPos;
     }
 
+    public void setPage(int aPage)
+    {
+        page = aPage;
+    }
+
+    public void setText(String aText)
+    {
+        text = aText;
+    }
+
+    public void setStartPos(int aStartPos)
+    {
+        startPos = aStartPos;
+    }
+
+    public void setEndPos(int aEndPos)
+    {
+        endPos = aEndPos;
+    }
+
     public String toAnnoFileString()
     {
         return "[[spans]]\n" +
             "id = \"" + id +  "\"\n" +
             "page = " + page + "\n" +
-            "label = \"" + label + "\"\n" +
+            "label = \"" + label.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
             "color = \"" + color + "\"\n" +
-            "text = \"" + text + "\"\n" +
+            "text = \"" + text.replace("`", "\\`").replace("\"", "\\\\\"") + "\"\n" +
             "textrange = [" + startPos + "," + endPos + "]\n";
     }
 

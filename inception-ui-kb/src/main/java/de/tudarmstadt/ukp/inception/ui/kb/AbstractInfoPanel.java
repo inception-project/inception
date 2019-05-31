@@ -48,13 +48,12 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementDetailPreference;
-import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementGroupBean;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.StatementsPanel;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
 /**
  * An {@code AbstractInfoPanel} offers functionality to create, display and edit instances of a
@@ -74,7 +73,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     private @SpringBean KnowledgeBaseService kbService;
     
     protected IModel<T> kbObjectModel;
-    protected IModel<KBHandle> handleModel;
+    protected IModel<? extends KBObject> handleModel;
     protected IModel<KnowledgeBase> kbModel;
     
     private ConfirmationDialog confirmationDialog;
@@ -82,7 +81,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     
 
     public AbstractInfoPanel(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aHandleModel, IModel<T> aKbObjectModel) {
+            IModel<? extends KBObject> aHandleModel, IModel<T> aKbObjectModel) {
         super(aId, aHandleModel);
         kbModel = aKbModel;
         handleModel = aHandleModel;
@@ -163,7 +162,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
 
         private static final long serialVersionUID = -7974486904999393082L;
 
-        public ViewMode(String id, CompoundPropertyModel<KBHandle> compoundModel,
+        public ViewMode(String id, CompoundPropertyModel<? extends KBObject> compoundModel,
                 StatementDetailPreference aDetailPreference) {
             super(id, "viewMode", AbstractInfoPanel.this);
             Label uiLabel = new Label("uiLabel", compoundModel.bind("uiLabel"));
@@ -238,7 +237,9 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
     }
     
     protected abstract String getTypeLabelResourceKey();
-    
+
+    public abstract List<String> getLabelProperties();
+
     /**
      * Returns the {@link StatementDetailPreference} for the included {@link StatementsPanel}. If
      * this method returns {@code null}, the {@code StatementDetailPreference} can be defined by

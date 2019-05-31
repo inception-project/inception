@@ -57,9 +57,7 @@ public class SPARQLQueryBuilderAsserts
     public static List<KBHandle> asHandles(Repository aRepo, SPARQLQuery aBuilder)
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {
-            System.out.printf("Query   : %n");
-            Arrays.stream(aBuilder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+            printQuery(aBuilder);
             
             long startTime = System.currentTimeMillis();
 
@@ -67,34 +65,22 @@ public class SPARQLQueryBuilderAsserts
 
             System.out.printf("Results : %d in %dms%n", results.size(),
                     System.currentTimeMillis() - startTime);
-            results.forEach(r -> System.out.printf("          %s%n", r));
+            results.stream().limit(10).forEach(r -> System.out.printf("          %s%n", r));
+            if (results.size() > 10) {
+                System.out.printf("          ... and %d more ...%n", results.size() - 10);
+            }
             
             return results;
         }
         catch (MalformedQueryException e) {
-            String[] queryStringLines = aBuilder.selectQuery().getQueryString().split("\n");
-            if (e.getCause() instanceof ParseException) {
-                ParseException cause = (ParseException) e.getCause();
-                String message = String.format(
-                        "Error: %s%n" +
-                        "Bad query part starting with: %s%n",
-                        e.getMessage(),
-                        queryStringLines[cause.currentToken.beginLine - 1]
-                                .substring(cause.currentToken.beginColumn - 1));
-                throw new MalformedQueryException(message);
-            }
-            else {
-                throw e;
-            }
+            throw handleParseException(aBuilder, e);
         }
     }
     
     public static boolean exists(Repository aRepo, SPARQLQuery aBuilder)
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {
-            System.out.printf("Query   : %n");
-            Arrays.stream(aBuilder.selectQuery().getQueryString().split("\n"))
-                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+            printQuery(aBuilder);
             
             long startTime = System.currentTimeMillis();
 
@@ -106,20 +92,33 @@ public class SPARQLQueryBuilderAsserts
             return result;
         }
         catch (MalformedQueryException e) {
-            String[] queryStringLines = aBuilder.selectQuery().getQueryString().split("\n");
-            if (e.getCause() instanceof ParseException) {
-                ParseException cause = (ParseException) e.getCause();
-                String message = String.format(
-                        "Error: %s%n" +
-                        "Bad query part starting with: %s%n",
-                        e.getMessage(),
-                        queryStringLines[cause.currentToken.beginLine - 1]
-                                .substring(cause.currentToken.beginColumn - 1));
-                throw new MalformedQueryException(message);
-            }
-            else {
-                throw e;
-            }
+            throw handleParseException(aBuilder, e);
+        }
+    }
+    
+    private static void printQuery(SPARQLQuery aBuilder)
+    {
+        System.out.printf("Query   : %n");
+        Arrays.stream(aBuilder.selectQuery().getQueryString().split("\n"))
+                .forEachOrdered(l -> System.out.printf("          %s%n", l));
+    }
+    
+    private static <T extends RuntimeException> T handleParseException(SPARQLQuery aBuilder,
+            T aException)
+    {
+        String[] queryStringLines = aBuilder.selectQuery().getQueryString().split("\n");
+        if (aException.getCause() instanceof ParseException) {
+            ParseException cause = (ParseException) aException.getCause();
+            String message = String.format(
+                    "Error: %s%n" +
+                    "Bad query part starting with: %s%n",
+                    aException.getMessage(),
+                    queryStringLines[cause.currentToken.beginLine - 1]
+                            .substring(cause.currentToken.beginColumn - 1));
+            return (T) new MalformedQueryException(message);
+        }
+        else {
+            return aException;
         }
     }
 }

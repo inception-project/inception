@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.io.IOException;
@@ -27,8 +28,8 @@ import java.util.List;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -76,6 +77,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 
 public class QualifierFeatureEditor
     extends FeatureEditor
@@ -315,7 +317,7 @@ public class QualifierFeatureEditor
     private AnnotationFeature getLinkedAnnotationFeature() {
         String linkedType = this.getModelObject().feature.getType();
         AnnotationLayer linkedLayer = annotationService
-            .getLayer(linkedType, this.stateModel.getObject().getProject());
+            .findLayer(this.stateModel.getObject().getProject(), linkedType);
         AnnotationFeature linkedAnnotationFeature = annotationService
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
         return linkedAnnotationFeature;
@@ -326,9 +328,9 @@ public class QualifierFeatureEditor
         if (aItem.getModelObject().targetAddr != -1) {
             try {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-                JCas jCas = actionHandler.getEditorCas();
+                CAS cas = actionHandler.getEditorCas();
                 int targetAddr = aItem.getModelObject().targetAddr;
-                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(jCas, targetAddr,
+                selectedKBHandleItem = factService.getKBHandleFromCasByAddr(cas, targetAddr,
                     project, traits);
             } catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -343,9 +345,9 @@ public class QualifierFeatureEditor
     {
         if (aItem.getModelObject().targetAddr != -1) {
             try {
-                JCas jCas = actionHandler.getEditorCas();
-                AnnotationFS selectedFS = WebAnnoCasUtil
-                    .selectByAddr(jCas, aItem.getModelObject().targetAddr);
+                CAS cas = actionHandler.getEditorCas();
+                FeatureStructure selectedFS = selectFsByAddr(cas,
+                        aItem.getModelObject().targetAddr);
                 WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
                     value != null ? value.getIdentifier() : value);
                 LOG.info("change the value");
@@ -357,7 +359,7 @@ public class QualifierFeatureEditor
                 // For focus-components, the AnnotationFeatureForm already handles adding the
                 // saving behavior.
                 actionHandler.actionCreateOrUpdate(
-                        RequestCycle.get().find(AjaxRequestTarget.class).get(), jCas);
+                        RequestCycle.get().find(AjaxRequestTarget.class).get(), cas);
             }
             catch (Exception e) {
                 LOG.error("Error: " + e.getMessage(), e);
@@ -406,28 +408,28 @@ public class QualifierFeatureEditor
         return traits;
     }
 
-    private JCas getEditorCas(AnnotationActionHandler aHandler) throws IOException
+    private CAS getEditorCas(AnnotationActionHandler aHandler) throws IOException
     {
         return aHandler.getEditorCas();
     }
 
-    private AutoCompleteTextField<KBHandle> createSelectPropertyAutoCompleteTextField()
+    private AutoCompleteTextField<KBProperty> createSelectPropertyAutoCompleteTextField()
     {
-        AutoCompleteTextField<KBHandle> field = new AutoCompleteTextField<KBHandle>("newRole",
-            new PropertyModel<KBHandle>(this, "selectedRole"),
-            new TextRenderer<KBHandle>("uiLabel"), KBHandle.class)
+        AutoCompleteTextField<KBProperty> field = new AutoCompleteTextField<KBProperty>("newRole",
+            new PropertyModel<KBProperty>(this, "selectedRole"),
+            new TextRenderer<KBProperty>("uiLabel"), KBProperty.class)
         {
 
             private static final long serialVersionUID = 1458626823154651501L;
 
-            @Override protected List<KBHandle> getChoices(String input)
+            @Override protected List<KBProperty> getChoices(String input)
             {
                 ConceptFeatureTraits traits = factService.getFeatureTraits(project);
                 String repoId = traits.getRepositoryId();
                 if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
                     return Collections.emptyList();
                 }
-                return factService.getPredicatesFromKB(project, traits);
+                return factService.listProperties(project, traits);
             }
 
             @Override

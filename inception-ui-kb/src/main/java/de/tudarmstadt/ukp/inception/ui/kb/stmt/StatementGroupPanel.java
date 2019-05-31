@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -42,6 +41,7 @@ import org.apache.wicket.markup.repeater.ReuseIfModelsEqualStrategy;
 import org.apache.wicket.markup.repeater.util.ModelIteratorAdapter;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 import de.tudarmstadt.ukp.inception.ui.core.Focusable;
+import de.tudarmstadt.ukp.inception.ui.kb.AbstractInfoPanel;
 import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 import de.tudarmstadt.ukp.inception.ui.kb.WriteProtectionBehavior;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxPropertySelectionEvent;
@@ -68,13 +69,15 @@ import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxStatementGroupChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringRegistry;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.coloring.StatementColoringStrategy;
 import de.tudarmstadt.ukp.inception.ui.kb.stmt.editor.StatementEditor;
+import de.tudarmstadt.ukp.inception.ui.kb.stmt.model.StatementGroupBean;
 
-public class StatementGroupPanel extends Panel {
-
+public class StatementGroupPanel
+    extends Panel
+{
     private static final long serialVersionUID = 2431747012293487976L;
+    
     private static final Logger LOG = LoggerFactory.getLogger(StatementGroupPanel.class);
 
-    
     private static final String CONTENT_MARKUP_ID = "content";
 
     private @SpringBean KnowledgeBaseService kbService;
@@ -107,18 +110,22 @@ public class StatementGroupPanel extends Panel {
 
     /**
      * Add a new prototype statement using this group's instance and its current property
-     * @param aStmtGroupBean a {@link StatementGroupBean}
+     * 
+     * @param aStmtGroupBean
+     *            a {@link StatementGroupBean}
      */
-    private void addStatementProto(StatementGroupBean aStmtGroupBean) {
-        KBStatement statementProto = new KBStatement(
-            aStmtGroupBean.getInstance(),
-            aStmtGroupBean.getProperty());
+    private void addStatementProto(StatementGroupBean aStmtGroupBean)
+    {
+        KBStatement statementProto = new KBStatement(aStmtGroupBean.getInstance(),
+                aStmtGroupBean.getProperty());
 
         aStmtGroupBean.getStatements().add(statementProto);
     }
-    
-    private class NewStatementGroupFragment extends Fragment implements Focusable {
 
+    private class NewStatementGroupFragment
+        extends Fragment
+        implements Focusable
+    {
         private static final long serialVersionUID = 7617846171917989652L;
         
         private Component focusComponent;
@@ -126,10 +133,10 @@ public class StatementGroupPanel extends Panel {
         public NewStatementGroupFragment(String aId) {
             super(aId, "newStatementGroup", StatementGroupPanel.this, groupModel);
                         
-            IModel<KBHandle> property = Model.of();
+            IModel<KBProperty> property = Model.of();
             
-            Form<KBHandle> form = new Form<>("form", property);
-            DropDownChoice<KBHandle> type = new BootstrapSelect<>("property");
+            Form<KBProperty> form = new Form<>("form", property);
+            DropDownChoice<KBProperty> type = new BootstrapSelect<>("property");
             type.setModel(property);
             type.setChoiceRenderer(new ChoiceRenderer<>("uiLabel"));            
             type.setChoices(getUnusedProperties());
@@ -146,18 +153,18 @@ public class StatementGroupPanel extends Panel {
         /**
          * Returns the list of properties in the knowledge base for which the current instance does
          * not have statements for yet.
-         * 
-         * @return
          */
-        private List<KBHandle> getUnusedProperties() {
+        private List<KBProperty> getUnusedProperties()
+        {
             StatementGroupBean bean = groupModel.getObject(); 
             StatementDetailPreference detailPreference = bean.getDetailPreference();
-            Set<KBHandle> existingPropertyHandles = Collections.emptySet();
+            Set<KBProperty> existingPropertyHandles = Collections.emptySet();
             try {
                 existingPropertyHandles = kbService
                         .listStatements(bean.getKb(), bean.getInstance(),
                                 detailPreference == StatementDetailPreference.ALL)
-                        .stream().map(stmt -> stmt.getProperty()).collect(Collectors.toSet());
+                        .stream().map(stmt -> stmt.getProperty())
+                        .collect(Collectors.toSet());
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list statements: " + e.getLocalizedMessage());
@@ -165,26 +172,10 @@ public class StatementGroupPanel extends Panel {
 
             }
 
-            List<KBHandle> properties = new ArrayList<KBHandle>();
+            List<KBProperty> properties = new ArrayList<KBProperty>();
             try {
                 properties = kbService.listDomainProperties(groupModel.getObject().getKb(),
                         bean.getInstance().getIdentifier(), true, true);
-                
-                List<KBHandle> parentConceptList = kbService.getParentConceptList(
-                        groupModel.getObject().getKb(), bean.getInstance().getIdentifier(), true);
-                
-                for (KBHandle parent : parentConceptList) {
-                    properties.addAll(kbService.listDomainProperties(groupModel.getObject().getKb(),
-                            parent.getIdentifier(), true, true));
-                }
-
-                // Condition here to avoid fail case scenario e.g. WikiData : In case the above
-                // domain property doesn't return anything, we consider the complete list of 
-                // properties for now
-                if (properties.isEmpty()) {
-                    properties = kbService.listProperties(groupModel.getObject().getKb(),
-                            detailPreference == StatementDetailPreference.ALL);
-                } 
             }
             catch (QueryEvaluationException e) {
                 error("Unable to list properties: " + e.getLocalizedMessage());
@@ -195,7 +186,8 @@ public class StatementGroupPanel extends Panel {
             return KBHandle.distinctByIri(properties);
         }
 
-        private void actionNewProperty(AjaxRequestTarget target, Form<KBHandle> form) {
+        private void actionNewProperty(AjaxRequestTarget target, Form<KBProperty> form)
+        {
             groupModel.getObject().setProperty(form.getModelObject());
 
             // replace content to show existing statement group with a new, empty statement
@@ -220,13 +212,15 @@ public class StatementGroupPanel extends Panel {
         }
     }
     
-    public class ExistingStatementGroupFragment extends Fragment {
-        
+    public class ExistingStatementGroupFragment
+        extends Fragment
+    {
         private static final long serialVersionUID = 5054250870556101031L;
         
         private WebMarkupContainer statementListWrapper;
         
-        public ExistingStatementGroupFragment(String aId) {
+        public ExistingStatementGroupFragment(String aId)
+        {
             super(aId, "existingStatementGroup", StatementGroupPanel.this, groupModel);
 
             StatementGroupBean statementGroupBean = groupModel.getObject();
@@ -239,9 +233,7 @@ public class StatementGroupPanel extends Panel {
             // TODO what about handling type intersection when multiple range statements are
             // present?
             // obtain IRI of property range, if existent
-            Optional<KBProperty> property = kbService.readProperty(statementGroupBean.getKb(),
-                statementGroupBean.getProperty().getIdentifier());
-            IModel<KBProperty> propertyModel = Model.of(property.orElse(null));
+            IModel<KBProperty> propertyModel = Model.of(statementGroupBean.getProperty());
 
             form.add(new IriInfoBadge("statementIdtext", groupModel.bind("property.identifier")));
                         
@@ -284,27 +276,39 @@ public class StatementGroupPanel extends Panel {
             addLink.add(new WriteProtectionBehavior(groupModel.bind("kb")));
             statementGroupFooter.add(addLink);
 
-            // Apply a specific coloring strategy depending on the property
-            StatementColoringStrategy coloringStrategy = coloringRegistry
-                .getStatementColoringStrategy(statementGroupBean.getProperty().getIdentifier(),
-                    statementGroupBean.getKb());
-
-            String frameColor = coloringStrategy.getFrameColor();
             AttributeAppender framehighlightAppender = new AttributeAppender("style",
-                "background-color:#" + frameColor);
+                    LoadableDetachableModel.of(() -> 
+                        "background-color:#" + getColoringStrategy().getFrameColor()
+                    ));
             statementGroupFooter.add(framehighlightAppender);
             form.add(framehighlightAppender);
 
-            String textColor = coloringStrategy.getTextColor();
-            String backgroundColor = coloringStrategy.getBackgroundColor();
             AttributeAppender highlightAppender = new AttributeAppender("style",
-                "background-color:#" + backgroundColor + ";color:#" + textColor);
+                    LoadableDetachableModel.of(() -> {
+                        StatementColoringStrategy coloringStrategy = getColoringStrategy();
+                        return "background-color:#" + coloringStrategy.getBackgroundColor()
+                                + ";color:#" + coloringStrategy.getTextColor();
+                    }));
             statementListWrapper.add(highlightAppender);
-
 
             form.add(statementGroupFooter);
             add(form);
 
+        }
+        
+        public StatementGroupBean getModelObject()
+        {
+            return (StatementGroupBean) getDefaultModelObject();
+        }
+        
+        private StatementColoringStrategy getColoringStrategy()
+        {
+            AbstractInfoPanel<?> aip = findParent(AbstractInfoPanel.class);
+            StatementGroupBean statementGroupBean = getModelObject();
+            return coloringRegistry
+                    .getStatementColoringStrategy(
+                            statementGroupBean.getProperty().getIdentifier(),
+                            statementGroupBean.getKb(), aip.getLabelProperties());
         }
         
         private void actionPropertyLinkClicked(AjaxRequestTarget target)
@@ -314,7 +318,8 @@ public class StatementGroupPanel extends Panel {
         }
         
         @OnEvent
-        public void actionStatementChanged(AjaxStatementChangedEvent event) {
+        public void actionStatementChanged(AjaxStatementChangedEvent event)
+        {
             // event is not relevant if the statement in the event has a different property|subject
             // than the property|subject of this statement group
             KBStatement statement = event.getStatement();
@@ -351,7 +356,8 @@ public class StatementGroupPanel extends Panel {
             event.getTarget().add(statementListWrapper);
         }
 
-        private void actionAddValue(AjaxRequestTarget target) {
+        private void actionAddValue(AjaxRequestTarget target)
+        {
             addStatementProto(groupModel.getObject());
             target.add(statementListWrapper);
         }

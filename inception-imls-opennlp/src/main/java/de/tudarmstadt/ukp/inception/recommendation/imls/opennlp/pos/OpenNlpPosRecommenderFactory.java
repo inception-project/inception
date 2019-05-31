@@ -64,7 +64,7 @@ public class OpenNlpPosRecommenderFactory
         }
         
         return SINGLE_TOKEN.equals(aLayer.getAnchoringMode()) && SPAN_TYPE.equals(aLayer.getType())
-                && CAS.TYPE_NAME_STRING.equals(aFeature.getType());
+                && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 
     @Override

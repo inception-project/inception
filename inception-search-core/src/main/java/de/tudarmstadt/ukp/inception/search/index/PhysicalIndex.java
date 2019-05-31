@@ -21,7 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.jcas.JCas;
+import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -48,9 +48,9 @@ public interface PhysicalIndex
     List<SearchResult> executeQuery(SearchQueryRequest aRequest)
             throws IOException, ExecutionException;
 
-    public void indexDocument(SourceDocument aDocument, JCas aJCas) throws IOException;
+    public void indexDocument(SourceDocument aDocument, CAS aJCas) throws IOException;
 
-    public void indexDocument(AnnotationDocument aDocument, JCas aJCas) throws IOException;
+    public void indexDocument(AnnotationDocument aDocument, CAS aJCas) throws IOException;
 
     public void deindexDocument(SourceDocument aDocument) throws IOException;
 

@@ -132,11 +132,13 @@ public class ElasticSearchProvider
 
                 // There are highlights, set them in the result
                 List<ExternalSearchHighlight> highlights = new ArrayList<>();
-                for (String highlight : hit.getHighlight().getDoctext()) {
-                    Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
-                            .parseHighlight(highlight, originalText);
+                if (hit.getHighlight().getDoctext() != null) {
+                    for (String highlight : hit.getHighlight().getDoctext()) {
+                        Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                                .parseHighlight(highlight, originalText);
                     
-                    exHighlight.ifPresent(highlights::add);
+                        exHighlight.ifPresent(highlights::add);
+                    }
                 }
                 result.setHighlights(highlights);
             }
@@ -154,9 +156,13 @@ public class ElasticSearchProvider
         ObjectNode bodyNode = mapper.createObjectNode();
         bodyNode.put("size", aTraits.getResultSize());
 
+        ObjectNode queryString = mapper.createObjectNode();
+        queryString.put("default_field", aTraits.getDefaultField());
+        queryString.put("query", aQuery);
+        
         ObjectNode queryBody = mapper.createObjectNode();
-        queryBody.putPOJO("match", mapper.createObjectNode()
-            .put("doc.text", aQuery));
+        queryBody.putPOJO("query_string", queryString);
+        
         if (aTraits.isRandomOrder()) {
             ObjectNode query = mapper.createObjectNode();
 
@@ -178,7 +184,7 @@ public class ElasticSearchProvider
         ObjectNode highlightNode = mapper.createObjectNode();
         ObjectNode emptyNode = mapper.createObjectNode();
         highlightNode.putPOJO("fields", mapper.createObjectNode()
-            .putPOJO("doc.text", emptyNode));
+            .putPOJO(aTraits.getDefaultField(), emptyNode));
         bodyNode.putPOJO("highlight", highlightNode);
 
         // Render JSON to string

@@ -132,7 +132,7 @@ public class RecommenderExporter implements ProjectExporter {
             }
 
             String layerName = exportedRecommender.getLayerName();
-            AnnotationLayer layer = annotationService.getLayer(layerName, aProject);
+            AnnotationLayer layer = annotationService.findLayer(aProject, layerName);
             recommender.setLayer(layer);
 
             String featureName = exportedRecommender.getFeature();

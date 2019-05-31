@@ -36,7 +36,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,6 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBInstance;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.graph.KBProperty;
 import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
-import de.tudarmstadt.ukp.inception.kb.graph.RdfUtils;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxConceptSelectionEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.event.AjaxInstanceSelectionEvent;
@@ -88,13 +86,15 @@ public class KnowledgeBasePanel
     private @SpringBean ConceptLinkingService conceptLinkingService;
 
     private IModel<KnowledgeBase> kbModel;
-    private Model<KBHandle> selectedConceptHandle = Model.of();
-    private Model<KBHandle> selectedPropertyHandle = Model.of();
+    private Model<KBObject> selectedConceptHandle = Model.of();
+    private Model<KBProperty> selectedPropertyHandle = Model.of();
     private Model<KBHandle> searchHandleModel = Model.of();
 
     private WebMarkupContainer detailContainer;
     private ConceptTreePanel conceptTreePanel;
     private PropertyListPanel propertyListPanel;
+    
+    private List<String> labelProperties;
     
     /**
      * right-side component which either displays concept details or property details
@@ -151,7 +151,7 @@ public class KnowledgeBasePanel
             {
                 KBHandle selectedResource = this.getModelObject();
                 Optional<KBObject> optKbObject = kbService
-                    .readKBIdentifier(kbModel.getObject(), selectedResource.getIdentifier());
+                    .readItem(kbModel.getObject(), selectedResource.getIdentifier());
 
                 if (optKbObject.isPresent()) {
                     KBObject kbObject = optKbObject.get();
@@ -186,19 +186,26 @@ public class KnowledgeBasePanel
                 new AjaxConceptSelectionEvent(aTarget, KBHandle.of(aKbObject), true));
         }
         else if (aKbObject instanceof KBInstance) {
-            KBHandle conceptForInstance = kbService
+            List<KBHandle> conceptsForInstance = kbService
                 .getConceptForInstance(kbModel.getObject(),
-                    aKbObject.getIdentifier(), true).get(0);
+                    aKbObject.getIdentifier(), true);
 
-            send(getPage(), Broadcast.BREADTH,
-                new AjaxConceptSelectionEvent(aTarget, conceptForInstance, true));
+            if (!conceptsForInstance.isEmpty()) {
+                send(getPage(), Broadcast.BREADTH,
+                    new AjaxConceptSelectionEvent(aTarget, conceptsForInstance.get(0), true));
+            }
+            else {
+                error("Unable to find the concept to which the the instance ["
+                        + aKbObject.getUiLabel() + "] belongs.");
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
 
             send(getPage(), Broadcast.BREADTH,
                 new AjaxInstanceSelectionEvent(aTarget, KBHandle.of(aKbObject)));
         }
         else if (aKbObject instanceof KBProperty) {
             send(getPage(), Broadcast.BREADTH,
-                new AjaxPropertySelectionEvent(aTarget, KBHandle.of(aKbObject), true));
+                new AjaxPropertySelectionEvent(aTarget, (KBProperty) aKbObject, true));
         }
         else {
             throw new IllegalArgumentException(String.format(
@@ -215,8 +222,6 @@ public class KnowledgeBasePanel
      * page may not seem like the smartest solution. However, given the severe consequences a single
      * statement change can have (transforming a property into a concept?), it is the simplest
      * working solution.
-     *
-     * @param event
      */
     @OnEvent
     public void actionStatementChanged(AjaxStatementChangedEvent event)
@@ -224,17 +229,17 @@ public class KnowledgeBasePanel
         // if this event is not about renaming (changing the RDFS label) of a KBObject, return
         KBStatement statement = event.getStatement();
 
-        if (isRenamingEvent(statement)) {
+        if (isLabelStatement(statement)) {
             // determine whether the concept name or property name was changed (or neither), then
             // update the name in the respective KBHandle
 
-            List<Model<KBHandle>> models = Arrays.asList(selectedConceptHandle,
+            List<Model<? extends KBObject>> models = Arrays.asList(selectedConceptHandle,
                     selectedPropertyHandle);
             models.stream().filter(model -> model.getObject() != null && model.getObject()
                     .getIdentifier().equals(statement.getInstance().getIdentifier()))
                     .forEach(model -> {
                         Optional<KBObject> kbObject = kbService
-                            .readKBIdentifier(kbModel.getObject(),
+                            .readItem(kbModel.getObject(),
                                 model.getObject().getIdentifier());
                         if (kbObject.isPresent()) {
                             model.getObject().setName(kbObject.get().getName());
@@ -247,16 +252,36 @@ public class KnowledgeBasePanel
         }
     }
 
-    private boolean isRenamingEvent(KBStatement aStatement)
+    /**
+     * Checks if the given statement is (potentially) assigning the label to the item in subject
+     * position. This is the case if the property is a label property. Since we do at this point
+     * not know if the statement is about a class, instance or property, we need to check all
+     * label properties.
+     */
+    private boolean isLabelStatement(KBStatement aStatement)
     {
-        String propertyIdentifier = aStatement.getProperty().getIdentifier();
-        SimpleValueFactory vf = SimpleValueFactory.getInstance();
-        boolean hasMainLabel = RdfUtils.readFirst(kbService.getConnection(kbModel.getObject()),
-            vf.createIRI(aStatement.getInstance().getIdentifier()),
-            kbModel.getObject().getLabelIri(), null, kbModel.getObject()).isPresent();
-        return propertyIdentifier.equals(kbModel.getObject().getLabelIri().stringValue()) || (
-            kbService.isSubpropertyLabel(kbModel.getObject(), propertyIdentifier)
-                && !hasMainLabel);
+        if (labelProperties == null) {
+            labelProperties = kbService.listLabelProperties(kbModel.getObject());
+        }
+        
+        return labelProperties.contains(aStatement.getProperty().getIdentifier());
+        
+        
+//        SimpleValueFactory vf = SimpleValueFactory.getInstance();
+//        
+//        String propertyIri = aStatement.getProperty().getIdentifier();
+//        IRI subjectIri = vf.createIRI(aStatement.getInstance().getIdentifier());
+//        IRI labelIri = kbModel.getObject().getLabelIri();
+//
+//        try (RepositoryConnection conn = kbService.getConnection(kbModel.getObject())) {
+//            
+//            boolean hasMainLabel = RdfUtils
+//                    .readFirst(conn, subjectIri, labelIri, null, kbModel.getObject()).isPresent();
+//            
+//            return propertyIri.equals(labelIri.stringValue())
+//                    || (kbService.isLabelProperty(kbModel.getObject(), propertyIri)
+//                            && !hasMainLabel);
+//        }
     }
 
     @OnEvent
@@ -328,7 +353,7 @@ public class KnowledgeBasePanel
     {
         // cancel selection of concept
         selectedConceptHandle.setObject(null);
-        selectedPropertyHandle.setObject(event.getSelection());
+        selectedPropertyHandle.setObject(event.getNewSelection());
         
         // replace detail view: empty panel if a deselection took place (see lengthy explanation
         // above)
