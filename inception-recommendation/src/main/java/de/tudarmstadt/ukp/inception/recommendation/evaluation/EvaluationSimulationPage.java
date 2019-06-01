@@ -23,10 +23,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
-import org.apache.wicket.util.string.StringValueConversionException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
@@ -69,7 +65,8 @@ public class EvaluationSimulationPage
                 selectedRecommenderModel);
         add(recommenderViewPanel);
 
-        RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDER_LIST,Model.of(projectModel) , selectedRecommenderModel);
+        RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDER_LIST,
+                Model.of(projectModel), selectedRecommenderModel);
         recommenderListPanel.setCreateAction(_target -> {
             Recommender recommender = new Recommender();
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
