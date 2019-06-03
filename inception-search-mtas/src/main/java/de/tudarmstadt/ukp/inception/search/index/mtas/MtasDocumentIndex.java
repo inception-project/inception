@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
-import static java.util.Collections.unmodifiableList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -26,11 +25,16 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.text.BreakIterator;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.*;
-import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
-import de.tudarmstadt.ukp.inception.search.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -75,8 +79,20 @@ import com.github.openjson.JSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
+import de.tudarmstadt.ukp.inception.search.ExecutionException;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
+import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
+import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
+
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.MtasCodec;
@@ -132,6 +148,8 @@ public class MtasDocumentIndex
 
     private static final int RESULT_WINDOW_SIZE = 3;
 
+    private static final String EMPTY_FEATUREVALUE_KEY = "<Empty>";
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
@@ -143,9 +161,6 @@ public class MtasDocumentIndex
 
     // The index writers for this index
     private IndexWriter indexWriter;
-
-    // The annotations to be indexed
-    private final List<String> annotationShortNames;
 
     private final File resourceDir;
 
@@ -162,18 +177,6 @@ public class MtasDocumentIndex
         documentService = aDocumentService;
         projectService = aProjectService;
         project = aProject;
-
-        // Create list with the annotation types of the layer (only the enabled ones)
-        Set<String> shortNames = new HashSet<>();
-        annotationSchemaService.listAnnotationLayer(project).stream()
-                .filter(AnnotationLayer::isEnabled)
-                .map(layer -> getShortName(layer.getUiName()))
-                .forEach(shortNames::add);
-        shortNames.add(MtasUimaParser.MTAS_TOKEN_LABEL);
-        shortNames.add(MtasUimaParser.MTAS_SENTENCE_LABEL);
-        shortNames.add("Named_entity");
-        shortNames.add("Part_of_speech");
-        annotationShortNames = unmodifiableList(new ArrayList<>(shortNames));
        
         resourceDir = new File(aDir);
         log.debug("New Mtas/Lucene index instance created...");
@@ -202,8 +205,7 @@ public class MtasDocumentIndex
                 mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
             }
             
-            return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery,
-                    annotationShortNames);
+            return doQuery(indexReader, aRequest, FIELD_CONTENT, mtasSpanQuery);
         }
         catch (mtas.parser.cql.ParseException e) {
             log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
@@ -250,8 +252,8 @@ public class MtasDocumentIndex
         return result;
     }
 
-    private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader, SearchQueryRequest aRequest,
-            String field, MtasSpanQuery q, List<String> prefixes)
+    private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader,
+        SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
     {
         HashMap<String, List<SearchResult>> results = new HashMap<>();
@@ -450,7 +452,9 @@ public class MtasDocumentIndex
         return results;
     }
 
-    private void addToResults(HashMap<String, List<SearchResult>> aResultsMap, String aKey, SearchResult aSearchResult) {
+    private void addToResults(HashMap<String, List<SearchResult>> aResultsMap, String aKey,
+        SearchResult aSearchResult)
+    {
         if (aResultsMap.containsKey(aKey)) {
             aResultsMap.get(aKey).add(aSearchResult);
         }
@@ -466,23 +470,40 @@ public class MtasDocumentIndex
     {
         List<String> featureValues = new ArrayList<>();
 
+        String groupingFeatureIndexName;
+
         Optional<FeatureIndexingSupport> fisOpt = featureIndexingSupportRegistry
             .getIndexingSupport(aAnnotationFeature);
         if (fisOpt.isPresent()) {
             FeatureIndexingSupport fis = fisOpt.get();
-            // a feature prefix is currently only used for target and source of relation-annotations.
-            // however we just look at the feature value of the relation-annotation itself here, so we
-            // can just use "" as feature prefix
-            String groupingFeatureIndexName = fis
+            // a feature prefix is currently only used for target and source of
+            // relation-annotations however we just look at the feature value of the
+            // relation-annotation itself here, so we can just use "" as feature prefix
+            groupingFeatureIndexName = fis
                 .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
-
-            aTokens.stream()
-                .filter(t -> t.getPositionStart() == aMatchStart
-                    && t.getPositionEnd() == aMatchEnd - 1
-                    && extractFeatureIndexName(t).equals(
-                        MtasUimaParser.getIndexedName(groupingFeatureIndexName)))
-                .forEach(t -> featureValues.add(extractFeatureValue(t)));
         }
+        else {
+            //TODO: throw exception
+            return featureValues;
+        }
+        List<String> fsAddresses = new ArrayList<>();
+        aTokens.stream().filter(
+            t -> t.getPositionStart() == aMatchStart && t.getPositionEnd() == aMatchEnd - 1
+                && extractFeatureIndexName(t)
+                .equals(MtasUimaParser.getIndexedName(groupingFeatureIndexName)))
+            .forEach(t -> {
+                featureValues.add(extractFeatureValue(t));
+                fsAddresses.add(t.getPayload().utf8ToString());
+            });
+        // now we look for the annotations where the feature value for the grouping feature is empty
+        aTokens.stream()
+            .filter(t -> t.getPositionStart() == aMatchStart
+                && t.getPositionEnd() == aMatchEnd - 1
+                && extractFeatureIndexName(t).equals(
+                MtasUimaParser.getIndexedName(aAnnotationLayer.getUiName()))
+                && !fsAddresses.contains(t.getPayload().utf8ToString()))
+            .forEach(t ->
+                featureValues.add(EMPTY_FEATUREVALUE_KEY));
         return featureValues;
     }
 
@@ -494,8 +515,8 @@ public class MtasDocumentIndex
 
     private String extractFeatureIndexName(MtasTokenString aMtasTokenString) {
         String tokenValue = aMtasTokenString.getValue();
-        String featureValue = tokenValue.split(MtasTokenString.DELIMITER, 2)[0];
-        return featureValue;
+        String featureIndexName = tokenValue.split(MtasTokenString.DELIMITER, 2)[0];
+        return featureIndexName;
     }
 
     /**

@@ -21,9 +21,13 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.*;
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.model.Index;
 
@@ -31,8 +35,7 @@ public interface SearchService
 {
     static final String SERVICE_NAME = "searchService";
 
-    Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
-        AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature)
+    Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 
     Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,

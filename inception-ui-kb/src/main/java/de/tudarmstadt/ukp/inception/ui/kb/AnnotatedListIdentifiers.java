@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.MarkupContainer;
@@ -150,7 +151,13 @@ public class AnnotatedListIdentifiers
         }
         try {
             currentProject = kbModel.getObject().getProject();
-            return null; //searchService.query(currentUser, currentProject, targetQuery.getObject());
+            Map<String, List<SearchResult>> queryResults = searchService
+                .query(currentUser, currentProject, targetQuery.getObject());
+            List<SearchResult> queryResultsAsList = new ArrayList<>();
+            queryResults.values().stream()
+                .forEach(resultGroup -> queryResultsAsList.addAll(resultGroup));
+
+            return queryResultsAsList;
         }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);

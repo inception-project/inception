@@ -34,6 +34,7 @@ import java.util.TreeMap;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.lucene.util.BytesRef;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -255,7 +257,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        
+        int fsAddress = WebAnnoCasUtil.getAddr(aAnnotation);
         if (aAnnotation.getEnd() - aAnnotation.getBegin() > OVERSIZED_ANNOTATION_LIMIT) {
             log.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
                     aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),
@@ -309,25 +311,25 @@ public class MtasUimaParser
                     
                     // Index the source annotation text (equals the target)
                     indexAnnotationText(layer.getUiName(), targetFs.getCoveredText(), range,
-                            mtasId++);
+                            mtasId++, fsAddress);
                     indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET,
-                            targetFs.getCoveredText(), range, mtasId++);
+                            targetFs.getCoveredText(), range, mtasId++, fsAddress);
                     
                     // Index the target annotation text
                     indexAnnotationText(layer.getUiName() + SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE,
-                            sourceFs.getCoveredText(), range, mtasId++);
-                    
-                    
+                            sourceFs.getCoveredText(), range, mtasId++, fsAddress);
+
                     // Index the relation features
-                    mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId);
+                    mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId,
+                        fsAddress);
 
                     // Index the source features
                     mtasId = indexFeatures(sourceFs, layer.getUiName(),
-                            SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE, range, mtasId);
+                            SPECIAL_SEP + SPECIAL_ATTR_REL_SOURCE, range, mtasId, fsAddress);
                     
                     // Index the target features
                     mtasId = indexFeatures(targetFs, layer.getUiName(),
-                            SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET, range, mtasId);
+                            SPECIAL_SEP + SPECIAL_ATTR_REL_TARGET, range, mtasId, fsAddress);
                 }
             }
             else {
@@ -335,23 +337,24 @@ public class MtasUimaParser
                 
                 // Index the annotation text
                 indexAnnotationText(layer.getUiName(), aAnnotation.getCoveredText(), range,
-                        mtasId++);
+                        mtasId++, fsAddress);
                 
                 // Iterate over the features of this layer and index them one-by-one
-                mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId);
+                mtasId = indexFeatures(aAnnotation, layer.getUiName(), range, mtasId, fsAddress);
             }
         }
         
         return mtasId;
     }
 
-    private int indexFeatures(AnnotationFS aAnnotation, String aLayer, Range aRange, int aMtasId)
+    private int indexFeatures(AnnotationFS aAnnotation, String aLayer, Range aRange, int aMtasId,
+        int aFSAddress)
     {
-        return indexFeatures(aAnnotation, aLayer, "", aRange, aMtasId);
+        return indexFeatures(aAnnotation, aLayer, "", aRange, aMtasId, aFSAddress);
     }
 
     private int indexFeatures(AnnotationFS aAnnotation, String aLayer, String aPrefix, Range aRange,
-            int aMtasId)
+            int aMtasId, int aFSAddress)
     {
         int mtasId = aMtasId;
 
@@ -364,7 +367,7 @@ public class MtasUimaParser
                         .indexFeatureValue(aLayer, aAnnotation, aPrefix, feature);
                 for (Entry<String, String> e : fieldsAndValues.entries()) {
                     indexFeatureValue(e.getKey(), e.getValue(), mtasId++,
-                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange);
+                            aAnnotation.getBegin(), aAnnotation.getEnd(), aRange, aFSAddress);
                 }
                 
                 log.trace("FEAT[{}-{}]: {}", aRange.getBegin(), aRange.getEnd(), fieldsAndValues);
@@ -393,25 +396,29 @@ public class MtasUimaParser
     }
 
     private void indexAnnotationText(String aField, String aValue, Range aRange,
-            int aMtasId)
+            int aMtasId, int aFSAddress)
     {
         String field = getIndexedName(aField);
 
         MtasToken mtasSentence = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
         mtasSentence.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        // store address as string in ByteRef
+        mtasSentence.setPayload(new BytesRef(String.valueOf(aFSAddress)));
         tokenCollection.add(mtasSentence);
         
         log.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
     }
 
     private void indexFeatureValue(String aField, String aValue, int aMtasId, int aBeginOffset,
-            int aEndOffset, Range aRange)
+            int aEndOffset, Range aRange, int aFSAddress)
     {
         MtasToken mtasAnnotationTypeFeatureLabel = new MtasTokenString(aMtasId,
                 getIndexedName(aField), aValue, aRange.getBegin());
         mtasAnnotationTypeFeatureLabel.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasAnnotationTypeFeatureLabel.addPositionRange(aRange.getBegin(), aRange.getEnd());
+        // store address as string in ByteRef
+        mtasAnnotationTypeFeatureLabel.setPayload(new BytesRef(String.valueOf(aFSAddress)));
         tokenCollection.add(mtasAnnotationTypeFeatureLabel);
     }
     
