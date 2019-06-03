@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.conceptlinking;
 
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -61,7 +62,7 @@ import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class NamedEntityLinkerTest
 {
@@ -128,11 +129,11 @@ public class NamedEntityLinkerTest
         CAS cas = casList.get(0);
         
         sut.train(context, Collections.singletonList(cas));
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

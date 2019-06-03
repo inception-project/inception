@@ -1010,25 +1010,25 @@ public class RecommendationServiceImpl
             throws UIMAException, IOException {
 
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
-            TypeSystemDescription ts = annoService.getFullProjectTypeSystem(aProject);
+            TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
 
             for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
-                TypeDescription type = ts.getType(layer.getName());
+                TypeDescription td = tsd.getType(layer.getName());
 
-                if (type == null) {
+                if (td == null) {
                     log.debug("Could not monkey patch type [{}]", layer.getName());
                     continue;
                 }
 
-                for (FeatureDescription feature : type.getFeatures()) {
+                for (FeatureDescription feature : td.getFeatures()) {
                     String scoreFeatureName = feature.getName() + "_score";
-                    type.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
+                    td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
                 }
 
-                type.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
+                td.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
-            annoService.upgradeCas(aCas, ts);
+            annoService.upgradeCas(aCas, tsd);
         }
     }
 }

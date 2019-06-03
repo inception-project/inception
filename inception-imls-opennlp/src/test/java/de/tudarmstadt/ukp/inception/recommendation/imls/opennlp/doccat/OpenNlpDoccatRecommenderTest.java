@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngine;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -58,7 +59,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class OpenNlpDoccatRecommenderTest
 {
@@ -100,13 +101,13 @@ public class OpenNlpDoccatRecommenderTest
         List<CAS> casList = loadArxivData();
         
         CAS cas = casList.get(0);
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

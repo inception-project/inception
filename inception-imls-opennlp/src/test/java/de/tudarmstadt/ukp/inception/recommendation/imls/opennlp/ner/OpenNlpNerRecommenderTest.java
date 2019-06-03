@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class OpenNlpNerRecommenderTest
 {
@@ -91,7 +91,7 @@ public class OpenNlpNerRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.train(context, asList(cas));
 

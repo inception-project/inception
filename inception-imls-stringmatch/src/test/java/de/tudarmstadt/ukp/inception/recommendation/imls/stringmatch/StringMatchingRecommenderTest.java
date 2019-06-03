@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -56,7 +57,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBase
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRecommenderTest
 {
@@ -94,13 +95,13 @@ public class StringMatchingRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -117,13 +118,13 @@ public class StringMatchingRecommenderTest
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         CAS cas = getTestCasNoLabelLabels();
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
@@ -148,7 +149,7 @@ public class StringMatchingRecommenderTest
         List<CAS> casList = loadDevelopmentData();
 
         CAS cas = casList.get(0);
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         List<GazeteerEntry> gazeteer = new ArrayList<>();
         gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
@@ -161,7 +162,7 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
              .isNotEmpty();
@@ -343,6 +344,6 @@ public class StringMatchingRecommenderTest
 
     private static Double getScore(AnnotationFS fs)
     {
-        return RecommenderHelper.getScore(fs, "value");
+        return RecommenderTestHelper.getScore(fs, "value");
     }
 }

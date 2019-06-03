@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -31,6 +33,7 @@ import org.apache.uima.cas.Type;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.TypeSystemUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -45,9 +48,9 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.AnnotationSchemaServiceImpl;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -74,7 +77,7 @@ public class RecommendationServiceImplIntegrationTest
     private UserDao userRepository;
     private RecommenderFactoryRegistry recommenderFactoryRegistry;
     private SchedulingService schedulingService;
-    private @Mock AnnotationSchemaService annoService;
+    private @Mock AnnotationSchemaServiceImpl annoService;
     private DocumentService documentService;
     private LearningRecordService learningRecordService;
 
@@ -98,7 +101,6 @@ public class RecommendationServiceImplIntegrationTest
         feature = createAnnotationFeature(layer, "value");
 
         rec = buildRecommender(project, feature);
-        rec.setEnabled(true);
         sut.createOrUpdateRecommender(rec);
     }
 
@@ -140,6 +142,8 @@ public class RecommendationServiceImplIntegrationTest
     @Test
     public void getRecommenders_WithOnlyDisabledRecommender_ShouldReturnEmptyList()
     {
+        rec.setEnabled(false);
+        testEntityManager.persist(rec);
 
         Optional<Recommender> enabledRecommenders = sut.getEnabledRecommender(rec.getId());
 
@@ -166,13 +170,15 @@ public class RecommendationServiceImplIntegrationTest
                 .thenReturn(TypeSystemUtil.typeSystem2TypeSystemDescription(jCas.getTypeSystem()));
         when(annoService.listAnnotationLayer(project))
                 .thenReturn(asList(layer));
+        doCallRealMethod().when(annoService)
+                .upgradeCas(any(CAS.class), any(TypeSystemDescription.class));
 
         sut.monkeyPatchTypeSystem(project, jCas.getCas());
 
         Type type = CasUtil.getType(jCas.getCas(), layer.getName());
 
         assertThat(type.getFeatures())
-                .extracting(Feature::getName)
+                .extracting(Feature::getShortName)
                 .contains(feature.getName() + "_score")
                 .contains("predicted");
     }

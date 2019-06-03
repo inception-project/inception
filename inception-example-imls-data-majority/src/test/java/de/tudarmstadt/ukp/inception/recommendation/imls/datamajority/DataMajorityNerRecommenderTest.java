@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
-import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper.addScoreFeature;
-import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper.getPredictions;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,7 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class DataMajorityNerRecommenderTest
 {
@@ -274,7 +274,7 @@ public class DataMajorityNerRecommenderTest
 
     private static double getScore(AnnotationFS aAnnotationFS)
     {
-        return RecommenderHelper.getScore(aAnnotationFS, "value");
+        return RecommenderTestHelper.getScore(aAnnotationFS, "value");
     }
 
 

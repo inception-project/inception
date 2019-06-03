@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JSequenceRecommender.NO_LABEL;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -53,7 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
 
 public class DL4JSequenceRecommenderTest
 {
@@ -275,10 +276,10 @@ public class DL4JSequenceRecommenderTest
         
         sut.train(context, asList(cas.getCas()));
 
-        RecommenderHelper.addScoreFeature(cas.getCas(), POS.class, "PosValue");
+        addScoreFeature(cas.getCas(), POS.class, "PosValue");
         sut.predict(context, cas.getCas());
 
-        List<POS> predictions = RecommenderHelper.getPredictions(cas.getCas(), POS.class);
+        List<POS> predictions = getPredictions(cas.getCas(), POS.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
@@ -342,10 +343,10 @@ public class DL4JSequenceRecommenderTest
 
         sut.train(context, asList(cas));
 
-        RecommenderHelper.addScoreFeature(cas, NamedEntity.class, "value");
+        addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = RecommenderHelper.getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         

@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderHelper;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class OpenNlpPosRecommenderTest
 {
@@ -89,13 +89,13 @@ public class OpenNlpPosRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        RecommenderHelper.addScoreFeature(cas, POS.class, "PosValue");
+        RecommenderTestHelper.addScoreFeature(cas, POS.class, "PosValue");
 
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        List<POS> predictions = RecommenderHelper.getPredictions(cas, POS.class);
+        List<POS> predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
