@@ -14,7 +14,6 @@ import * as searchUI from './page/search'
 import * as textLayer from './page/textLayer'
 import { showLoader } from './page/util/display'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
-import * as deepscholar from './deepscholar'
 import * as constants from './shared/constants'
 import * as pdfextractdownload from './page/pdfextractdownload'
 import { readPdftxt } from './page/pdf/loadFiles'
@@ -92,15 +91,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(`.nav-tabs a[href="#tab${tabIndex}"]`).click()
   }
 
-  if (deepscholar.isTarget()) {
-    // Display for DeepScholar.
-    deepscholar.initialize()
-
-  } else {
-    // Show a content.
-    displayViewer()
-  }
-
+  // Show a content.
+  displayViewer()
 })
 
 function getAnnotations() {

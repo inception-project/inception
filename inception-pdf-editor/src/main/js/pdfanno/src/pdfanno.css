@@ -77,16 +77,6 @@
   padding: 0 0 10px;
 }
 
-/*
-  UI for DeepScholar.
- */
-.deepscholar #browseButton {
-  display: none !important;
-}
-.deepscholar #deepschoarUploadButton {
-  display: inline-block !important;
-}
-
 .textLayer {
   display: none;
 }
