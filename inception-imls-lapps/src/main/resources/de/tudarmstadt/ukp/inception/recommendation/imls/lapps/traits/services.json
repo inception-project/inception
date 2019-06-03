@@ -1,9 +1,9 @@
 {
   "ner": [
     {
-      "name": "edu.cmu.lti.oaqa.lapps.LingpipeNER - 1.0.0-SNAPSHOT",
+      "name": "edu.cmu.lti.oaqa.lapps.LingpipeNER - 1.1.1-SNAPSHOT",
       "description": "Lingpipe Named Entity Recognizer with model \"English News: MUC-6\"",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.ner_1.0.0"
+      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.ner_1.1.1-SNAPSHOT"
     },
     {
       "name": "org.anc.lapps.stanford.SelectableNamedEntityRecognizer - 2.1.0-SNAPSHOT",
@@ -14,11 +14,6 @@
       "name": "edu.cmu.lti.oaqa.lapps.LingpipeDictionaryBasedNER - 1.1.1-SNAPSHOT",
       "description": "Exact Dictionary-based Lingpipe Named Entity Recognizer",
       "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.dictionary_ner_1.1.1-SNAPSHOT"
-    },
-    {
-      "name": "edu.cmu.lti.oaqa.lapps.LingpipeNER - 1.1.1-SNAPSHOT",
-      "description": "Lingpipe Named Entity Recognizer with model \"English News: MUC-6\"",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.ner_1.1.1-SNAPSHOT"
     },
     {
       "name": "Stanford Named Entity Recognizer - 2.1.0-SNAPSHOT",
@@ -39,63 +34,13 @@
       "name": "edu.cmu.lti.oaqa.lapps.LingpipeNER - 1.0.0-SNAPSHOT",
       "description": "Lingpipe Named Entity Recognizer with model \"English News: MUC-6\"",
       "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.ner_1.1.0"
-    },
-    {
-      "name": "edu.brandeis.cs.gate.GateAnnieNamedEntityRecognizer - 2.0.0",
-      "description": "Gate Annie NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:gate.annie.namedentityrecognizer_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.gate.GateOpenNlpNamedEntityRecognizer - 2.0.0",
-      "description": "Gate OpenNlp NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:gate.opennlp.namedentityrecognizer_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.NamedEntityRecognizer - 2.0.0",
-      "description": "DkPro  Standford NLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:uima.dkpro.stanfordnlp.namedentityrecognizer_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.NamedEntityRecognizer - 2.0.0",
-      "description": "DkPro OpenNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:uima.dkpro.opennlp.namedentityrecognizer_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.NamedEntityRecognizer - 2.0.0",
-      "description": "Stanford CoreNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.namedentityrecognizer_2.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.NamedEntityRecognizer - 2.0.0",
-      "description": "Stanford CoreNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.namedentityrecognizer_2.0.0"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.NamedEntityRecognizer - 2.0.3",
-      "description": "ner:opennlp",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.namedentityrecognizer_2.0.3"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.NamedEntityRecognizer - 2.0.0",
-      "description": "OpenNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.namedentityrecognizer_2.0.2"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.NamedEntityRecognizer - 2.0.0",
-      "description": "OpenNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.namedentityrecognizer_2.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.NamedEntityRecognizer - 2.0.0",
-      "description": "OpenNLP NamedEntityRecognizer",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.namedentityrecognizer_2.0.0"
     }
   ],
   "pos": [
     {
-      "name": "edu.cmu.lti.oaqa.lapps.LingpipeTagger - 1.0.0-SNAPSHOT",
+      "name": "edu.cmu.lti.oaqa.lapps.LingpipeTagger - 1.1.0-SNAPSHOT",
       "description": "Lingpipe Brown-HMM pos targger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.tagger_1.0.0"
+      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.tagger_1.1.0"
     },
     {
       "name": "edu.cmu.lti.oaqa.lapps.LingpipeTagger - 1.1.1-SNAPSHOT",
@@ -121,96 +66,6 @@
       "name": "org.anc.lapps.gate.Tagger - 2.3.0",
       "description": "GATE Part of Speech Tagger",
       "url": "http://vassar.lappsgrid.org/invoker/anc:gate.tagger_2.3.0"
-    },
-    {
-      "name": "edu.cmu.lti.oaqa.lapps.LingpipeTagger - 1.0.0-SNAPSHOT",
-      "description": "Lingpipe Brown-HMM pos targger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:lingpipe.tagger_1.1.0"
-    },
-    {
-      "name": "org.anc.lapps.gate.Tagger - 2.2.0",
-      "description": "GATE Part of Speech Tagger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:gate.tagger_2.2.0"
-    },
-    {
-      "name": "org.anc.lapps.gate.Tagger - 2.1.0",
-      "description": "GATE Part of Speech Tagger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:gate.tagger_2.1.0"
-    },
-    {
-      "name": "org.anc.lapps.stanford.Tagger - 2.0.0",
-      "description": "Stanford Part of Speech Tagger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:stanford.tagger_2.0.0"
-    },
-    {
-      "name": "org.anc.lapps.gate.Tagger - 2.0.0",
-      "description": "GATE Part of Speech Tagger",
-      "url": "http://vassar.lappsgrid.org/invoker/anc:gate.tagger_2.0.0"
-    },
-    {
-      "name": "edu.brandeis.cs.gate.GateAnniePOSTagger - 2.0.0",
-      "description": "Gate Annie  POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:gate.annie.postagger_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.gate.GateOpenNlpPOSTagger - 2.0.0",
-      "description": "Gate OpenNlp  POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:gate.opennlp.postagger_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.0",
-      "description": "DkPro  Standford NLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:uima.dkpro.stanfordnlp.postagger_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.0",
-      "description": "DkPro OpenNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:uima.dkpro.opennlp.postagger_0.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.4",
-      "description": "Stanford CoreNLP 3.3.1 Parts-of-speech Tagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.postagger_2.0.4"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.3",
-      "description": "Stanford CoreNLP 3.3.1 Parts-of-speech Tagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.postagger_2.0.3"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.2",
-      "description": "Stanford CoreNLP 3.3.1 Parts-of-speech Tagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.postagger_2.0.2"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.0",
-      "description": "Stanford CoreNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.postagger_2.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.stanford.corenlp.POSTagger - 2.0.0",
-      "description": "Stanford CoreNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:stanfordnlp.postagger_2.0.0"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.POSTagger - 2.0.3",
-      "description": "tagger:opennlp",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.postagger_2.0.3"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.POSTagger - 2.0.0",
-      "description": "OpenNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.postagger_2.0.2"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.POSTagger - 2.0.0",
-      "description": "OpenNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.postagger_2.0.1"
-    },
-    {
-      "name": "edu.brandeis.cs.lappsgrid.opennlp.POSTagger - 2.0.0",
-      "description": "OpenNLP POSTagger",
-      "url": "http://eldrad.cs-i.brandeis.edu:8080/service_manager/invoker/brandeis_eldrad_grid_1:opennlp.postagger_2.0.0"
     }
   ]
 }
