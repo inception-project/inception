@@ -3,7 +3,6 @@ import { ANNO_VERSION, PDFEXTRACT_VERSION } from '../version'
 import { toTomlString, fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
 import SpanAnnotation from './span'
-import RectAnnotation from './rect'
 import RelationAnnotation from './relation'
 import semver from 'semver'
 import Ajv from 'ajv'
@@ -272,15 +271,6 @@ export default class AnnotationContainer {
         span.save()
         span.render()
         span.enableViewMode()
-
-        // Rect.
-      } else if (d.type === 'rect') {
-
-        let rect = RectAnnotation.newInstanceFromTomlObject(d)
-        rect.color = getColor(tomlIndex, rect.type, rect.text)
-        rect.save()
-        rect.render()
-        rect.enableViewMode()
 
         // Relation.
       } else if (d.type === 'relation') {

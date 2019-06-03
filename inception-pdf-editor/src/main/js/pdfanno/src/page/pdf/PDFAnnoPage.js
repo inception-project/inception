@@ -237,7 +237,7 @@ export default class PDFAnnoPage {
 
     let selectedAnnotations = window.iframeWindow.annotationContainer.getSelectedAnnotations()
     selectedAnnotations = selectedAnnotations.filter(a => {
-      return a.type === 'rect' || a.type === 'span'
+      return a.type === 'span'
     }).sort((a1, a2) => {
       return (a1.selectedTime - a2.selectedTime) // asc
     })
@@ -396,13 +396,6 @@ export default class PDFAnnoPage {
    */
   addAnnotation  (annotation) {
     window.iframeWindow.annotationContainer.add(annotation)
-  }
-
-  /**
-   * Create a new rect annotation.
-   */
-  createRectAnnotation (options) {
-    return window.iframeWindow.PDFAnnoCore.default.RectAnnotation.newInstance(options)
   }
 
   /**
