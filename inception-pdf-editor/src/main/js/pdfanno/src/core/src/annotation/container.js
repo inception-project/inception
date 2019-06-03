@@ -2,7 +2,6 @@ import { uuid } from 'anno-ui/src/utils'
 import { ANNO_VERSION, PDFEXTRACT_VERSION } from '../version'
 import { toTomlString, fromTomlString } from '../utils/tomlString'
 import { dispatchWindowEvent } from '../utils/event'
-// import { convertToExportY } from '../../../shared/coords'
 import SpanAnnotation from './span'
 import RectAnnotation from './rect'
 import RelationAnnotation from './relation'
@@ -181,9 +180,6 @@ export default class AnnotationContainer {
 
       // schema Validation
       if (!this.validate(dataExport)) {
-        // errorをcatchしづらい
-        // reject(this.validate.errors)
-        // return
         console.error(JSON.stringify(this.validate.errors))
       }
 

@@ -2,8 +2,6 @@ require('file-loader?name=index.html!./index.html')
 require('file-loader?name=index-debug.html!./index-debug.html')
 require('!style-loader!css-loader!./pdfanno.css')
 
-// /tab=TAB&pdf=PDFURL&anno=ANNOURL&move
-
 import urijs from 'urijs'
 
 // UI parts.
@@ -14,16 +12,13 @@ import { unlistenWindowLeaveEvent } from './page/util/window'
 import * as publicApi from './page/public'
 import * as searchUI from './page/search'
 import * as textLayer from './page/textLayer'
-// import * as pdftxtDownload from './page/pdftxtdownload'
 import { showLoader } from './page/util/display'
-// import * as ws from './page/socket'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
 import * as deepscholar from './deepscholar'
 import * as constants from './shared/constants'
 import * as pdfextractdownload from './page/pdfextractdownload'
 import { readPdftxt } from './page/pdf/loadFiles'
 
-// XXX
 process.env.SERVER_PATH = '0.4.1'
 
 /**
@@ -147,10 +142,6 @@ async function displayViewer () {
 
     const listenPageRendered = async () => {
       showLoader(false)
-
-      // Load and display annotations, if annoURL is set.
-      if (annoURL) {
-      }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
     window.addEventListener('pagerendered', listenPageRendered)
@@ -307,9 +298,6 @@ function setupUI () {
     didDownloadCallback : unlistenWindowLeaveEvent
   })
 
-  // Download pdftxt button.
-  // pdftxtDownload.setup()
-
   // Label input.
   annoUI.labelInput.setup({
     getSelectedAnnotations : window.annoPage.getSelectedAnnotations,
@@ -350,7 +338,6 @@ function getDefaultPDFURL () {
   // e.g. https://paperai.github.io:80/pdfanno/pdfs/P12-1046.pdf
   const pathnames = location.pathname.split('/')
   const pdfURL = location.protocol + '//' + location.hostname + ':' + location.port + pathnames.slice(0, pathnames.length - 1).join('/') + '/pdfs/P12-1046.pdf'
-  // console.log(location.pathname, pathnames, pdfURL)
   return pdfURL
 }
 
@@ -362,6 +349,3 @@ function getPDFName (url) {
   return a[a.length - 1]
 }
 window.getPDFName = getPDFName
-
-// WebSocket.
-// ws.setup()

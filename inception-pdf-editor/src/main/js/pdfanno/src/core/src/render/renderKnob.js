@@ -1,4 +1,3 @@
-
 /**
  * Circle radius.
  */

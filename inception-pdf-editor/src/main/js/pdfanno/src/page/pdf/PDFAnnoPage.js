@@ -1,6 +1,4 @@
-// import axios from 'axios'
 import * as annoUI from 'anno-ui'
-import { loadFiles } from './loadFiles'
 import { getSearchHighlight } from '../search'
 import * as socket from '../socket'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
@@ -9,10 +7,7 @@ import {
   unlistenWindowLeaveEvent,
   adjustViewerSize
 } from '../util/window'
-// import { saveSpan } from '../../core/src/UI/span'
 import * as constants from '../../shared/constants'
-import * as pako from 'pako'
-import { PDFEXTRACT_VERSION } from '../../core/src/version'
 
 /**
  * PDFAnno's Annotation functions for Page produced by .
@@ -40,8 +35,6 @@ export default class PDFAnnoPage {
     // TODO Remove this alias.
     window.iframeWindow = window
 
-    // window.iframeWindow.addEventListener('DOMContentLoaded', () => {
-
     // Adjust the height of viewer.
     adjustViewerSize()
 
@@ -49,53 +42,6 @@ export default class PDFAnnoPage {
     unlistenWindowLeaveEvent()
 
     dispatchWindowEvent('iframeReady')
-    // })
-
-    // window.iframeWindow.addEventListener('pagerendered', ev => {
-    //     dispatchWindowEvent('pagerendered', ev.detail)
-    // })
-
-    // window.iframeWindow.addEventListener('annotationrendered', () => {
-    //     dispatchWindowEvent('annotationrendered')
-    // })
-
-    // Set the confirm dialog when leaving a page.
-    // window.iframeWindow.addEventListener('annotationUpdated', () => {
-    //     listenWindowLeaveEvent()
-    //     dispatchWindowEvent('annotationUpdated')
-    // })
-
-    // enable text input.
-    // window.iframeWindow.addEventListener('enableTextInput', e => {
-    //     dispatchWindowEvent('enableTextInput', e.detail)
-    // })
-    //
-    // // disable text input.
-    // window.iframeWindow.addEventListener('disappearTextInput', e => {
-    //     dispatchWindowEvent('disappearTextInput', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationDeleted', e => {
-    //     dispatchWindowEvent('annotationDeleted', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationHoverIn', e => {
-    //     dispatchWindowEvent('annotationHoverIn', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationHoverOut', e => {
-    //     dispatchWindowEvent('annotationHoverOut', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationSelected', e => {
-    //     dispatchWindowEvent('annotationSelected', e.detail)
-    // })
-    //
-    // window.iframeWindow.addEventListener('annotationDeselected', () => {
-    //     dispatchWindowEvent('annotationDeselected')
-    // })
-
-    // setInterval(this.checkAnnotationUpdate, 1500)
   }
 
   /**
@@ -181,15 +127,6 @@ export default class PDFAnnoPage {
 
     // Reset setting.
     this.resetPDFViewerSettings()
-
-    // let url = './viewer.html'
-    // if (initialPDFPath) {
-    //     url += '?file=' + initialPDFPath
-    // }
-
-    // // Reload pdf.js.
-    // $(viewerSelector + ' iframe').remove()
-    // $(viewerSelector).html('<iframe src="' + url + '" class="anno-viewer" frameborder="0"></iframe>')
   }
 
   /**
@@ -215,8 +152,6 @@ export default class PDFAnnoPage {
    * Create a Span annotation.
    */
   createSpan ({ text = null, color = null } = {}) {
-    // TODO Refactoring: a little too long.
-
     // Get user selection.
     const rects = window.iframeWindow.PDFAnnoCore.default.UI.getRectangles()
     console.log('createSpan:rects:', rects)
@@ -595,12 +530,6 @@ export default class PDFAnnoPage {
     })
   }
 
-  // loadPdftxt (url) {
-  //   this.loadPdf(url).then(data => {
-  //     return pako.inflate(data, {to : 'string'})
-  //   })
-  // }
-
   /**
    * Load pdftxt data from url.
    * @param {String} url
@@ -655,8 +584,7 @@ export default class PDFAnnoPage {
       if (response.ok) {
         return response.text()
       } else {
-        // throw new Error(`HTTP ${response.status} - ${response.statusText}`)
-        throw new Error(`HTTP ${response.status} - annotationファイルのロードに失敗しました。`)
+        throw new Error(`HTTP ${response.status} - annotation - ${response.statusText}`)
       }
     })
   }
@@ -673,9 +601,6 @@ export default class PDFAnnoPage {
    * Check annotation changings.
    */
   async checkAnnotationUpdate () {
-
-    // TODO Refactoring. Too Long...
-
     // prevs.
     const prevAnnotations = this.prevAnnotations
     const prevFileName = this.prevFileName
@@ -683,7 +608,7 @@ export default class PDFAnnoPage {
 
     // current.
     const currentAnnotations = this.getAllAnnotations()
-    let currentFileName // = annoUI.downloadButton.getDownloadFileName(this.getCurrentContentName)
+    let currentFileName
     // TODO Refactoring (use in downloadButton)
     (() => {
       let primaryAnnotationName
@@ -702,23 +627,16 @@ export default class PDFAnnoPage {
       let pdfFileName = this.getCurrentContentFile() && this.getCurrentContentFile().name
       if (!pdfFileName) {
         return
-        // TODO pdftxtとannoダウンロードは、Viewerが閉じている時には無効化すべし.
       }
-      // let annoName = pdfFileName.replace(/\.pdf$/i, '.anno')
       let annoName = pdfFileName.replace(/\.pdf$/i, '.' + constants.ANNO_FILE_EXTENSION)
       currentFileName = annoName
     })()
     if (!currentFileName) {
       return
     }
-    // console.log('currentFileName:', currentFileName)
-    // console.log('currentAnnotations:', currentAnnotations.length)
 
     // Check.
     if (prevAnnotations && prevFileName && currentAnnotations && currentFileName) {
-
-      // TODO test.
-
       // Check the fileName.
       if (prevFileName !== currentFileName) {
         socket.sendAnnotationUpdated({
@@ -730,9 +648,6 @@ export default class PDFAnnoPage {
 
         // Check if added.
       } else if (currentAnnotations.length > prevAnnotations.length) {
-
-        // TODO test => OK.
-
         const adds = currentAnnotations.filter(a => {
           return prevAnnotations.indexOf(a) === -1
         })
@@ -749,9 +664,6 @@ export default class PDFAnnoPage {
 
         // Check if deleted.
       } else if (currentAnnotations.length < prevAnnotations.length) {
-
-        // TODO test => OK.
-
         const deletes = prevAnnotations.filter(a => {
           return currentAnnotations.indexOf(a) === -1
         })

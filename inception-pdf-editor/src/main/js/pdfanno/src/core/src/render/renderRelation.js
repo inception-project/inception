@@ -59,8 +59,6 @@ export function renderRelation (a) {
     let marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
     setAttributes(marker, {
       viewBox : '0 0 10 10',
-      // markerWidth  : 2,
-      // markerHeight : 3,
       fill    : a.color,
       id      : markerId,
       orient  : 'auto-start-reverse'

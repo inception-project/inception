@@ -28,16 +28,8 @@ export function renderSpan (a) {
   const pageView = window.PDFView.pdfViewer.getPageView(0)
   const viewport = pageView.viewport
   const scale = viewport.scale
-  // const viewBox = viewport.viewBox
-  // let pageHeight = viewBox[3] - viewBox[1]
   let merginBetweenPages =  1
-
-  // #139 correct the absolute position of annotation
-  // let pageTopY = paddingTop + (paddingTop + pageHeight + merginBetweenPages) * (a.page - 1)
-  // let pageTopY = $('#pageContainer' + a.page).position().top / scale + paddingTop
   let pageTopY = $('#pageContainer' + a.page).position().top / scale + paddingTop + merginBetweenPages
-
-  // console.log('renderSpan()', scale, pageTopY, a.rectangles)
 
   const rectangles = a.rectangles.map(r => {
     return {
@@ -66,34 +58,6 @@ export function renderSpan (a) {
 }
 
 function createRect (a, r, color, readOnly) {
-
-  /*
-  // #135 Change the style of Reference Anno
-  if (readOnly) {
-    return $('<div class="anno-span__border"/>').css({
-      top         : r.y + 'px',
-      left        : r.x + 'px',
-      width       : r.width + 'px',
-      height      : r.height + 'px',
-      borderColor : color
-    })
-
-  } else {
-
-    const rgba = hex2rgba(color, 0.4)
-    const borderCss = (a.border === false ? 'no-border' : '')
-
-    return $(`<div class="anno-span__area ${borderCss}"/>`).css({
-      top             : r.y + 'px',
-      left            : r.x + 'px',
-      width           : r.width + 'px',
-      height          : r.height + 'px',
-      backgroundColor : rgba,
-      borderColor     : color
-    })
-  }
-  */
-
   let className = readOnly ? 'anno-span__border' : 'anno-span__area'
   if (a.border === false) {
     className += ' no-border'

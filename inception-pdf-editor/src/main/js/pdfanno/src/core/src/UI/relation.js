@@ -25,7 +25,6 @@ export function createRelation ({ type, anno1, anno2, text, color }) {
   annotation.render()
 
   // TODO Refactoring.
-  // TODO 適切な場所に移動する.
   // Deselect all.
   window.annotationContainer
     .getSelectedAnnotations()

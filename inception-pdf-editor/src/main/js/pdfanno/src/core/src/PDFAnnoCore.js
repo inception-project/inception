@@ -1,4 +1,3 @@
-// import render from './render'
 import UI from './UI'
 import RectAnnotation from './annotation/rect'
 import SpanAnnotation from './annotation/span'

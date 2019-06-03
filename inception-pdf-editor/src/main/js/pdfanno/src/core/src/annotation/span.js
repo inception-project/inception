@@ -1,7 +1,5 @@
 import { uuid } from 'anno-ui/src/utils'
 import AbstractAnnotation from './abstract'
-// import { convertFromExportY } from '../../../shared/coords'
-// import appendChild from '../render/appendChild'
 
 /**
  * Span Annotation.
@@ -101,7 +99,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     let promise = super.destroy()
     this.emit('delete')
 
-    // TODO オブジェクトベースで削除できるようにしたい.
     window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise

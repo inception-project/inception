@@ -67,8 +67,7 @@
 }
 
 /*
-  viewer.cssに合わせてとりあえず.
-  TODO リファクタリング.
+  viewer.css
  */
 .dropdown, .dropup {
   z-index: 10000;
