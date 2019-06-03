@@ -28,7 +28,7 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     
     private final Recommender recommender;
     private final String user;
-    private final EvaluationResult evalResul;
+    private final EvaluationResult evalResult;
     private final long duration;
     private final boolean active;
     
@@ -39,7 +39,7 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
 
         recommender = aRecommender;
         user = aUser;
-        evalResul = aResult;
+        evalResult = aResult;
         duration = aDuration;
         active = aActive;
     }
@@ -56,7 +56,7 @@ public class RecommenderEvaluationResultEvent extends ApplicationEvent
     
     public EvaluationResult getResult()
     {
-        return evalResul;
+        return evalResult;
     }
     
     public long getDuration()

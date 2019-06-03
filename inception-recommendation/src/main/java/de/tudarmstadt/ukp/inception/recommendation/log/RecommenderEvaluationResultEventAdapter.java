@@ -67,13 +67,18 @@ public class RecommenderEvaluationResultEventAdapter
             Details details = new Details();
 
             details.recommenderId = aEvent.getRecommender().getId();
+            
             EvaluationResult result = aEvent.getResult();
             details.accuracy = result.computeAccuracyScore();
             details.f1 = result.computeF1Score();
             details.precision = result.computePrecisionScore();
             details.recall = result.computeRecallScore();
-            details.active = aEvent.isActive();
+            
+            
+            details.trainSetSize = result.getTrainingSetSize();
+            details.testSetSize = result.getTestSetSize();
 
+            details.active = aEvent.isActive();
             details.duration = aEvent.getDuration();
             details.threshold = aEvent.getRecommender().getThreshold();
             details.layer = aEvent.getRecommender().getLayer().getName();
@@ -107,5 +112,9 @@ public class RecommenderEvaluationResultEventAdapter
         public double f1;
         public double precision;
         public double recall;
+        
+        // Used data
+        public int trainSetSize;
+        public int testSetSize;
     }
 }
