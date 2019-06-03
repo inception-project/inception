@@ -185,15 +185,13 @@ public class LayerDetailForm
                                 return new ArrayList<>();
                             }
 
-                            return Arrays.asList(
-                                    layer.getAttachType());
+                            return Arrays.asList(layer.getAttachType());
                         }
-                        if (!RELATION_TYPE
-                                .equals(layer.getType())) {
+                        if (!RELATION_TYPE.equals(layer.getType())) {
                             return new ArrayList<>();
                         }
 
-                        List<AnnotationLayer> attachTeypes = new ArrayList<>();
+                        List<AnnotationLayer> attachTypes = new ArrayList<>();
                         // remove a span layer which is already used as attach type for the
                         // other
                         List<AnnotationLayer> usedLayers = new ArrayList<>();
@@ -205,12 +203,12 @@ public class LayerDetailForm
                         allLayers.removeAll(usedLayers);
 
                         for (AnnotationLayer l : allLayers) {
-                            if (l.getType().equals(SPAN_TYPE) && !l.isBuiltIn()) {
-                                attachTeypes.add(l);
+                            if (l.getType().equals(SPAN_TYPE)) {
+                                attachTypes.add(l);
                             }
                         }
 
-                        return attachTeypes;
+                        return attachTypes;
                     }
                 });
                 setChoiceRenderer(new ChoiceRenderer<>("uiName"));
