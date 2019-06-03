@@ -1,6 +1,5 @@
 import * as annoUI from 'anno-ui'
 import { getSearchHighlight } from '../search'
-import * as socket from '../socket'
 import { anyOf, dispatchWindowEvent } from '../../shared/util'
 import { convertToExportY, paddingBetweenPages, nextZIndex } from '../../shared/coords'
 import {
@@ -493,13 +492,6 @@ export default class PDFAnnoPage {
   }
 
   /**
-   * Get the content's name displayed now.
-   */
-  getCurrentContentName () {
-    return window.iframeWindow.getFileName(window.iframeWindow.PDFView.url)
-  }
-
-  /**
    * Load PDF data from url.
    * @param {String} url
    * @returns Promise<Uint8Array>
@@ -563,25 +555,6 @@ export default class PDFAnnoPage {
     })
   }
 
-  /**
-   * Load PDF annotaion file from url.
-   * @param {String} url
-   * @returns Promise<String>
-   * @memberof PDFAnnoPage
-   */
-  loadAnnoFileFromServer (url) {
-    return fetch(url, {
-      method : 'GET',
-      mode   : 'cors'
-    }).then(response => {
-      if (response.ok) {
-        return response.text()
-      } else {
-        throw new Error(`HTTP ${response.status} - annotation - ${response.statusText}`)
-      }
-    })
-  }
-
   set pdftxt (text) {
     this._pdftxt = text
   }
@@ -590,119 +563,4 @@ export default class PDFAnnoPage {
     return this._pdftxt
   }
 
-  /**
-   * Check annotation changings.
-   */
-  async checkAnnotationUpdate () {
-    // prevs.
-    const prevAnnotations = this.prevAnnotations
-    const prevFileName = this.prevFileName
-    const prevLabelMap = this.prevLabelMap
-
-    // current.
-    const currentAnnotations = this.getAllAnnotations()
-    let currentFileName
-    // TODO Refactoring (use in downloadButton)
-    (() => {
-      let primaryAnnotationName
-      $('#dropdownAnnoPrimary a').each((index, element) => {
-        let $elm = $(element)
-        if ($elm.find('.fa-check').hasClass('no-visible') === false) {
-          primaryAnnotationName = $elm.find('.js-annoname').text()
-        }
-      })
-      if (primaryAnnotationName) {
-        currentFileName = primaryAnnotationName
-        return
-      }
-
-      // The name of Content.
-      let pdfFileName = this.getCurrentContentFile() && this.getCurrentContentFile().name
-      if (!pdfFileName) {
-        return
-      }
-      let annoName = pdfFileName.replace(/\.pdf$/i, '.' + constants.ANNO_FILE_EXTENSION)
-      currentFileName = annoName
-    })()
-    if (!currentFileName) {
-      return
-    }
-
-    // Check.
-    if (prevAnnotations && prevFileName && currentAnnotations && currentFileName) {
-      // Check the fileName.
-      if (prevFileName !== currentFileName) {
-        socket.sendAnnotationUpdated({
-          fileName   : currentFileName,
-          updated    : `file was changed (${prevFileName} => ${currentFileName}).`,
-          userId     : $('#userId').val(),
-          annotation : await this.exportData()
-        })
-
-        // Check if added.
-      } else if (currentAnnotations.length > prevAnnotations.length) {
-        const adds = currentAnnotations.filter(a => {
-          return prevAnnotations.indexOf(a) === -1
-        })
-
-        if (adds.length > 0) {
-          const ids = adds.map(a => a.uuid)
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : `an annotation(${ids.join(',')}) was added.`,
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-
-        // Check if deleted.
-      } else if (currentAnnotations.length < prevAnnotations.length) {
-        const deletes = prevAnnotations.filter(a => {
-          return currentAnnotations.indexOf(a) === -1
-        })
-
-        if (deletes.length > 0) {
-          const ids = deletes.map(a => a.uuid)
-          const messages = ids.map(id => {
-            return `an annotation(${id}) was deleted.`
-          })
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : messages.join('\n'),
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-
-        // Check if labels are modifed.
-      } else {
-
-        const changes = Object.keys(prevLabelMap).filter(uuid => {
-          const b = currentAnnotations.filter(aa => uuid === aa.uuid)
-          if (b.length > 0) {
-            return prevLabelMap[uuid] !== b[0].text
-          }
-          return false
-        })
-
-        if (changes.length > 0) {
-          socket.sendAnnotationUpdated({
-            fileName   : currentFileName,
-            updated    : `an label(${changes.join(',')}) was changed.`,
-            userId     : $('#userId').val(),
-            annotation : await this.exportData()
-          })
-        }
-      }
-    }
-
-    // Save the state.
-    this.prevAnnotations = currentAnnotations
-    this.prevFileName = currentFileName
-    this.prevLabelMap = {}
-    currentAnnotations.forEach(a => {
-      this.prevLabelMap[a.uuid] = a.text
-    })
-
-  }
 }
