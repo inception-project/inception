@@ -35,7 +35,10 @@ public interface SearchService
 {
     static final String SERVICE_NAME = "searchService";
 
-    Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery)
+    List<SearchResult> query(User aUser, Project aProject, String aQuery)
+        throws IOException, ExecutionException;
+
+    List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
 
     Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,

@@ -124,7 +124,6 @@ import de.tudarmstadt.ukp.inception.search.scheduling.IndexScheduler;
 
 public class MtasDocumentIndexTest
 {
-    /**
     private @Autowired UserDao userRepository;
     private @Autowired ProjectService projectService;
     private @Autowired DocumentService documentService;
@@ -647,5 +646,5 @@ public class MtasDocumentIndexTest
                     new ChainLayerSupport(aFeatureSupportRegistry, null,
                             annotationSchemaService(), null)));
         }
-    }**/
+    }
 }

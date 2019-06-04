@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -315,13 +316,27 @@ public class SearchServiceImpl
 
     @Override
     @Transactional
-    public Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery)
+    public List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException
     {
-        return query(aUser, aProject, aQuery, null, null, null);
+        return query(aUser, aProject, aQuery, null);
     }
 
-    @Override @Transactional public Map<String, List<SearchResult>> query(User aUser,
+    @Override
+    @Transactional public List<SearchResult> query(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument) throws IOException, ExecutionException
+    {
+        Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
+            null, null);
+        List<SearchResult> resultsAsList = new ArrayList<>();
+        groupedResults.values().stream()
+            .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
+        return resultsAsList;
+    }
+
+    @Override
+    @Transactional
+    public Map<String, List<SearchResult>> query(User aUser,
         Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
         AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException
     {
