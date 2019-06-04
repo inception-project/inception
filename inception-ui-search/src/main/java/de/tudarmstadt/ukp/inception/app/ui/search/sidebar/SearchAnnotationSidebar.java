@@ -294,6 +294,14 @@ public class SearchAnnotationSidebar
         if (isBlank(targetQuery.getObject())) {
             return Collections.emptyMap();
         }
+
+        // If a layer is selected but no feature show error
+        if (searchOptions.getObject().getGroupingLayer() != null
+            && searchOptions.getObject().getGroupingFeature() == null) {
+            error(
+                "A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
+            return Collections.emptyMap();
+        }
         
         try {
             AnnotatorState state = getModelObject();
