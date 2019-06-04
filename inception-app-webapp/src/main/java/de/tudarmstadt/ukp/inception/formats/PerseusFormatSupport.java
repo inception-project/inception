@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -17,26 +17,20 @@
  */
 package de.tudarmstadt.ukp.inception.formats;
 
-import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDescription;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDescription;
 
-import org.apache.uima.analysis_engine.AnalysisEngineDescription;
-import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUWriter;
 
 @Component
-public class ConllUFormatSupport
+public class PerseusFormatSupport
     implements FormatSupport
 {
-    public static final String ID = "conllu";
-    public static final String NAME = "CoNLL-U";
+    public static final String ID = "perseus_2.1";
+    public static final String NAME = "Perseus treebank XML (2.1)";
     
     @Override
     public String getId()
@@ -59,19 +53,12 @@ public class ConllUFormatSupport
     @Override
     public boolean isWritable()
     {
-        return true;
+        return false;
     }
 
     @Override
     public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
     {
-        return createReaderDescription(ConllUReader.class);
-    }
-    
-    @Override
-    public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
-        throws ResourceInitializationException
-    {
-        return createEngineDescription(ConllUWriter.class);
+        return createReaderDescription(PerseusReader.class);
     }
 }

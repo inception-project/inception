@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,17 +15,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.kb.config;
+package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
 
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlID;
 
-public interface KnowledgeBaseProperties
+public class PerseusWord
 {
+    @XmlID 
+    @XmlAttribute
+    public String id;
 
-    public int getDefaultMaxResults();
+    @XmlAttribute
+    public String form;
     
-    public void setDefaultMaxResults(int aDefaultMaxResults);
+    @XmlAttribute
+    public String lemma;
 
-    public int getHardMaxResults();
+    @XmlAttribute
+    public String postag;
 
-    public void setHardMaxResults(int aHardMaxResults);
+    @XmlAttribute
+    public String relation;
+
+    @XmlAttribute
+    public String cite;
+
+    @XmlAttribute
+    public int head;
+    
+    @XmlAttribute(name = "insertion_id")
+    public String insertionId;
+    
+    @XmlAttribute
+    public String artificial;
 }

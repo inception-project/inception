@@ -599,7 +599,8 @@ public class MtasDocumentIndexTest
         @Bean
         public CasStorageService casStorageService()
         {
-            return new CasStorageServiceImpl(null, repositoryProperties(), backupProperties());
+            return new CasStorageServiceImpl(null, null, repositoryProperties(),
+                    backupProperties());
         }
 
         @Bean
