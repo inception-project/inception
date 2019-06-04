@@ -44,7 +44,7 @@ public class ElasticSearchProviderTest
         repo = new DocumentRepository("dummy", null);
         
         traits = new ElasticSearchProviderTraits();
-        traits.setRemoteUrl("http://bart.ukp.informatik.tu-darmstadt.de:9200");
+        traits.setRemoteUrl("http://10.167.1.6:9200");
         traits.setIndexName("common-crawl-en");
         traits.setSearchPath("_search");
         traits.setObjectType("texts");
@@ -63,6 +63,9 @@ public class ElasticSearchProviderTest
     @Test
     public void thatDocumentTextCanBeRetrieved() throws Exception
     {
-        sut.getDocumentText(repo, traits, "common-crawl-en", "TcBhiGABg9im2MD5uAjq");
+        String documentText = sut.getDocumentText(repo, traits,
+                "common-crawl-en", "TcBhiGABg9im2MD5uAjq");
+        assertThat(documentText).isNotNull();
+        
     }
 }
