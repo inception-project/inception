@@ -1,4 +1,27 @@
-package paperai.pdfextract;
+/*
+ * The MIT License (MIT)
+ * 
+ * Copyright (c) 2017 Hiroyuki Shindo
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+package de.tudarmstadt.ukp.inception.pdfeditor.pdfextract;
 
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -51,13 +74,15 @@ public class PDFExtractor
         File path = args.length == 0 ? new File(".") : new File(args[0]);
         if (path.isDirectory()) {
             for (File file : path.listFiles()) {
-                if (file.isFile() && file.getName().endsWith(".pdf"))
+                if (file.isFile() && file.getName().endsWith(".pdf")) {
                     processFile(file);
+                }
             }
         }
         else {
-            if (path.isFile())
+            if (path.isFile()) {
                 processFile(path);
+            }
         }
     }
 
@@ -183,10 +208,12 @@ public class PDFExtractor
             else if (obj instanceof DrawOperator) {
                 DrawOperator d = (DrawOperator) obj;
                 output.write(String.format("%s\t[%s]", pageIndex, d.type));
-                if (d.values.length > 0)
+                if (d.values.length > 0) {
                     output.write(String.format("\t%s", d.values[0]));
-                for (int k = 1; k < d.values.length; k++)
+                }
+                for (int k = 1; k < d.values.length; k++) {
                     output.write(String.format(" %s", d.values[k]));
+                }
             }
             output.write("\n");
         }
@@ -326,15 +353,18 @@ public class PDFExtractor
             spaceWidthText = font.getAverageFontWidth() * glyphSpaceToTextSpaceFactor;
             spaceWidthText *= 0.8F;
         }
-        if (spaceWidthText == 0.0F)
+        if (spaceWidthText == 0.0F) {
             spaceWidthText = 1.0F;
+        }
 
         float spaceWidthDisplay = spaceWidthText * textRenderingMatrix.getScalingFactorX();
         unicode = font.toUnicode(code, this.glyphList);
-        if (unicode == null)
+        if (unicode == null) {
             unicode = "NO_UNICODE";
-        else if (StringUtils.isBlank(unicode))
+        }
+        else if (StringUtils.isBlank(unicode)) {
             return;
+        }
 
         Matrix translatedTextRenderingMatrix;
         if (this.translateMatrix == null) {
@@ -454,8 +484,9 @@ public class PDFExtractor
             // shouldn't happen, please open issue in JIRA
             System.out.println("Unknown font class: " + font.getClass());
         }
-        if (path == null)
+        if (path == null) {
             return null;
+        }
         Shape s = at.createTransformedShape(path.getBounds2D());
         s = flipAT.createTransformedShape(s);
         s = rotateAT.createTransformedShape(s);
