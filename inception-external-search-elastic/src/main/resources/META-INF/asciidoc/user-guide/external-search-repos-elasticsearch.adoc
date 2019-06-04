@@ -18,6 +18,12 @@ From this information, two URLs are constructed:
 * the search URL: `<URL>/<index name>/<search path>`
 * the document retrieval URL as: `<URL>/<index name>/<object type>/<document id>`
 
+The individual documents should contain following two fields as their source:
+
+* *doc*: should contain the subfield _text_ which is the full text of the document
+* *metadata*: should contain subfields like _language_, _source_, _timestamp_ and _uri_
+to provide further information about the document
+
 The *Random Ordering* setting allows to switch the ranking of results from the default ranking used by
 the ElasticSearch server to a random order. The documents returned will still match the query, but
 the order does not correspond to the matching quality anymore. When random ordering is enabled, no

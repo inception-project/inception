@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-beta-8</webanno.version>
+    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
@@ -62,7 +62,8 @@
     <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <lucene.version>7.3.0</lucene.version>
+    <lucene.version>7.3.1</lucene.version>
+    <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <mockito.version>2.23.4</mockito.version>
@@ -1008,6 +1009,27 @@
         <groupId>com.github.jsonld-java</groupId>
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
+      </dependency>
+        
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>transport</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
       </dependency>
         
       <dependency>
