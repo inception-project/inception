@@ -335,7 +335,15 @@ public class ExternalSearchAnnotationSidebar
             return;
         }
         
-        searchState.getDataProvider().searchDocuments(currentRepository, searchState.getQuery());
+        try {
+            searchState.getDataProvider().searchDocuments(currentRepository,
+                    searchState.getQuery());
+        }
+        catch (Exception e) {
+            LOG.error("Unable to perform query", e);
+            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            aTarget.addChildren(getPage(), IFeedback.class);
+        }
 
         aTarget.add(dataTableContainer);
 
