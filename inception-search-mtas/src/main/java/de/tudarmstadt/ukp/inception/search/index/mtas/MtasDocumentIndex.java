@@ -79,6 +79,7 @@ import com.github.openjson.JSONObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -89,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.ApplicationContextProvider;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupportRegistry;
+import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
@@ -153,6 +155,7 @@ public class MtasDocumentIndex
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
+    private @Autowired  FeatureSupportRegistry featureSupportRegistry;
 
     private final AnnotationSchemaService annotationSchemaService;
     private final DocumentService documentService;
@@ -470,22 +473,27 @@ public class MtasDocumentIndex
     {
         List<String> featureValues = new ArrayList<>();
 
-        String groupingFeatureIndexName;
-
         Optional<FeatureIndexingSupport> fisOpt = featureIndexingSupportRegistry
             .getIndexingSupport(aAnnotationFeature);
+        FeatureIndexingSupport fis;
         if (fisOpt.isPresent()) {
-            FeatureIndexingSupport fis = fisOpt.get();
-            // a feature prefix is currently only used for target and source of
-            // relation-annotations however we just look at the feature value of the
-            // relation-annotation itself here, so we can just use "" as feature prefix
-            groupingFeatureIndexName = fis
-                .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
+            fis = fisOpt.get();
         }
         else {
-            //TODO: throw exception
-            return featureValues;
+            log.error(
+                "No FeatureIndexingSupport found for feature " + aAnnotationFeature + ". Using "
+                    + PrimitiveUimaIndexingSupport.class.getSimpleName()
+                    + " to determine index name for the feature");
+            fis = new PrimitiveUimaIndexingSupport(featureSupportRegistry);
         }
+
+        // a feature prefix is currently only used for target and source of
+        // relation-annotations however we just look at the feature value of the
+        // relation-annotation itself here, so we can just use "" as feature prefix
+        String groupingFeatureIndexName = fis
+            .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
+
+
         List<String> fsAddresses = new ArrayList<>();
         aTokens.stream().filter(
             t -> t.getPositionStart() == aMatchStart && t.getPositionEnd() == aMatchEnd - 1
