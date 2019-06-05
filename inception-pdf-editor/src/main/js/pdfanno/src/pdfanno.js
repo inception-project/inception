@@ -117,8 +117,6 @@ async function displayViewer () {
   const q        = urijs(document.URL).query(true)
   const pdfURL   = q.pdf
   const pdftxtURL = q.pdftxt
-  const annoURL  = q.anno
-  const moveTo   = q.move
   window.apiUrl = q.api
 
   // Load a PDF file.
