@@ -36,6 +36,11 @@
       <artifactId>webanno-api-dao</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-recommendation-api</artifactId>
+    </dependency>
+
     <!-- UIMA -->
     <dependency>
       <groupId>org.apache.uima</groupId>

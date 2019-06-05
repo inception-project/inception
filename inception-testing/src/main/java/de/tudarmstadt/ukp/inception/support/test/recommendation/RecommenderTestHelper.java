@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.support.test.recommendation;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
+import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
 
 import java.io.IOException;
@@ -47,8 +50,8 @@ public class RecommenderTestHelper
 
         TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
         TypeDescription typeDescription = tsd.getType(aTypeName);
-        typeDescription.addFeature(scoreFeatureName, "Confidence feature", CAS.TYPE_NAME_DOUBLE);
-        typeDescription.addFeature("predicted", "Is prediction", CAS.TYPE_NAME_BOOLEAN);
+        typeDescription.addFeature(scoreFeatureName, "Confidence feature", TYPE_NAME_DOUBLE);
+        typeDescription.addFeature(FEATURE_NAME_IS_PREDICTION, "Is prediction", TYPE_NAME_BOOLEAN);
 
         AnnotationSchemaService annotationSchemaService = new AnnotationSchemaServiceImpl();
         annotationSchemaService.upgradeCas(aCas, tsd);
@@ -69,7 +72,7 @@ public class RecommenderTestHelper
             throws Exception
     {
         Type type = CasUtil.getType(aCas, aClass);
-        Feature feature = type.getFeatureByBaseName("predicted");
+        Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         return JCasUtil.select(aCas.getJCas(), aClass).stream()
                 .filter(fs -> fs.getBooleanValue(feature))

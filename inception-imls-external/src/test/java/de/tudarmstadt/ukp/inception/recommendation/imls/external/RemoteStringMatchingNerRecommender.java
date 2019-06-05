@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.ByteArrayInputStream;
@@ -103,7 +104,7 @@ public class RemoteStringMatchingNerRecommender
 
         // Only work on real annotations, not on predictions
         Type predictedType = CasUtil.getType(cas, recommender.getLayer().getName());
-        Feature feature = predictedType.getFeatureByBaseName("predicted");
+        Feature feature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         for (AnnotationFS fs : CasUtil.select(cas, predictedType)) {
             if (fs.getBooleanValue(feature)) {

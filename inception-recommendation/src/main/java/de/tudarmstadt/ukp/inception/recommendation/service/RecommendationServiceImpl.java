@@ -122,8 +122,8 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final double NO_SCORE = 0.0;
 
+    private static final double NO_SCORE = 0.0;
     private static final int TRAININGS_PER_SELECTION = 5;
 
     private @PersistenceContext EntityManager entityManager;
@@ -832,7 +832,7 @@ public class RecommendationServiceImpl
         Type predictedType = CasUtil.getType(aCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
         Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
-        Feature isPredictionFeature = predictedType.getFeatureByBaseName("predicted");
+        Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         int predictionCount = 0;
 
@@ -841,7 +841,7 @@ public class RecommendationServiceImpl
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
         for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
-            if (!annotationFS.getBooleanValue(isPredictionFeature)) {
+            if (!annotationFS.getBooleanValue(predictionFeature)) {
                 continue;
             }
 
@@ -1025,7 +1025,7 @@ public class RecommendationServiceImpl
                     td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
                 }
 
-                td.addFeature("predicted", "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
+                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
             annoService.upgradeCas(aCas, tsd);

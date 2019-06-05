@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 public interface RecommendationService
 {
     String SERVICE_NAME = "recommendationService";
-    
+    String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
+
     int MAX_RECOMMENDATIONS_DEFAULT = 3; 
     int MAX_RECOMMENDATIONS_CAP = 10; 
     

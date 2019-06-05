@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
@@ -112,6 +113,6 @@ public abstract class RecommendationEngine {
 
     protected Feature getIsPredictionFeature(CAS aCas)
     {
-        return getPredictedType(aCas).getFeatureByBaseName("predicted");
+        return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
     }
 }
