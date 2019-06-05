@@ -210,28 +210,24 @@ public class StringMatchingRecommender
 
         int trainingSetSize = trainingSet.size();
         int testSetSize = testSet.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
-        long trainingSetLabeledSamplesCount = trainingSet.stream()
-                .filter(sample -> !sample.getSpans().isEmpty()).count();
-
-        long testSetLabeledSamplesCount = testSet.stream()
-                .filter(sample -> !sample.getSpans().isEmpty()).count();
-
-        if (trainingSetLabeledSamplesCount < 2 || testSetLabeledSamplesCount < 2) {
-            log.info(
-                    "Not enough labeled data: training set [{}] items ([{}] labeled), test set [{}] ([{}] labeled) of total [{}]",
-                    trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
-                    testSetLabeledSamplesCount, data.size());
+        if (trainingSetSize < 2 || testSetSize < 2) {
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
+                    trainingSetSize, testSetSize, data.size());
+            log.info(info);
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
         log.info(
-                "Training on [{}] items ([{}] labeled), predicting on [{}] ([{}] labeled) of total [{}]",
-                trainingSet.size(), trainingSetLabeledSamplesCount, testSet.size(),
-                testSetLabeledSamplesCount, data.size());
+                "Training on [{}] items, predicting on [{}] of total [{}].",
+                trainingSet.size(), testSet.size(), data.size());
 
         // Train
         Trie<DictEntry> dict = createTrie();
@@ -268,7 +264,7 @@ public class StringMatchingRecommender
         }
 
         return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, NO_LABEL));
+                .collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
     }
 
     private void learn(Trie<DictEntry> aDict, String aText, String aLabel)

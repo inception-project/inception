@@ -285,6 +285,7 @@ public class ExternalRecommender
     {
         EvaluationResult result = new EvaluationResult();
         result.setEvaluationSkipped(true);
+        result.setErrorMsg("ExternalRecommender does not support evaluation.");
         return result;
     }
 
