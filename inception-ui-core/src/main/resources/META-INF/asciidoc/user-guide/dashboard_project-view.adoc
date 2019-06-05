@@ -17,5 +17,8 @@
 == Project dashboard
 
 Once you have selected a project from the <<sect_projects_list>>, you are taken to this project's
-dashboard. Depending on the roles that a user has in the project, differnt functionalities can
-be accessed from here such as annotation, curation, project configuration.
+dashboard. Depending on the roles that a user has in the project, different functionalities can
+be accessed from here such as annotation, curation and project configuration.
+On the right-hand side of the page, some of the last activities of the user in this project are shown.
+The user can click on an activity to resume it e.g. if the user annotated a specific document, 
+the annotation page will be opened on this document.

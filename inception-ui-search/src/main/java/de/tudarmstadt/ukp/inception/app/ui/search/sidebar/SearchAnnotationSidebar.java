@@ -23,12 +23,16 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -38,11 +42,14 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
 import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -50,6 +57,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -74,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -106,13 +115,15 @@ public class SearchAnnotationSidebar
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
-    private IModel<List<SearchResult>> searchResults;
-    private Map<String, Boolean> documentLevelSelections = initDocumentLevelSelections();
+    private IModel<Map<String, ResultsGroup>> groupedSearchResults;
+    private Map<String, Boolean> groupLevelSelections;
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
         .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
         .of(new DeleteAnnotationsOptions());
 
+    DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>("groupingFeature",
+        Collections.emptyList(), new ChoiceRenderer<>("uiName"));
 
     private SearchResult selectedResult;
 
@@ -129,7 +140,7 @@ public class SearchAnnotationSidebar
         add(mainContainer);
 
         Form<Void> searchForm = new Form<Void>("searchForm");
-        searchForm.add(new TextArea<String>("queryInput", targetQuery));
+        searchForm.add(new TextArea<>("queryInput", targetQuery));
         LambdaAjaxButton<Void> searchButton = new LambdaAjaxButton<>("search", this::actionSearch);
         searchForm.add(searchButton);
         searchForm.setDefaultButton(searchButton);
@@ -137,6 +148,10 @@ public class SearchAnnotationSidebar
 
         Form<SearchOptions> searchOptionsForm = new Form<>("searchOptionsForm", searchOptions);
         searchOptionsForm.add(new CheckBox("limitedToCurrentDocument"));
+        searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
+            annotationService.listAnnotationLayer(getModelObject().getProject())));
+        searchOptionsForm.add(groupingFeature);
+        groupingFeature.setNullValid(true);
         searchOptionsForm.add(visibleWhen(() -> searchOptionsForm.getModelObject().isVisible()));
         searchOptionsForm.setOutputMarkupPlaceholderTag(true);
         searchForm.add(searchOptionsForm);
@@ -146,8 +161,8 @@ public class SearchAnnotationSidebar
             _target.add(searchOptionsForm);
         }));
 
-        searchResults = LambdaModel.of(this::getSearchResults);
-        
+        groupedSearchResults = LambdaModel.of(this::getSearchResultsGrouped);
+
         // Add link for re-indexing the project
         searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
             Project project = ((IModel<AnnotatorState>) t.getPage().getDefaultModel()).getObject()
@@ -155,36 +170,31 @@ public class SearchAnnotationSidebar
             searchService.reindex(project);
         }));
 
-        ListView<String> searchResultGroups = new ListView<String>("searchResultGroups")
+        ListView<ResultsGroup> searchResultGroups = new ListView<ResultsGroup>("searchResultGroups")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<String> item)
+            protected void populateItem(ListItem<ResultsGroup> item)
             {
-                item.add(new Label("documentTitle", LambdaModel.of(() -> item.getModelObject())));
-                item.add(createDocumentLevelSelectionCheckBox("selectAllInDoc", Model.of(
-                    documentLevelSelections.get(item.getModelObject())),
-                    item.getModelObject()));
-                item.add(new SearchResultGroup("group", "resultGroup", 
-                        SearchAnnotationSidebar.this,
-                        LambdaModel.of(() -> searchResults.getObject().stream().filter((result) -> {
-                            if (result.getDocumentTitle() == null) {
-                                return true;
-                            }
-                            else {
-                                return result.getDocumentTitle().equals(item.getModelObject());
-                            }
-                        }).collect(Collectors.toList()))));
+                ResultsGroup result = item.getModelObject();
+                item.add(new Label("groupTitle", LoadableDetachableModel
+                        .of(() -> result.getGroupKey() + " (" + result.getResults().size() + ")")));
+                item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
+                    Model.of(groupLevelSelections.get(result.getGroupKey())),
+                    result.getGroupKey()));
+                item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
+                        result.getGroupKey(), LambdaModel.of(() -> 
+                        groupedSearchResults.getObject().get(result.getGroupKey()))));
             }
         };
-        searchResultGroups.setModel(LambdaModel.of(() -> 
-                searchResults.getObject().stream().map((result -> result.getDocumentTitle()))
-                        .distinct().collect(Collectors.toList())));
-
+        searchResultGroups.setModel(LoadableDetachableModel.of(() -> 
+                groupedSearchResults.getObject().values().stream()
+                        .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
+                        .collect(Collectors.toList())));
         mainContainer.add(searchResultGroups);
 
-        Form<Void> annotationForm = new Form("annotateForm");
+        Form<Void> annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
         LambdaAjaxButton<Void> annotateButton = new LambdaAjaxButton<>("annotateAllButton",
             (target, form) -> actionApplyToSelectedResults(target,
@@ -223,33 +233,59 @@ public class SearchAnnotationSidebar
         }));
 
         annotationForm.setDefaultButton(annotateButton);
-        annotationForm.add(visibleWhen(() -> !searchResults.getObject().isEmpty()));
+        annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
 
         mainContainer.add(annotationForm);
     }
 
-    private Map<String, Boolean> initDocumentLevelSelections()
+    private Map<String, Boolean> initGroupLevelSelections(
+        Set<String> groupKeys)
     {
-        Map<String, Boolean> docLevelSelections = new HashMap();
-        Project project = getModelObject().getProject();
-        for (SourceDocument document : documentService.listSourceDocuments(project)) {
-            docLevelSelections.put(document.getName(), true);
+        Map<String, Boolean> selections = new HashMap<>();
+        for (String key : groupKeys) {
+            selections.put(key, true);
         }
-        return docLevelSelections;
+        return selections;
     }
 
-    private AjaxCheckBox createDocumentLevelSelectionCheckBox(String aId, IModel<Boolean> aModel,
-        String aDocumentTitle)
+    private DropDownChoice<AnnotationLayer> createLayerDropDownChoice(String aId,
+        List<AnnotationLayer> aChoices)
+    {
+        DropDownChoice<AnnotationLayer> layerChoice = new BootstrapSelect<>(aId, aChoices,
+            new ChoiceRenderer<>("uiName"));
+
+        layerChoice.add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            @Override protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                //update the choices for the feature selection dropdown
+                groupingFeature.setChoices(annotationService
+                    .listAnnotationFeature(searchOptions.getObject().getGroupingLayer()));
+                aTarget.add(groupingFeature);
+            }
+        });
+        layerChoice.setNullValid(true);
+        return layerChoice;
+    }
+
+    private AjaxCheckBox createGroupLevelSelectionCheckBox(String aId, IModel<Boolean> aModel,
+        String aGroupKey)
     {
         AjaxCheckBox selectAllCheckBox = new AjaxCheckBox(aId, aModel)
         {
+            private static final long serialVersionUID = 2431702654443882657L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                searchResults.getObject().stream()
-                    .filter(r -> r.getDocumentTitle().equals(aDocumentTitle))
-                    .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
-                documentLevelSelections.put(aDocumentTitle, getModelObject());
+                for (Entry<String, ResultsGroup> entry : groupedSearchResults.getObject()
+                    .entrySet()) {
+                    if (entry.getKey().equals(aGroupKey)) {
+                        entry.getValue().getResults().stream()
+                            .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
+                    }
+                }
+                groupLevelSelections.put(aGroupKey, getModelObject());
                 target.add(mainContainer);
             }
         };
@@ -258,15 +294,23 @@ public class SearchAnnotationSidebar
 
     private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
         selectedResult = null;
-        searchResults.detach();
+        groupedSearchResults.detach();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
     }
     
-    private List<SearchResult> getSearchResults()
+    private Map<String, ResultsGroup> getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
-            return Collections.emptyList();
+            return Collections.emptyMap();
+        }
+
+        // If a layer is selected but no feature show error
+        if (searchOptions.getObject().getGroupingLayer() != null
+            && searchOptions.getObject().getGroupingFeature() == null) {
+            error(
+                "A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
+            return Collections.emptyMap();
         }
         
         try {
@@ -277,12 +321,20 @@ public class SearchAnnotationSidebar
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
-            return searchService.query(currentUser, project, targetQuery.getObject(),
-                    limitToDocument);
+            SearchOptions opt = searchOptions.getObject();
+            Map<String, ResultsGroup> queryResults = searchService
+                    .query(currentUser, project, targetQuery.getObject(), limitToDocument,
+                            opt.getGroupingLayer(), opt.getGroupingFeature())
+                    .entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> 
+                            new ResultsGroup(e.getKey(), e.getValue())));
+
+            // init group level selection as soon as we know what the group-keys are
+            groupLevelSelections = initGroupLevelSelections(queryResults.keySet());
+            return queryResults;
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
-            return Collections.emptyList();
+            return Collections.emptyMap();
         }
     }
 
@@ -311,9 +363,11 @@ public class SearchAnnotationSidebar
             AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
             try {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-                for (SearchResult result : searchResults.getObject()) {
-                    if (result.isSelectedForAnnotation()) {
-                        aConsumer.accept(result, adapter);
+                for (ResultsGroup group : groupedSearchResults.getObject().values()) {
+                    for (SearchResult result : group.getResults()) {
+                        if (result.isSelectedForAnnotation()) {
+                            aConsumer.accept(result, adapter);
+                        }
                     }
                 }
             }
@@ -419,6 +473,20 @@ public class SearchAnnotationSidebar
         updateTimestamp(aSourceDoc);
     }
 
+    private void updateTimestamp(SourceDocument aModifiedDocument) throws IOException
+    {
+        // If the currently displayed document is the same one where the annotation was created,
+        // then update timestamp in state to avoid concurrent modification errors
+        AnnotatorState state = getModelObject();
+        if (Objects.equals(state.getDocument().getId(), aModifiedDocument.getId())) {
+            Optional<Long> diskTimestamp = documentService
+                .getAnnotationCasTimestamp(aModifiedDocument, currentUser.getUsername());
+            if (diskTimestamp.isPresent()) {
+                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
+            }
+        }
+    }
+
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
     {
         SpanAdapter aAdapter = (SpanAdapter) annotationService
@@ -434,27 +502,36 @@ public class SearchAnnotationSidebar
         return true;
     }
 
-    private void updateTimestamp(SourceDocument aModifiedDocument) throws IOException
+    private class ResultsGroup implements Serializable
     {
-        // If the currently displayed document is the same one where the annotation was created,
-        // then update timestamp in state to avoid concurrent modification errors
-        AnnotatorState state = getModelObject();
-        if (Objects.equals(state.getDocument().getId(), aModifiedDocument.getId())) {
-            Optional<Long> diskTimestamp = documentService
-                .getAnnotationCasTimestamp(aModifiedDocument, currentUser.getUsername());
-            if (diskTimestamp.isPresent()) {
-                state.setAnnotationDocumentTimestamp(diskTimestamp.get());
-            }
+        private static final long serialVersionUID = -4448435773623997560L;
+        private final String groupKey;
+        private final List<SearchResult> results;
+        
+        public ResultsGroup(String aGroupKey, List<SearchResult> aResults)
+        {
+            groupKey = aGroupKey;
+            results = aResults;
+        }
+        
+        public String getGroupKey()
+        {
+            return groupKey;
+        }
+        
+        public List<SearchResult> getResults()
+        {
+            return results;
         }
     }
-
+    
     private class SearchResultGroup
         extends Fragment
     {
         private static final long serialVersionUID = 3540041356505975132L;
 
         public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-                IModel<List<SearchResult>> aModel)
+            String groupKey, IModel<ResultsGroup> aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, aModel);
             
@@ -487,10 +564,10 @@ public class SearchAnnotationSidebar
                         {
                             SearchResult modelObject = aItem.getModelObject();
                             modelObject.setSelectedForAnnotation(getModelObject());
-                            if (getModelObject() == false) {
+                            if (!getModelObject()) {
                                 // not all results in the document are selected, so set document
                                 // level selection to false
-                                documentLevelSelections.put(modelObject.getDocumentTitle(), false);
+                                groupLevelSelections.put(groupKey, false);
                                 target.add(mainContainer);
                             }
                         }
@@ -507,7 +584,8 @@ public class SearchAnnotationSidebar
                             .add(new Label("sentence", sentence).setEscapeModelStrings(false));
                 }
             };
-            statementList.setModel(aModel);
+            statementList
+                    .setModel(LoadableDetachableModel.of(() -> aModel.getObject().getResults()));
             add(statementList);        
         }
     }
