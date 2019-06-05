@@ -84,8 +84,15 @@ public class PrimitiveUimaIndexingSupport
         if (isEmpty(featureValue)) {
             return values;
         }
-        values.put(aFieldPrefix + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
+        values.put(featureIndexName(aFieldPrefix, aFeaturePrefix, aFeature),
                 featureValue);
         return values;
+    }
+
+    @Override
+    public String featureIndexName(String aFieldPrefix, String aFeaturePrefix,
+        AnnotationFeature aFeature)
+    {
+        return aFieldPrefix + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName();
     }
 }

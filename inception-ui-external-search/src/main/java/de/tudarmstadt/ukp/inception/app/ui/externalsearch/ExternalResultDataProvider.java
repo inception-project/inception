@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -92,7 +93,7 @@ public class ExternalResultDataProvider
         };
     }
 
-    public void searchDocuments(DocumentRepository aRepository, String aQuery)
+    public void searchDocuments(DocumentRepository aRepository, String aQuery) throws IOException
     {
         results.clear();
         
