@@ -23,10 +23,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -54,6 +57,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -111,7 +115,7 @@ public class SearchAnnotationSidebar
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
-    private IModel<Map<String, List<SearchResult>>> groupedSearchResults;
+    private IModel<Map<String, ResultsGroup>> groupedSearchResults;
     private Map<String, Boolean> groupLevelSelections;
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
         .of(new CreateAnnotationsOptions());
@@ -166,24 +170,28 @@ public class SearchAnnotationSidebar
             searchService.reindex(project);
         }));
 
-        ListView<String> searchResultGroups = new ListView<String>("searchResultGroups")
+        ListView<ResultsGroup> searchResultGroups = new ListView<ResultsGroup>("searchResultGroups")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<String> item)
+            protected void populateItem(ListItem<ResultsGroup> item)
             {
-                item.add(new Label("groupTitle", LambdaModel.of(() -> item.getModelObject())));
+                ResultsGroup result = item.getModelObject();
+                item.add(new Label("groupTitle", LoadableDetachableModel
+                        .of(() -> result.getGroupKey() + " (" + result.getResults().size() + ")")));
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
-                    Model.of(groupLevelSelections.get(item.getModelObject())),
-                    item.getModelObject()));
+                    Model.of(groupLevelSelections.get(result.getGroupKey())),
+                    result.getGroupKey()));
                 item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
-                    item.getModelObject(), LambdaModel
-                    .of(() -> groupedSearchResults.getObject().get(item.getModelObject()))));
+                        result.getGroupKey(), LambdaModel.of(() -> 
+                        groupedSearchResults.getObject().get(result.getGroupKey()))));
             }
         };
-        searchResultGroups.setModel(LambdaModel.of(() -> groupedSearchResults.getObject().keySet()
-                .stream().collect(Collectors.toList())));
+        searchResultGroups.setModel(LoadableDetachableModel.of(() -> 
+                groupedSearchResults.getObject().values().stream()
+                        .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
+                        .collect(Collectors.toList())));
         mainContainer.add(searchResultGroups);
 
         Form<Void> annotationForm = new Form<>("annotateForm");
@@ -233,11 +241,11 @@ public class SearchAnnotationSidebar
     private Map<String, Boolean> initGroupLevelSelections(
         Set<String> groupKeys)
     {
-        Map<String, Boolean> groupLevelSelections = new HashMap();
+        Map<String, Boolean> selections = new HashMap<>();
         for (String key : groupKeys) {
-            groupLevelSelections.put(key, true);
+            selections.put(key, true);
         }
-        return groupLevelSelections;
+        return selections;
     }
 
     private DropDownChoice<AnnotationLayer> createLayerDropDownChoice(String aId,
@@ -265,13 +273,15 @@ public class SearchAnnotationSidebar
     {
         AjaxCheckBox selectAllCheckBox = new AjaxCheckBox(aId, aModel)
         {
+            private static final long serialVersionUID = 2431702654443882657L;
+
             @Override
             protected void onUpdate(AjaxRequestTarget target)
             {
-                for (Map.Entry<String, List<SearchResult>> entry : groupedSearchResults.getObject()
+                for (Entry<String, ResultsGroup> entry : groupedSearchResults.getObject()
                     .entrySet()) {
                     if (entry.getKey().equals(aGroupKey)) {
-                        entry.getValue().stream()
+                        entry.getValue().getResults().stream()
                             .forEach(r -> r.setSelectedForAnnotation(getModelObject()));
                     }
                 }
@@ -289,7 +299,7 @@ public class SearchAnnotationSidebar
         aTarget.addChildren(getPage(), IFeedback.class);
     }
     
-    private Map<String, List<SearchResult>> getSearchResultsGrouped()
+    private Map<String, ResultsGroup> getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
             return Collections.emptyMap();
@@ -311,10 +321,12 @@ public class SearchAnnotationSidebar
                     : null;
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
-            Map<String, List<SearchResult>> queryResults = searchService
-                .query(currentUser, project, targetQuery.getObject(), limitToDocument,
-                    searchOptions.getObject().getGroupingLayer(),
-                    searchOptions.getObject().getGroupingFeature());
+            SearchOptions opt = searchOptions.getObject();
+            Map<String, ResultsGroup> queryResults = searchService
+                    .query(currentUser, project, targetQuery.getObject(), limitToDocument,
+                            opt.getGroupingLayer(), opt.getGroupingFeature())
+                    .entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> 
+                            new ResultsGroup(e.getKey(), e.getValue())));
 
             // init group level selection as soon as we know what the group-keys are
             groupLevelSelections = initGroupLevelSelections(queryResults.keySet());
@@ -351,8 +363,8 @@ public class SearchAnnotationSidebar
             AnnotationLayer layer = getModelObject().getSelectedAnnotationLayer();
             try {
                 SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(layer);
-                for (List<SearchResult> results : groupedSearchResults.getObject().values()) {
-                    for (SearchResult result : results) {
+                for (ResultsGroup group : groupedSearchResults.getObject().values()) {
+                    for (SearchResult result : group.getResults()) {
                         if (result.isSelectedForAnnotation()) {
                             aConsumer.accept(result, adapter);
                         }
@@ -490,13 +502,36 @@ public class SearchAnnotationSidebar
         return true;
     }
 
+    private class ResultsGroup implements Serializable
+    {
+        private static final long serialVersionUID = -4448435773623997560L;
+        private final String groupKey;
+        private final List<SearchResult> results;
+        
+        public ResultsGroup(String aGroupKey, List<SearchResult> aResults)
+        {
+            groupKey = aGroupKey;
+            results = aResults;
+        }
+        
+        public String getGroupKey()
+        {
+            return groupKey;
+        }
+        
+        public List<SearchResult> getResults()
+        {
+            return results;
+        }
+    }
+    
     private class SearchResultGroup
         extends Fragment
     {
         private static final long serialVersionUID = 3540041356505975132L;
 
         public SearchResultGroup(String aId, String aMarkupId, MarkupContainer aMarkupProvider,
-            String groupKey, IModel<List<SearchResult>> aModel)
+            String groupKey, IModel<ResultsGroup> aModel)
         {
             super(aId, aMarkupId, aMarkupProvider, aModel);
             
@@ -549,7 +584,8 @@ public class SearchAnnotationSidebar
                             .add(new Label("sentence", sentence).setEscapeModelStrings(false));
                 }
             };
-            statementList.setModel(aModel);
+            statementList
+                    .setModel(LoadableDetachableModel.of(() -> aModel.getObject().getResults()));
             add(statementList);        
         }
     }

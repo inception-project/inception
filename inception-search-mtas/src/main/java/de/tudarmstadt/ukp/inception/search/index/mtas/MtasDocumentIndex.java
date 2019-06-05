@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
+import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -95,7 +97,8 @@ import de.tudarmstadt.ukp.inception.search.PrimitiveUimaIndexingSupport;
 import de.tudarmstadt.ukp.inception.search.SearchQueryRequest;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.index.PhysicalIndex;
-
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import mtas.analysis.token.MtasTokenString;
 import mtas.analysis.util.MtasTokenizerFactory;
 import mtas.codec.MtasCodec;
@@ -151,21 +154,23 @@ public class MtasDocumentIndex
 
     private static final int RESULT_WINDOW_SIZE = 3;
 
-    private static final String EMPTY_FEATUREVALUE_KEY = "<Empty>";
+    private static final String EMPTY_FEATURE_VALUE_KEY = "<Empty>";
 
     // Comparator for feature values. Sort lexicographically and make sure
     // EMPTY_FEATUREVALUE_KEY is the "biggest" value
     private static final Comparator<String> FEATUREVALUE_COMPARATOR = (o1, o2) -> {
-        if (EMPTY_FEATUREVALUE_KEY.equals(o1) && EMPTY_FEATUREVALUE_KEY.equals(o2)) {
+        if (EMPTY_FEATURE_VALUE_KEY.equals(o1) && EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
             return 0;
         }
-        else if (EMPTY_FEATUREVALUE_KEY.equals(o1)) {
+        else if (EMPTY_FEATURE_VALUE_KEY.equals(o1)) {
             return 1;
         }
-        else if (EMPTY_FEATUREVALUE_KEY.equals(o2)) {
+        else if (EMPTY_FEATURE_VALUE_KEY.equals(o2)) {
             return -1;
         }
-        else return o1.compareTo(o2);
+        else {
+            return o1.compareTo(o2);
+        }
     };
 
     private final Logger log = LoggerFactory.getLogger(getClass());
@@ -509,25 +514,26 @@ public class MtasDocumentIndex
 
         List<String> featureValues = new ArrayList<>();
 
-        List<String> fsAddresses = new ArrayList<>();
-        aTokens.stream().filter(
-            t -> t.getPositionStart() == aMatchStart && t.getPositionEnd() == aMatchEnd - 1
-                && t.getPrefix()
-                .equals(MtasUimaParser.getIndexedName(groupingFeatureIndexName))
-                && !fsAddresses.contains(t.getPayload().utf8ToString())) //NE can appear mul. times
+        IntSet fsAddresses = new IntOpenHashSet();
+        aTokens.stream().filter(t -> 
+                t.getPositionStart() == aMatchStart && 
+                t.getPositionEnd() == aMatchEnd - 1 &&
+                t.getPrefix().equals(getIndexedName(groupingFeatureIndexName)) &&
+                // Handle stacked annotations
+                !fsAddresses.contains(decodeFSAddress(t.getPayload()))) 
             .forEach(t -> {
                 featureValues.add(t.getPostfix());
-                fsAddresses.add(t.getPayload().utf8ToString());
+                fsAddresses.add(decodeFSAddress(t.getPayload()));
             });
         // now we look for the annotations where the feature value for the grouping feature is empty
         aTokens.stream()
-            .filter(t -> t.getPositionStart() == aMatchStart
-                && t.getPositionEnd() == aMatchEnd - 1
-                && t.getPrefix().equals(
-                MtasUimaParser.getIndexedName(aAnnotationLayer.getUiName()))
-                && !fsAddresses.contains(t.getPayload().utf8ToString()))
+            .filter(t -> 
+                t.getPositionStart() == aMatchStart &&
+                t.getPositionEnd() == aMatchEnd - 1 &&
+                t.getPrefix().equals(getIndexedName(aAnnotationLayer.getUiName())) &&
+                !fsAddresses.contains(decodeFSAddress(t.getPayload())))
             .forEach(t ->
-                featureValues.add(EMPTY_FEATUREVALUE_KEY));
+                featureValues.add(EMPTY_FEATURE_VALUE_KEY));
         return featureValues;
     }
 

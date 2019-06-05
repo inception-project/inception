@@ -18,11 +18,11 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
+import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Reader;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,7 +35,6 @@ import java.util.TreeMap;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.lucene.util.BytesRef;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -404,8 +403,10 @@ public class MtasUimaParser
         MtasToken mtasSentence = new MtasTokenString(aMtasId, field, aValue, aRange.getBegin());
         mtasSentence.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
-        // store address as string in ByteRef
-        mtasSentence.setPayload(new BytesRef(encodeFSAddress(aFSAddress)));
+        // Store the FS address as payload so we can identify which MtasTokens were generated from
+        // the same FS - this is not really meant to be used to look up the FS through the stored
+        // address as the CAS may be out-of-sync with the index and thus the IDs may not match
+        mtasSentence.setPayload(encodeFSAddress(aFSAddress));
         tokenCollection.add(mtasSentence);
         
         log.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
@@ -418,13 +419,11 @@ public class MtasUimaParser
                 getIndexedName(aField), aValue, aRange.getBegin());
         mtasAnnotationTypeFeatureLabel.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasAnnotationTypeFeatureLabel.addPositionRange(aRange.getBegin(), aRange.getEnd());
-        // store address as string in ByteRef
-        mtasAnnotationTypeFeatureLabel.setPayload(new BytesRef(encodeFSAddress(aFSAddress)));
+        // Store the FS address as payload so we can identify which MtasTokens were generated from
+        // the same FS - this is not really meant to be used to look up the FS through the stored
+        // address as the CAS may be out-of-sync with the index and thus the IDs may not match
+        mtasAnnotationTypeFeatureLabel.setPayload(encodeFSAddress(aFSAddress));
         tokenCollection.add(mtasAnnotationTypeFeatureLabel);
-    }
-
-    private byte[] encodeFSAddress(int aFeatureStructureAddress) {
-        return String.valueOf(aFeatureStructureAddress).getBytes(Charset.forName("Unicode"));
     }
     
     /**
