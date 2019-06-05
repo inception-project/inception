@@ -487,8 +487,6 @@ public class MtasDocumentIndex
     private List<String> featureValuesAtMatch(List<MtasTokenString> aTokens, int aMatchStart,
         int aMatchEnd, AnnotationLayer aAnnotationLayer, AnnotationFeature aAnnotationFeature)
     {
-        List<String> featureValues = new ArrayList<>();
-
         Optional<FeatureIndexingSupport> fisOpt = featureIndexingSupportRegistry
             .getIndexingSupport(aAnnotationFeature);
         FeatureIndexingSupport fis;
@@ -509,39 +507,28 @@ public class MtasDocumentIndex
         String groupingFeatureIndexName = fis
             .featureIndexName(aAnnotationLayer.getUiName(), "", aAnnotationFeature);
 
+        List<String> featureValues = new ArrayList<>();
 
         List<String> fsAddresses = new ArrayList<>();
         aTokens.stream().filter(
             t -> t.getPositionStart() == aMatchStart && t.getPositionEnd() == aMatchEnd - 1
-                && extractFeatureIndexName(t)
+                && t.getPrefix()
                 .equals(MtasUimaParser.getIndexedName(groupingFeatureIndexName))
                 && !fsAddresses.contains(t.getPayload().utf8ToString())) //NE can appear mul. times
             .forEach(t -> {
-                featureValues.add(extractFeatureValue(t));
+                featureValues.add(t.getPostfix());
                 fsAddresses.add(t.getPayload().utf8ToString());
             });
         // now we look for the annotations where the feature value for the grouping feature is empty
         aTokens.stream()
             .filter(t -> t.getPositionStart() == aMatchStart
                 && t.getPositionEnd() == aMatchEnd - 1
-                && extractFeatureIndexName(t).equals(
+                && t.getPrefix().equals(
                 MtasUimaParser.getIndexedName(aAnnotationLayer.getUiName()))
                 && !fsAddresses.contains(t.getPayload().utf8ToString()))
             .forEach(t ->
                 featureValues.add(EMPTY_FEATUREVALUE_KEY));
         return featureValues;
-    }
-
-    private String extractFeatureValue(MtasTokenString aMtasTokenString) {
-        String tokenValue = aMtasTokenString.getValue();
-        String featureValue = tokenValue.split(MtasTokenString.DELIMITER, 2)[1];
-        return featureValue;
-    }
-
-    private String extractFeatureIndexName(MtasTokenString aMtasTokenString) {
-        String tokenValue = aMtasTokenString.getValue();
-        String featureIndexName = tokenValue.split(MtasTokenString.DELIMITER, 2)[0];
-        return featureIndexName;
     }
 
     /**
