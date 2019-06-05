@@ -222,6 +222,9 @@ public class NamedEntityLinker
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        throw new UnsupportedOperationException("Evaluation not supported");
+        EvaluationResult result = new EvaluationResult();
+        result.setEvaluationSkipped(true);
+        result.setErrorMsg("NamedEntityLinker does not support evaluation.");
+        return result;
     }
 }
