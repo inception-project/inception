@@ -198,9 +198,9 @@ public class EvaluationSimulationPanel
                     LOG.warn("Evaluation skipped. Chart cannot to be shown");
                     continue;
                 }
-                
-                score = evaluationResult.computeAccuracyScore();
-                trainingSize = evaluationResult.getTrainingSetSize();
+
+                score = evaluationResult.computeF1Score();
+                trainingSize = evaluationResult.getTrainDataRatio();
             }
             catch (RecommendationException e) {
                 LOG.error(e.toString(),e);

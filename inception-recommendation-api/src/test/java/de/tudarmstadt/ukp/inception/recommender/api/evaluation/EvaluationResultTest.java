@@ -88,7 +88,7 @@ public class EvaluationResultTest
         double expectedPrec = (4.0 / 5 + 2.0 / 5) * 0.5;
         double expectedRecall = 0.5;
         EvaluationResult calc = instances.stream()
-                .collect(EvaluationResult.collector(0, 0, "PER"));
+                .collect(EvaluationResult.collector(0, 0, 0, "PER"));
 
         assertThat(calc.computeF1Score()).as("f1 with ignore label is correctly calculated")
                 .isEqualTo(2 * expectedPrec * expectedRecall / (expectedPrec + expectedRecall));
@@ -107,12 +107,12 @@ public class EvaluationResultTest
         assertThat(calc.getNumOfLabels()).as("check num of labels for no ignoreLabel").isEqualTo(3);
 
         calc = instances.stream()
-                .collect(EvaluationResult.collector(0, 0, "PER"));
+                .collect(EvaluationResult.collector(0, 0, 0, "PER"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for one ignoreLabel")
                 .isEqualTo(2);
 
         calc = instances.stream().collect(
-                EvaluationResult.collector(0, 0, "PER", "ORG"));
+                EvaluationResult.collector(0, 0, 0, "PER", "ORG"));
         assertThat(calc.getNumOfLabels()).as("check num of labels for two ignoreLabel")
                 .isEqualTo(1);
     }
