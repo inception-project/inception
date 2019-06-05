@@ -34,6 +34,7 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.TreeMap;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -152,6 +153,21 @@ public class MtasDocumentIndex
 
     private static final String EMPTY_FEATUREVALUE_KEY = "<Empty>";
 
+    // Comparator for feature values. Sort lexicographically and make sure
+    // EMPTY_FEATUREVALUE_KEY is the "biggest" value
+    private static final Comparator<String> FEATUREVALUE_COMPARATOR = (o1, o2) -> {
+        if (EMPTY_FEATUREVALUE_KEY.equals(o1) && EMPTY_FEATUREVALUE_KEY.equals(o2)) {
+            return 0;
+        }
+        else if (EMPTY_FEATUREVALUE_KEY.equals(o1)) {
+            return 1;
+        }
+        else if (EMPTY_FEATUREVALUE_KEY.equals(o2)) {
+            return -1;
+        }
+        else return o1.compareTo(o2);
+    };
+
     private final Logger log = LoggerFactory.getLogger(getClass());
 
     private @Autowired FeatureIndexingSupportRegistry featureIndexingSupportRegistry;
@@ -259,7 +275,7 @@ public class MtasDocumentIndex
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
     {
-        HashMap<String, List<SearchResult>> results = new HashMap<>();
+        Map<String, List<SearchResult>> results = new TreeMap<>(FEATUREVALUE_COMPARATOR);
 
         ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
                 .listIterator();
@@ -455,7 +471,7 @@ public class MtasDocumentIndex
         return results;
     }
 
-    private void addToResults(HashMap<String, List<SearchResult>> aResultsMap, String aKey,
+    private void addToResults(Map<String, List<SearchResult>> aResultsMap, String aKey,
         SearchResult aSearchResult)
     {
         if (aResultsMap.containsKey(aKey)) {
@@ -498,7 +514,8 @@ public class MtasDocumentIndex
         aTokens.stream().filter(
             t -> t.getPositionStart() == aMatchStart && t.getPositionEnd() == aMatchEnd - 1
                 && extractFeatureIndexName(t)
-                .equals(MtasUimaParser.getIndexedName(groupingFeatureIndexName)))
+                .equals(MtasUimaParser.getIndexedName(groupingFeatureIndexName))
+                && !fsAddresses.contains(t.getPayload().utf8ToString())) //NE can appear mul. times
             .forEach(t -> {
                 featureValues.add(extractFeatureValue(t));
                 fsAddresses.add(t.getPayload().utf8ToString());

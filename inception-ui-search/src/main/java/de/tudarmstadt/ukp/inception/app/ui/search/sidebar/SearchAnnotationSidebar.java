@@ -183,7 +183,7 @@ public class SearchAnnotationSidebar
             }
         };
         searchResultGroups.setModel(LambdaModel.of(() -> groupedSearchResults.getObject().keySet()
-                .stream().sorted().collect(Collectors.toList())));
+                .stream().collect(Collectors.toList())));
         mainContainer.add(searchResultGroups);
 
         Form<Void> annotationForm = new Form<>("annotateForm");

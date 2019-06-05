@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.Reader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -404,7 +405,7 @@ public class MtasUimaParser
         mtasSentence.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasSentence.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // store address as string in ByteRef
-        mtasSentence.setPayload(new BytesRef(String.valueOf(aFSAddress)));
+        mtasSentence.setPayload(new BytesRef(encodeFSAddress(aFSAddress)));
         tokenCollection.add(mtasSentence);
         
         log.trace("TEXT[{}-{}]: {}={}", aRange.getBegin(), aRange.getEnd(), field, aValue);
@@ -418,8 +419,12 @@ public class MtasUimaParser
         mtasAnnotationTypeFeatureLabel.setOffset(aRange.getBeginOffset(), aRange.getEndOffset());
         mtasAnnotationTypeFeatureLabel.addPositionRange(aRange.getBegin(), aRange.getEnd());
         // store address as string in ByteRef
-        mtasAnnotationTypeFeatureLabel.setPayload(new BytesRef(String.valueOf(aFSAddress)));
+        mtasAnnotationTypeFeatureLabel.setPayload(new BytesRef(encodeFSAddress(aFSAddress)));
         tokenCollection.add(mtasAnnotationTypeFeatureLabel);
+    }
+
+    private byte[] encodeFSAddress(int aFeatureStructureAddress) {
+        return String.valueOf(aFeatureStructureAddress).getBytes(Charset.forName("Unicode"));
     }
     
     /**
