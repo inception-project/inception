@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -25,13 +26,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
@@ -55,8 +56,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.GazeteerEntry;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class StringMatchingRecommenderTest
 {
@@ -94,39 +95,41 @@ public class StringMatchingRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         assertThat(predictions).as("Score is positive")
-            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
 
         assertThat(predictions).as("Some score is not perfect")
-            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
-    
+
     @Test
     public void thatPredictionForNoLabelAnnosWorks() throws Exception
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         CAS cas = getTestCasNoLabelLabels();
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
-        assertThat(predictions).as("Has all null labels").extracting(PredictedSpan::getLabel)
+        assertThat(predictions).as("Has all null labels").extracting(NamedEntity::getValue)
                 .containsOnlyNulls();
     }
-    
+
     private CAS getTestCasNoLabelLabels() throws Exception
     {
         Dataset ds = loader.load("germeval2014-de");
@@ -135,7 +138,7 @@ public class StringMatchingRecommenderTest
         Feature valFeature = neType.getFeatureByBaseName("value");
         JCasUtil.select(cas.getJCas(), NamedEntity.class)
                 .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
-        
+
         return cas;
     }
 
@@ -144,32 +147,33 @@ public class StringMatchingRecommenderTest
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
-        
+
         CAS cas = casList.get(0);
-        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
         List<GazeteerEntry> gazeteer = new ArrayList<>();
         gazeteer.add(new GazeteerEntry("Toyota", "ORG"));
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
 
         sut.pretrain(gazeteer);
-        
+
         sut.train(context, emptyList());
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
-            .isNotEmpty();
-        
+             .isNotEmpty();
+
         assertThat(predictions)
             .as("Score is positive")
-            .allMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() <= 1.0 );
+            .allMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) <= 1.0 );
 
         assertThat(predictions)
             .as("Some score is not perfect")
-            .anyMatch(prediction -> prediction.getScore() > 0.0 && prediction.getScore() < 1.0 );
+            .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
     }
 
 
@@ -336,5 +340,10 @@ public class StringMatchingRecommenderTest
         recommender.setMaxRecommendations(3);
 
         return recommender;
+    }
+
+    private static Double getScore(AnnotationFS fs)
+    {
+        return RecommenderTestHelper.getScore(fs, "value");
     }
 }
