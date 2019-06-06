@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfAnnoModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.render.PdfAnnoRenderer;
-import paperai.pdfextract.PDFExtractor;
+import de.tudarmstadt.ukp.inception.pdfeditor.pdfextract.PDFExtractor;
 
 public class PdfAnnotationEditor
     extends AnnotationEditorBase

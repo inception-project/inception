@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -49,7 +49,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.StringMatchingRecommenderTraits;
 
@@ -59,12 +58,18 @@ public class RemoteStringMatchingNerRecommender
     private final RecommenderContext context;
     private final StringMatchingRecommender recommendationEngine;
 
+    private final String layerName;
+    private final String featureName;
+
     public RemoteStringMatchingNerRecommender(Recommender aRecommender)
     {
         recommender = aRecommender;
         context = new RecommenderContext();
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
         recommendationEngine = new StringMatchingRecommender(recommender, traits);
+
+        layerName = aRecommender.getLayer().getName();
+        featureName = aRecommender.getFeature().getName();
     }
 
     public void train(String aTrainingRequestJson) throws Exception
@@ -97,20 +102,17 @@ public class RemoteStringMatchingNerRecommender
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
-        recommendationEngine.predict(context, cas);
+        // Only work on real annotations, not on predictions
+        Type predictedType = CasUtil.getType(cas, recommender.getLayer().getName());
+        Feature feature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
-        // Convert PredictionSpan to NamedEntity annotations
-        Type predictionType = getType(cas, PredictedSpan.class);
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
-        Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-        Feature valueFeature = neType.getFeatureByBaseName("value");
-
-        for (AnnotationFS fs : CasUtil.select(cas, predictionType)) {
-            AnnotationFS ne = cas.createAnnotation(neType, fs.getBegin(), fs.getEnd());
-            ne.setStringValue(valueFeature, fs.getStringValue(labelFeature));
-            cas.addFsToIndexes(ne);
-            cas.removeFsFromIndexes(fs);
+        for (AnnotationFS fs : CasUtil.select(cas, predictedType)) {
+            if (fs.getBooleanValue(feature)) {
+                cas.removeFsFromIndexes(fs);
+            }
         }
+
+        recommendationEngine.predict(context, cas);
 
         return buildPredictionResponse(cas);
     }

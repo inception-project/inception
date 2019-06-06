@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
 public class OpenNlpNerRecommenderTest
 {
@@ -91,12 +91,13 @@ public class OpenNlpNerRecommenderTest
         List<CAS> casList = loadDevelopmentData();
         
         CAS cas = casList.get(0);
-        
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
         sut.train(context, asList(cas));
 
         sut.predict(context, cas);
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas.getJCas(), PredictedSpan.class);
+        Collection<NamedEntity> predictions = JCasUtil.select(cas.getJCas(), NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

@@ -75,13 +75,13 @@ public class ActiveLearningServiceImpl
     public List<SuggestionGroup> getSuggestions(User aUser,
             AnnotationLayer aLayer)
     {
-        Predictions model = recommendationService.getPredictions(aUser, aLayer.getProject());
+        Predictions predictions = recommendationService.getPredictions(aUser, aLayer.getProject());
 
-        if (model == null) {
+        if (predictions == null) {
             return Collections.emptyList();
         }
 
-        Map<String, SuggestionDocumentGroup> recommendationsMap = model
+        Map<String, SuggestionDocumentGroup> recommendationsMap = predictions
                 .getPredictionsForWholeProject(aLayer, documentService);
 
         return recommendationsMap.values().stream()

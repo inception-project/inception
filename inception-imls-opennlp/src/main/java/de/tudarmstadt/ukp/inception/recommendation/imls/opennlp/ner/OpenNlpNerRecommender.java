@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -48,7 +47,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -62,23 +60,18 @@ import opennlp.tools.util.Span;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpNerRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
     
     private static final String NO_NE_TAG = "O";
 
-    private final String layerName;
-    private final String featureName;
     private final OpenNlpNerRecommenderTraits traits;
-    private final int maxRecommendations;
 
     public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
+        super(aRecommender);
         
         traits = aTraits;
     }
@@ -113,10 +106,12 @@ public class OpenNlpNerRecommender
         NameFinderME finder = new NameFinderME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
         Type tokenType = getType(aCas, Token.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type predictedType = getPredictedType(aCas);
+
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -137,9 +132,11 @@ public class OpenNlpNerRecommender
                 }
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
-                AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
-                annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                annotation.setStringValue(labelFeature, label);
+                AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
+                annotation.setStringValue(predictedFeature, label);
+                annotation.setDoubleValue(scoreFeature, prediction.getProb());
+                annotation.setBooleanValue(isPredictionFeature, true);
+
                 aCas.addFsToIndexes(annotation);
             }
         }
@@ -169,13 +166,19 @@ public class OpenNlpNerRecommender
         
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingSetSize < 2 || testSetSize < 2) {
-            LOG.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
             
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -205,7 +208,7 @@ public class OpenNlpNerRecommender
         }
 
         return labelPairs.stream().collect(EvaluationResult
-                .collector(trainingSetSize, testSetSize, NO_NE_TAG));
+                .collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
     }
 
     /**

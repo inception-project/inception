@@ -17,11 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+
 public class SearchOptions extends Options
 {
     private static final long serialVersionUID = 3030323391922717647L;
 
     private boolean limitedToCurrentDocument = false;
+
+    private AnnotationLayer groupingLayer;
+
+    private AnnotationFeature groupingFeature;
 
     public boolean isLimitedToCurrentDocument()
     {
@@ -31,5 +38,25 @@ public class SearchOptions extends Options
     public void setLimitedToCurrentDocument(boolean aLimitedToCurrentDocument)
     {
         limitedToCurrentDocument = aLimitedToCurrentDocument;
+    }
+
+    public AnnotationLayer getGroupingLayer()
+    {
+        return groupingLayer;
+    }
+
+    public void setGroupingLayer(AnnotationLayer aGroupingLayer)
+    {
+        groupingLayer = aGroupingLayer;
+    }
+
+    public AnnotationFeature getGroupingFeature()
+    {
+        return groupingFeature;
+    }
+
+    public void setGroupingFeature(AnnotationFeature aGroupingFeature)
+    {
+        groupingFeature = aGroupingFeature;
     }
 }

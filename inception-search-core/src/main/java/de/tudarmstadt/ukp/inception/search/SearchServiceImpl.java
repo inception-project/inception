@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.search;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -319,15 +322,27 @@ public class SearchServiceImpl
     }
 
     @Override
+    @Transactional public List<SearchResult> query(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument) throws IOException, ExecutionException
+    {
+        Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
+            null, null);
+        List<SearchResult> resultsAsList = new ArrayList<>();
+        groupedResults.values().stream()
+            .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
+        return resultsAsList;
+    }
+
+    @Override
     @Transactional
-    public List<SearchResult> query(User aUser, Project aProject, String aQuery,
-            SourceDocument aDocument)
-        throws IOException, ExecutionException
+    public Map<String, List<SearchResult>> query(User aUser,
+        Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException
     {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
 
-        List<SearchResult> results = null;
+        Map<String, List<SearchResult>> results = null;
 
         Index index = getIndexFromMemory(aProject);
 
@@ -367,7 +382,8 @@ public class SearchServiceImpl
                 log.debug("Running query: [{}]", aQuery);
 
                 results = index.getPhysicalIndex().executeQuery(
-                        new SearchQueryRequest(aProject, aUser.getUsername(), aQuery, aDocument));
+                    new SearchQueryRequest(aProject, aUser.getUsername(), aQuery, aDocument,
+                        aAnnotationLayer, aAnnotationFeature));
             }
 
         }

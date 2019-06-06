@@ -28,8 +28,6 @@ import org.apache.uima.fit.util.FSUtil;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.ListAssert;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
-
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
@@ -57,6 +55,7 @@ public class CasAssert
         return this;
     }
 
+    /*
     public CasAssert containsPrediction(String text, String label)
     {
         isNotNull();
@@ -73,6 +72,7 @@ public class CasAssert
 
         return this;
     }
+    */
 
     public ListAssert<AnnotationFS> extractNamedEntities()
     {

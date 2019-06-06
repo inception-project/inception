@@ -62,7 +62,8 @@
     <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <lucene.version>7.3.0</lucene.version>
+    <lucene.version>7.3.1</lucene.version>
+    <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <mockito.version>2.27.0</mockito.version>
@@ -98,6 +99,7 @@
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
+    <module>inception-testing</module>
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
     <module>inception-scheduling</module>
@@ -317,6 +319,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
+        <version>0.10.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-testing</artifactId>
         <version>0.10.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1008,6 +1015,27 @@
         <groupId>com.github.jsonld-java</groupId>
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
+      </dependency>
+        
+      <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>transport</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
       </dependency>
         
       <dependency>
