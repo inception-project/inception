@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -51,7 +50,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
@@ -61,25 +59,19 @@ import opennlp.tools.util.Sequence;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpPosRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<POSModel> KEY_MODEL = new Key<>("opennlp_pos_model");
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpPosRecommender.class);
     private static final String PAD = "<PAD>";
 
-    private final String layerName;
-    private final String featureName;
-    private final int maxRecommendations;
-    
     private final OpenNlpPosRecommenderTraits traits;
 
     public OpenNlpPosRecommender(Recommender aRecommender, OpenNlpPosRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
-        
+        super(aRecommender);
+
         traits = aTraits;
     }
 
@@ -114,11 +106,12 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
 
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -158,10 +151,11 @@ public class OpenNlpPosRecommender
                     int end = token.getEnd();
                     double confidence = probabilities[i];
 
-                    // Create the PredictedSpan
-                    AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
-                    annotation.setDoubleValue(confidenceFeature, confidence);
-                    annotation.setStringValue(labelFeature, label);
+                    // Create the prediction
+                    AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
+                    annotation.setStringValue(predictedFeature, label);
+                    annotation.setDoubleValue(scoreFeature, confidence);
+                    annotation.setBooleanValue(isPredictionFeature, true);
                     aCas.addFsToIndexes(annotation);
                 }
             }
