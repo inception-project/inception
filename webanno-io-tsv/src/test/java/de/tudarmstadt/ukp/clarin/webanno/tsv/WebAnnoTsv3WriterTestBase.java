@@ -62,6 +62,7 @@ import org.junit.runners.MethodSorters;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.morph.MorphologicalFeatures;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Stem;
@@ -1669,7 +1670,91 @@ public abstract class WebAnnoTsv3WriterTestBase
         
         writeAndAssertEquals(jcas);
     }
+    
+    /*
+     * This is something that cannot be done through the editor UI but can happen when working with
+     * externally created data.
+     */
+    @Test
+    public void testAnnotationWithTrailingWhitespace() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("one  two");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 5, 8).addToIndexes();
+        new Sentence(jcas, 0, 8).addToIndexes();
+        
+        // NE has trailing whitespace - on export this should be silently dropped
+        new NamedEntity(jcas, 0, 4).addToIndexes();
+        
+        writeAndAssertEquals(jcas);
+    }
 
+    /*
+     * This is something that cannot be done through the editor UI but can happen when working with
+     * externally created data.
+     */
+    @Test
+    public void testAnnotationWithTrailingWhitespaceAtEnd() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("one two ");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 4, 7).addToIndexes();
+        new Sentence(jcas, 0, 7).addToIndexes();
+        
+        // NE has trailing whitespace - on export this should be silently dropped
+        new NamedEntity(jcas, 4, 8).addToIndexes();
+        
+        writeAndAssertEquals(jcas);
+    }    
+    
+    /*
+     * This is something that cannot be done through the editor UI but can happen when working with
+     * externally created data.
+     */
+    @Test
+    public void testAnnotationWithLeadingWhitespaceAtStart() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText(" one two");
+        new Token(jcas, 1, 4).addToIndexes();
+        new Token(jcas, 5, 8).addToIndexes();
+        new Sentence(jcas, 1, 8).addToIndexes();
+        
+        // NE has leading whitespace - on export this should be silently dropped
+        new NamedEntity(jcas, 0, 4).addToIndexes();
+        
+        writeAndAssertEquals(jcas);
+    }
+
+    /*
+     * This is something that cannot be done through the editor UI but can happen when working with
+     * externally created data.
+     */
+    @Test
+    public void testAnnotationWithLeadingWhitespace() throws Exception
+    {
+        JCas jcas = JCasFactory.createJCas();
+        
+        DocumentMetaData.create(jcas).setDocumentId("doc");
+        jcas.setDocumentText("one  two");
+        new Token(jcas, 0, 3).addToIndexes();
+        new Token(jcas, 5, 8).addToIndexes();
+        new Sentence(jcas, 0, 8).addToIndexes();
+        
+        // NE has leading whitespace - on export this should be silently dropped
+        new NamedEntity(jcas, 4, 8).addToIndexes();
+        
+        writeAndAssertEquals(jcas);
+    }
+    
     private void writeAndAssertEquals(JCas aJCas, Object... aParams)
         throws IOException, ResourceInitializationException, AnalysisEngineProcessException
     {
