@@ -213,6 +213,14 @@ For every features of a span Annotation, annotation value will be presented in t
 Here, the first annotation at column 4, `JJ` is avalue for a feature *PosValue* of the layer *de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS*. For the two features of the layer *webanno.custom.Sentiment* (*Category* and *Opinion*), the values `abstract` and `negative` are
 presented at column 5 and 6 resp.
 
+NOTE: When serializing a span annotation starts or ends in a space between tokens, then the
+      annotation is truncated to start at the next token after the space or to end at the last token 
+      before the space. For example, if you consider the text `[one two]` and there is an some span annotation
+      on `[one ]` (note the trailing space), the extent of this span annotation will be serialized as only
+      covering `[one]`. It is not possible in this format to have annotations starting or ending in 
+      the space between tokens because the inter-token space is not rendered as a row and therefore is not
+      addressable in the format. 
+
 === Disambiguation IDs
 
 Within a single line, an annotation can be uniquely identified by its type and stacking index.
