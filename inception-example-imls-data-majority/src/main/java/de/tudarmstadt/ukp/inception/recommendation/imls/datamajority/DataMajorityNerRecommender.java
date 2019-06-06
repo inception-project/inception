@@ -169,10 +169,11 @@ public class DataMajorityNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
+        List<Annotation> data = extractAnnotations(aCasses);
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
-        for (Annotation ann : extractAnnotations(aCasses)) {
+        for (Annotation ann : data) {
             switch (aDataSplitter.getTargetSet(ann)) {
             case TRAIN:
                 trainingData.add(ann);
@@ -187,11 +188,13 @@ public class DataMajorityNerRecommender
         
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -201,7 +204,7 @@ public class DataMajorityNerRecommender
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize));
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
         
         return result;
     }

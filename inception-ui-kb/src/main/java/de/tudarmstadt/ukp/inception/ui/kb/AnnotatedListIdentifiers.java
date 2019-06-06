@@ -150,7 +150,8 @@ public class AnnotatedListIdentifiers
         }
         try {
             currentProject = kbModel.getObject().getProject();
-            return searchService.query(currentUser, currentProject, targetQuery.getObject());
+            return searchService
+                .query(currentUser, currentProject, targetQuery.getObject());
         }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);

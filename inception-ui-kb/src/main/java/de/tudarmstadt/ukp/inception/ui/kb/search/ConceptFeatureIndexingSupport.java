@@ -113,13 +113,13 @@ public class ConceptFeatureIndexingSupport
         String field = aFieldPrefix;
         
         // Indexing <layer>.<feature>-exact=<UI label>
-        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT,
+        values.put(featureIndexName(field, aFeaturePrefix, aFeature),
                 featureObject.getUiLabel());
         // Indexing <layer>.<feature>=<UI label>
         values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(),
                 featureObject.getUiLabel());
         // Indexing: <layer>.<feature>-exact=<URI>
-        values.put(field + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT,
+        values.put(featureIndexName(field, aFeaturePrefix, aFeature),
                 featureObject.getIdentifier());
         // Indexing: <layer>.<feature>=<URI>
         values.put(field + ATTRIBUTE_SEP + aFeature.getUiName(), featureObject.getIdentifier());
@@ -144,6 +144,13 @@ public class ConceptFeatureIndexingSupport
         }
         
         return values;
+    }
+
+    @Override
+    public String featureIndexName(String aFieldPrefix, String aFeaturePrefix,
+        AnnotationFeature aFeature)
+    {
+        return aFieldPrefix + ATTRIBUTE_SEP + aFeature.getUiName() + SPECIAL_SEP + INDEX_KB_EXACT;
     }
     
 }

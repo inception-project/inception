@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 
 import org.apache.wicket.Session;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
@@ -39,8 +40,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItemRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.DashboardMenu;
+import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.ActivitiesDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet.CurrentProjectDashlet;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.projectlist.ProjectsOverviewPage;
+import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 /**
  * Project dashboard page
@@ -88,7 +91,24 @@ public class ProjectDashboardPage extends ApplicationPageBase
         menu = new DashboardMenu("menu", LoadableDetachableModel.of(this::getMenuItems));
         add(menu);
         
-        add(new CurrentProjectDashlet("currentProjectDashlet"));
+        Model<Project> currentProject = Model.of(getProject());
+        add(new CurrentProjectDashlet("currentProjectDashlet", currentProject));
+        add(new ActivitiesDashlet("activitiesDashlet", currentProject));
+    }
+    
+    /**
+     * Look up project in session but get fresh info from the DB in case the session object is
+     * stale (e.g. if the title/description has changed).
+     */
+    private Project getProject()
+    {
+        Project project = Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT);
+        if (project == null) {
+            return null;
+        }
+        else {
+            return projectService.getProject(project.getId());
+        }
     }
     
     private List<MenuItem> getMenuItems()

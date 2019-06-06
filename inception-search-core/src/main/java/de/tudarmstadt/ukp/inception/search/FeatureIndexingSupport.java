@@ -50,4 +50,9 @@ public interface FeatureIndexingSupport
      */
     MultiValuedMap<String, String> indexFeatureValue(String aFieldPrefix,
             AnnotationFS aAnnotation, String aFeaturePrefix, AnnotationFeature aFeature);
+
+    /**
+     * Get the name of the feature how it is used in the index
+     */
+    String featureIndexName(String aFieldPrefix, String aFeaturePrefix, AnnotationFeature aFeature);
 }
