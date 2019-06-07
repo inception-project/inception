@@ -827,17 +827,24 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-maven-plugin</artifactId>
             <version>${spring.boot.version}</version>
-            <configuration>
-              <executable>true</executable>
-              <layout>ZIP</layout> <!-- To use the PropertiesLauncher -->
-            </configuration>
             <executions>
               <execution>
                 <goals>
                   <goal>repackage</goal>
                 </goals>
+                <configuration>
+                  <executable>true</executable>
+                  <layoutFactory implementation="de.tudarmstadt.ukp.inception.bootloader.PluginEnabledWarLayoutFactory"/>
+                </configuration>
               </execution>
             </executions>
+            <dependencies>
+              <dependency>
+                <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+                <artifactId>inception-boot-loader</artifactId>
+                <version>0.10.0-SNAPSHOT</version>
+              </dependency>
+            </dependencies>
           </plugin>
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>

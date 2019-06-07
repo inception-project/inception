@@ -76,6 +76,7 @@
   </properties>
   <modules>
     <module>inception-build</module>
+    <module>inception-boot-loader</module>
     <module>inception-app-webapp</module>
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
