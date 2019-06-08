@@ -69,6 +69,7 @@
     <mockito.version>2.23.4</mockito.version>
     <assertj.version>3.12.1</assertj.version>
     <okhttp.version>3.13.1</okhttp.version>
+    <pf4j.version>2.6.0</pf4j.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
@@ -76,6 +77,9 @@
   </properties>
   <modules>
     <module>inception-build</module>
+    <module>inception-plugin-api</module>
+    <module>inception-plugin-manager</module>
+    <module>inception-plugin-parent</module>
     <module>inception-app-webapp</module>
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
@@ -210,6 +214,16 @@
         <groupId>javax.servlet</groupId>
         <artifactId>javax.servlet-api</artifactId>
         <version>3.1.0</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-plugin-manager</artifactId>
+        <version>0.10.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-plugin-api</artifactId>
+        <version>0.10.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -553,6 +567,23 @@
           <exclusion>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+    
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j</artifactId>
+        <version>${pf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j-spring</artifactId>
+        <version>0.5.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
       </dependency>

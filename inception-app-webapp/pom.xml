@@ -37,6 +37,14 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-doc</artifactId>
     </dependency>
     <dependency>
@@ -318,7 +326,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-
+    
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>

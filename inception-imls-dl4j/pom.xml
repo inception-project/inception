@@ -19,12 +19,16 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <artifactId>inception-app</artifactId>
+    <artifactId>inception-plugin-parent</artifactId>
     <version>0.10.0-SNAPSHOT</version>
+    <relativePath>../inception-plugin-parent</relativePath>
   </parent>
   <artifactId>inception-imls-dl4j</artifactId>
   <name>INCEpTION - ML - Deeplearning4J (v${dl4j.version})</name>
   <properties>
+    <plugin.class>de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JSequenceRecommenderPlugin</plugin.class>
+    <plugin.provider>INCEpTION</plugin.provider>
+    
     <dl4j.version>1.0.0-beta4</dl4j.version>
     <openblas.version>0.3.5</openblas.version>
     <javacpp-presets.version>1.5</javacpp-presets.version>
@@ -36,28 +40,51 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api-dao</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimaj-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
+      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
     </dependency>
 
     <dependency>
@@ -73,6 +100,7 @@
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -191,24 +219,6 @@
       <artifactId>${nd4j.backend}</artifactId>
       <version>${dl4j.version}</version>
       <classifier>windows-x86_64</classifier>
-    </dependency>
-
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimafit-core</artifactId>
     </dependency>
 
     <dependency>

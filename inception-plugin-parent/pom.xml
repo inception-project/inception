@@ -1,0 +1,142 @@
+<!--
+  Copyright 2019
+  Ubiquitous Knowledge Processing (UKP) Lab
+  Technische Universität Darmstadt
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+    <artifactId>inception-app</artifactId>
+    <version>0.10.0-SNAPSHOT</version>
+  </parent>
+  <artifactId>inception-plugin-parent</artifactId>
+  <name>INCEpTION - Plugin Parent POM</name>
+  <packaging>pom</packaging>
+  <properties>
+    <!-- Override below properties in each plugin's pom.xml -->
+    <plugin.id>${project.groupId}:${project.artifactId}</plugin.id>
+    <plugin.class />
+    <plugin.version>${project.version}</plugin.version>
+    <plugin.provider />
+    <plugin.dependencies />
+  </properties>
+  <dependencies>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-plugin-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.pf4j</groupId>
+      <artifactId>pf4j</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <!-- The logging subsystem used by WebAnno -->
+    <dependency>
+      <!-- Use Log4J http as logging backend -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <!-- Use Log4J http as logging backend -->
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j-impl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <!-- Route Log4J v1 over SLF4J -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>log4j-over-slf4j</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <!-- Route Java Commons Logging over SLF4J -->
+      <groupId>org.slf4j</groupId>
+      <artifactId>jcl-over-slf4j</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <!-- Avoid Commons Logging -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <!-- JAXB is no longer included with Java 9+ by default -->
+    <dependency>
+      <groupId>javax.xml.bind</groupId>
+      <artifactId>jaxb-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.bind</groupId>
+      <artifactId>jaxb-impl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>javax.activation-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <finalName>${project.artifactId}-${project.version}-plugin</finalName>
+          <appendAssemblyId>false</appendAssemblyId>
+          <attach>false</attach>
+          <archive>
+            <manifest>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Plugin-Id>${plugin.id}</Plugin-Id>
+              <Plugin-Version>${plugin.version}</Plugin-Version>
+              <Plugin-Provider>${plugin.provider}</Plugin-Provider>
+              <Plugin-Class>${plugin.class}</Plugin-Class>
+              <Plugin-Dependencies>${plugin.dependencies}</Plugin-Dependencies>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

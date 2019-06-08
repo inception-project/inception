@@ -61,6 +61,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuIte
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
+import de.tudarmstadt.ukp.inception.plugin.api.InceptionPluginManager;
+import de.tudarmstadt.ukp.inception.plugin.impl.InceptionPluginManagerImpl;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
@@ -108,6 +110,15 @@ public class INCEpTION
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+    
+    @Bean
+    public InceptionPluginManager pluginManager()
+    {
+        InceptionPluginManagerImpl pluginManager = new InceptionPluginManagerImpl(
+                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
+        return pluginManager;
     }
     
     // The WebAnno User model class picks this bean up by name!
@@ -168,16 +179,20 @@ public class INCEpTION
                 .setupScreen(INCEpTION.class.getResource("splash.png"));
         
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        // Add the main application as the root Spring context
+        builder.sources(INCEpTION.class).web(true);
+        
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
-        builder.sources(INCEpTION.class);
+        
         builder.listeners(event -> {
             if (event instanceof ApplicationReadyEvent
                     || event instanceof ShutdownDialogAvailableEvent) {
                 splash.ifPresent(it -> it.dispose());
             }
         });
+        
         builder.run(args);
     }
 }

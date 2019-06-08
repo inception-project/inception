@@ -19,49 +19,69 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-    <artifactId>inception-app</artifactId>
+    <artifactId>inception-plugin-parent</artifactId>
     <version>0.10.0-SNAPSHOT</version>
+    <relativePath>../inception-plugin-parent</relativePath>
   </parent>
   <artifactId>inception-example-imls-data-majority</artifactId>
   <name>INCEpTION - Example - ML - Data Majority Recommender</name>
+  <properties>
+    <plugin.class>de.tudarmstadt.ukp.inception.recommendation.imls.datamajority.DataMajorityNerRecommenderPlugin</plugin.class>
+    <plugin.provider>INCEpTION</plugin.provider>
+    <plugin.dependencies></plugin.dependencies>
+  </properties>
   <dependencies>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-model</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
+      <scope>provided</scope>
     </dependency>
-    
+
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimafit-core</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.segmentation-asl</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.pf4j</groupId>
+      <artifactId>pf4j</artifactId>
+      <scope>provided</scope>
     </dependency>
 
     <!-- Testing -->
@@ -79,13 +99,11 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-testing</artifactId>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
@@ -106,10 +124,5 @@
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
-
-
-
-
   </dependencies>
-
 </project>
