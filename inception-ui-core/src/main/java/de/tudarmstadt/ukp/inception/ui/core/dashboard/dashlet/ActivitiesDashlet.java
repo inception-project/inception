@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCUMENT_ID;
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
@@ -31,14 +29,12 @@ import java.util.stream.Collectors;
 import javax.persistence.NoResultException;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +48,11 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaStatelessLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
+import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 
 public class ActivitiesDashlet extends Dashlet_ImplBase
 {
@@ -106,9 +102,8 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
             protected void populateItem(ListItem<LoggedEvent> aItem)
             {
                 SourceDocument document = getSourceDocument(aItem.getModelObject());
-                LambdaStatelessLink eventLink = new LambdaStatelessLink("eventLink",
-                    () -> openLastActivity(aItem.getModelObject(), document));
-                eventLink.add(new Label("eventName", getEventDescription(aItem, document)));
+                ExternalLink eventLink = createLastActivityLink("eventLink", aItem.getModelObject(),
+                        document);
                 aItem.add(eventLink);
             }
         };
@@ -164,23 +159,6 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         
         return true;
     }
-
-    private String getEventDescription(ListItem<LoggedEvent> aItem, SourceDocument aDocument) {
-
-        if (aItem == null || aDocument == null) {
-            return null;
-        }
-        String documentName = aDocument.getName();
-        String eventDate = formatDateStr(aItem.getModelObject());
-
-        // the annotation event was fired while curating
-        if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
-            return String.format("%s: Curated \"%s\"", eventDate, documentName);
-        }
-        else {
-            return String.format("%s: Annotated \"%s\"", eventDate, documentName);
-        }
-    }
     
     private SourceDocument getSourceDocument(LoggedEvent aEvent)
     {
@@ -215,32 +193,40 @@ public class ActivitiesDashlet extends Dashlet_ImplBase
         return eventDate;
     }
     
-    private void openLastActivity(LoggedEvent aEvent, SourceDocument aDocument)
+    private ExternalLink createLastActivityLink(String aId, LoggedEvent aEvent,
+            SourceDocument aDocument)
     {
         if (aEvent == null || aDocument == null) {
-            return;
+            return getDummyLink(aId);
         }
         
         String eventName = aEvent.getEvent();
         if (!annotationEvents.contains(eventName)) {
             log.info(String.format("Unknown last activities event: %s", eventName));
-            return;
+            return getDummyLink(aId);
         }        
        
+        Project project = projectModel.getObject();
+        Long docId = aDocument.getId();
+        String documentName = aDocument.getName();
+        String eventDate = formatDateStr(aEvent);
         if (SourceDocumentState.CURATION_IN_PROGRESS.equals(aDocument.getState())) {
-            openDocument(aEvent, CurationPage.class);
+            String linkLabel = String.format("%s: Curated \"%s\"", eventDate, documentName);
+            return LinkProvider.createDocumentPageLink(project, docId, aId, linkLabel,
+                    CurationPage.class);
         }
         else {
-            openDocument(aEvent, AnnotationPage.class);
+            String linkLabel = String.format("%s: Annotated \"%s\"", eventDate, documentName);
+            return LinkProvider.createDocumentPageLink(project, docId, aId, linkLabel,
+                    AnnotationPage.class);
         }
     }
 
-    private void openDocument(LoggedEvent aEvent, Class<? extends WebPage> aPage)
+    private ExternalLink getDummyLink(String aId)
     {
-        PageParameters params = new PageParameters();
-        params.add(PAGE_PARAM_PROJECT_ID, projectModel.getObject().getId());
-        params.add(PAGE_PARAM_DOCUMENT_ID, aEvent.getDocument());
-        setResponsePage(aPage, params);
+        ExternalLink link = new ExternalLink(aId, "");
+        link.setVisible(false);
+        return link;
     }
 
     private List<LoggedEvent> listActivities()
