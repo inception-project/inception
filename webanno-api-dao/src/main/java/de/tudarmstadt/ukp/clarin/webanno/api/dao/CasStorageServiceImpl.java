@@ -96,7 +96,7 @@ public class CasStorageServiceImpl
         }
 
         if (backupProperties.getInterval() > 0) {
-            log.info("CAS backups enabled - interval: {}  max-backups: {}  max-age: {}",
+            log.info("CAS backups enabled - interval: {}sec  max-backups: {}sec  max-age: {}sec",
                     backupProperties.getInterval(), backupProperties.getKeep().getNumber(),
                     backupProperties.getKeep().getTime());
         }
@@ -278,7 +278,7 @@ public class CasStorageServiceImpl
             else {
                 // Check if the newest history file is significantly older than the current one
                 File latestHistory = history[history.length - 1];
-                if (latestHistory.lastModified() + backupProperties.getInterval() < now) {
+                if (latestHistory.lastModified() + (backupProperties.getInterval() * 1000) < now) {
                     FileUtils.copyFile(currentVersion, historyFile);
                     historyFileCreated = true;
                 }
@@ -321,7 +321,8 @@ public class CasStorageServiceImpl
                 // Prune history based on time
                 if (backupProperties.getKeep().getTime() > 0) {
                     for (File file : history) {
-                        if ((file.lastModified() + backupProperties.getKeep().getTime()) < now) {
+                        if ((file.lastModified()
+                                + (backupProperties.getKeep().getTime() * 1000)) < now) {
                             FileUtils.forceDelete(file);
 
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
