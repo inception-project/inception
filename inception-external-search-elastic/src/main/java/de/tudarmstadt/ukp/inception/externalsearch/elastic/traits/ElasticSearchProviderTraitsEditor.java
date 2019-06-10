@@ -28,6 +28,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
@@ -83,12 +84,23 @@ public class ElasticSearchProviderTraitsEditor
         TextField<String> objectType = new TextField<>("objectType");
         objectType.setRequired(true);
         form.add(objectType);
+    
+        TextField<String> defaultField = new TextField<>("defaultField");
+        objectType.setRequired(true);
+        form.add(defaultField);
+    
+        NumberTextField<Integer> resultSize =
+                new NumberTextField<>("resultSize", Integer.class);
+        resultSize.setMinimum(1);
+        resultSize.setMaximum(10000);
+        resultSize.setRequired(true);
+        form.add(resultSize);
 
         NumberTextField<Integer> seed = new NumberTextField<Integer>("seed", Integer.class);
         seed.setMinimum(0);
         seed.setMaximum(Integer.MAX_VALUE);
         seed.add(visibleWhen(() -> properties.isRandomOrder()));
-        seed.add(new AttributeModifier("title", getString("seedTooltip")));
+        seed.add(new AttributeModifier("title", new ResourceModel("seedTooltip")));
         seed.setOutputMarkupPlaceholderTag(true);
         seed.setRequired(true);
         form.add(seed);

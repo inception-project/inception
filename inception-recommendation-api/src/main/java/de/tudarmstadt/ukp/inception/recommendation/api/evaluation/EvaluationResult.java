@@ -17,28 +17,189 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.function.ToDoubleBiFunction;
+import java.util.stream.Collector;
+
+/**
+ * Provides macro-averaged scores on per-token basis over all labels contained in processed
+ * annotated pairs except for those matching the optionally provided ignore-labels as a gold label.
+ */
 public class EvaluationResult
 {
-    private double defaultScore;
-    private int trainingSetSize;
-    private int testSetSize;
+    private final int trainingSetSize;
+    private final int testSetSize;
+    
+    /**
+     * Rate of this training data compared to all training data
+     */
+    private final double trainingDataRatio;
     private boolean skippedEvaluation;
+    private String errorMsg;
+
+    private final Set<String> ignoreLabels;
 
     /**
-     * Get the specific score which the recommender evaluation uses e.g. accuracy or f-score as a
-     * default.
+     * Stores number of predicted labels for each gold label
      */
-    public double getDefaultScore()
+    private ConfusionMatrix confusionMatrix;
+
+    
+    public EvaluationResult()
     {
-        return defaultScore;
+        ignoreLabels = new LinkedHashSet<>();
+        confusionMatrix = new ConfusionMatrix();
+        trainingSetSize = 0;
+        testSetSize = 0;
+        trainingDataRatio = 0.0;
+    }
+
+    public EvaluationResult(ConfusionMatrix aConfMatrix, int aTrainSetSize, int aTestSetSize,
+            double aTrainDataPercentage, Set<String> aIgnoreLabels)
+    {
+        ignoreLabels = new LinkedHashSet<>();
+        ignoreLabels.addAll(aIgnoreLabels);
+
+        confusionMatrix = aConfMatrix;
+        trainingSetSize = aTrainSetSize;
+        testSetSize = aTestSetSize;
+        trainingDataRatio = aTrainDataPercentage;
+    }
+    
+    public EvaluationResult(int aTrainSetSize, int aTestSetSize, double aTrainDataPercentage)
+    {
+        ignoreLabels = new HashSet<>();
+        confusionMatrix = new ConfusionMatrix();
+        trainingSetSize = aTrainSetSize;
+        testSetSize = aTestSetSize;
+        trainingDataRatio = aTrainDataPercentage;
+    }
+
+    public int getNumOfLabels()
+    {
+        Set<String> labels = confusionMatrix.getLabels();
+        
+        if (ignoreLabels.isEmpty()) {
+            return labels.size();
+        }
+        else {
+            return Math.toIntExact(labels.stream().filter(l -> !ignoreLabels.contains(l)).count());
+        }
     }
 
     /**
-     * Set the specific score which the recommender evaluation uses e.g. accuracy or f-score.
+     * Calculate accuracy, ignoring the ignoreLabel class as a gold label.
+     * 
+     * @return accuracy score
      */
-    public void setDefaultScore(double aDefaultScore)
+    public double computeAccuracyScore()
     {
-        defaultScore = aDefaultScore;
+        double tp = 0.0;
+        double ignoreLabelAsGold = 0;
+        for (String label : confusionMatrix.getLabels()) {
+            if (!ignoreLabels.contains(label)) {
+                tp += confusionMatrix.getEntryCount(label, label);
+            }
+            ignoreLabelAsGold += countIgnoreLabelsAsGold(label);
+        }
+        double total = confusionMatrix.getTotal() - ignoreLabelAsGold;
+        return (total > 0) ? tp / total : 0.0;
+    }
+
+    /**
+     * Count how many times the given label was predicted incorrectly for a label that should be
+     * ignored.
+     */
+    private double countIgnoreLabelsAsGold(String label)
+    {
+        double ignoreLabelAsGold = 0.0; 
+        for (String ignoreLabel : ignoreLabels) {
+            ignoreLabelAsGold += confusionMatrix.getEntryCount(label, ignoreLabel);
+        }
+        return ignoreLabelAsGold;
+    }
+
+    /**
+     * Calculate macro-averaged precision score, ignoring the ignoreLabel class as a gold label.
+     * 
+     * @return precision score
+     */
+    public double computePrecisionScore()
+    {
+        // precision divides tp by (tp + fp) i.e num of instances predicted as the goldlabel
+        return calcMetricAverage((goldLabel, predictedLabel) -> 
+                    ignoreLabels.contains(predictedLabel) ? 0.0 :
+                        confusionMatrix.getEntryCount(goldLabel, predictedLabel));
+    }
+
+    /**
+     * Calculate macro-averaged recall score, ignoring the ignoreLabel class as a gold label.
+     * 
+     * @return recall score
+     */
+    public double computeRecallScore()
+    {
+        // recall divides tp by (tp + fn) i.e num of instances that are the goldlabel
+        return calcMetricAverage((goldLabel, predictedLabel) -> 
+                    ignoreLabels.contains(goldLabel) ? 0.0 : 
+                        confusionMatrix.getEntryCount(predictedLabel, goldLabel));
+    }
+
+    /**
+     * Calculate the metric average for all labels for metrics which divide tp by a specific count
+     * @param countFunction the specific count of a certain label combination
+     * @return macro-averaged metric score
+     */
+    private double calcMetricAverage(ToDoubleBiFunction<String, String> countFunction)
+    {
+        double metric = 0.0;
+        int numOfLabels = getNumOfLabels();
+        if (numOfLabels > 0) {
+            Set<String> labels = confusionMatrix.getLabels();
+            for (String label : labels) {
+                double tp = 0.0;
+                if (!ignoreLabels.contains(label)) {
+                    tp = confusionMatrix.getEntryCount(label, label);
+                }
+                double numIsLabel = 0.0;
+                for (String predictedLabel : labels) {
+                    numIsLabel += countFunction.applyAsDouble(label, predictedLabel);
+                }
+                metric += calcClassMetric(label, tp, numIsLabel);
+
+            }
+            metric = metric / numOfLabels;
+        }
+        return metric;
+    }
+
+    private double calcClassMetric(String aLabel, double aTp, double aNumIsLabel)
+    {
+        double classMetric = 0.0;
+        if (aNumIsLabel > 0 && !ignoreLabels.contains(aLabel)) {
+            classMetric = aTp / aNumIsLabel;
+        }
+        return classMetric;
+    }
+
+    /**
+     * Calculate macro-averaged f1-score
+     * 
+     * @return f1 score
+     */
+    public double computeF1Score()
+    {
+        double precision = computePrecisionScore();
+        double recall = computeRecallScore();
+        return (precision > 0 || recall > 0) ? 2 * precision * recall / (precision + recall) : 0;
     }
 
     /**
@@ -52,14 +213,6 @@ public class EvaluationResult
     }
 
     /**
-     * Set the size of the training data used in the recommender evaluation.
-     */
-    public void setTrainingSetSize(int aTrainingSetSize)
-    {
-        trainingSetSize = aTrainingSetSize;
-    }
-
-    /**
      * Get the size of the test data used in the recommender evaluation.
      * 
      * @return the test size
@@ -69,12 +222,9 @@ public class EvaluationResult
         return testSetSize;
     }
 
-    /**
-     * Set the size of the test data used in the recommender evaluation.
-     */
-    public void setTestSetSize(int aTestSetSize)
+    public double getTrainDataRatio()
     {
-        testSetSize = aTestSetSize;
+        return trainingDataRatio;
     }
 
     public void setEvaluationSkipped(boolean aSkipVal)
@@ -91,5 +241,93 @@ public class EvaluationResult
     {
         return skippedEvaluation;
     }
+    
+    public Optional<String> getErrorMsg()
+    {
+        return Optional.ofNullable(errorMsg);
+    }
 
+    public void setErrorMsg(String aErrorMsg)
+    {
+        errorMsg = aErrorMsg;
+    }
+
+    public void setConfusionMatrix(ConfusionMatrix aConfusionMatrix)
+    {
+        confusionMatrix = aConfusionMatrix;
+    }
+
+    public static EvaluationResultCollector collector()
+    {
+        return new EvaluationResultCollector();
+    }
+
+    public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
+            double aTrainDataPercentage, String... aIgnoreLabels)
+    {
+        return new EvaluationResultCollector(aTrainSetSize, aTestSetSize, aTrainDataPercentage,
+                aIgnoreLabels);
+    }
+    
+    public static class EvaluationResultCollector
+        implements Collector<LabelPair, ConfusionMatrix, EvaluationResult>
+    {
+        private final Set<String> ignoreLabels;
+        private final int testSize;
+        private final int trainSize;
+        private final double trainDataRatio;
+
+        public EvaluationResultCollector(int aTrainSetSize, int aTestSetSize,
+                double aTrainDataPercentage, String... aIgnoreLabels)
+        {
+            ignoreLabels = new HashSet<>();
+            testSize = aTestSetSize;
+            trainSize = aTrainSetSize;
+            trainDataRatio = aTrainDataPercentage;
+            Collections.addAll(ignoreLabels, aIgnoreLabels);
+        }
+
+        public EvaluationResultCollector()
+        {
+            ignoreLabels = new HashSet<>();
+            testSize = 0;
+            trainSize = 0;
+            trainDataRatio = 0;
+        }
+
+        @Override
+        public Supplier<ConfusionMatrix> supplier()
+        {
+            return ConfusionMatrix::new;
+        }
+
+        @Override
+        public BiConsumer<ConfusionMatrix, LabelPair> accumulator()
+        {
+            return (confMatrix, pair) -> confMatrix.incrementCounts(pair.getPredictedLabel(),
+                    pair.getGoldLabel());
+        }
+
+        @Override
+        public BinaryOperator<ConfusionMatrix> combiner()
+        {
+            return (matrix1, matrix2) -> {
+                matrix1.addMatrix(matrix2);
+                return matrix1;
+            };
+        }
+
+        @Override
+        public Function<ConfusionMatrix, EvaluationResult> finisher()
+        {
+            return confMatrix -> new EvaluationResult(confMatrix, trainSize,
+                    testSize, trainDataRatio, ignoreLabels);
+        }
+
+        @Override
+        public Set<Collector.Characteristics> characteristics()
+        {
+            return Collections.emptySet();
+        }
+    }
 }

@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
@@ -32,6 +35,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -50,6 +54,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.ui.kb.IriInfoBadge;
 
 /**
  * Component for editing knowledge-base-related features on annotations.
@@ -62,6 +67,7 @@ public class ConceptFeatureEditor
     private static final long serialVersionUID = 7763348613632105600L;
 
     private Component focusComponent;
+    private IriInfoBadge iriBadge;
 
     private @SpringBean KnowledgeBaseService kbService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -71,6 +77,9 @@ public class ConceptFeatureEditor
             IModel<AnnotatorState> aStateModel, AnnotationActionHandler aHandler)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
+        add(iriBadge = new IriInfoBadge("iriInfoBadge",
+                LoadableDetachableModel.of(this::iriTooltipValue)));
+        iriBadge.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(focusComponent = new KnowledgeBaseItemAutoCompleteField(MID_VALUE, _query -> 
                 getCandidates(aStateModel, aHandler, _query)));
         add(new DisabledKBWarning("disabledKBWarning", Model.of(getModelObject().feature)));
@@ -82,6 +91,13 @@ public class ConceptFeatureEditor
         super.renderHead(aResponse);
 
         aResponse.render(forReference(KendoChoiceDescriptionScriptReference.get()));
+    }
+    
+    private String iriTooltipValue()
+    {
+        return Optional.ofNullable((KBHandle) getModelObject().value)
+                .map(KBHandle::getIdentifier)
+                .orElse("");
     }
 
     private List<KBHandle> getCandidates(IModel<AnnotatorState> aStateModel,

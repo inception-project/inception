@@ -28,6 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -39,9 +40,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.ClassUtils;
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.eclipse.rdf4j.common.net.ParsedIRI;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +57,9 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
+import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.feature.EntityRankingFeatureGenerator;
+import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRankingStrategy;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.FileUtils;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -161,6 +163,34 @@ public class ConceptLinkingServiceImpl
         Set<KBHandle> result = new HashSet<>();
         
         try (RepositoryConnection conn = kbService.getConnection(aKB)) {
+            if (aQuery != null) {
+                ParsedIRI iri = null;
+                try {
+                    iri = new ParsedIRI(aQuery);
+                }
+                catch (URISyntaxException | NullPointerException e) {
+                    // Skip match by IRI.
+                }
+                if (iri != null && iri.isAbsolute()) {
+                    SPARQLQueryPrimaryConditions iriMatchBuilder = newQueryBuilder(aValueType, aKB)
+                            .withIdentifier(aQuery);
+                    
+                    if (aConceptScope != null) {
+                        iriMatchBuilder.childrenOf(aConceptScope);
+                    }
+                    
+                    List<KBHandle> exactMatches = iriMatchBuilder
+                            .retrieveLabel()
+                            .retrieveDescription()
+                            .asHandles(conn, true);
+    
+                    log.debug("Found [{}] candidates exactly matching IRI {}",
+                            exactMatches.size(), asList(aQuery));
+    
+                    result.addAll(exactMatches);
+                }
+            }
+            
             // Collect exact matches - although exact matches are theoretically contained in the
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
@@ -172,7 +202,7 @@ public class ConceptLinkingServiceImpl
                     .toArray(String[]::new);
             SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
                     .withLabelMatchingExactlyAnyOf(exactLabels);
-            
+                        
             if (aConceptScope != null) {
                 exactBuilder.childrenOf(aConceptScope);
             }
@@ -284,30 +314,6 @@ public class ConceptLinkingServiceImpl
         return candidate;
     }
     
-    private Comparator<CandidateEntity> baseLineRankingStrategy()
-    {
-        return (e1, e2) -> new CompareToBuilder()
-                // The edit distance between query and label is given high importance
-                // Comparing simultaneously against the edit distance to the query and to the 
-                // mention causes items similar to either to be ranked up
-                .append(Math.min(e1.getLevQuery(), e1.getLevMention()),
-                        Math.min(e2.getLevQuery(), e2.getLevMention()))
-                // A high signature overlap score is preferred.
-                .append(e2.getSignatureOverlapScore(), e1.getSignatureOverlapScore())
-                // A low edit distance is preferred.
-                .append(e1.getLevContext(), e2.getLevContext())
-                // A high entity frequency is preferred.
-                .append(e2.getFrequency(), e1.getFrequency())
-                // A high number of related relations is preferred.
-                .append(e2.getNumRelatedRelations(), e1.getNumRelatedRelations())
-                // A low wikidata ID rank is preferred.
-                .append(e1.getIdRank(), e2.getIdRank())
-                // Finally order alphabetically
-                .append(e1.getLabel().toLowerCase(e1.getLocale()), 
-                        e2.getLabel().toLowerCase(e2.getLocale()))
-                .toComparison();
-    }
-    
     @Override
     public List<KBHandle> rankCandidates(String aQuery, String aMention, Set<KBHandle> aCandidates,
             CAS aCas, int aBegin)
@@ -328,7 +334,7 @@ public class ConceptLinkingServiceImpl
         
         // Do the main ranking
         // Sort candidates by multiple keys.
-        candidates.sort(baseLineRankingStrategy());
+        candidates.sort(BaselineRankingStrategy.getInstance());
 
         List<KBHandle> results = candidates.stream()
                 .map(candidate -> {
@@ -356,7 +362,8 @@ public class ConceptLinkingServiceImpl
         // Determine which knowledge bases to query
         List<KnowledgeBase> knowledgeBases = new ArrayList<>();
         if (aRepositoryId != null) {
-            kbService.getKnowledgeBaseById(aProject, aRepositoryId).filter(KnowledgeBase::isEnabled)
+            kbService.getKnowledgeBaseById(aProject, aRepositoryId)
+                    .filter(KnowledgeBase::isEnabled)
                     .ifPresent(knowledgeBases::add);
         }
         else {
@@ -366,8 +373,7 @@ public class ConceptLinkingServiceImpl
         // Query the knowledge bases for candidates
         Set<KBHandle> candidates = new HashSet<>();
         for (KnowledgeBase kb : knowledgeBases) {
-            candidates.addAll(
-                    generateCandidates(kb, aConceptScope, aValueType, query, aMention));
+            candidates.addAll(generateCandidates(kb, aConceptScope, aValueType, query, aMention));
         }
         
         // Rank the candidates and return them

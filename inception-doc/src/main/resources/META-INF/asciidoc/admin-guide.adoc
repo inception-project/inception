@@ -36,6 +36,8 @@ include::{include-dir}installation_database_hsqldb.adoc[leveloffset=+2]
 
 include::{include-dir}installation_jar.adoc[leveloffset=+1]
 
+include::{include-dir}installation_docker.adoc[leveloffset=+1]
+
 <<<
 
 
@@ -75,8 +77,6 @@ include::{include-dir}security-preauth.adoc[leveloffset=+1]
 include::{include-dir}settings_concept-linking.adoc[leveloffset=+1]
 
 include::{include-dir}settings_knowledgebase.adoc[leveloffset=+1]
-
-include::{include-dir}settings_recommendation.adoc[leveloffset=+1]
 
 include::{include-dir}settings_scheduler.adoc[leveloffset=+1]
 

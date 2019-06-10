@@ -1,0 +1,51 @@
+##
+# docker-compose up [-d]
+# docker-compose down
+##
+version: '2.1'
+
+networks:
+  inception-net:
+
+services:
+  mysqlserver:
+    image: "mysql:5"
+    container_name: inception_mysql
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=inception
+      - MYSQL_USER=inception
+      - MYSQL_PORT=3306
+      - MYSQL_PASSWORD=inception
+    volumes:
+      - ${INCEPTION_HOME}/mysql-data:/var/lib/mysql
+    command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pinception", "-uinception"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+    networks:
+      inception-net:
+
+  webserver:
+    image: "inceptionproject/inception:latest"
+    container_name: inception_webserver
+    ports:
+      - "${INCEPTION_PORT}:8080"
+    environment:
+      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect
+      - INCEPTION_DB_DRIVER=com.mysql.jdbc.Driver
+      - INCEPTION_DB_URL=jdbc:mysql://mysqlserver:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
+      - INCEPTION_DB_USERNAME=inception
+      - INCEPTION_DB_PASSWORD=inception
+    volumes:
+      - ${INCEPTION_HOME}/server-data:/export
+    depends_on:
+      mysqlserver:
+        condition: service_healthy
+    mem_limit: 1g
+    memswap_limit: 1g
+    restart: unless-stopped
+    networks:
+      inception-net:

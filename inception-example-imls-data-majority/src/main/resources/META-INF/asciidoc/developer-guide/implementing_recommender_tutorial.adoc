@@ -53,22 +53,24 @@ the version of the entry you just created to the version you find in the _pom.xm
 Add the same entry in `inception-app-webapp`, but omit the version number. It then uses automatically the
 version in the parent POM file. Also add it to `usedDependencies` there.
 
-To add a new recommender to INCEpTION, two interfaces need to be implemented. These are
+To add a new recommender to INCEpTION, two classes need to be created. These are
 described in the following.
 
 == Implementing the RecommendationEngine
 
 Recommenders give suggestions for possible annotations to the user. In order to do that,
 they need to be able be to trained on existing annotations, predict annotations in a document and
-be evaluated for a performance estimate. This is what the `RecommendationEngine` interface is for.
-It defines the methods that are used to train, test and evaluate a machine learning algorithm.
-Instances of this interface often wrap external machine learning packages like https://opennlp.apache.org/[OpenNLP]
- or https://deeplearning4j.org/[Deeplearning4j].
+be evaluated for a performance estimate. This is what the `RecommendationEngine` abstract class is for.
+It defines the methods that are used to train, test and evaluate a machine learning algorithm and offers
+several helper methods. Instances of this class often wrap external machine learning packages like
+https://opennlp.apache.org/[OpenNLP] or https://deeplearning4j.org/[Deeplearning4j].
 
 Recommenders in {product-name} heavily rely on https://uima.apache.org[Apache UIMA] types and features.
 A recommender is configured for a certain layer and a certain feature. A layer can be seen as the
 type of annotation you want to to, e.g. `POS`, `NER`. Layers correspond to UIMA types. A feature is
 one piece of information that should be annotated, e.g. the POS tag. One layer can have many features.
+When extending `RecommendationEngine`, the predicted layer/type can be obtained by `getPredictedType`,
+the feature to predict respectively by `getPredictedFeature`.
 
 Annotations are given to a recommender in the form of a
 http://uima.apache.org/d/uimaj-current/apidocs/index.html[UIMA CAS]. One CAS corresponds to one
@@ -151,23 +153,34 @@ For a document, we consider possible candidates for a named entity to be tokens 
 In a real recommender, the step of candidate extraction should be more elaborate than that, but for this
 tutorial, it is sufficient.
 
-.Predicting annotations for a CAS
+When making predictions, we also set the score feature to put a number on the quality of the annotation.
+The UIMA score feature to set can be obtained by calling `getScoreFeature` inside a `RecommendationEngine`.
+
+.Making the predictions
 [source,java,indent=0]
 ----
 include::{source-dir}inception-example-imls-data-majority/src/main/java/de/tudarmstadt/ukp/inception/recommendation/imls/datamajority/DataMajorityNerRecommender.java[tags=predict2]
 ----
 
+We use the dummy score here from the training as the confidence.
+
 === Evaluating
 
 When configuring a recommender, it can be specified that it needs to achieve a certain score
 before the recommendations are shown to the user. For that, the platform regularly evaluates 
-recommenders in the background. In code, it is implemented in the `evaluate` method.
+recommenders in the background. We use macro-averaged F1-score as an evaluation score.  
+In code, the evaluation is implemented in the `evaluate` method.
 
 Evaluation is done on a set of documents. In order to properly divide the annotations into training
 and test set, a `DataSplitter` is given which tells you to which data set an annotation belongs.
 
-For the actual evaluation, we check whether the labels in the test set are the same to the ones we
-predict via the majority label.
+For the actual evaluation, we collect the true label and the predicted majority label in a 
+`LabelPair` for each true label. A stream of these instances can then be collected with 
+the use of an `EvaluationResultCollector` as an `EvaluationResult` object - the result of the 
+evaluation. This object provides access to calculations for token-based accuracy, macro-averaged 
+precision, recall and F1-score. This F1-score is later used for 
+comparison with the user-defined threshold to activate the recommender.
+ 
 
 .Evaluating the recommender
 [source,java,indent=0]

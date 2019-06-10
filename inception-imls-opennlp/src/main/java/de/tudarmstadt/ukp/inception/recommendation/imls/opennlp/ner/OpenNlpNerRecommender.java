@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -42,12 +41,12 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -55,28 +54,24 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import opennlp.tools.ml.BeamSearch;
 import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.namefind.NameSample;
-import opennlp.tools.namefind.TokenNameFinderEvaluator;
 import opennlp.tools.namefind.TokenNameFinderFactory;
 import opennlp.tools.namefind.TokenNameFinderModel;
 import opennlp.tools.util.Span;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpNerRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<TokenNameFinderModel> KEY_MODEL = new Key<>("opennlp_ner_model");
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpNerRecommender.class);
+    
+    private static final String NO_NE_TAG = "O";
 
-    private final String layerName;
-    private final String featureName;
     private final OpenNlpNerRecommenderTraits traits;
-    private final int maxRecommendations;
 
     public OpenNlpNerRecommender(Recommender aRecommender, OpenNlpNerRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
+        super(aRecommender);
         
         traits = aTraits;
     }
@@ -111,10 +106,12 @@ public class OpenNlpNerRecommender
         NameFinderME finder = new NameFinderME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
         Type tokenType = getType(aCas, Token.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type predictedType = getPredictedType(aCas);
+
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -130,14 +127,16 @@ public class OpenNlpNerRecommender
 
             for (Span prediction : finder.find(tokens)) {
                 String label = prediction.getType();
-                if ("default".equals(label)) {
+                if (NameSample.DEFAULT_TYPE.equals(label)) {
                     continue;
                 }
                 int begin = tokenAnnotations.get(prediction.getStart()).getBegin();
                 int end = tokenAnnotations.get(prediction.getEnd() - 1).getEnd();
-                AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
-                annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                annotation.setStringValue(labelFeature, label);
+                AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
+                annotation.setStringValue(predictedFeature, label);
+                annotation.setDoubleValue(scoreFeature, prediction.getProb());
+                annotation.setBooleanValue(isPredictionFeature, true);
+
                 aCas.addFsToIndexes(annotation);
             }
         }
@@ -147,8 +146,6 @@ public class OpenNlpNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
     {
-        EvaluationResult result = new EvaluationResult();
-        
         List<NameSample> data = extractNameSamples(aCasses);
         List<NameSample> trainingSet = new ArrayList<>();
         List<NameSample> testSet = new ArrayList<>();
@@ -169,12 +166,19 @@ public class OpenNlpNerRecommender
         
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        result.setTestSetSize(testSetSize);
-        result.setTrainingSetSize(trainingSetSize);
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingSetSize < 2 || testSetSize < 2) {
-            LOG.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
+            
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -186,17 +190,82 @@ public class OpenNlpNerRecommender
         NameFinderME nameFinder = new NameFinderME(model);
 
         // Evaluate
-        try (NameSampleStream stream = new NameSampleStream(testSet)) {
-            TokenNameFinderEvaluator evaluator = new TokenNameFinderEvaluator(nameFinder);
-            evaluator.evaluate(stream);
-            // getFMeasure returns -1 if the evaluation cannot be performed, but we want any 
-            // recommender to get activated when the threshold is set to 0, so we cap at 0.
-            result.setDefaultScore(Math.max(0, evaluator.getFMeasure().getFMeasure()));
-            return result;
-        } catch (IOException e) {
-            LOG.error("Exception during evaluating the OpenNLP Named Entity Recognizer model.", e);
-            throw new RecommendationException("Error while evaluating OpenNlp NER", e);
+        List<LabelPair> labelPairs = new ArrayList<>();
+        for (NameSample sample : testSet) {
+            // clear adaptive data from feature generators if necessary
+            if (sample.isClearAdaptiveDataSet()) {
+                nameFinder.clearAdaptiveData();
+            }
+
+            // Span contains one NE, Array of them all in one sentence
+            String[] sentence = sample.getSentence();
+            Span[] predictedNames = nameFinder.find(sentence);
+            Span[] goldNames = sample.getNames();
+
+            labelPairs.addAll(determineLabelsForASentence(sentence, predictedNames,
+                    goldNames));
+
         }
+
+        return labelPairs.stream().collect(EvaluationResult
+                .collector(trainingSetSize, testSetSize, trainRatio, NO_NE_TAG));
+    }
+
+    /**
+     * Extract AnnotatedTokenPairs with info on predicted and gold label for each token of the given
+     * sentence.
+     */
+    private List<LabelPair> determineLabelsForASentence(String[] sentence,
+            Span[] predictedNames, Span[] goldNames)
+    {
+        int predictedNameIdx = 0;
+        int goldNameIdx = 0;
+        
+        List<LabelPair> labelPairs = new ArrayList<>();
+        // Spans store which tokens are part of it as [begin,end). 
+        // Tokens are counted 0 to length of sentence.
+        // Therefore go through all tokens, determine which span they are part of 
+        // for predictions and gold ones. Assign label accordingly to the annotated-token.
+        for (int i = 0; i < sentence.length; i++) {
+
+            String predictedLabel = NO_NE_TAG;
+            if (predictedNameIdx < predictedNames.length) {
+                Span predictedName = predictedNames[predictedNameIdx];
+                predictedLabel = determineLabel(predictedName, i);
+
+                if (i > predictedName.getEnd()) {
+                    predictedNameIdx++;
+                }
+            }
+
+            String goldLabel = NO_NE_TAG;
+            if (goldNameIdx < goldNames.length) {
+                Span goldName = goldNames[goldNameIdx];
+                goldLabel = determineLabel(goldName, i);
+                if (i > goldName.getEnd()) {
+                    goldNameIdx++;
+                }
+            }
+
+            labelPairs.add(new LabelPair(goldLabel, predictedLabel));
+
+        }
+        return labelPairs;
+    }
+
+    /**
+     * Check that token index is part of the given span and return the span's label 
+     * or no-label (token is outside span). 
+     */
+    private String determineLabel(Span aName, int aTokenIdx)
+    {
+        String label = NO_NE_TAG;
+
+        if (aName.getStart() <= aTokenIdx && aName.getEnd() > aTokenIdx) {
+            label = aName.getType();
+        }
+
+        return label;
     }
 
     private List<NameSample> extractNameSamples(List<CAS> aCasses)

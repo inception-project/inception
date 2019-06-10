@@ -17,7 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
+import java.nio.ByteBuffer;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.util.BytesRef;
 
 import mtas.analysis.token.MtasTokenCollection;
 import mtas.analysis.util.MtasParserException;
@@ -46,5 +49,18 @@ public final class MtasUtils
             }
             System.out.println();
         }        
+    }
+    
+    public static BytesRef encodeFSAddress(int aFeatureStructureAddress)
+    {
+        return new BytesRef(ByteBuffer.allocate(4).putInt(aFeatureStructureAddress).array());
+    }
+
+    public static int decodeFSAddress(BytesRef aBytesRef)
+    {
+        ByteBuffer buffer = ByteBuffer.allocate(4).put(aBytesRef.bytes, aBytesRef.offset,
+                aBytesRef.length);
+        buffer.flip();
+        return buffer.getInt();
     }
 }

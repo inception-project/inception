@@ -13,7 +13,8 @@
 # Please keep the list sorted.
 
 Beto Boullosa
-Jan-Christoph Klie [rentier]
+Chaitrali Agashe[chaitraliagashe]
+Jan-Christoph Klie [jcklie]
 Jennifer Chen [shinyichen]
 Michael Bugert
 Peter Jiang

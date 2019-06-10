@@ -39,6 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
@@ -125,6 +126,13 @@ public class SelectionTask
                     long start = System.currentTimeMillis();
                     RecommendationEngineFactory factory = recommendationService
                         .getRecommenderFactory(recommender);
+                    
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                + "- skipping recommender", user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     if (recommender.isAlwaysSelected()) {
@@ -142,8 +150,8 @@ public class SelectionTask
                     log.info("[{}][{}]: Evaluating...", userName, recommenderName);
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
-                    double score = recommendationEngine.evaluate(casses.get(), splitter)
-                            .getDefaultScore();
+                    EvaluationResult result = recommendationEngine.evaluate(casses.get(), splitter);
+                    double score = result.computeF1Score();
 
                     Double threshold = recommender.getThreshold();
                     boolean activated;
@@ -162,7 +170,7 @@ public class SelectionTask
                     }
 
                     appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), score,
+                            recommender, user.getUsername(), result,
                             System.currentTimeMillis() - start, activated));
                 }
                 catch (Throwable e) {

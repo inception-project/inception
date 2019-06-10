@@ -24,11 +24,13 @@ import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,6 +41,8 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -47,6 +51,7 @@ import org.eclipse.rdf4j.rio.RDFFormat;
 import org.eclipse.rdf4j.rio.Rio;
 import org.eclipse.rdf4j.sail.lucene.LuceneSail;
 import org.eclipse.rdf4j.sail.memory.MemoryStore;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -132,6 +137,11 @@ public class SPARQLQueryBuilderGenericTest
             break;
         }
         case REMOTE: {
+            Assume.assumeTrue(
+                    "Remote repository at [" + profile.getAccess().getAccessUrl()
+                            + "] is not reachable",
+                    isReachable(profile.getAccess().getAccessUrl()));
+            
             repo = new SPARQLRepository(profile.getAccess().getAccessUrl());
             repo.init();
             break;
@@ -183,6 +193,26 @@ public class SPARQLQueryBuilderGenericTest
         });
     }
     
+    @Test
+    public void thatRegexMetaCharactersAreSafe()
+    {
+        try (RepositoryConnection conn = repo.getConnection()) {
+            SPARQLQueryOptionalElements builder = SPARQLQueryBuilder
+                    .forItems(kb)
+                    .withLabelMatchingExactlyAnyOf(".[]*+{}()lala")
+                    .limit(3);
+            
+            System.out.printf("Query   : %n");
+            Arrays.stream(builder.selectQuery().getQueryString().split("\n"))
+                    .forEachOrdered(l -> System.out.printf("          %s%n", l));
+            
+            builder.asHandles(conn, true);
+            
+            // We don't need an assertion here since we do not expect any results - it is only important
+            // that the query does not crash
+        }
+    }
+    
     @SuppressWarnings("resource")
     private void importData(Repository aRepo, String aUrl) throws IOException
     {
@@ -215,7 +245,32 @@ public class SPARQLQueryBuilderGenericTest
             return new PathMatchingResourcePatternResolver().getResource(aUrl).getInputStream();
         }
         else {
-            return new URL(aUrl).openStream();
+            if ("https://www.bbc.co.uk/ontologies/wo/1.1.ttl".equals(aUrl)) {
+                return new File("src/test/resources/upstream-data/1.1.ttl").toURI().toURL()
+                        .openStream();
+            }
+            else if ("http://purl.org/olia/penn.owl".equals(aUrl)) {
+                return new File("src/test/resources/upstream-data/penn.owl").toURI().toURL()
+                        .openStream();
+            }
+            else {
+                return new URL(aUrl).openStream();
+            }
+        }
+    }
+    
+    public static boolean isReachable(String aUrl)
+    {
+        SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.init();
+        try (RepositoryConnection conn = r.getConnection()) {
+            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+            try (TupleQueryResult result = query.evaluate()) {
+                return true;
+            }
+        }
+        catch (Exception e) {
+            return false;
         }
     }
 }

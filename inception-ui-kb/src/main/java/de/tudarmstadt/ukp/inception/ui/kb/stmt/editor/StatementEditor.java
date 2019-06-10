@@ -96,7 +96,7 @@ public class StatementEditor extends Panel
         property = aProperty;
 
         // new statements start with edit mode right away
-        boolean isNewStatement = statement.getObject().getOriginalStatements().isEmpty();
+        boolean isNewStatement = statement.getObject().getOriginalTriples().isEmpty();
         if (isNewStatement) {
             EditMode editMode = new EditMode(CONTENT_MARKUP_ID, statement, true);
 
@@ -153,6 +153,13 @@ public class StatementEditor extends Panel
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
     {
         KBStatement modifiedStatement = aForm.getModelObject();
+
+        if (modifiedStatement.getValue() == null) {
+            error("The value of statement cannot be empty");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         try {
             // persist the modified statement and replace the original, unchanged model
             KBStatement oldStatement = statement.getObject();
@@ -285,14 +292,14 @@ public class StatementEditor extends Panel
         @OnEvent
         public void actionQualifierChanged(AjaxQualifierChangedEvent event)
         {
-            boolean isEventForThisStatement = event.getQualifier().getKbStatement()
+            boolean isEventForThisStatement = event.getQualifier().getStatement()
                 .equals(statement.getObject());
             if (isEventForThisStatement) {
                 if (event.isDeleted()) {
-                    event.getQualifier().getKbStatement().getQualifiers()
+                    event.getQualifier().getStatement().getQualifiers()
                         .remove(event.getQualifier());
                 }
-                statement.setObject(event.getQualifier().getKbStatement());
+                statement.setObject(event.getQualifier().getStatement());
                 event.getTarget().add(qualifierListWrapper);
             }
         }
@@ -332,7 +339,6 @@ public class StatementEditor extends Panel
             super(aId, "editMode", StatementEditor.this, aStatement);
             CompoundPropertyModel<KBStatement> model = CompoundPropertyModel.of(aStatement);
             Form<KBStatement> form = new Form<>("form", model);
-            List<ValueType> valueTypes;
             // Set property to the property of the current statement
             if (property.getObject() == null) {
                 Optional<KBProperty> prop = kbService.readProperty(kbModel.getObject(),
@@ -347,12 +353,16 @@ public class StatementEditor extends Panel
                 rangeValue = property.getObject().getRange();
             }
 
-            valueTypes = valueTypeRegistry.getAllTypes();
+            List<ValueType> valueTypes;
             if (rangeValue != null) {
-                Optional<KBObject> rangeKBHandle = kbService
-                        .readItem(kbModel.getObject().getProject(), rangeValue);
+                Optional<KBObject> rangeKBHandle = kbService.readItem(kbModel.getObject(),
+                        rangeValue);
                 valueTypes = valueTypeRegistry.getRangeTypes(rangeValue, rangeKBHandle);
             }
+            else {
+                valueTypes = valueTypeRegistry.getAllTypes();
+            }
+            
             valueType = new BootstrapSelect<>("valueType", valueTypes);
             valueType.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
             valueType.setModel(Model.of(

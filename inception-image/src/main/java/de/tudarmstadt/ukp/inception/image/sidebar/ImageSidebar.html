@@ -17,18 +17,29 @@
  - limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .showOnHover {
+      opacity: 0.1;
+    }
+    
+    .showOnHover:hover {
+      opacity: 1;
+    } 
+  </style>
+</wicket:head>
 <wicket:panel>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
     <div class="panel panel-default panel-flex flex-content">
       <div class="panel-heading">
         <h3 class="panel-title">Images</h3>
       </div>
-      <div class="panel-body flex-v-container">
-        <div wicket:id="mainContainer" class="scrolling flex-content flex-v-container flex-gutter">
+      <div class="scrolling panel-body flex-v-container" style="background-color: silver;">
+        <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter">
           <wicket:container wicket:id="images">
             <div style="position: relative;">
-              <img wicket:id="image" class="img-thumbnail img-responsive"/>
-              <div style="position: absolute; top: 5px; right: 5px;">
+              <img wicket:id="image" class="img-thumbnail img-responsive" crossorigin="anonymous"/>
+              <div style="position: absolute; top: 5px; right: 5px;" class="showOnHover">
                 <a wicket:id="open" target="_blank" class="btn btn-xs btn-default">
                   <i class="fa fa-external-link" aria-hidden="true"></i>
                 </a>

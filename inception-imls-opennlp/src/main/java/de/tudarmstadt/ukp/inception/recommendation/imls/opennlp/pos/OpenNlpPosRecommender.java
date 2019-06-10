@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import static org.apache.commons.lang3.StringUtils.isNoneBlank;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -45,14 +44,13 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.ml.BeamSearch;
-import opennlp.tools.postag.POSEvaluator;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.postag.POSTaggerFactory;
@@ -61,25 +59,19 @@ import opennlp.tools.util.Sequence;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpPosRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<POSModel> KEY_MODEL = new Key<>("opennlp_pos_model");
 
     private static final Logger LOG = LoggerFactory.getLogger(OpenNlpPosRecommender.class);
     private static final String PAD = "<PAD>";
 
-    private final String layerName;
-    private final String featureName;
-    private final int maxRecommendations;
-    
     private final OpenNlpPosRecommenderTraits traits;
 
     public OpenNlpPosRecommender(Recommender aRecommender, OpenNlpPosRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
-        
+        super(aRecommender);
+
         traits = aTraits;
     }
 
@@ -114,11 +106,12 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
 
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -158,10 +151,11 @@ public class OpenNlpPosRecommender
                     int end = token.getEnd();
                     double confidence = probabilities[i];
 
-                    // Create the PredictedSpan
-                    AnnotationFS annotation = aCas.createAnnotation(predictionType, begin, end);
-                    annotation.setDoubleValue(confidenceFeature, confidence);
-                    annotation.setStringValue(labelFeature, label);
+                    // Create the prediction
+                    AnnotationFS annotation = aCas.createAnnotation(predictedType, begin, end);
+                    annotation.setStringValue(predictedFeature, label);
+                    annotation.setDoubleValue(scoreFeature, confidence);
+                    annotation.setBooleanValue(isPredictionFeature, true);
                     aCas.addFsToIndexes(annotation);
                 }
             }
@@ -171,9 +165,7 @@ public class OpenNlpPosRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException
-    {
-        EvaluationResult result = new EvaluationResult();
-        
+    {        
         List<POSSample> data = extractPosSamples(aCasses);
         List<POSSample> trainingSet = new ArrayList<>();
         List<POSSample> testSet = new ArrayList<>();
@@ -194,12 +186,19 @@ public class OpenNlpPosRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
-        result.setTestSetSize(testSetSize);
-        result.setTrainingSetSize(trainingSetSize);
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
         
         if (trainingSetSize < 2 || testSetSize < 2) {
-            LOG.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    trainingSetSize, testSetSize, data.size());
+            LOG.info(info);
+
+            EvaluationResult result = new EvaluationResult(trainingSetSize,
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -215,15 +214,17 @@ public class OpenNlpPosRecommender
         POSTaggerME tagger = new POSTaggerME(model);
 
         // Evaluate
-        try (POSSampleStream stream = new POSSampleStream(testSet)) {
-            POSEvaluator evaluator = new POSEvaluator(tagger);
-            evaluator.evaluate(stream);
-            result.setDefaultScore(evaluator.getWordAccuracy());
-            return result;
+        List<LabelPair> labelPairs = new ArrayList<>();
+        for (POSSample sample : testSet) {
+            String[] predictedTags = tagger.tag(sample.getSentence());
+            String[] goldTags = sample.getTags();
+            for (int i = 0; i < predictedTags.length; i++) {
+                labelPairs.add(new LabelPair(goldTags[i], predictedTags[i]));
+            }
         }
-        catch (IOException e) {
-            throw new RecommendationException("Error while evaluating", e);
-        }
+
+        return labelPairs.stream().collect(EvaluationResult
+                .collector(trainingSetSize, testSetSize, trainRatio, PAD));
     }
 
     private List<POSSample> extractPosSamples(List<CAS> aCasses)

@@ -30,23 +30,27 @@
       <a wicket:id="makeExplicit" wicket:message="title:makeExplicit" class="btn-link"> <i class="fa fa-gavel" aria-hidden="true"></i></a>
       <a wicket:id="edit" wicket:message="title:edit" class="btn-link"> <i class="fa fa-pencil" aria-hidden="true"></i></a>
     </div>
-      <div wicket:id="qualifierListWrapper" class="flex-v-container flex-content flex-gutter flex-only-initial-gutter">
-            <div wicket:id="qualifierList" class="qualifier-group-statement-wrapper">
-                <div wicket:id="qualifier" class="qualifier-editor"></div>
-            </div>
+    <div>
+      <div wicket:id="qualifierListWrapper" class="flex-v-container flex-content">
+        <div wicket:id="qualifierList" class="qualifier-group-statement-wrapper">
+            <div wicket:id="qualifier" class="qualifier-editor"></div>
+        </div>
       </div>
-      <div class="pull-right">
-        <a wicket:id="addQualifier" class="btn-link">
-          <i class="fa fa-plus" aria-hidden="true"></i>
-          <wicket:container wicket:id="label"></wicket:container>
-        </a>
-      </div>
+    </div>
+    <div class="pull-right" wicket:enclosure="addQualifier">
+      <a wicket:id="addQualifier" class="btn-link">
+        <i class="fa fa-plus" aria-hidden="true"></i>
+        <wicket:container wicket:id="label"></wicket:container>
+      </a>
+    </div>
   </wicket:fragment>
 
   <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
       <div class="flex-h-container flex-gutter flex-only-internal-gutter">
-        <select wicket:id=valueType class="form-control" data-container="body"></select>
+        <div style="width: 140px;">
+          <select wicket:id="valueType" class="form-control" data-container="body"></select>
+        </div>
         <div class="flex-content flex-h-container flex-gutter flex-only-internal-gutter" wicket:id="value"></div>
         <div class="pull-right statement-editor-button-row">
           <ul>
