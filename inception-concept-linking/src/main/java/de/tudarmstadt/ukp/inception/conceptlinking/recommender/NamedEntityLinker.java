@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.conceptlinking.recommender;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getDocumentUri;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -56,12 +55,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class NamedEntityLinker
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
-    private Recommender recommender;
     private NamedEntityLinkerTraits traits;
     
     private KnowledgeBaseService kbService;
@@ -76,7 +73,8 @@ public class NamedEntityLinker
             KnowledgeBaseService aKbService, ConceptLinkingService aClService,
             FeatureSupportRegistry aFsRegistry, ConceptFeatureTraits aFeatureTraits)
     {
-        recommender = aRecommender;
+        super(aRecommender);
+
         traits = aTraits;
         kbService = aKbService;
         clService = aClService;
@@ -96,21 +94,20 @@ public class NamedEntityLinker
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
         List<CAS> aCasList)
     {
-        Type tokenType = org.apache.uima.fit.util.CasUtil
-            .getType(aCasList.get(0), recommender.getLayer().getName());
-        Feature feature = tokenType.getFeatureByBaseName(recommender.getFeature().getName());
-
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples = new HashSet<>();
         for (CAS cas : aCasList) {
+            Type predictedType = getPredictedType(cas);
+            Feature predictedFeature = getPredictedFeature(cas);
+
             Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
             Type sentenceType = getType(cas, Sentence.class);
 
             Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
-                tokenType);
+                predictedType);
             for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
                     // If the identifier has not been set
-                    .filter(a -> a.getStringValue(feature) == null)
+                    .filter(a -> a.getStringValue(predictedFeature) == null)
                     .collect(Collectors.toSet());
                 namesPerDocument.addAll(tokens);
             }
@@ -200,14 +197,16 @@ public class NamedEntityLinker
             }
         }
 
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
-
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type predictedType = getPredictedType(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (KBHandle prediction : handles.stream().limit(recommender.getMaxRecommendations())
             .collect(Collectors.toList())) {
-            AnnotationFS annotation = aCas.createAnnotation(predictionType, aBegin, aEnd);
-            annotation.setStringValue(labelFeature, prediction.getIdentifier());
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, aBegin, aEnd);
+            annotation.setStringValue(predictedFeature, prediction.getIdentifier());
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
@@ -222,6 +221,9 @@ public class NamedEntityLinker
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        throw new UnsupportedOperationException("Evaluation not supported");
+        EvaluationResult result = new EvaluationResult();
+        result.setEvaluationSkipped(true);
+        result.setErrorMsg("NamedEntityLinker does not support evaluation.");
+        return result;
     }
 }

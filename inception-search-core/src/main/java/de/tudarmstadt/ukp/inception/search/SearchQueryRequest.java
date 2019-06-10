@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.search;
 
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
@@ -30,6 +32,9 @@ public class SearchQueryRequest
 
     private final SourceDocument limitedToDocument;
 
+    private final AnnotationLayer annoationLayer;
+    private final AnnotationFeature annotationFeature;
+
     public SearchQueryRequest(Project aProject, String aUsername, String aQuery)
     {
         this(aProject, aUsername, aQuery, null);
@@ -38,11 +43,20 @@ public class SearchQueryRequest
     public SearchQueryRequest(Project aProject, String aUsername, String aQuery,
             SourceDocument aLimitedToDocument)
     {
+        this(aProject, aUsername, aQuery, aLimitedToDocument, null, null);
+    }
+
+    public SearchQueryRequest(Project aProject, String aUsername, String aQuery,
+        SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature)
+    {
         super();
         project = aProject;
         username = aUsername;
         query = aQuery;
         limitedToDocument = aLimitedToDocument;
+        annoationLayer = aAnnotationLayer;
+        annotationFeature = aAnnotationFeature;
     }
 
     public Project getProject()
@@ -63,5 +77,15 @@ public class SearchQueryRequest
     public Optional<SourceDocument> getLimitedToDocument()
     {
         return Optional.ofNullable(limitedToDocument);
+    }
+
+    public AnnotationLayer getAnnoationLayer()
+    {
+        return annoationLayer;
+    }
+
+    public AnnotationFeature getAnnotationFeature()
+    {
+        return annotationFeature;
     }
 }

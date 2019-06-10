@@ -15,37 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.inception.pdfeditor.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component
-@ConfigurationProperties("ui.pdf")
-public class PdfEditorProperties
+public interface PdfEditorProperties
 {
-    private boolean enabled = false;
+    public boolean isEnabled();
 
-    private boolean debug = false;
+    public void setEnabled(boolean aEnabled);
 
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
+    public boolean isDebug();
 
-    public void setEnabled(boolean aEnabled)
-    {
-        enabled = aEnabled;
-    }
-
-    public boolean isDebug()
-    {
-        return debug;
-    }
-
-    public void setDebug(boolean aDebug)
-    {
-        this.debug = aDebug;
-    }
+    public void setDebug(boolean aDebug);
 }

@@ -20,15 +20,16 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.9.0-SNAPSHOT</version>
+    <version>0.10.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-imls-dl4j</artifactId>
   <name>INCEpTION - ML - Deeplearning4J (v${dl4j.version})</name>
   <properties>
-    <openblas.version>0.3.3</openblas.version>
-    <javacpp-presets.version>1.4.3</javacpp-presets.version>
-    <mkl.version>2019.0</mkl.version>
-    <mkl-dnn.javacpp.version>0.16-${javacpp-presets.version}</mkl-dnn.javacpp.version>
+    <dl4j.version>1.0.0-beta4</dl4j.version>
+    <openblas.version>0.3.5</openblas.version>
+    <javacpp-presets.version>1.5</javacpp-presets.version>
+    <mkl.version>2019.3</mkl.version>
+    <mkl-dnn.javacpp.version>0.18.1-${javacpp-presets.version}</mkl-dnn.javacpp.version>
     <nd4j.backend>nd4j-native</nd4j.backend>
   </properties>
   <dependencies>
@@ -121,31 +122,31 @@
       </dependency>
 -->    
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>openblas</artifactId>
       <version>${openblas.version}-${javacpp-presets.version}</version>
       <classifier>linux-x86</classifier>
     </dependency>
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>openblas</artifactId>
       <version>${openblas.version}-${javacpp-presets.version}</version>
       <classifier>linux-x86_64</classifier>
     </dependency>
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>openblas</artifactId>
       <version>${openblas.version}-${javacpp-presets.version}</version>
       <classifier>macosx-x86_64</classifier>
     </dependency>
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>openblas</artifactId>
       <version>${openblas.version}-${javacpp-presets.version}</version>
       <classifier>windows-x86</classifier>
     </dependency>
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>openblas</artifactId>
       <version>${openblas.version}-${javacpp-presets.version}</version>
       <classifier>windows-x86_64</classifier>
@@ -159,12 +160,12 @@
       </dependency>
      -->
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>mkl-platform</artifactId>
       <version>${mkl.version}-${javacpp-presets.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.bytedeco.javacpp-presets</groupId>
+      <groupId>org.bytedeco</groupId>
       <artifactId>mkl-dnn-platform</artifactId>
       <version>${mkl-dnn.javacpp.version}</version>
     </dependency>
@@ -220,6 +221,13 @@
       <artifactId>assertj-core</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
+
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
@@ -251,7 +259,7 @@
             <ignoredDependencies>
               <!-- ND4J plugins - used via reflection -->
               <dependency>org.nd4j:nd4j-native:*:*</dependency>
-              <dependency>org.bytedeco.javacpp-presets:*:*:*</dependency>
+              <dependency>org.bytedeco:*:*:*</dependency>
             </ignoredDependencies>
           </configuration>
         </plugin>

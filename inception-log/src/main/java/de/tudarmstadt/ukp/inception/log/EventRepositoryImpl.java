@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -53,22 +54,34 @@ public class EventRepositoryImpl
 
     @Override
     @Transactional
-    public void create(LoggedEvent aEvent)
+    public void create(LoggedEvent... aEvents)
     {
-        log.info("{}", aEvent);
-        entityManager.persist(aEvent);
+        for (LoggedEvent event : aEvents) {
+            log.trace("{}", event);
+            entityManager.persist(event);
+        }
     }
 
     @Override
     @Transactional
-    public List<LoggedEvent> listLoggedEvents(Project aProject, String aUsername, String aEventType,
-            int aSize, long recommenderId)
+    public List<LoggedEvent> listLoggedEventsForRecommender(Project aProject, String aUsername,
+            String aEventType, int aMaxSize, long aRecommenderId)
     {
-        String query = String.join("\n",
-                "FROM LoggedEvent WHERE ",
+        String detailStr = "%\"recommenderId\":" + aRecommenderId + "%";
+
+        return listLoggedEventsForDetail(aProject, aUsername, aEventType, aMaxSize, detailStr);
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listLoggedEventsForDetail(Project aProject, String aUsername,
+            String aEventType, int aMaxSize, String aDetail)
+    {
+        String query = String.join("\n", 
+                "FROM LoggedEvent WHERE ", 
                 "user=:user AND ",
-                "project = :project AND ",
-                "event = :event AND ",
+                "project = :project AND ", 
+                "event = :event AND ", 
                 "details LIKE :details ",
                 "ORDER BY created DESC");
 
@@ -76,9 +89,40 @@ public class EventRepositoryImpl
                 .setParameter("user", aUsername)
                 .setParameter("project", aProject.getId())
                 .setParameter("event", aEventType)
-                .setParameter("details", "%\"recommenderId\":" + recommenderId + "%")
-                .setMaxResults(aSize)
-                .getResultList();
+                .setParameter("details", aDetail)
+                .setMaxResults(aMaxSize).getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public List<LoggedEvent> listUniqueLoggedEventsForDoc(Project aProject, String aUsername,
+            String[] aEventTypes, int aMaxSize)
+    {
+        String query = String.join("\n", 
+                "FROM LoggedEvent WHERE",
+                "id IN",
+                // select one event when time-stamps are the same per document
+                "   (SELECT max(id)",
+                "   FROM LoggedEvent WHERE",
+                "   user=:user AND",
+                "   project=:project AND",
+                "   event in (:eventTypes)",
+                "   AND created in",
+                // select last created events per document
+                "       (SELECT max(created) ",
+                "       FROM LoggedEvent WHERE",
+                "       user=:user AND",
+                "       project=:project AND",
+                "       event in (:eventTypes)",
+                "       GROUP BY document)",
+                "   GROUP BY document)",
+                "ORDER BY created DESC");
+
+        TypedQuery<LoggedEvent> typedQuery = entityManager.createQuery(query, LoggedEvent.class)
+                .setParameter("user", aUsername)
+                .setParameter("project", aProject.getId())
+                .setParameter("eventTypes", Arrays.asList(aEventTypes));
+        return typedQuery.setMaxResults(aMaxSize).getResultList();
     }
     
     @Override

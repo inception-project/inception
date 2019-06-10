@@ -3,3 +3,17 @@
 Package: src/main/js/pdfanno
 
 All files under this package are from PDFAnno and are licensed under the MIT.
+
+Original source: https://github.com/paperai/pdfanno
+
+
+
+== paperai pdfextract
+
+Package: de.tudarmstadt.ukp.inception.pdfeditor.pdfextract
+
+All files in this package are from paperai pdfextract and are licensed under the MIT.
+
+Copyright (c) 2017 Hiroyuki Shindo
+
+Original source: https://github.com/yuichiro-s/pdfextract

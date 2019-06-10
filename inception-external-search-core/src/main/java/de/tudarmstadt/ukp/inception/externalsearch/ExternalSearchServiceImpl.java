@@ -77,6 +77,7 @@ public class ExternalSearchServiceImpl
     @Override
     public List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository,
             String aQuery)
+        throws IOException
     {
         log.debug("Running query: {}", aQuery);
         

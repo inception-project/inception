@@ -17,8 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.kb.graph;
 
-import static org.apache.commons.lang3.builder.ToStringStyle.SHORT_PREFIX_STYLE;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -26,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.cyberborean.rdfbeans.datatype.DatatypeMapper;
 import org.cyberborean.rdfbeans.datatype.DefaultDatatypeMapper;
 import org.eclipse.rdf4j.model.BNode;
@@ -34,72 +33,76 @@ import org.eclipse.rdf4j.model.Literal;
 import org.eclipse.rdf4j.model.Statement;
 import org.eclipse.rdf4j.model.Value;
 
-import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
-
 public class KBStatement implements Serializable
 {
     private static final long serialVersionUID = 6117845741665780184L;
 
     private String statementId;
+
     // Subject
     private KBHandle instance;
 
     // Predicate
-    private KBHandle property;
+    private KBProperty property;
 
     // Object
     private Object value;
+    
+    private String valueLabel;
 
     // Language
     private String language;
 
     private boolean inferred;
 
-    private Set<Statement> originalStatements;
+    private Set<Statement> originalTriples;
 
     private List<KBQualifier> qualifiers;
 
-    /**
-     * Call {@link KnowledgeBaseService#initStatement(KnowledgeBase, KBStatement)}
-     * after constructing this in order to allow upserting.
-     * @param aInstance {@link KBHandle} for the statement instance
-     * @param aProperty {@link KBHandle} for the statement property
-     * @param aValue Defines value for the statement
-     */
-    public KBStatement(KBHandle aInstance, KBHandle aProperty, Value aValue)
+    public KBStatement(String aId, String aInstance)
     {
+        this(aId, new KBHandle(aInstance), null, null);
+    }
+
+    public KBStatement(String aId, String aInstance, String aProperty, Object aValue,
+            String aValueLabel)
+    {
+        this(aId, new KBHandle(aInstance), new KBProperty(aProperty), aValue);
+        setValueLabel(aValueLabel);
+    }
+
+    /**
+     * @param aInstance
+     *            {@link KBHandle} for the statement instance
+     * @param aProperty
+     *            {@link KBHandle} for the statement property
+     * @param aValue
+     *            Defines value for the statement
+     */
+    public KBStatement(String aId, KBHandle aInstance, KBProperty aProperty, Object aValue)
+    {
+        statementId = aId;
         instance = aInstance;
         property = aProperty;
 
-        DatatypeMapper mapper = new DefaultDatatypeMapper();
-        if (aValue instanceof Literal) {
-            Literal litValue = (Literal) aValue;
-            language = litValue.getLanguage().orElse(null);
-            value = mapper.getJavaObject(litValue);
-        }
-        else if (aValue instanceof IRI) {
-            value = aValue;
-        }
-        else if (aValue instanceof BNode) {
-            value = null;
-        }
-        else {
-            throw new IllegalStateException("Unknown object type: " + aValue.getClass());
-        }
-
-        originalStatements = new HashSet<>();
-
+        setValue(aValue);
+        
+        originalTriples = new HashSet<>();
         qualifiers = new ArrayList<>();
     }
 
-    public KBStatement(KBHandle aInstance, KBHandle aProperty)
+    public KBStatement(KBHandle aInstance, KBProperty aProperty)
     {
         instance = aInstance;
         property = aProperty;
         value = null;
-        originalStatements = new HashSet<>();
+        originalTriples = new HashSet<>();
         qualifiers = new ArrayList<>();
+    }
+
+    public KBStatement(KBHandle aInstance)
+    {
+        this(aInstance, null);
     }
 
     public KBStatement(KBStatement other)
@@ -108,7 +111,7 @@ public class KBStatement implements Serializable
         this.inferred = other.inferred;
         this.instance = other.instance;
         this.language = other.language;
-        this.originalStatements = other.originalStatements;
+        this.originalTriples = other.originalTriples;
         this.property = other.property;
         this.value = other.value;
         qualifiers = other.qualifiers;
@@ -134,12 +137,12 @@ public class KBStatement implements Serializable
         instance = aInstance;
     }
 
-    public KBHandle getProperty()
+    public KBProperty getProperty()
     {
         return property;
     }
 
-    public void setProperty(KBHandle aProperty)
+    public void setProperty(KBProperty aProperty)
     {
         property = aProperty;
     }
@@ -151,7 +154,26 @@ public class KBStatement implements Serializable
 
     public void setValue(Object aValue)
     {
-        value = aValue;
+        if (aValue instanceof Value) {
+            DatatypeMapper mapper = new DefaultDatatypeMapper();
+            if (aValue instanceof Literal) {
+                Literal litValue = (Literal) aValue;
+                language = litValue.getLanguage().orElse(null);
+                value = mapper.getJavaObject(litValue);
+            }
+            else if (aValue instanceof IRI) {
+                value = aValue;
+            }
+            else if (aValue instanceof BNode) {
+                value = null;
+            }
+            else {
+                throw new IllegalStateException("Unknown object type: " + aValue.getClass());
+            }
+        }
+        else {
+            value = aValue;
+        }
     }
 
     public String getLanguage()
@@ -174,19 +196,22 @@ public class KBStatement implements Serializable
         inferred = aInferred;
     }
 
-    public Set<Statement> getOriginalStatements()
+    public Set<Statement> getOriginalTriples()
     {
-        return originalStatements;
+        return originalTriples;
     }
 
-    public void setOriginalStatements(Set<Statement> statements)
+    public void setOriginalTriples(Set<Statement> statements)
     {
-        originalStatements = statements;
+        originalTriples = statements;
     }
 
     public void addQualifier(KBQualifier aQualifier)
     {
-        qualifiers.add(aQualifier);
+        aQualifier.setStatement(this);
+        if (!qualifiers.contains(aQualifier)) {
+            qualifiers.add(aQualifier);
+        }
     }
 
     public List<KBQualifier> getQualifiers()
@@ -198,12 +223,29 @@ public class KBStatement implements Serializable
     {
         qualifiers = qualifierList;
     }
-
-    @Override public String toString()
+    
+    public String getValueLabel()
     {
-        return new ToStringBuilder(this, SHORT_PREFIX_STYLE).append("instance", instance)
-                .append("property", property).append("value", value).append("language", language)
-                .append("inferred", inferred).append("originalStatements", originalStatements)
-                .toString();
+        return valueLabel;
+    }
+
+    public void setValueLabel(String aValueLabel)
+    {
+        valueLabel = aValueLabel;
+    }
+
+    @Override
+    public String toString()
+    {
+        return new ToStringBuilder(this, ToStringStyle.MULTI_LINE_STYLE)
+                .append("statementId", statementId)
+                .append("instance", instance)
+                .append("property", property)
+                .append("value", value)
+                .append("valueLabel", valueLabel)
+                .append("language", language)
+                .append("inferred", inferred)
+                .append("originalTriples", originalTriples)
+                .append("qualifiers", qualifiers).toString();
     }
 }

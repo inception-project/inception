@@ -71,7 +71,7 @@ public class Predictions
         }
     }
     
-    public Predictions(Project aProject, User aUser) {
+    public Predictions(User aUser, Project aProject) {
         this(aProject, aUser, null);
     }
 

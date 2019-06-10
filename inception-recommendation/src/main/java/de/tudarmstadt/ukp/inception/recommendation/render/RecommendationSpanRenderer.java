@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -43,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -90,15 +92,17 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         // No recommendations available at all
-        if (model == null) {
+        if (predictions == null) {
             return;
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
+        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
+                .orElse(getDocumentTitle(aCas));
+        SuggestionDocumentGroup groups = predictions.getPredictions(sourceDocumentName, layer,
                 aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer
@@ -194,9 +198,10 @@ public class RecommendationSpanRenderer
                         AnnotationFeature feature = aAnnotationService
                             .getFeature(ao.getFeature(), layer);
                         // Retrieve the UI display label for the given feature value
-                        String annotation = aFsRegistry.getFeatureSupport(feature)
-                            .renderFeatureValue(feature, ao.getLabel());
-
+                        FeatureSupport featureSupport = aFsRegistry.getFeatureSupport(feature);
+                        String annotation = featureSupport.renderFeatureValue(feature,
+                                ao.getLabel());
+                        
                         Map<String, String> featureAnnotation = new HashMap<>();
                         featureAnnotation.put(ao.getFeature(), annotation);
 
@@ -204,6 +209,7 @@ public class RecommendationSpanRenderer
                                 new VRange(ao.getBegin() - aWindowBeginOffset,
                                         ao.getEnd() - aWindowBeginOffset),
                                 featureAnnotation, Collections.emptyMap(), color);
+                        v.setLazyDetails(featureSupport.getLazyDetails(feature, ao.getLabel()));
                         vdoc.add(v);
                         first = false;
                     }
@@ -211,10 +217,6 @@ public class RecommendationSpanRenderer
                     if (ao.getConfidence() != -1) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,
                                 String.format("Confidence: %.2f", ao.getConfidence())));
-                    }
-                    if (ao.getUiLabel() != null && !ao.getUiLabel().isEmpty()) {
-                        vdoc.add(new VComment(vid, VCommentType.INFO,
-                                "Description: " + ao.getUiLabel()));
                     }
                     if (pref.isShowAllPredictions() && !ao.isVisible()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,

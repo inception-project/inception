@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
 import static de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JSequenceRecommender.NO_LABEL;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -27,13 +29,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +55,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSpl
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 public class DL4JSequenceRecommenderTest
 {
@@ -122,7 +122,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("C");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -159,7 +159,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
                 new ArrayList<>(select(jcas, Token.class)), 
@@ -187,7 +187,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -215,7 +215,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -243,7 +243,7 @@ public class DL4JSequenceRecommenderTest
         ne.setValue("B");
         ne.addToIndexes();
         
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
+        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         
         assertThatThrownBy(() -> sut.extractTokenLabels(
@@ -276,21 +276,21 @@ public class DL4JSequenceRecommenderTest
         
         sut.train(context, asList(cas.getCas()));
 
+        addScoreFeature(cas.getCas(), POS.class, "PosValue");
         sut.predict(context, cas.getCas());
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas, PredictedSpan.class);
-
+        List<POS> predictions = getPredictions(cas.getCas(), POS.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         // check how many labels are not padding labels
         long numWithLabel = predictions.stream()
-                .filter(p -> !p.getLabel().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+                .filter(p -> !p.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
         System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
                 predictions.size());
         
         assertThat(predictions).as("There are predictions other than *No_Label*")
-            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
+            .anyMatch(l -> !l.getPosValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test
@@ -338,25 +338,26 @@ public class DL4JSequenceRecommenderTest
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
-        JCas cas = loadNerDevelopmentData();
-        
-        sut.train(context, asList(cas.getCas()));
+        JCas jCas = loadNerDevelopmentData();
+        CAS cas = jCas.getCas();
 
-        sut.predict(context, cas.getCas());
+        sut.train(context, asList(cas));
 
-        Collection<PredictedSpan> predictions = JCasUtil.select(cas, PredictedSpan.class);
+        addScoreFeature(cas, NamedEntity.class, "value");
+        sut.predict(context, cas);
 
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
         // check how many labels are not padding labels
         long numWithLabel = predictions.stream()
-                .filter(p -> !p.getLabel().equals(DL4JSequenceRecommender.NO_LABEL)).count();
+                .filter(p -> !p.getValue().equals(DL4JSequenceRecommender.NO_LABEL)).count();
         System.out.printf("Predicted %d labels not no_label out of %d.%n", numWithLabel,
                 predictions.size());
         
         assertThat(predictions).as("There are predictions other than *No_Label*")
-            .anyMatch(l -> !l.getLabel().equals(DL4JSequenceRecommender.NO_LABEL));
+            .anyMatch(l -> !l.getValue().equals(DL4JSequenceRecommender.NO_LABEL));
     }
 
     @Test

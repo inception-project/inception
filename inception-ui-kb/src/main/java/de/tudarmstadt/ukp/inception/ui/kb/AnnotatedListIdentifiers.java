@@ -45,7 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
-import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
+import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
@@ -63,7 +63,7 @@ public class AnnotatedListIdentifiers
     private @SpringBean UserDao userRepository;
 
     private IModel<KnowledgeBase> kbModel;
-    private IModel<KBHandle> conceptModel;
+    private IModel<KBObject> conceptModel;
 
     private Project currentProject;
     private User currentUser;
@@ -71,7 +71,7 @@ public class AnnotatedListIdentifiers
     private Model<String> targetQuery = Model.of("");
 
     public AnnotatedListIdentifiers(String aId, IModel<KnowledgeBase> aKbModel,
-            IModel<KBHandle> aConcept, IModel<KBHandle> aInstance, boolean flagInstanceSelect)
+            IModel<KBObject> aConcept, IModel<KBObject> aInstance, boolean flagInstanceSelect)
     {
         super(aId, aConcept);
         setOutputMarkupId(true);
@@ -150,7 +150,8 @@ public class AnnotatedListIdentifiers
         }
         try {
             currentProject = kbModel.getObject().getProject();
-            return searchService.query(currentUser, currentProject, targetQuery.getObject());
+            return searchService
+                .query(currentUser, currentProject, targetQuery.getObject());
         }
         catch (Exception e) {
             LOG.debug("Error in the query.", e);

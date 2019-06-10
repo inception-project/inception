@@ -65,11 +65,6 @@ public class KBConcept
         super();
     }
 
-    public KBConcept(String aName)
-    {
-        name = aName;
-    }
-
     public KBConcept(String aIdentifier, String aName)
     {
         identifier = aIdentifier;

@@ -24,7 +24,6 @@ import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.sparqlbuilder.core.query.SelectQuery;
 
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBStatement;
 
 public interface SPARQLQuery
 {
@@ -76,6 +75,7 @@ public interface SPARQLQuery
     {
         return asHandles(aConnection, aAll).stream().findFirst();
     }
-    
-    List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll);
+
+    // This has been moved to NoReification
+//    List<KBStatement> asStatements(RepositoryConnection aConnection, boolean aAll);
 }

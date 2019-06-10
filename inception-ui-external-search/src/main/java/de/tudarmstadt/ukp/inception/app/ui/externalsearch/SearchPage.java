@@ -40,7 +40,6 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
-import org.apache.wicket.markup.html.link.ExternalLink;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -69,6 +68,7 @@ import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
+import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 import de.tudarmstadt.ukp.inception.ui.core.session.SessionMetaData;
 
 @MountPath("/search.html")
@@ -253,16 +253,10 @@ public class SearchPage extends ApplicationPageBase
             add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
                     .add(visibleWhen(() -> !existsSourceDocument)));
             
-            String url = "";
-            if (existsSourceDocument) {
-                long docId = documentService.getSourceDocument(project, result.getDocumentTitle())
-                        .getId();
-                url = String.format("%s#!p=%d&d=%d",
-                        getRequestCycle().urlFor(AnnotationPage.class, new PageParameters()),
-                        project.getId(), docId);
-            }
-            add(new ExternalLink("openLink", url).add(
-                    visibleWhen(() -> existsSourceDocument)));
+            add(LinkProvider
+                    .createDocumentPageLink(documentService, project, result.getDocumentId(),
+                            "openLink", AnnotationPage.class)
+                    .add(visibleWhen(() -> existsSourceDocument)));
         }
     }
 }

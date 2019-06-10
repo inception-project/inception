@@ -15,3 +15,9 @@ Attribution: Christian Chiarcos, and Maria Sukhareva (2015). OLiA - Ontologies o
 
 Source:      https://www.w3.org/TR/owl-guide/wine.rdf
 License:     https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document
+
+
+== wordnet-ontolex-ontology.owl
+
+Source:      http://wordnet-rdf.princeton.edu/ontology
+License:     http://wordnet-rdf.princeton.edu/license

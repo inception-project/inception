@@ -20,13 +20,15 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
 <wicket:panel>
+  <div class="small">
     <wicket:container wicket:id="content"></wicket:container>
+  </div>
 </wicket:panel>
 
 <wicket:fragment wicket:id="editMode">
     <form wicket:id="form" class="form-inline">
         <label class="control-label">Qualifier</label>
-        <select wicket:id="kbProperty" class="form-control flex-content" style="width:80px" data-container="body"></select>
+        <select wicket:id="property" class="form-control flex-content" style="width:80px" data-container="body"></select>
         <input type="text" wicket:id="language" class="form-control" size="6"
             wicket:message="placeholder:qualifier.language.placeholder"></input>
         <textarea wicket:id="value" rows="1" cols="12" class="form-control hfill"
@@ -48,7 +50,7 @@
 </wicket:fragment>
 
 <wicket:fragment wicket:id="viewMode">
-    <i style="margin-left:50px" wicket:id="property"></i>
+    <i wicket:id="property"></i>
     <span> : </span>
     <wicket:enclosure child="language">
         <label>(<wicket: wicket:id="language" />)</label>
