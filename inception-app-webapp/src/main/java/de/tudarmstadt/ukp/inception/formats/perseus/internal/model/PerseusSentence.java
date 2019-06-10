@@ -1,6 +1,6 @@
 /*
- * Copyright 2017
- * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,23 +15,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic.model;
+package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-public class ElasticSearchDoc
+import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlID;
+
+public class PerseusSentence
 {
-    private String text;
+    @XmlID 
+    @XmlAttribute(name = "id")
+    public String id;
 
-    public String getText()
-    {
-        return text;
-    }
+    @XmlAttribute(name = "subdoc")
+    public String subdoc;
 
-    public void setText(String text)
-    {
-        this.text = text;
-    }
+    @XmlAttribute(name = "document_id")
+    public String documentId;
 
+    @XmlElement(name = "word")
+    public List<PerseusWord> words;
 }

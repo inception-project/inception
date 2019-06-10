@@ -28,6 +28,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.validation.validator.UrlValidator;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class ExternalRecommenderTraitsEditor
     extends Panel
@@ -36,7 +37,7 @@ public class ExternalRecommenderTraitsEditor
 
     private static final String MID_FORM = "form";
 
-    private @SpringBean ExternalRecommenderFactory toolFactory;
+    private @SpringBean RecommendationEngineFactory<ExternalRecommenderTraits> toolFactory;
     
     private final ExternalRecommenderTraits traits;
 

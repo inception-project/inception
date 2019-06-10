@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocumen
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VRange;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
@@ -91,15 +92,17 @@ public class RecommendationSpanRenderer
             return;
         }
 
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         // No recommendations available at all
-        if (model == null) {
+        if (predictions == null) {
             return;
         }
         
         // TODO #176 use the document Id once it it available in the CAS
-        SuggestionDocumentGroup groups = model.getPredictions(getDocumentTitle(aCas), layer,
+        String sourceDocumentName = CasMetadataUtils.getSourceDocumentName(aCas)
+                .orElse(getDocumentTitle(aCas));
+        SuggestionDocumentGroup groups = predictions.getPredictions(sourceDocumentName, layer,
                 aWindowBeginOffset, aWindowEndOffset);
         
         // No recommendations to render for this layer

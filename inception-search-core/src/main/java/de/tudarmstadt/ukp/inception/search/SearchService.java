@@ -19,10 +19,13 @@ package de.tudarmstadt.ukp.inception.search;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -35,8 +38,30 @@ public interface SearchService
     List<SearchResult> query(User aUser, Project aProject, String aQuery)
         throws IOException, ExecutionException;
 
+    /**
+     * Receive the search results un-grouped as a list.
+     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature)}
+     */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
-            throws IOException, ExecutionException;
+        throws IOException, ExecutionException;
+
+    /**
+     * Receive the search results grouped by the feature values of the given AnnotationFeature of
+     * the given AnnotationLayer. Both AnnotationLayer and AnnotationFeature must be not null for
+     * this, otherwise the search results will be grouped by document title.
+     * @param aUser the current user
+     * @param aProject the project to search in
+     * @param aDocument limit search to this document or search in the whole project if null
+     * @param aAnnotationLayer the layer that the grouping feature belongs to
+     * @param aAnnotationFeature the feature that is used to group the results
+     * @return a Map where the keys are the group-keys (e.g. feature-values) and the values are
+     * lists of search results that belong to this group.
+     * @throws IOException
+     * @throws ExecutionException
+     */
+    Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException;
 
     void reindex(Project aproject) throws IOException;
 

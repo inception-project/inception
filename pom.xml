@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-beta-7</webanno.version>
+    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
@@ -62,7 +62,8 @@
     <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <lucene.version>7.3.0</lucene.version>
+    <lucene.version>7.3.1</lucene.version>
+    <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
     <mockito.version>2.23.4</mockito.version>
@@ -98,6 +99,7 @@
     <module>inception-imls-external</module>
     <module>inception-log</module>
     <module>inception-support</module>
+    <module>inception-testing</module>
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
     <module>inception-scheduling</module>
@@ -317,6 +319,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
+        <version>0.10.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-testing</artifactId>
         <version>0.10.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -1011,6 +1018,27 @@
       </dependency>
         
       <dependency>
+        <groupId>org.elasticsearch</groupId>
+        <artifactId>elasticsearch</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>transport</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-high-level-client</artifactId>
+        <version>${elasticsearch.version}</version>
+      </dependency>
+        
+      <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
@@ -1083,31 +1111,29 @@
         </executions>
         <configuration>
           <failOnWarning>true</failOnWarning>
-          <usedDependencies combine.children="append">
+          <ignoredDependencies combine.children="append">
             <!-- 
               - Logging is used via reflection and cannot be detected by Maven
             -->
-            <usedDependency>org.apache.logging.log4j:log4j-slf4j-impl</usedDependency>
-            <usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
-            <usedDependency>org.slf4j:log4j-over-slf4j</usedDependency>
-            <usedDependency>org.slf4j:jcl-over-slf4j</usedDependency>
-            <usedDependency>commons-logging:commons-logging</usedDependency>
+            <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
+            <dependency>org.apache.logging.log4j:log4j-core</dependency>
+            <dependency>org.slf4j:log4j-over-slf4j</dependency>
+            <dependency>org.slf4j:jcl-over-slf4j</dependency>
+            <dependency>commons-logging:commons-logging</dependency>
             <!-- 
               - JAXB is used via reflection and cannot be detected by Maven
             -->
-            <usedDependency>javax.xml.bind:jaxb-api</usedDependency>
-            <usedDependency>com.sun.xml.bind:jaxb-core</usedDependency>
-            <usedDependency>com.sun.xml.bind:jaxb-impl</usedDependency>
-            <usedDependency>javax.activation:javax.activation-api</usedDependency>
-          </usedDependencies>
-          <ignoredUnusedDeclaredDependencies>
+            <dependency>javax.xml.bind:jaxb-api</dependency>
+            <dependency>com.sun.xml.bind:jaxb-core</dependency>
+            <dependency>com.sun.xml.bind:jaxb-impl</dependency>
+            <dependency>javax.activation:javax.activation-api</dependency>
             <!-- 
               - h2database and data-jpa, used via reflection in tests in search-mtas, 
               - cannot be detected by Maven
              -->
-            <ignoredUnusedDeclaredDependency>com.h2database:h2</ignoredUnusedDeclaredDependency>
-            <ignoredUnusedDeclaredDependency>org.springframework.boot:spring-boot-starter-data-jpa</ignoredUnusedDeclaredDependency>
-          </ignoredUnusedDeclaredDependencies>
+            <dependency>com.h2database:h2</dependency>
+            <dependency>org.springframework.boot:spring-boot-starter-data-jpa</dependency>
+          </ignoredDependencies>
         </configuration>
       </plugin>
       <plugin>

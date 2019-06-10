@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,23 +42,18 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 
 // tag::classDefinition[]
 public class DataMajorityNerRecommender
-        implements RecommendationEngine
+        extends RecommendationEngine
 {
     public static final Key<DataMajorityModel> KEY_MODEL = new Key<>("model");
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private final String layerName;
-    private final String featureName;
-
     public DataMajorityNerRecommender(Recommender aRecommender)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
+        super(aRecommender);
     }
 // end::classDefinition[]
 // tag::train[]
@@ -81,10 +75,10 @@ public class DataMajorityNerRecommender
 
         for (CAS cas : aCasses) {
             Type annotationType = CasUtil.getType(cas, layerName);
-            Feature labelFeature = annotationType.getFeatureByBaseName(featureName);
+            Feature predictedFeature = annotationType.getFeatureByBaseName(featureName);
 
             for (AnnotationFS ann : CasUtil.select(cas, annotationType)) {
-                String label = ann.getFeatureValueAsString(labelFeature);
+                String label = ann.getFeatureValueAsString(predictedFeature);
                 if (isNotEmpty(label)) {
                     annotations.add(new Annotation(label, ann.getBegin(), ann.getEnd()));
                 }
@@ -125,19 +119,21 @@ public class DataMajorityNerRecommender
                 new RecommendationException("Key [" + KEY_MODEL + "] not found in context"));
 
         // Make the predictions
-        Type tokenType = getAnnotationType(aCas, Token.class);
+        Type tokenType = CasUtil.getAnnotationType(aCas, Token.class);
         Collection<AnnotationFS> candidates = CasUtil.select(aCas, tokenType);
         List<Annotation> predictions = predict(candidates, model);
 
         // Add predictions to the CAS
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Type predictedType = getPredictedType(aCas);
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         for (Annotation ann : predictions) {
-            AnnotationFS annotation = aCas.createAnnotation(predictionType, ann.begin, ann.end);
-            annotation.setDoubleValue(confidenceFeature, ann.score);
-            annotation.setStringValue(labelFeature, ann.label);
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, ann.begin, ann.end);
+            annotation.setStringValue(predictedFeature, ann.label);
+            annotation.setDoubleValue(scoreFeature, ann.score);
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
@@ -169,10 +165,11 @@ public class DataMajorityNerRecommender
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
             throws RecommendationException
     {
+        List<Annotation> data = extractAnnotations(aCasses);
         List<Annotation> trainingData = new ArrayList<>();
         List<Annotation> testData = new ArrayList<>();
 
-        for (Annotation ann : extractAnnotations(aCasses)) {
+        for (Annotation ann : data) {
             switch (aDataSplitter.getTargetSet(ann)) {
             case TRAIN:
                 trainingData.add(ann);
@@ -187,11 +184,13 @@ public class DataMajorityNerRecommender
         
         int trainingSetSize = trainingData.size();
         int testSetSize = testData.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
 
         if (trainingData.size() < 1 || testData.size() < 1) {
             log.info("Not enough data to evaluate, skipping!");
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
             return result;
         }
@@ -201,7 +200,7 @@ public class DataMajorityNerRecommender
         // evaluation: collect predicted and gold labels for evaluation
         EvaluationResult result = testData.stream()
                 .map(anno -> new LabelPair(anno.label, model.majorityLabel))
-                .collect(EvaluationResult.collector(trainingSetSize, testSetSize));
+                .collect(EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio));
         
         return result;
     }
