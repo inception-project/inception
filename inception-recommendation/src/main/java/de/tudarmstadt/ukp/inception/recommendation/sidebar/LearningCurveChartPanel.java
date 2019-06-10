@@ -151,7 +151,7 @@ public class LearningCurveChartPanel
         }
         
         for (Recommender recommender : listEnabledRecommenders) {
-            List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEvents(
+            List<LoggedEvent> tempLoggedEvents = eventRepo.listLoggedEventsForRecommender(
                     model.getObject().getProject(), model.getObject().getUser().getUsername(),
                     eventType, MAX_POINTS_TO_PLOT, recommender.getId());
             
@@ -188,12 +188,12 @@ public class LearningCurveChartPanel
                 }
 
                 // sometimes score values NaN. Can result into error while rendering the graph on UI
-                if (!Double.isFinite(detail.score)) {
+                if (!Double.isFinite(detail.f1)) {
                     continue;
                 }
                 
                 //recommenderIfActive only has one member
-                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.score);
+                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.f1);
             }
             catch (IOException e) {
                 LOG.error("Invalid logged Event detail. Skipping record with logged event id: "

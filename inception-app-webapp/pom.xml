@@ -95,10 +95,14 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-stringmatch</artifactId>
     </dependency>
+
+    <!-- INCEPTION - Example -->
+    <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-example-imls-data-majority</artifactId>
     </dependency>
+    !-->
 
     <!-- INCEPTION - ACTIVE LEARNING FUNCTIONALITY -->
     <dependency>
@@ -678,7 +682,6 @@
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-dl4j</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-opennlp</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-stringmatch</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-example-imls-data-majority</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-kb</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-search</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-ui-external-search</usedDependency>

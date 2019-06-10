@@ -30,7 +30,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
  */
 public interface ExternalSearchService
 {
-    List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository, String aQuery);
+    List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository, String aQuery)
+        throws IOException;
 
     /**
      * Obtains only the text from the document.
