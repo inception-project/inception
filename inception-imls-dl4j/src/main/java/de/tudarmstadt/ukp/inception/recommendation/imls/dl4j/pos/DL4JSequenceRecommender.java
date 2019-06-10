@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
 import static java.util.Arrays.asList;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -69,13 +68,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
 public class DL4JSequenceRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -85,9 +83,8 @@ public class DL4JSequenceRecommender
     public static final Key<MultiLayerNetwork> KEY_MODEL = new Key<>("model");
     public static final Key<INDArray> KEY_UNKNOWN = new Key<>("unknown");
     
-    private final String layerName;
-    private final String featureName;
     private final File datasetCache;
+
     private DL4JSequenceRecommenderTraits traits;
     private BinaryVectorizer wordVectors;
     private INDArray randUnk;
@@ -95,8 +92,8 @@ public class DL4JSequenceRecommender
     public DL4JSequenceRecommender(Recommender aRecommender, DL4JSequenceRecommenderTraits aTraits,
             File aDatasetCache)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
+        super(aRecommender);
+
         traits = aTraits;
         datasetCache = aDatasetCache;
     }
@@ -368,10 +365,12 @@ public class DL4JSequenceRecommender
         
         try {
             Type sentenceType = getType(aCas, Sentence.class);
+            Type predictedType = getPredictedType(aCas);
             Type tokenType = getType(aCas, Token.class);
-            Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
-            Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-            Feature labelFeature = predictionType.getFeatureByBaseName("label");
+
+            Feature scoreFeature = getScoreFeature(aCas);
+            Feature predictedFeature = getPredictedFeature(aCas);
+            Feature isPredictionFeature = getIsPredictionFeature(aCas);
     
             final int limit = traits.getPredictionLimit();
             final int batchSize = traits.getBatchSize();
@@ -405,11 +404,12 @@ public class DL4JSequenceRecommender
                     List<AnnotationFS> tokenFSes = outcome.getSample().getTokens();
                     for (int tokenIdx = 0; tokenIdx < tokenFSes.size(); tokenIdx ++) {
                         AnnotationFS token = tokenFSes.get(tokenIdx);
-                        AnnotationFS annotation = aCas.createAnnotation(predictionType,
+                        AnnotationFS annotation = aCas.createAnnotation(predictedType,
                                 token.getBegin(), token.getEnd());
-                        //annotation.setDoubleValue(confidenceFeature, prediction.getProb());
-                        annotation.setStringValue(labelFeature,
+                        //annotation.setDoubleValue(scoreFeature, prediction.getProb());
+                        annotation.setStringValue(predictedFeature,
                                 outcomes.get(outcomeIdx).getLabels().get(tokenIdx));
+                        annotation.setBooleanValue(isPredictionFeature, true);
                         aCas.addFsToIndexes(annotation);
                     }
                     outcomeIdx++;
@@ -493,12 +493,18 @@ public class DL4JSequenceRecommender
 
         int testSetSize = testSet.size();
         int trainingSetSize = trainingSet.size();
+        double overallTrainingSize = data.size() - testSetSize;
+        double trainRatio = (overallTrainingSize > 0) ? trainingSetSize / overallTrainingSize : 0.0;
         
         if (trainingSetSize < 2 || testSetSize < 2) {
-            log.info("Not enough data to evaluate, skipping!");
+            String info = String.format(
+                    "Not enough training data: training set [%s] items, test set [%s] of total [%s].",
+                    trainingSetSize, testSetSize, data.size());
+            log.info(info);
             EvaluationResult result = new EvaluationResult(trainingSetSize,
-                    testSetSize);
+                    testSetSize, trainRatio);
             result.setEvaluationSkipped(true);
+            result.setErrorMsg(info);
             return result;
         }
 
@@ -536,8 +542,8 @@ public class DL4JSequenceRecommender
                     }
                 }
             }
-            return labelPairs.stream()
-                    .collect(EvaluationResult.collector(trainingSetSize, testSetSize, NO_LABEL));
+            return labelPairs.stream().collect(
+                    EvaluationResult.collector(trainingSetSize, testSetSize, trainRatio, NO_LABEL));
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to evaluate", e);

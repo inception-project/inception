@@ -24,7 +24,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
+import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 
 import java.io.IOException;
@@ -61,9 +61,9 @@ import org.apache.uima.cas.impl.CASCompleteSerializer;
 import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.apache.uima.resource.metadata.FeatureDescription;
+import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
@@ -91,6 +91,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -121,8 +122,8 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private static final double NO_SCORE = 0.0;
 
+    private static final double NO_SCORE = 0.0;
     private static final int TRAININGS_PER_SELECTION = 5;
 
     private @PersistenceContext EntityManager entityManager;
@@ -681,44 +682,49 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public void getPredictions(Predictions model, List<SourceDocument> documents, User user)
+    public Predictions computePredictions(User aUser, Project aProject,
+                                          List<SourceDocument> aDocuments)
     {
-        nextDocument: for (SourceDocument document : documents) {
+        String username = aUser.getUsername();
+        Predictions predictions = new Predictions(aUser, aProject);
+
+        nextDocument: for (SourceDocument document : aDocuments) {
             Optional<CAS> originalCas = Optional.empty();
-            Optional<CAS> predictionCas = Optional.empty();
+            CAS predictionCas = null;
             nextLayer: for (AnnotationLayer layer : annoService
                     .listAnnotationLayer(document.getProject())) {
                 if (!layer.isEnabled()) {
                     continue nextLayer;
                 }
 
-                List<Recommender> recommenders = getActiveRecommenders(user, layer);
+                List<Recommender> recommenders = getActiveRecommenders(aUser, layer);
 
                 nextRecommender: for (Recommender r : recommenders) {
                     
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
+
                     try {
                         recommender = getRecommender(r.getId());
                     }
                     catch (NoResultException e) {
                         log.info("[{}][{}]: Recommender no longer available... skipping",
-                                user.getUsername(), r.getName());
+                                username, r.getName());
                         continue nextRecommender;
                     }
 
                     if (!recommender.isEnabled()) {
-                        log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                        log.debug("[{}][{}]: Disabled - skipping", username, r.getName());
                         continue nextRecommender;
                     }
 
-                    RecommenderContext ctx = getContext(user, recommender);
+                    RecommenderContext ctx = getContext(aUser, recommender);
 
                     if (!ctx.isReadyForPrediction()) {
                         log.info("Context for recommender [{}]({}) for user [{}] on document "
                                 + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
-                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId());
                         continue nextRecommender;
@@ -730,10 +736,9 @@ public class RecommendationServiceImpl
                     // by this type of recommender
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                + "- skipping recommender", user.getUsername(), r.getName());
+                                + "- skipping recommender", username, r.getName());
                         continue nextRecommender;
                     }
-                    
 
                     // We lazily load the CAS only at this point because that allows us to skip
                     // loading the CAS entirely if there is no enabled layer or recommender.
@@ -741,37 +746,39 @@ public class RecommendationServiceImpl
                     if (!originalCas.isPresent()) {
                         try {
                             originalCas = Optional.of(documentService.readAnnotationCas(document,
-                                    user.getUsername()));
+                                    username));
                         }
                         catch (IOException e) {
                             log.error(
                                     "Cannot read annotation CAS for user [{}] of document "
                                             + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
                         }
                         try {
                             annoService.upgradeCasIfRequired(originalCas.get(), document,
-                                    user.getUsername());
+                                    username);
                         }
                         catch (UIMAException | IOException e) {
                             log.error(
                                     "Cannot upgrade annotation CAS for user [{}] of document "
                                             + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
                         }
+
                         try {
-                            predictionCas = Optional.of(cloneCAS(originalCas.get()));
+                            predictionCas = cloneCAS(originalCas.get());
+                            monkeyPatchTypeSystem(aProject, predictionCas);
                         }
-                        catch (UIMAException e) {
-                            log.error("Cannot clone annotation CAS for user [{}] of document "
+                        catch (UIMAException | IOException e) {
+                            log.error("Cannot create prediction CAS for user [{}] of document "
                                     + "[{}]({}) in project [{}]({}) - skipping document",
-                                    user.getUsername(), document.getName(), document.getId(),
+                                    username, document.getName(), document.getId(),
                                     document.getProject().getName(), document.getProject().getId(),
                                     e);
                             continue nextDocument;
@@ -781,40 +788,29 @@ public class RecommendationServiceImpl
                     try {
                         RecommendationEngine recommendationEngine = factory.build(recommender);
 
-                        Type predictionType = getAnnotationType(predictionCas.get(),
-                                recommendationEngine.getPredictedType());
-                        Feature labelFeature = predictionType
-                                .getFeatureByBaseName(recommendationEngine.getPredictedFeature());
-                        Optional<Feature> scoreFeature = recommendationEngine.getScoreFeature()
-                                .map(predictionType::getFeatureByBaseName);
-                        
-                        // Remove any annotations that will be predicted (either manually created
-                        // or from a previous prediction run) from the CAS
-                        removePredictions(predictionCas.get(), predictionType);
-                        
                         // Perform the actual prediction
-                        recommendationEngine.predict(ctx, predictionCas.get());
+                        recommendationEngine.predict(ctx, predictionCas);
 
                         // Extract the suggestions from the data which the recommender has written 
                         // into the CAS
-                        List<AnnotationSuggestion> predictions = extractSuggestions(user,
-                                predictionCas.get(), predictionType, labelFeature, scoreFeature,
+                        List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,
+                                predictionCas,
                                 document, recommender);
                         
                         // Calculate the visibility of the suggestions. This happens via the 
                         // original CAS which contains only the manually created annotations and 
                         // *not* the suggestions.
-                        Collection<SuggestionGroup> groups = SuggestionGroup.group(predictions);
-                        calculateVisibility(originalCas.get(), user.getUsername(), layer, groups, 0,
-                                originalCas.get().getDocumentText().length());
-                        
-                        model.putPredictions(layer.getId(), predictions);
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                        calculateVisibility(originalCas.get(), username, layer,
+                                groups, 0, originalCas.get().getDocumentText().length());
+
+                        predictions.putPredictions(layer.getId(), suggestions);
                     }
                     catch (Throwable e) {
                         log.error(
                                 "Error applying recommender [{}]({}) for user [{}] to document "
                                         + "[{}]({}) in project [{}]({}) - skipping recommender",
-                                recommender.getName(), recommender.getId(), user.getUsername(),
+                                recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId(), e);
                         continue nextRecommender;
@@ -822,36 +818,43 @@ public class RecommendationServiceImpl
                 }
             }
         }
+
+        return predictions;
     }
 
-    private void removePredictions(CAS aCas, Type aPredictionType)
+    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas,
+                                                          SourceDocument aDocument,
+                                                          Recommender aRecommender)
     {
-        for (AnnotationFS fs : CasUtil.select(aCas, aPredictionType)) {
-            aCas.removeFsFromIndexes(fs);
-        }
-    }
+        String typeName = aRecommender.getLayer().getName();
+        String featureName = aRecommender.getFeature().getName();
 
-    private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas, Type predictionType,
-            Feature predictedFeature, Optional<Feature> aScoreFeature, SourceDocument aDocument,
-            Recommender aRecommender)
-    {
+        Type predictedType = CasUtil.getType(aCas, typeName);
+        Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
+        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
+        Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
+
         int predictionCount = 0;
+
+        Type tokenType = getType(aCas, Token.class);
 
         List<AnnotationSuggestion> result = new ArrayList<>();
         int id = 0;
-        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictionType)) {
-            List<Token> tokens = JCasUtil.selectCovered(Token.class, annotationFS);
-            Token firstToken = tokens.get(0);
-            Token lastToken = tokens.get(tokens.size() - 1);
+        for (AnnotationFS annotationFS : CasUtil.select(aCas, predictedType)) {
+            if (!annotationFS.getBooleanValue(predictionFeature)) {
+                continue;
+            }
+
+            List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
+            AnnotationFS firstToken = tokens.get(0);
+            AnnotationFS lastToken = tokens.get(tokens.size() - 1);
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
-            double score = aScoreFeature.map(f -> FSUtil.getFeature(annotationFS, f, Double.class))
-                    .orElse(NO_SCORE);
-            String featurename = aRecommender.getFeature().getName();
+            double score = annotationFS.getDoubleValue(scoreFeature);
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
-                    aRecommender.getLayer().getId(), featurename, aDocument.getName(),
+                    aRecommender.getLayer().getId(), featureName, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
                     label, score);
 
@@ -987,6 +990,8 @@ public class RecommendationServiceImpl
             }
         }
     }
+
+
     
     private CAS cloneCAS(CAS aCAS) throws ResourceInitializationException, CASException
     {
@@ -999,5 +1004,31 @@ public class RecommendationServiceImpl
         clone.getJCas();
         
         return clone;
+    }
+
+    public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
+            throws UIMAException, IOException {
+
+        try (StopWatch watch = new StopWatch(log, "adding score features")) {
+            TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
+
+            for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
+                TypeDescription td = tsd.getType(layer.getName());
+
+                if (td == null) {
+                    log.debug("Could not monkey patch type [{}]", layer.getName());
+                    continue;
+                }
+
+                for (FeatureDescription feature : td.getFeatures()) {
+                    String scoreFeatureName = feature.getName() + "_score";
+                    td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
+                }
+
+                td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
+            }
+
+            annoService.upgradeCas(aCas, tsd);
+        }
     }
 }

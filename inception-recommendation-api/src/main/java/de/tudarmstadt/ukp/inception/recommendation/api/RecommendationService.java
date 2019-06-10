@@ -44,7 +44,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 public interface RecommendationService
 {
     String SERVICE_NAME = "recommendationService";
-    
+    String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
+
     int MAX_RECOMMENDATIONS_DEFAULT = 3; 
     int MAX_RECOMMENDATIONS_CAP = 10; 
     
@@ -113,7 +114,7 @@ public interface RecommendationService
             String aValue, int aBegin, int aEnd)
         throws AnnotationException;
     
-    void getPredictions(Predictions model, List<SourceDocument> documents, User user);
+    Predictions computePredictions(User aUser, Project aProject, List<SourceDocument> aDocuments);
     
     void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);

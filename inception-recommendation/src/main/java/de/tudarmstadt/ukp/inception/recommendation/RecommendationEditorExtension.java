@@ -144,9 +144,9 @@ public class RecommendationEditorExtension
         throws AnnotationException, IOException
     {
         SourceDocument document = aState.getDocument();
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
-        Optional<AnnotationSuggestion> prediction = model.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> prediction = predictions.getPredictionByVID(document, aVID);
 
         if (!prediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);
@@ -202,11 +202,11 @@ public class RecommendationEditorExtension
             int aEnd)
         throws AnnotationException
     {
-        Predictions model = recommendationService.getPredictions(aState.getUser(),
+        Predictions predictions = recommendationService.getPredictions(aState.getUser(),
                 aState.getProject());
         
         SourceDocument document = aState.getDocument();
-        Optional<AnnotationSuggestion> oPrediction = model.getPredictionByVID(document, aVID);
+        Optional<AnnotationSuggestion> oPrediction = predictions.getPredictionByVID(document, aVID);
         
         if (!oPrediction.isPresent()) {
             log.error("Could not find annotation in [{}] with id [{}]", document, aVID);

@@ -100,6 +100,7 @@
     <module>inception-imls-lapps</module>
     <module>inception-log</module>
     <module>inception-support</module>
+    <module>inception-testing</module>
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
     <module>inception-scheduling</module>
@@ -324,6 +325,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-support</artifactId>
+        <version>0.10.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-testing</artifactId>
         <version>0.10.0-SNAPSHOT</version>
       </dependency>
       <dependency>
