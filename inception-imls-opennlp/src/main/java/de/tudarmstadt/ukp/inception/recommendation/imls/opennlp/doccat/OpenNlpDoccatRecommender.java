@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.doccat;
 
-import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.indexCovered;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -48,7 +47,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
-import de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan;
 import opennlp.tools.doccat.DoccatFactory;
 import opennlp.tools.doccat.DoccatModel;
 import opennlp.tools.doccat.DocumentCategorizerME;
@@ -58,7 +56,7 @@ import opennlp.tools.namefind.NameFinderME;
 import opennlp.tools.util.TrainingParameters;
 
 public class OpenNlpDoccatRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     public static final Key<DoccatModel> KEY_MODEL = new Key<>("model");
     
@@ -66,17 +64,12 @@ public class OpenNlpDoccatRecommender
 
     private static final String NO_CATEGORY = "<NO_CATEGORY>";
 
-    private final String layerName;
-    private final String featureName;
     private final OpenNlpDoccatRecommenderTraits traits;
-    private final int maxRecommendations;
 
     public OpenNlpDoccatRecommender(Recommender aRecommender,
             OpenNlpDoccatRecommenderTraits aTraits)
     {
-        layerName = aRecommender.getLayer().getName();
-        featureName = aRecommender.getFeature().getName();
-        maxRecommendations = aRecommender.getMaxRecommendations();
+        super(aRecommender);
 
         traits = aTraits;
     }
@@ -111,10 +104,11 @@ public class OpenNlpDoccatRecommender
         DocumentCategorizerME finder = new DocumentCategorizerME(model);
 
         Type sentenceType = getType(aCas, Sentence.class);
-        Type predictionType = getAnnotationType(aCas, PredictedSpan.class);
+        Type predictedType = getPredictedType(aCas);
         Type tokenType = getType(aCas, Token.class);
-        Feature confidenceFeature = predictionType.getFeatureByBaseName("score");
-        Feature labelFeature = predictionType.getFeatureByBaseName("label");
+        Feature scoreFeature = getScoreFeature(aCas);
+        Feature predictedFeature = getPredictedFeature(aCas);
+        Feature isPredictionFeature = getIsPredictionFeature(aCas);
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
@@ -131,10 +125,11 @@ public class OpenNlpDoccatRecommender
             double[] outcome = finder.categorize(tokens);
             String label = finder.getBestCategory(outcome);
             
-            AnnotationFS annotation = aCas.createAnnotation(predictionType, sentence.getBegin(),
+            AnnotationFS annotation = aCas.createAnnotation(predictedType, sentence.getBegin(),
                     sentence.getEnd());
-            annotation.setDoubleValue(confidenceFeature, NumberUtils.max(outcome));
-            annotation.setStringValue(labelFeature, label);
+            annotation.setStringValue(predictedFeature, label);
+            annotation.setDoubleValue(scoreFeature, NumberUtils.max(outcome));
+            annotation.setBooleanValue(isPredictionFeature, true);
             aCas.addFsToIndexes(annotation);
         }
     }
