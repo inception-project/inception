@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
+import static de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos.DL4JSequenceRecommender.NO_LABEL;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
@@ -411,7 +412,7 @@ public class DL4JSequenceRecommenderTest
 
     private JCas loadPosDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("conll2000-en");
+        Dataset ds = loader.load("conll2000-en", CONTINUE);
         
         CollectionReader reader = createReader(Conll2000Reader.class,
                 Conll2000Reader.PARAM_PATTERNS, ds.getDefaultSplit().getTestFiles(), 
@@ -424,7 +425,7 @@ public class DL4JSequenceRecommenderTest
 
     private JCas loadNerDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, ds.getDefaultSplit().getDevelopmentFiles(), 
