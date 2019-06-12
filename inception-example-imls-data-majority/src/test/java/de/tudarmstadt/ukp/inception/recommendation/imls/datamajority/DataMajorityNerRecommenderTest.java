@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.addScoreFeature;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
@@ -179,7 +180,7 @@ public class DataMajorityNerRecommenderTest
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
         Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
         Feature valFeature = neType.getFeatureByBaseName("value");
@@ -227,13 +228,13 @@ public class DataMajorityNerRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         return loadData(ds, ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 
