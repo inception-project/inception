@@ -109,6 +109,8 @@ import wicket.contrib.input.events.key.KeyType;
 public class CurationPage
     extends AnnotationPageBase
 {
+    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+
     private final static Logger LOG = LoggerFactory.getLogger(CurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
@@ -185,10 +187,11 @@ public class CurationPage
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
         add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy().createPositionLabel("numberOfPages", getModel())
+        add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
-                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class, (c, e) -> 
-                        e.getRequestHandler().add(c))));
+                .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
+                    (c, e) -> e.getRequestHandler().add(c))));
         
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
@@ -604,7 +607,9 @@ public class CurationPage
             loadPreferences();
             
             // Re-render whole page as sidebar size preference may have changed
-            aTarget.add(CurationPage.this);
+            if (aTarget != null) {
+                aTarget.add(CurationPage.this);
+            }
     
             List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
     
@@ -621,6 +626,9 @@ public class CurationPage
             AnnotationDocument randomAnnotationDocument = null;
             if (finishedAnnotationDocuments.size() > 0) {
                 randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+            }
+            else {
+                throw new IllegalStateException("There are no finished annotation documents!");
             }
     
             // upgrade CASes for each user, what if new type is added once the user finished
@@ -663,9 +671,11 @@ public class CurationPage
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
     
-            aTarget.add(documentNamePanel);
-            aTarget.add(remergeDocumentLink);
-            aTarget.add(finishDocumentLink);
+            if (aTarget != null) {
+                aTarget.add(documentNamePanel);
+                aTarget.add(remergeDocumentLink);
+                aTarget.add(finishDocumentLink);
+            }
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -680,6 +690,7 @@ public class CurationPage
         try {
             curationPanel.updatePanel(aTarget, curationContainer);
             updatePanel(curationContainer, aTarget);
+            aTarget.add(get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -769,6 +780,8 @@ public class CurationPage
             // If we arrive here and the document is not null, then we have a change of document
             // or a change of focus (or both)
             if (!document.equals(getModelObject().getDocument())) {
+                // do not need to choose document
+                openDocumentsModal.setVisible(false);
                 getModelObject().setDocument(document, getListOfDocs());
                 actionLoadDocument(aTarget, focus);
             }

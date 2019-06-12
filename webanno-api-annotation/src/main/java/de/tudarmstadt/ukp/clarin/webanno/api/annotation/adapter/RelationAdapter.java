@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -29,7 +29,6 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.slf4j.Logger;
@@ -37,6 +36,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -142,9 +142,13 @@ public class RelationAdapter
         for (RelationLayerBehavior behavior : behaviors) {
             request = behavior.onCreate(this, request);
         }
-        
-        return createRelationAnnotation(request.getCas(), request.getOriginFs(),
-                request.getTargetFs());
+
+        AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
+                request.getOriginFs(), request.getTargetFs());
+        publishEvent(new RelationUpdateEvent(this, request.getDocument(), request.getUsername(),
+                relationAnno, getSourceAnnotation(relationAnno)));
+
+        return relationAnno;
     }
 
     private AnnotationFS createRelationAnnotation(CAS cas, AnnotationFS originFS,
@@ -175,8 +179,17 @@ public class RelationAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
+        publishEvent(new RelationUpdateEvent(this, aDocument, aUsername,
+                fs, getSourceAnnotation(fs)));
+    }
+
+    private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
+    {
+        Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
+        AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
+        return sourceToken;
     }
 
     public String getSourceFeatureName()

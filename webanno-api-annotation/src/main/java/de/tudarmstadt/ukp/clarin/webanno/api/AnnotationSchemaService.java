@@ -431,6 +431,14 @@ public interface AnnotationSchemaService
      */
     void upgradeCas(CAS aCas, AnnotationDocument aAnnotationDocument)
             throws UIMAException, IOException;
+
+    /**
+     * In-place upgrade of the given CAS to the target type system. It is
+     * a slow call. The CAS is not automatically persisted - the calling code
+     * needs to take care of this.
+     */
+    public void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+            throws UIMAException, IOException;
     
     /**
      * @see #upgradeCas(CAS, SourceDocument, String)
@@ -438,6 +446,9 @@ public interface AnnotationSchemaService
     void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser)
             throws UIMAException, IOException;
 
+    void upgradeCas(CAS aCas, SourceDocument aSourceDocument, String aUser, CasUpgradeMode aMode)
+            throws UIMAException, IOException;
+    
     /**
      * Better call {@link #upgradeCas(CAS, SourceDocument, String)} which also logs the action
      * nicely to the log files. This method here is rather for unconditional bulk use such as

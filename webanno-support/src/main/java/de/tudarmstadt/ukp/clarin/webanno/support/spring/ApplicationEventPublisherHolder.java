@@ -17,21 +17,13 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.support.spring;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.stereotype.Component;
 
 /**
  * Helper component because we cannot inject the {@link ApplicationEventPublisher} directly into
  * Wicket components.
  */
-@Component
-public class ApplicationEventPublisherHolder
+public interface ApplicationEventPublisherHolder
 {
-    private @Autowired ApplicationEventPublisher applicationEventPublisher;
-
-    public ApplicationEventPublisher get()
-    {
-        return applicationEventPublisher;
-    }
+    public ApplicationEventPublisher get();
 }

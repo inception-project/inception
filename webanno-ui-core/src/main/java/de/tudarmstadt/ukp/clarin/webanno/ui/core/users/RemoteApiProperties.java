@@ -17,25 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component("RemoteApiProperties-secondary")
-@ConfigurationProperties("remote-api")
-public class RemoteApiProperties
+public interface RemoteApiProperties
 {
-    private boolean enabled = false;
+    public boolean isEnabled();
 
-    public boolean isEnabled()
-    {
-        boolean enabledViaLegacySystemProperty = "true"
-                .equals(System.getProperty("webanno.remote-api.enable"));
-        
-        return enabled || enabledViaLegacySystemProperty;
-    }
-
-    public void setEnabled(boolean aRemoteApiEnabled)
-    {
-        enabled = aRemoteApiEnabled;
-    }
+    public void setEnabled(boolean aRemoteApiEnabled);
 }

@@ -16,9 +16,19 @@
           <rangeTypeName>uima.cas.Long</rangeTypeName>
         </featureDescription>
         <featureDescription>
+          <name>projectName</name>
+          <description>The name of the project to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
           <name>sourceDocumentId</name>
           <description>The ID of the source documents to which these annotations belong.</description>
           <rangeTypeName>uima.cas.Long</rangeTypeName>
+        </featureDescription>
+        <featureDescription>
+          <name>sourceDocumentName</name>
+          <description>The name of the source documents to which these annotations belong.</description>
+          <rangeTypeName>uima.cas.String</rangeTypeName>
         </featureDescription>
         <featureDescription>
           <name>username</name>

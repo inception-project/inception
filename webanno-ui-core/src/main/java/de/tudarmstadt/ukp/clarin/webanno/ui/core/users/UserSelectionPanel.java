@@ -19,8 +19,11 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.users;
 
 import java.util.List;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -38,6 +41,7 @@ class UserSelectionPanel
     private @SpringBean UserDao userRepository;
 
     private OverviewListChoice<User> overviewList;
+    private CheckBox showDisabled;
 
     public UserSelectionPanel(String id, IModel<User> aModel)
     {
@@ -60,10 +64,24 @@ class UserSelectionPanel
         add(overviewList);
 
         add(new LambdaAjaxLink("create", this::actionCreate));
+        showDisabled = new CheckBox("showDisabled", Model.of(false));
+        showDisabled.add(
+                new LambdaAjaxFormComponentUpdatingBehavior("change", this::toggleShowDisabled));
+        add(showDisabled);
     }
 
     private List<User> listUsers()
     {
-        return userRepository.list();
+        if (showDisabled.getModelObject()) {
+            return userRepository.listDisabledUsers();
+        }
+        else {
+            return userRepository.listEnabledUsers();
+        }
+    }
+    
+    private void toggleShowDisabled(AjaxRequestTarget aTarget)
+    {
+        aTarget.add(overviewList);
     }
 }

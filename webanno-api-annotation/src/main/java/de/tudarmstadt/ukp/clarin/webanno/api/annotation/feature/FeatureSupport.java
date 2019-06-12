@@ -215,7 +215,14 @@ public interface FeatureSupport<T>
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
     {
         Feature labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-        return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        
+        if (labelFeature.getRange().isPrimitive()) {
+            return getLazyDetails(aFeature, aFs.getFeatureValueAsString(labelFeature));
+        }
+        else {
+            return Collections.emptyList();
+        }
+        
     }
 
     default List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)

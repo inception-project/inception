@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.dao;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.ANNOTATION_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
@@ -50,8 +51,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
+import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -79,14 +82,24 @@ public class CasStorageServiceImpl
     };
 
     private final CasDoctor casDoctor;
+    private final AnnotationSchemaService schemaService;
     private final RepositoryProperties repositoryProperties;
     private final BackupProperties backupProperties;
     
-    public CasStorageServiceImpl(@Autowired(required = false) CasDoctor aCasDoctor,
+    /**
+     * @param aCasDoctor
+     *            (optional) if present, CAS validation can take place
+     * @param aSchemaService
+     *            (optional) if present, CAS upgrades can be performed
+     */
+    public CasStorageServiceImpl(
+            @Autowired(required = false) CasDoctor aCasDoctor,
+            @Autowired(required = false) AnnotationSchemaService aSchemaService,
             @Autowired RepositoryProperties aRepositoryProperties,
             @Autowired BackupProperties aBackupProperties)
     {
         casDoctor = aCasDoctor;
+        schemaService = aSchemaService;
         repositoryProperties = aRepositoryProperties;
         backupProperties = aBackupProperties;
         
@@ -95,7 +108,7 @@ public class CasStorageServiceImpl
         }
 
         if (backupProperties.getInterval() > 0) {
-            log.info("CAS backups enabled - interval: {}  max-backups: {}  max-age: {}",
+            log.info("CAS backups enabled - interval: {}sec  max-backups: {}  max-age: {}sec",
                     backupProperties.getInterval(), backupProperties.getKeep().getNumber(),
                     backupProperties.getKeep().getTime());
         }
@@ -283,7 +296,7 @@ public class CasStorageServiceImpl
             else {
                 // Check if the newest history file is significantly older than the current one
                 File latestHistory = history[history.length - 1];
-                if (latestHistory.lastModified() + backupProperties.getInterval() < now) {
+                if (latestHistory.lastModified() + (backupProperties.getInterval() * 1000) < now) {
                     FileUtils.copyFile(currentVersion, historyFile);
                     historyFileCreated = true;
                 }
@@ -326,7 +339,8 @@ public class CasStorageServiceImpl
                 // Prune history based on time
                 if (backupProperties.getKeep().getTime() > 0) {
                     for (File file : history) {
-                        if ((file.lastModified() + backupProperties.getKeep().getTime()) < now) {
+                        if ((file.lastModified()
+                                + (backupProperties.getKeep().getTime() * 1000)) < now) {
                             FileUtils.forceDelete(file);
 
                             try (MDC.MDCCloseable closable = MDC.putCloseable(
@@ -350,25 +364,26 @@ public class CasStorageServiceImpl
     public CAS readCas(SourceDocument aDocument, String aUsername)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, true, null);
+        return readCas(aDocument, aUsername, true);
     }
     
     @Override
     public CAS readCas(SourceDocument aDocument, String aUsername, boolean aAnalyzeAndRepair)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, null);
+        return readOrCreateCas(aDocument, aUsername, aAnalyzeAndRepair, NO_CAS_UPGRADE, null);
     }
 
     @Override
     public CAS readOrCreateCas(SourceDocument aDocument, String aUsername, CasProvider aSupplier)
         throws IOException
     {
-        return readOrCreateCas(aDocument, aUsername, true, aSupplier);
+        return readOrCreateCas(aDocument, aUsername, true, NO_CAS_UPGRADE, aSupplier);
     }
 
-    private CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
-            boolean aAnalyzeAndRepair, CasProvider aSupplier)
+    @Override
+    public CAS readOrCreateCas(SourceDocument aDocument, String aUsername,
+            boolean aAnalyzeAndRepair, CasUpgradeMode aUpgradeMode, CasProvider aSupplier)
         throws IOException
     {
         synchronized (lock) {
@@ -388,16 +403,33 @@ public class CasStorageServiceImpl
             File casFile = getCasFile(aDocument, aUsername);
             if (casFile.exists()) {
                 cas = realReadCas(aDocument, aUsername, aAnalyzeAndRepair);
+                if (schemaService != null) {
+                    try {
+                        schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
+                    }
+                    catch (UIMAException e) {
+                        throw new IOException(e);
+                    }
+                }
                 source = "disk";
             }
             else if (aSupplier != null) {
                 cas = aSupplier.get();
+                if (schemaService != null) {
+                    try {
+                        schemaService.upgradeCas(cas, aDocument, aUsername, aUpgradeMode);
+                    }
+                    catch (UIMAException e) {
+                        throw new IOException(e);
+                    }
+                }
                 source = "importer";
                 realWriteCas(aDocument, aUsername, cas);
             }
             else {
-                throw new FileNotFoundException("CAS [" + aDocument.getId() + "," + aUsername
-                        + "] does not exist and no initializer is specified.");
+                throw new FileNotFoundException("CAS file for [" + aDocument.getId() + ","
+                        + aUsername + "] does not exist at [" + casFile
+                        + "] and no initializer is specified.");
             }
             
             // Add/update the CAS metadata

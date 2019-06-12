@@ -180,9 +180,9 @@ public class LegacyProjectInitializer
                 "OTHderiv", "OTHpart" };
         String[] neTagDescriptions = aNeTagDescriptions.length == neTags.length ? aNeTagDescriptions
                 : new String[] { "Person", "Person derivative", "Hyphenated part  is person",
-                        "Location derivatives", "Location derivative",
-                        "Hyphenated part  is location", "Organization", "Organization derivative",
-                        "Hyphenated part  is organization",
+                        "Location", "Location derivative",
+                        "Hyphenated part is location", "Organization", "Organization derivative",
+                        "Hyphenated part is organization",
                         "Other: Every name that is not a location, person or organisation",
                         "Other derivative", "Hyphenated part  is Other" };
         TagSet neFeatureTagset = annotationSchemaService.createTagSet("Named Entity annotation",

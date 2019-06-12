@@ -167,11 +167,7 @@ public interface DocumentService
      * @throws IOException
      *             if an I/O error occurs.
      */
-    File getDocumentFolder(SourceDocument aDocument)
-        throws IOException;
-
-    SourceDocumentState setSourceDocumentState(SourceDocument aDocument,
-            SourceDocumentState aState);
+    File getDocumentFolder(SourceDocument aDocument) throws IOException;
 
     SourceDocumentState transitionSourceDocumentState(SourceDocument aDocument,
             SourceDocumentStateTransition aTransition);
@@ -336,6 +332,9 @@ public interface DocumentService
     CAS readAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
 
+    CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
+            throws IOException;
+    
     void deleteAnnotationCas(AnnotationDocument annotationDocument)
         throws IOException;
     
@@ -373,6 +372,9 @@ public interface DocumentService
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(SourceDocument document, String userName)
+        throws IOException;
+
+    CAS readAnnotationCas(SourceDocument aDocument, String aUserName, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
     /**

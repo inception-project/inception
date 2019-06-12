@@ -738,6 +738,12 @@ public class AnnotationFeatureForm
             editor = featureSupport.createEditor("editor", AnnotationFeatureForm.this, editorPanel,
                     AnnotationFeatureForm.this.getModel(), item.getModel());
 
+            // We need to enable the markup ID here because we use it during the AJAX behavior
+            // that automatically saves feature editors on change/blur. 
+            // Check addAnnotateActionBehavior.
+            editor.setOutputMarkupId(true);
+            editor.setOutputMarkupPlaceholderTag(true);
+            
             if (!featureState.feature.getLayer().isReadonly()) {
                 AnnotatorState state = getModelObject();
 
@@ -763,6 +769,8 @@ public class AnnotationFeatureForm
                 }
 
                 Component labelComponent = editor.getLabelComponent();
+//                labelComponent.setMarkupId(
+//                        ID_PREFIX + editor.getModelObject().feature.getId() + "-w-lbl");
                 labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
                 labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
                     featureState.feature.getDescription()));
@@ -771,12 +779,6 @@ public class AnnotationFeatureForm
                 editor.getFocusComponent().setEnabled(false);
             }
 
-            // We need to enable the markup ID here because we use it during the AJAX behavior
-            // that automatically saves feature editors on change/blur. 
-            // Check addAnnotateActionBehavior.
-            editor.setOutputMarkupId(true);
-            editor.setOutputMarkupPlaceholderTag(true);
-            
             // Ensure that markup IDs of feature editor focus components remain constant across
             // refreshes of the feature editor panel. This is required to restore the focus.
             editor.getFocusComponent().setOutputMarkupId(true);
