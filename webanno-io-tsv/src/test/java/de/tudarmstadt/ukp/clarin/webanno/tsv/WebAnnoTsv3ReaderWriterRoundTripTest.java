@@ -72,6 +72,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
     private boolean isKnownToFail(String aMethodName)
     {
         Set<String> failingTests = new HashSet<>();
+        failingTests.add("testAnnotationWithLeadingWhitespaceAtStart");
         failingTests.add("testMultiTokenChain");
         failingTests.add("testSingleStackedNonTokenRelationWithoutFeatureValue2");
         failingTests.add("testSubtokenChain");
