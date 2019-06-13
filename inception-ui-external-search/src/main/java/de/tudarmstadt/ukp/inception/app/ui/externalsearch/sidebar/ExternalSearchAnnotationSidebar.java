@@ -20,9 +20,11 @@ package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchUserStateMetaData.CURRENT_ES_USER_STATE;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -78,6 +80,7 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.Utilities;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
+import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.event.ExternalSearchQueryEvent;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 import de.tudarmstadt.ukp.inception.support.annotation.OffsetSpan;
@@ -221,23 +224,39 @@ public class ExternalSearchAnnotationSidebar
     private void highlightKeywords (AnnotatorState aAnnotatorState, VDocument aVDocument)
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
-        for (ExternalSearchHighlight highlight :
-            searchState.getSelectedResult().getHighlights()) {
-
-            // Highlight the keywords in the annotator indicated by the offsets
-            // if they are within the current window.
-            for (OffsetSpan offset : highlight.getOffsets()) {
-                if (aAnnotatorState.getWindowBeginOffset() <= offset.getBegin()) {
-                    if (offset.getEnd() <= aAnnotatorState.getWindowEndOffset()) {
-                        aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
-                            offset.getBegin() - aAnnotatorState.getWindowBeginOffset(),
-                            offset.getEnd() - aAnnotatorState.getWindowBeginOffset()));
-                    }
-                    else {
-                        break;
+        try {
+            String documentText = externalSearchService.getDocumentText(
+                    searchState.getSelectedResult().getRepository(),
+                    searchState.getSelectedResult().getCollectionId(),
+                    searchState.getSelectedResult().getDocumentId());
+            for (ExternalSearchHighlight highlight :
+                    searchState.getSelectedResult().getHighlights()) {
+                
+                Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
+                        .parseHighlight(highlight.getHighlight(), documentText);
+                if (exHighlight.isPresent()) {
+                    // Highlight the keywords in the annotator indicated by the offsets
+                    // if they are within the current window.
+                    for (OffsetSpan offset : exHighlight.get().getOffsets()) {
+                        if (aAnnotatorState.getWindowBeginOffset() <= offset.getBegin()) {
+                            if (offset.getEnd() <= aAnnotatorState.getWindowEndOffset()) {
+                                aVDocument.add(new VTextMarker(VMarker.MATCH_FOCUS,
+                                        offset.getBegin() - aAnnotatorState.getWindowBeginOffset(),
+                                        offset.getEnd() - aAnnotatorState.getWindowBeginOffset()));
+                            }
+                            else {
+                                break;
+                            }
+                        }
                     }
                 }
             }
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load document {}: {}",
+                    searchState.getSelectedResult().getDocumentId(), e.getMessage(), e);
+            error("Unable to load document " + searchState.getSelectedResult().getDocumentId() + ": "
+                    + ExceptionUtils.getRootCauseMessage(e));
         }
     }
 
