@@ -424,7 +424,8 @@ public class RecommenderEditorPanel
 
         for (AnnotationLayer layer : annotationSchemaService
                 .listAnnotationLayer(projectModel.getObject())) {
-            if (WebAnnoConst.SPAN_TYPE.equals(layer.getType())
+            if ((WebAnnoConst.SPAN_TYPE.equals(layer.getType()) ||
+                 WebAnnoConst.RELATION_TYPE.equals(layer.getType()))
                     && !Token.class.getName().equals(layer.getName())) {
                 layers.add(layer);
             }

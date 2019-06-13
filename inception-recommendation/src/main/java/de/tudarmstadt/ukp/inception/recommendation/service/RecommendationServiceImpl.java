@@ -1011,6 +1011,7 @@ public class RecommendationServiceImpl
 
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
             TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
+            System.out.println("Number of types before: " + tsd.getTypes().length);
 
             for (AnnotationLayer layer : annoService.listAnnotationLayer(aProject)) {
                 TypeDescription td = tsd.getType(layer.getName());
@@ -1029,6 +1030,8 @@ public class RecommendationServiceImpl
             }
 
             annoService.upgradeCas(aCas, tsd);
+
+            System.out.println("Number of types after: " + annoService.getFullProjectTypeSystem(aProject).getTypes().length);
         }
     }
 }

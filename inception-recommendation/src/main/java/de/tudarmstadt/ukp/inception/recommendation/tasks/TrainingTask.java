@@ -200,7 +200,13 @@ public class TrainingTask
 
     private boolean containsTargetAnnotation(Recommender aRecommender, CAS aCas)
     {
-        Type type = CasUtil.getType(aCas, aRecommender.getLayer().getName());
+        String typeName = aRecommender.getLayer().getName();
+
+        if (aCas.getTypeSystem().getType(typeName) == null) {
+            return false;
+        }
+
+        Type type = CasUtil.getType(aCas, typeName);
         return CasUtil.iterator(aCas, type).hasNext();
     }
 
