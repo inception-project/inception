@@ -70,7 +70,7 @@ public class LearningCurveChartPanel
     
     private final ChartPanel chartPanel;
     private final IModel<AnnotatorState> model;
-    public String selectedMetric;
+    public RecommenderEvaluationScoreMetric selectedMetric;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -88,7 +88,7 @@ public class LearningCurveChartPanel
         dropDownPanel.setOutputMarkupId(true);
         add(dropDownPanel);
         
-        selectedMetric = "Accuracy";
+        selectedMetric = RecommenderEvaluationScoreMetric.ACCURACY;
     }
     
 
@@ -99,7 +99,7 @@ public class LearningCurveChartPanel
         if (event.getPayload() instanceof DropDownEvent) {
             DropDownEvent dEvent = (DropDownEvent) event.getPayload();
             
-            String aSelectedMetric = dEvent.getSelectedValue();
+            RecommenderEvaluationScoreMetric aSelectedMetric = dEvent.getSelectedValue();
             AjaxRequestTarget target = dEvent.getTarget();
             
             target.add(this);
@@ -220,12 +220,31 @@ public class LearningCurveChartPanel
                 }
 
                 // sometimes score values NaN. Can result into error while rendering the graph on UI
-                if (!Double.isFinite(detail.f1)) {
+                double score;
+                
+                switch (selectedMetric ) {
+                case ACCURACY:
+                    score = detail.accuracy;
+                    break;
+                case PRECISION:
+                    score = detail.precision;
+                    break;
+                case RECALL:
+                    score = detail.recall;
+                    break;
+                case F1:
+                    score = detail.f1;
+                    break;
+                default:
+                    score = detail.accuracy;
+                }
+                
+                if (!Double.isFinite(score)) {
                     continue;
                 }
                 
                 //recommenderIfActive only has one member
-                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.f1);
+                recommenderScoreMap.put(recommenderIfActive.get().getName(), score);
             }
             catch (IOException e) {
                 LOG.error("Invalid logged Event detail. Skipping record with logged event id: "

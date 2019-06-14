@@ -37,8 +37,8 @@ public class MetricSelectDropDownPanel
 
     private static final long serialVersionUID = 4988942370126340112L;
 
-    private static final List<String> GENRES = Arrays.asList("Accuracy", "Precision", "Recall",
-            "F1");
+    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays.asList(RecommenderEvaluationScoreMetric.values());
+    
     private static final String MID_METRIC_SELECT = "select";
     private static final String MID_METRIC_LINK = "link";
 
@@ -48,8 +48,8 @@ public class MetricSelectDropDownPanel
     {
         super(aId);
 
-        final DropDownChoice<String> dropdown = new DropDownChoice<String>(MID_METRIC_SELECT,
-                new Model<String>(GENRES.get(0)), new ListModel<String>(GENRES));
+        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new DropDownChoice<RecommenderEvaluationScoreMetric>(MID_METRIC_SELECT,
+                new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)), new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
 
@@ -60,7 +60,7 @@ public class MetricSelectDropDownPanel
             protected void onUpdate(AjaxRequestTarget target)
             {
                 DropDownEvent dropDownEvent = new DropDownEvent();
-                dropDownEvent.setSelectedValue(GENRES.get(Integer.valueOf(dropdown.getValue())));
+                dropDownEvent.setSelectedValue(dropdown.getModelObject());
                 dropDownEvent.setTarget(target);
 
                 send(getPage(), Broadcast.BREADTH, dropDownEvent);

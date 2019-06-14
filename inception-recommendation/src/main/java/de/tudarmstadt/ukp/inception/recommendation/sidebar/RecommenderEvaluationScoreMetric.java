@@ -17,30 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
-
-public class DropDownEvent
+public enum RecommenderEvaluationScoreMetric
 {
-    public RecommenderEvaluationScoreMetric selectedValue;
-    public AjaxRequestTarget target;
-
-    public RecommenderEvaluationScoreMetric getSelectedValue()
-    {
-        return selectedValue;
-    }
-
-    public void setSelectedValue(RecommenderEvaluationScoreMetric selectedValue)
-    {
-        this.selectedValue = selectedValue;
-    }
-
-    public AjaxRequestTarget getTarget()
-    {
-        return target;
-    }
-
-    public void setTarget(AjaxRequestTarget target)
-    {
-        this.target = target;
-    }
+    ACCURACY, PRECISION, F1, RECALL
 }
