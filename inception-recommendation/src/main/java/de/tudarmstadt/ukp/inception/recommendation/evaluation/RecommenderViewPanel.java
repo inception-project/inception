@@ -43,12 +43,6 @@ public class RecommenderViewPanel
     private static final String MID_LAYER = "layer";
     private static final String MID_TOOL = "tool";
 
-    private @SpringBean RecommendationService recommendationService;
-    private @SpringBean AnnotationSchemaService annotationSchemaService;
-    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
-    private @SpringBean ApplicationEventPublisherHolder appEventPublisherHolder;
-    private @SpringBean UserDao userDao;
-
     private TextField<String> nameField;
     private TextField<String> tool;
     private TextField<String> feature;
@@ -68,16 +62,18 @@ public class RecommenderViewPanel
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
         
-        nameField = new TextField<String>(MID_NAME, Model.of(getNameField()));
+        nameField = new TextField<>(MID_NAME, String.class);
+        nameField.setRequired(true);
         form.add(nameField);
- 
-        tool = new TextField<String>(MID_TOOL, Model.of(getTool()));
+        
+        tool = new TextField<>(MID_TOOL, String.class);
+        tool.setRequired(true);
         form.add(tool);
-
-        feature = new TextField<String>(MID_FEATURE,  Model.of(getFeature()));
+        
+        feature = new TextField<String>(MID_FEATURE,  String.class );
         form.add(feature);
 
-        layer = new TextField<String>(MID_LAYER, Model.of(getLayer()));
+        layer = new TextField<String>(MID_LAYER, String.class);
         form.add(layer);
     }
 
