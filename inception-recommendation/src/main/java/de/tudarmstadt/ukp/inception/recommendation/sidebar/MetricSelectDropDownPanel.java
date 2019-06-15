@@ -37,19 +37,23 @@ public class MetricSelectDropDownPanel
 
     private static final long serialVersionUID = 4988942370126340112L;
 
-    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays.asList(RecommenderEvaluationScoreMetric.values());
+    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays
+            .asList(RecommenderEvaluationScoreMetric.values());
     
     private static final String MID_METRIC_SELECT = "select";
     private static final String MID_METRIC_LINK = "link";
 
     private final AjaxLink<Void> link;
+    private boolean isDropdownVisible = false;
 
     public MetricSelectDropDownPanel(String aId)
     {
         super(aId);
 
-        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new DropDownChoice<RecommenderEvaluationScoreMetric>(MID_METRIC_SELECT,
-                new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)), new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
+        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new 
+                DropDownChoice<RecommenderEvaluationScoreMetric>(
+                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
 
@@ -63,22 +67,27 @@ public class MetricSelectDropDownPanel
                 dropDownEvent.setSelectedValue(dropdown.getModelObject());
                 dropDownEvent.setTarget(target);
 
-                send(getPage(), Broadcast.BREADTH, dropDownEvent);
+                send(getPage(), Broadcast.BREADTH, dropDownEvent); 
+                
+                Effects.hide(target, dropdown);
+                Effects.show(target, dropdown);
+                target.appendJavaScript("document.getElementById('" + link.getMarkupId()
+                        + "').classList.remove('fa-chevron-circle-right');");
+                target.appendJavaScript("document.getElementById('" + link.getMarkupId()
+                        + "').classList.add('fa-chevron-circle-left');");
             }
         });
 
         add(dropdown);
 
         link = new AjaxLink<Void>(MID_METRIC_LINK)
-        {
+        {            
             private static final long serialVersionUID = 1L;
 
-            boolean isDropdownVisible = false;
-
+            
             @Override
             public void onClick(AjaxRequestTarget target)
             {
-
                 if (isDropdownVisible) {
                     Effects.hide(target, dropdown);
                     target.appendJavaScript("document.getElementById('" + link.getMarkupId()
@@ -106,14 +115,13 @@ public class MetricSelectDropDownPanel
 
     private static class Effects
     {
-
         private static void hide(AjaxRequestTarget target, Component component)
         {
             component.add(new DisplayNoneBehavior());
             String js = "$('#" + component.getMarkupId()
                     + "').animate({'width': '-=100'},  100); $('#"
-                    + ((DropDownChoice) component).getOutputMarkupId() + "').hide();";
-            target.prependJavaScript(js);
+                    + ((DropDownChoice) component).getMarkupId() + "').hide();";
+            target.appendJavaScript(js);
         }
 
         private static void show(AjaxRequestTarget target, Component component)
@@ -122,8 +130,8 @@ public class MetricSelectDropDownPanel
 
             String js = "$('#" + component.getMarkupId()
                     + "').animate({'width': '+=100'},  100); $('#"
-                    + ((DropDownChoice) component).getOutputMarkupId() + "').show();";
-            target.prependJavaScript(js);
+                    + ((DropDownChoice) component).getMarkupId() + "').show();";
+            target.appendJavaScript(js);
         }
     }
 
