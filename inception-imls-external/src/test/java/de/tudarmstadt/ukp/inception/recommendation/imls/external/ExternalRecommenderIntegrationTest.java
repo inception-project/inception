@@ -18,12 +18,13 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
+import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.File;
@@ -51,10 +52,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
 import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
 import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import okhttp3.mockwebserver.Dispatcher;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -121,7 +124,13 @@ public class ExternalRecommenderIntegrationTest
         sut.train(context, casses);
 
         CAS cas = casses.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
+
+        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions).as("Predictions are not empty")
+                .isNotEmpty();
 
         assertThat(cas).as("Predictions are correct")
             .containsNamedEntity("Ecce homo", "OTH")
@@ -159,6 +168,7 @@ public class ExternalRecommenderIntegrationTest
         List<CAS> casses = loadDevelopmentData();
         sut.train(context, casses);
         CAS cas = casses.get(0);
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
 
         PredictionRequest request = fromJsonString(PredictionRequest.class, requestBodies.get(1));
@@ -174,30 +184,9 @@ public class ExternalRecommenderIntegrationTest
             .hasFieldOrPropertyWithValue("documentId", 0L);
     }
 
-    @Test
-    public void thatAnnotationsAreClearedBeforeSending() throws Exception
-    {
-        List<CAS> casses = loadDevelopmentData();
-        sut.train(context, casses);
-
-        // Add fake annotation to the CAS that should be cleared by
-        // the external recommender when predicting
-        CAS cas = casses.get(0);
-        createNamedEntity(cas, "FAKE");
-        sut.predict(context, cas);
-
-        assertThat(cas).as("Predictions are cleared")
-            .extractNamedEntities()
-            .noneMatch(fs -> {
-                Type neType = getType(cas, "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity");
-                Feature valueFeature = neType.getFeatureByBaseName("value");
-                return "FAKE".equals(fs.getStringValue(valueFeature));
-            });
-    }
-
     private List<CAS> loadDevelopmentData() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
 
         for (int i = 0; i < data.size(); i++) {

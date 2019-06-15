@@ -26,6 +26,9 @@ Clicking on the search settings button (cog wheel) shows additional options:
 * **Rebuild index** may help fixing search issues (e.g. no or only partial results), in particular
   after upgrading to a new version of {product-name}. Note that this process may take quite some
   time depending on the number of documents in the project.
+* **Grouping by** allows to group the search results by feature values of the selected annotation
+  feature. By default the search results will be grouped by document title if no layer and no
+  feature is selected.
 
 === Creating/Deleting Annotations for Search Results
 

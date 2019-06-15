@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.search.index;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -45,7 +46,7 @@ public interface PhysicalIndex
 
     boolean isOpen();
 
-    List<SearchResult> executeQuery(SearchQueryRequest aRequest)
+    Map<String, List<SearchResult>> executeQuery(SearchQueryRequest aRequest)
             throws IOException, ExecutionException;
 
     public void indexDocument(SourceDocument aDocument, CAS aJCas) throws IOException;
