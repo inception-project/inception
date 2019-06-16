@@ -22,14 +22,7 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
-import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderViewPanel
@@ -83,34 +76,5 @@ public class RecommenderViewPanel
         super.onConfigure();
 
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
-    }
-    
-    private String getNameField()
-    {
-        if ((recommenderModel == null | recommenderModel.getObject() == null)) {
-            return "";
-        }
-        return (recommenderModel.getObject().getName());
-    }
-    private String getTool()
-    {
-        if ((recommenderModel == null | recommenderModel.getObject() == null)) {
-            return "";
-        }
-        return (recommenderModel.getObject().getTool());
-    }
-    private String getFeature()
-    {
-        if ((recommenderModel == null | recommenderModel.getObject() == null)) {
-            return "";
-        }
-        return (recommenderModel.getObject().getFeature().getName());
-    }
-    private String getLayer()
-    {
-        if ((recommenderModel == null | recommenderModel.getObject() == null)) {
-            return "";
-        }
-        return (recommenderModel.getObject().getLayer().getName());
     }
 }

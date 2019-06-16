@@ -72,7 +72,6 @@ public class EvaluationSimulationPage
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
             selectedRecommenderModel.setObject(recommender);
         });
-        recommenderListPanel.getLambdaAjaxLink().setVisible(false);
         recommenderListPanel.setChangeAction(_target -> {
             _target.add(recommenderViewPanel);
         });

@@ -19,24 +19,30 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.SimulationLearningCurvePanel;
 
 public class ProjectRecommendersPanel
     extends ProjectSettingsPanelBase
 {
     private static final long serialVersionUID = 3042218455285633439L;
     
-    private static final String EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
+    private static final String MID_RECOMMENDERS = "recommenders";
+    private static final String MID_CREATE_BUTTON = "create";
+    private static final String MID_RECOMMENDER_EDITOR = "recommenderEditor";
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
     
+    private final RecommenderEditorPanel recommenderEditorPanel;
+    private final LambdaAjaxLink lambdaAjaxLink;
+
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
         super(aId, aProject);
@@ -44,29 +50,21 @@ public class ProjectRecommendersPanel
         selectedRecommenderModel = Model.of();
         projectModel = aProject;
 
-        RecommenderEditorPanel recommenderEditorPanel = new RecommenderEditorPanel(
-                "recommenderEditor", projectModel, selectedRecommenderModel);
+        recommenderEditorPanel = new RecommenderEditorPanel(
+                MID_RECOMMENDER_EDITOR, projectModel, selectedRecommenderModel);
         add(recommenderEditorPanel);
 
-        RecommenderListPanel recommenderListPanel = new RecommenderListPanel("recommenders",
+        RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDERS,
                 projectModel, selectedRecommenderModel);
         recommenderListPanel.setCreateAction(_target -> {
-            Recommender recommender = new Recommender();
-            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
-            selectedRecommenderModel.setObject(recommender);
-            recommenderEditorPanel.modelChanged();
         });
         recommenderListPanel.setChangeAction(_target -> {
             recommenderEditorPanel.modelChanged();
             _target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
-        
-        SimulationLearningCurvePanel evaluationSimulationPanel = new SimulationLearningCurvePanel(
-                EVALUATION_SIMULATION_CONTAINER, projectModel.getObject(),
-                selectedRecommenderModel);
-        evaluationSimulationPanel.setOutputMarkupId(true);
-        add(evaluationSimulationPanel);
+        lambdaAjaxLink = new LambdaAjaxLink(MID_CREATE_BUTTON, this::actionCreate);
+        add(lambdaAjaxLink);
     }
 
     @Override
@@ -75,4 +73,12 @@ public class ProjectRecommendersPanel
         super.onModelChanged();
         selectedRecommenderModel.setObject(null);
     }
+
+	private void actionCreate(AjaxRequestTarget aTarget) {
+		Recommender recommender = new Recommender();
+		recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+		selectedRecommenderModel.setObject(recommender);
+		recommenderEditorPanel.modelChanged();
+		aTarget.add(recommenderEditorPanel);
+	}
 }

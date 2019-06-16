@@ -22,7 +22,9 @@
     <div class="flex-content flex-h-container flex-gutter">
       <div class="flex-sidebar flex-v-container flex-only-internal-gutter" style="flex-basis: 30%;">
         <div wicket:id="recommenders" class="flex-content flex-v-container"></div>
-        <wicket:container wicket:id="evaluation-simulation-container"/>
+        <div class="panel-footer text-right">
+          <input wicket:id="create" type="button" class="btn btn-primary" wicket:message="value:create"/>
+        </div>
       </div>
       <div class="flex-content flex-v-container flex-only-internal-gutter"
         wicket:id="recommenderEditor"></div>

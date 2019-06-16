@@ -25,7 +25,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
@@ -44,8 +43,6 @@ public class RecommenderListPanel
     
     private OverviewListChoice<Recommender> overviewList;
     
-    private final LambdaAjaxLink lambdaAjaxLink;
-
     public RecommenderListPanel(String id, IModel<Project> aProject,
             IModel<Recommender> aRecommender)
     {
@@ -62,18 +59,10 @@ public class RecommenderListPanel
         overviewList.setChoices(LambdaModel.of(this::listRecommenders));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
-        
-        lambdaAjaxLink = new LambdaAjaxLink("create", this::actionCreate);
-        add(lambdaAjaxLink);
     }
     
     private List<Recommender> listRecommenders()
     {
         return recommendationService.listRecommenders(projectModel.getObject());
-    }
-
-    public LambdaAjaxLink getLambdaAjaxLink()
-    {
-        return lambdaAjaxLink;
     }
 }
