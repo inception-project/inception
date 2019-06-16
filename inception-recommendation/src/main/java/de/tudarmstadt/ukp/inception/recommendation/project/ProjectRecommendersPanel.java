@@ -74,11 +74,12 @@ public class ProjectRecommendersPanel
         selectedRecommenderModel.setObject(null);
     }
 
-	private void actionCreate(AjaxRequestTarget aTarget) {
-		Recommender recommender = new Recommender();
-		recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
-		selectedRecommenderModel.setObject(recommender);
-		recommenderEditorPanel.modelChanged();
-		aTarget.add(recommenderEditorPanel);
-	}
+    private void actionCreate(AjaxRequestTarget aTarget)
+    {
+        Recommender recommender = new Recommender();
+        recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+        selectedRecommenderModel.setObject(recommender);
+        recommenderEditorPanel.modelChanged();
+        aTarget.add(recommenderEditorPanel);
+    }
 }

@@ -19,16 +19,22 @@ package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +70,9 @@ public class SimulationLearningCurvePanel
 
     private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
     
+    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays
+            .asList(RecommenderEvaluationScoreMetric.values());
+    
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
     private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
@@ -72,6 +81,9 @@ public class SimulationLearningCurvePanel
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
+    private ChartPanel chartPanel ;
+    private RecommenderEvaluationScoreMetric selectedValue;
+    
     public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aSelectedRecommenderPanel)
     {
@@ -81,6 +93,28 @@ public class SimulationLearningCurvePanel
                 
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
+        
+        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new DropDownChoice<RecommenderEvaluationScoreMetric>(
+                "select", new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
+        dropdown.setRequired(true);
+        dropdown.setOutputMarkupId(true);
+        selectedValue = RecommenderEvaluationScoreMetric.ACCURACY;
+
+        dropdown.add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            private static final long serialVersionUID = -6744838136235652577L;
+
+            protected void onUpdate(AjaxRequestTarget target)
+            {
+                System.out.println("changed");
+                selectedValue = dropdown.getModelObject();
+                form.addOrReplace(chartPanel);
+                target.add(chartPanel);
+            }
+        });
+
+        form.add(dropdown);
         
         emptyPanel  = new EmptyPanel(MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupPlaceholderTag(true);
@@ -94,7 +128,7 @@ public class SimulationLearningCurvePanel
             (_target, _form) -> {
                 // replace the empty panel with chart panel on click event so the chard renders
                 // with the loadable detachable model.
-                ChartPanel chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
+                chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
                         LoadableDetachableModel.of(this::renderChart));
                 chartPanel.setOutputMarkupPlaceholderTag(true);
                 chartPanel.setOutputMarkupId(true);
@@ -199,7 +233,23 @@ public class SimulationLearningCurvePanel
                     continue;
                 }
 
-                score = evaluationResult.computeF1Score();
+                switch (selectedValue) {
+                case ACCURACY:
+                    score = evaluationResult.computeAccuracyScore();
+                    break;
+                case PRECISION:
+                    score = evaluationResult.computePrecisionScore();
+                    break;
+                case RECALL:
+                    score = evaluationResult.computeRecallScore();
+                    break;
+                case F1:
+                    score = evaluationResult.computeF1Score();
+                    break;
+                default:
+                    score = evaluationResult.computeAccuracyScore();
+                }
+
                 trainingSize = evaluationResult.getTrainDataRatio();
             }
             catch (RecommendationException e) {
@@ -212,5 +262,10 @@ public class SimulationLearningCurvePanel
         }
 
         return new String[] {sbScore.toString(), sbTrainingSize.toString() };
+    }
+    
+    enum RecommenderEvaluationScoreMetric
+    {
+        ACCURACY, PRECISION, F1, RECALL
     }
 }
