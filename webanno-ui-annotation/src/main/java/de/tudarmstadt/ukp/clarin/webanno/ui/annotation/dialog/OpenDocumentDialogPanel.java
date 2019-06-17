@@ -21,30 +21,20 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.en
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
-import org.apache.wicket.extensions.markup.html.form.select.Select;
-import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
-import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.list.ListItem;
-import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
@@ -71,34 +61,28 @@ public class OpenDocumentDialogPanel
     extends Panel
 {
     private static final long serialVersionUID = 1299869948010875439L;
-    private static final String CURRENT_USER_COLOR = "blue";
 
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
 
-    // Project list, Document List and buttons List, contained in separate forms
-    private final ProjectSelectionForm projectSelectionForm;
-    private final DocumentSelectionForm documentSelectionForm;
     private final ButtonsForm buttonsForm;
-    private Select<SourceDocument> documentSelection;
 
-    // The first project - selected by default
-    private Project selectedProject;
-    // The first document in the project // auto selected in the first time.
-    private SourceDocument selectedDocument;
+    private OverviewListChoice<DecoratedObject<Project>> projectListChoice;
+    private IModel<List<DecoratedObject<Project>>> projects;
+    
+    private OverviewListChoice<DecoratedObject<SourceDocument>> docListChoice;
+
+    private OverviewListChoice<DecoratedObject<User>> userListChoice;
+    private static final String CURRENT_USER_COLOR = "blue";
 
     private final AnnotatorState state;
     
-    private IModel<List<DecoratedObject<Project>>> projects;
-    
     private final ModalWindow modalWindow;
     
-    private IModel<User> selectedUser;
-    private OverviewListChoice<User> userListChoice;
     
- // TODO make other users' docs read-only
+    
     public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
             IModel<List<DecoratedObject<Project>>> aProjects)
     {
@@ -108,32 +92,108 @@ public class OpenDocumentDialogPanel
         state = aBModel;
         projects = aProjects;
         
-        List<DecoratedObject<Project>> allowedProjects = projects.getObject();
-        if (!allowedProjects.isEmpty()) {
-            selectedProject = allowedProjects.get(0).get();
-        }
-
-        projectSelectionForm = new ProjectSelectionForm("projectSelectionForm");
-        if (aBModel.isProjectLocked()) {
-            selectedProject = aBModel.getProject();
-            projectSelectionForm.getModelObject().projectSelection = aBModel.getProject();
-            projectSelectionForm.setVisible(false);
-        }
-        documentSelectionForm = new DocumentSelectionForm("documentSelectionForm", aModalWindow);
+        projectListChoice = createProjectListChoice(aBModel);
+        
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
         
-        selectedUser = Model.of(userRepository.getCurrentUser());
-        userListChoice = new OverviewListChoice<>("user");
-        userListChoice.setModel(selectedUser);
-        userListChoice.setChoices(listUsers());
-        userListChoice.setChoiceRenderer(new ChoiceRenderer<User>() {
-            
+        userListChoice = createUserListChoice();
+        
+        docListChoice = createDocListChoice();
+       
+        add(buttonsForm);
+        add(projectListChoice);
+        add(docListChoice);
+        add(userListChoice);
+    }
+
+    private OverviewListChoice<DecoratedObject<SourceDocument>> createDocListChoice()
+    {
+        docListChoice = new OverviewListChoice<>("document", Model.of(), listDocuments());
+        docListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<SourceDocument>>()
+        {
+
             private static final long serialVersionUID = 1L;
 
             @Override
-            public Object getDisplayValue(User aUser)
+            public Object getDisplayValue(DecoratedObject<SourceDocument> aDoc)
             {
-                return aUser.getUsername();
+                return defaultIfEmpty(aDoc.getLabel(), aDoc.get().getName());
+            }
+        });
+        docListChoice.setOutputMarkupId(true);
+        docListChoice.add(new OnChangeAjaxBehavior()
+        {
+            private static final long serialVersionUID = -8232688660762056913L;
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                aTarget.add(buttonsForm);
+                aTarget.add(docListChoice);
+            }
+        }).add(AjaxEventBehavior.onEvent("dblclick",
+                OpenDocumentDialogPanel.this::actionOpenDocument));;
+        return docListChoice;
+    }
+
+    private OverviewListChoice<DecoratedObject<Project>> createProjectListChoice(
+            AnnotatorState aBModel)
+    {
+        List<DecoratedObject<Project>> allowedProjects = projects.getObject();
+        IModel<DecoratedObject<Project>> selectedProject = Model.of();
+        if (!allowedProjects.isEmpty()) {
+            selectedProject = Model.of(DecoratedObject.of(allowedProjects.get(0).get()));
+        }
+        if (aBModel.isProjectLocked()) {
+            selectedProject = Model.of(DecoratedObject.of(aBModel.getProject()));
+            projectListChoice.setVisible(false);
+        }
+        projectListChoice = new OverviewListChoice<>("project", selectedProject,
+                projects.getObject());
+        projectListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<Project>>()
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Object getDisplayValue(DecoratedObject<Project> aProject)
+            {
+                return defaultIfEmpty(aProject.getLabel(), aProject.get().getName());
+            }
+        });
+        projectListChoice.setOutputMarkupId(true);
+        projectListChoice.add(new OnChangeAjaxBehavior()
+        {
+            private static final long serialVersionUID = -2516735444707689106L;
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                userListChoice.setChoices(listUsers());
+                docListChoice.setChoices(new ArrayList<>());
+                docListChoice.setDefaultModel(Model.of());
+                aTarget.add(buttonsForm);
+                aTarget.add(userListChoice);
+                aTarget.add(docListChoice);
+            }
+        });
+        return projectListChoice;
+    }
+    
+    private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
+    {
+        DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
+        currentUser.setColor(CURRENT_USER_COLOR);
+        userListChoice = new OverviewListChoice<>("user", Model.of(currentUser), listUsers());
+        userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            public Object getDisplayValue(DecoratedObject<User> aUser)
+            {
+                return defaultIfEmpty(aUser.getLabel(), aUser.get().getUsername());
             }
         });
         userListChoice.setOutputMarkupId(true);
@@ -144,168 +204,43 @@ public class OpenDocumentDialogPanel
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                // Remove selected document from other project
-                selectedDocument = null;
-                documentSelection.setModelObject(selectedDocument);
+                docListChoice.setChoices(listDocuments());
+                docListChoice.setDefaultModel(Model.of());
                 aTarget.add(buttonsForm);
-                aTarget.add(documentSelection);
+                aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(
-            () -> projectService.isManager(selectedProject, userRepository.getCurrentUser())));
+        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
+                && projectService.isManager(projectListChoice.getModelObject().get(),
+                        userRepository.getCurrentUser())));
 
-        add(buttonsForm);
-        add(projectSelectionForm);
-        add(documentSelectionForm);
-        add(userListChoice);
+        return userListChoice;
     }
 
-    private class ProjectSelectionForm
-        extends Form<SelectionModel>
+    private List<DecoratedObject<User>> listUsers()
     {
-        private static final long serialVersionUID = -1L;
-        private Select<Project> projectSelection;
-
-        public ProjectSelectionForm(String id)
-        {
-            super(id, new CompoundPropertyModel<>(new SelectionModel()));
-
-            projectSelection = new Select<>("projectSelection");
-            
-            ListView<DecoratedObject<Project>> lv = new ListView<DecoratedObject<Project>>(
-                    "projects", projects)
-            {
-                private static final long serialVersionUID = 8901519963052692214L;
-
-                @Override
-                protected void populateItem(final ListItem<DecoratedObject<Project>> item)
-                {
-                    DecoratedObject<Project> dp = item.getModelObject();
-                    
-                    String color = defaultIfEmpty(dp.getColor(), "#008000");
-                    
-                    item.add(new SelectOption<Project>("project", new Model<>(dp.get()))
-                    {
-                        private static final long serialVersionUID = 3095089418860168215L;
-
-                        @Override
-                        public void onComponentTagBody(MarkupStream markupStream,
-                                ComponentTag openTag)
-                        {
-                            replaceComponentTagBody(markupStream, openTag,
-                                    defaultIfEmpty(dp.getLabel(), dp.get().getName()));
-                        }
-                    }.add(new AttributeModifier("style", "color:" + color + ";")));
-                }
-            };
-            add(projectSelection.add(lv));
-            projectSelection.setOutputMarkupId(true);
-            projectSelection.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    selectedProject = getModelObject().projectSelection;
-                    // Remove document from other project
-                    selectedDocument = null;
-                    documentSelection.setModelObject(selectedDocument);
-                    userListChoice.setChoices(listUsers());
-                    aTarget.add(buttonsForm);
-                    aTarget.add(userListChoice);
-                    aTarget.add(documentSelection);
-                    aTarget.add(userListChoice);
-                }
-            }).add(new AjaxEventBehavior("dblclick")
-            {
-
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onEvent(final AjaxRequestTarget aTarget)
-                {
-                    selectedProject = getModelObject().projectSelection;
-                    // Remove selected user and document from other project
-                    selectedDocument = null;
-                    aTarget.add(documentSelection.setOutputMarkupId(true));
-                }
-            });
-        }
-    }
-
-    private class SelectionModel
-        implements Serializable
-    {
-        private static final long serialVersionUID = -1L;
-
-        private Project projectSelection;
-        private SourceDocument documentSelection;
-    }
-    
-
-    private class DocumentSelectionForm
-        extends Form<SelectionModel>
-    {
-        private static final long serialVersionUID = -1L;
-
-        private ListView<DecoratedObject<SourceDocument>> lv;
-        
-        public DocumentSelectionForm(String id, final ModalWindow modalWindow)
-        {
-            super(id, new CompoundPropertyModel<>(new SelectionModel()));
-
-            documentSelection = new Select<>("documentSelection");
-            lv = new ListView<DecoratedObject<SourceDocument>>("documents",
-                    LoadableDetachableModel.of(OpenDocumentDialogPanel.this::listDocuments))
-            {
-                private static final long serialVersionUID = 8901519963052692214L;
-
-                @Override
-                protected void populateItem(final ListItem<DecoratedObject<SourceDocument>> aItem)
-                {
-                    SourceDocument sdoc = aItem.getModelObject().get();
-                    aItem.add(new SelectOption<SourceDocument>("document", Model.of(sdoc))
-                    {
-                        private static final long serialVersionUID = 3095089418860168215L;
-
-                        @Override
-                        public void onComponentTagBody(MarkupStream markupStream,
-                                ComponentTag openTag)
-                        {
-                            String label = defaultIfEmpty(aItem.getModelObject().getLabel(),
-                                    sdoc.getName());
-                            replaceComponentTagBody(markupStream, openTag, label);
-                        }
-                    }.add(new AttributeModifier("style",
-                            "color:" + aItem.getModelObject().getColor() + ";")));
-                }
-            };
-            documentSelection.add(lv);
-            documentSelection.setOutputMarkupId(true);
-            documentSelection.add(OnChangeAjaxBehavior.onChange(_target -> {
-                selectedDocument = getModelObject().documentSelection;
-                _target.add(buttonsForm);
-            }));
-            documentSelection.add(AjaxEventBehavior.onEvent("dblclick",
-                    OpenDocumentDialogPanel.this::actionOpenDocument));
-            
-            add(documentSelection);
-        }
-    }
-    
-    private List<User> listUsers()
-    {
-        if (selectedProject == null || !state.getMode().equals(Mode.ANNOTATION)) {
+        if (projectListChoice.getModelObject() == null
+                || !state.getMode().equals(Mode.ANNOTATION)) {
             return new ArrayList<>();
         }
 
-        return projectService.listProjectUsersWithPermissions(selectedProject,
-                    PermissionLevel.ANNOTATOR);
+        List<DecoratedObject<User>> users = new ArrayList<>();
+
+        for (User user : projectService.listProjectUsersWithPermissions(
+                projectListChoice.getModelObject().get(), PermissionLevel.ANNOTATOR)) {
+            DecoratedObject<User> du = DecoratedObject.of(user);
+            if (user.equals(userRepository.getCurrentUser())) {
+                du.setColor(CURRENT_USER_COLOR);
+            }
+            du.setLabel(user.getUsername());
+            users.add(du);
+        }
+
+        return users;
     }
 
     private List<DecoratedObject<SourceDocument>> listDocuments()
     {
-        if (selectedProject == null || selectedUser == null) {
+        if (projectListChoice.getModelObject() == null || userListChoice.getModelObject() == null) {
             return new ArrayList<>();
         }
         
@@ -318,8 +253,9 @@ public class OpenDocumentDialogPanel
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
-            Map<SourceDocument, AnnotationDocument> docs = documentService
-                    .listAnnotatableDocuments(selectedProject, selectedUser.getObject());
+            Map<SourceDocument, AnnotationDocument> docs = documentService.listAnnotatableDocuments(
+                    projectListChoice.getModelObject().get(),
+                    userListChoice.getModelObject().get());
 
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
                 DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
@@ -333,7 +269,7 @@ public class OpenDocumentDialogPanel
         }
         case CURATION: {
             List<SourceDocument> sdocs = curationDocumentService
-                    .listCuratableSourceDocuments(selectedProject);
+                    .listCuratableSourceDocuments(projectListChoice.getModelObject().get());
             
             for (SourceDocument sourceDocument : sdocs) {
                 DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
@@ -361,7 +297,7 @@ public class OpenDocumentDialogPanel
             super(id);
             
             add(new LambdaAjaxLink("openButton", OpenDocumentDialogPanel.this::actionOpenDocument)
-                    .add(enabledWhen(() -> selectedDocument != null)));
+                    .add(enabledWhen(() -> docListChoice.getModelObject() != null)));
 
             add(new LambdaAjaxLink("cancelButton", OpenDocumentDialogPanel.this::actionCancel));
         }
@@ -369,9 +305,9 @@ public class OpenDocumentDialogPanel
 
     private void actionOpenDocument(AjaxRequestTarget aTarget)
     {
-        if (selectedProject != null && selectedDocument != null) {
-            state.setProject(selectedProject);
-            state.setDocument(selectedDocument, documentSelectionForm.lv.getModelObject()
+        if (projectListChoice.getModelObject() != null && docListChoice.getModelObject()  != null) {
+            state.setProject(projectListChoice.getModelObject().get());
+            state.setDocument(docListChoice.getModelObject().get(), docListChoice.getChoices()
                     .stream().map(t -> t.get()).collect(Collectors.toList()));
             modalWindow.close(aTarget);
         }
@@ -379,9 +315,9 @@ public class OpenDocumentDialogPanel
     
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        projectSelectionForm.detach();
+        projectListChoice.detach();
         userListChoice.detach();
-        documentSelectionForm.detach();
+        docListChoice.detach();
         if (Mode.CURATION.equals(state.getMode())) {
             state.setDocument(null, null); // on cancel, go welcomePage
         }
