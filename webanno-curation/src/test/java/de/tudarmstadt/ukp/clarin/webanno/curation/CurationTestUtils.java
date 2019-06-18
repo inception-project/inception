@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -55,8 +56,8 @@ import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
 public class CurationTestUtils
 {
 
-    public static final String HOST_TYPE = "LinkHost";
-    public static final String LINK_TYPE = "LinkType";
+    public static final String HOST_TYPE = "webanno.custom.LinkHost";
+    public static final String LINK_TYPE = "webanno.custom.LinkType";
 
     public static JCas loadWebAnnoTsv3(String aPath) throws UIMAException, IOException
     {
@@ -66,7 +67,16 @@ public class CurationTestUtils
         reader.getNext(jcas.getCas());
         return jcas;
     }
-    
+
+    public static JCas loadWebAnnoTsv3(File aPath) throws UIMAException, IOException
+    {
+        CollectionReader reader = createReader(WebannoTsv3XReader.class,
+                WebannoTsv3XReader.PARAM_SOURCE_LOCATION, aPath);
+        JCas jcas = JCasFactory.createJCas();
+        reader.getNext(jcas.getCas());
+        return jcas;
+    }
+
     public static Map<String, List<CAS>> load(String... aPaths)
         throws UIMAException, IOException
     {
@@ -176,7 +186,7 @@ public class CurationTestUtils
         // Link type
         TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature("role", "", CAS.TYPE_NAME_STRING);
-        linkTD.addFeature("target", "", Token.class.getName());
+        linkTD.addFeature("target", "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
         TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
@@ -198,7 +208,7 @@ public class CurationTestUtils
         // Link type
         TypeDescription linkTD = tsd.addType(LINK_TYPE, "", CAS.TYPE_NAME_TOP);
         linkTD.addFeature("role", "", CAS.TYPE_NAME_STRING);
-        linkTD.addFeature("target", "", Token.class.getName());
+        linkTD.addFeature("target", "", CAS.TYPE_NAME_ANNOTATION);
 
         // Link host
         TypeDescription hostTD = tsd.addType(HOST_TYPE, "", CAS.TYPE_NAME_ANNOTATION);
