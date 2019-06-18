@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.statistics;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.junit.Assert.assertEquals;
@@ -38,11 +40,11 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.SpanDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.RelationDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.SpanDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
@@ -117,7 +119,7 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(POS.class.getName(),
+        DiffResult diff = CasDiff.doDiff(POS.class.getName(),
                 new SpanDiffAdapter(POS.class.getName(), "PosValue"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
@@ -157,8 +159,8 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(Dependency.class.getName(),
-                new ArcDiffAdapter(Dependency.class.getName(), "Dependent", "Governor",
+        DiffResult diff = CasDiff.doDiff(Dependency.class.getName(),
+                new RelationDiffAdapter(Dependency.class.getName(), "Dependent", "Governor",
                         "DependencyType"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -223,7 +225,7 @@ public class TwoPairedKappaTest
         
         // Check against new impl
         DiffResult diff = doDiff(
-                Dependency.class.getName(), new ArcDiffAdapter(Dependency.class.getName(),
+                Dependency.class.getName(), new RelationDiffAdapter(Dependency.class.getName(),
                         "Dependent", "Governor", "DependencyType"),
                 LINK_TARGET_AS_LABEL, convert(userCases));
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
@@ -258,10 +260,10 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        DiffResult diff = CasDiff2.doDiff(
+        DiffResult diff = CasDiff.doDiff(
                 asList(POS.class.getName(), Dependency.class.getName()), 
-                asList(SpanDiffAdapter.POS, ArcDiffAdapter.DEPENDENCY), 
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+                asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), 
+                LINK_TARGET_AS_LABEL, convert(userCases));
         
         Map<String, List<CAS>> user1and2 = convert(userCases);
         user1and2.remove("user3");
