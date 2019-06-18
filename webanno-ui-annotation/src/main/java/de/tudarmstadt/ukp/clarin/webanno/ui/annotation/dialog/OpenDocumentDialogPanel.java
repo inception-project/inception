@@ -215,9 +215,7 @@ public class OpenDocumentDialogPanel
                 aTarget.add(buttonsForm);
                 aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
-                && projectService.isManager(projectListChoice.getModelObject().get(),
-                        userRepository.getCurrentUser())));
+        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)));
 
         return userListChoice;
     }
@@ -230,9 +228,20 @@ public class OpenDocumentDialogPanel
         }
 
         List<DecoratedObject<User>> users = new ArrayList<>();
+        
+        Project selectedProject = projectListChoice.getModelObject().get();
+        
+        if (!projectService.isManager(selectedProject, userRepository.getCurrentUser())) {
+            User currentUser = userRepository.getCurrentUser();
+            DecoratedObject<User> du = DecoratedObject.of(currentUser);
+            du.setLabel(currentUser.getUsername());
+            du.setColor(CURRENT_USER_COLOR);
+            users.add(du);
+            return users;
+        }
 
         for (User user : projectService.listProjectUsersWithPermissions(
-                projectListChoice.getModelObject().get(), PermissionLevel.ANNOTATOR)) {
+                selectedProject, PermissionLevel.ANNOTATOR)) {
             DecoratedObject<User> du = DecoratedObject.of(user);
             if (user.equals(userRepository.getCurrentUser())) {
                 du.setColor(CURRENT_USER_COLOR);

@@ -28,3 +28,6 @@ Projects appear as folders, and contain the documents of the project. Double-cli
 open it for annotation. Document names written in black show that the document has not been opened 
 by the current user, blue font means that it has already been opened, whereas red font indicates 
 that the document has already been marked as *done*.
+
+Users that are managers can additionally open other users' documents to view their annotations but cannot change them.
+This is done by selecting the project, user and then document in the described dialogue. The user's own name is marked in blue.
