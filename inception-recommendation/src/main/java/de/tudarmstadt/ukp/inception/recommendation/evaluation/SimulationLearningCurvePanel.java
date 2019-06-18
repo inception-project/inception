@@ -94,7 +94,8 @@ public class SimulationLearningCurvePanel
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
-        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new DropDownChoice<RecommenderEvaluationScoreMetric>(
+        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = 
+                new DropDownChoice<RecommenderEvaluationScoreMetric>(
                 "select", new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)),
                 new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
         dropdown.setRequired(true);
@@ -107,7 +108,6 @@ public class SimulationLearningCurvePanel
 
             protected void onUpdate(AjaxRequestTarget target)
             {
-                System.out.println("changed");
                 selectedValue = dropdown.getModelObject();
                 form.addOrReplace(chartPanel);
                 target.add(chartPanel);
