@@ -90,7 +90,7 @@ public class CasMergeSuiteTest
 
         sut.reMergeCas(result, document, null, curatorCas.getCas(), getSingleCasByUser(casByUser));
 
-        assertMatch(curatorCas);
+        writeAndAssertEquals(curatorCas);
     }
 
     private Map<String, CAS> getSingleCasByUser(Map<String, List<CAS>> aCasByUserSingle)
@@ -103,10 +103,11 @@ public class CasMergeSuiteTest
         return casByUserSingle;
     }
     
-    private void assertMatch(JCas curatorCas)
+    private void writeAndAssertEquals(JCas curatorCas)
         throws Exception
     {
-        File targetFolder = testContext.getTestOutputFolder();
+        String targetFolder = "target/test-output/" + testContext.getClassName() + "/"
+                + referenceFolder.getName();
         
         DocumentMetaData dmd = DocumentMetaData.get(curatorCas);
         dmd.setDocumentId("curator");
