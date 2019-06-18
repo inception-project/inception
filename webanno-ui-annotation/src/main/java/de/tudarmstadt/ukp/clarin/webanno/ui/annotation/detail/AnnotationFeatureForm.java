@@ -617,8 +617,10 @@ public class AnnotationFeatureForm
     {
         super.onConfigure();
         
-        // Avoid reversing in read-only layers
-        setEnabled(getModelObject().getDocument() != null && !editorPanel.isAnnotationFinished());
+        // set read only if annotation is finished or the admin is viewing other's work
+        setEnabled(getModelObject().getDocument() != null 
+                && !editorPanel.isAnnotationFinished()
+                && getModelObject().getUser().equals(userDao.getCurrentUser()));
     }
 
     public void updateLayersDropdown()

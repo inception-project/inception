@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -169,11 +170,16 @@ public class OpenDocumentDialogPanel
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                userListChoice.setChoices(listUsers());
-                docListChoice.setChoices(new ArrayList<>());
+                if (userListChoice.isVisible()) {
+                    userListChoice.setChoices(listUsers());
+                    docListChoice.setChoices(new ArrayList<>());
+                    aTarget.add(userListChoice);
+                }
+                else {
+                    docListChoice.setChoices(listDocuments());
+                }
                 docListChoice.setDefaultModel(Model.of());
                 aTarget.add(buttonsForm);
-                aTarget.add(userListChoice);
                 aTarget.add(docListChoice);
             }
         });
@@ -253,15 +259,28 @@ public class OpenDocumentDialogPanel
         case ANNOTATION:
         case AUTOMATION:
         case CORRECTION: {
-            Map<SourceDocument, AnnotationDocument> docs = documentService.listAnnotatableDocuments(
+            Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(
                     projectListChoice.getModelObject().get(),
                     userListChoice.getModelObject().get());
 
+            boolean userIsSelected = userListChoice.getModelObject().get()
+                    .equals(userRepository.getCurrentUser());
+
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+                // other user has not annotated this doc yet, no need to list it for admin to see
+                if (!userIsSelected && e.getValue() == null) {
+                    continue;
+                }
                 DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
                 if (e.getValue() != null) {
                     AnnotationDocument adoc = e.getValue();
-                    dsd.setColor(adoc.getState().getColor());
+                    AnnotationDocumentState docState = adoc.getState();
+                    dsd.setColor(docState.getColor());
+                    
+                    // if current user is opening her own docs, don't let her see locked ones
+                    if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
+                        continue;
+                    }
                 }
                 allSourceDocuments.add(dsd);
             }
@@ -309,6 +328,8 @@ public class OpenDocumentDialogPanel
             state.setProject(projectListChoice.getModelObject().get());
             state.setDocument(docListChoice.getModelObject().get(), docListChoice.getChoices()
                     .stream().map(t -> t.get()).collect(Collectors.toList()));
+            state.setUser(userListChoice.getModelObject().get());
+  
             modalWindow.close(aTarget);
         }
     }

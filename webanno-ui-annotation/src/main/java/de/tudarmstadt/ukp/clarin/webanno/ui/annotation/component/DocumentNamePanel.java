@@ -63,6 +63,11 @@ public class DocumentNamePanel
         if (state.getDocument() != null) {
             sb.append(state.getDocument().getName());
         }
+        
+        sb.append(" ");
+        if (state.getUser() != null) {
+            sb.append(state.getUser().getUsername());
+        }
 
         if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {
             sb.append(" (");
