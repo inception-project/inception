@@ -259,7 +259,7 @@ public class AnnotationPage
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()) 
-                        && !isAdminViewingOthersWork());
+                        && !isUserViewingOthersWork());
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -549,7 +549,7 @@ public class AnnotationPage
             state.reset();
             
             // Initialize timestamp in state
-            if (!isAdminViewingOthersWork()) {
+            if (!isUserViewingOthersWork()) {
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
                         state.getDocument(), state.getUser().getUsername()));
             }
@@ -576,7 +576,7 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isAdminViewingOthersWork()
+            if (!isUserViewingOthersWork()
                     && SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         NEW_TO_ANNOTATION_IN_PROGRESS);
@@ -749,7 +749,7 @@ public class AnnotationPage
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState())
-                    && !isAdminViewingOthersWork()) {
+                    && !isUserViewingOthersWork()) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
@@ -788,7 +788,7 @@ public class AnnotationPage
         }
     }
 
-    private boolean isAdminViewingOthersWork()
+    private boolean isUserViewingOthersWork()
     {
         return !getModelObject().getUser().equals(userRepository.getCurrentUser());
     }

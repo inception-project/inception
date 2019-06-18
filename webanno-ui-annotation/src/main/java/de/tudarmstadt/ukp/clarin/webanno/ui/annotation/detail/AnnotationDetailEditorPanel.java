@@ -528,8 +528,7 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionAnnotate");
         
-        if (isAdminViewingOthersWork()) {
-            System.out.println("------------------------------------detaileditor: actionCreateOrUpdate");
+        if (isUserViewingOthersWork()) {
             return;
         }
 
@@ -636,8 +635,7 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionCreateForward()");
         
-        if (isAdminViewingOthersWork()) {
-            System.out.println("------------------------------------detaileditor: actionForward");
+        if (isUserViewingOthersWork()) {
             return;
         }
 
@@ -730,7 +728,7 @@ public abstract class AnnotationDetailEditorPanel
     }
 
 
-    private boolean isAdminViewingOthersWork()
+    private boolean isUserViewingOthersWork()
     {
         return !getModelObject().getUser().equals(userRepository.getCurrentUser());
     }
