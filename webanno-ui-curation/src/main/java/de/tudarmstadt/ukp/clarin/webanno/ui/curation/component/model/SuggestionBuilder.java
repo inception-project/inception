@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -533,14 +534,19 @@ public class SuggestionBuilder
         }
 
         List<Type> entryTypes = getEntryTypes(mergeCas, aAnnotationLayers, annotationService);
+        
+        DiffResult diff;
+        try (StopWatch watch = new StopWatch(log, "CasDiff")) {
+            diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
+                    LINK_ROLE_AS_LABEL, aCasses, 0,
+                    mergeCas.getDocumentText().length());
+        }
 
-        DiffResult diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
-                LINK_ROLE_AS_LABEL, aCasses, 0,
-                mergeCas.getDocumentText().length());
-
-        CasMerge casMerge = new CasMerge(annotationService);
-        casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
-                mergeCas, aCasses);
+        try (StopWatch watch = new StopWatch(log, "CasMerge")) {
+            CasMerge casMerge = new CasMerge(annotationService);
+            casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
+                    mergeCas, aCasses);
+        }
 
         curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
                 false);

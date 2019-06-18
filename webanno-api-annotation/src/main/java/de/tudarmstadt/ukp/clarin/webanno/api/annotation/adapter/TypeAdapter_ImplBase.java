@@ -43,11 +43,12 @@ public abstract class TypeAdapter_ImplBase
     implements TypeAdapter
 {
     private final FeatureSupportRegistry featureSupportRegistry;
-    private final ApplicationEventPublisher applicationEventPublisher;
     
     private final AnnotationLayer layer;
 
     private final Map<String, AnnotationFeature> features;
+
+    private ApplicationEventPublisher applicationEventPublisher;
 
     public TypeAdapter_ImplBase(FeatureSupportRegistry aFeatureSupportRegistry,
             ApplicationEventPublisher aEventPublisher, AnnotationLayer aLayer,
@@ -149,5 +150,11 @@ public abstract class TypeAdapter_ImplBase
     public String getAttachTypeName()
     {
         return getLayer().getAttachType() == null ? null : getLayer().getAttachType().getName();
+    }
+    
+    @Override
+    public void silenceEvents()
+    {
+        applicationEventPublisher = null;
     }
 }

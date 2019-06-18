@@ -34,6 +34,7 @@ import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -86,6 +87,8 @@ public class CasMerge
     
     private final AnnotationSchemaService schemaService;
     private boolean mergeIncompleteAnnotations = false;
+    private boolean silenceEvents = false;
+    private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
     
     public CasMerge(AnnotationSchemaService aSchemaService)
     {
@@ -151,6 +154,8 @@ public class CasMerge
             CAS aTargetCas, Map<String, CAS> aCases)
         throws AnnotationException, UIMAException
     {
+        silenceEvents = true;
+        
         List<LogMessage> messages = new ArrayList<>();
         
         // Remove any annotations from the target CAS - keep type system, sentences and tokens
@@ -507,7 +512,7 @@ public class CasMerge
 //        }
     }
 
-    public static void clearAnnotations(CAS aCas)
+    private static void clearAnnotations(CAS aCas)
         throws UIMAException
     {
         CAS backup = createCas();
@@ -683,7 +688,9 @@ public class CasMerge
             FeatureStructure aTargetFS, FeatureStructure aSourceFs)
         throws AnnotationException
     {
-        List<AnnotationFeature> features = schemaService.listAnnotationFeature(aAdapter.getLayer());
+        // Cache the feature list instead of hammering the database
+        List<AnnotationFeature> features = featureCache.computeIfAbsent(aAdapter.getLayer(),
+            key -> schemaService.listAnnotationFeature(key));
         for (AnnotationFeature feature : features) {
             Type sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS());
             Feature sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
@@ -762,6 +769,9 @@ public class CasMerge
         }
 
         SpanAdapter adapter = (SpanAdapter) schemaService.getAdapter(aAnnotationLayer);
+        if (silenceEvents) {
+            adapter.silenceEvents();
+        }
 
         // a) if stacking allowed add this new annotation to the mergeview
         List<AnnotationFS> existingAnnos = selectAt(aTargetCas, aSourceFs.getType(),
@@ -782,6 +792,9 @@ public class CasMerge
         throws AnnotationException
     {
         RelationAdapter adapter = (RelationAdapter) schemaService.getAdapter(aAnnotationLayer);
+        if (silenceEvents) {
+            adapter.silenceEvents();
+        }
         
         AnnotationFS originFsClicked = FSUtil.getFeature(aSourceFs,
                 adapter.getSourceFeatureName(), AnnotationFS.class);
@@ -843,8 +856,10 @@ public class CasMerge
             AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)
         throws AnnotationException
     {
-        CAS aSourceCas = aSourceFs.getCAS();
         TypeAdapter adapter = schemaService.getAdapter(aAnnotationLayer);
+        if (silenceEvents) {
+            adapter.silenceEvents();
+        }
         
         List<AnnotationFS> candidateHosts = getCandidateAnnotations(aTargetCas, aSourceFs);
 
@@ -872,7 +887,7 @@ public class CasMerge
                         slotFeature = feat;
 
                         List<AnnotationFS> targets = checkAndGetTargets(aTargetCas,
-                                selectAnnotationByAddr(aSourceCas, link.targetAddr));
+                                selectAnnotationByAddr(aSourceFs.getCAS(), link.targetAddr));
                         targetFs = targets.get(0);
                         link.targetAddr = getAddr(targetFs);
                         linkRole = link;
