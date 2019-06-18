@@ -18,12 +18,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
   xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
-  <wicket:extend>
-    <h1>System Status</h1>
-  
-    <p>
-      Active users: <wicket:container wicket:id="activeUsers"/>
-    </p>
-  </wicket:extend>
+  <wicket:panel>
+    <div class="flex-tile">
+      <h1>System Status</h1>
+    
+      <p>
+        Active users: <wicket:container wicket:id="activeUsers"/>
+      </p>
+    </div>
+  </wicket:panel>
 </body>
 </html>

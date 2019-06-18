@@ -17,15 +17,35 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static org.apache.uima.fit.util.CasUtil.getType;
+
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public interface RecommendationEngine {
+public abstract class RecommendationEngine {
+
+    protected final Recommender recommender;
+    protected final String layerName;
+    protected final String featureName;
+    protected final int maxRecommendations;
+
+    public RecommendationEngine(Recommender aRecommender)
+    {
+        recommender = aRecommender;
+
+        layerName = aRecommender.getLayer().getName();
+        featureName = aRecommender.getFeature().getName();
+        maxRecommendations = aRecommender.getMaxRecommendations();
+    }
+
 // tag::methodDefinition[]
     /**
      * Given training data in {@code aCasses}, train a model. In order to save data between
@@ -34,7 +54,8 @@ public interface RecommendationEngine {
      * @param aContext The context of the recommender
      * @param aCasses The training data
      */
-    void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException;
+    public abstract void train(RecommenderContext aContext, List<CAS> aCasses)
+            throws RecommendationException;
 
     /**
      * Given text in {@code aCas}, predict target annotations. These should be written into
@@ -43,7 +64,8 @@ public interface RecommendationEngine {
      * @param aContext The context of the recommender
      * @param aCas The training data
      */
-    void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException;
+    public abstract void predict(RecommenderContext aContext, CAS aCas)
+            throws RecommendationException;
 
     /**
      * Evaluates the performance of a recommender by splitting the data given in {@code aCasses} in
@@ -58,48 +80,39 @@ public interface RecommendationEngine {
      * @return Scores available through an EvaluationResult object measuring the performance
      *         of predicting on the test set
      */
-    EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public abstract EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
         throws RecommendationException;
 // end::methodDefinition[]
 
-    /**
-     * Returns the long name of the type this recommender predict, e.g.
-     * {@code "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity"}
-     * @return The long name of the feature that is predicted
-     */
-    default String getPredictedType()
-    {
-        return "de.tudarmstadt.ukp.inception.recommendation.api.type.PredictedSpan";
-    }
-
-    /**
-     * Returns the name of the feature that is predicted. This has to be a feature
-     * of the type whose name is returned by {@link #getPredictedType}.
-     * @return The name of the feature that is predicted.
-     */
-    default String getPredictedFeature()
-    {
-        return "label";
-    }
-
-    /**
-     * Returns the name of the feature that contains the score. This has to be a feature
-     * of the type whose name is returned by {@link #getPredictedType}.
-     * @return The name of the feature that contains the score.
-     */
-    default Optional<String> getScoreFeature()
-    {
-        return Optional.of("score");
-    }
-    
     /**
      * Whether or not this engine supports training. If training is not supported, the call to
      * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
      * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
      * training is skipped - this is meant only for engines that use pre-trained models.
      */
-    default boolean requiresTraining()
+    public boolean requiresTraining()
     {
         return true;
+    }
+
+    protected Type getPredictedType(CAS aCas)
+    {
+        return getType(aCas, layerName);
+    }
+
+    protected Feature getPredictedFeature(CAS aCas)
+    {
+        return getPredictedType(aCas).getFeatureByBaseName(featureName);
+    }
+
+    protected Feature getScoreFeature(CAS aCas)
+    {
+        String scoreFeatureName = featureName + "_score";
+        return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
+    }
+
+    protected Feature getIsPredictionFeature(CAS aCas)
+    {
+        return getPredictedType(aCas).getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
     }
 }
