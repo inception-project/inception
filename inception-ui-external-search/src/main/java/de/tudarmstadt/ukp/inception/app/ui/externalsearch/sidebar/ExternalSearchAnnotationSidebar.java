@@ -225,10 +225,8 @@ public class ExternalSearchAnnotationSidebar
     {
         ExternalSearchUserState searchState = searchStateModel.getObject();
         try {
-            String documentText = externalSearchService.getDocumentText(
-                    searchState.getSelectedResult().getRepository(),
-                    searchState.getSelectedResult().getCollectionId(),
-                    searchState.getSelectedResult().getDocumentId());
+            String documentText = getCasProvider().get().getDocumentText();
+            
             for (ExternalSearchHighlight highlight :
                     searchState.getSelectedResult().getHighlights()) {
                 
