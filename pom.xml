@@ -89,6 +89,7 @@
     <module>inception-ui-kb</module>
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-constituents-editor</module>
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
@@ -255,6 +256,11 @@
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-pdf-editor</artifactId>
         <version>0.10.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-constituents-editor</artifactId>
+        <version>0.7.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -1285,6 +1291,7 @@
                   <excludes>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
+                    <exclude>.activate-run-jcasgen</exclude>
                     <exclude>suppressions.xml</exclude>
                     <exclude>marker-*</exclude>
                     <!-- maven config files -->
