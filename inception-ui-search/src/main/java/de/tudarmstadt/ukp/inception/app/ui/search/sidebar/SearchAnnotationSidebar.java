@@ -112,6 +112,7 @@ public class SearchAnnotationSidebar
     private User currentUser;
 
     private final WebMarkupContainer mainContainer;
+    private final WebMarkupContainer resultsGroupContainer;
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
@@ -170,6 +171,10 @@ public class SearchAnnotationSidebar
             searchService.reindex(project);
         }));
 
+        resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
+        resultsGroupContainer.setOutputMarkupId(true);
+        mainContainer.add(resultsGroupContainer);
+
         ListView<ResultsGroup> searchResultGroups = new ListView<ResultsGroup>("searchResultGroups")
         {
             private static final long serialVersionUID = -631500052426449048L;
@@ -192,7 +197,7 @@ public class SearchAnnotationSidebar
                 groupedSearchResults.getObject().values().stream()
                         .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
                         .collect(Collectors.toList())));
-        mainContainer.add(searchResultGroups);
+        resultsGroupContainer.add(searchResultGroups);
 
         Form<Void> annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
@@ -286,7 +291,7 @@ public class SearchAnnotationSidebar
                     }
                 }
                 groupLevelSelections.put(aGroupKey, getModelObject());
-                target.add(mainContainer);
+                target.add(resultsGroupContainer);
             }
         };
         return selectAllCheckBox;
@@ -565,7 +570,7 @@ public class SearchAnnotationSidebar
                                 // not all results in the document are selected, so set document
                                 // level selection to false
                                 groupLevelSelections.put(groupKey, false);
-                                target.add(mainContainer);
+                                target.add(resultsGroupContainer);
                             }
                         }
                     };
