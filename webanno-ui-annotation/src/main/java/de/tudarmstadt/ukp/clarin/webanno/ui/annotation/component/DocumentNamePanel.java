@@ -54,6 +54,11 @@ public class DocumentNamePanel
 
         AnnotatorState state = getModelObject();
 
+        if (state.getUser() != null) {
+            sb.append(state.getUser().getUsername());
+            sb.append(": ");
+        }
+        
         if (state.getProject() != null) {
             sb.append(state.getProject().getName());
         }
@@ -62,11 +67,6 @@ public class DocumentNamePanel
 
         if (state.getDocument() != null) {
             sb.append(state.getDocument().getName());
-        }
-        
-        sb.append(" ");
-        if (state.getUser() != null) {
-            sb.append(state.getUser().getUsername());
         }
 
         if (RuntimeConfigurationType.DEVELOPMENT.equals(getApplication().getConfigurationType())) {

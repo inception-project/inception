@@ -94,12 +94,10 @@ public class OpenDocumentDialogPanel
         projects = aProjects;
         
         projectListChoice = createProjectListChoice(aBModel);
+        userListChoice = createUserListChoice();
+        docListChoice = createDocListChoice();
         
         buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
-        
-        userListChoice = createUserListChoice();
-        
-        docListChoice = createDocListChoice();
        
         add(buttonsForm);
         add(projectListChoice);
@@ -147,7 +145,6 @@ public class OpenDocumentDialogPanel
         }
         if (aBModel.isProjectLocked()) {
             selectedProject = Model.of(DecoratedObject.of(aBModel.getProject()));
-            projectListChoice.setVisible(false);
         }
         projectListChoice = new OverviewListChoice<>("project", selectedProject,
                 projects.getObject());
@@ -181,6 +178,11 @@ public class OpenDocumentDialogPanel
                 aTarget.add(docListChoice);
             }
         });
+        
+        if (aBModel.isProjectLocked()) {
+            projectListChoice.setVisible(false);
+        }
+        
         return projectListChoice;
     }
     
@@ -215,7 +217,8 @@ public class OpenDocumentDialogPanel
                 aTarget.add(buttonsForm);
                 aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
+        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION) 
+                && !state.isProjectLocked()
                 && isManagerForListedProjects()));
 
         return userListChoice;
@@ -252,6 +255,14 @@ public class OpenDocumentDialogPanel
 
         for (User user : projectService.listProjectUsersWithPermissions(
                 selectedProject, PermissionLevel.ANNOTATOR)) {
+            
+            // do not show user if she has no annotated documents yet
+            if (documentService
+                    .listAnnotationDocuments(selectedProject, userRepository.getCurrentUser())
+                    .isEmpty()) {
+                continue;
+            }
+                
             DecoratedObject<User> du = DecoratedObject.of(user);
             if (user.equals(userRepository.getCurrentUser())) {
                 du.setColor(CURRENT_USER_COLOR);
