@@ -42,7 +42,6 @@ See https://github.com/adobe-type-tools/cmap-resources
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/spectrum/1.8.0/spectrum.min.css">
   <!-- PDFAnno -->
   <script type="text/javascript" src="./pdfanno.page.bundle.js"></script>
-  <!--拡張機能-->
   <script src="./pdfanno.core.bundle.js"></script>
 </head>
 
@@ -72,10 +71,6 @@ See https://github.com/adobe-type-tools/cmap-resources
 
       <label id="browseButton" class="btn btn-primary btn-file js-file" style="display: inline-block; margin-right: 5px;">
         Browse <input type="file" style="display: none;" webkitdirectory>
-      </label>
-
-      <label id="deepschoarUploadButton" class="btn btn-primary btn-file js-file" style="display: none; margin-right: 5px;">
-        Upload to DeepScholar
       </label>
 
       <div id="dropdownPdf" class="dropdown" style="display: inline-block; margin-right: 5px;">
@@ -122,11 +117,6 @@ See https://github.com/adobe-type-tools/cmap-resources
           <i class="fa fa-download"></i> pdfanno
         </a>
       </div>
-      <!-- <div class="btn-group" role="group" style="display: inline-block; margin-right: 5px;">
-        <a id="downloadPDFTextButton" class="btn btn-default" href="#" title="download">
-          <i class="fa fa-download"></i> pdf.txt
-        </a>
-      </div> -->
     </div>
 
     <!-- Annotation Tools -->
@@ -210,12 +200,7 @@ See https://github.com/adobe-type-tools/cmap-resources
         </div>
       </div>
       <div id="viewerWrapper" class="col-md-9 col-sm-9 col-xs-9" style="padding-left: 0; padding-right: 0; position: relative;">
-<!-- BEGIN INCEpTION EXTENSION - #620 - Exclude PDFAnno UI -->
-<!--
-        <div style="padding-right: 15px;">
--->
         <div>
-<!-- END INCEpTION EXTENSION -->
           <div id="viewerInner" class="viewer">
             <div tabindex="1" class="loadingInProgress">
               <div id="outerContainer">
@@ -547,7 +532,6 @@ See https://github.com/adobe-type-tools/cmap-resources
                   }
                 </style>
                 <div class="mozPrintCallback-dialog-box">
-                  <!-- TODO: Localise the following strings -->
                   Preparing document for printing...
                   <div class="progress-row">
                     <progress value="0" max="100"></progress>
