@@ -172,12 +172,10 @@ public class OpenDocumentDialogPanel
             {
                 if (userListChoice.isVisible()) {
                     userListChoice.setChoices(listUsers());
-                    docListChoice.setChoices(new ArrayList<>());
                     aTarget.add(userListChoice);
                 }
-                else {
-                    docListChoice.setChoices(listDocuments());
-                }
+                
+                docListChoice.setChoices(listDocuments());
                 docListChoice.setDefaultModel(Model.of());
                 aTarget.add(buttonsForm);
                 aTarget.add(docListChoice);
@@ -199,7 +197,9 @@ public class OpenDocumentDialogPanel
             @Override
             public Object getDisplayValue(DecoratedObject<User> aUser)
             {
-                return defaultIfEmpty(aUser.getLabel(), aUser.get().getUsername());
+                User user = aUser.get();
+                String username = defaultIfEmpty(aUser.getLabel(), user.getUsername());
+                return username + (user.isEnabled() ? "" : " (login disabled)");
             }
         });
         userListChoice.setOutputMarkupId(true);
@@ -215,9 +215,19 @@ public class OpenDocumentDialogPanel
                 aTarget.add(buttonsForm);
                 aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)));
+        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
+                && isManagerForListedProjects()));
 
         return userListChoice;
+    }
+
+    /**
+     * Check if current user is manager for any of the listed projects
+     */
+    private boolean isManagerForListedProjects()
+    {
+        return projects.getObject().stream()
+                .anyMatch(p -> projectService.isManager(p.get(), userRepository.getCurrentUser()));
     }
 
     private List<DecoratedObject<User>> listUsers()
