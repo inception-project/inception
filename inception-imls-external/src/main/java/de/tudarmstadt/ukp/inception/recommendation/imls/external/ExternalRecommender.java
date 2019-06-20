@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -62,10 +63,14 @@ public class ExternalRecommender
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            									.connectTimeout(30, TimeUnit.SECONDS)
+            									.writeTimeout(30, TimeUnit.SECONDS)
+            									.readTimeout(30, TimeUnit.SECONDS)
+            									.build();
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
-    private final OkHttpClient client;
 
     public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
     {
@@ -73,7 +78,6 @@ public class ExternalRecommender
 
         recommender = aRecommender;
         traits = aTraits;
-        client = new OkHttpClient();
     }
 
     @Override
