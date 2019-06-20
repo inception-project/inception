@@ -274,7 +274,6 @@ window.addEventListener('DOMContentLoaded', () => {
       if (spanAnnotation) {
         spanAnnotation.deselect()
       }
-// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
       if (startPosition !== null && endPosition !== null) {
         var data = {
           "action": "createSpan",
@@ -299,7 +298,6 @@ window.addEventListener('DOMContentLoaded', () => {
           }]
         });
       }
-// END INCEpTION EXTENSION
     }
     mouseDown = false
   })

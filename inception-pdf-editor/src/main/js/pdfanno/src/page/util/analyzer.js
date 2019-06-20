@@ -72,8 +72,6 @@ export function customizeAnalyzeResult (pdftxt) {
     page
   })
 
-  // console.log(pages)
-
   return pages
 }
 
