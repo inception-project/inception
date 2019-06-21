@@ -83,6 +83,8 @@ public class SimulationLearningCurvePanel
 
     private ChartPanel chartPanel ;
     private RecommenderEvaluationScoreMetric selectedValue;
+    List<EvaluationResult> evaluationResults;
+    private boolean evaluate;
     
     public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aSelectedRecommenderPanel)
@@ -90,7 +92,8 @@ public class SimulationLearningCurvePanel
         super(aId);
         project = aProject;
         selectedRecommenderPanel = aSelectedRecommenderPanel;
-                
+        evaluate = true;
+
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
@@ -111,6 +114,7 @@ public class SimulationLearningCurvePanel
                 selectedValue = dropdown.getModelObject();
                 form.addOrReplace(chartPanel);
                 target.add(chartPanel);
+                evaluate = false;
             }
         });
 
@@ -134,7 +138,9 @@ public class SimulationLearningCurvePanel
                 chartPanel.setOutputMarkupId(true);
                 
                 form.addOrReplace(chartPanel);
-                _target.add(chartPanel);                
+                _target.add(chartPanel);
+
+                evaluate = true;
             });
         
         form.add(startButton);
@@ -215,16 +221,17 @@ public class SimulationLearningCurvePanel
             return null;
         }
         
-        StringBuilder sbScore = new StringBuilder();
-        StringBuilder sbTrainingSize = new StringBuilder();
+        if (!evaluate) {
+            return getEvaluationScore(evaluationResults);
+        }
+
+        evaluationResults = new ArrayList<EvaluationResult>();
 
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
-            double trainingSize;
-            double score;
             try {
                 EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
                 
@@ -233,37 +240,60 @@ public class SimulationLearningCurvePanel
                     continue;
                 }
 
-                switch (selectedValue) {
-                case ACCURACY:
-                    score = evaluationResult.computeAccuracyScore();
-                    break;
-                case PRECISION:
-                    score = evaluationResult.computePrecisionScore();
-                    break;
-                case RECALL:
-                    score = evaluationResult.computeRecallScore();
-                    break;
-                case F1:
-                    score = evaluationResult.computeF1Score();
-                    break;
-                default:
-                    score = evaluationResult.computeAccuracyScore();
-                }
-
-                trainingSize = evaluationResult.getTrainDataRatio();
+                evaluationResults.add(evaluationResult);
             }
             catch (RecommendationException e) {
                 LOG.error(e.toString(),e);
                 continue;
             }
+        }
+
+        return getEvaluationScore(evaluationResults);
+    }
+
+    private String[] getEvaluationScore(List<EvaluationResult> evaluationResults)
+    {
+        StringBuilder sbScore = new StringBuilder();
+        StringBuilder sbTrainingSize = new StringBuilder();
+
+        // create a list of comma separated string of scores from every iteration of
+        // evaluation.
+        for (EvaluationResult evaluationResult : evaluationResults) {
+
+            double trainingSize;
+            double score;
+
+            if (evaluationResult.isEvaluationSkipped()) {
+                LOG.warn("Evaluation skipped. Chart cannot to be shown");
+                continue;
+            }
+
+            switch (selectedValue) {
+            case ACCURACY:
+                score = evaluationResult.computeAccuracyScore();
+                break;
+            case PRECISION:
+                score = evaluationResult.computePrecisionScore();
+                break;
+            case RECALL:
+                score = evaluationResult.computeRecallScore();
+                break;
+            case F1:
+                score = evaluationResult.computeF1Score();
+                break;
+            default:
+                score = evaluationResult.computeAccuracyScore();
+            }
+
+            trainingSize = evaluationResult.getTrainDataRatio();
 
             sbScore.append(score).append(",");
             sbTrainingSize.append(trainingSize).append(",");
         }
 
-        return new String[] {sbScore.toString(), sbTrainingSize.toString() };
+        return new String[] { sbScore.toString(), sbTrainingSize.toString() };
     }
-    
+
     enum RecommenderEvaluationScoreMetric
     {
         ACCURACY, PRECISION, F1, RECALL
