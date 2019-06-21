@@ -47,6 +47,10 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
+    </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -490,6 +494,7 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
+    
   </dependencies>
   <build>
     <plugins>
@@ -684,6 +689,7 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-external-search-pubannotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-active-learning</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-log</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-curation</usedDependency>
               <!-- INCEpTION annotation editor modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
