@@ -63,14 +63,13 @@ public class ExternalRecommender
 {
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            									.connectTimeout(30, TimeUnit.SECONDS)
-            									.writeTimeout(30, TimeUnit.SECONDS)
-            									.readTimeout(30, TimeUnit.SECONDS)
-            									.build();
+    private static final long CONNECT_TIMEOUT = 30;
+    private static final long WRITE_TIMEOUT = 30;
+    private static final long READ_TIMEOUT = 30;
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
+    private final OkHttpClient client;
 
     public ExternalRecommender(Recommender aRecommender, ExternalRecommenderTraits aTraits)
     {
@@ -78,6 +77,11 @@ public class ExternalRecommender
 
         recommender = aRecommender;
         traits = aTraits;
+        client = new OkHttpClient.Builder()
+                .connectTimeout(CONNECT_TIMEOUT,TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+                .build();
     }
 
     @Override
