@@ -44,7 +44,6 @@ export function resizeHandler () {
   let height = $(window).innerHeight() - $('#viewerInner').offset().top
   $('#viewerInner').css('height', `${height}px`)
 
-  // とりあえず.
   $('.loadingInProgress').css('height', '99%')
 
   // TODO move to anno-ui.
