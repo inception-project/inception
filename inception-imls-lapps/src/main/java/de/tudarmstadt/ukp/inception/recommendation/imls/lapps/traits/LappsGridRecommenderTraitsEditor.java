@@ -74,8 +74,7 @@ public class LappsGridRecommenderTraitsEditor
     private DropDownChoice<LappsGridService> servicesDropDown;
     private TextField<String> urlField;
 
-    public LappsGridRecommenderTraitsEditor(String aId,
-                                            IModel<Recommender> aRecommender)
+    public LappsGridRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender)
     {
         super(aId, aRecommender);
 
@@ -117,7 +116,8 @@ public class LappsGridRecommenderTraitsEditor
         add(form);
     }
 
-    private List<LappsGridService> getPredefinedServicesList() {
+    private List<LappsGridService> getPredefinedServicesList()
+    {
         Map<String, List<LappsGridService>> predefinedServices = loadPredefinedServicesData();
 
         String layer = recommender.getLayer().getName();

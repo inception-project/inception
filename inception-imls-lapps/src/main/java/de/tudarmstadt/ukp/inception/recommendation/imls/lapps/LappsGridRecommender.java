@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.io.lif.internal.DKPro2Lif;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
@@ -39,24 +40,25 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 
 public class LappsGridRecommender
-    implements RecommendationEngine
+    extends RecommendationEngine
 {
     private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
 
-    private final Recommender recommender;
     private final LappsGridRecommenderTraits traits;
     private final ServiceClient client;
 
     public LappsGridRecommender(Recommender aRecommender, LappsGridRecommenderTraits aTraits)
     {
-        recommender = aRecommender;
+        super(aRecommender);
+
         traits = aTraits;
         client = buildClient();
     }
-
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
+        // Training not supported
     }
 
     @Override
@@ -91,11 +93,13 @@ public class LappsGridRecommender
             throw new RecommendationException("Cannot predict", e);
         }
     }
-
+    
     @Override
-    public double evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
+    public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        return 0;
+        EvaluationResult result = new EvaluationResult();
+        result.setErrorMsg("Evaluation not supported (yet)");
+        return result;
     }
 
     private ServiceClient buildClient()
@@ -104,25 +108,15 @@ public class LappsGridRecommender
 
         try {
             return new ServiceClient(url, "tester", "tester");
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
     @Override
-    public String getPredictedType()
+    public boolean requiresTraining()
     {
-        return recommender.getLayer().getName();
-    }
-
-    @Override
-    public String getPredictedFeature()
-    {
-        return recommender.getFeature().getName();
-    }
-
-    @Override
-    public boolean requiresTraining() {
         return false;
     }
 }

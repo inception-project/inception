@@ -30,6 +30,11 @@
     <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>xml-apis</groupId>
+      <artifactId>xml-apis</artifactId>
+    </dependency>
+  
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -216,10 +221,6 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
       <artifactId>de.tudarmstadt.ukp.dkpro.core.api.io-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>xml-apis</groupId>
-      <artifactId>xml-apis</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
