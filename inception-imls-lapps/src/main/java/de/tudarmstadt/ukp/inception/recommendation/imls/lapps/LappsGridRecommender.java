@@ -17,9 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
+import static org.apache.uima.fit.util.CasUtil.getType;
+import static org.apache.uima.fit.util.CasUtil.select;
+
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.lappsgrid.client.ServiceClient;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.serialization.Data;
@@ -30,6 +36,7 @@ import org.lappsgrid.serialization.lif.View;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.lif.internal.DKPro2Lif;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
@@ -86,9 +93,28 @@ public class LappsGridRecommender
             String response = client.execute(request);
 
             DataContainer result = Serializer.parse(response, DataContainer.class);
-
+            
             aCas.reset();
             new Lif2DKPro().convert(result.getPayload(), aCas.getJCas());
+            
+            Feature isPredictionFeature = getIsPredictionFeature(aCas);
+            for (AnnotationFS predictedAnnotation : select(aCas, getPredictedType(aCas))) {
+                predictedAnnotation.setBooleanValue(isPredictionFeature, true);
+            }
+            
+            // If the remote service did not return tokens (or if we didn't find them...), then
+            // let's just re-add the tokens that we originally sent. We need the tokens later
+            // when extracting the predicted annotations
+            Type tokenType = getType(aCas, Token.class);
+            if (select(aCas, getType(aCas, Token.class)).isEmpty()) {
+                container.getView(0).getAnnotations().stream()
+                    .filter(a -> Discriminators.Uri.TOKEN.equals(a.getAtType()))
+                    .forEach(token -> {
+                        AnnotationFS t = aCas.createAnnotation(tokenType,
+                                token.getStart().intValue(), token.getEnd().intValue());
+                        aCas.addFsToIndexes(t);
+                    });
+            }
         } catch (Exception e) {
             throw new RecommendationException("Cannot predict", e);
         }

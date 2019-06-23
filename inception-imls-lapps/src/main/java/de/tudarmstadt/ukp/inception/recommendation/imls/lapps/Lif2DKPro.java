@@ -55,7 +55,9 @@ public class Lif2DKPro
         aJCas.setDocumentLanguage(aContainer.getLanguage());
         aJCas.setDocumentText(aContainer.getText());
 
-        View view = aContainer.getView(0);
+        // Get the last view - this is the one most likely to contain the predicted annotations
+        // ... it might not contain anything else though...
+        View view = aContainer.getView(aContainer.getViews().size() - 1);
 
         // Paragraph
         view.getAnnotations().stream()
