@@ -217,8 +217,7 @@ public class OpenDocumentDialogPanel
                 aTarget.add(buttonsForm);
                 aTarget.add(docListChoice);
             }
-        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION) 
-                && !state.isProjectLocked()
+        }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
                 && isManagerForListedProjects()));
 
         return userListChoice;
@@ -229,8 +228,10 @@ public class OpenDocumentDialogPanel
      */
     private boolean isManagerForListedProjects()
     {
-        return projects.getObject().stream()
-                .anyMatch(p -> projectService.isManager(p.get(), userRepository.getCurrentUser()));
+        return projectService.isManager(projectListChoice.getModelObject().get(),
+                userRepository.getCurrentUser())
+                || projects.getObject().stream().anyMatch(
+                    p -> projectService.isManager(p.get(), userRepository.getCurrentUser()));
     }
 
     private List<DecoratedObject<User>> listUsers()
@@ -257,9 +258,8 @@ public class OpenDocumentDialogPanel
                 selectedProject, PermissionLevel.ANNOTATOR)) {
             
             // do not show user if she has no annotated documents yet
-            if (documentService
-                    .listAnnotationDocuments(selectedProject, userRepository.getCurrentUser())
-                    .isEmpty()) {
+            if (!user.equals(userRepository.getCurrentUser()) &&
+                    documentService.listAnnotationDocuments(selectedProject, user).isEmpty()) {
                 continue;
             }
                 
