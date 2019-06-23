@@ -56,7 +56,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -76,7 +75,6 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 // activation strategies for menu items. Thus, we need to re-implement the menu
                 // items for INCEpTION.
                 AnnotationPageMenuItem.class,
-                CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
                 // INCEpTION uses its recommenders, not the WebAnno automation code

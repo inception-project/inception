@@ -17,16 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.form.CheckBoxMultipleChoice;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Check;
+import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.Model;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -36,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 
@@ -48,8 +52,7 @@ public class CurationSidebar
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     
-    private CheckBoxMultipleChoice<User> selectedUsers;
-    private final WebMarkupContainer mainContainer;
+    private CheckGroup<User> selectedUsers;
     
     private AnnotatorState state;
     private AnnotationPage annoPage;
@@ -61,32 +64,46 @@ public class CurationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         state = aModel.getObject();
         annoPage = aAnnotationPage;
-        mainContainer = new WebMarkupContainer("mainContainer");
+        WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
-        // TODO: put in listview ?
-        selectedUsers = new CheckBoxMultipleChoice<User>("users", Model.of(), listUsers());
-        selectedUsers.setChoiceRenderer(new ChoiceRenderer<User>() {
+        // set up user-checklist
+        Form<List<User>> usersForm = new Form<List<User>>("usersForm",
+                new ListModel<User>(new ArrayList<>()))
+        {
 
-            private static final long serialVersionUID = -8165699251116827372L;
+            private static final long serialVersionUID = 1L;
 
             @Override
-            public Object getDisplayValue(User aUser)
+            protected void onSubmit()
             {
-                return aUser.getUsername();
+                showUsers();
             }
-            
-        });
-        selectedUsers.setOutputMarkupId(true);
+
+        };
+        selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
+        ListView<User> users = new ListView<User>("users",
+                LoadableDetachableModel.of(this::listUsers))
+        {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void populateItem(ListItem<User> aItem)
+            {
+                aItem.add(new Check<User>("user", aItem.getModel()));
+                aItem.add(new Label("name", aItem.getModelObject().getUsername()));
+
+            }
+        };
+        selectedUsers.add(users);
         
-        Form<Void> usersForm = new Form<Void>("usersForm");
-        usersForm.add(new LambdaAjaxLink("showUsers", this::showUsers));
         usersForm.add(selectedUsers);
         mainContainer.add(usersForm);
     }
     
-    private List<? extends User> listUsers()
+    private List<User> listUsers()
     {
         return projectService
                 .listProjectUsersWithPermissions(state.getProject(), PermissionLevel.ANNOTATOR)
@@ -94,11 +111,16 @@ public class CurationSidebar
                 .collect(Collectors.toList());
     }
 
-    private void showUsers(AjaxRequestTarget aTarget)
+    private void showUsers()
     {
         // TODO Auto-generated method stub
+        // for testing
+        Collection<User> users = selectedUsers.getModelObject();
+        for (User user : users) {
+            System.out.println(user.getUsername());
+        }
         // refresh should call render of PreRenderer and render of editor-extensions ?
-        annoPage.actionRefreshDocument(aTarget);
+        //annoPage.actionRefreshDocument(aTarget);
     }
 
 }
