@@ -1,4 +1,5 @@
-# User Documentation
+[[sect_pdf_editor]]
+# PDF Annotation Editor
 
 ## Opening the PDF Editor
 
@@ -20,11 +21,11 @@ In the PDF panel on the top left there are buttons for switching to the previous
 or next page in the document.
 Next to the buttons you can enter a page number to jump to a specific page.
 
-image::images/pdf-panel-top-left.png[align="center"]
+image::pdf-panel-top-left.png[align="center"]
 
 In the top center of the PDF panel the zoom level of the document can be adjusted.
 
-image::images/pdf-panel-top-center.png[align="center"]
+image::pdf-panel-top-center.png[align="center"]
 
 The button on the top right in the PDF panel opens a small menu which provides
 functionality to go to the first or last page.
@@ -32,7 +33,7 @@ You can also use the `Home` and `End` keys instead.
 The menu also contains an option to enable the hand tool to navigate through the document via clicking
 and dragging the pages.
 
-image::images/pdf-panel-top-right.png[align="center"]
+image::pdf-panel-top-right.png[align="center"]
 
 When moving through the document annotations will not show immediately.
 Once the movement stops for a short period of time the annotations for the
@@ -59,7 +60,7 @@ If it was not possible to create the annotation an error message is shown.
 After the span annotation is created it will be automatically selected in the
 `Layer box`.
 
-image::images/span-annotation.png[align="center"]
+image::span-annotation.png[align="center"]
 
 ## Creating Relation Annotations
 
@@ -68,7 +69,7 @@ and drop on another span annotation knob.
 In order to create a relation annotation between two spans an according layer
 must exist.
 
-image::images/relation-annotation-drag.png[align="center"]
+image::relation-annotation-drag.png[align="center"]
 
 After releasing the mouse button the creation process starts which is indicated
 by a moving circle in the upper right corner.
@@ -79,7 +80,7 @@ If it was not possible to create the annotation an error message is shown.
 After the relation annotation is created it will be automatically selected in
 the `Layer box`.
 
-image::images/relation-annotation.png[align="center"]
+image::relation-annotation.png[align="center"]
 
 Currently long distance relation annotations are not creatable as annotations are
 rendered dynamically when moving through the pages.
