@@ -1,4 +1,5 @@
-# Developer Documentation
+[[sect_pdf_editor_dev]]
+# PDF Annotation Editor
 
 ## Selecting a PDF Annotation Tool
 
@@ -110,7 +111,7 @@ text, however _DKPro PDF Reader_ preserves them.
 The whitespaces are removed from the _DKPro PDF Reader_ string to have a similar
 structure to the _PDFExtract_ sanitized string content.
 
-image::images/matching.png[align="center", title="Mapping Process (left) with examples (right)"]
+image::matching.png[align="center", title="Mapping Process (left) with examples (right)"]
 
 Even though both representation now are in a similar shape it can still happen
 that the content in both strings differs.
@@ -172,4 +173,4 @@ in a document for a large document corpus.
 This way a representative ratio of mapped and unmapped annotations could be
 generated and unknown issues could be unveiled.
 
-image::images/inception-pdf-editor.png[align="center",title="PDF Editor Architecture"]
+image::inception-pdf-editor.png[align="center",title="PDF Editor Architecture"]

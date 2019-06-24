@@ -53,6 +53,8 @@ include::{include-dir}dashboard_project-view.adoc[leveloffset=+1]
 
 include::{include-dir}annotation.adoc[leveloffset=+1]
 
+include::{include-dir}other_editors.adoc[leveloffset=+1]
+
 include::{include-dir}annotation_open.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_navigation.adoc[leveloffset=+2]
