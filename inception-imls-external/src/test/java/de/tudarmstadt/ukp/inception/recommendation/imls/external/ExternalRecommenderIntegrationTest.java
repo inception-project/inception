@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.fromJsonString;
+import static de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.external.util.InceptionAssertions.assertThat;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
@@ -186,7 +187,7 @@ public class ExternalRecommenderIntegrationTest
 
     private List<CAS> loadDevelopmentData() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
 
         for (int i = 0; i < data.size(); i++) {

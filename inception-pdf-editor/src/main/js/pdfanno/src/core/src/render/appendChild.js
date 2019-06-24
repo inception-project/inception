@@ -1,4 +1,3 @@
-import { renderRect } from './renderRect'
 import { renderSpan } from './renderSpan'
 import renderText from './renderText'
 import { renderRelation } from './renderRelation'
@@ -31,9 +30,6 @@ export default function appendChild (svg, annotation, viewport) {
 
   let child
   switch (annotation.type) {
-  case 'rect':
-    child = renderRect(annotation, svg)
-    break
   case 'span':
     child = renderSpan(annotation, svg)
     break
