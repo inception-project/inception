@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
@@ -107,7 +108,7 @@ public abstract class RecommendationEngine {
 
     protected Feature getScoreFeature(CAS aCas)
     {
-        String scoreFeatureName = featureName + "_score";
+        String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
     }
 

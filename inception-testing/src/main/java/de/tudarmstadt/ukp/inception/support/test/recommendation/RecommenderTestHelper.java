@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.support.test.recommendation;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.cas.CAS.TYPE_NAME_BOOLEAN;
 import static org.apache.uima.cas.CAS.TYPE_NAME_DOUBLE;
 import static org.apache.uima.util.TypeSystemUtil.typeSystem2TypeSystemDescription;
@@ -46,7 +47,7 @@ public class RecommenderTestHelper
     public static void addScoreFeature(CAS aCas, String aTypeName, String aFeatureName)
             throws IOException, UIMAException
     {
-        String scoreFeatureName = aFeatureName + "_score";
+        String scoreFeatureName = aFeatureName + FEATURE_NAME_SCORE_SUFFIX;
 
         TypeSystemDescription tsd = typeSystem2TypeSystemDescription(aCas.getTypeSystem());
         TypeDescription typeDescription = tsd.getType(aTypeName);
@@ -64,7 +65,7 @@ public class RecommenderTestHelper
 
     public static double getScore(AnnotationFS aAnnotationFS, String aFeatureName)
     {
-        Feature feature = aAnnotationFS.getType().getFeatureByBaseName(aFeatureName + "_score");
+        Feature feature = aAnnotationFS.getType().getFeatureByBaseName(aFeatureName + FEATURE_NAME_SCORE_SUFFIX);
         return aAnnotationFS.getDoubleValue(feature);
     }
 
