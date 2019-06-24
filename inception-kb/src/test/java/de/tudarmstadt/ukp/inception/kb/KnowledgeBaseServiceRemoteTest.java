@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
-import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderGenericTest.isReachable;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
