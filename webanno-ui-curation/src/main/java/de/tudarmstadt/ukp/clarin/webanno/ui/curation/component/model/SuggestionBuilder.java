@@ -91,8 +91,8 @@ public class SuggestionBuilder
     private final UserDao userRepository;
     private final CasStorageService casStorageService;
 
-    int diffRangeBegin, diffRangeEnd;
-    boolean firstload = true;
+    private int diffRangeBegin, diffRangeEnd;
+    private boolean firstload = true;
     public static Map<Integer, Set<Integer>> crossSentenceLists;
     //
     Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
@@ -142,7 +142,7 @@ public class SuggestionBuilder
             casses = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
             mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
-                    false);
+                    false, false);
             String username = casses.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
                     casses.get(username), username, aBModel.getWindowBeginOffset(),
@@ -152,7 +152,7 @@ public class SuggestionBuilder
             casses = listCassesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
             mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
-                    false);
+                    false, false);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
                     WebAnnoConst.CURATION_USER,
                     WebAnnoCasUtil.getFirstSentence(mergeCas).getBegin(),
@@ -398,7 +398,8 @@ public class SuggestionBuilder
      *             hum?
      */
     public CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
+            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade,
+            boolean aMergeIncompleteAnnotations)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CAS mergeCas = null;
@@ -442,7 +443,7 @@ public class SuggestionBuilder
             }
             else {
                 mergeCas = createCurationCas(aState, randomAnnotationDocument, aCasses,
-                        aState.getAnnotationLayers());
+                        aState.getAnnotationLayers(), aMergeIncompleteAnnotations);
                 updateDocumentTimestampAfterWrite(aState,
                         curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
             }
@@ -512,9 +513,9 @@ public class SuggestionBuilder
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public CAS createCurationCas(AnnotatorState aState,
+    private CAS createCurationCas(AnnotatorState aState,
             AnnotationDocument aRandomAnnotationDocument, Map<String, CAS> aCasses,
-            List<AnnotationLayer> aAnnotationLayers)
+            List<AnnotationLayer> aAnnotationLayers, boolean aMergeIncompleteAnnotations)
         throws IOException, UIMAException, AnnotationException
     {
         Validate.notNull(aState, "State must be specified");
@@ -544,6 +545,7 @@ public class SuggestionBuilder
 
         try (StopWatch watch = new StopWatch(log, "CasMerge")) {
             CasMerge casMerge = new CasMerge(annotationService);
+            casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
             casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
                     mergeCas, aCasses);
         }
