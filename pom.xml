@@ -24,7 +24,7 @@
   </parent>
   <groupId>de.tudarmstadt.ukp.inception.app</groupId>
   <artifactId>inception-app</artifactId>
-  <version>0.10.1-SNAPSHOT</version>
+  <version>0.11.0-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>INCEpTION</name>
   <description>Towards an Infrastructure for the Distributed Exploration and Annotation of Large Corpora and Knowledge Bases</description>
@@ -54,7 +54,7 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-beta-9</webanno.version>
+    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.10.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
