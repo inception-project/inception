@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
-import de.tudarmstadt.ukp.inception.recommendation.service.RecommendationServiceImpl;
 
 public class VisibilityCalculationTests
 {
@@ -66,6 +65,7 @@ public class VisibilityCalculationTests
     private final static String DOC_NAME = "TestDocument";
     private final static String UI_LABEL = "TestUiLabel";
     private final static double CONFIDENCE = 0.2;
+    private final static String CONFIDENCE_EXPLANATION = "Predictor A: 0.05 | Predictor B: 0.15";
     private final static String COVERED_TEXT = "TestText";
 
     @Before
@@ -181,7 +181,7 @@ public class VisibilityCalculationTests
         for (int[] val : vals) {
             suggestions.add(new AnnotationSuggestion(val[0], RECOMMENDER_ID, RECOMMENDER_NAME,
                     layerId, FEATURE, DOC_NAME, val[1], val[2], COVERED_TEXT, null, UI_LABEL,
-                    CONFIDENCE));
+                    CONFIDENCE, CONFIDENCE_EXPLANATION));
         }
 
         return SuggestionGroup.group(suggestions);
