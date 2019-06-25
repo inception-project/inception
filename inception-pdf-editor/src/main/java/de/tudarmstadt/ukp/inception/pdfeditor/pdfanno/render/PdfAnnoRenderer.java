@@ -165,7 +165,7 @@ public class PdfAnnoRenderer
                     PdfExtractLine lastLine =
                         aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
-                    span.setEndPos(lastLine.getPosition());
+                    span.setEndPos(lastLine.getPosition() + 1);
                     // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());

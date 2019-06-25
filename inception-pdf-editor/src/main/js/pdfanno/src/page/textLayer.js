@@ -78,12 +78,19 @@ window.findTexts = function (page, startPosition, endPosition) {
     const data = extractMeta(info)
     const { position } = data
 
-    if (startPosition <= position) {
+    if (startPosition == endPosition && startPosition == position) {
+      data.w = 1
+      data.x = data.x - 1
+      items.push(data)
+      break
+    }
+
+    if (startPosition <= position && position < endPosition) {
       inRange = true
       items.push(data)
     }
 
-    if (endPosition <= position) {
+    if (position == endPosition) {
       break
     }
   }
