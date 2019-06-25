@@ -17,15 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
-import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class DocumentOpenedEventAdapter
@@ -52,21 +49,6 @@ public class DocumentOpenedEventAdapter
     }
 
     @Override
-    public String getDetails(DocumentOpenedEvent aEvent)
-    {
-        DocumentOpenedDetails details = new DocumentOpenedDetails(aEvent.getAnnotator(),
-                aEvent.getUser(), aEvent.getDocument());
-        try {
-            String json = JSONUtil.toJsonString(details); 
-            return json;
-        }
-        catch (IOException e) {
-            log.error("Unable to log event [{}]", aEvent, e);
-            return "<ERROR>";
-        }
-    }
-
-    @Override
     public String getUser(DocumentOpenedEvent aEvent)
     {
         return aEvent.getUser();
@@ -76,33 +58,5 @@ public class DocumentOpenedEventAdapter
     public String getAnnotator(DocumentOpenedEvent aEvent)
     {
         return aEvent.getAnnotator();
-    }
-
-    private class DocumentOpenedDetails
-    {
-        private final String annotator;
-        private final String opener;
-        private final String docName;
-        
-        public DocumentOpenedDetails(String aAnnotator, String aOpener, SourceDocument aDoc) {
-            annotator = aAnnotator;
-            opener = aOpener;
-            docName = aDoc.getName();
-        }
-
-        public String getAnnotator()
-        {
-            return annotator;
-        }
-
-        public String getOpener()
-        {
-            return opener;
-        }
-
-        public String getDocName()
-        {
-            return docName;
-        }
     }
 }
