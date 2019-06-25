@@ -76,7 +76,6 @@ public class OpenDocumentDialogPanel
     private OverviewListChoice<DecoratedObject<SourceDocument>> docListChoice;
 
     private OverviewListChoice<DecoratedObject<User>> userListChoice;
-    private static final String CURRENT_USER_COLOR = "blue";
 
     private final AnnotatorState state;
     
@@ -150,7 +149,6 @@ public class OpenDocumentDialogPanel
                 projects.getObject());
         projectListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<Project>>()
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -189,7 +187,6 @@ public class OpenDocumentDialogPanel
     private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
     {
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        currentUser.setColor(CURRENT_USER_COLOR);
         userListChoice = new OverviewListChoice<>("user", Model.of(currentUser), listUsers());
         userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
@@ -201,6 +198,9 @@ public class OpenDocumentDialogPanel
             {
                 User user = aUser.get();
                 String username = defaultIfEmpty(aUser.getLabel(), user.getUsername());
+                if (user.equals(currentUser.get())) {
+                    username += " (me)";
+                }
                 return username + (user.isEnabled() ? "" : " (login disabled)");
             }
         });
@@ -228,10 +228,11 @@ public class OpenDocumentDialogPanel
      */
     private boolean isManagerForListedProjects()
     {
+        User currentUser = userRepository.getCurrentUser();
         return projectService.isManager(projectListChoice.getModelObject().get(),
-                userRepository.getCurrentUser())
+                currentUser)
                 || projects.getObject().stream().anyMatch(
-                    p -> projectService.isManager(p.get(), userRepository.getCurrentUser()));
+                    p -> projectService.isManager(p.get(), currentUser));
     }
 
     private List<DecoratedObject<User>> listUsers()
@@ -244,31 +245,24 @@ public class OpenDocumentDialogPanel
         List<DecoratedObject<User>> users = new ArrayList<>();
         
         Project selectedProject = projectListChoice.getModelObject().get();
-        
-        if (!projectService.isManager(selectedProject, userRepository.getCurrentUser())) {
-            User currentUser = userRepository.getCurrentUser();
+        User currentUser = userRepository.getCurrentUser();
+        if (!projectService.isManager(selectedProject, currentUser)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUsername());
-            du.setColor(CURRENT_USER_COLOR);
             users.add(du);
             return users;
         }
 
         for (User user : projectService.listProjectUsersWithPermissions(
-                selectedProject, PermissionLevel.ANNOTATOR)) {
-            
-            // do not show user if she has no annotated documents yet
-            if (!user.equals(userRepository.getCurrentUser()) &&
-                    documentService.listAnnotationDocuments(selectedProject, user).isEmpty()) {
-                continue;
-            }
-                
+                selectedProject, PermissionLevel.ANNOTATOR)) {               
             DecoratedObject<User> du = DecoratedObject.of(user);
-            if (user.equals(userRepository.getCurrentUser())) {
-                du.setColor(CURRENT_USER_COLOR);
-            }
             du.setLabel(user.getUsername());
-            users.add(du);
+            if (user.equals(currentUser)) {
+                users.add(0, du);
+            }
+            else {
+                users.add(du);
+            }
         }
 
         return users;
@@ -293,20 +287,16 @@ public class OpenDocumentDialogPanel
                     projectListChoice.getModelObject().get(),
                     userListChoice.getModelObject().get());
 
-            boolean userIsSelected = userListChoice.getModelObject().get()
-                    .equals(userRepository.getCurrentUser());
-
             for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
-                // other user has not annotated this doc yet, no need to list it for admin to see
-                if (!userIsSelected && e.getValue() == null) {
-                    continue;
-                }
+                
                 DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
                 if (e.getValue() != null) {
                     AnnotationDocument adoc = e.getValue();
                     AnnotationDocumentState docState = adoc.getState();
                     dsd.setColor(docState.getColor());
                     
+                    boolean userIsSelected = userListChoice.getModelObject().get()
+                            .equals(userRepository.getCurrentUser());
                     // if current user is opening her own docs, don't let her see locked ones
                     if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
                         continue;

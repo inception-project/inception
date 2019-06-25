@@ -22,7 +22,7 @@ When navigating to the *Annotation* page, a dialogue opens that allows you to se
 a document within the project. If you want to open a different project or document later, click on 
 *Open* to open the dialog.
 
-image::version3_annotation1.png[align="center"]
+image::open_doc.png[align="center"]
 
 Projects appear as folders, and contain the documents of the project. Double-click on a document to 
 open it for annotation. Document names written in black show that the document has not been opened 
@@ -30,4 +30,6 @@ by the current user, blue font means that it has already been opened, whereas re
 that the document has already been marked as *done*.
 
 Users that are managers can additionally open other users' documents to view their annotations but cannot change them.
-This is done by selecting the project, user and then document in the described dialogue. The user's own name is marked in blue.
+This is done by selecting the project, user and then document in the described dialogue. The user's own name is listed at the top and marked _(me)_.
+
+image::open_doc_manager.png[align="center"]
