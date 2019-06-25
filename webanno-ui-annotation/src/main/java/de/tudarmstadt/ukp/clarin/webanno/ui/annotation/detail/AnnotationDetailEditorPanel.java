@@ -103,6 +103,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 /**
  * Annotation Detail Editor Panel.
@@ -122,6 +123,7 @@ public abstract class AnnotationDetailEditorPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean UserDao userRepository;
     
     private AnnotationPageBase page;
     private AnnotationFeatureForm annotationFeatureForm;
@@ -524,6 +526,10 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionAnnotate");
+        
+        if (isUserViewingOthersWork()) {
+            return;
+        }
 
         if (isAnnotationFinished()) {
             throw new AnnotationException("This document is already closed. Please ask your "
@@ -627,6 +633,10 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         LOG.trace("actionCreateForward()");
+        
+        if (isUserViewingOthersWork()) {
+            return;
+        }
 
         if (isAnnotationFinished()) {
             throw new AnnotationException("This document is already closed. Please ask your "
@@ -715,7 +725,13 @@ public abstract class AnnotationDetailEditorPanel
         
         aTarget.add(annotationFeatureForm);
     }
-    
+
+
+    private boolean isUserViewingOthersWork()
+    {
+        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
+    }
+
     /**
      * Persists the potentially modified CAS, remembers feature values, reloads the feature editors
      * using the latest info from the CAS, updates the sentence number and focus unit, performs
