@@ -81,13 +81,13 @@ public class PdfExtractFile implements Serializable
     private Int2IntMap sanitizedToString;
 
     /**
-     * Mpaping for characters from stringContent to sanitizedContent where a character
+     * Mapping for characters from stringContent to sanitizedContent where a character
      * is mapped to a character sequence instead of a single character
      */
     private Map<Integer, Offset> stringToSanitizedSequence;
 
     /**
-     * Mpaping for characters from sanitizedContent to stringContent where a character
+     * Mapping for characters from sanitizedContent to stringContent where a character
      * is mapped to a character sequence instead of a single character
      */
     private Map<Integer, Offset> sanitizedToStringSequence;
