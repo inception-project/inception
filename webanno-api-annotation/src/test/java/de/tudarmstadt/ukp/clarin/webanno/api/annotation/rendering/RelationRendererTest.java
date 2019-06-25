@@ -143,8 +143,7 @@ public class RelationRendererTest
         POS target = posAnnotations.get(posAnnotations.size() - 1);
 
         depLayer.setCrossSentence(true);
-        AnnotationFS dep = adapter.add(document, username, source, target, jcas.getCas(), 0,
-                jcas.getDocumentText().length());
+        AnnotationFS dep = adapter.add(document, username, source, target, jcas.getCas());
         
         depLayer.setCrossSentence(false);
         RelationRenderer sut = new RelationRenderer(adapter, featureSupportRegistry,
@@ -185,10 +184,8 @@ public class RelationRendererTest
 
         // Create two annotations stacked annotations
         depLayer.setOverlapMode(ANY_OVERLAP);
-        AnnotationFS dep1 = adapter.add(document, username, source, target, jcas.getCas(), 0,
-                jcas.getDocumentText().length());
-        AnnotationFS dep2 = adapter.add(document, username, source, target, jcas.getCas(), 0,
-                jcas.getDocumentText().length());
+        AnnotationFS dep1 = adapter.add(document, username, source, target, jcas.getCas());
+        AnnotationFS dep2 = adapter.add(document, username, source, target, jcas.getCas());
         
         {
             depLayer.setOverlapMode(ANY_OVERLAP);
@@ -241,7 +238,7 @@ public class RelationRendererTest
         adapter.delete(document, username, jcas.getCas(), new VID(dep2));
         depLayer.setOverlapMode(ANY_OVERLAP);
         AnnotationFS dep3 = adapter.add(document, username, source, posAnnotations.get(2),
-                jcas.getCas(), 0, jcas.getDocumentText().length());
+                jcas.getCas());
         
         {
             depLayer.setOverlapMode(NO_OVERLAP);

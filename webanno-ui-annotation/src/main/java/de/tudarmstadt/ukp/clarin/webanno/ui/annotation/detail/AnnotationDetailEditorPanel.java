@@ -419,8 +419,7 @@ public abstract class AnnotationDetailEditorPanel
 
         // Creating a relation
         AnnotationFS arc = aAdapter.add(state.getDocument(), state.getUser().getUsername(),
-                originFs, targetFs, aCas, state.getWindowBeginOffset(),
-                state.getWindowEndOffset());
+                originFs, targetFs, aCas);
         selection.selectArc(new VID(arc), originFs, targetFs);
     }
 
@@ -1109,8 +1108,7 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof RelationAdapter) {
             // If no features, still create arc #256
             AnnotationFS arc = ((RelationAdapter) adapter).add(state.getDocument(),
-                    state.getUser().getUsername(), targetFs, originFs, cas,
-                    state.getWindowBeginOffset(), state.getWindowEndOffset());
+                    state.getUser().getUsername(), targetFs, originFs, cas);
             state.getSelection().setAnnotation(new VID(getAddr(arc)));
             
             for (FeatureState featureState : featureStates) {

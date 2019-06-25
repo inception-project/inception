@@ -46,12 +46,12 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ArcPosition;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Position;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Position;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.RelationDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.RelationPosition;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
@@ -315,11 +315,12 @@ public class AgreementUtils
                 Configuration cfg = cfgs.get(0);
                 
                 // Check if source and/or targets of a relation are stacked
-                if (cfg.getPosition() instanceof ArcPosition) {
-                    ArcPosition pos = (ArcPosition) cfg.getPosition();
+                if (cfg.getPosition() instanceof RelationPosition) {
+                    RelationPosition pos = (RelationPosition) cfg.getPosition();
                     FeatureStructure arc = cfg.getFs(user, pos.getCasId(), aCasMap);
 
-                    ArcDiffAdapter adapter = (ArcDiffAdapter) aDiff.getDiffAdapter(pos.getType());
+                    RelationDiffAdapter adapter = (RelationDiffAdapter) aDiff
+                            .getDiffAdapter(pos.getType());
 
                     // Check if the source of the relation is stacked
                     AnnotationFS source = FSUtil.getFeature(arc, adapter.getSourceFeature(),

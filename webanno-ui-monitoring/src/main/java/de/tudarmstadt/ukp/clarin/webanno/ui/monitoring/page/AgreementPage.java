@@ -79,10 +79,10 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.Agree
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -408,12 +408,12 @@ public class AgreementPage
                             Map<String, List<CAS>> casMap = getCases();
 
                             Project project = projectSelectionForm.getModelObject().project;
-                            List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService,
+                            List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService,
                                     project);
 
                             AgreementFormModel pref = AgreementForm.this.getModelObject();
 
-                            DiffResult diff = CasDiff2.doDiff(asList(feature.getLayer().getName()),
+                            DiffResult diff = CasDiff.doDiff(asList(feature.getLayer().getName()),
                                     adapters, pref.linkCompareBehavior, casMap);
                             return AgreementUtils.getPairwiseAgreement(
                                     AgreementForm.this.getModelObject().measure,
@@ -454,12 +454,12 @@ public class AgreementPage
                                     Map<String, List<CAS>> casMap = getCases();
 
                                     Project project = projectSelectionForm.getModelObject().project;
-                                    List<DiffAdapter> adapters = CasDiff2
+                                    List<DiffAdapter> adapters = CasDiff
                                             .getAdapters(annotationService, project);
 
                                     AgreementFormModel pref = AgreementForm.this.getModelObject();
 
-                                    DiffResult diff = CasDiff2.doDiff(
+                                    DiffResult diff = CasDiff.doDiff(
                                             asList(feature.getLayer().getName()), adapters,
                                             pref.linkCompareBehavior, casMap);
 
