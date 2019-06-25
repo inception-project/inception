@@ -162,8 +162,10 @@ public class TrainingTask
                                 recommender.getName(), (System.currentTimeMillis() - startTime));
                     }
                     else {
-                        log.info("[{}][{}]: There are annotations available to train on",
+                        log.info("[{}][{}]: There are no annotations available to train on",
                                 user.getUsername(), recommender.getName());
+                        
+                        context.markAsReadyForPrediction();
                     }
                 }
                 catch (Throwable e) {
