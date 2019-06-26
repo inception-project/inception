@@ -65,10 +65,15 @@ public class DataMajorityNerRecommender
 
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
-        aContext.markAsReadyForPrediction();
     }
 // end::train[]
 // tag::extractAnnotations[]
+    
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() {
+    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+    }
+    
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();

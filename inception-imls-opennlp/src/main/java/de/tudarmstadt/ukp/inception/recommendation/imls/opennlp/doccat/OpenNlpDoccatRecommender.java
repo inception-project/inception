@@ -89,10 +89,17 @@ public class OpenNlpDoccatRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         DoccatModel model = train(nameSamples, params);
-        if (model != null) {
-            aContext.put(KEY_MODEL, model);
-            aContext.markAsReadyForPrediction();
+        
+        if (model == null) {
+        	throw new RecommendationException("Could not obtain Doccat model");
         }
+        
+        aContext.put(KEY_MODEL, model);
+    }
+    
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() {
+    	return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override

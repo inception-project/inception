@@ -88,7 +88,6 @@ public class NamedEntityLinker
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples =
             extractNamedEntities(aCasList);
         aContext.put(KEY_MODEL, nameSamples);
-        aContext.markAsReadyForPrediction();
     }
 
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(

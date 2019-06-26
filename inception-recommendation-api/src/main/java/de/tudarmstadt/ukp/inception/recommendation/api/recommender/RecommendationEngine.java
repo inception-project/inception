@@ -31,6 +31,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public abstract class RecommendationEngine {
+	
+	public enum RecommendationEngineCapability {
+		TRAINING_NOT_SUPPORTED,
+		TRAINING_SUPPORTED,
+		TRAINING_REQUIRED
+	}
 
     protected final Recommender recommender;
     protected final String layerName;
@@ -85,14 +91,15 @@ public abstract class RecommendationEngine {
 // end::methodDefinition[]
 
     /**
-     * Whether or not this engine supports training. If training is not supported, the call to
-     * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
-     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
-     * training is skipped - this is meant only for engines that use pre-trained models.
+     * Which training capabilities this engine has. 
+     * If training is not supported, the call to {@link #train} should be skipped and 
+     * {@link #predict} should be called immediately.   
+     * Note that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+     * training is skipped or fails - this is meant only for engines that use pre-trained models.
      */
-    public boolean requiresTraining()
+    public RecommendationEngineCapability getTrainingCapability()
     {
-        return true;
+        return RecommendationEngineCapability.TRAINING_SUPPORTED;
     }
 
     protected Type getPredictedType(CAS aCas)

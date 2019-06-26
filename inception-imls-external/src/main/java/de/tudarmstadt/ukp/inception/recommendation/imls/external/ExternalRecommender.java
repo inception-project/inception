@@ -80,8 +80,6 @@ public class ExternalRecommender
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
-        aContext.markAsReadyForPrediction();
-
         TrainingRequest trainingRequest = new TrainingRequest();
         List<Document> documents = new ArrayList<>();
 
@@ -273,8 +271,12 @@ public class ExternalRecommender
     }
 
     @Override
-    public boolean requiresTraining()
+    public RecommendationEngineCapability getTrainingCapability() 
     {
-        return traits.isTrainable();
+        if (traits.isTrainable()) {
+        	return RecommendationEngineCapability.TRAINING_REQUIRED;
+        } else {
+        	return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+        }
     }
 }

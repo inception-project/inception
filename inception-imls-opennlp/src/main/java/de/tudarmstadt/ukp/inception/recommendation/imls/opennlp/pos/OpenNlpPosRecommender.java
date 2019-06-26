@@ -90,10 +90,16 @@ public class OpenNlpPosRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         POSModel model = train(posSamples, params);
 
-        if (model != null) {
-            aContext.put(KEY_MODEL, model);
-            aContext.markAsReadyForPrediction();
-        }
+        if (model == null) {
+        	throw new RecommendationException("Could not obtain POS model");
+        } 
+        
+        aContext.put(KEY_MODEL, model);
+    }
+    
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() {
+    	return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override

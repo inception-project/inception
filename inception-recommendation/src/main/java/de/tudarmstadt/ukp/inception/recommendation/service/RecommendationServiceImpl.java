@@ -786,7 +786,7 @@ public class RecommendationServiceImpl
                     }
 
                     try {
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
+                        RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);

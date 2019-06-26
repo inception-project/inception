@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_SUPPORTED;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -132,12 +137,13 @@ public class TrainingTask
                 }
 
                 try {
-                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                    RecommendationEngine recommendationEngine = factory.build(recommender, context);
+                   
+                    RecommendationEngineCapability trainingCapability = recommendationEngine.getTrainingCapability();
                     
-                    // If the engine does not require/support training, then we mark the context
-                    // as ready for prediction and skip the training step
-                    if (!recommendationEngine.requiresTraining()) {
-                        log.info("[{}][{}]: Engine does not require training",
+                    // If engine does not support training, mark engine ready and skip to prediction
+                    if (trainingCapability == TRAINING_NOT_SUPPORTED) {
+                        log.info("[{}][{}]: Engine does not support training",
                                 user.getUsername(), recommender.getName());
                         context.markAsReadyForPrediction();
                         continue;
@@ -151,21 +157,31 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
+                    // If no data for training is available, but the engine requires training, do not mark as ready 
+                    if (cassesForTraining.isEmpty() && trainingCapability == TRAINING_REQUIRED) {
+                    	continue;
+                    }
+                    
+                    // If not data for training is available, and the engine supports but not requires training, mark as ready 
+                    if (cassesForTraining.isEmpty() && trainingCapability == TRAINING_SUPPORTED) {
+                    	context.markAsReadyForPrediction();
+                    	continue;
+                    }
+                    
                     if (!cassesForTraining.isEmpty()) {
                         log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
                                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                                 casses.get().size());
                         
                         recommendationEngine.train(context, cassesForTraining);
-                        
+                        context.markAsReadyForPrediction();
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                                recommender.getName(), (System.currentTimeMillis() - startTime));
+                        		recommender.getName(), (System.currentTimeMillis() - startTime));
+                        
                     }
                     else {
                         log.info("[{}][{}]: There are no annotations available to train on",
                                 user.getUsername(), recommender.getName());
-                        
-                        context.markAsReadyForPrediction();
                     }
                 }
                 catch (Throwable e) {
