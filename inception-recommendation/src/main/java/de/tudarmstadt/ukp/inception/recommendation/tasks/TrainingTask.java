@@ -159,6 +159,8 @@ public class TrainingTask
 
                     // If no data for training is available, but the engine requires training, do not mark as ready 
                     if (cassesForTraining.isEmpty() && trainingCapability == TRAINING_REQUIRED) {
+                    	log.info("[{}][{}]: There are no annotations available to train on",
+                                user.getUsername(), recommender.getName());
                     	continue;
                     }
                     
@@ -178,10 +180,6 @@ public class TrainingTask
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                         		recommender.getName(), (System.currentTimeMillis() - startTime));
                         
-                    }
-                    else {
-                        log.info("[{}][{}]: There are no annotations available to train on",
-                                user.getUsername(), recommender.getName());
                     }
                 }
                 catch (Throwable e) {
