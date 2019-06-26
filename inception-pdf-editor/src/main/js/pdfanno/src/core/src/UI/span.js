@@ -228,6 +228,10 @@ window.addEventListener('DOMContentLoaded', () => {
       spanAnnotation = null
     }
 
+    if (startPosition === endPosition) {
+      return
+    }
+
     let targets = window.findTexts(currentPage, startPosition, endPosition)
     if (targets.length > 0) {
       const mergedRect = mergeRects(targets)
@@ -274,7 +278,7 @@ window.addEventListener('DOMContentLoaded', () => {
       if (spanAnnotation) {
         spanAnnotation.deselect()
       }
-      if (startPosition !== null && endPosition !== null) {
+      if (startPosition !== null && endPosition !== null && startPosition < endPosition) {
         var data = {
           "action": "createSpan",
           "page": currentPage,
