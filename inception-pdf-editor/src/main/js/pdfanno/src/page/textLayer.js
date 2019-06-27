@@ -50,9 +50,10 @@ window.findText = function (page, point) {
  * @param page - the page number.
  * @param startPosition - the start position in pdftxt.
  * @param endPosition - the end position in pdftxt.
+ * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-window.findTexts = function (page, startPosition, endPosition) {
+window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
 
   const items = []
 
@@ -78,20 +79,35 @@ window.findTexts = function (page, startPosition, endPosition) {
     const data = extractMeta(info)
     const { position } = data
 
-    if (startPosition == endPosition && startPosition == position) {
-      data.w = 1
-      data.x = data.x - 1
-      items.push(data)
-      break
-    }
+    // if zero-width spans are allowed interprete ranges different from PDFAnno default
+    // [3,3] is zero-width, [3,4] is one character
+    if (allowZeroWidth) {
+      if (startPosition === endPosition && startPosition === position) {
+        data.w = 1
+        data.x = data.x - 1
+        items.push(data)
+        break
+      }
 
-    if (startPosition <= position && position < endPosition) {
-      inRange = true
-      items.push(data)
-    }
+      if (startPosition <= position && position < endPosition) {
+        inRange = true
+        items.push(data)
+      }
 
-    if (position == endPosition) {
-      break
+      if (position === endPosition) {
+        break
+      }
+    // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
+    // [3,3] is one character, [3,4] are two characters
+    } else {
+      if (startPosition <= position) {
+        inRange = true
+        items.push(data)
+      }
+
+      if (endPosition <= position) {
+        break
+      }
     }
   }
 
