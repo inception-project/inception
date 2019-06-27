@@ -17,10 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_REQUIRED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability.TRAINING_SUPPORTED;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine.RecommendationEngineCapability;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -139,10 +135,10 @@ public class TrainingTask
                 try {
                     RecommendationEngine recommendationEngine = factory.build(recommender, context);
                    
-                    RecommendationEngineCapability trainingCapability = recommendationEngine.getTrainingCapability();
+                    RecommendationEngineCapability capability = recommendationEngine.getTrainingCapability();
                     
                     // If engine does not support training, mark engine ready and skip to prediction
-                    if (trainingCapability == TRAINING_NOT_SUPPORTED) {
+                    if (capability == RecommendationEngineCapability.TRAINING_NOT_SUPPORTED) {
                         log.info("[{}][{}]: Engine does not support training",
                                 user.getUsername(), recommender.getName());
                         context.markAsReadyForPrediction();
@@ -157,15 +153,19 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
-                    // If no data for training is available, but the engine requires training, do not mark as ready 
-                    if (cassesForTraining.isEmpty() && trainingCapability == TRAINING_REQUIRED) {
+                    // If no data for training is available, but the engine requires training, 
+                    // do not mark as ready 
+                    if (cassesForTraining.isEmpty() && 
+                            capability == RecommendationEngineCapability.TRAINING_REQUIRED) {
                     	log.info("[{}][{}]: There are no annotations available to train on",
                                 user.getUsername(), recommender.getName());
                     	continue;
                     }
                     
-                    // If not data for training is available, and the engine supports but not requires training, mark as ready 
-                    if (cassesForTraining.isEmpty() && trainingCapability == TRAINING_SUPPORTED) {
+                    // If not data for training is available, and the engine supports but not 
+                    // requires training, mark as ready 
+                    if (cassesForTraining.isEmpty() 
+                            && capability == RecommendationEngineCapability.TRAINING_SUPPORTED) {
                     	context.markAsReadyForPrediction();
                     	continue;
                     }

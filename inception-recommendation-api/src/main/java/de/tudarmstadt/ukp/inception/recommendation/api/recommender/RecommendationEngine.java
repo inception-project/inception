@@ -31,13 +31,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public abstract class RecommendationEngine {
-	
-	public enum RecommendationEngineCapability {
-		TRAINING_NOT_SUPPORTED,
-		TRAINING_SUPPORTED,
-		TRAINING_REQUIRED
-	}
-
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
