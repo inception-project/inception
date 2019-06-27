@@ -1,6 +1,11 @@
 [[sect_pdf_editor_dev]]
 # PDF Annotation Editor
 
+The PDF-Editor module allows the view and annotation of PDF documents. 
+This is implemented using _PDFAnno_, _PDFExtract_ and _DKPro PDF Reader_. 
+The choice for _PDFAnno_ and other implementation choices
+ are explained in the following.
+
 ## Selecting a PDF Annotation Tool
 
 There are only few requirements to a PDF annotation tool for integration into
@@ -21,7 +26,7 @@ https://aclweb.org/anthology/L18-1175[Shindo et al].
 
 _Hypothes.is_ is a project that was created to provide an annotation layer
 over the web. The idea is to be able to create annotations for all content
-available in the internet and to share it with other people.
+available on the internet and to share it with other people.
 Hence _Hypothes.is_ provides the functionality to annotate PDF documents.
 
 _PDFAnno_ compared to _Hypothes.is_ comes with a smaller code base and is less
@@ -33,7 +38,7 @@ As _Hypothes.is_ was designed to share annotations with others a login mechanism
 is part of the software.
 
 _PDFAnno_ provides relations, is more lightweight and does not have a login
-functionality, which would be removed.
+functionality, which would have to be removed.
 Hence _PDFAnno_ fits the requirements better than _Hypothes.is_ and was
 chosen as the PDF annotation tool for integration into _INCEpTION_.
 
@@ -92,7 +97,7 @@ operations to ensure correct text ordering and to replace certain character
 sequences with substitutes from a substitution table.
 
 As the extractions between _PDFAnno_ and _INCEpTION_ differ a mapping of
-those representations must be implement to ensure annotations can be exchanged
+those representations must be implemented to ensure annotations can be exchanged
 between the frontend and the backend and are usable across all editor modes.
 
 ## Preparing Representations
@@ -104,21 +109,21 @@ As the _PDFExtract_ file does not only contain the text string, first
 the characters of the file need to be obtained and appended to a
 string. All draw operations and `NO_UNICODE` lines are ignored.
 As _DKPro PDF Reader_ uses a substitution table to sanitize the document text,
-the same substitution table is used to sanitized the obtained string.
+the same substitution table is used to sanitize the obtained string.
 
-The _PDFExtract_ file does not contain any whitespaces present in the docment
+The _PDFExtract_ file does not contain any whitespaces present in the document
 text, however _DKPro PDF Reader_ preserves them.
 The whitespaces are removed from the _DKPro PDF Reader_ string to have a similar
 structure to the _PDFExtract_ sanitized string content.
 
 image::matching.png[align="center", title="Mapping Process (left) with examples (right)"]
 
-Even though both representation now are in a similar shape it can still happen
+Even though both representations now are in a similar shape it can still happen
 that the content in both strings differs.
 For example ordering of text areas could be messed up which can especially happen
 for PDF documents that contain multiple text columns on one page.
 As both representations are not equal even after preprocessing, a mapping algorithm
-has to be implement to find the text of annotations from one representation in the
+has to be implemented to find the text of annotations from one representation in the
 respective other representation.
 
 ## Mapping Annotations
@@ -148,17 +153,17 @@ Such an algorithm is https://en.wikipedia.org/wiki/Hirschberg%27s_algorithm[Hirs
 It consumes only O(min(M,N)) memory.
 
 The advantage of the sequence alignment method would be a direct mapping between
-the representation of _PDFExtract_ and _DKPro PDF READER_.
-However during testing for larger documents, for example 40 pages, the duration
+the representation of _PDFExtract_ and _DKPro PDF Reader_.
+However, during testing for larger documents, for example 40 pages, the duration
 until Hirschbergs algorithm finished was too long and would be unsatisfying for a user.
 The exact string search however takes increasingly longer to compute mappings the
 larger the document is and the more annotations have to be mapped.
-As discussed the Aho-Corasick algorithm reduces the time however this still does not
+As discussed the Aho-Corasick algorithm reduces the time. However, this still does not
 scale well for larger documents.
 To overcome this issue a page wise rendering of annotations was introduced.
 When navigating through the PDF document in _PDFAnno_ annotations are rendered
 dynamically per page.
-In detail this means whenever the user moves through the document, the current
+In detail, this means whenever the user moves through the document, the current
 page changes and the user stops movement for 500 ms, the annotations for the
 previous, current and next page are rendered.
 This way large documents can be handled by the PDF editor without long wait times
@@ -167,10 +172,6 @@ for the user.
 The exact string search seemed to perform well in terms of finding matching
 occurrences for annotations in both directions.
 For the manually tested documents all annotations were found and matched.
-To evaluate the actual performance of the exact string search method an automated
-test must be implemented that for example could create annotations for each token
-in a document for a large document corpus.
-This way a representative ratio of mapped and unmapped annotations could be
-generated and unknown issues could be unveiled.
+
 
 image::inception-pdf-editor.png[align="center",title="PDF Editor Architecture"]
