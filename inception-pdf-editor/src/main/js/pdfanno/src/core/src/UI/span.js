@@ -248,7 +248,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const $viewer = $('#viewer')
 
   $viewer.on('mousedown', '.canvasWrapper', e => {
-    if (otherAnnotationTreating) {
+    if (otherAnnotationTreating || e.shiftKey) {
       // Ignore, if other annotation is detected.
       return
     }
@@ -300,6 +300,38 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
     mouseDown = false
+  })
+
+  $viewer.on('click', '.canvasWrapper', e => {
+    if (e.shiftKey) {
+      setPositions(e)
+      var data = {
+        "action": "createZeroWidthSpan",
+        "page": currentPage,
+        "position": startPosition
+      }
+      console.log(data)
+      if (startPosition != null) {
+        parent.Wicket.Ajax.ajax({
+          "m"  : "POST",
+          "ep" : data,
+          "u"  : window.apiUrl,
+          "fh" : [function () {
+            alert('Something went wrong on creating new zero-width span annotation for: ' + data)
+          }]
+        })
+      } else {
+        console.log('Position is null, cannot create zero-width span annotaton')
+      }
+      currentPage = null
+      initPosition = null
+      startPosition = null
+      endPosition = null
+      if (spanAnnotation) {
+        spanAnnotation.destroy()
+      }
+      spanAnnotation = null
+    }
   })
 
   let otherAnnotationTreating = false

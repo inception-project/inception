@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -228,7 +228,7 @@ public class PdfAnnotationEditor
             if (origin.isSynthetic() || target.isSynthetic()) {
                 throw new AnnotationException("Cannot create relations on suggestions");
             }
-            
+
             AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, origin.getId());
             AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target.getId());
 
@@ -323,6 +323,29 @@ public class PdfAnnotationEditor
         renderPdfAnnoModel(aTarget);
     }
 
+    public void createZeroWidthSpan(
+        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
+    {
+        try
+        {
+            int position = Integer.parseInt(aParams.getParameterValue("position").toString());
+            Offset docOffset = PdfAnnoRenderer.convertToDocumentOffset(
+                new Offset(position, position), documentModel, pdfExtractFile);
+            if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
+                getModelObject().getSelection()
+                    .selectSpan(aCas, docOffset.getBegin(), docOffset.getBegin());
+                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
+            } else {
+                handleError(
+                    "Unable to create zero-width span annotation: No match was found", aTarget);
+            }
+        }
+        catch (IOException | AnnotationException e)
+        {
+            handleError("Unable to create span annotation", e, aTarget);
+        }
+    }
+
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams)
     {
         try
@@ -343,6 +366,8 @@ public class PdfAnnotationEditor
             case "deleteRecommendation": deleteRecommendation(aTarget, aParams, cas);
                 break;
             case "getAnnotations": getAnnotations(aTarget, aParams);
+                break;
+            case "createZeroWidthSpan": createZeroWidthSpan(aTarget, aParams, cas);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }
