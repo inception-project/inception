@@ -37,7 +37,7 @@ public class MetricSelectDropDownPanel
 
     private static final long serialVersionUID = 4988942370126340112L;
 
-    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays
+    private static final List<RecommenderEvaluationScoreMetric> METRICS = Arrays
             .asList(RecommenderEvaluationScoreMetric.values());
     
     private static final String MID_METRIC_SELECT = "select";
@@ -52,8 +52,8 @@ public class MetricSelectDropDownPanel
 
         final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new 
                 DropDownChoice<RecommenderEvaluationScoreMetric>(
-                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)),
-                new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
+                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetric>(METRICS.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetric>(METRICS));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
 
