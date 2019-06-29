@@ -71,8 +71,9 @@ public class DataMajorityNerRecommender
 // tag::extractAnnotations[]
     
     @Override
-    public RecommendationEngineCapability getTrainingCapability() {
-    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
     
     private List<Annotation> extractAnnotations(List<CAS> aCasses)

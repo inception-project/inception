@@ -92,7 +92,7 @@ public class OpenNlpDoccatRecommender
         DoccatModel model = train(nameSamples, params);
         
         if (model == null) {
-        	throw new RecommendationException("Could not obtain Doccat model");
+            throw new RecommendationException("Could not obtain Doccat model");
         }
         
         aContext.put(KEY_MODEL, model);
@@ -101,7 +101,7 @@ public class OpenNlpDoccatRecommender
     @Override
     public RecommendationEngineCapability getTrainingCapability() 
     {
-    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override

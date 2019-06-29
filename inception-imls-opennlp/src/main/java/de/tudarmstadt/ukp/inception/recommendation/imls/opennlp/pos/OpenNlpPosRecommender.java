@@ -92,7 +92,7 @@ public class OpenNlpPosRecommender
         POSModel model = train(posSamples, params);
 
         if (model == null) {
-        	throw new RecommendationException("Could not obtain POS model");
+            throw new RecommendationException("Could not obtain POS model");
         } 
         
         aContext.put(KEY_MODEL, model);
@@ -101,7 +101,7 @@ public class OpenNlpPosRecommender
     @Override
     public RecommendationEngineCapability getTrainingCapability() 
     {
-    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override

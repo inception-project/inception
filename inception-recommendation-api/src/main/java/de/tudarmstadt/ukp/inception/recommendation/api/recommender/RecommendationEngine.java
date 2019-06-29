@@ -83,8 +83,8 @@ public abstract class RecommendationEngine {
         throws RecommendationException;
 // end::methodDefinition[]
 
-    /**
-     * Which training capabilities this engine has. 
+    /** 
+     * Returns which training capabilities this engine has.
      * If training is not supported, the call to {@link #train} should be skipped and 
      * {@link #predict} should be called immediately.   
      * Note that the engine cannot expect a model to be present in the {@link RecommenderContext} if

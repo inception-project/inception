@@ -74,17 +74,15 @@ public class StringMatchingRecommender
 
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
-    	Trie<DictEntry> dict = createTrie();
-    	
+        Trie<DictEntry> dict = createTrie();
+
         if (aData != null) {
             for (GazeteerEntry entry : aData) {
                 learn(dict, entry.text, entry.label);
             }
         }
         
-        if (aContext != null) {
-        	aContext.put(KEY_MODEL, dict);
-        }
+        aContext.put(KEY_MODEL, dict);
     }
 
     private <T> Trie<T> createTrie()
@@ -95,7 +93,7 @@ public class StringMatchingRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-    	Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElse(createTrie());
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElse(createTrie());
         
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);

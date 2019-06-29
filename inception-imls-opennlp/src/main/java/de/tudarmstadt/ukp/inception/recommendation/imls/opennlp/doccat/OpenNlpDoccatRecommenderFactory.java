@@ -52,7 +52,8 @@ public class OpenNlpDoccatRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext) {
+    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext) 
+    {
         OpenNlpDoccatRecommenderTraits traits = new OpenNlpDoccatRecommenderTraits();
         return new OpenNlpDoccatRecommender(aRecommender, traits);
     }

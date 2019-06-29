@@ -135,7 +135,8 @@ public class TrainingTask
                 try {
                     RecommendationEngine recommendationEngine = factory.build(recommender, context);
                    
-                    RecommendationEngineCapability capability = recommendationEngine.getTrainingCapability();
+                    RecommendationEngineCapability capability = recommendationEngine
+                                                                    .getTrainingCapability();
                     
                     // If engine does not support training, mark engine ready and skip to prediction
                     if (capability == RecommendationEngineCapability.TRAINING_NOT_SUPPORTED) {
@@ -153,24 +154,22 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
-                    // If no data for training is available, but the engine requires training, 
-                    // do not mark as ready 
-                    if (cassesForTraining.isEmpty() && 
-                            capability == RecommendationEngineCapability.TRAINING_REQUIRED) {
-                    	log.info("[{}][{}]: There are no annotations available to train on",
-                                user.getUsername(), recommender.getName());
-                    	continue;
-                    }
                     
-                    // If not data for training is available, and the engine supports but not 
-                    // requires training, mark as ready 
-                    if (cassesForTraining.isEmpty() 
-                            && capability == RecommendationEngineCapability.TRAINING_SUPPORTED) {
-                    	context.markAsReadyForPrediction();
-                    	continue;
-                    }
-                    
-                    if (!cassesForTraining.isEmpty()) {
+                    if (cassesForTraining.isEmpty()) {
+                        // If no data for training is available, but the engine requires training, 
+                        // do not mark as ready
+                        if (capability == RecommendationEngineCapability.TRAINING_REQUIRED) {
+                            log.info("[{}][{}]: There are no annotations available to train on",
+                                    user.getUsername(), recommender.getName());
+                            continue;
+                        // If not data for training is available, and the engine supports but not 
+                        // requires training, mark as ready
+                        } else if (capability == RecommendationEngineCapability
+                                                                        .TRAINING_SUPPORTED) {
+                            context.markAsReadyForPrediction();
+                            continue;
+                        }
+                    } else {
                         log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
                                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                                 casses.get().size());
@@ -178,8 +177,7 @@ public class TrainingTask
                         recommendationEngine.train(context, cassesForTraining);
                         context.markAsReadyForPrediction();
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                        		recommender.getName(), (System.currentTimeMillis() - startTime));
-                        
+                                recommender.getName(), (System.currentTimeMillis() - startTime));
                     }
                 }
                 catch (Throwable e) {

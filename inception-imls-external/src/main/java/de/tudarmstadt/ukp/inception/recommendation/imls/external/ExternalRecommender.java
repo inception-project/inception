@@ -275,9 +275,9 @@ public class ExternalRecommender
     public RecommendationEngineCapability getTrainingCapability() 
     {
         if (traits.isTrainable()) {
-        	return RecommendationEngineCapability.TRAINING_REQUIRED;
+            return RecommendationEngineCapability.TRAINING_REQUIRED;
         } else {
-        	return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+            return RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
         }
     }
 }

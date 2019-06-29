@@ -128,7 +128,7 @@ public class DL4JSequenceRecommender
     @Override
     public RecommendationEngineCapability getTrainingCapability() 
     {
-    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
     
     private void ensureEmbeddingsAreAvailable() throws IOException

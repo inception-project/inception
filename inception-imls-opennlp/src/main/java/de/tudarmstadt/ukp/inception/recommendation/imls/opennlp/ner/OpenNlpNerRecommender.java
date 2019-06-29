@@ -94,7 +94,7 @@ public class OpenNlpNerRecommender
         TokenNameFinderModel model = train(nameSamples, params);
         
         if (model == null) {
-        	throw new RecommendationException("Could not obtain TokenNameFinder model");
+            throw new RecommendationException("Could not obtain TokenNameFinder model");
         } 
         
         aContext.put(KEY_MODEL, model);
@@ -103,7 +103,7 @@ public class OpenNlpNerRecommender
     @Override
     public RecommendationEngineCapability getTrainingCapability() 
     {
-    	return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return RecommendationEngineCapability.TRAINING_REQUIRED;
     }
 
     @Override
