@@ -175,6 +175,9 @@ public class PdfExtractFile implements Serializable
                 stringIndex++;
             }
         }
+        // Dummy entry for position behind last character, required for zero-width spans
+        sanitizedToString.put(sanitizedIndex, stringIndex);
+        stringToSanitized.put(stringIndex, sanitizedIndex);
 
         sanitizedContent = sb.toString();
     }
@@ -227,7 +230,7 @@ public class PdfExtractFile implements Serializable
         }
 
         // add last page
-        pageOffsetMap.put(lastPage, new Offset(pageBeginIndex, extractLineIndex - 1));
+        pageOffsetMap.put(lastPage, new Offset(pageBeginIndex, extractLineIndex - 2));
         maxPageNumber = lastPage;
         stringContent = sb.toString();
     }

@@ -36,12 +36,14 @@ public class RenderSpan
     private int end;
     private String windowBeforeText;
     private String windowAfterText;
+    private boolean isZeroWidth;
 
     public RenderSpan(Offset aOffset)
     {
         // search for begin of the first range and end of the last range
         begin = aOffset.getBegin();
         end = aOffset.getEnd();
+        isZeroWidth = begin == end;
     }
 
     public RenderSpan(VSpan aVSpan, Span aSpan, int aPageBeginOffset)
@@ -50,9 +52,12 @@ public class RenderSpan
         span = aSpan;
         // search for begin of the first range and end of the last range
         begin = vSpan.getRanges().stream().mapToInt(VRange::getBegin).min().getAsInt();
-        begin += aPageBeginOffset;
         end = vSpan.getRanges().stream().mapToInt(VRange::getEnd).max().getAsInt();
+
+        isZeroWidth = begin == end;
+
         end += aPageBeginOffset;
+        begin += aPageBeginOffset;
     }
 
     public void setText(String aText)
@@ -120,4 +125,8 @@ public class RenderSpan
         return windowAfterText;
     }
 
+    public boolean isZeroWidth()
+    {
+        return isZeroWidth;
+    }
 }

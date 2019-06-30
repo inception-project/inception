@@ -66,6 +66,7 @@ public class DocumentModel implements Serializable
             }
             documentTextIndex++;
         }
+
         whitespacelessText = sb.toString();
     }
 

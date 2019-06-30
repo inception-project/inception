@@ -330,10 +330,10 @@ public class PdfAnnotationEditor
         {
             int position = Integer.parseInt(aParams.getParameterValue("position").toString());
             Offset docOffset = PdfAnnoRenderer.convertToDocumentOffset(
-                new Offset(position, position), documentModel, pdfExtractFile);
+                new Offset(position - 1, position - 1), documentModel, pdfExtractFile);
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
                 getModelObject().getSelection()
-                    .selectSpan(aCas, docOffset.getBegin(), docOffset.getBegin());
+                    .selectSpan(aCas, docOffset.getEnd(), docOffset.getEnd());
                 getActionHandler().actionCreateOrUpdate(aTarget, aCas);
             } else {
                 handleError(
