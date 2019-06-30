@@ -54,6 +54,10 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     // draw the chart with the help of the arrayOfLearningCurves
     var e = c3.generate({
         bindto: "#canvas",
+        size: {
+            height: 700,
+            width: 900
+        },
         data: {
         	empty:{label:{text:"No Data Available"}},
             x: "x",
