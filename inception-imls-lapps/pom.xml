@@ -182,6 +182,11 @@
       <artifactId>de.tudarmstadt.ukp.dkpro.core.io.xmi-asl</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-testing</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>com.squareup.okhttp3</groupId>

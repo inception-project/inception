@@ -34,21 +34,23 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.io.conll.ConllUReader;
 import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridService;
+import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
@@ -56,7 +58,6 @@ import junitparams.Parameters;
 public class LappsGridRecommenderConformityTest
 {
     @Test
-    @Ignore
     @Parameters(method = "getNerServices")
     public void testNerConformity(LappsGridService aService) throws Exception
     {
@@ -64,12 +65,11 @@ public class LappsGridRecommenderConformityTest
 
         predict(aService.getUrl(), cas);
 
+        System.out.println(aService.getName());
+
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
                 .as("Prediction should contain Tokens")
-                .isNotEmpty();
-        softly.assertThat(JCasUtil.select(cas.getJCas(), Sentence.class))
-                .as("Prediction should contain Sentences")
                 .isNotEmpty();
         softly.assertThat(JCasUtil.select(cas.getJCas(), NamedEntity.class))
                 .as("Prediction should contain NER")
@@ -79,7 +79,6 @@ public class LappsGridRecommenderConformityTest
     }
 
     @Test
-    @Ignore
     @Parameters(method = "getPosServices")
     public void testPosConformity(LappsGridService aService) throws Exception
     {
@@ -90,9 +89,6 @@ public class LappsGridRecommenderConformityTest
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
                 .as("Prediction should contain Tokens")
-                .isNotEmpty();
-        softly.assertThat(JCasUtil.select(cas.getJCas(), Sentence.class))
-                .as("Prediction should contain Sentences")
                 .isNotEmpty();
         softly.assertThat(JCasUtil.select(cas.getJCas(), POS.class))
                 .as("Prediction should contain POS tags")
@@ -105,14 +101,18 @@ public class LappsGridRecommenderConformityTest
     {
         LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
         traits.setUrl(aUrl);
-        LappsGridRecommender recommender = new LappsGridRecommender(null, traits);
+        LappsGridRecommender recommender = new LappsGridRecommender(buildRecommender(), traits);
         recommender.predict(null, aCas);
     }
 
     private CAS loadData() throws IOException, UIMAException {
-        File file = new File(getClass().getResource("/testdata/cas.xmi").getFile());
+        File file = new File(getClass().getResource("/testdata/tnf.xmi").getFile());
 
-        return loadData(file);
+        CAS cas = loadData(file);
+
+        RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
+
+        return cas;
     }
 
     private static CAS loadData(File aFile) throws UIMAException, IOException
@@ -151,5 +151,20 @@ public class LappsGridRecommenderConformityTest
                     new TypeReference<Map<String, List<LappsGridService>>>() {};
             return getObjectMapper().readValue(is, typeRef);
         }
+    }
+
+    private static Recommender buildRecommender()
+    {
+        AnnotationLayer layer = new AnnotationLayer();
+        layer.setName(POS.class.getName());
+
+        AnnotationFeature feature = new AnnotationFeature();
+        feature.setName("value");
+
+        Recommender recommender = new Recommender();
+        recommender.setLayer(layer);
+        recommender.setFeature(feature);
+
+        return recommender;
     }
 }
