@@ -55,7 +55,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var e = c3.generate({
         bindto: "#canvas",
         size: {
-            height: 700,
+            height: 650,
             width: 900
         },
         data: {
