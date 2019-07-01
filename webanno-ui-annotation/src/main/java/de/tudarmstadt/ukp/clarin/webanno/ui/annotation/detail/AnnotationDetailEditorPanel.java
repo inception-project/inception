@@ -889,9 +889,6 @@ public abstract class AnnotationDetailEditorPanel
         state.setFocusUnitIndex(sentenceNumber);
         state.getDocument().setSentenceAccessed(sentenceNumber);
 
-        // persist changes
-        page.writeEditorCas(aCas);
-
         // Remember the current feature values independently for spans and relations
         LOG.trace("actionAnnotate() remembering feature editor values");
         state.rememberFeatures();
