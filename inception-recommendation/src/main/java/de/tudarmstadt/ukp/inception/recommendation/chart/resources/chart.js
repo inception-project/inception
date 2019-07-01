@@ -23,8 +23,12 @@
  */
 function updateLearningCurveDiagram(arrayOfLearningCurves) {
 	
+	debugger;
+	
     var xAxixType = 'indexed';
     var plotType = 'step';
+    var height = 350;
+    var width = 350;
     var xTick = {
     	format : function(a) {
     		return Math.round(1e2 * a) / 1e2;
@@ -33,9 +37,12 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     
 	// make the type of x-axis "category" (shows x in category intervals of size 1). 
     // It is for better visualization when the x-axis represents test data size (annotationpage)
-    if ((arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) > 1) 
-    	xAxixType = "category";
-    
+    if ((arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) < 1) 
+	{
+		xAxixType = "category";
+		height = 650;
+		width = 900;
+	}
 
     // if we just have one value per data-row, we cannot visualize a step
     var plotTypes = {};
@@ -55,8 +62,8 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var e = c3.generate({
         bindto: "#canvas",
         size: {
-            height: 650,
-            width: 900
+            height: height,
+            width: width
         },
         data: {
         	empty:{label:{text:"No Data Available"}},

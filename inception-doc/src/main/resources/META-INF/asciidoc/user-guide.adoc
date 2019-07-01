@@ -108,6 +108,9 @@ include::{include-dir}monitoring.adoc[leveloffset=+1]
 include::{include-dir}agreement.adoc[leveloffset=+1]
 
 <<<
+include::{include-dir}evaluation.adoc[leveloffset=+1]
+
+<<<
 
 include::{include-dir}knowledge_base.adoc[]
 
