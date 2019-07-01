@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -57,7 +59,14 @@ public class DataMajorityNerRecommender
         super(aRecommender);
     }
 // end::classDefinition[]
+
 // tag::train[]
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return TRAINING_REQUIRED;
+    }
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
             throws RecommendationException
@@ -67,15 +76,15 @@ public class DataMajorityNerRecommender
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
     }
-// end::train[]
-// tag::extractAnnotations[]
     
     @Override
-    public RecommendationEngineCapability getTrainingCapability() 
+    public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        return RecommendationEngineCapability.TRAINING_REQUIRED;
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
+// end::train[]
     
+// tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
         List<Annotation> annotations = new ArrayList<>();
@@ -95,6 +104,7 @@ public class DataMajorityNerRecommender
         return annotations;
     }
 // end::extractAnnotations[]
+
 // tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
             throws RecommendationException
@@ -118,6 +128,7 @@ public class DataMajorityNerRecommender
         return new DataMajorityModel(majorityLabel, confidence);
     }
 // end::trainModel[]
+
 // tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
@@ -145,6 +156,7 @@ public class DataMajorityNerRecommender
         }
     }
 // end::predict1[]
+
 // tag::predict2[]
     private List<Annotation> predict(Collection<AnnotationFS> candidates,
                                      DataMajorityModel aModel)
@@ -167,6 +179,7 @@ public class DataMajorityNerRecommender
         return result;
     }
 // end::predict2[]
+
 // tag::evaluate[]
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
@@ -212,18 +225,22 @@ public class DataMajorityNerRecommender
         return result;
     }
 // end::evaluate[]
+
 // tag::utility[]
-    private static class DataMajorityModel {
+    private static class DataMajorityModel
+    {
         private final String majorityLabel;
         private final double confidence;
 
-        private DataMajorityModel(String aMajorityLabel, double aConfidence) {
+        private DataMajorityModel(String aMajorityLabel, double aConfidence)
+        {
             majorityLabel = aMajorityLabel;
             confidence = aConfidence;
         }
     }
 
-    private static class Annotation {
+    private static class Annotation
+    {
         private final String label;
         private final int begin;
         private final int end;

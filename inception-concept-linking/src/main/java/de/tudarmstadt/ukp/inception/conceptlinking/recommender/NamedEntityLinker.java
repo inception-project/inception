@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -80,6 +81,12 @@ public class NamedEntityLinker
         clService = aClService;
         fsRegistry = aFsRegistry;
         featureTraits = aFeatureTraits;
+    }
+
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 
     @Override

@@ -721,7 +721,7 @@ public class RecommendationServiceImpl
 
                     RecommenderContext ctx = getContext(aUser, recommender);
 
-                    if (!ctx.isReadyForPrediction()) {
+                    if (!ctx.isClosed()) {
                         log.info("Context for recommender [{}]({}) for user [{}] on document "
                                 + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
                                 recommender.getName(), recommender.getId(), username,
@@ -787,6 +787,14 @@ public class RecommendationServiceImpl
 
                     try {
                         RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
+
+                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
+                            log.info("Recommender context [{}]({}) for user [{}] in project "
+                                    + "[{}]({}) is not ready for prediction - skipping recommender",
+                                    recommender.getName(), recommender.getId(), username,
+                                    document.getProject().getName(), document.getProject().getId());
+                            continue nextRecommender;
+                        }
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);

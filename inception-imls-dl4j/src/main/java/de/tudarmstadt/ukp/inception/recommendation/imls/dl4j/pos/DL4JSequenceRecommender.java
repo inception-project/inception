@@ -31,6 +31,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -100,6 +101,12 @@ public class DL4JSequenceRecommender
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
     {
         // Prepare a map where we store the mapping from labels to numeric label IDs - i.e.
@@ -118,7 +125,6 @@ public class DL4JSequenceRecommender
             aContext.put(KEY_MODEL, model);
             aContext.put(KEY_TAGSET, compileTagset(tagsetCollector));
             aContext.put(KEY_UNKNOWN, randUnk);
-            aContext.markAsReadyForPrediction();
         }
         catch (IOException e) {
             throw new IllegalStateException("Unable to train model", e);

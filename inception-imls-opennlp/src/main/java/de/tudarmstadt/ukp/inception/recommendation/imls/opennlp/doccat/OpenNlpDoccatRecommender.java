@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.uima.cas.CAS;
@@ -76,6 +77,12 @@ public class OpenNlpDoccatRecommender
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
@@ -90,10 +97,6 @@ public class OpenNlpDoccatRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         DoccatModel model = train(nameSamples, params);
-        
-        if (model == null) {
-            throw new RecommendationException("Could not obtain Doccat model");
-        }
         
         aContext.put(KEY_MODEL, model);
     }

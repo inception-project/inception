@@ -28,6 +28,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -72,6 +73,12 @@ public class StringMatchingRecommender
         traits = aTraits;
     }
 
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
     public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
         Trie<DictEntry> dict = createTrie();

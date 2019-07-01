@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -78,6 +79,12 @@ public class OpenNlpNerRecommender
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
@@ -92,10 +99,6 @@ public class OpenNlpNerRecommender
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         TokenNameFinderModel model = train(nameSamples, params);
-        
-        if (model == null) {
-            throw new RecommendationException("Could not obtain TokenNameFinder model");
-        } 
         
         aContext.put(KEY_MODEL, model);
     }

@@ -19,7 +19,24 @@ package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 public enum RecommendationEngineCapability 
 {
+    /**
+     * {@link RecommendationEngine} does not support training. Calling 
+     * {@link RecommendationEngine#train} may be a no-op at
+     * best or result in an exception at worst.
+     */
     TRAINING_NOT_SUPPORTED,
+
+    /**
+     * {@link RecommendationEngine} supports training but does not require it. Thus,
+     * {@link RecommendationEngine#predict} can be called even if there was not training data.
+     * {@link RecommendationEngine#isReadyForPrediction} may return {@code true}, even if
+     * {@link RecommendationEngine#train} has not been called before.
+     */
     TRAINING_SUPPORTED,
+    
+    /**
+     * {@link RecommendationEngine} requires training. {@link RecommendationEngine#train} must
+     * be called to initialize a context before {@link RecommendationEngine#predict} can be used.
+     */
     TRAINING_REQUIRED
 }
