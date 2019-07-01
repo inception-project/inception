@@ -34,6 +34,8 @@ import java.util.stream.IntStream;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -58,6 +60,8 @@ public class LearningCurveChartPanel
     private static final long serialVersionUID = 4306746527837380863L;
 
     private static final String MID_CHART_CONTAINER = "chart-container";
+    private static final String MID_DROPDOWN_PANEL = "dropdownPanel";
+
     private static final int MAX_POINTS_TO_PLOT = 50;
     private static final Logger LOG = LoggerFactory.getLogger(LearningCurveChartPanel.class);
     
@@ -66,6 +70,7 @@ public class LearningCurveChartPanel
     
     private final ChartPanel chartPanel;
     private final IModel<AnnotatorState> model;
+    public RecommenderEvaluationScoreMetric selectedMetric;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -78,6 +83,32 @@ public class LearningCurveChartPanel
         
         chartPanel.setOutputMarkupId(true);
         add(chartPanel);
+        
+        final Panel dropDownPanel = new MetricSelectDropDownPanel(MID_DROPDOWN_PANEL);
+        dropDownPanel.setOutputMarkupId(true);
+        add(dropDownPanel);
+        
+        selectedMetric = RecommenderEvaluationScoreMetric.ACCURACY;
+    }
+    
+
+    @Override
+    public void onEvent(IEvent<?> event)
+    {
+        super.onEvent(event);
+        if (event.getPayload() instanceof DropDownEvent) {
+            DropDownEvent dEvent = (DropDownEvent) event.getPayload();
+            
+            RecommenderEvaluationScoreMetric aSelectedMetric = dEvent.getSelectedValue();
+            AjaxRequestTarget target = dEvent.getTarget();
+            
+            target.add(this);
+
+            selectedMetric = aSelectedMetric;
+            LOG.debug("Option selected: " + aSelectedMetric);
+            
+            event.stop();
+        }
     }
 
     @OnEvent
@@ -95,6 +126,7 @@ public class LearningCurveChartPanel
      */
     private LearningCurve renderChart()
     {
+        LOG.debug("SELECTED METRIC IS " + selectedMetric);
         MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores();
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
@@ -188,12 +220,31 @@ public class LearningCurveChartPanel
                 }
 
                 // sometimes score values NaN. Can result into error while rendering the graph on UI
-                if (!Double.isFinite(detail.f1)) {
+                double score;
+                
+                switch (selectedMetric ) {
+                case ACCURACY:
+                    score = detail.accuracy;
+                    break;
+                case PRECISION:
+                    score = detail.precision;
+                    break;
+                case RECALL:
+                    score = detail.recall;
+                    break;
+                case F1:
+                    score = detail.f1;
+                    break;
+                default:
+                    score = detail.accuracy;
+                }
+                
+                if (!Double.isFinite(score)) {
                     continue;
                 }
                 
                 //recommenderIfActive only has one member
-                recommenderScoreMap.put(recommenderIfActive.get().getName(), detail.f1);
+                recommenderScoreMap.put(recommenderIfActive.get().getName(), score);
             }
             catch (IOException e) {
                 LOG.error("Invalid logged Event detail. Skipping record with logged event id: "
