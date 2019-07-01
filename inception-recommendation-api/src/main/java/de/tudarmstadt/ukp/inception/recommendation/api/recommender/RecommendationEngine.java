@@ -86,13 +86,13 @@ public abstract class RecommendationEngine {
     /**
      * This method should be called before attempting to call {@link #predict} to ensure that the
      * given context contains sufficient information to perform prediction. If this method returns
-     * {@code false}, calling {@link #predict} might result in an exception being thrown or in 
+     * {@code false}, calling {@link #predict} might result in an exception being thrown or in
      * predictions being invalid/unusable.
      * 
-     * @returns if the recommender can use the given context to make predictions. This is usually
-     *          the case if the recommender has previously initialized the context with a trained
-     *          model. However, some recommenders might be able to provide recommendations without a
-     *          trained model, e.g. using some kind of fall back mechanism.
+     * @return if the recommender can use the given context to make predictions. This is usually the
+     *         case if the recommender has previously initialized the context with a trained model.
+     *         However, some recommenders might be able to provide recommendations without a trained
+     *         model, e.g. using some kind of fall back mechanism.
      */
     public abstract boolean isReadyForPrediction(RecommenderContext aContext);
     
