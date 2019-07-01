@@ -376,10 +376,14 @@ public class RecommenderEditorPanel
                 || aRecommender.getTool() == null) {
             return null;
         }
+        
         RecommendationEngineFactory factory = recommenderRegistry
                 .getFactory(aRecommender.getTool());
+        
+        String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
+        
         return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
-                aRecommender.getFeature().getUiName(), factory.getName());
+                aRecommender.getFeature().getUiName(), factoryName);
     }
     
     @Override
