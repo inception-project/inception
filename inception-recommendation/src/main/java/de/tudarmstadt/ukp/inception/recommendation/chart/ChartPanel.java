@@ -51,7 +51,7 @@ public class ChartPanel
     private static final Logger LOG = LoggerFactory.getLogger(ChartPanel.class);
 
     private static final String MID_CHART_CONTAINER = "chart";
-    private static final String OUTPUT_MARKUP_ID_CHART = "canvas"; 
+    private static final String OUTPUT_MARKUP_ID_CHART = "canvas";
 
     private LoadableDetachableModel<LearningCurve> model;
     private final WebMarkupContainer chart;
@@ -61,20 +61,22 @@ public class ChartPanel
     {
         super(aId, aModel);
         model = aModel;
-        
+
         chart = new WebMarkupContainer(MID_CHART_CONTAINER);
         chart.setMarkupId(OUTPUT_MARKUP_ID_CHART);
         add(chart);
 
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
+
+
     }
-    
+
     @Override
     public void renderHead(IHeaderResponse aResponse)
     {
         super.renderHead(aResponse);
-        
+
         // import Js
         aResponse.render(JavaScriptHeaderItem
                 .forReference(new WebjarsJavaScriptResourceReference("c3/current/c3.js")));
@@ -87,9 +89,9 @@ public class ChartPanel
 
         aResponse.render(JavaScriptReferenceHeaderItem.forReference(
                 getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
-        
-        aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
 
+        aResponse.render(JavaScriptHeaderItem.forReference(ChartJsReference.get()));
+        
         String chartTriggerJavascript = String.join("\n",
                 "$(document).ready(function(){", 
                 "   $.ajax({",
@@ -105,7 +107,7 @@ public class ChartPanel
 
         aResponse.render(JavaScriptContentHeaderItem.forScript(chartTriggerJavascript, null));
     }
- 
+
     private final class ChartAjaxBejavior
         extends AbstractAjaxBehavior
     {
@@ -115,7 +117,7 @@ public class ChartPanel
         public void onRequest()
         {
             RequestCycle requestCycle = RequestCycle.get();
-            
+
             LearningCurve learningCurve = model.getObject();
 
             try {
