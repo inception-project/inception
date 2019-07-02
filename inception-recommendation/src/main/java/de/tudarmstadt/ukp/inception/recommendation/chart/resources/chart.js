@@ -22,9 +22,6 @@
  * the arrayOfLeaningCurves also includes x-axis.
  */
 function updateLearningCurveDiagram(arrayOfLearningCurves) {
-	
-	debugger;
-	
     var xAxixType = 'indexed';
     var plotType = 'step';
     var height = 350;

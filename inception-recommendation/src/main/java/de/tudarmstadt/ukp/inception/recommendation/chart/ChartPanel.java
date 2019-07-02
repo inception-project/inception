@@ -68,8 +68,6 @@ public class ChartPanel
 
         chartAjaxBejavior = new ChartAjaxBejavior();
         add(chartAjaxBejavior);
-
-
     }
 
     @Override

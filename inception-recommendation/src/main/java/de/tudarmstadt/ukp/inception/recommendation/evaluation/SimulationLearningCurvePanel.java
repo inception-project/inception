@@ -54,6 +54,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
+import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
 public class SimulationLearningCurvePanel
     extends Panel
@@ -70,8 +71,8 @@ public class SimulationLearningCurvePanel
 
     private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
     
-    private static final List<RecommenderEvaluationScoreMetric> GENRES = Arrays
-            .asList(RecommenderEvaluationScoreMetric.values());
+    private static final List<RecommenderEvaluationScoreMetricEnum> DROPDOWN_VALUES = Arrays
+            .asList(RecommenderEvaluationScoreMetricEnum.values());
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
@@ -82,7 +83,7 @@ public class SimulationLearningCurvePanel
     private final IModel<Recommender> selectedRecommenderPanel;
 
     private ChartPanel chartPanel ;
-    private RecommenderEvaluationScoreMetric selectedValue;
+    private RecommenderEvaluationScoreMetricEnum selectedValue;
     List<EvaluationResult> evaluationResults;
     private boolean evaluate;
     
@@ -97,23 +98,23 @@ public class SimulationLearningCurvePanel
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
-        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = 
-                new DropDownChoice<RecommenderEvaluationScoreMetric>(
-                "select", new Model<RecommenderEvaluationScoreMetric>(GENRES.get(0)),
-                new ListModel<RecommenderEvaluationScoreMetric>(GENRES));
+        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = 
+                new DropDownChoice<RecommenderEvaluationScoreMetricEnum>(
+                "select", new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
-        selectedValue = RecommenderEvaluationScoreMetric.ACCURACY;
+        selectedValue = RecommenderEvaluationScoreMetricEnum.ACCURACY;
 
         dropdown.add(new AjaxFormComponentUpdatingBehavior("change")
         {
             private static final long serialVersionUID = -6744838136235652577L;
 
-            protected void onUpdate(AjaxRequestTarget target)
+            protected void onUpdate(AjaxRequestTarget _target)
             {
                 selectedValue = dropdown.getModelObject();
                 form.addOrReplace(chartPanel);
-                target.add(chartPanel);
+                _target.add(chartPanel);
                 evaluate = false;
             }
         });
@@ -251,14 +252,14 @@ public class SimulationLearningCurvePanel
         return getEvaluationScore(evaluationResults);
     }
 
-    private String[] getEvaluationScore(List<EvaluationResult> evaluationResults)
+    private String[] getEvaluationScore(List<EvaluationResult> aEvaluationResults)
     {
         StringBuilder sbScore = new StringBuilder();
         StringBuilder sbTrainingSize = new StringBuilder();
 
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
-        for (EvaluationResult evaluationResult : evaluationResults) {
+        for (EvaluationResult evaluationResult : aEvaluationResults) {
 
             double trainingSize;
             double score;
@@ -292,10 +293,5 @@ public class SimulationLearningCurvePanel
         }
 
         return new String[] { sbScore.toString(), sbTrainingSize.toString() };
-    }
-
-    enum RecommenderEvaluationScoreMetric
-    {
-        ACCURACY, PRECISION, F1, RECALL
     }
 }

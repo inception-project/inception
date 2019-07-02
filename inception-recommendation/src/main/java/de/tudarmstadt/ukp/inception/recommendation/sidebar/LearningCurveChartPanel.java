@@ -53,6 +53,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
+import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
 public class LearningCurveChartPanel
     extends Panel
@@ -70,7 +71,7 @@ public class LearningCurveChartPanel
     
     private final ChartPanel chartPanel;
     private final IModel<AnnotatorState> model;
-    public RecommenderEvaluationScoreMetric selectedMetric;
+    public RecommenderEvaluationScoreMetricEnum selectedMetric;
 
     public LearningCurveChartPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -88,7 +89,7 @@ public class LearningCurveChartPanel
         dropDownPanel.setOutputMarkupId(true);
         add(dropDownPanel);
         
-        selectedMetric = RecommenderEvaluationScoreMetric.ACCURACY;
+        selectedMetric = RecommenderEvaluationScoreMetricEnum.ACCURACY;
     }
     
 
@@ -99,7 +100,7 @@ public class LearningCurveChartPanel
         if (event.getPayload() instanceof DropDownEvent) {
             DropDownEvent dEvent = (DropDownEvent) event.getPayload();
             
-            RecommenderEvaluationScoreMetric aSelectedMetric = dEvent.getSelectedValue();
+            RecommenderEvaluationScoreMetricEnum aSelectedMetric = dEvent.getSelectedValue();
             AjaxRequestTarget target = dEvent.getTarget();
             
             target.add(this);
