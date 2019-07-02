@@ -492,11 +492,20 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public RecommenderContext getContext(User aUser, Recommender aRecommender)
+    public Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender)
     {
         RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
+        }
+    }
+    
+    @Override
+    public void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            state.putContext(aRecommender, aContext);
         }
     }
     
@@ -637,14 +646,22 @@ public class RecommendationServiceImpl
         }
         
         /**
-         * Returns the context for the given recommender or creates a new one if there is none so
-         * far.
+         * Returns the context for the given recommender if there is one.
          */
-        public RecommenderContext getContext(Recommender aRecommender)
+        public Optional<RecommenderContext> getContext(Recommender aRecommender)
         {
             Validate.notNull(aRecommender, "Recommender must be specified");
             
-            return contexts.computeIfAbsent(aRecommender, (v) -> new RecommenderContext());
+            return Optional.ofNullable(contexts.get(aRecommender));
+        }
+        
+        public void putContext(Recommender aRecommender, RecommenderContext aContext)
+        {
+            Validate.notNull(aRecommender, "Recommender must be specified");
+            Validate.notNull(aContext, "Context must be specified");
+            Validate.isTrue(aContext.isClosed(), "Context must be closed");
+            
+            contexts.put(aRecommender, aContext);
         }
                 
         public void removePredictions(Recommender aRecommender)
@@ -719,16 +736,18 @@ public class RecommendationServiceImpl
                         continue nextRecommender;
                     }
 
-                    RecommenderContext ctx = getContext(aUser, recommender);
+                    Optional<RecommenderContext> context = getContext(aUser, recommender);
 
-                    if (!ctx.isClosed()) {
-                        log.info("Context for recommender [{}]({}) for user [{}] on document "
-                                + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
+                    if (!context.isPresent()) {
+                        log.info("No context available for recommender [{}]({}) for user [{}] "
+                                + "on document [{}]({}) in project [{}]({}) - skipping recommender",
                                 recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId());
                         continue nextRecommender;
                     }
+                    
+                    RecommenderContext ctx = context.get();
 
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
                     

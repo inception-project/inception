@@ -23,8 +23,18 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
-public class RecommenderContext implements AutoCloseable
+public class RecommenderContext
 {
+    /**
+     * Empty context which starts out being closed.
+     */
+    public static final RecommenderContext EMPTY_CONTEXT;
+    
+    static {
+        EMPTY_CONTEXT = new  RecommenderContext();
+        EMPTY_CONTEXT.close();
+    }
+    
     private final Map<String, Object> store;
     private boolean closed = false;
 
@@ -52,7 +62,6 @@ public class RecommenderContext implements AutoCloseable
     /**
      * Close the context. Further modifications to the context are not permitted.
      */
-    @Override
     synchronized public void close()
     {
         closed = true;
@@ -64,6 +73,21 @@ public class RecommenderContext implements AutoCloseable
     synchronized public boolean isClosed()
     {
         return closed;
+    }
+    
+    /**
+     * Creates a non-closed copy of the current context. The data from the internal store is copied
+     * into the store of the new context.
+     */
+    synchronized public RecommenderContext copy()
+    {
+        if (!closed) {
+            throw new IllegalStateException("Context must be closed before it can be copied.");
+        }
+        
+        RecommenderContext ctx = new RecommenderContext();
+        ctx.store.putAll(store);   
+        return ctx;
     }
     
     public static class Key<T>

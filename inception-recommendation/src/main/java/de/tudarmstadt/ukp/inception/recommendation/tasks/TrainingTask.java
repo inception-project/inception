@@ -127,7 +127,15 @@ public class TrainingTask
                 
                 long startTime = System.currentTimeMillis();
                 
-                try (RecommenderContext ctx = recommendationService.getContext(user, recommender)) {
+                try {
+                    // Create a new context either by copying the current context or by creating a
+                    // new one. Copying the data from the current context over to the new one is
+                    // meant to permit incremental training of models. Mind that the recommender
+                    // may have to take extra measures to avoid the incremental update from 
+                    // interfering with any predictions being executed using the current model.
+                    RecommenderContext ctx = recommendationService.getContext(user, recommender)
+                            .orElse(RecommenderContext.EMPTY_CONTEXT).copy();
+                    
                     RecommendationEngineFactory factory = recommendationService
                             .getRecommenderFactory(recommender);
 
@@ -180,6 +188,9 @@ public class TrainingTask
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                                 recommender.getName(), (System.currentTimeMillis() - startTime));
                     }
+                    
+                    ctx.close();
+                    recommendationService.putContext(user, recommender, ctx);
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
