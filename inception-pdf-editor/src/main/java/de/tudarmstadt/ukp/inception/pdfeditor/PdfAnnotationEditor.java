@@ -312,7 +312,7 @@ public class PdfAnnotationEditor
                 ? page + 1 : page).getEnd();
             List<Offset> offsets = new ArrayList<>();
             offsets.add(new Offset(begin, begin));
-            offsets.add(new Offset(end, end));
+            offsets.add(new Offset(end + 1, end + 1));
             offsets =
                 PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
             int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
@@ -321,29 +321,6 @@ public class PdfAnnotationEditor
             pageOffsetCache.put(page, pageOffset);
         }
         renderPdfAnnoModel(aTarget);
-    }
-
-    public void createZeroWidthSpan(
-        AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
-    {
-        try
-        {
-            int position = Integer.parseInt(aParams.getParameterValue("position").toString());
-            Offset docOffset = PdfAnnoRenderer.convertToDocumentOffset(
-                new Offset(position - 1, position - 1), documentModel, pdfExtractFile);
-            if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
-                getModelObject().getSelection()
-                    .selectSpan(aCas, docOffset.getEnd(), docOffset.getEnd());
-                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-            } else {
-                handleError(
-                    "Unable to create zero-width span annotation: No match was found", aTarget);
-            }
-        }
-        catch (IOException | AnnotationException e)
-        {
-            handleError("Unable to create span annotation", e, aTarget);
-        }
     }
 
     public void handleAPIRequest(AjaxRequestTarget aTarget, IRequestParameters aParams)
@@ -366,8 +343,6 @@ public class PdfAnnotationEditor
             case "deleteRecommendation": deleteRecommendation(aTarget, aParams, cas);
                 break;
             case "getAnnotations": getAnnotations(aTarget, aParams);
-                break;
-            case "createZeroWidthSpan": createZeroWidthSpan(aTarget, aParams, cas);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }

@@ -157,9 +157,6 @@ public class PdfAnnoRenderer
                     // get begin/end position of the original text within PDFExtract text
                     int begin = emit.getStart() + renderSpan.getWindowBeforeText().length();
                     int end = emit.getEnd() - renderSpan.getWindowAfterText().length();
-                    if (renderSpan.isZeroWidth()) {
-                        end += 1;
-                    }
                     // get according PDFExtract file lines for begin and end of annotation
                     Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
                     Offset endOffset = aPdfExtractFile.getExtractIndex(end);
@@ -168,11 +165,7 @@ public class PdfAnnoRenderer
                     PdfExtractLine lastLine =
                         aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
-                    if (renderSpan.isZeroWidth()) {
-                        span.setEndPos(lastLine.getPosition());
-                    } else {
-                        span.setEndPos(lastLine.getPosition() + 1);
-                    }
+                    span.setEndPos(lastLine.getPosition() + 1);
                     // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());
@@ -243,7 +236,7 @@ public class PdfAnnoRenderer
         for (Offset offset : aOffsets) {
             Offset begin = aPdfExtractFile.getStringIndex(offset.getBegin());
             Offset end = aPdfExtractFile.getStringIndex(offset.getEnd());
-            iterList.add(new RenderSpan(new Offset(begin.getBegin(), end.getEnd() + 1)));
+            iterList.add(new RenderSpan(new Offset(begin.getBegin(), end.getEnd())));
         }
         List<RenderSpan> ambiguous = new ArrayList<>();
         List<Offset> processed = new ArrayList<>();
@@ -267,7 +260,7 @@ public class PdfAnnoRenderer
                     int begin = aDocumentModel.getDocumentIndex(
                         emit.getStart() + renderSpan.getWindowBeforeText().length());
                     int end = aDocumentModel.getDocumentIndex(
-                        emit.getEnd() - renderSpan.getWindowAfterText().length()) + 1;
+                        emit.getEnd() - renderSpan.getWindowAfterText().length() + 1);
                     processed.add(new Offset(begin, end));
                 } else {
                     // if multiple occurrences found span is ambiguous. add more context and retry

@@ -38,7 +38,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -92,8 +91,7 @@ public class PDFExtractor
         try (StringWriter w = new StringWriter(); PDDocument doc = PDDocument.load(file)) {
 
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
-                boolean isLastPage = i == doc.getNumberOfPages() - 1;
-                PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w, isLastPage);
+                PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
                 ext.setWriteGlyphCoords(writeGlyphCoords);
                 ext.processPage(doc.getPage(i));
                 ext.write();
@@ -110,8 +108,7 @@ public class PDFExtractor
             Writer w = new BufferedWriter(new OutputStreamWriter(gzip, "UTF-8"));
         ) {
             for (int i = 0; i < doc.getNumberOfPages(); i++) {
-                boolean isLastPage = i == doc.getNumberOfPages() - 1;
-                PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w, isLastPage);
+                PDFExtractor ext = new PDFExtractor(doc.getPage(i), i + 1, w);
                 ext.processPage(doc.getPage(i));
                 ext.write();
             }
@@ -129,20 +126,17 @@ public class PDFExtractor
     private Matrix translateMatrix;
     private final GlyphList glyphList;
     private List<Object> buffer = new ArrayList<>();
-    private boolean isLastPage;
 
     private AffineTransform flipAT;
     private AffineTransform rotateAT;
     private AffineTransform transAT;
 
-    public PDFExtractor(PDPage page, int pageIndex, Writer output, boolean aIsLastPage)
-        throws IOException
+    public PDFExtractor(PDPage page, int pageIndex, Writer output) throws IOException
     {
         super(page);
         this.pageIndex = pageIndex;
         this.output = output;
         this.writeGlyphCoords = true;
-        this.isLastPage = aIsLastPage;
 
         String path = "org/apache/pdfbox/resources/glyphlist/additional.txt";
         InputStream input = GlyphList.class.getClassLoader().getResourceAsStream(path);
@@ -202,21 +196,6 @@ public class PDFExtractor
 
     private void write() throws IOException
     {
-        // Add a last dummy line, required for zero-width span annotations
-        if (isLastPage) {
-            ListIterator li = buffer.listIterator(buffer.size());
-            while (li.hasPrevious()) {
-                int index = li.previousIndex();
-                Object obj = buffer.get(index);
-                if (obj instanceof TextOperator) {
-                    TextOperator t = (TextOperator) obj;
-                    buffer.add(index + 1, new TextOperator(" ",
-                        t.fx + t.fw, t.fy, 5, t.fh, t.gx + t.gw, t.gy, 5, t.gh));
-                    break;
-                }
-            }
-        }
-
         for (Object obj : buffer) {
             if (obj instanceof TextOperator) {
                 TextOperator t = (TextOperator) obj;

@@ -279,7 +279,7 @@ window.addEventListener('DOMContentLoaded', () => {
           "action": "createSpan",
           "page": currentPage,
           "begin": startPosition,
-          "end": endPosition
+          "end": endPosition + 1
         }
         parent.Wicket.Ajax.ajax({
           "m": "POST",
@@ -306,9 +306,10 @@ window.addEventListener('DOMContentLoaded', () => {
     if (e.shiftKey) {
       setPositions(e)
       var data = {
-        "action": "createZeroWidthSpan",
+        "action": "createSpan",
         "page": currentPage,
-        "position": startPosition
+        "begin": startPosition,
+        "end": startPosition
       }
       console.log(data)
       if (startPosition != null) {
