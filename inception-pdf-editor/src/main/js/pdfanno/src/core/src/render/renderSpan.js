@@ -64,11 +64,12 @@ function createRect (a, r, color, readOnly) {
   }
 
   return $(`<div class="${className}"/>`).css({
-    top             : r.y + 'px',
-    left            : r.x + 'px',
-    width           : r.width + 'px',
-    height          : r.height + 'px',
-    backgroundColor : hex2rgba(color, 0.4),
-    borderColor     : color
+    top              : r.y + 'px',
+    left             : r.x + 'px',
+    width            : r.width + 'px',
+    height           : r.height + 'px',
+    backgroundColor  : hex2rgba(color, 0.4),
+    borderColor      : color,
+    'pointer-events' : 'none'
   })
 }
