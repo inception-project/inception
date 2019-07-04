@@ -304,15 +304,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   $viewer.on('click', '.canvasWrapper', e => {
     if (e.shiftKey) {
-      setPositions(e)
+      const canvasElement = e.currentTarget
+      const pageElement = canvasElement.parentNode
+      const page = parseInt(pageElement.getAttribute('data-page-number'))
+      currentPage = page
+      const { top, left } = canvasElement.getBoundingClientRect()
+      const x = e.clientX - left
+      const y = e.clientY - top
+
+      const position = window.findIndex(page, scaleDown({ x, y }))
       var data = {
         "action": "createSpan",
         "page": currentPage,
-        "begin": startPosition,
-        "end": startPosition
+        "begin": position,
+        "end": position
       }
       console.log(data)
-      if (startPosition != null) {
+      if (position != null) {
         parent.Wicket.Ajax.ajax({
           "m"  : "POST",
           "ep" : data,
@@ -325,13 +333,6 @@ window.addEventListener('DOMContentLoaded', () => {
         console.log('Position is null, cannot create zero-width span annotaton')
       }
       currentPage = null
-      initPosition = null
-      startPosition = null
-      endPosition = null
-      if (spanAnnotation) {
-        spanAnnotation.destroy()
-      }
-      spanAnnotation = null
     }
   })
 

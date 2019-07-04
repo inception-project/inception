@@ -17,6 +17,38 @@ export function setup (analyzeData) {
 }
 
 /**
+ * Find index between characters in the text.
+ * Used for zero-width span annotations.
+ * @param page - the page number.
+ * @param point - { x, y } coords.
+ * @return {*} - The nearest text index to the given point.
+ */
+window.findIndex = function (page, point) {
+
+  const metaList = pages[page - 1].meta
+
+  for (let i = 0, len = metaList.length; i < len; i++) {
+    const info = metaList[i]
+
+    if (!info) {
+      continue
+    }
+
+    const { position, char, x, y, w, h } = extractMeta(info)
+
+    if (y <= point.y && point.y <= (y + h)) {
+      if (x <= point.x && point.x <= x + w / 2) {
+        return position
+      } else if (x + w / 2 < point.x && point.x <= x + w) {
+        return position + 1
+      }
+    }
+  }
+
+  return null
+}
+
+/**
  * Find the text.
  * @param page - the page number.
  * @param point - { x, y } coords.
@@ -77,6 +109,7 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
     }
 
     const data = extractMeta(info)
+    var last = data
     const { position } = data
 
     // if zero-width spans are allowed interprete ranges different from PDFAnno default
@@ -97,6 +130,8 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
       if (position === endPosition) {
         break
       }
+
+      if (last.position < data.position) last = data
     // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
     // [3,3] is one character, [3,4] are two characters
     } else {
@@ -109,6 +144,22 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
         break
       }
     }
+  }
+
+  // handle case where position is the very last index for a zero-width span
+  // which does not exist in the pdfextract file and therefore cannot be found
+  // use the previous character box and "append" the zero-width span after it
+  if (items.length === 0 && startPosition === endPosition && page === pages.length) {
+    items.push({
+      position: startPosition,
+      page: last.page,
+      type: last.type,
+      char: '',
+      x: last.x + last.w,
+      y: last.y,
+      w: 1,
+      h: last.h
+    })
   }
 
   return items

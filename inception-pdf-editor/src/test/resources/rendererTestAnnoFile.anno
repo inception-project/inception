@@ -47,7 +47,7 @@ page = 1
 label = "$."
 color = "#8dd3c7"
 text = "."
-textrange = [25,26]
+textrange = [25,28]
 
 [[spans]]
 id = "199"

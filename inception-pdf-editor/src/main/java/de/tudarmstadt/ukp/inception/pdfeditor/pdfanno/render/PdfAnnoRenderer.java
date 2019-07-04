@@ -156,7 +156,7 @@ public class PdfAnnoRenderer
                     Emit emit = occurrences.get(0);
                     // get begin/end position of the original text within PDFExtract text
                     int begin = emit.getStart() + renderSpan.getWindowBeforeText().length();
-                    int end = emit.getEnd() - renderSpan.getWindowAfterText().length();
+                    int end = emit.getEnd() - renderSpan.getWindowAfterText().length() + 1;
                     // get according PDFExtract file lines for begin and end of annotation
                     Offset beginOffset = aPdfExtractFile.getExtractIndex(begin);
                     Offset endOffset = aPdfExtractFile.getExtractIndex(end);
@@ -165,7 +165,7 @@ public class PdfAnnoRenderer
                     PdfExtractLine lastLine =
                         aPdfExtractFile.getStringPdfExtractLine(endOffset.getEnd());
                     span.setStartPos(firstLine.getPosition());
-                    span.setEndPos(lastLine.getPosition() + 1);
+                    span.setEndPos(lastLine.getPosition());
                     // TODO annotation across page boundaries not handled currently
                     span.setPage(firstLine.getPage());
                     span.setText(renderSpan.getText());

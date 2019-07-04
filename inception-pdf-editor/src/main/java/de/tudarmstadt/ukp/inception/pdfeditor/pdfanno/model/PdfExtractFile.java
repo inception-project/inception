@@ -230,6 +230,8 @@ public class PdfExtractFile implements Serializable
         }
 
         extractToString.put(extractLineIndex, strContentIndex);
+        stringToExtract.put(strContentIndex, extractLineIndex);
+        extractLines.put(extractLineIndex, new PdfExtractLine(lastPage, extractLineIndex, "", ""));
 
         // add last page
         pageOffsetMap.put(lastPage, new Offset(pageBeginIndex, extractLineIndex - 1));
