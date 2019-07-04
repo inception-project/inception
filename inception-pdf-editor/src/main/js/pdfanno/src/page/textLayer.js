@@ -149,7 +149,7 @@ window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
   // handle case where position is the very last index for a zero-width span
   // which does not exist in the pdfextract file and therefore cannot be found
   // use the previous character box and "append" the zero-width span after it
-  if (items.length === 0 && startPosition === endPosition && page === pages.length) {
+  if (items.length === 0 && startPosition === endPosition && page === pages.length && allowZeroWidth) {
     items.push({
       position: startPosition,
       page: last.page,
