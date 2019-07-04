@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 @Component
 public class OpenNlpPosRecommenderFactory
@@ -45,7 +46,7 @@ public class OpenNlpPosRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender)
+    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
     {
         return new OpenNlpPosRecommender(aRecommender, readTraits(aRecommender));
     }
