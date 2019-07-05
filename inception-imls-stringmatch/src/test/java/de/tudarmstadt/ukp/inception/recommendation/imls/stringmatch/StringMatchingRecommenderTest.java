@@ -157,7 +157,7 @@ public class StringMatchingRecommenderTest
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
 
-        sut.pretrain(gazeteer);
+        sut.pretrain(gazeteer, context);
 
         sut.train(context, emptyList());
 

@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_SUPPORTED;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -121,25 +126,35 @@ public class TrainingTask
                 }
                 
                 long startTime = System.currentTimeMillis();
-                RecommenderContext context = recommendationService.getContext(user, recommender);
-                RecommendationEngineFactory factory = recommendationService
-                    .getRecommenderFactory(recommender);
                 
-                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                    log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                            + "- skipping recommender", user.getUsername(), r.getName());
-                    continue;
-                }
-
                 try {
-                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                    // Create a new context either by copying the current context or by creating a
+                    // new one. Copying the data from the current context over to the new one is
+                    // meant to permit incremental training of models. Mind that the recommender
+                    // may have to take extra measures to avoid the incremental update from 
+                    // interfering with any predictions being executed using the current model.
+                    RecommenderContext ctx = recommendationService.getContext(user, recommender)
+                            .orElse(RecommenderContext.EMPTY_CONTEXT).copy();
                     
-                    // If the engine does not require/support training, then we mark the context
-                    // as ready for prediction and skip the training step
-                    if (!recommendationEngine.requiresTraining()) {
-                        log.info("[{}][{}]: Engine does not require training",
+                    RecommendationEngineFactory factory = recommendationService
+                            .getRecommenderFactory(recommender);
+
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                        + "- skipping recommender",
+                                user.getUsername(), r.getName());
+                        continue;
+                    }
+                    
+                    RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
+                   
+                    RecommendationEngineCapability capability = recommendationEngine
+                            .getTrainingCapability();
+                    
+                    // If engine does not support training, mark engine ready and skip to prediction
+                    if (capability == TRAINING_NOT_SUPPORTED) {
+                        log.info("[{}][{}]: Engine does not support training",
                                 user.getUsername(), recommender.getName());
-                        context.markAsReadyForPrediction();
                         continue;
                     }
                     
@@ -151,20 +166,31 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
-                    if (!cassesForTraining.isEmpty()) {
+                    
+                    if (cassesForTraining.isEmpty()) {
+                        // If no data for training is available, but the engine requires training, 
+                        // do not mark as ready
+                        if (capability == TRAINING_REQUIRED) {
+                            log.info("[{}][{}]: There are no annotations available to train on",
+                                    user.getUsername(), recommender.getName());
+                            continue;
+                        // If not data for training is available, and the engine supports but not 
+                        // requires training, mark as ready
+                        } else if (capability == TRAINING_SUPPORTED) {
+                            continue;
+                        }
+                    } else {
                         log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
                                 user.getUsername(), recommender.getName(), cassesForTraining.size(),
                                 casses.get().size());
                         
-                        recommendationEngine.train(context, cassesForTraining);
-                        
+                        recommendationEngine.train(ctx, cassesForTraining);
                         log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                                 recommender.getName(), (System.currentTimeMillis() - startTime));
                     }
-                    else {
-                        log.info("[{}][{}]: There are annotations available to train on",
-                                user.getUsername(), recommender.getName());
-                    }
+                    
+                    ctx.close();
+                    recommendationService.putContext(user, recommender, ctx);
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),

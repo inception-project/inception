@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -83,12 +84,17 @@ public class NamedEntityLinker
     }
 
     @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+
+    @Override
     public void train(RecommenderContext aContext, List<CAS> aCasList)
     {
         Collection<ImmutablePair<String, Collection<AnnotationFS>>> nameSamples =
             extractNamedEntities(aCasList);
         aContext.put(KEY_MODEL, nameSamples);
-        aContext.markAsReadyForPrediction();
     }
 
     private Collection<ImmutablePair<String, Collection<AnnotationFS>>> extractNamedEntities(
