@@ -165,8 +165,8 @@ public class RecommendationSpanRenderer
             }
             
             // Sort and filter labels under threshold value
-            // Note: the order in which annotations are rendered is only indicative to the frontend (e.g. brat) 
-            // which may choose to re-order them (e.g. for layout reasons).
+            // Note: the order in which annotations are rendered is only indicative to the 
+            // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
             List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(pref.getMaxPredictions())
