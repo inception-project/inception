@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.Lapp
 import static de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor.POS_LAYER;
 
 import org.apache.wicket.model.IModel;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -36,6 +37,8 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRe
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
 @Component
+@ConditionalOnProperty(prefix = "recommenders.lappsgrid", name = "enabled",
+        matchIfMissing = false)
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
