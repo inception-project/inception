@@ -90,10 +90,12 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final ListView<FeatureState> featureList;
+    private final DocumentMetadataAnnotationSelectionPanel selectionPanel;
     
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
-            IModel<Project> aProject, AnnotationPage aAnnotationPage)
+            IModel<Project> aProject, AnnotationPage aAnnotationPage , boolean aVisible,
+            DocumentMetadataAnnotationSelectionPanel aSelectionPanel)
     {
         super(aId, aModel);
 
@@ -104,18 +106,16 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         annotationPage = aAnnotationPage;
         jcasProvider = aCasProvider;
         project = aProject;
+        selectionPanel = aSelectionPanel;
+        
+        setVisible(aVisible);
         
         add(featureList = createFeaturesList());
         
         add(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
         add(new LambdaAjaxLink(CID_CLOSE, this::actionClose));
         
-        add(LambdaBehavior.visibleWhen(() -> getModelObject() != null && getModelObject().isSet()));
-    }
-    
-    public void setModelObject(VID aVID)
-    {
-        setDefaultModelObject(aVID);
+        add(LambdaBehavior.visibleWhen(this::isVisible));
     }
     
     public VID getModelObject()
@@ -172,12 +172,12 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 }
 
                 // We need to enable the markup ID here because we use it during the AJAX behavior
-                // that automatically saves feature editors on change/blur. 
+                // that automatically saves feature editors on change/blur.
                 // Check addAnnotateActionBehavior.
                 editor.setOutputMarkupId(true);
                 editor.setOutputMarkupPlaceholderTag(true);
                 
-                // Ensure that markup IDs of feature editor focus components remain constant 
+                // Ensure that markup IDs of feature editor focus components remain constant
                 // across refreshes of the feature editor panel. This is required to restore the
                 // focus.
                 editor.getFocusComponent().setOutputMarkupId(true);
@@ -197,7 +197,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         if (proj == null || vid == null || vid.isNotSet()) {
             return emptyList();
         }
-            
+        
         CAS cas;
         try {
             cas = jcasProvider.get();
@@ -303,6 +303,8 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             // persist changes
             annotationPage.writeEditorCas(cas);
+            
+            selectionPanel.cacheSelection(new VID(fs));
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
@@ -325,9 +327,9 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             // persist changes
             annotationPage.writeEditorCas(cas);
             
-            setModelObject(null);
-            
             aTarget.add(getParent());
+            
+            selectionPanel.actionDelete(aTarget, this);
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this,
@@ -337,7 +339,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     
     private void actionClose(AjaxRequestTarget aTarget)
     {
-        setModelObject(null);
+        setVisible(false);
         
         aTarget.add(getParent());
     }
@@ -401,5 +403,10 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         private static final long serialVersionUID = 1L;
         
         public final static IsSidebarAction INSTANCE = new IsSidebarAction();
+    }
+    
+    public void toggleVisibility()
+    {
+        setVisible(!isVisible());
     }
 }

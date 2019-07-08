@@ -81,22 +81,25 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private static final String CID_LAYER = "layer";
     private static final String CID_CREATE = "create";
     private static final String CID_ANNOTATIONS_CONTAINER = "annotationsContainer";
+    private static final String CID_ANNOTATION_DETAILS = "annotationDetails";
     
     private @SpringBean LayerSupportRegistry layerSupportRegistry;
     private @SpringBean AnnotationSchemaService annotationService;
     
     private final AnnotationPage annotationPage;
     private final CasProvider jcasProvider;
-    private final DocumentMetadataAnnotationDetailPanel detailPanel;
+    private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
     private final WebMarkupContainer annotationsContainer;
+    private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
+    
+    private VID selectionCache;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            CasProvider aCasProvider, DocumentMetadataAnnotationDetailPanel aDetails,
-            AnnotationPage aAnnotationPage)
+            CasProvider aCasProvider, AnnotationPage aAnnotationPage)
     {
         super(aId, aProject);
 
@@ -106,8 +109,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         sourceDocument = aDocument;
         username = aUsername;
         jcasProvider = aCasProvider;
-        detailPanel = aDetails;
+        project = aProject;
         selectedLayer = Model.of();
+        detailPanels = new ArrayList<>();
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
@@ -135,23 +139,38 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 .getAdapter(selectedLayer.getObject());
         CAS cas = jcasProvider.get();
         AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
-        detailPanel.setModelObject(new VID(fs));
+        selectionCache = new VID(fs);
         
         annotationPage.writeEditorCas(cas);
         
         aTarget.add(this);
-        aTarget.add(detailPanel);
     }
     
-    private void actionSelect(AjaxRequestTarget aTarget, AnnotationListItem aItem)
+    private void actionSelect(
+        AjaxRequestTarget aTarget, DocumentMetadataAnnotationDetailPanel aDetailPanel)
     {
-        detailPanel.setModelObject(new VID(aItem.addr));
-        
-        aTarget.add(detailPanel);
+        // close all other detail panels that are open
+        for (DocumentMetadataAnnotationDetailPanel detailPanel : detailPanels) {
+            if (!(detailPanel == aDetailPanel) && detailPanel.isVisible()) {
+                detailPanel.toggleVisibility();
+                aTarget.add(detailPanel);
+            }
+        }
+        aDetailPanel.toggleVisibility();
+        aTarget.add(aDetailPanel);
+    }
+    
+    void actionDelete(AjaxRequestTarget aTarget, DocumentMetadataAnnotationDetailPanel detailPanel)
+    {
+        detailPanels.remove(detailPanel);
+        remove(detailPanel);
+        aTarget.add(this);
     }
     
     private ListView<AnnotationListItem> createAnnotationList()
     {
+        DocumentMetadataAnnotationSelectionPanel selectionPanel = this;
+        detailPanels = new ArrayList<>();
         return new ListView<AnnotationListItem>(CID_ANNOTATIONS,
                 LoadableDetachableModel.of(this::listAnnotations))
         {
@@ -164,10 +183,24 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
 
                 aItem.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
 
+                VID vid = new VID(aItem.getModelObject().addr);
+                boolean visible = selectionCache != null && selectionCache.equals(vid);
+                // if visible is true the cache can be reset
+                selectionCache = visible ? null : selectionCache;
+                
+                DocumentMetadataAnnotationDetailPanel detailPanel =
+                    new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
+                        Model.of(vid), sourceDocument, username, jcasProvider, project,
+                        annotationPage, visible, selectionPanel);
+                detailPanels.add(detailPanel);
+                aItem.add(detailPanel);
+                
                 LambdaAjaxLink link = new LambdaAjaxLink(CID_ANNOTATION_LINK,
-                    _target -> actionSelect(_target, aItem.getModelObject()));
+                    _target -> actionSelect(_target, detailPanel));
                 link.add(new Label(CID_LABEL));
                 aItem.add(link);
+    
+                aItem.setOutputMarkupId(true);
             }
         };
     }
@@ -211,6 +244,10 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         return items;
+    }
+    
+    void cacheSelection(VID vid) {
+        selectionCache = vid;
     }
     
     @OnEvent

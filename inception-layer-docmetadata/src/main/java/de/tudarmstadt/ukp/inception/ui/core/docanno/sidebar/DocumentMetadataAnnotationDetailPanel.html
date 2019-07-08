@@ -3,13 +3,13 @@
  - Copyright 2018
  - Ubiquitous Knowledge Processing (UKP) Lab
  - Technische Universität Darmstadt
- - 
+ -
  - Licensed under the Apache License, Version 2.0 (the "License");
  - you may not use this file except in compliance with the License.
  - You may obtain a copy of the License at
- -  
+ -
  -  http://www.apache.org/licenses/LICENSE-2.0
- - 
+ -
  - Unless required by applicable law or agreed to in writing, software
  - distributed under the License is distributed on an "AS IS" BASIS,
  - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -18,22 +18,16 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
+  <hr/>
   <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-    <div class="panel panel-default panel-flex flex-content">
-      <div class="panel-heading">
-        <h3 class="panel-title">
-          Details
-          <span class="pull-right">
-            <button wicket:id="close" type="button" class="btn btn-xs btn-default"><wicket:message key="close"/></button>
-            <button wicket:id="delete" type="button" class="btn btn-xs btn-danger"><wicket:message key="delete"/></button>
-          </span> 
-        </h3>
-      </div>
-      <div class="scrolling panel-body flex-v-container">
-        <div wicket:id="featureValues">
-          <div wicket:id="editor"></div>
-        </div>
-      </div>
+    <div>
+      <span class="pull-right">
+        <button wicket:id="close" type="button" class="btn btn-xs btn-default"><wicket:message key="close"/></button>
+        <button wicket:id="delete" type="button" class="btn btn-xs btn-danger"><wicket:message key="delete"/></button>
+      </span>
+    </div>
+    <div wicket:id="featureValues">
+      <div wicket:id="editor"></div>
     </div>
   </div>
 </wicket:panel>
