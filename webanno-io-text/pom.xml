@@ -84,7 +84,7 @@
                 - do require it as a compile dependency and also at runtime, so we
                 - cannot set it to scope provided. Need to tell Maven to ignore it here.
               -->
-              <usedDependency>de.tudarmstadt.ukp.dkpro.core:de.tudarmstadt.ukp.dkpro.core.api.parameter-asl</usedDependency>
+              <usedDependency>org.dkpro.core:dkpro-core-api-parameter-asl</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
