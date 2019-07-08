@@ -23,6 +23,8 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -106,9 +108,8 @@ public class LappsGridRecommenderConformityTest
     }
 
     private CAS loadData() throws IOException, UIMAException {
-        File file = new File(getClass().getResource("/testdata/tnf.xmi").getFile());
-
-        CAS cas = loadData(file);
+        Path path = Paths.get("src", "test", "resources", "testdata", "tnf.xmi");
+        CAS cas = loadData(path.toFile());
 
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
