@@ -207,18 +207,38 @@ public class PdfAnnoRendererTest
         // List of PDFAnno offsets
         // indices represent line numbers in the PDFExtractFile for the according character
         List<Offset> offsets = new ArrayList<>();
+        offsets.add(new Offset(3, 3));
+        offsets.add(new Offset(3, 4));
+        offsets.add(new Offset(3, 5));
+        offsets.add(new Offset(3, 6));
         offsets.add(new Offset(3, 7));
+        offsets.add(new Offset(3, 8));
+        offsets.add(new Offset(6, 8));
+        offsets.add(new Offset(7, 7));
+        offsets.add(new Offset(7, 8));
+        offsets.add(new Offset(8, 8));
         offsets.add(new Offset(8, 13));
+        offsets.add(new Offset(28, 28));
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
         List<Offset> docOffsets =
             PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
-        expectedOffsets.add(new Offset(0, 5));
-        expectedOffsets.add(new Offset(6, 12));
-        expectedOffsets.add(new Offset(29, 32));
-        expectedOffsets.add(new Offset(38, 42));
+        expectedOffsets.add(new Offset(0, 0));
+        expectedOffsets.add(new Offset(0, 1));
+        expectedOffsets.add(new Offset(0, 2));
+        expectedOffsets.add(new Offset(0, 3));
+        expectedOffsets.add(new Offset(0, 4));
+        expectedOffsets.add(new Offset(0, 6));
+        expectedOffsets.add(new Offset(3, 6));
+        expectedOffsets.add(new Offset(4, 4));
+        expectedOffsets.add(new Offset(4, 6));
+        expectedOffsets.add(new Offset(6, 6));
+        expectedOffsets.add(new Offset(6, 11));
+        expectedOffsets.add(new Offset(29, 29));
+        expectedOffsets.add(new Offset(29, 31));
+        expectedOffsets.add(new Offset(38, 41));
         assertThat(docOffsets).isEqualTo(expectedOffsets);
     }
 }
