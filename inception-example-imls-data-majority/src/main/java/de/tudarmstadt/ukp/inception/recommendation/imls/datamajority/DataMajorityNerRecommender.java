@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -39,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.LabelPair;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
@@ -56,7 +59,14 @@ public class DataMajorityNerRecommender
         super(aRecommender);
     }
 // end::classDefinition[]
+
 // tag::train[]
+    @Override
+    public RecommendationEngineCapability getTrainingCapability() 
+    {
+        return TRAINING_REQUIRED;
+    }
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
             throws RecommendationException
@@ -65,9 +75,15 @@ public class DataMajorityNerRecommender
 
         DataMajorityModel model = trainModel(annotations);
         aContext.put(KEY_MODEL, model);
-        aContext.markAsReadyForPrediction();
+    }
+    
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
 // end::train[]
+    
 // tag::extractAnnotations[]
     private List<Annotation> extractAnnotations(List<CAS> aCasses)
     {
@@ -88,6 +104,7 @@ public class DataMajorityNerRecommender
         return annotations;
     }
 // end::extractAnnotations[]
+
 // tag::trainModel[]
     private DataMajorityModel trainModel(List<Annotation> aAnnotations)
             throws RecommendationException
@@ -111,6 +128,7 @@ public class DataMajorityNerRecommender
         return new DataMajorityModel(majorityLabel, confidence, numberOfAnnotations);
     }
 // end::trainModel[]
+
 // tag::predict1[]
     @Override
     public void predict(RecommenderContext aContext, CAS aCas) throws RecommendationException
@@ -140,6 +158,7 @@ public class DataMajorityNerRecommender
         }
     }
 // end::predict1[]
+
 // tag::predict2[]
     private List<Annotation> predict(Collection<AnnotationFS> candidates,
                                      DataMajorityModel aModel)
@@ -162,6 +181,7 @@ public class DataMajorityNerRecommender
         return result;
     }
 // end::predict2[]
+
 // tag::evaluate[]
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
@@ -207,6 +227,7 @@ public class DataMajorityNerRecommender
         return result;
     }
 // end::evaluate[]
+
 // tag::utility[]
     private static class DataMajorityModel 
     {
