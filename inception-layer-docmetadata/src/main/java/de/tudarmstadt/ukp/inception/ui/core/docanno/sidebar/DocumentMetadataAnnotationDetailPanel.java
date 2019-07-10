@@ -299,8 +299,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             // persist changes
             annotationPage.writeEditorCas(cas);
-            
-            selectionPanel.cacheSelection(new VID(fs));
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);

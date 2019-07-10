@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.AnnotationBaseFS;
@@ -95,8 +96,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final WebMarkupContainer annotationsContainer;
     private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
     
-    private VID selectionCache;
-    
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
             CasProvider aCasProvider, AnnotationPage aAnnotationPage)
@@ -139,7 +138,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 .getAdapter(selectedLayer.getObject());
         CAS cas = jcasProvider.get();
         AnnotationBaseFS fs = adapter.add(sourceDocument.getObject(), username.getObject(), cas);
-        selectionCache = new VID(fs);
         
         annotationPage.writeEditorCas(cas);
         
@@ -184,16 +182,21 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 aItem.add(new Label(CID_TYPE, aItem.getModelObject().layer.getUiName()));
 
                 VID vid = new VID(aItem.getModelObject().addr);
-                boolean visible = selectionCache != null && selectionCache.equals(vid);
-                // if visible is true the cache can be reset
-                selectionCache = visible ? null : selectionCache;
+    
+                DocumentMetadataAnnotationDetailPanel detailPanel;
+                // see if this detail panel already is instantiated, if so use it
+                Optional<DocumentMetadataAnnotationDetailPanel> oldPanel =
+                    detailPanels.stream().filter(d -> d.getModelObject().equals(vid)).findFirst();
                 
-                DocumentMetadataAnnotationDetailPanel detailPanel =
-                    new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
-                        Model.of(vid), sourceDocument, username, jcasProvider, project,
-                        annotationPage, selectionPanel);
-                detailPanel.setVisible(visible);
-                detailPanels.add(detailPanel);
+                if (oldPanel.isPresent()) {
+                    detailPanel = oldPanel.get();
+                } else {
+                    detailPanel = new DocumentMetadataAnnotationDetailPanel(
+                        CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
+                        jcasProvider, project, annotationPage, selectionPanel);
+                    detailPanel.setVisible(false);
+                    detailPanels.add(detailPanel);
+                }
                 aItem.add(detailPanel);
                 
                 LambdaAjaxLink link = new LambdaAjaxLink(CID_ANNOTATION_LINK,
@@ -245,10 +248,6 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         }
         
         return items;
-    }
-    
-    void cacheSelection(VID vid) {
-        selectionCache = vid;
     }
     
     @OnEvent
