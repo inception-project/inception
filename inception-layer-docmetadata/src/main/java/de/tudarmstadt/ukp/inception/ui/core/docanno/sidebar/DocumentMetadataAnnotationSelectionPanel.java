@@ -141,6 +141,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         
         annotationPage.writeEditorCas(cas);
         
+        // close all other panels so that this is the only one opened after creation
+        detailPanels.forEach(d -> d.setVisible(false));
+        
         aTarget.add(this);
     }
     
@@ -173,6 +176,15 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 LoadableDetachableModel.of(this::listAnnotations))
         {
             private static final long serialVersionUID = -6833373063896777785L;
+    
+            /**
+             * Determines if new annotations should be rendered visible or not.
+             * For the initialization of existing annotations this value should be false.
+             * Afterwards when manually creating new annotations it should be true to immediately
+             * open them afterwards.
+             * If there are no annotations at initialization it is initialized with true else false.
+             */
+            boolean renderVisible = getModelObject().size() == 0;
 
             @Override
             protected void populateItem(ListItem<AnnotationListItem> aItem)
@@ -194,7 +206,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                     detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
                         jcasProvider, project, annotationPage, selectionPanel);
-                    detailPanel.setVisible(false);
+                    detailPanel.setVisible(renderVisible);
                     detailPanels.add(detailPanel);
                 }
                 aItem.add(detailPanel);
@@ -205,6 +217,11 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 aItem.add(link);
     
                 aItem.setOutputMarkupId(true);
+                
+                // after all panels are created for existing annotations set renderVisible to true
+                if (detailPanels.size() == getModelObject().size()) {
+                    renderVisible = true;
+                }
             }
         };
     }
