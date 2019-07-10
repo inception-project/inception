@@ -191,7 +191,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 DocumentMetadataAnnotationDetailPanel detailPanel =
                     new DocumentMetadataAnnotationDetailPanel(CID_ANNOTATION_DETAILS,
                         Model.of(vid), sourceDocument, username, jcasProvider, project,
-                        annotationPage, visible, selectionPanel);
+                        annotationPage, selectionPanel);
+                detailPanel.setVisible(visible);
                 detailPanels.add(detailPanel);
                 aItem.add(detailPanel);
                 

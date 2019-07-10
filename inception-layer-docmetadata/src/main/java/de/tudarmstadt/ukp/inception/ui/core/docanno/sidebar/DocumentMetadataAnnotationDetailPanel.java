@@ -76,7 +76,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
 
     private static final String CID_EDITOR = "editor";
     private static final String CID_FEATURE_VALUES = "featureValues";
-    private static final String CID_CLOSE = "close";
     private static final String CID_DELETE = "delete";
 
     public static final String ID_PREFIX = "metaFeatureEditorHead";
@@ -94,7 +93,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
-            IModel<Project> aProject, AnnotationPage aAnnotationPage , boolean aVisible,
+            IModel<Project> aProject, AnnotationPage aAnnotationPage,
             DocumentMetadataAnnotationSelectionPanel aSelectionPanel)
     {
         super(aId, aModel);
@@ -108,12 +107,9 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         project = aProject;
         selectionPanel = aSelectionPanel;
         
-        setVisible(aVisible);
-        
         add(featureList = createFeaturesList());
         
         add(new LambdaAjaxLink(CID_DELETE, this::actionDelete));
-        add(new LambdaAjaxLink(CID_CLOSE, this::actionClose));
         
         add(LambdaBehavior.visibleWhen(this::isVisible));
     }
@@ -307,8 +303,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             selectionPanel.cacheSelection(new VID(fs));
         }
         catch (Exception e) {
-            handleException(DocumentMetadataAnnotationDetailPanel.this,
-                aTarget, e);
+            handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
         }
     }
     
@@ -332,18 +327,10 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             selectionPanel.actionDelete(aTarget, this);
         }
         catch (Exception e) {
-            handleException(DocumentMetadataAnnotationDetailPanel.this,
-                aTarget, e);
+            handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
         }
     }
     
-    private void actionClose(AjaxRequestTarget aTarget)
-    {
-        setVisible(false);
-        
-        aTarget.add(getParent());
-    }
-
     private void writeFeatureEditorModelsToCas(TypeAdapter aAdapter, CAS aCas)
             throws IOException
     {
@@ -399,9 +386,11 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         }
     }
     
-    private static final class IsSidebarAction extends MetaDataKey<Boolean> {
+    private static final class IsSidebarAction
+        extends MetaDataKey<Boolean>
+    {
         private static final long serialVersionUID = 1L;
-        
+
         public final static IsSidebarAction INSTANCE = new IsSidebarAction();
     }
     
