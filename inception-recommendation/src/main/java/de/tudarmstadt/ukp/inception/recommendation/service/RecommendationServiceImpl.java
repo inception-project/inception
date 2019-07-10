@@ -802,7 +802,8 @@ public class RecommendationServiceImpl
                     }
 
                     try {
-
+                        RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
+                        
                         if (!recommendationEngine.isReadyForPrediction(ctx)) {
                             log.info("Recommender context [{}]({}) for user [{}] in project "
                                     + "[{}]({}) is not ready for prediction - skipping recommender",
