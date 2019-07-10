@@ -688,9 +688,17 @@ public class RecommendationServiceImpl
         String username = aUser.getUsername();
         Predictions predictions = new Predictions(aUser, aProject);
 
+        CAS predictionCas = null;
+        try {
+            predictionCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        }
+        catch (ResourceInitializationException e) {
+            log.info("Cannot create prediction CAS, stopping predictions!");
+            return predictions;
+        }
+
         nextDocument: for (SourceDocument document : aDocuments) {
             Optional<CAS> originalCas = Optional.empty();
-            CAS predictionCas = null;
             nextLayer: for (AnnotationLayer layer : annoService
                     .listAnnotationLayer(document.getProject())) {
                 if (!layer.isEnabled()) {
@@ -771,21 +779,13 @@ public class RecommendationServiceImpl
                             continue nextDocument;
                         }
 
-                        try {
-                            predictionCas = cloneCAS(originalCas.get());
-                            monkeyPatchTypeSystem(aProject, predictionCas);
-                        }
-                        catch (UIMAException | IOException e) {
-                            log.error("Cannot create prediction CAS for user [{}] of document "
-                                    + "[{}]({}) in project [{}]({}) - skipping document",
-                                    username, document.getName(), document.getId(),
-                                    document.getProject().getName(), document.getProject().getId(),
-                                    e);
-                            continue nextDocument;
-                        }
+
                     }
 
                     try {
+                        cloneCAS(originalCas.get(), predictionCas);
+                        monkeyPatchTypeSystem(aProject, predictionCas);
+
                         RecommendationEngine recommendationEngine = factory.build(recommender);
 
                         // Perform the actual prediction
@@ -991,19 +991,15 @@ public class RecommendationServiceImpl
         }
     }
 
-
-    
-    private CAS cloneCAS(CAS aCAS) throws ResourceInitializationException, CASException
+    private CAS cloneCAS(CAS aSourceCas, CAS aTargetCas) throws CASException
     {
-        CAS clone = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        
-        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aCAS);
-        Serialization.deserializeCASComplete(ser, (CASMgr) clone);
+        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aSourceCas);
+        Serialization.deserializeCASComplete(ser, (CASMgr) aTargetCas);
         
         // Make sure JCas is properly initialized too
-        clone.getJCas();
+        aTargetCas.getJCas();
         
-        return clone;
+        return aTargetCas;
     }
 
     public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
