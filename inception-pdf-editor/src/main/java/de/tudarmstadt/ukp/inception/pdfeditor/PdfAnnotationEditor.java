@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -228,7 +228,7 @@ public class PdfAnnotationEditor
             if (origin.isSynthetic() || target.isSynthetic()) {
                 throw new AnnotationException("Cannot create relations on suggestions");
             }
-            
+
             AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, origin.getId());
             AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target.getId());
 
@@ -312,7 +312,7 @@ public class PdfAnnotationEditor
                 ? page + 1 : page).getEnd();
             List<Offset> offsets = new ArrayList<>();
             offsets.add(new Offset(begin, begin));
-            offsets.add(new Offset(end, end));
+            offsets.add(new Offset(end + 1, end + 1));
             offsets =
                 PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
             int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();
