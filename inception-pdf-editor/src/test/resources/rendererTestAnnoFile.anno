@@ -7,7 +7,7 @@ page = 1
 label = "NE"
 color = "#8dd3c7"
 text = "Karin"
-textrange = [3,7]
+textrange = [3,8]
 
 [[spans]]
 id = "169"
@@ -15,7 +15,7 @@ page = 1
 label = "VVFIN"
 color = "#8dd3c7"
 text = "fliegt"
-textrange = [8,13]
+textrange = [8,14]
 
 [[spans]]
 id = "175"
@@ -23,7 +23,7 @@ page = 1
 label = "APPR"
 color = "#8dd3c7"
 text = "nach"
-textrange = [14,17]
+textrange = [14,18]
 
 [[spans]]
 id = "181"
@@ -31,7 +31,7 @@ page = 1
 label = "NE"
 color = "#8dd3c7"
 text = "New"
-textrange = [18,20]
+textrange = [18,21]
 
 [[spans]]
 id = "187"
@@ -39,7 +39,7 @@ page = 1
 label = "NE"
 color = "#8dd3c7"
 text = "York"
-textrange = [21,24]
+textrange = [21,25]
 
 [[spans]]
 id = "193"
@@ -47,7 +47,7 @@ page = 1
 label = "$."
 color = "#8dd3c7"
 text = "."
-textrange = [25,25]
+textrange = [25,28]
 
 [[spans]]
 id = "199"
@@ -55,7 +55,7 @@ page = 1
 label = "PPER"
 color = "#8dd3c7"
 text = "Sie"
-textrange = [28,30]
+textrange = [28,31]
 
 [[spans]]
 id = "205"
@@ -63,7 +63,7 @@ page = 2
 label = "VMFIN"
 color = "#8dd3c7"
 text = "will"
-textrange = [31,34]
+textrange = [31,35]
 
 [[spans]]
 id = "211"
@@ -71,7 +71,7 @@ page = 2
 label = "ADV"
 color = "#8dd3c7"
 text = "dort"
-textrange = [35,38]
+textrange = [35,39]
 
 [[spans]]
 id = "217"
@@ -79,7 +79,7 @@ page = 2
 label = "NN"
 color = "#8dd3c7"
 text = "Urlaub"
-textrange = [39,44]
+textrange = [39,45]
 
 [[spans]]
 id = "223"
@@ -87,7 +87,7 @@ page = 2
 label = "VVINF"
 color = "#8dd3c7"
 text = "machen"
-textrange = [45,50]
+textrange = [45,51]
 
 [[spans]]
 id = "229"
@@ -95,4 +95,4 @@ page = 2
 label = "$."
 color = "#8dd3c7"
 text = "."
-textrange = [51,51]
+textrange = [51,52]

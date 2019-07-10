@@ -276,6 +276,16 @@ public class MtasDocumentIndex
         return result;
     }
 
+    private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
+    {
+        Map<Long, Long> annotateableDocuments =  new HashMap<>();
+        documentService.listAnnotatableDocuments(aProject, aUser).entrySet()
+            .stream()
+            .filter(e -> e.getValue() != null) // only include entries where the annodoc is not null
+            .forEach(e -> annotateableDocuments.put(e.getKey().getId(), e.getValue().getId()));
+        return annotateableDocuments;
+    }
+
     private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader,
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
@@ -286,6 +296,9 @@ public class MtasDocumentIndex
                 .listIterator();
 
         IndexSearcher searcher = new IndexSearcher(aIndexReader);
+
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
+            aRequest.getUser());
 
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
@@ -332,35 +345,24 @@ public class MtasDocumentIndex
                                 continue;
                             }
 
-                            // FIXME Checking for every document whether an annotation document
-                            // exists will heavily slow down search in larger projects. We have
-                            // TWO DB accesses here, one for the source document and one checking
-                            // whether there is an annotation document. This is quite bad. However,
-                            // if we do not do this here, then the user will not get any results
-                            // from documents which the user has not opened yet or alternatively
-                            // duplicate results. Better find a solution which handles this during
-                            // indexing time.
-                            // See: https://github.com/inception-project/inception/issues/790
-                            SourceDocument sourceDocument = documentService
-                                    .getSourceDocument(project.getId(), sourceDocumentId);
-                            if (documentService.existsAnnotationDocument(sourceDocument,
-                                    aRequest.getUsername()) && annotationDocumentId == -1) {
+                            if (annotatableDocuments.containsKey(sourceDocumentId)
+                                && annotationDocumentId == -1) {
                                 // Exclude result if the retrieved document is a sourcedocument
                                 // (that is, has annotationDocument = -1) AND it has a
                                 // corresponding annotation document for this user
                                 log.trace("Skipping results from indexed source document {} in"
                                         + "favor of results from the corresponding annotation "
-                                        + "document", sourceDocument.getId());
+                                        + "document", sourceDocumentId);
                                 continue;
                             }
                             else if (annotationDocumentId != -1
-                                    && !aRequest.getUsername().equals(user)) {
+                                    && !aRequest.getUser().getUsername().equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
                                 // is different from the quering user
                                 log.trace("Skipping results from annotation document for user {} "
                                         + "which does not match the requested user {}", user,
-                                        aRequest.getUsername());
+                                        aRequest.getUser().getUsername());
                                 continue;
                             }
 
