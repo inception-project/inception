@@ -41,16 +41,16 @@ import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
+import org.dkpro.core.api.parameter.ComponentParameters;
+import org.dkpro.core.api.resources.CompressionUtils;
+import org.dkpro.core.api.resources.MappingProvider;
+import org.dkpro.core.api.resources.MappingProviderFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec.AdjacentLabelCodec;
 import de.tudarmstadt.ukp.clarin.webanno.conll.sequencecodec.SequenceItem;
-import de.tudarmstadt.ukp.dkpro.core.api.io.JCasResourceCollectionReader_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.api.parameter.ComponentParameters;
-import de.tudarmstadt.ukp.dkpro.core.api.resources.CompressionUtils;
-import de.tudarmstadt.ukp.dkpro.core.api.resources.MappingProvider;
-import de.tudarmstadt.ukp.dkpro.core.api.resources.MappingProviderFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -165,8 +165,8 @@ public class ConllCoreNlpReader
     {
         super.initialize(aContext);
         
-        posMappingProvider = MappingProviderFactory.createPosMappingProvider(posMappingLocation,
-                posTagset, getLanguage());
+        posMappingProvider = MappingProviderFactory.createPosMappingProvider(this,
+                posMappingLocation, posTagset, getLanguage());
         
         namedEntityMappingProvider = new MappingProvider();
         namedEntityMappingProvider.setDefault(MappingProvider.LOCATION,
