@@ -20,16 +20,16 @@ package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
@@ -172,14 +172,12 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        List expectedAnnoFileLines = linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"), "UTF-8");
-
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(expectedAnnoFileLines)
-            .isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**
