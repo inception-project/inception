@@ -18,10 +18,14 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -29,11 +33,23 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
+@Component(CurationEditorExtension.EXTENSION_ID)
 public class CurationEditorExtension
     extends AnnotationEditorExtensionImplBase
     implements AnnotationEditorExtension
 {
+    public static final String EXTENSION_ID = "curationEditorExtension";
+    
+    private @Autowired DocumentService documentService;
+    private @Autowired CurationService curationService;
+    
+    @Override
+    public String getBeanName()
+    {
+        return EXTENSION_ID;
+    }
 
     @Override
     public void handleAction(AnnotationActionHandler aPanel, AnnotatorState aState,
@@ -51,5 +67,17 @@ public class CurationEditorExtension
         // TODO Auto-generated method stub
 
     }
+
+    public void selectedUsersChanged(AnnotatorState aAnnotatorState, Collection<User> aUsers)
+    {
+        System.out.println("CurrentExtension: " + this.toString());
+        System.out.println("Currentuser: " + aAnnotatorState.getUser().getUsername());
+        for (User user : aUsers) {
+            
+            System.out.println(user.getUsername());
+        }
+    }
+    
+    
 
 }

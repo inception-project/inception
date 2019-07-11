@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,6 +35,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -43,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.inception.curation.CurationEditorExtension;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
@@ -51,11 +52,12 @@ public class CurationSidebar
     
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
+    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     
     private CheckGroup<User> selectedUsers;
     
     private AnnotatorState state;
-    private AnnotationPage annoPage;
+//    private AnnotationPage annoPage;
 
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -63,7 +65,7 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         state = aModel.getObject();
-        annoPage = aAnnotationPage;
+//        annoPage = aAnnotationPage;
         WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
@@ -113,12 +115,9 @@ public class CurationSidebar
 
     private void showUsers()
     {
-        // TODO Auto-generated method stub
-        // for testing
-        Collection<User> users = selectedUsers.getModelObject();
-        for (User user : users) {
-            System.out.println(user.getUsername());
-        }
+        ((CurationEditorExtension) extensionRegistry
+                .getExtension(CurationEditorExtension.EXTENSION_ID))
+                        .selectedUsersChanged(getModelObject(), selectedUsers.getModelObject());
         // refresh should call render of PreRenderer and render of editor-extensions ?
         //annoPage.actionRefreshDocument(aTarget);
     }
