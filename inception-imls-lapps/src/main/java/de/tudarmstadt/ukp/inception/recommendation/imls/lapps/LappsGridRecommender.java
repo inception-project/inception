@@ -26,6 +26,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.dkpro.core.io.lif.internal.DKPro2Lif;
 import org.lappsgrid.client.ServiceClient;
 import org.lappsgrid.discriminator.Discriminators;
 import org.lappsgrid.serialization.Data;
@@ -37,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.lif.internal.DKPro2Lif;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
@@ -141,8 +141,8 @@ public class LappsGridRecommender
     }
 
     @Override
-    public boolean requiresTraining()
+    public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        return false;
+        return true;
     }
 }

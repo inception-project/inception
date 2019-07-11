@@ -56,7 +56,7 @@
   <properties>
     <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
-    <dkpro.version>1.10.0</dkpro.version>
+    <dkpro.version>1.11.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
     <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
     <wicket.version>8.3.0</wicket.version>
@@ -317,7 +317,7 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-lapps</artifactId>
-        <version>0.10.0-SNAPSHOT</version>
+        <version>0.11.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -668,8 +668,8 @@
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-testing-asl</artifactId>
         <version>${dkpro.version}</version>
         <exclusions>
           <exclusion>
@@ -680,20 +680,20 @@
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-html-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
       
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-conll-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>

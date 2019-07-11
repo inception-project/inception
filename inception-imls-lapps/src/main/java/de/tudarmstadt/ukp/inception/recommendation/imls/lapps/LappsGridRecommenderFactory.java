@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRecommenderTraitsEditor;
 
@@ -53,7 +54,7 @@ public class LappsGridRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender)
+    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
     {
         LappsGridRecommenderTraits traits = readTraits(aRecommender);
         return new LappsGridRecommender(aRecommender, traits);
