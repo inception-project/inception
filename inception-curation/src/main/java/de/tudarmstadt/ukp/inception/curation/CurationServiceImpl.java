@@ -17,15 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
+import org.apache.uima.cas.CAS;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Component
@@ -33,10 +40,11 @@ public class CurationServiceImpl implements CurationService
 {
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
+    
+    private @Autowired DocumentService documentService;
 
     public CurationServiceImpl()
     {
-        // TODO Auto-generated constructor stub
         curationStates = new ConcurrentHashMap<>();
     }
     
@@ -48,19 +56,9 @@ public class CurationServiceImpl implements CurationService
         private String username;
         private long projectId;
         
-        public CurationStateKey(User aUser, Project aProject) {
-            username = aUser.getUsername();
-            projectId = aProject.getId();
-        }
-        
-        public String getUsername()
-        {
-            return username;
-        }
-
-        public long getProjectId()
-        {
-            return projectId;
+        public CurationStateKey(String aUser, long aProject) {
+            username = aUser;
+            projectId = aProject;
         }
 
         @Override
@@ -81,26 +79,84 @@ public class CurationServiceImpl implements CurationService
         }
     }
     
-    private CurationState getCurationState(User aUser, Project aProject) {
-        return curationStates.get(new CurationStateKey(aUser, aProject));
+    private CurationState getCurationState(String aUser, long aProjectId) {
+        synchronized (curationStates) {
+            return curationStates.computeIfAbsent(new CurationStateKey(aUser, aProjectId), 
+                key -> new CurationState());
+        }
     }
     
     private class CurationState
     {
-        //TODO
+        private List<User> selectedUsers;
+        // source document of the curated document
+        private SourceDocument curationDoc;
+                
+        public List<User> getSelectedUsers()
+        {
+            return selectedUsers;
+        }
+
+        public void setSelectedUsers(Collection<User> aSelectedUsers)
+        {
+            selectedUsers = new ArrayList<>(aSelectedUsers);
+        }
+
+        public SourceDocument getCurationDoc()
+        {
+            return curationDoc;
+        }
+
+        public void setCurationDoc(SourceDocument aCurationDoc)
+        {
+            curationDoc = aCurationDoc;
+        }
     }
 
     @Override
-    public List<User> listUsersSelectedForCuration(User aCurrentUser, Project aProject)
+    public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId)
     {
-        // TODO Auto-generated method stub
-        return null;
+        return Optional.ofNullable(getCurationState(aCurrentUser, aProjectId).getSelectedUsers());
     }
 
     @Override
-    public void updateUsersSelectedForCuration(User aCurrentUser, Project aProject)
+    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId) throws IOException
     {
-        // TODO Auto-generated method stub
+        SourceDocument doc = getCurationState(aUser, aProjectId).getCurationDoc();
+        if (doc == null) {
+            return Optional.empty();
+        }
         
+        return Optional.of(documentService
+                .readAnnotationCas(doc, aUser));
     }
+
+    @Override
+    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId,
+            Collection<User> aSelectedUsers)
+    {
+        synchronized (curationStates)
+        {
+            getCurationState(aCurrentUser, aProjectId).setSelectedUsers(aSelectedUsers);
+        }
+    }
+
+    @Override
+    public void updateCurationDoc(String aCurrentUser, long aProjectId, SourceDocument aCurationDoc)
+    {
+        synchronized (curationStates)
+        {
+            getCurationState(aCurrentUser, aProjectId).setCurationDoc(aCurationDoc);
+        }
+    }
+
+    @Override
+    public void removeCurrentUserInformation(String aCurrentUser, long aProjectId)
+    {
+        synchronized (curationStates)
+        {
+            curationStates.remove(new CurationStateKey(aCurrentUser, aProjectId));
+        }
+    }
+
 }

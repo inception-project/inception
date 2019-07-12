@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import org.apache.uima.cas.CAS;
+
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationService
@@ -27,10 +32,27 @@ public interface CurationService
     /**
      * List users that were selected to be shown for curation by the given user
      */
-    public List<User> listUsersSelectedForCuration(User aCurrentUser, Project project);
+    public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
+    
+    /**
+     * retrieves CAS associated with curation doc for the given user
+     */
+    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId) throws IOException;
     
     /**
      * Store the users that were selected to be shown for curation by the given user
      */
-    public void updateUsersSelectedForCuration(User aCurrentUser, Project project);
+    public void updateUsersSelectedForCuration(String aCurrentUser, long aProjectId, 
+            Collection<User> aUsers);
+    
+    /**
+     * Store document that curated items should be saved to
+     */
+    public void updateCurationDoc(String aCurrentUser, long aProjectId, 
+            SourceDocument aCurationDoc);
+    
+    /**
+     * Removed stored curation information after user session has ended
+     */
+    public void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
 }

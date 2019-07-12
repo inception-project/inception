@@ -17,8 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -26,11 +31,12 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -39,22 +45,30 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.curation.CurationEditorExtension;
+import de.tudarmstadt.ukp.inception.curation.CurationService;
+
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -4195790451286055737L;
+    private static final String DEFAULT_CURATION_TARGET = "my document";
     
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean CurationService curationService;
     
     private CheckGroup<User> selectedUsers;
+
+    private final List<String> curationTargets = Arrays
+            .asList(new String[] { DEFAULT_CURATION_TARGET, "curation document" });
+    private String selectedCurationTarget = DEFAULT_CURATION_TARGET;
     
     private AnnotatorState state;
 //    private AnnotationPage annoPage;
@@ -71,10 +85,45 @@ public class CurationSidebar
         add(mainContainer);
         
         // set up user-checklist
-        Form<List<User>> usersForm = new Form<List<User>>("usersForm",
-                new ListModel<User>(new ArrayList<>()))
-        {
+        Form<List<User>> usersForm = createUserSelection();
+        mainContainer.add(usersForm);
+        
+        // set up curation target radio button
+        Form<Void> targetForm = new Form<Void>("settingsForm") {
+            
+            private static final long serialVersionUID = -5535838955781542216L;
 
+            @Override
+            protected void onSubmit()
+            {
+                updateSettings();
+            }            
+        };
+        RadioChoice<String> curationTargetBtn = new RadioChoice<String>("curationTargetRadioBtn",
+                new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets);
+        targetForm.add(curationTargetBtn);
+        mainContainer.add(targetForm);
+    }
+
+    private void updateSettings()
+    {
+        SourceDocument doc = state.getDocument();
+        long project = state.getProject().getId();
+
+        if (selectedCurationTarget.equals(DEFAULT_CURATION_TARGET)) {
+            curationService.updateCurationDoc(userRepository.getCurrentUser().getUsername(),
+                    project, doc);
+        }
+        else {
+            curationService.updateCurationDoc(CURATION_USER, project, doc);
+        }
+    }
+    
+    private Form<List<User>> createUserSelection()
+    {
+        Form<List<User>> usersForm = new Form<List<User>>("usersForm",
+                LoadableDetachableModel.of(this::listSelectedUsers))
+        {
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -88,7 +137,6 @@ public class CurationSidebar
         ListView<User> users = new ListView<User>("users",
                 LoadableDetachableModel.of(this::listUsers))
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -100,9 +148,18 @@ public class CurationSidebar
             }
         };
         selectedUsers.add(users);
-        
         usersForm.add(selectedUsers);
-        mainContainer.add(usersForm);
+        return usersForm;
+    }
+    
+    private List<User> listSelectedUsers()
+    {
+        Optional<List<User>> users = curationService.listUsersSelectedForCuration(
+                userRepository.getCurrentUser().getUsername(), state.getProject().getId());
+        if (!users.isPresent()) {
+            return new ArrayList<>();
+        }
+        return users.get();
     }
     
     private List<User> listUsers()
@@ -115,9 +172,9 @@ public class CurationSidebar
 
     private void showUsers()
     {
-        ((CurationEditorExtension) extensionRegistry
-                .getExtension(CurationEditorExtension.EXTENSION_ID))
-                        .selectedUsersChanged(getModelObject(), selectedUsers.getModelObject());
+        Collection<User> users = selectedUsers.getModelObject();
+        curationService.updateUsersSelectedForCuration(
+                userRepository.getCurrentUser().getUsername(), state.getProject().getId(), users);
         // refresh should call render of PreRenderer and render of editor-extensions ?
         //annoPage.actionRefreshDocument(aTarget);
     }

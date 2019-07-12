@@ -18,14 +18,14 @@
 package de.tudarmstadt.ukp.inception.curation;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -42,7 +42,6 @@ public class CurationEditorExtension
 {
     public static final String EXTENSION_ID = "curationEditorExtension";
     
-    private @Autowired DocumentService documentService;
     private @Autowired CurationService curationService;
     
     @Override
@@ -65,18 +64,29 @@ public class CurationEditorExtension
             int aWindowEndOffset)
     {
         // TODO Auto-generated method stub
-
-    }
-
-    public void selectedUsersChanged(AnnotatorState aAnnotatorState, Collection<User> aUsers)
-    {
+        String currentUser = aState.getUser().getUsername();
         System.out.println("CurrentExtension: " + this.toString());
-        System.out.println("Currentuser: " + aAnnotatorState.getUser().getUsername());
-        for (User user : aUsers) {
-            
+        System.out.println("Currentuser: " + currentUser);
+        Optional<List<User>> selectedUsers = curationService
+                .listUsersSelectedForCuration(currentUser, aState.getProject().getId());
+        if (!selectedUsers.isPresent()) {
+            return;
+        }
+
+        for (User user : selectedUsers.get()) {
             System.out.println(user.getUsername());
         }
     }
+
+//    public void selectedUsersChanged(AnnotatorState aAnnotatorState, Collection<User> aUsers)
+//    {
+//        System.out.println("CurrentExtension: " + this.toString());
+//        System.out.println("Currentuser: " + aAnnotatorState.getUser().getUsername());
+//        for (User user : aUsers) {
+//            
+//            System.out.println(user.getUsername());
+//        }
+//    }
     
     
 
