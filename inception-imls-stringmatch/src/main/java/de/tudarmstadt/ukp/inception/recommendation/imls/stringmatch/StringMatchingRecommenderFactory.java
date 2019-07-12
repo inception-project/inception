@@ -22,12 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static java.util.Arrays.asList;
 
-import java.io.IOException;
-
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.model.IModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -37,15 +33,12 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.settings.StringMatchingRecommenderTraitsEditor;
 
 @Component
 public class StringMatchingRecommenderFactory
     extends RecommendationEngineFactoryImplBase<StringMatchingRecommenderTraits>
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
-    
     // This is a string literal so we can rename/refactor the class without it changing its ID
     // and without the database starting to refer to non-existing recommendation tools.
     public static final String ID =
@@ -68,23 +61,7 @@ public class StringMatchingRecommenderFactory
     public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
     {
         StringMatchingRecommenderTraits traits = new StringMatchingRecommenderTraits();
-        StringMatchingRecommender recommender = new StringMatchingRecommender(aRecommender, traits);
-        
-        // Pre-load the gazeteers into the recommender
-        for (Gazeteer gaz : gazeteerService.listGazeteers(aRecommender)) {
-            try {
-                recommender.pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
-            }
-            catch (IOException e) {
-                log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
-                        gaz.getName(), gaz.getRecommender().getName(),
-                        gaz.getRecommender().getId(),
-                        gaz.getRecommender().getProject().getName(),
-                        gaz.getRecommender().getProject().getId(), e);
-            }
-        }
-        
-        return recommender;
+        return new StringMatchingRecommender(aRecommender, traits, gazeteerService);
     }
 
     @Override
