@@ -29,7 +29,7 @@ public class LinkProvider
 
     /**
      * Create an external link to a page which opens a document, codes the url as
-     * aPageClass?params#!p=projectId&d=docId
+     * {@code aPageClass?params#!p=projectId&d=docId}.
      */
     public static ExternalLink createDocumentPageLink(DocumentService aDocService, Project aProject,
             String aDocId, String aId, String aLinkLabel, Class<? extends WebPage> aPageClass)

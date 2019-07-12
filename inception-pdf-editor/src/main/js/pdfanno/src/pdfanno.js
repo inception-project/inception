@@ -2,8 +2,6 @@ require('file-loader?name=index.html!./index.html')
 require('file-loader?name=index-debug.html!./index-debug.html')
 require('!style-loader!css-loader!./pdfanno.css')
 
-// /tab=TAB&pdf=PDFURL&anno=ANNOURL&move
-
 import urijs from 'urijs'
 
 // UI parts.
@@ -14,16 +12,12 @@ import { unlistenWindowLeaveEvent } from './page/util/window'
 import * as publicApi from './page/public'
 import * as searchUI from './page/search'
 import * as textLayer from './page/textLayer'
-// import * as pdftxtDownload from './page/pdftxtdownload'
 import { showLoader } from './page/util/display'
-// import * as ws from './page/socket'
 import PDFAnnoPage from './page/pdf/PDFAnnoPage'
-import * as deepscholar from './deepscholar'
 import * as constants from './shared/constants'
 import * as pdfextractdownload from './page/pdfextractdownload'
 import { readPdftxt } from './page/pdf/loadFiles'
 
-// XXX
 process.env.SERVER_PATH = '0.4.1'
 
 /**
@@ -97,18 +91,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     $(`.nav-tabs a[href="#tab${tabIndex}"]`).click()
   }
 
-  if (deepscholar.isTarget()) {
-    // Display for DeepScholar.
-    deepscholar.initialize()
-
-  } else {
-    // Show a content.
-    displayViewer()
-  }
-
+  // Show a content.
+  displayViewer()
 })
 
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
 function getAnnotations() {
   var data = {
     "action": "getAnnotations",
@@ -124,35 +110,18 @@ function getAnnotations() {
     }]
   });
 }
-// END INCEpTION EXTENSION
 
 async function displayViewer () {
 
   // Display a PDF specified via URL query parameter.
   const q        = urijs(document.URL).query(true)
-// BEGIN INCEpTION EXTENSION - #593 - Add PDFAnno sources
-/*
-  const pdfURL   = q.pdf || getDefaultPDFURL()
-*/
   const pdfURL   = q.pdf
-// END INCEpTION EXTENSION
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
   const pdftxtURL = q.pdftxt
-// END INCEpTION EXTENSION
-  const annoURL  = q.anno
-  const moveTo   = q.move
-// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
   window.apiUrl = q.api
-// END INCEpTION EXTENSION
 
   // Load a PDF file.
   try {
-// BEGIN INCEpTION EXTENSION - #624 - Integration of PDFExtractor
-/*
-    let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL)
-*/
     let { pdf, analyzeResult } = await window.annoPage.loadPDFFromServer(pdfURL, pdftxtURL)
-// END INCEpTION EXTENSION
 
     setTimeout(() => {
       window.annoPage.displayViewer({
@@ -163,40 +132,6 @@ async function displayViewer () {
 
     const listenPageRendered = async () => {
       showLoader(false)
-
-      // Load and display annotations, if annoURL is set.
-      if (annoURL) {
-// BEGIN INCEpTION EXTENSION - #627 - Retrieval of existing annotations in PDF editor frontend
-/*
-        let anno = await window.annoPage.loadAnnoFileFromServer(annoURL)
-
-        window.annoPage.importAnnotation({
-          primary     : true,
-          annotations : [anno],
-          colorMap    : annoUI.labelInput.getColorMap()
-        }, true)
-
-        // Move to the annotation.
-        if (moveTo) {
-          setTimeout(() => {
-            window.annoPage.scrollToAnnotation(moveTo)
-          }, 500)
-        }
-*/
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
-/*
-        parent.Wicket.Ajax.ajax({
-          "m" : "GET",
-          "u" : annoURL,
-          "sh" : [],
-          "fh": [function() {
-              console.log('Something went wrong on requesting annotations from inception backend.')
-          }]
-        });
-*/
-// END INCEpTION EXTENSION - #802
-// END INCEpTION EXTENSION - #627
-      }
       window.removeEventListener('pagerendered', listenPageRendered)
     }
     window.addEventListener('pagerendered', listenPageRendered)
@@ -211,14 +146,9 @@ async function displayViewer () {
     textLayer.setup(analyzeResult)
     window.annoPage.pdftxt = analyzeResult
 
-// BEGIN INCEpTION EXTENSION - #802 - Rendering annotations pagewise
     const renderTimeout = 500
     window.pagechangeEventCounter = 0
     window.pageRender = 1;
-// BEGIN INCEpTION EXTENSION - #1089 - PDF Editor Viewport undefined
-/*
-    getAnnotations()
-*/
     let initAnnotations = function(e) {
       try {
         getAnnotations()
@@ -227,13 +157,12 @@ async function displayViewer () {
       }
     }
     document.addEventListener('pagerendered', initAnnotations)
-// END INCEpTION EXTENSION - #1089
     document.addEventListener('pagechange', function(e) {
       pagechangeEventCounter++
       if (e.pageNumber !== window.pageRender) {
         const snapshot = window.pagechangeEventCounter
         setTimeout(() => {
-          if (snapshot === pagechangeEventCounter && e.pageNumber != window.pageRender) {
+          if (snapshot === pagechangeEventCounter && e.pageNumber !== window.pageRender) {
             window.pageRender = e.pageNumber
             window.pagechangeEventCounter = 0
             getAnnotations()
@@ -241,7 +170,6 @@ async function displayViewer () {
         }, renderTimeout)
       }
     })
-// END INCEpTION EXTENSION - #802
 
   } catch (err) {
 
@@ -360,9 +288,6 @@ function setupUI () {
     didDownloadCallback : unlistenWindowLeaveEvent
   })
 
-  // Download pdftxt button.
-  // pdftxtDownload.setup()
-
   // Label input.
   annoUI.labelInput.setup({
     getSelectedAnnotations : window.annoPage.getSelectedAnnotations,
@@ -403,7 +328,6 @@ function getDefaultPDFURL () {
   // e.g. https://paperai.github.io:80/pdfanno/pdfs/P12-1046.pdf
   const pathnames = location.pathname.split('/')
   const pdfURL = location.protocol + '//' + location.hostname + ':' + location.port + pathnames.slice(0, pathnames.length - 1).join('/') + '/pdfs/P12-1046.pdf'
-  // console.log(location.pathname, pathnames, pdfURL)
   return pdfURL
 }
 
@@ -415,6 +339,3 @@ function getPDFName (url) {
   return a[a.length - 1]
 }
 window.getPDFName = getPDFName
-
-// WebSocket.
-// ws.setup()

@@ -248,7 +248,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const $viewer = $('#viewer')
 
   $viewer.on('mousedown', '.canvasWrapper', e => {
-    if (otherAnnotationTreating) {
+    if (otherAnnotationTreating || e.shiftKey) {
       // Ignore, if other annotation is detected.
       return
     }
@@ -274,13 +274,12 @@ window.addEventListener('DOMContentLoaded', () => {
       if (spanAnnotation) {
         spanAnnotation.deselect()
       }
-// BEGIN INCEpTION EXTENSION - #838 - Creation of spans in PDF editor
       if (startPosition !== null && endPosition !== null) {
         var data = {
           "action": "createSpan",
           "page": currentPage,
           "begin": startPosition,
-          "end": endPosition
+          "end": endPosition + 1
         }
         parent.Wicket.Ajax.ajax({
           "m": "POST",
@@ -299,9 +298,42 @@ window.addEventListener('DOMContentLoaded', () => {
           }]
         });
       }
-// END INCEpTION EXTENSION
     }
     mouseDown = false
+  })
+
+  $viewer.on('click', '.canvasWrapper', e => {
+    if (e.shiftKey) {
+      const canvasElement = e.currentTarget
+      const pageElement = canvasElement.parentNode
+      const page = parseInt(pageElement.getAttribute('data-page-number'))
+      currentPage = page
+      const { top, left } = canvasElement.getBoundingClientRect()
+      const x = e.clientX - left
+      const y = e.clientY - top
+
+      const position = window.findIndex(page, scaleDown({ x, y }))
+      var data = {
+        "action": "createSpan",
+        "page": currentPage,
+        "begin": position,
+        "end": position
+      }
+      console.log(data)
+      if (position != null) {
+        parent.Wicket.Ajax.ajax({
+          "m"  : "POST",
+          "ep" : data,
+          "u"  : window.apiUrl,
+          "fh" : [function () {
+            alert('Something went wrong on creating new zero-width span annotation for: ' + data)
+          }]
+        })
+      } else {
+        console.log('Position is null, cannot create zero-width span annotaton')
+      }
+      currentPage = null
+    }
   })
 
   let otherAnnotationTreating = false

@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.inception.support.test.recommendation.Recommend
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,16 +40,16 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.api.datasets.Dataset;
+import org.dkpro.core.api.datasets.DatasetFactory;
+import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Before;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
@@ -179,7 +180,7 @@ public class DataMajorityNerRecommenderTest
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
         Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
         Feature valFeature = neType.getFeatureByBaseName("value");
@@ -227,13 +228,13 @@ public class DataMajorityNerRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         return loadData(ds, ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
     }
 

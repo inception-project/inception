@@ -24,7 +24,9 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +42,10 @@ import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
+import org.dkpro.core.api.datasets.Dataset;
+import org.dkpro.core.api.datasets.DatasetFactory;
+import org.dkpro.core.io.conll.Conll2002Reader;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,11 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.Dataset;
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2002Reader;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
@@ -185,7 +187,7 @@ public class ExternalRecommenderIntegrationTest
 
     private List<CAS> loadDevelopmentData() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de");
+        Dataset ds = loader.load("germeval2014-de", CONTINUE);
         List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
 
         for (int i = 0; i < data.size(); i++) {

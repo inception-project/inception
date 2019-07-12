@@ -19,12 +19,10 @@ package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -47,12 +45,7 @@ public class DocumentMetadataSidebar
         IModel<String> username = LoadableDetachableModel
                 .of(() -> aModel.getObject().getUser().getUsername());
         
-        DocumentMetadataAnnotationDetailPanel details = new DocumentMetadataAnnotationDetailPanel(
-                "details", Model.of(VID.NONE_ID), sourceDocument, username, aCasProvider, project,
-                aAnnotationPage);
-        add(details);
-        
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aCasProvider, details, aAnnotationPage));
+                username, aCasProvider, aAnnotationPage));
     }
 }

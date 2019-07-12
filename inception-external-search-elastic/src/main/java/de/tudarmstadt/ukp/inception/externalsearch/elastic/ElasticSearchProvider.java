@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
@@ -47,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.text.TextFormatSupport;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchHighlight;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchProvider;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
-import de.tudarmstadt.ukp.inception.externalsearch.HighlightUtils;
 import de.tudarmstadt.ukp.inception.externalsearch.elastic.traits.ElasticSearchProviderTraits;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -85,7 +83,8 @@ public class ElasticSearchProvider
             highlightBuilder.field(highlightField);
     
             SearchRequest searchRequest = new SearchRequest(indexName);
-            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+            SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
+                    .fetchSource(null, ELASTIC_HIT_DOC_KEY);
             RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
             randomFunc.seed(aTraits.getSeed());
             if (aTraits.isRandomOrder()) {
@@ -127,7 +126,6 @@ public class ElasticSearchProvider
     
                 Map<String, Object> hitSource = hit.getSourceAsMap();
                 Map<String, String> metadata = (Map) hitSource.get(ELASTIC_HIT_METADATA_KEY);
-                Map<String, String> doc = (Map) hitSource.get(ELASTIC_HIT_DOC_KEY);
     
                 // Set the metadata fields
                 result.setOriginalSource(metadata.get(METADATA_SOURCE_KEY));
@@ -137,26 +135,13 @@ public class ElasticSearchProvider
     
                 if (hit.getHighlightFields().size() != 0) {
     
-                    // Highlights from elastic search are small sections of the document text
-                    // with the keywords surrounded by the <em> tags.
-                    // There are no offset information for the highlights
-                    // or the keywords in the document text. There is a feature
-                    // request for it (https://github.com/elastic/elasticsearch/issues/5736).
-                    // Until this feature is implemented, we currently try to find
-                    // the keywords offsets by finding the matching highlight in the document text,
-                    // then the keywords offset within highlight using <em> tags.
-                    String originalText = doc.get(DOC_TEXT_KEY);
-    
                     // There are highlights, set them in the result
                     List<ExternalSearchHighlight> highlights = new ArrayList<>();
                     if (hit.getHighlightFields().get(aTraits.getDefaultField()) != null) {
                         for (Text highlight : hit.getHighlightFields()
                                 .get(aTraits.getDefaultField())
                                 .getFragments()) {
-                            Optional<ExternalSearchHighlight> exHighlight = HighlightUtils
-                                    .parseHighlight(highlight.toString(), originalText);
-                        
-                            exHighlight.ifPresent(highlights::add);
+                            highlights.add(new ExternalSearchHighlight(highlight.toString()));
                         }
                     }
                     result.setHighlights(highlights);

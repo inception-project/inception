@@ -1,7 +1,5 @@
 import { uuid } from 'anno-ui/src/utils'
 import AbstractAnnotation from './abstract'
-// import { convertFromExportY } from '../../../shared/coords'
-// import appendChild from '../render/appendChild'
 
 /**
  * Span Annotation.
@@ -34,14 +32,9 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance (annotation) {
+  static newInstance (annotation, allowZeroWidth) {
     let a          = new SpanAnnotation()
-// BEGIN INCEpTION EXTENSION - #593 - add pdfanno sources
-/*
-    a.uuid         = uuid()
-*/
     a.uuid         = annotation.uuid || uuid()
-// END INCEpTION EXTENSION
     a.text         = annotation.text
     a.color        = annotation.color
     a.readOnly     = annotation.readOnly || false
@@ -53,7 +46,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     a.border       = annotation.border !== false
 
     // Calc the position.
-    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1])
+    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
     rects = window.mergeRects(rects)
     a.rectangles = rects
 
@@ -68,7 +61,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     d.selectedText = d.text
     d.text = d.label
     d.textRange = d.textrange
-    let span = SpanAnnotation.newInstance(d)
+    let span = SpanAnnotation.newInstance(d, true)
     return span
   }
 
@@ -106,7 +99,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     let promise = super.destroy()
     this.emit('delete')
 
-    // TODO オブジェクトベースで削除できるようにしたい.
     window.globalEvent.removeListener('deleteSelectedAnnotation', this.deleteSelectedAnnotation)
     window.globalEvent.removeListener('enableViewMode', this.enableViewMode)
     return promise
@@ -210,7 +202,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
    */
   handleClickEvent (e) {
     super.handleClickEvent(e)
-// BEGIN INCEpTION EXTENSION - #879 - Selection of spans in PDF editor
     if (this.selected) {
       var data = {
         "action": "selectSpan",
@@ -229,7 +220,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
         }]
       });
     }
-// END INCEpTION EXTENSION
   }
 
   export (id) {
@@ -268,7 +258,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
     }
   }
 
-// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
   deleteRecommendation() {
     var data = {
       "action": "deleteRecommendation",
@@ -287,7 +276,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
       }]
     });
   }
-// END INCEpTION EXTENSION
 
   /**
    * Enable view mode.
@@ -295,11 +283,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
   enableViewMode () {
     this.disableViewMode()
     super.enableViewMode()
-// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
-/*
-    if (!this.readOnly) {
-      this.$element.find('.anno-knob').on('click', this.handleClickEvent)
-*/
     var singleClickAction = this.handleClickEvent
     var doubleClickAction = this.deleteRecommendation
     if (!this.readOnly) {
@@ -322,7 +305,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
           }
         }
       })
-// END INCEpTION EXTENSION
     }
   }
 
@@ -335,8 +317,6 @@ export default class SpanAnnotation extends AbstractAnnotation {
   }
 }
 
-// BEGIN INCEpTION EXTENSION - #947 - Removing recommendations in PDF editor
 var clickCount = 0;
 var timer = null;
 var CLICK_DELAY = 300;
-// END INCEpTION EXTENSION

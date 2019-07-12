@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderAsserts.asHandles;
+import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -41,8 +42,6 @@ import org.apache.commons.compress.compressors.CompressorStreamFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.rdf4j.model.ValueFactory;
 import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
-import org.eclipse.rdf4j.query.TupleQuery;
-import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
 import org.eclipse.rdf4j.repository.RepositoryConnection;
 import org.eclipse.rdf4j.repository.sail.SailRepository;
@@ -256,21 +255,6 @@ public class SPARQLQueryBuilderGenericTest
             else {
                 return new URL(aUrl).openStream();
             }
-        }
-    }
-    
-    public static boolean isReachable(String aUrl)
-    {
-        SPARQLRepository r = new SPARQLRepository(aUrl);
-        r.init();
-        try (RepositoryConnection conn = r.getConnection()) {
-            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
-            try (TupleQueryResult result = query.evaluate()) {
-                return true;
-            }
-        }
-        catch (Exception e) {
-            return false;
         }
     }
 }
