@@ -492,11 +492,20 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public RecommenderContext getContext(User aUser, Recommender aRecommender)
+    public Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender)
     {
         RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
+        }
+    }
+    
+    @Override
+    public void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            state.putContext(aRecommender, aContext);
         }
     }
     
@@ -637,14 +646,22 @@ public class RecommendationServiceImpl
         }
         
         /**
-         * Returns the context for the given recommender or creates a new one if there is none so
-         * far.
+         * Returns the context for the given recommender if there is one.
          */
-        public RecommenderContext getContext(Recommender aRecommender)
+        public Optional<RecommenderContext> getContext(Recommender aRecommender)
         {
             Validate.notNull(aRecommender, "Recommender must be specified");
             
-            return contexts.computeIfAbsent(aRecommender, (v) -> new RecommenderContext());
+            return Optional.ofNullable(contexts.get(aRecommender));
+        }
+        
+        public void putContext(Recommender aRecommender, RecommenderContext aContext)
+        {
+            Validate.notNull(aRecommender, "Recommender must be specified");
+            Validate.notNull(aContext, "Context must be specified");
+            Validate.isTrue(aContext.isClosed(), "Context must be closed");
+            
+            contexts.put(aRecommender, aContext);
         }
                 
         public void removePredictions(Recommender aRecommender)
@@ -688,9 +705,17 @@ public class RecommendationServiceImpl
         String username = aUser.getUsername();
         Predictions predictions = new Predictions(aUser, aProject);
 
+        CAS predictionCas = null;
+        try {
+            predictionCas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        }
+        catch (ResourceInitializationException e) {
+            log.info("Cannot create prediction CAS, stopping predictions!");
+            return predictions;
+        }
+
         nextDocument: for (SourceDocument document : aDocuments) {
             Optional<CAS> originalCas = Optional.empty();
-            CAS predictionCas = null;
             nextLayer: for (AnnotationLayer layer : annoService
                     .listAnnotationLayer(document.getProject())) {
                 if (!layer.isEnabled()) {
@@ -719,16 +744,18 @@ public class RecommendationServiceImpl
                         continue nextRecommender;
                     }
 
-                    RecommenderContext ctx = getContext(aUser, recommender);
+                    Optional<RecommenderContext> context = getContext(aUser, recommender);
 
-                    if (!ctx.isReadyForPrediction()) {
-                        log.info("Context for recommender [{}]({}) for user [{}] on document "
-                                + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
+                    if (!context.isPresent()) {
+                        log.info("No context available for recommender [{}]({}) for user [{}] "
+                                + "on document [{}]({}) in project [{}]({}) - skipping recommender",
                                 recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId());
                         continue nextRecommender;
                     }
+                    
+                    RecommenderContext ctx = context.get();
 
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
                     
@@ -771,22 +798,22 @@ public class RecommendationServiceImpl
                             continue nextDocument;
                         }
 
-                        try {
-                            predictionCas = cloneCAS(originalCas.get());
-                            monkeyPatchTypeSystem(aProject, predictionCas);
-                        }
-                        catch (UIMAException | IOException e) {
-                            log.error("Cannot create prediction CAS for user [{}] of document "
-                                    + "[{}]({}) in project [{}]({}) - skipping document",
-                                    username, document.getName(), document.getId(),
-                                    document.getProject().getName(), document.getProject().getId(),
-                                    e);
-                            continue nextDocument;
-                        }
+
                     }
 
                     try {
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
+                        RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
+                        
+                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
+                            log.info("Recommender context [{}]({}) for user [{}] in project "
+                                    + "[{}]({}) is not ready for prediction - skipping recommender",
+                                    recommender.getName(), recommender.getId(), username,
+                                    document.getProject().getName(), document.getProject().getId());
+                            continue nextRecommender;
+                        }
+
+                        cloneCAS(originalCas.get(), predictionCas);
+                        monkeyPatchTypeSystem(aProject, predictionCas);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
@@ -991,19 +1018,15 @@ public class RecommendationServiceImpl
         }
     }
 
-
-    
-    private CAS cloneCAS(CAS aCAS) throws ResourceInitializationException, CASException
+    private CAS cloneCAS(CAS aSourceCas, CAS aTargetCas) throws CASException
     {
-        CAS clone = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
-        
-        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aCAS);
-        Serialization.deserializeCASComplete(ser, (CASMgr) clone);
+        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aSourceCas);
+        Serialization.deserializeCASComplete(ser, (CASMgr) aTargetCas);
         
         // Make sure JCas is properly initialized too
-        clone.getJCas();
+        aTargetCas.getJCas();
         
-        return clone;
+        return aTargetCas;
     }
 
     public void monkeyPatchTypeSystem(Project aProject, CAS aCas)

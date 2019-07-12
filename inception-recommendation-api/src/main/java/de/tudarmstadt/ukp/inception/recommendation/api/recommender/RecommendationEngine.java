@@ -31,7 +31,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public abstract class RecommendationEngine {
-
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
@@ -85,14 +84,28 @@ public abstract class RecommendationEngine {
 // end::methodDefinition[]
 
     /**
-     * Whether or not this engine supports training. If training is not supported, the call to
-     * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
-     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
-     * training is skipped - this is meant only for engines that use pre-trained models.
+     * This method should be called before attempting to call {@link #predict} to ensure that the
+     * given context contains sufficient information to perform prediction. If this method returns
+     * {@code false}, calling {@link #predict} might result in an exception being thrown or in
+     * predictions being invalid/unusable.
+     * 
+     * @return if the recommender can use the given context to make predictions. This is usually the
+     *         case if the recommender has previously initialized the context with a trained model.
+     *         However, some recommenders might be able to provide recommendations without a trained
+     *         model, e.g. using some kind of fall back mechanism.
      */
-    public boolean requiresTraining()
+    public abstract boolean isReadyForPrediction(RecommenderContext aContext);
+    
+    /** 
+     * Returns which training capabilities this engine has.
+     * If training is not supported, the call to {@link #train} should be skipped and 
+     * {@link #predict} should be called immediately.   
+     * Note that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+     * training is skipped or fails - this is meant only for engines that use pre-trained models.
+     */
+    public RecommendationEngineCapability getTrainingCapability()
     {
-        return true;
+        return RecommendationEngineCapability.TRAINING_SUPPORTED;
     }
 
     protected Type getPredictedType(CAS aCas)

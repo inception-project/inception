@@ -20,7 +20,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns="http://www.springframework.org/schema/security"
     xsi:schemaLocation="
-        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xs
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
         http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.2.xsd">
 
     <beans:bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
@@ -57,6 +57,7 @@
         <beans:property name="principalRequestHeader" value="${auth.preauth.header.principal}" />
         <beans:property name="authenticationManager" ref="authenticationManager" />
         <beans:property name="userDetailsManager" ref="userDetailsService" />
+        <beans:property name="userRepository" ref="userRepository" />
         <beans:property name="exceptionIfHeaderMissing" value="true" />
     </beans:bean>
 
@@ -78,4 +79,7 @@
         class="de.tudarmstadt.ukp.clarin.webanno.security.OverridableUserDetailsManager">
         <beans:property name="dataSource" ref="dataSource" />
     </beans:bean>
+    
+    <beans:bean id="sessionRegistry" 
+        class="org.springframework.security.core.session.SessionRegistryImpl" />
 </beans:beans>

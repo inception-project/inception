@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.inception.plugin.api.ExportedBean;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 @ExportedBean
 @Component
@@ -69,7 +70,7 @@ public class DL4JSequenceRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender)
+    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
     {
         DL4JSequenceRecommenderTraits traits = new DL4JSequenceRecommenderTraits();
         return new DL4JSequenceRecommender(aRecommender, traits,

@@ -135,23 +135,23 @@
     </dependency>
 
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-conll-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.datasets-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-datasets-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.api.ner-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-      <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-testing-asl</artifactId>
       <scope>test</scope>
     </dependency>
   </dependencies>
