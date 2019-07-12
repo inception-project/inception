@@ -25,9 +25,6 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.Trie;
-import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.trie.WhitespaceNormalizingSanitizer;
-
 public class TrieTest
 {
     private Trie<String> sut;

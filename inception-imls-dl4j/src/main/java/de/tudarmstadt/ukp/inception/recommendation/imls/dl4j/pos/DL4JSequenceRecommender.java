@@ -46,6 +46,7 @@ import org.deeplearning4j.nn.conf.layers.LSTM;
 import org.deeplearning4j.nn.conf.layers.RnnOutputLayer;
 import org.deeplearning4j.nn.conf.layers.recurrent.Bidirectional;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.api.embeddings.binary.BinaryVectorizer;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
@@ -58,7 +59,6 @@ import org.nd4j.linalg.schedule.StepSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.dkpro.core.api.datasets.DatasetFactory;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
