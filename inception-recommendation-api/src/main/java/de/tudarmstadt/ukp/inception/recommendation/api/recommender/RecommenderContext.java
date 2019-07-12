@@ -17,33 +17,79 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Nullable;
 
 public class RecommenderContext
 {
-    private final ConcurrentHashMap<String, Object> store;
-    private boolean ready = false;
+    /**
+     * Empty context which starts out being closed.
+     */
+    public static final RecommenderContext EMPTY_CONTEXT;
+    
+    static {
+        EMPTY_CONTEXT = new  RecommenderContext();
+        EMPTY_CONTEXT.close();
+    }
+    
+    private final Map<String, Object> store;
+    private boolean closed = false;
 
     public RecommenderContext()
     {
-        store = new ConcurrentHashMap<>();
+        store = new HashMap<>();
     }
 
     @SuppressWarnings("unchecked")
     @Nullable
-    public <T> Optional<T> get(Key<T> aKey)
+    synchronized public <T> Optional<T> get(Key<T> aKey)
     {
         return Optional.ofNullable((T) store.get(aKey.name));
     }
 
-    public <T> void put(Key<T> aKey, T aValue)
+    synchronized public <T> void put(Key<T> aKey, T aValue)
     {
+        if (closed) {
+            throw new IllegalStateException("Adding data to a closed context is not permitted.");
+        }
+        
         store.put(aKey.name, aValue);
     }
-
+    
+    /**
+     * Close the context. Further modifications to the context are not permitted.
+     */
+    synchronized public void close()
+    {
+        closed = true;
+    }
+    
+    /**
+     * @return whether the context is closed.
+     */
+    synchronized public boolean isClosed()
+    {
+        return closed;
+    }
+    
+    /**
+     * Creates a non-closed copy of the current context. The data from the internal store is copied
+     * into the store of the new context.
+     */
+    synchronized public RecommenderContext copy()
+    {
+        if (!closed) {
+            throw new IllegalStateException("Context must be closed before it can be copied.");
+        }
+        
+        RecommenderContext ctx = new RecommenderContext();
+        ctx.store.putAll(store);   
+        return ctx;
+    }
+    
     public static class Key<T>
     {
         private final String name;
@@ -52,21 +98,5 @@ public class RecommenderContext
         {
             name = aName;
         }
-    }
-    
-    /**
-     * Mark context as ready meaning that it can be used to generate predictions.
-     */
-    public void markAsReadyForPrediction()
-    {
-        ready = true;
-    }
-    
-    /**
-     * @return whether the context is ready to be used for making predictions.
-     */
-    public boolean isReadyForPrediction()
-    {
-        return ready;
     }
 }

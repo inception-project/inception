@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.BeanIds;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -83,6 +84,7 @@ public class InceptionSecurity
     protected void configureGlobal(AuthenticationManagerBuilder auth) throws Exception
     {
         auth.authenticationProvider(authenticationProvider());
+        auth.authenticationEventPublisher(new DefaultAuthenticationEventPublisher());
     }
     
     @Order(1)

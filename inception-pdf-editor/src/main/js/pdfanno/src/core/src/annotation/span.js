@@ -32,7 +32,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
   /**
    * Create an instance from an annotation data.
    */
-  static newInstance (annotation) {
+  static newInstance (annotation, allowZeroWidth) {
     let a          = new SpanAnnotation()
     a.uuid         = annotation.uuid || uuid()
     a.text         = annotation.text
@@ -46,7 +46,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     a.border       = annotation.border !== false
 
     // Calc the position.
-    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1])
+    let rects = window.findTexts(a.page, a.textRange[0], a.textRange[1], allowZeroWidth)
     rects = window.mergeRects(rects)
     a.rectangles = rects
 
@@ -61,7 +61,7 @@ export default class SpanAnnotation extends AbstractAnnotation {
     d.selectedText = d.text
     d.text = d.label
     d.textRange = d.textrange
-    let span = SpanAnnotation.newInstance(d)
+    let span = SpanAnnotation.newInstance(d, true)
     return span
   }
 

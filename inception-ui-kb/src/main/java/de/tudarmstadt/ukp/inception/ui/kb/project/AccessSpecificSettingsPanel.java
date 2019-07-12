@@ -74,6 +74,7 @@ import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseProperties;
 import de.tudarmstadt.ukp.inception.kb.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
+import de.tudarmstadt.ukp.inception.ui.kb.project.validators.Validators;
 
 public class AccessSpecificSettingsPanel
     extends Panel
@@ -186,8 +187,9 @@ public class AccessSpecificSettingsPanel
         }, str -> {
             model.setObject(str != null ? SimpleValueFactory.getInstance().createIRI(str) : null);
         });
-        
-        return new TextField<String>(aId, adapter);
+        TextField<String> defaultDataset = new TextField<>(aId, adapter);
+        defaultDataset.add(Validators.IRI_VALIDATOR);
+        return defaultDataset;
     }
 
     private ListView<KnowledgeBaseProfile> remoteSuggestionsList(String aId,

@@ -127,6 +127,12 @@ public class SelectionTask
                     RecommendationEngineFactory factory = recommendationService
                         .getRecommenderFactory(recommender);
                     
+                    if (factory == null) {
+                        log.error("[{}][{}]: No recommender factory available for [{}]",
+                                user.getUsername(), r.getName(), r.getTool());
+                        continue;
+                    }
+                    
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
                                 + "- skipping recommender", user.getUsername(), r.getName());
