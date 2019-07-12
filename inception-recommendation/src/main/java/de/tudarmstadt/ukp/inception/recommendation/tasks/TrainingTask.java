@@ -151,20 +151,14 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
-                    if (!cassesForTraining.isEmpty()) {
-                        log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
-                                user.getUsername(), recommender.getName(), cassesForTraining.size(),
-                                casses.get().size());
-                        
-                        recommendationEngine.train(context, cassesForTraining);
-                        
-                        log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                                recommender.getName(), (System.currentTimeMillis() - startTime));
-                    }
-                    else {
-                        log.info("[{}][{}]: There are annotations available to train on",
-                                user.getUsername(), recommender.getName());
-                    }
+                    log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
+                            user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                            casses.get().size());
+                    
+                    recommendationEngine.train(context, cassesForTraining);
+                    
+                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime));
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
