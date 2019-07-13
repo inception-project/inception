@@ -91,13 +91,17 @@ public class StringMatchingRecommender
         return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
     }
     
-    public void pretrain(List<GazeteerEntry> aData, Trie<DictEntry> aDict)
+    public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
     {
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
+        
         if (aData != null) {
             for (GazeteerEntry entry : aData) {
-                learn(aDict, entry.text, entry.label);
+                learn(dict, entry.text, entry.label);
             }
         }
+        
+        aContext.put(KEY_MODEL, dict);
     }
 
     private <T> Trie<T> createTrie()
@@ -108,13 +112,11 @@ public class StringMatchingRecommender
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        Trie<DictEntry> dict = createTrie();
-        
         // Pre-load the gazeteers into the model
         if (gazeteerService != null) {
             for (Gazeteer gaz : gazeteerService.listGazeteers(recommender)) {
                 try {
-                    pretrain(gazeteerService.readGazeteerFile(gaz), dict);
+                    pretrain(gazeteerService.readGazeteerFile(gaz), aContext);
                 }
                 catch (IOException e) {
                     log.info("Unable to load gazeteer [{}] for recommender [{}]({}) in project [{}]({})",
@@ -125,6 +127,8 @@ public class StringMatchingRecommender
                 }
             }
         }
+        
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElseGet(this::createTrie);
         
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
