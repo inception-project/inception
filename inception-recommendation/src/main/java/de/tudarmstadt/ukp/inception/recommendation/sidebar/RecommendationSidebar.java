@@ -98,7 +98,7 @@ public class RecommendationSidebar
 
         add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
         
-        add(new RecommenderInfoPanel("recommenders", aModel, getCasProvider()));
+        add(new RecommenderInfoPanel("recommenders", aModel));
     }
 
     @Override

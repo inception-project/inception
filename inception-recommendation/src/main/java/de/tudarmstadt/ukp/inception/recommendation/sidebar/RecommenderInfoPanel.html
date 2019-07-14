@@ -28,8 +28,40 @@
       <ul class="form-group list-group">
         <li wicket:id="recommender" class="list-group-item">
           <span wicket:id="state" class="badge"/>
-          <h4 wicket:id="name" class="list-group-item-heading"></h4>
-          <input wicket:id="acceptAll" type="button" class="btn btn-primary" value="Accept all"/>
+          <div wicket:id="name" class="list-group-item-heading"></div>
+          <div wicket:id="resultsContainer">
+            <div class="row">
+              <div class="col-md-6 form-group">
+                <label class="col-sm-4 control-label">F1</label>
+                <div class="col-sm-8">
+                  <span wicket:id="f1Score" class="form-control"/>
+                </div>
+              </div>
+              <div class="col-md-6 form-group">
+                <label class="col-sm-4 control-label">Acc.</label>
+                <div class="col-sm-8">
+                  <span wicket:id="accuracy" class="form-control"/>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 form-group">
+                <label class="col-sm-4 control-label">Prec.</label>
+                <div class="col-sm-8">
+                  <span wicket:id="precision" class="form-control"/>
+                </div>
+              </div>
+              <div class="col-md-6 form-group">
+                <label class="col-sm-4 control-label">Rec.</label>
+                <div class="col-sm-8">
+                  <span wicket:id="recall" class="form-control"/>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row text-right">
+            <input wicket:id="acceptAll" type="button" class="btn btn-xs btn-success" value="Accept all"/>
+          </div>
         </li>
       </ul>
     </div>

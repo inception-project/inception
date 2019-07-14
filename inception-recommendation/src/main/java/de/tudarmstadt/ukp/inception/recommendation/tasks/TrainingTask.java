@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
@@ -97,8 +98,8 @@ public class TrainingTask
                 continue;
             }
             
-            List<Recommender> recommenders = recommendationService.getActiveRecommenders(user,
-                    layer);
+            List<EvaluatedRecommender> recommenders = recommendationService
+                    .getActiveRecommenders(user, layer);
     
             if (recommenders.isEmpty()) {
                 log.debug("[{}][{}]: No active recommenders, skipping training.",
@@ -106,47 +107,44 @@ public class TrainingTask
                 continue;
             }
             
-            for (Recommender r : recommenders) {
+            for (EvaluatedRecommender r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from the
                 // active recommenders list may be outdated
                 Recommender recommender;
                 try {
-                    recommender = recommendationService.getRecommender(r.getId());
+                    recommender = recommendationService.getRecommender(r.getRecommender().getId());
                 }
                 catch (NoResultException e) {
                     log.info("[{}][{}]: Recommender no longer available... skipping",
-                            user.getUsername(), r.getName());
+                            user.getUsername(), r.getRecommender().getName());
                     continue;
                 }
                 
                 if (!recommender.isEnabled()) {
-                    log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                    log.debug("[{}][{}]: Disabled - skipping", user.getUsername(),
+                            r.getRecommender().getName());
                     continue;
                 }
                 
                 long startTime = System.currentTimeMillis();
                 
                 try {
-                    // Create a new context either by copying the current context or by creating a
-                    // new one. Copying the data from the current context over to the new one is
-                    // meant to permit incremental training of models. Mind that the recommender
-                    // may have to take extra measures to avoid the incremental update from 
-                    // interfering with any predictions being executed using the current model.
-                    RecommenderContext ctx = recommendationService.getContext(user, recommender)
-                            .orElse(RecommenderContext.EMPTY_CONTEXT).copy();
-                    
                     RecommendationEngineFactory factory = recommendationService
                             .getRecommenderFactory(recommender);
 
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
                                         + "- skipping recommender",
-                                user.getUsername(), r.getName());
+                                user.getUsername(), r.getRecommender().getName());
                         continue;
                     }
                     
-                    RecommendationEngine recommendationEngine = factory.build(recommender, ctx);
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
                    
+                    RecommenderContext ctx = recommendationEngine
+                            .newContext(recommendationService.getContext(user, recommender)
+                                    .orElse(RecommenderContext.EMPTY_CONTEXT));
+                    
                     RecommendationEngineCapability capability = recommendationEngine
                             .getTrainingCapability();
                     

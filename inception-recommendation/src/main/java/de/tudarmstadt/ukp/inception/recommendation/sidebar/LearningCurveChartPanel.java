@@ -122,9 +122,7 @@ public class LearningCurveChartPanel
     }
     
     /**
-     * returns chart data wrapped in LearningCurve
-     * 
-     * @return
+     * Returns chart data wrapped in LearningCurve
      */
     private LearningCurve renderChart()
     {

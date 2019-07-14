@@ -23,10 +23,12 @@ import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSu
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -34,12 +36,13 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -48,9 +51,12 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -62,13 +68,11 @@ public class RecommenderInfoPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     
-    private CasProvider casProvider;
-    
-    public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel, CasProvider aCasProvider)
+    public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
         
-        casProvider = aCasProvider;
+        setOutputMarkupId(true);
         
         ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
         {
@@ -79,12 +83,29 @@ public class RecommenderInfoPanel
             {
                 User user = userService.getCurrentUser();
                 Recommender recommender = item.getModelObject();
-                boolean active = recommendationService
-                        .getActiveRecommenders(user, recommender.getLayer()).contains(recommender);
+                List<EvaluatedRecommender> activeRecommenders = recommendationService
+                        .getActiveRecommenders(user, recommender.getLayer());
+                Optional<EvaluationResult> evalResult = activeRecommenders.stream()
+                        .filter(r -> r.getRecommender().equals(recommender))
+                        .map(EvaluatedRecommender::getEvaluationResult)
+                        .findAny();
                 item.add(new Label("name", recommender.getName()));
-                item.add(new Label("state", active ? "active" : "off"));
+                item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
+
                 item.add(new LambdaAjaxLink("acceptAll", _target -> 
                         actionAcceptAll(_target, recommender)));
+                
+                WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
+                resultsContainer.setVisible(evalResult.isPresent());
+                resultsContainer.add(new Label("f1Score",
+                        evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
+                resultsContainer.add(new Label("accuracy",
+                        evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
+                resultsContainer.add(new Label("precision",
+                        evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
+                resultsContainer.add(new Label("recall",
+                        evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+                item.add(resultsContainer);
             }
         };
         searchResultGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
@@ -97,12 +118,21 @@ public class RecommenderInfoPanel
         return (AnnotatorState) getDefaultModelObject();
     }
     
+    @OnEvent
+    public void onRenderAnnotations(PredictionsSwitchedEvent aEvent)
+    {
+        aEvent.getRequestHandler().add(this);
+    }
+    
     private void actionAcceptAll(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
         User user = userService.getCurrentUser();
         AnnotatorState state = getModelObject();
-        CAS cas = casProvider.get();
+        
+        AnnotationPageBase page = findParent(AnnotationPageBase.class);
+        
+        CAS cas = page.getEditorCas();
         
         SourceDocument document = state.getDocument();
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
@@ -146,6 +176,8 @@ public class RecommenderInfoPanel
         }
         
         // Save CAS after annotations have been created
-        documentService.writeAnnotationCas(cas, document, state.getUser(), true);
+        page.writeEditorCas(cas);
+        
+        page.actionRefreshDocument(aTarget);
     }
 }
