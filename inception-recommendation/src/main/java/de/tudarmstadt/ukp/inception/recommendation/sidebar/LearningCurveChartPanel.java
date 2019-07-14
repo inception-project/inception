@@ -77,6 +77,8 @@ public class LearningCurveChartPanel
         super(aId, aModel);
         model = aModel;
 
+        setOutputMarkupId(true);
+        
         //initially the chart is empty. passing empty model
         chartPanel = new ChartPanel(MID_CHART_CONTAINER,
                 LoadableDetachableModel.of(this::renderChart));
