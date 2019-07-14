@@ -242,6 +242,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-brat</artifactId>
       <exclusions>
         <exclusion>
@@ -715,8 +719,9 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
