@@ -45,13 +45,13 @@ import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.resource.metadata.impl.TypeSystemDescription_impl;
 import org.apache.uima.util.CasCreationUtils;
+import org.dkpro.core.io.conll.Conll2006Reader;
+import org.dkpro.core.io.xmi.XmiReader;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv2Reader;
 import de.tudarmstadt.ukp.clarin.webanno.tsv.WebannoTsv3XReader;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.io.conll.Conll2006Reader;
-import de.tudarmstadt.ukp.dkpro.core.io.xmi.XmiReader;
 
 public class CurationTestUtils
 {

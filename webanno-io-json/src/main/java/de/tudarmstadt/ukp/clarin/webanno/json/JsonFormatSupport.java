@@ -22,11 +22,11 @@ import static org.apache.uima.fit.factory.AnalysisEngineFactory.createEngineDesc
 import org.apache.uima.analysis_engine.AnalysisEngineDescription;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.ResourceInitializationException;
+import org.dkpro.core.io.json.JsonWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.dkpro.core.io.json.JsonWriter;
 
 @Component
 public class JsonFormatSupport
