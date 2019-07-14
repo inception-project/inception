@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.DOCUMENT_FOLD
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.SOURCE_FOLDER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static java.util.Objects.isNull;
@@ -684,6 +685,11 @@ public class DocumentServiceImpl
     {
         AnnotationDocument adoc = getAnnotationDocument(aDocument, aUser);
         JCas jcas = createOrReadInitialCas(aDocument);
+        // Add/update the CAS metadata
+        File casFile = getCasFile(aDocument, aUser.getUsername());
+        if (casFile.exists()) {
+            addOrUpdateCasMetadata(jcas, casFile, aDocument, aUser.getUsername());
+        }
         writeAnnotationCas(jcas, aDocument, aUser, false);
         applicationEventPublisher.publishEvent(new AfterDocumentResetEvent(this, adoc, jcas));
     }
