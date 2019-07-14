@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_SUPPORTED;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -155,6 +154,8 @@ public class TrainingTask
                     if (capability == TRAINING_NOT_SUPPORTED) {
                         log.info("[{}][{}]: Engine does not support training",
                                 user.getUsername(), recommender.getName());
+                        ctx.close();
+                        recommendationService.putContext(user, recommender, ctx);
                         continue;
                     }
                     
@@ -166,28 +167,22 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
-                    
-                    if (cassesForTraining.isEmpty()) {
-                        // If no data for training is available, but the engine requires training, 
-                        // do not mark as ready
-                        if (capability == TRAINING_REQUIRED) {
-                            log.info("[{}][{}]: There are no annotations available to train on",
-                                    user.getUsername(), recommender.getName());
-                            continue;
-                        // If not data for training is available, and the engine supports but not 
-                        // requires training, mark as ready
-                        } else if (capability == TRAINING_SUPPORTED) {
-                            continue;
-                        }
-                    } else {
-                        log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
-                                user.getUsername(), recommender.getName(), cassesForTraining.size(),
-                                casses.get().size());
-                        
-                        recommendationEngine.train(ctx, cassesForTraining);
-                        log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
-                                recommender.getName(), (System.currentTimeMillis() - startTime));
+                    // If no data for training is available, but the engine requires training, 
+                    // do not mark as ready
+                    if (cassesForTraining.isEmpty() && capability == TRAINING_REQUIRED) {
+                        log.info("[{}][{}]: There are no annotations available to train on",
+                                user.getUsername(), recommender.getName());
+                        continue;
                     }
+                    
+                    log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
+                            user.getUsername(), recommender.getName(), cassesForTraining.size(),
+                            casses.get().size());
+                    
+                    recommendationEngine.train(ctx, cassesForTraining);
+                    
+                    log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
+                            recommender.getName(), (System.currentTimeMillis() - startTime));
                     
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
