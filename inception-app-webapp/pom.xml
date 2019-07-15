@@ -499,6 +499,10 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-javax</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -745,7 +749,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
-              <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
