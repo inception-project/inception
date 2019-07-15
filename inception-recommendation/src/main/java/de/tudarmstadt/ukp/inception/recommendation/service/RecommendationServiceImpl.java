@@ -479,6 +479,8 @@ public class RecommendationServiceImpl
         
         synchronized (states) {
             states.keySet().removeIf(key -> aUsername.equals(key.getUser()));
+            trainingTaskCounter.keySet()
+                    .removeIf(key -> aUsername.equals(key.getKey().getUsername()));
         }
     }
     
@@ -723,6 +725,12 @@ public class RecommendationServiceImpl
                 }
 
                 List<Recommender> recommenders = getActiveRecommenders(aUser, layer);
+                
+                if (recommenders.isEmpty()) {
+                    log.trace("[{}]: No active recommenders on layer [{}]", username,
+                            layer.getUiName());
+                    continue;
+                }
 
                 nextRecommender: for (Recommender r : recommenders) {
                     
@@ -797,8 +805,6 @@ public class RecommendationServiceImpl
                                     e);
                             continue nextDocument;
                         }
-
-
                     }
 
                     try {
@@ -812,6 +818,9 @@ public class RecommendationServiceImpl
                             continue nextRecommender;
                         }
 
+                        log.trace("[{}][{}]: Generating predictions for layer [{}]", username,
+                                r.getName(), layer.getUiName());
+                        
                         cloneCAS(originalCas.get(), predictionCas);
                         monkeyPatchTypeSystem(aProject, predictionCas);
 
