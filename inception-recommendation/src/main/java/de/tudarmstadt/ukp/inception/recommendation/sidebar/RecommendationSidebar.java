@@ -68,6 +68,7 @@ public class RecommendationSidebar
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        
         IModel<Preferences> modelPreferences = LambdaModelAdapter.of(
             () -> recommendationService.getPreferences(aModel.getObject().getUser(),
                     aModel.getObject().getProject()),
@@ -95,9 +96,9 @@ public class RecommendationSidebar
 
         add(form);
 
-        LearningCurveChartPanel chartContainer = new LearningCurveChartPanel(LEARNING_CURVE,aModel);
-        chartContainer.setOutputMarkupId(true);
-        add(chartContainer);
+        add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
+        
+        add(new RecommenderInfoPanel("recommenders", aModel));
     }
 
     @Override

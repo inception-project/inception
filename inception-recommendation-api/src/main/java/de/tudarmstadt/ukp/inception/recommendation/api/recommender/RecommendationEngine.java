@@ -30,7 +30,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public abstract class RecommendationEngine {
+public abstract class RecommendationEngine
+{
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
@@ -106,6 +107,16 @@ public abstract class RecommendationEngine {
     public RecommendationEngineCapability getTrainingCapability()
     {
         return RecommendationEngineCapability.TRAINING_SUPPORTED;
+    }
+    
+    /**
+     * Create a new context given the previous context. This allows incrementally training 
+     * recommenders to salvage information from the current context for a new iteration. By default,
+     * no information is copy and simply new context is created.
+     */
+    public RecommenderContext newContext(RecommenderContext aCurrentContext)
+    {
+        return new RecommenderContext();
     }
 
     protected Type getPredictedType(CAS aCas)
