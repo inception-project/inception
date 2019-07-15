@@ -885,6 +885,13 @@ public class RecommendationServiceImpl
             }
 
             List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
+            if (tokens.isEmpty()) {
+                // This can happen if a recommender uses different token boundaries (e.g. if a 
+                // remote service performs its own tokenization). We might be smart here by looking
+                // for overlapping tokens instead of contained tokens.
+                continue;
+            }
+            
             AnnotationFS firstToken = tokens.get(0);
             AnnotationFS lastToken = tokens.get(tokens.size() - 1);
 
