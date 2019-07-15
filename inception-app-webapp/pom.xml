@@ -758,6 +758,7 @@
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
+              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>

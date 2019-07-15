@@ -251,16 +251,6 @@
       <artifactId>dkpro-core-api-ner-asl</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-native-websocket-javax</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.giffing.wicket.spring.boot.starter</groupId>
-      <artifactId>wicket-spring-boot-starter</artifactId>
-      <scope>test</scope>
-    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
