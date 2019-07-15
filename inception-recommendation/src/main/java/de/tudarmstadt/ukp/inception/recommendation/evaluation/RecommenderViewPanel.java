@@ -22,7 +22,14 @@ import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderViewPanel
@@ -38,9 +45,13 @@ public class RecommenderViewPanel
 
     private TextField<String> nameField;
     private TextField<String> tool;
-    private TextField<String> feature;
-    private TextField<String> layer;
+    private TextField<AnnotationFeature> feature;
+    private TextField<AnnotationLayer> layer;
 
+    private @SpringBean RecommendationService recommendationService;
+    private @SpringBean AnnotationSchemaService annotationSchemaService;
+    private @SpringBean RecommenderFactoryRegistry recommenderRegistry;
+    
     private IModel<Recommender> recommenderModel;
 
     public RecommenderViewPanel(String aId, IModel<Recommender> aRecommender)
@@ -50,8 +61,8 @@ public class RecommenderViewPanel
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
 
-        recommenderModel = aRecommender;
-
+        recommenderModel = aRecommender; 
+        
         Form<Recommender> form = new Form<>(MID_FORM, CompoundPropertyModel.of(aRecommender));
         add(form);
         
@@ -59,14 +70,14 @@ public class RecommenderViewPanel
         nameField.setRequired(true);
         form.add(nameField);
         
-        tool = new TextField<>(MID_TOOL, String.class);
+        tool = new TextField<>(MID_TOOL,String.class);
         tool.setRequired(true);
         form.add(tool);
         
-        feature = new TextField<String>(MID_FEATURE,  String.class );
+        feature = new TextField<AnnotationFeature>(MID_FEATURE );
         form.add(feature);
 
-        layer = new TextField<String>(MID_LAYER, String.class);
+        layer = new TextField<AnnotationLayer>(MID_LAYER);
         form.add(layer);
     }
 
@@ -76,5 +87,19 @@ public class RecommenderViewPanel
         super.onConfigure();
 
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
+        
+        if(recommenderModel != null && recommenderModel.getObject() != null) {
+            String name = recommenderModel.getObject().getLayer().getName();
+            String[] split = name.split("\\.");
+            layer.setDefaultModel(Model.of(split[split.length - 1]));
+
+            name = recommenderModel.getObject().getFeature().getName();
+            split = name.split("\\.");
+            feature.setDefaultModel(Model.of(split[split.length - 1]));
+
+            name = recommenderModel.getObject().getTool();
+            split = name.split("\\.");
+            tool.setDefaultModel(Model.of(split[split.length - 1]));
+        }
     }
 }

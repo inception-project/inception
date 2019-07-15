@@ -80,7 +80,6 @@ import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulati
                 CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
-                EvaluationSimulationPageMenuItem.class,
 
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
