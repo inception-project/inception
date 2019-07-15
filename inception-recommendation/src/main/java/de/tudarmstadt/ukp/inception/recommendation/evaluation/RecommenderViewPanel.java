@@ -88,7 +88,7 @@ public class RecommenderViewPanel
 
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
         
-        if(recommenderModel != null && recommenderModel.getObject() != null) {
+        if (recommenderModel != null && recommenderModel.getObject() != null) {
             String name = recommenderModel.getObject().getLayer().getName();
             String[] split = name.split("\\.");
             layer.setDefaultModel(Model.of(split[split.length - 1]));
