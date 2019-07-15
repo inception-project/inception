@@ -59,9 +59,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
@@ -258,7 +258,7 @@ public class RecommendationEditorExtension
             RequestCycle.get().find(AjaxRequestTarget.class)
                     .ifPresent(_target -> _target.getPage().send(_target.getPage(),
                             Broadcast.BREADTH,
-                            new AjaxPredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
+                            new PredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
         }
 
         // Add the suggestions to the visual document

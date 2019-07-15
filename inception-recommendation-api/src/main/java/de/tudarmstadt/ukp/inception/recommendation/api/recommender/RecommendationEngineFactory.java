@@ -46,12 +46,7 @@ public interface RecommendationEngineFactory<T>
         return true;
     }
 
-    default RecommendationEngine build(Recommender aRecommender) 
-    {
-        return build(aRecommender, new RecommenderContext());
-    }
-    
-    RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext);
+    RecommendationEngine build(Recommender aRecommender);
 
     boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature);
 
