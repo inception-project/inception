@@ -197,24 +197,36 @@ public class PdfAnnotationEditor
             handleError("Unable to create span annotation", e, aTarget);
         }
     }
-
+    
     private void selectSpanAnnotation(
         AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
     {
+        VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+        AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, paramId.getId());
+        Offset offset = new Offset(fs.getBegin(), fs.getEnd());
+        selectSpanAnnotation(aTarget, paramId, offset, aCas);
+    }
+    
+    private void selectSpanAnnotation(
+        AjaxRequestTarget aTarget, VID paramId, Offset offset, CAS aCas)
+    {
         try
         {
-            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
-            Offset offset = new Offset(aParams);
-            Offset docOffset =
-                PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
-            if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
+            if (offset.getBegin() > -1 && offset.getEnd() > -1) {
+                AnnotatorState state = getModelObject();
                 if (paramId.isSynthetic()) {
                     extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                        aTarget, aCas, paramId, "spanOpenDialog", docOffset.getBegin(),
-                        docOffset.getEnd());
+                        aTarget, aCas, paramId, "spanOpenDialog", offset.getBegin(),
+                        offset.getEnd());
+                } else if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(aTarget, aCas, offset.getBegin(),
+                        offset.getEnd(), paramId);
                 } else {
-                    getModelObject().getSelection().selectSpan(paramId, aCas, docOffset.getBegin(),
-                            docOffset.getEnd());
+                    state.getSelection().selectSpan(paramId, aCas, offset.getBegin(),
+                            offset.getEnd());
                     getActionHandler().actionSelect(aTarget, aCas);
                 }
             } else {
@@ -279,11 +291,21 @@ public class PdfAnnotationEditor
 
             AnnotatorState state = getModelObject();
             Selection selection = state.getSelection();
-            selection.selectArc(VID.parseOptional(aParams.getParameterValue("id").toString()),
-                originFs, targetFs);
-
-            if (selection.getAnnotation().isSet()) {
-                getActionHandler().actionSelect(aTarget, aCas);
+            VID paramId = VID.parseOptional(aParams.getParameterValue("id").toString());
+    
+            // HACK: If an arc was clicked that represents a link feature, then
+            // open the associated span annotation instead.
+            if (paramId.isSlotSet()) {
+                paramId = new VID(paramId.getId());
+                Offset offset = new Offset(originFs.getBegin(), originFs.getEnd());
+                selectSpanAnnotation(aTarget, paramId, offset, aCas);
+            } else {
+                selection.selectArc(paramId,
+                    originFs, targetFs);
+    
+                if (selection.getAnnotation().isSet()) {
+                    getActionHandler().actionSelect(aTarget, aCas);
+                }
             }
         }
         catch (AnnotationException e)
