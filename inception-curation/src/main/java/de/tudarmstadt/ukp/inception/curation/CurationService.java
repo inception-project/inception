@@ -37,7 +37,8 @@ public interface CurationService
     /**
      * retrieves CAS associated with curation doc for the given user
      */
-    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId) throws IOException;
+    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
+        throws IOException;
     
     /**
      * Store the users that were selected to be shown for curation by the given user
@@ -46,10 +47,10 @@ public interface CurationService
             Collection<User> aUsers);
     
     /**
-     * Store document that curated items should be saved to
+     * Store which name the curated document should be associated with
      */
-    public void updateCurationDoc(String aCurrentUser, long aProjectId, 
-            SourceDocument aCurationDoc);
+    public void updateCurationName(String aCurrentUser, long aProjectId, 
+            String aCurationName);
     
     /**
      * Removed stored curation information after user session has ended

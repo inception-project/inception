@@ -40,10 +40,12 @@ import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -63,6 +65,7 @@ public class CurationSidebar
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean CurationService curationService;
+    private @SpringBean DocumentService documentService;
     
     private CheckGroup<User> selectedUsers;
 
@@ -107,15 +110,16 @@ public class CurationSidebar
 
     private void updateSettings()
     {
-        SourceDocument doc = state.getDocument();
+        String currentUsername = userRepository.getCurrentUser().getUsername();
         long project = state.getProject().getId();
 
         if (selectedCurationTarget.equals(DEFAULT_CURATION_TARGET)) {
-            curationService.updateCurationDoc(userRepository.getCurrentUser().getUsername(),
-                    project, doc);
+            
+            curationService.updateCurationName(currentUsername,
+                    project, currentUsername);
         }
         else {
-            curationService.updateCurationDoc(CURATION_USER, project, doc);
+            curationService.updateCurationName(currentUsername, project, CURATION_USER);
         }
     }
     
@@ -162,12 +166,30 @@ public class CurationSidebar
         return users.get();
     }
     
+    /**
+     * retrieve annotators of this document which finished annotating
+     */
     private List<User> listUsers()
     {
         return projectService
                 .listProjectUsersWithPermissions(state.getProject(), PermissionLevel.ANNOTATOR)
-                .stream().filter(user -> !user.equals(userRepository.getCurrentUser()))
+                .stream().filter(user -> !user.equals(userRepository.getCurrentUser()) 
+                        && hasFinishedDoc(user))
                 .collect(Collectors.toList());
+    }
+
+    private boolean hasFinishedDoc(User aUser)
+    {
+        SourceDocument doc = state.getDocument();
+        String username = aUser.getUsername();
+        if (documentService.existsAnnotationDocument(doc, username) && 
+                documentService.getAnnotationDocument(doc, username).getState()
+                .equals(AnnotationDocumentState.FINISHED)) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     private void showUsers()

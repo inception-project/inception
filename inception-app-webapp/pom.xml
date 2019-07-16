@@ -52,10 +52,6 @@
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-image</artifactId>
     </dependency>
-    <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-curation</artifactId>
-    </dependency>
 
     <!-- INCEPTION - KNOWLEDGE BASE SUPPORT -->
     <dependency>
@@ -503,7 +499,12 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
-    
+
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-curation</artifactId>
+      <version>0.11.0-SNAPSHOT</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

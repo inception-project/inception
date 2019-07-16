@@ -82,7 +82,7 @@ public class CurationServiceImpl implements CurationService
     private CurationState getCurationState(String aUser, long aProjectId) {
         synchronized (curationStates) {
             return curationStates.computeIfAbsent(new CurationStateKey(aUser, aProjectId), 
-                key -> new CurationState());
+                key -> new CurationState(aUser));
         }
     }
     
@@ -90,8 +90,14 @@ public class CurationServiceImpl implements CurationService
     {
         private List<User> selectedUsers;
         // source document of the curated document
-        private SourceDocument curationDoc;
+        // the curationdoc can be retrieved from user (CURATION or current) and projectId
+        private String curationUser;
                 
+        public CurationState(String aUser)
+        {
+            curationUser = aUser;
+        }
+
         public List<User> getSelectedUsers()
         {
             return selectedUsers;
@@ -102,14 +108,14 @@ public class CurationServiceImpl implements CurationService
             selectedUsers = new ArrayList<>(aSelectedUsers);
         }
 
-        public SourceDocument getCurationDoc()
+        public String getCurationName()
         {
-            return curationDoc;
+            return curationUser;
         }
 
-        public void setCurationDoc(SourceDocument aCurationDoc)
+        public void setCurationName(String aCurationName)
         {
-            curationDoc = aCurationDoc;
+            curationUser = aCurationName;
         }
     }
 
@@ -120,15 +126,16 @@ public class CurationServiceImpl implements CurationService
     }
 
     @Override
-    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId) throws IOException
+    public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
+        throws IOException
     {
-        SourceDocument doc = getCurationState(aUser, aProjectId).getCurationDoc();
-        if (doc == null) {
+        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
+        if (curationUser == null) {
             return Optional.empty();
         }
         
         return Optional.of(documentService
-                .readAnnotationCas(doc, aUser));
+                .readAnnotationCas(aDoc, curationUser));
     }
 
     @Override
@@ -142,11 +149,11 @@ public class CurationServiceImpl implements CurationService
     }
 
     @Override
-    public void updateCurationDoc(String aCurrentUser, long aProjectId, SourceDocument aCurationDoc)
+    public void updateCurationName(String aCurrentUser, long aProjectId, String aUserName)
     {
         synchronized (curationStates)
         {
-            getCurationState(aCurrentUser, aProjectId).setCurationDoc(aCurationDoc);
+            getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);;
         }
     }
 

@@ -56,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
@@ -82,7 +83,9 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 AutomationMiraTemplateExporter.class,
                 AutomationTrainingDocumentExporter.class,
                 // INCEpTION uses the original DKPro Core CoNLL-U components
-                ConllUFormatSupport.class
+                ConllUFormatSupport.class,
+                // exclude curation from dashboard
+                CurationPageMenuItem.class
         })})
 @EntityScan(basePackages = {
         // Include WebAnno entity packages separately so we can skip the automation entities!
