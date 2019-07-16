@@ -72,6 +72,13 @@ public class PdfAnnotationEditor
 {
     private static final long serialVersionUID = -3358207848681467993L;
     private static final Logger LOG = LoggerFactory.getLogger(PdfAnnotationEditor.class);
+    
+    private static final String CREATE_SPAN = "createSpan";
+    private static final String SELECT_SPAN = "selectSpan";
+    private static final String CREATE_RELATION = "createRelation";
+    private static final String SELECT_RELATION = "selectRelation";
+    private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
+    private static final String GET_ANNOTATIONS = "getAnnotations";
 
     private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
@@ -103,8 +110,8 @@ public class PdfAnnotationEditor
         Selection selection = getModelObject().getSelection();
         renderPdfAnnoModel(aTarget);
         if (selection.getAnnotation() != null) {
-            aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById("
-                + selection.getAnnotation() + ");"
+            aTarget.appendJavaScript("var anno = pdfanno.contentWindow.annoPage.findAnnotationById('"
+                + selection.getAnnotation() + "');"
                 + "anno && anno.select();");
         }
     }
@@ -169,10 +176,18 @@ public class PdfAnnotationEditor
             Offset offset = new Offset(aParams);
             Offset docOffset =
                 PdfAnnoRenderer.convertToDocumentOffset(offset, documentModel, pdfExtractFile);
+            AnnotatorState state = getModelObject();
             if (docOffset.getBegin() > -1 && docOffset.getEnd() > -1) {
-                getModelObject().getSelection()
-                    .selectSpan(aCas, docOffset.getBegin(), docOffset.getEnd());
-                getActionHandler().actionCreateOrUpdate(aTarget, aCas);
+                if (state.isSlotArmed()) {
+                    // When filling a slot, the current selection is *NOT* changed. The
+                    // Span annotation which owns the slot that is being filled remains
+                    // selected!
+                    getActionHandler().actionFillSlot(
+                        aTarget, aCas, docOffset.getBegin(), docOffset.getEnd(), VID.NONE_ID);
+                } else {
+                    state.getSelection().selectSpan(aCas, docOffset.getBegin(), docOffset.getEnd());
+                    getActionHandler().actionCreateOrUpdate(aTarget, aCas);
+                }
             } else {
                 handleError("Unable to create span annotation: No match was found", aTarget);
             }
@@ -329,20 +344,27 @@ public class PdfAnnotationEditor
         {
             CAS cas = getCasProvider().get();
             String action = aParams.getParameterValue("action").toString();
+    
+            // Doing anything but selecting or creating a span annotation when a
+            // slot is armed will unarm it
+            if (getModelObject().isSlotArmed()
+                && !(action.equals(SELECT_SPAN) || action.equals(CREATE_SPAN))) {
+                getModelObject().clearArmedSlot();
+            }
 
             switch (action)
             {
-            case "createSpan": createSpanAnnotation(aTarget, aParams, cas);
+            case CREATE_SPAN: createSpanAnnotation(aTarget, aParams, cas);
                 break;
-            case "selectSpan": selectSpanAnnotation(aTarget, aParams, cas);
+            case SELECT_SPAN: selectSpanAnnotation(aTarget, aParams, cas);
                 break;
-            case "createRelation": createRelationAnnotation(aTarget, aParams, cas);
+            case CREATE_RELATION: createRelationAnnotation(aTarget, aParams, cas);
                 break;
-            case "selectRelation": selectRelationAnnotation(aTarget, aParams, cas);
+            case SELECT_RELATION: selectRelationAnnotation(aTarget, aParams, cas);
                 break;
-            case "deleteRecommendation": deleteRecommendation(aTarget, aParams, cas);
+            case DELETE_RECOMMENDATION: deleteRecommendation(aTarget, aParams, cas);
                 break;
-            case "getAnnotations": getAnnotations(aTarget, aParams);
+            case GET_ANNOTATIONS: getAnnotations(aTarget, aParams);
                 break;
             default: handleError("Unkown action: " + action, aTarget);
             }
