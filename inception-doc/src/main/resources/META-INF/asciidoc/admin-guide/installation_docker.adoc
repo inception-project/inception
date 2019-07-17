@@ -37,7 +37,7 @@ To run the {product-name} docker in the background use
 docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
-Logs are accessible by typing 
+Logs are accessible by typing
 
 [source,text,subs="+attributes"]
 ----
@@ -99,8 +99,32 @@ By default, {product-name} uses an embedded SQL database to store its metadata (
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
 recommended to use a separate MySQL database instead of the embedded SQL database.
 
-You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download link:admin-guide/scripts/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
+== Docker Compose
+
+Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
+Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
+link:https://hub.docker.com/_/mysql/[this one]).
+
+The following Compose script sets these containers up.
+
+NOTE: The script contains placeholder for usernames and passwords used by the {product-name} container to
+       connect to the database container, namely `DBUSER` and `DBPASSWORD`. You either need to replace
+       them in the compose file or set them, e.g. via
+
+[source,text,subs="+attributes"]
+----
+export DBUSER=<USER_NAME>
+export DBPASSWORD=<PASSWORD>
+----
+
+
+[source,text,subs="+attributes"]
+.Docker Compose script
+----
+include::scripts/docker-compose.yml[]
+----
+
+Place the script into any folder, change to that folder, and issue the commands 
 
 [source,text,subs="+attributes"]
 ----
