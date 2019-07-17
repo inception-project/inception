@@ -121,7 +121,7 @@ pos.PosValue
 
 Hereby all annotations of type `<shortLayerName>` at the same position as the current context are found.
 
-== Comments
+=== Comments
 
 The constraint language supports block comments which start with `/*` and end with `*/`. These
 comments may span across multiple lines.
@@ -137,7 +137,7 @@ comments may span across multiple lines.
 ----
 
 
-== Conditional features
+=== Conditional features
 
 Constraints can be used to set up conditional features, that is features that only become available
 in the UI if another feature has a specific value. Let's say that for example you want to annotate
@@ -199,7 +199,7 @@ SemPred {
 }
 ----
 
-=== Constraints language grammar
+== Constraints language grammar
 
 .Constraints language grammar
 [source,text]

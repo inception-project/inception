@@ -90,8 +90,25 @@ By default, WebAnno uses an embedded SQL database to store its metadata (not the
 annotations, these are stored in files on disk). For production use, it is highly recommended to
 use a separate MySQL database instead of the embedded SQL database.
 
-You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download link:https://raw.githubusercontent.com/webanno/webanno/master/webanno-webapp/src/main/docker/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands 
+== Docker Compose
+
+Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
+Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
+link:https://hub.docker.com/_/mysql/[this one]).
+
+The following Compose script sets these containers up.
+
+NOTE: The script contains example usernames and passwords used by the {product-name} container to
+       connect to the database container, namely `DBUSER` and `DBPASSWORD`. It is highly recommended that you
+       change these!
+
+[source,text,subs="+attributes"]
+.Docker Compose script
+----
+include::scripts/docker-compose.yml[]
+----
+
+Place the script into any folder, change to that folder, and issue the commands 
 
 [source,text,subs="+attributes"]
 ----
