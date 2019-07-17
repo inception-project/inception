@@ -35,8 +35,7 @@ public class ExtendedId
     private final int end;
     private final int annotationId;
     private final int sentenceId;
-    
-    private long recommenderId;
+    private final long recommenderId;
 
     public ExtendedId(String userName, long projectId, String documentName, long layerId,
             Offset offset, long recommenderId, int annotationId, int sentenceId)
@@ -102,11 +101,6 @@ public class ExtendedId
     public long getRecommenderId()
     {
         return recommenderId;
-    }
-
-    public void setRecommenderId(long aRecommenderId)
-    {
-        recommenderId = aRecommenderId;
     }
 
     @Override

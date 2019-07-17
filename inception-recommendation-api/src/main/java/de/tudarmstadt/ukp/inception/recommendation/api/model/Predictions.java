@@ -119,15 +119,12 @@ public class Predictions
     private List<AnnotationSuggestion> getFlattenedPredictions(String aDocumentName,
         AnnotationLayer aLayer, int aWindowBegin, int aWindowEnd)
     {
-        List<Map.Entry<ExtendedId, AnnotationSuggestion>> p = predictions.entrySet().stream()
+        return predictions.entrySet().stream()
             .filter(f -> f.getKey().getDocumentName().equals(aDocumentName))
             .filter(f -> f.getKey().getLayerId() == aLayer.getId())
             .filter(f -> aWindowBegin == -1 || (f.getKey().getBegin() >= aWindowBegin))
             .filter(f -> aWindowEnd == -1 || (f.getKey().getEnd() <= aWindowEnd))
             .sorted(Comparator.comparingInt(e2 -> e2.getValue().getBegin()))
-            .collect(Collectors.toList());
-
-        return p.stream()
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
     }

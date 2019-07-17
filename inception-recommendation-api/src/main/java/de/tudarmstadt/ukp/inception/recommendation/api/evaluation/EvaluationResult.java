@@ -261,6 +261,13 @@ public class EvaluationResult
     {
         return new EvaluationResultCollector();
     }
+    
+    public static EvaluationResult skipped()
+    {
+        EvaluationResult result = new EvaluationResult();
+        result.setEvaluationSkipped(true);
+        return result;
+    }
 
     public static EvaluationResultCollector collector(int aTrainSetSize, int aTestSetSize,
             double aTrainDataPercentage, String... aIgnoreLabels)
