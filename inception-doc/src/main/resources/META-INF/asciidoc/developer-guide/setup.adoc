@@ -223,6 +223,7 @@ Community Version is used, but this guide should also apply to the Enterprise Ve
 After checking out {product-name} from Github, open Intellij and import the project. The easiest
 way is to go to `File -> Open` and the select the `pom.xml` in the {product-name} root directory.
 IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
+INCEpTION now can be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
 
 === Checkstyle and Formatting
 
@@ -242,6 +243,17 @@ In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new pro
 file.
 
 Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+=== IntelliJ IDEA Tomcat Integration
+
+This requires IntelliJ IDEA Ultimate. Using Tomcat allows editing HTML,CSS and JavaScript on the fly without restarting
+the application. First, download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5).
+Then, you need to create a Tomcat server runtime configuration in `Run | Edit Configurations…`. Click on the `+` icon,
+select `Tomcat Server -> Local`.  Click on the `Deployment` tab and then on the `+` icon to select an artifact to deploy.
+Choose the exploded war version. Select the `Server` tab, navigate to the path of your Tomcat server, and update the
+on `Update` action to `Update classes and resources` for both. Make sure that all port settings are different.
+You now can start or debug your web application via Tomcat. When starting throws an permission error, make sure that
+the mentioned file, e.g. `catalina.sh` is marked as executable.
 
 === Building documentation
 
