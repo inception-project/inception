@@ -21,6 +21,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,6 +86,8 @@ public class GenerateDocumentation
         Path webannoDir = inceptionDir.getParent().resolve("webanno");
         Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
                 .resolve("doc-out");
+
+        Files.createDirectories(outputDir);
 
         List<Path> modules = new ArrayList<>();
         modules.addAll(getAsciiDocs(webannoDir));

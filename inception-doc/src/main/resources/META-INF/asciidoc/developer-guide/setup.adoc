@@ -19,7 +19,50 @@
 
 This section covers setting up a development environment.
 
-== GIT
+== Source code management
+
+We use git as our source code management system and collaborate via the {product-name}
+repository on Github.
+
+=== Development workflow
+
+Every feature or bugfix needs to be tracked in an issue on Github. Development is done in branches
+Based on the milestone (see the issue description on Github), the new branch is either created from
+master (if the code should be in the next major release) or from a bugfix release branch
+(if the code should be in the next minor release). In order to get the code in production,
+you need to create a pull request on Github of your branch into the target branch (as described before).
+
+In order to contribute to {product-name}, you need to create a pull request. This section briefly
+guides you through the best way of doing this:
+
+- Every feature or bugfix needs to be tracked in an issue on Github. If there is no issue for the
+feature yet, create an issue first.
+- Create a branch based on the branch to which you wish to contribute. Normally, you should create
+this branch from the master branch of the respective project. In the case you want to fix a bug in
+the latest released version, you should consider to branch off the latest maintenance branch (e.g.
+0.10.x). If you are not sure, ask via the issue you have just created. Do *not* make changes directly
+to the master or maintenance branches. The name of the branch should be e.g.
+`feature/[ISSUE-NUMBER]-[SHORT-ISSUE-DESCRIPTION]` or `bugfix/[ISSUE-NUMBER]-[SHORT-ISSUE-DESCRIPTION]`.
+- Now you make changes to your branch. When committing to your branch, use the format shown below
+for your commit messages. Note that **#** normally introduces comments in git. You may have to reconfigure
+git before attempting an interactive rebase and switch it to another comment character.
+
+  #[ISSUE NUMBER] - [ISSUE TITLE]
+  [EMPTY LINE]
+  - [CHANGE 1]
+  - [CHANGE 2]
+  - [...]
+
+You can create the pull request any time after your first commit. I.e. you do not have to wait until
+you are completely finished with your implementation. Creating a pull request early tells other
+developers that you are actively working on an issue and facilitates asking questions about and
+discussing implementation details.
+
+=== Git configuration
+
+Before committing, make sure that you specified your email and name in the git config so
+that commits can be attributed to you. This can e.g. be done as described in the
+https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup[Git Documentation].
 
 All sources files are stored using UNIX line endings. If you develop on Windows, you have to
 set the `core.autocrlf` configuration setting to `input` to avoid accidentally submitting Windows
@@ -33,6 +76,24 @@ C:\> git config --global core.autocrlf input
 ----
 
 After changing this setting, best do a fresh clone and check-out of the project.
+
+== Checkstyle and Formatting
+
+We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
+
+* DKPro code formatting profile - the profile configures your IDE to auto-format the code according to
+  our guidelines as you go.
+* Checkstyle - this tool is used to check if the source code is actually formatted according to our
+  guidelines. It is run as part of a Maven build and the build fails if the code is not formatted
+  properly.
+
+Here is a brief summary of the formatting rules:
+
+* no tabs, only spaces
+* indenting using 4 spaces in Java files and 2 spaces in XML files
+* maximum 100 characters per line (with a few exceptions)
+* curly braces on the next line for class/method declarations, same line for logic blocks (if/for/...)
+* parameter names start with `a` (e.g. `void foo(String aValue)`)
 
 == Setting up for the development in Eclipse
 
@@ -82,12 +143,12 @@ C:/Program Files/Java/jdk1.8.0_144/jre/bin/server/jvm.dll
 ** m2e-wtp - Maven Integration for WTP
 ** WST Server Adapters
 
-== Eclipse Workspace Settings
+=== Eclipse Workspace Settings
 
 * You should check that Text file encoding is UTF-8  in *Preferences -> General -> Workspace* of 
   your Eclipse install.
 
-== Importing {product-name} into the Workspace
+=== Importing {product-name} into the Workspace
 
 Checkout out the {product-name} git repository with your favorite git client. If you use the command-line
 client, use the command
@@ -100,7 +161,7 @@ $ git clone https://github.com/inception-project/inception.git
 In Eclipse, go to *File -> Import*, choose *Existing Maven projects*, and select the folder to which
 you have cloned {product-name}. Eclipse should automatically detect all modules.
 
-== Eclipse Tomcat Integration
+=== Eclipse Tomcat Integration
 
 Download Apache Tomcat from `http://tomcat.apache.org/` (we're using version 8.5). Then, you need to
 add the Tomcat server to your runtime configuration. Go to preferences and go to
@@ -128,23 +189,10 @@ server in order for changes to Java class files to take effect. However, as a be
 HTML, CSS or JavaScript files take effect immediately and you just have to refresh the browser to
 see the changes.
 
-== Checkstyle and Formatting
+=== Setting up Checkstyle and Formatting
 
-We use a style for formatting the source code in {product-name}. Our approach consists of two steps:
-
-* DKPro code formatting profile - the profile configures your IDE to auto-format the code according to
-  our guidelines as you go.
-* Checkstyle - this tool is used to check if the source code is actually formatted according to our
-  guidelines. It is run as part of a Maven build and the build fails if the code is not formatted
-  properly.
-
-Here is a brief summary of the formatting rules:
-
-* no tabs, only spaces
-* indenting using 4 spaces in Java files and 2 spaces in XML files
-* maximum 100 characters per line (with a few exceptions)
-* curly braces on the next line for class/method declarations, same line for logic blocks (if/for/...)
-* parameter names start with `a` (e.g. `void foo(String aValue)`)
+We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
+The following section describes how to use it with Eclipse.
 
 First, obtain the DKPro code formatting profile from the link:https://dkpro.github.io/contributing/[DKPro website] (Section "Code style"). In Eclipse, go to **Preferences -> Java -> Code Style -> Formatter** to import the file. Apparently, the files can also be used with IntelliJ via the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
 
@@ -166,3 +214,40 @@ NOTE: Should the steps mentioned above not have been sufficient, close all the {
       properly set up the `.checkstyle` files and activate checkstyle. +
       If the Maven project update cannot be completed due to missing .jars, execute a Maven install via right click on the inception project *Run as ->
       Maven build...*, enter the goal `install` and check *Skip Tests*. Alternatively, use the command `mvn clean install -DskipTests`.
+
+== Setting up for the development in IntelliJ IDEA
+
+This is a guide to setting up a development environment using IntelliJ IDEA. We assume that the
+Community Version is used, but this guide should also apply to the Enterprise Version.
+
+After checking out {product-name} from Github, open Intellij and import the project. The easiest
+way is to go to `File -> Open` and the select the `pom.xml` in the {product-name} root directory.
+IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
+
+=== Checkstyle and Formatting
+
+We use a style for formatting the source code in {product-name} (see <<Checkstyle and Formatting>>.
+The following section describes how to use it with IntelliJ IDEA.
+
+First, install the https://plugins.jetbrains.com/plugin/1065-checkstyle-idea[Checkstyle-IDEA plugin].
+In `File | Settings | Other Settings | Checkstyle`, navigate to the *Checkstyle* tab. Start to add
+a new configuration file by clicking on the `+` on the right, navigate to
+`inception-build/src/main/resources/inception/checkstyle.xml` and apply the changes. Make sure to
+check the box next to the newly created configuration and apply it as well.
+
+In order to achieve the same formatting and import order as Eclipse, install the
+https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter/versions[Eclipse Code Formatter].
+Download the https://dkpro.github.io/files/DKProCoreStyle_20170725.xml[DKPro Eclipse Code Style file].
+In `File | Settings | Other Settings | Eclipse Code Formatter`, create a new profile using this
+file.
+
+Also make sure to enable auto import optimization in `File | Settings | Editor | General | Auto Import`.
+
+=== Building documentation
+
+The documentation can be built using a support class in `inception-doc/src/test/java/de/tudarmstadt/ukp/inception/doc/GenerateDocumentation.java`.
+To make it usable from Intellij IDEA, you need to build the whole project at least once. Run the
+class. If it fails, alter the run configuration and add a new environment variable `INTELLIJ=true`
+and check that the working directory is the {product-name} root directory. The resulting documentation
+will be in `target/doc-out`.
+
