@@ -53,6 +53,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
+import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -184,6 +186,9 @@ public class TrainingTask
                     
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
+
+                    getSchedulerCallback().accept(new TaskUpdateEvent(user.getUsername(),
+                            TaskState.TRAINING_FINISHED, recommender.getId()));
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),

@@ -48,6 +48,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
+import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
@@ -178,9 +180,8 @@ public class SelectionTask
                                 threshold);
                     }
 
-                    appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                            recommender, user.getUsername(), result,
-                            System.currentTimeMillis() - start, activated));
+                    publishFinishedEvents(user, recommender, start, result,
+                            activated);
                 }
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
@@ -192,6 +193,17 @@ public class SelectionTask
 
         schedulingService.enqueue(new TrainingTask(user, getProject(),
                 "SelectionTask after activating recommenders"));
+    }
+
+    private void publishFinishedEvents(User user, Recommender recommender, long start,
+            EvaluationResult result, boolean activated)
+    {
+        String username = user.getUsername();
+        appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
+                recommender, username, result,
+                System.currentTimeMillis() - start, activated));
+        getSchedulerCallback().accept(new TaskUpdateEvent(username, TaskState.SELECTION_FINISHED,
+                result.getTrainDataRatio(), recommender.getId(), activated));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.scheduling;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -30,6 +31,7 @@ public abstract class Task
     private final User user;
     private final Project project;
     private final String trigger;
+    private Consumer<TaskUpdateEvent> schedulerCallback;
 
     public Task(User aUser, Project aProject, String aTrigger)
     {
@@ -84,5 +86,15 @@ public abstract class Task
     @Override
     public int hashCode() {
         return Objects.hash(user, project);
+    }
+
+    protected void setSchedulerCallback(Consumer<TaskUpdateEvent> aCallback)
+    {
+        schedulerCallback = aCallback;
+    }
+    
+    protected Consumer<TaskUpdateEvent> getSchedulerCallback()
+    {
+        return schedulerCallback;
     }
 }

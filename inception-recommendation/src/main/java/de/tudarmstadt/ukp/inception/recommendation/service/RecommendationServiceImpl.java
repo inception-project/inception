@@ -829,7 +829,7 @@ public class RecommendationServiceImpl
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
-
+                        
                         // Extract the suggestions from the data which the recommender has written 
                         // into the CAS
                         List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,

@@ -22,12 +22,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import org.apache.wicket.Application;
+import org.apache.wicket.protocol.ws.WebSocketSettings;
+import org.apache.wicket.protocol.ws.api.IWebSocketConnection;
+import org.apache.wicket.protocol.ws.api.registry.IWebSocketConnectionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingProperties;
@@ -40,6 +46,7 @@ public class SchedulingService
 
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
+    private @Autowired SessionRegistry sessionRegistry;
 
     private final List<Task> runningTasks;
 
@@ -94,6 +101,9 @@ public class SchedulingService
 
         log.debug("Enqueuing task [{}]", aTask);
 
+        // set callback to websocket distribution
+        aTask.setSchedulerCallback(this::distributeWebSocketMessage);
+        
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
         factory.autowireBean(aTask);
@@ -122,5 +132,25 @@ public class SchedulingService
         executor.shutdownNow();
     }
 
+    public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdate)
+    {
+        Application application = Application.get();
+        WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
+        IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
+                .getConnectionRegistry();
 
+        // get all connections for the user
+        List<IWebSocketConnection> userConnections = new ArrayList<>();
+        for (SessionInformation sessionInfo : sessionRegistry
+                .getAllSessions(aTaskUpdate.getUsername(), false)) {
+            userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
+                    sessionInfo.getSessionId()));
+        }
+        
+        // send message to all connections
+        for (IWebSocketConnection connection : userConnections) {
+            connection.sendMessage(new TaskWebSocketPushMessage(aTaskUpdate.getProgress(),
+                    aTaskUpdate.getState(), aTaskUpdate.getRecommenderId(), aTaskUpdate.isActive()));
+        }
+    }
 }

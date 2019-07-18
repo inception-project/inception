@@ -35,6 +35,9 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
+import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
+import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
@@ -111,6 +114,19 @@ public class RecommenderInfoPanel
         searchResultGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject())));
         add(searchResultGroups);
+        
+        add(new WebSocketBehavior() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
+            {
+                // TODO: message specific stuff
+                aHandler.add(searchResultGroups);
+            }
+            
+        });
     }
     
     public AnnotatorState getModelObject()
