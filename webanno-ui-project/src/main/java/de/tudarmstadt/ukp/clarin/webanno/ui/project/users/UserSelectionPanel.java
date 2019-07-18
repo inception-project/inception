@@ -53,6 +53,7 @@ class UserSelectionPanel
 
     private @SpringBean ProjectService projectRepository;
     private @SpringBean UserDao userRepository;
+    private @SpringBean UserSelectionPanelConfiguration userSelectionPanelConfiguration;
 
     private IModel<Project> projectModel;
     private IModel<User> userModel;
@@ -65,6 +66,10 @@ class UserSelectionPanel
         super(id);
         
         setOutputMarkupId(true);
+        
+        final boolean hideUsernames = userSelectionPanelConfiguration.isHideUsers();
+        final int userNameMinLengthForSuggestions =
+                userSelectionPanelConfiguration.getUsersMinLengthCharacters();
         
         projectModel = aProject;
         userModel = aUser;
@@ -87,8 +92,16 @@ class UserSelectionPanel
             {
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("placeholder", Options.asString(getString("placeholder")));
-                aBehavior.setOption("filter", Options.asString("contains"));
-                aBehavior.setOption("autoClose", false);
+                if (hideUsernames) {
+                    aBehavior.setOption("filter", Options.asString("equals"));
+                    aBehavior.setOption("autoClose", true);
+                    aBehavior.setOption("minLength", userNameMinLengthForSuggestions >= 0 ?
+                            userNameMinLengthForSuggestions : 2);
+                    aBehavior.setOption("enforceMinLength", true);
+                }  else {
+                    aBehavior.setOption("filter", Options.asString("contains"));
+                    aBehavior.setOption("autoClose", false);
+                }
             }
         };
         usersToAdd.setModel(usersToAddModel);
