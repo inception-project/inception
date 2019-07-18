@@ -43,6 +43,6 @@ public class UserSelectionPanelConfiguration {
     }
 
     public void setMinLengthCharacters(int minLengthCharacters) {
-        this.minLengthCharacters = minLengthCharacters;
+        this.minLengthCharacters = minLengthCharacters; 
     }
 }
