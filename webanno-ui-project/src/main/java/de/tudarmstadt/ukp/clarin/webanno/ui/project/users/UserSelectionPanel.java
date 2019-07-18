@@ -94,7 +94,7 @@ class UserSelectionPanel
                 aBehavior.setOption("placeholder", Options.asString(getString("placeholder")));
                 if (hideUsernames) {
                     aBehavior.setOption("filter", Options.asString("equals"));
-                    aBehavior.setOption("autoClose", true); 
+                    aBehavior.setOption("autoClose", true);
                     aBehavior.setOption("minLength", userNameMinLengthForSuggestions >= 0 ?
                             userNameMinLengthForSuggestions : 2);
                     aBehavior.setOption("enforceMinLength", true);
