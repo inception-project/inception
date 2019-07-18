@@ -43,5 +43,15 @@
 | Whether regular users can access their own profile to change their password and other profile information. This setting has no effect if WebAnno is running in pre-authentication mode.
 | false
 | true
+
+| userSelection.hideUsers
+| Whether the system's usernames will be shown into the dropdown list at the Users tab. In order for the Project manager to add a user into an annotation project she has to write into the same text Field the annotator’s full username. When there is a full match this username (and only this) is displayed in the dropdown list where the Project Manager can select it and add it to her project.
+| false
+| true
+
+| userSelection.minLengthCharacters
+| The number of characters the Project Manager has to type in order to see the dropdown list at the Users tab. This setting has no effect if userSelection.hideUsers=false.
+| 2
+| 4
 |===
 
