@@ -255,6 +255,10 @@ on `Update` action to `Update classes and resources` for both. Make sure that al
 You now can start or debug your web application via Tomcat. When starting throws an permission error, make sure that
 the mentioned file, e.g. `catalina.sh` is marked as executable.
 
+*Experimental:* If desired, you can also use hot-code replacement via http://hotswapagent.org[HotswapAgent].
+This allows you to change code, e.g. adding methods without needing to restart the Tomcat server.
+For this, follow the excellent https://github.com/dmitry-zhuravlev/hotswap-agent-intellij-plugin[HotSwap IntelliJ IDEA plugin guide].
+
 === Building documentation
 
 The documentation can be built using a support class in `inception-doc/src/test/java/de/tudarmstadt/ukp/inception/doc/GenerateDocumentation.java`.
