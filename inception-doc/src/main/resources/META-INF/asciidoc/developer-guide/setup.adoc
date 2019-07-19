@@ -267,3 +267,10 @@ class. If it fails, alter the run configuration and add a new environment variab
 and check that the working directory is the {product-name} root directory. The resulting documentation
 will be in `target/doc-out`.
 
+=== Developing INCEpTION and webanno together
+
+INCEpTION builds on Webanno. Therefore, it can be desirable to work on Webanno and INCEpTION at the same time
+so that changes in Webanno are directly visible in your INCEpTION development. For this, check out Webanno from
+Github. Then, import it as a Maven project: first, open the Maven sidebar on the right. Then, click on the `+`
+and select the Webanno `pom.xml` . In `File | Settings | Build, Execution, Deployment | Build Tools | Maven`,
+make sure to check `Always update snapshots`.
