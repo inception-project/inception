@@ -17,66 +17,37 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
-import org.springframework.context.ApplicationEvent;
-
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
-public class RecommenderEvaluationResultEvent extends ApplicationEvent
+public class RecommenderEvaluationResultEvent extends RecommenderTaskEvent
 {
     private static final long serialVersionUID = 4618078923202025558L;
     
-    private final Recommender recommender;
-    private final String user;
-    private final EvaluationResult evalResult;
     private final long duration;
-    private final boolean active;
     
-    public RecommenderEvaluationResultEvent(Object aSource, Recommender aRecommender, String aUser,
-            EvaluationResult aResult, long aDuration, boolean aActive)
+    public RecommenderEvaluationResultEvent(Object aSource, String aUser, TaskState aState, 
+            double aProgress, Recommender aRecommender, boolean aActive, 
+            RecommenderState aRecommenderState, EvaluationResult aResult, long aDuration)
     {
-        super(aSource);
-
-        recommender = aRecommender;
-        user = aUser;
-        evalResult = aResult;
+        super(aSource, aUser, aState, aProgress, aRecommender, aActive, aRecommenderState, aResult);
         duration = aDuration;
-        active = aActive;
     }
 
-    public String getUser()
-    {
-        return user;
-    }
-    
-    public Recommender getRecommender()
-    {
-        return recommender;
-    }
-    
-    public EvaluationResult getResult()
-    {
-        return evalResult;
-    }
-    
     public long getDuration()
     {
         return duration;
     }
     
-    public boolean isActive()
-    {
-        return active;
-    }
-
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
         builder.append("RecommenderEvaluationResultEvent [recommender=");
-        builder.append(recommender);
+        builder.append(getRecommender());
         builder.append(", user=");
-        builder.append(user);
+        builder.append(getUser());
         builder.append("]");
         return builder.toString();
     }

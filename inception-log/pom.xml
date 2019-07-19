@@ -171,5 +171,9 @@
         </exclusion>
       </exclusions>
     </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-core</artifactId>
+    </dependency>
   </dependencies>
 </project>

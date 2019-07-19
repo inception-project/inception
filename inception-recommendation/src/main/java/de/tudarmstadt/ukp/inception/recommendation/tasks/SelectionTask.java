@@ -46,10 +46,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
-import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
 
 /**
  * This task evaluates all available classification tools for all annotation layers of the current
@@ -105,7 +105,9 @@ public class SelectionTask
     
             List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
+            double recommenderCount = 0;
             for (Recommender r : recommenders) {
+                recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from
                 // the active recommenders list may be outdated
                 Recommender recommender;
@@ -179,9 +181,8 @@ public class SelectionTask
                                 user.getUsername(), recommenderName, score,
                                 threshold);
                     }
-
-                    publishFinishedEvents(user, recommender, start, result,
-                            activated);
+                    publishEvalEvent(user, recommenders.size(), recommenderCount, recommender,
+                            start, result, activated);
                 }
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", user.getUsername(), recommenderName, e);
@@ -195,15 +196,19 @@ public class SelectionTask
                 "SelectionTask after activating recommenders"));
     }
 
-    private void publishFinishedEvents(User user, Recommender recommender, long start,
-            EvaluationResult result, boolean activated)
+    private void publishEvalEvent(User user, int aRecommenderSize,
+            double recommenderCount, Recommender recommender, long start, EvaluationResult result,
+            boolean activated)
     {
-        String username = user.getUsername();
-        appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this,
-                recommender, username, result,
-                System.currentTimeMillis() - start, activated));
-        getSchedulerCallback().accept(new TaskUpdateEvent(username, TaskState.SELECTION_FINISHED,
-                result.getTrainDataRatio(), recommender.getId(), activated));
+        RecommenderState recommenderState = recommenderCount < aRecommenderSize ? 
+                RecommenderState.EVALUATION_STARTED : 
+                    RecommenderState.EVALUATION_FINISHED;
+        double progress = recommenderCount / aRecommenderSize;
+        long duration = System.currentTimeMillis() - start;
+        appEventPublisher.publishEvent(new RecommenderEvaluationResultEvent(this, 
+                user.getUsername(), TaskState.RUNNING, 
+                progress, recommender, activated, 
+                recommenderState, result, duration));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

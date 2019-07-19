@@ -15,24 +15,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.recommendation.event;
 
-public enum TaskState
+public enum RecommenderState
 {
-    RUNNING, SCHEDULED, WAITING, DONE;
-
+    TRAINING_STARTED, TRAINING_FINISHED, EVALUATION_STARTED, EVALUATION_FINISHED,
+    PREDICTION_STARTED, PREDICTION_FINISHED;
+    
     @Override
     public String toString()
     {
         switch (this) {
-        case DONE:
-            return "Done";
-        case RUNNING:
-            return "Running";
-        case SCHEDULED:
-            return "Scheduled";
-        case WAITING:
-            return "Waiting on task";
+        case TRAINING_STARTED:
+            return "Training";
+        case TRAINING_FINISHED:
+            return "Finished Training";
+        case EVALUATION_STARTED:
+            return "Evaluating";
+        case EVALUATION_FINISHED:
+            return "Finished Evaluation";
+        case PREDICTION_FINISHED:
+            return "Finished Prediction";
+        case PREDICTION_STARTED:
+            return "Predicting";
         default:
             return name();
         }

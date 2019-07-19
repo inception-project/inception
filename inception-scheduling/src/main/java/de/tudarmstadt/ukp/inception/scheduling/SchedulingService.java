@@ -32,6 +32,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
@@ -62,12 +64,18 @@ public class SchedulingService
 
     private void beforeExecute(Thread aThread, Runnable aRunnable)
     {
-        runningTasks.add((Task) aRunnable);
+        Task task = (Task) aRunnable;
+        runningTasks.add(task);
+        distributeWebSocketMessage(
+                new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.RUNNING, 0.0));
     }
 
     private void afterExecute(Runnable aRunnable, Throwable aThrowable)
     {
-        runningTasks.remove(aRunnable);
+        Task task = (Task) aRunnable;
+        runningTasks.remove(task);
+        distributeWebSocketMessage(
+                new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.DONE, 1.0));
     }
 
     public List<Task> getScheduledTasks()
@@ -100,6 +108,8 @@ public class SchedulingService
         }
 
         log.debug("Enqueuing task [{}]", aTask);
+        distributeWebSocketMessage(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
+                TaskState.SCHEDULED, 0.0));
 
         // set callback to websocket distribution
         aTask.setSchedulerCallback(this::distributeWebSocketMessage);
@@ -132,25 +142,29 @@ public class SchedulingService
         executor.shutdownNow();
     }
 
-    public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdate)
+    @EventListener
+    public void distributeWebSocketMessage(ApplicationEvent aEvent)
     {
-        Application application = Application.get();
-        WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
-        IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
-                .getConnectionRegistry();
-
-        // get all connections for the user
-        List<IWebSocketConnection> userConnections = new ArrayList<>();
-        for (SessionInformation sessionInfo : sessionRegistry
-                .getAllSessions(aTaskUpdate.getUsername(), false)) {
-            userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
-                    sessionInfo.getSessionId()));
-        }
-        
-        // send message to all connections
-        for (IWebSocketConnection connection : userConnections) {
-            connection.sendMessage(new TaskWebSocketPushMessage(aTaskUpdate.getProgress(),
-                    aTaskUpdate.getState(), aTaskUpdate.getRecommenderId(), aTaskUpdate.isActive()));
+        if (aEvent instanceof TaskUpdateEvent) {
+            TaskUpdateEvent taskUpdate = (TaskUpdateEvent) aEvent;
+            
+            Application application = Application.get();
+            WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
+            IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
+                    .getConnectionRegistry();
+    
+            // get all connections for the user
+            List<IWebSocketConnection> userConnections = new ArrayList<>();
+            for (SessionInformation sessionInfo : sessionRegistry
+                    .getAllSessions(taskUpdate.getUser(), false)) {
+                userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
+                        sessionInfo.getSessionId()));
+            }
+            
+            // send message to all connections
+            for (IWebSocketConnection connection : userConnections) {
+                connection.sendMessage(taskUpdate);
+            }
         }
     }
 }

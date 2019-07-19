@@ -69,6 +69,7 @@ import org.apache.uima.util.CasCreationUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -107,12 +108,15 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.event.PreditionTaskUpdateEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 
 /**
  * The implementation of the RecommendationService.
@@ -136,6 +140,8 @@ public class RecommendationServiceImpl
     private final AnnotationSchemaService annoService;
     private final DocumentService documentService;
     private final LearningRecordService learningRecordService;
+    
+    private @Autowired ApplicationEventPublisher appEventPublisher;
     
     private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -734,8 +740,9 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
+                double recommenderCount = 0;
                 nextRecommender: for (EvaluatedRecommender r : recommenders) {
-                    
+                    recommenderCount++;
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
@@ -844,6 +851,9 @@ public class RecommendationServiceImpl
                                 groups, 0, originalCas.get().getDocumentText().length());
 
                         predictions.putPredictions(layer.getId(), suggestions);
+                        
+                        publishPredictionUpdateEvent(username, recommenderCount, 
+                                recommenders.size(), recommender);
                     }
                     catch (Throwable e) {
                         log.error(
@@ -859,6 +869,17 @@ public class RecommendationServiceImpl
         }
 
         return predictions;
+    }
+
+    private void publishPredictionUpdateEvent(String aUserName, double aRecommenderCount, 
+            int aRecommenderSize, Recommender aRecommender)
+    {
+        // TODO Auto-generated method stub
+        double progress = aRecommenderCount / aRecommenderSize;
+        RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
+                RecommenderState.PREDICTION_STARTED : RecommenderState.PREDICTION_FINISHED;
+        appEventPublisher.publishEvent(new PreditionTaskUpdateEvent(this, aUserName, 
+                TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 
     private List<AnnotationSuggestion> extractSuggestions(User aUser, CAS aCas,

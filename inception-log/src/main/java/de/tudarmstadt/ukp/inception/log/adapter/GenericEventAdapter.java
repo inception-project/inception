@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.log.adapter;
 
+import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.ApplicationContextEvent;
@@ -41,6 +42,7 @@ public class GenericEventAdapter
                 aEvent instanceof SessionDestroyedEvent ||
                 aEvent instanceof AbstractAuthorizationEvent ||
                 aEvent instanceof AbstractAuthenticationEvent ||
-                aEvent instanceof EmbeddedServletContainerInitializedEvent);
+                aEvent instanceof EmbeddedServletContainerInitializedEvent ||
+                aEvent instanceof IWebSocketPushMessage);
     }
 }

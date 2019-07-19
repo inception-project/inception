@@ -51,10 +51,11 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
-import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
 
 /**
  * This consumer trains a new classifier model, if a classification tool was selected before.
@@ -109,7 +110,9 @@ public class TrainingTask
                 continue;
             }
             
+            double recommenderCount = 0;
             for (EvaluatedRecommender r : recommenders) {
+                recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from the
                 // active recommenders list may be outdated
                 Recommender recommender;
@@ -187,8 +190,9 @@ public class TrainingTask
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
 
-                    getSchedulerCallback().accept(new TaskUpdateEvent(user.getUsername(),
-                            TaskState.TRAINING_FINISHED, recommender.getId()));
+                    publishTrainingEvents(user, recommenderCount, recommender, recommenders.size());
+                    //new TaskUpdateEvent(this, user.getUsername(),
+                    //TaskState.TRAINING_FINISHED, recommender.getId())
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),
@@ -199,6 +203,16 @@ public class TrainingTask
 
         schedulingService.enqueue(new PredictionTask(user, getProject(),
                         "TrainingTask after training was finished"));
+    }
+
+    private void publishTrainingEvents(User aUser, double aRecommenderCount,
+            Recommender aRecommender, int aRecommenderSize)
+    {
+        double progress = aRecommenderCount / aRecommenderSize;
+        RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ?
+                RecommenderState.TRAINING_STARTED : RecommenderState.TRAINING_FINISHED;
+        getSchedulerCallback().accept(new RecommenderTaskEvent(this, aUser.getUsername(), 
+                TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)

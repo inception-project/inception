@@ -15,26 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.scheduling;
+package de.tudarmstadt.ukp.inception.recommendation.event;
 
-public enum TaskState
+import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.scheduling.TaskState;
+
+public class PreditionTaskUpdateEvent
+    extends RecommenderTaskEvent
 {
-    RUNNING, SCHEDULED, WAITING, DONE;
 
-    @Override
-    public String toString()
+    public PreditionTaskUpdateEvent(Object aSource, String aUserName, TaskState aState,
+            double aProgress, Recommender aRecommender, boolean aActive,
+            RecommenderState aRecommenderState)
     {
-        switch (this) {
-        case DONE:
-            return "Done";
-        case RUNNING:
-            return "Running";
-        case SCHEDULED:
-            return "Scheduled";
-        case WAITING:
-            return "Waiting on task";
-        default:
-            return name();
-        }
+        super(aSource, aUserName, aState, aProgress, aRecommender, aActive, aRecommenderState);
+        // TODO Auto-generated constructor stub
     }
+
+    
+
 }
