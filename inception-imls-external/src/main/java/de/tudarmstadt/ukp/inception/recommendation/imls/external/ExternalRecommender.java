@@ -277,8 +277,7 @@ public class ExternalRecommender
     @Override
     public EvaluationResult evaluate(List<CAS> aCasses, DataSplitter aDataSplitter)
     {
-        EvaluationResult result = new EvaluationResult();
-        result.setEvaluationSkipped(true);
+        EvaluationResult result = EvaluationResult.skipped();
         result.setErrorMsg("ExternalRecommender does not support evaluation.");
         return result;
     }

@@ -49,6 +49,7 @@ public class SchedulingService
     private final ApplicationContext applicationContext;
     private final ThreadPoolExecutor executor;
     private @Autowired SessionRegistry sessionRegistry;
+    private @Autowired Application application;
 
     private final List<Task> runningTasks;
 
@@ -148,7 +149,6 @@ public class SchedulingService
         if (aEvent instanceof TaskUpdateEvent) {
             TaskUpdateEvent taskUpdate = (TaskUpdateEvent) aEvent;
             
-            Application application = Application.get();
             WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
             IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
                     .getConnectionRegistry();

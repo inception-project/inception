@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -122,8 +123,9 @@ public class RecommenderInfoPanel
             @Override
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
             {
-                // TODO: message specific stuff
-                aHandler.add(searchResultGroups);
+                if (aMessage instanceof RecommenderTaskEvent) {
+                    aHandler.add(searchResultGroups);
+                }
             }
             
         });

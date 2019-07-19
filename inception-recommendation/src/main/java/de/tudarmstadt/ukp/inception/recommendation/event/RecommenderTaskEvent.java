@@ -69,4 +69,27 @@ public class RecommenderTaskEvent
     {
         return result;
     }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("TaskUpdateEvent [");
+        builder.append("user=");
+        builder.append(getUser());
+        builder.append(", ");
+        builder.append("state=");
+        builder.append(recommenderState);
+        builder.append(", ");
+        builder.append("progress=");
+        builder.append(getProgress());
+        builder.append(", ");
+        builder.append("recommender=");
+        builder.append(recommender.getName());
+        builder.append(", ");
+        builder.append("active=");
+        builder.append(active);
+        builder.append("]");
+        return builder.toString();
+    }
 }
