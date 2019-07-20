@@ -32,6 +32,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
+import com.googlecode.wicket.jquery.core.utils.RequestCycleUtils;
+import com.googlecode.wicket.kendo.ui.KendoDataSource;
 import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
 import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
@@ -84,26 +86,46 @@ class UserSelectionPanel
             private static final long serialVersionUID = 8231304829756188352L;
 
             @Override
+            protected void onConfigure(KendoDataSource aDataSource)
+            {
+                // This ensures that we get the user input in getChoices
+                aDataSource.set("serverFiltering", true);
+            }
+            
+            @Override
             public void onConfigure(JQueryBehavior aBehavior)
             {
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("placeholder", Options.asString(getString("placeholder")));
-                if (config.isHideUsers()) {
-                    aBehavior.setOption("filter", Options.asString("equals"));
-                    aBehavior.setOption("autoClose", true);
-                    aBehavior.setOption("minLength", config.getUsersMinLengthCharacters());
-                    aBehavior.setOption("enforceMinLength", true);
-                }
-                else {
-                    aBehavior.setOption("filter", Options.asString("contains"));
-                    aBehavior.setOption("autoClose", false);
-                }
+                aBehavior.setOption("filter", Options.asString("contains"));
+                aBehavior.setOption("autoClose", false);
             }
 
             @Override
             public List<User> getChoices()
             {
-                return listUsersWithoutPermissions();
+                final String input = RequestCycleUtils
+                        .getQueryParameterValue("filter[filters][0][value]").toString();
+
+                List<User> result = new ArrayList<>();
+                
+                if (config.isHideUsers()) {
+                    // only offer the user matching what the input entered into the field
+                    User user = userRepository.get(input);
+                    if (user != null) {
+                        result.add(user);
+                    }
+                }
+                else {
+                    // offer all enabled users
+                    result.addAll(userRepository.listEnabledUsers());
+                }
+                
+                if (!result.isEmpty()) {
+                    result.removeAll(listUsersWithPermissions());
+                }
+                
+                return result;
             }
         };
         usersToAdd.setModel(usersToAddModel);
@@ -133,13 +155,6 @@ class UserSelectionPanel
     private List<User> listUsersWithPermissions()
     {
         return projectRepository.listProjectUsersWithPermissions(projectModel.getObject());
-    }
-
-    private List<User> listUsersWithoutPermissions()
-    {
-        List<User> result = new ArrayList<>(userRepository.list());
-        result.removeAll(listUsersWithPermissions());
-        return result;
     }
 
     private void actionAdd(AjaxRequestTarget aTarget, Form<List<User>> aForm)
