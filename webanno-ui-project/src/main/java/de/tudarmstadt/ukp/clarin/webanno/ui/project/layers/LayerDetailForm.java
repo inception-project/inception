@@ -400,7 +400,7 @@ public class LayerDetailForm
         case JSON:
             return "layer.json";
         case UIMA:
-            return "typesytem.xml";
+            return "typesystem.xml";
         default:
             throw new IllegalStateException("Unknown mode: [" + exportMode + "]");
         }
