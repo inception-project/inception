@@ -63,7 +63,8 @@ public class XmiFormatSupport
     @Override
     public CollectionReaderDescription getReaderDescription() throws ResourceInitializationException
     {
-        return createReaderDescription(XmiReader.class);
+        return createReaderDescription(XmiReader.class,
+                XmiReader.PARAM_LENIENT, true);
     }
     
     @Override
