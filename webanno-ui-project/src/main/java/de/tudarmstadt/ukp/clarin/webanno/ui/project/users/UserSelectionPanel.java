@@ -24,7 +24,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.IChoiceRenderer;
 import org.apache.wicket.model.IModel;
@@ -33,7 +32,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
-import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
+import com.googlecode.wicket.kendo.ui.form.multiselect.lazy.MultiSelect;
+import com.googlecode.wicket.kendo.ui.renderer.ChoiceRenderer;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
@@ -53,7 +53,7 @@ class UserSelectionPanel
 
     private @SpringBean ProjectService projectRepository;
     private @SpringBean UserDao userRepository;
-    private @SpringBean UserSelectionPanelConfiguration userSelectionPanelConfiguration;
+    private @SpringBean UserSelectionPanelConfiguration config;
 
     private IModel<Project> projectModel;
     private IModel<User> userModel;
@@ -66,10 +66,6 @@ class UserSelectionPanel
         super(id);
         
         setOutputMarkupId(true);
-        
-        final boolean hideUsernames = userSelectionPanelConfiguration.isHideUsers();
-        final int userNameMinLengthForSuggestions =
-                userSelectionPanelConfiguration.getUsersMinLengthCharacters();
         
         projectModel = aProject;
         userModel = aUser;
@@ -84,7 +80,7 @@ class UserSelectionPanel
         IModel<Collection<User>> usersToAddModel = new CollectionModel<>(new ArrayList<>());
         Form<Collection<User>> form = new Form<>("form", usersToAddModel);
         add(form);
-        usersToAdd = new MultiSelect<User>("usersToAdd") {
+        usersToAdd = new MultiSelect<User>("usersToAdd", new ChoiceRenderer<>("username")) {
             private static final long serialVersionUID = 8231304829756188352L;
 
             @Override
@@ -92,28 +88,32 @@ class UserSelectionPanel
             {
                 super.onConfigure(aBehavior);
                 aBehavior.setOption("placeholder", Options.asString(getString("placeholder")));
-                if (hideUsernames) {
+                if (config.isHideUsers()) {
                     aBehavior.setOption("filter", Options.asString("equals"));
                     aBehavior.setOption("autoClose", true);
-                    aBehavior.setOption("minLength", userNameMinLengthForSuggestions >= 0 ?
-                            userNameMinLengthForSuggestions : 2);
+                    aBehavior.setOption("minLength", config.getUsersMinLengthCharacters());
                     aBehavior.setOption("enforceMinLength", true);
-                }  else {
+                }
+                else {
                     aBehavior.setOption("filter", Options.asString("contains"));
                     aBehavior.setOption("autoClose", false);
                 }
             }
+
+            @Override
+            public List<User> getChoices()
+            {
+                return listUsersWithoutPermissions();
+            }
         };
         usersToAdd.setModel(usersToAddModel);
-        usersToAdd.setChoices(this::listUsersWithoutPermissions);
-        usersToAdd.setChoiceRenderer(new ChoiceRenderer<>("username"));
         form.add(usersToAdd);
         form.add(new LambdaAjaxButton<>("add", this::actionAdd));
     }
     
     private IChoiceRenderer<User> makeUserChoiceRenderer()
     {
-        return new ChoiceRenderer<User>()
+        return new org.apache.wicket.markup.html.form.ChoiceRenderer<User>()
         {
             private static final long serialVersionUID = 4607720784161484145L;
 
@@ -150,7 +150,6 @@ class UserSelectionPanel
         }
         
         aForm.getModelObject().clear();
-        usersToAdd.getChoicesModel().detach();
         
         aTarget.add(this);
     }

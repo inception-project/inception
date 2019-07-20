@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,32 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+public interface UserSelectionPanelConfiguration
+{
+    boolean isHideUsers();
 
-@Component
-@ConfigurationProperties(prefix = UserSelectionPanelConfiguration.PROPERTY_PREFIX)
-public class UserSelectionPanelConfiguration {
-    
-    public static final String PROPERTY_PREFIX = "userSelection";
-    
-    private boolean hideUsers;
-    
-    private int minLengthCharacters;
-
-    public boolean isHideUsers() {
-        return hideUsers;
-    }
-
-    public void setHideUsers(boolean hideUsers) {
-        this.hideUsers = hideUsers;
-    }
-
-    public int getUsersMinLengthCharacters() {
-        return minLengthCharacters;
-    }
-
-    public void setMinLengthCharacters(int minLengthCharacters) {
-        this.minLengthCharacters = minLengthCharacters;
-    }
+    int getUsersMinLengthCharacters();
 }
