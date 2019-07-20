@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.HOST_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.createMultiLinkWithRoleTestTypeSytem;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.load;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadWebAnnoTsv3;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
@@ -687,11 +687,11 @@ public class CasDiffTest
     public void multiLinkWithRoleNoDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));        
         makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
         makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
@@ -729,10 +729,10 @@ public class CasDiffTest
     public void multiLinkWithRoleLabelDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));     
 
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
@@ -769,10 +769,10 @@ public class CasDiffTest
     public void multiLinkWithRoleLabelDifferenceTest2()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));     
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
@@ -809,10 +809,10 @@ public class CasDiffTest
     public void multiLinkWithRoleTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));      
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
@@ -849,12 +849,12 @@ public class CasDiffTest
     public void multiLinkWithRoleMultiTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, 
                 makeLinkFS(jcasA, "slot1", 0, 0),
                 makeLinkFS(jcasA, "slot1", 10, 10));      
 
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, 
                 makeLinkFS(jcasB, "slot1", 10, 10));
 
@@ -892,12 +892,12 @@ public class CasDiffTest
     public void multiLinkWithRoleMultiTargetDifferenceTest2()
         throws Exception
     {
-        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasA = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasA, 0, 0, 
                 makeLinkFS(jcasA, "slot1", 0, 0),
                 makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSytem());
+        JCas jcasB = JCasFactory.createJCas(createMultiLinkWithRoleTestTypeSystem());
         makeLinkHostFS(jcasB, 0, 0, 
                 makeLinkFS(jcasB, "slot2", 10, 10));
 

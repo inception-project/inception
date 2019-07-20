@@ -198,7 +198,7 @@ public class CurationTestUtils
         return CasCreationUtils.mergeTypeSystems(typeSystems);
     }
 
-    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSytem(String... aFeatures)
+    public static TypeSystemDescription createMultiLinkWithRoleTestTypeSystem(String... aFeatures)
         throws Exception
     {
         List<TypeSystemDescription> typeSystems = new ArrayList<>();

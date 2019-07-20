@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.HOST_TYPE;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.createMultiLinkWithRoleTestTypeSytem;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.createMultiLinkWithRoleTestTypeSystem;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostMultiSPanFeatureFS;
@@ -168,11 +168,11 @@ public class CasMergeTest
     public void multiLinkWithRoleNoDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
         makeLinkHostFS(jcasA, 10, 10, makeLinkFS(jcasA, "slot1", 10, 10));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
         makeLinkHostFS(jcasB, 10, 10, makeLinkFS(jcasB, "slot1", 10, 10));
 
@@ -180,7 +180,7 @@ public class CasMergeTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
@@ -204,17 +204,17 @@ public class CasMergeTest
     public void multiLinkWithRoleLabelDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot2", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
@@ -239,17 +239,17 @@ public class CasMergeTest
     public void multiLinkWithRoleTargetDifferenceTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 10, 10));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
@@ -275,18 +275,18 @@ public class CasMergeTest
         throws Exception
     {
         // Creating two span stacked annotations. This should cause the data not to be merged.
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
         makeLinkHostFS(jcasA, 0, 0, makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostFS(jcasB, 0, 0, makeLinkFS(jcasB, "slot1", 0, 0));
 
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        CAS curatorCas = createJCas(createMultiLinkWithRoleTestTypeSytem("f1")).getCas();
+        CAS curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1")).getCas();
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
@@ -307,14 +307,14 @@ public class CasMergeTest
     public void multiLinkMultiSpanRoleDiffTest()
         throws Exception
     {
-        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
         makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
                 makeLinkFS(jcasA, "slot1", 0, 0));
 
-        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasB = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostMultiSPanFeatureFS(jcasB, 0, 0, feature, "A",
                 makeLinkFS(jcasB, "slot2", 0, 0));
 
@@ -322,7 +322,7 @@ public class CasMergeTest
         casByUser.put("user1", asList(jcasA.getCas()));
         casByUser.put("user2", asList(jcasB.getCas()));
 
-        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas curatorCas = createJCas(createMultiLinkWithRoleTestTypeSystem("f1"));
         curatorCas.setDocumentText(casByUser.values().stream().flatMap(Collection::stream)
                 .findFirst().get().getDocumentText());
 
@@ -463,7 +463,7 @@ public class CasMergeTest
     {
         slotLayer.setOverlapMode(OverlapMode.NO_OVERLAP);
         
-        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -471,7 +471,7 @@ public class CasMergeTest
                 CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
 
         CurationTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 CurationTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
@@ -491,7 +491,7 @@ public class CasMergeTest
         slotLayer.setAnchoringMode(TOKENS);
         slotLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
         
-        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = jcasA.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -499,7 +499,7 @@ public class CasMergeTest
                 CurationTestUtils.makeLinkFS(jcasA, "slot1", 0, 0));
 
         JCas mergeCAs = JCasFactory
-                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
 
         CurationTestUtils.makeLinkHostMultiSPanFeatureFS(mergeCAs, 0, 0, feature, "C",
                 CurationTestUtils.makeLinkFS(mergeCAs, "slot1", 0, 0));
@@ -513,7 +513,7 @@ public class CasMergeTest
     public void copyLinkToEmptyTest()
         throws Exception
     {
-        JCas mergeCas = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas mergeCas = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = mergeCas.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -525,7 +525,7 @@ public class CasMergeTest
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
                 makeLinkFS(jcasA, "slot1", 0, 0));
 
@@ -546,7 +546,7 @@ public class CasMergeTest
     {
 
         JCas mergeCas = JCasFactory
-                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+                .createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         Type type = mergeCas.getTypeSystem().getType(CurationTestUtils.HOST_TYPE);
         Feature feature = type.getFeatureByBaseName("f1");
 
@@ -559,7 +559,7 @@ public class CasMergeTest
         linkFs.add(copyFS);
         WebAnnoCasUtil.setLinkFeatureValue(mergeFs, type.getFeatureByBaseName("links"), linkFs);
 
-        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSytem("f1"));
+        JCas jcasA = createJCas(CurationTestUtils.createMultiLinkWithRoleTestTypeSystem("f1"));
         makeLinkHostMultiSPanFeatureFS(jcasA, 0, 0, feature, "A",
                 makeLinkFS(jcasA, "slot1", 0, 0));
 
