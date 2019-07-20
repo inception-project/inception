@@ -1,12 +1,17 @@
 = Users
 
-After clicking on *Users*, you are displayed a new pane in which you can add new users by clicking on the button *Add User*.  After doing so, you get a list of users in the system which can be added to the project. By making a tick in front of the login, you can chose a new user.
+After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. You get a dropdown list of enabled users in the system which can be added to the project. Any users which are already part of the project are not offered. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
 
-image::project4.jpg[align="center"]
+image::new_userSelection.jpg[align="center"]
 
-Please do not forget to save after choosing all members of the project. Close the pane by clicking on *Cancel*. The rights of users created like this are that of an annotator. If you want to expand the user's status, you can do so by clicking on the user and then on *Change Permission*. The following frame will pop up.
+NOTE: For privacy reasons, the administrator may choose to restrict the users shown in the dropdown. 
+      If this is the case, you have to enter the full name of a user before it appears in the dropdown and
+      can be added. 
 
-image::project5.jpg[align="center"]
+By default, the users are added to the project as annotators. If you want to assign additional roles,
+you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
 
-After ticking the wished permissions, click on *Update*.
-To remove a user, click on the login and then *Remove User*.
+image::new_userPermissions.jpg[align="center"]
+
+After ticking the wished permissions, click on *Save*.
+To remove a user, remove all the permissions and then click on *Save*.
