@@ -45,13 +45,8 @@
 | true
 
 | userSelection.hideUsers
-| Whether the system's usernames will be shown into the dropdown list at the Users tab. In order for the Project manager to add a user into an annotation project she has to write into the same text Field the annotator’s full username. When there is a full match this username (and only this) is displayed in the dropdown list where the Project Manager can select it and add it to her project.
+| Whether the list of users show in the users tab of the project settings is restricted. If this setting is enable, the full name of a user has to be entered into the input field before the user can be added. If this setting is disabled, it is possible to see all enabled users and to add any of them to the project.
 | false
 | true
-
-| userSelection.minLengthCharacters
-| The number of characters the Project Manager has to type in order to see the dropdown list at the Users tab. This setting has no effect if userSelection.hideUsers=false.
-| 2
-| 4
 |===
 

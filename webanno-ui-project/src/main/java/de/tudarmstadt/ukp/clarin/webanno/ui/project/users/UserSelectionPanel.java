@@ -117,8 +117,10 @@ class UserSelectionPanel
                     }
                 }
                 else {
-                    // offer all enabled users
-                    result.addAll(userRepository.listEnabledUsers());
+                    // offer all enabled users matching the input
+                    userRepository.listEnabledUsers().stream()
+                            .filter(user -> input == null || user.getUsername().contains(input))
+                            .forEach(result::add);
                 }
                 
                 if (!result.isEmpty()) {

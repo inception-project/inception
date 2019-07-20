@@ -29,27 +29,14 @@ public class UserSelectionPanelConfigurationImpl
 
     private boolean hideUsers;
 
-    private int minLengthCharacters;
-
     @Override
     public boolean isHideUsers()
     {
         return hideUsers;
     }
 
-    public void setHideUsers(boolean hideUsers)
+    public void setHideUsers(boolean aHideUsers)
     {
-        this.hideUsers = hideUsers;
-    }
-
-    @Override
-    public int getUsersMinLengthCharacters()
-    {
-        return Math.min(minLengthCharacters, 2);
-    }
-
-    public void setMinLengthCharacters(int minLengthCharacters)
-    {
-        this.minLengthCharacters = minLengthCharacters;
+        hideUsers = aHideUsers;
     }
 }

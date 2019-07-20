@@ -20,6 +20,4 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.project.users;
 public interface UserSelectionPanelConfiguration
 {
     boolean isHideUsers();
-
-    int getUsersMinLengthCharacters();
 }

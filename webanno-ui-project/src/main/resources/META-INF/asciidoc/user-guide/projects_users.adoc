@@ -1,12 +1,15 @@
 = Users
 
-After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. After doing so, you get a dropdown list with users in the system which can be added to the project. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
+After clicking on the *Users* tab, you are displayed with a new pane in which you can add new users by clicking on the *Add users* text field. You get a dropdown list of enabled users in the system which can be added to the project. Any users which are already part of the project are not offered. As you type the dropdown list with the users is filtered to match your input. By clicking on a username or by pressing enter you can select the corresponding user. You can keep typing to add more users to the project. When you press the *Add* button the selected users are added to your project.
 
 image::new_userSelection.jpg[align="center"]
 
-In order to add a user into a project when the administrator has decided not to show the systems's usernames the process differentiates. In this case when the Project Manager clicks into the *Add users* text field no dropdown list with users is displayed. Thus, in order for the project manager to add a user into an annotation project she has to write into the same text field the user's full username. When there is a full match the corresponding name and only this is displayed into the drop down list where the Project Manager can select it and add it to her project.
+NOTE: For privacy reasons, the administrator may choose to restrict the users shown in the dropdown. 
+      If this is the case, you have to enter the full name of a user before it appears in the dropdown and
+      can be added. 
 
-The default rights of the users are that of an annotator. If you want to expand the user's status, you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
+By default, the users are added to the project as annotators. If you want to assign additional roles,
+you can do so by clicking on the user and then on *Permissions* pane select the appropriate permissions.
 
 image::new_userPermissions.jpg[align="center"]
 
