@@ -203,7 +203,7 @@ public class AutomationUtil
             if (dCoveredText.equals(fs.getCoveredText())) {
                 if (g != null && isSamAnno(attachSpanType, fs, aDepFS)) {
                     AnnotationFS arc = adapter.add(aState.getDocument(),
-                            aState.getUser().getUsername(), g, fs, cas, aStart, aEnd);
+                            aState.getUser().getUsername(), g, fs, cas);
                     adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
                             cas, getAddr(arc), aFeature, aValue);
                     g = null;
@@ -219,7 +219,7 @@ public class AutomationUtil
             if (gCoveredText.equals(fs.getCoveredText())  ) {
                 if (d != null && isSamAnno(attachSpanType, fs, aGovFS)) {
                     AnnotationFS arc = adapter.add(aState.getDocument(),
-                            aState.getUser().getUsername(), fs, d, cas, aStart, aEnd);
+                            aState.getUser().getUsername(), fs, d, cas);
                     adapter.setFeatureValue(aState.getDocument(), aState.getUser().getUsername(),
                             cas, getAddr(arc), aFeature, aValue);
                     g = null;

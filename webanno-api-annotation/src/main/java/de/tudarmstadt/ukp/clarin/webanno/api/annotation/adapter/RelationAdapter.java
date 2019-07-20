@@ -118,20 +118,16 @@ public class RelationAdapter
      *            the target FS.
      * @param aCas
      *            the CAS.
-     * @param aWindowBegin
-     *            begin offset of the first visible sentence
-     * @param aWindowEnd
-     *            end offset of the last visible sentence
      * @return the ID.
      * @throws AnnotationException
      *             if the annotation could not be created/updated.
      */
     public AnnotationFS add(SourceDocument aDocument, String aUsername, AnnotationFS aOriginFs,
-            AnnotationFS aTargetFs, CAS aCas, int aWindowBegin, int aWindowEnd)
+            AnnotationFS aTargetFs, CAS aCas)
         throws AnnotationException
     {
         return handle(new CreateRelationAnnotationRequest(aDocument, aUsername, aCas, aOriginFs,
-                aTargetFs, aWindowBegin, aWindowEnd));
+                aTargetFs));
     }
 
     public AnnotationFS handle(CreateRelationAnnotationRequest aRequest)

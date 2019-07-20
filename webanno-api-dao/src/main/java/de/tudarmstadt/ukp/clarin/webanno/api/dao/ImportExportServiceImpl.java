@@ -428,7 +428,7 @@ public class ImportExportServiceImpl
                     cas);
             ConfigurationParameterFactory.addConfigurationParameters(writer,
                     JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
-                    JCasFileWriter_ImplBase.PARAM_ESCAPE_DOCUMENT_ID, false,
+                    JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 

@@ -29,14 +29,19 @@ public class DocumentOpenedEvent
     
     private final CAS cas;
     private final SourceDocument document;
-    private final String user;
+    // user who owns/annotates the opened document
+    private final String annotator;
+    // user who opened the document
+    private final String opener;
     
-    public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument, String aUser)
+    public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
+            String aAnnotator, String aOpener)
     {
         super(aSource);
         cas = aCas;
         document = aDocument;
-        user = aUser;
+        annotator = aAnnotator;
+        opener = aOpener;
     }
     
     public CAS getCas()
@@ -51,6 +56,11 @@ public class DocumentOpenedEvent
     
     public String getUser()
     {
-        return user;
+        return opener;
+    }
+    
+    public String getAnnotator()
+    {
+        return annotator;
     }
 }

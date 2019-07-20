@@ -23,29 +23,23 @@
       <div class="fluid-container">
         <div class="row">
           <div class="col-sm-12" style="display: flex;">
-            <div style="flex: 1; margin-right: 15px;" wicket:enclosure="projectSelectionForm">
-              <form wicket:id="projectSelectionForm">
-                <div class="form-group">
-                  <label>Projects:</label>
-                  <select wicket:id="projectSelection" size="18" class="form-control" style="overflow: auto">
-                    <span wicket:id="projects">
-                      <option wicket:id="project"></option>
-                    </span>
-                  </select>
-                </div>
-              </form>
+            <div style="flex: 1; margin-right: 15px;" wicket:enclosure="project">
+              <label>
+                <wicket:message key="projects"/>
+              </label>
+              <select wicket:id="project" size="18" class="form-control" style="overflow: auto"></select>
             </div>
-            <div style="flex: 1;" wicket:enclosure="documentSelectionForm">
-              <form wicket:id="documentSelectionForm">
-                <div class="form-group">
-                  <label>Documents:</label>
-                  <select wicket:id="documentSelection" size="18" class="form-control" style="overflow: auto">
-                    <span wicket:id="documents">
-                      <option wicket:id="document"></option>
-                    </span>
-                  </select>
-                </div>
-              </form>
+            <div style="flex: 1;" wicket:enclosure="user">
+              <label>
+                <wicket:message key="users"/>
+              </label>
+              <select wicket:id="user" size="18" class="form-control" style="overflow: auto"></select>
+            </div>
+            <div style="flex: 1;" wicket:enclosure="document">
+              <label>
+                <wicket:message key="docs"/>
+              </label>
+              <select wicket:id="document" size="18" class="form-control" style="overflow: auto"></select>
             </div>
           </div>
         </div>

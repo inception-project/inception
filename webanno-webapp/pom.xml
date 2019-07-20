@@ -79,6 +79,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-remote</artifactId>
     </dependency>
     <dependency>
@@ -424,6 +428,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-automation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-correction</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-project</usedDependency>

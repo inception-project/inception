@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.LinkCompareBehavior.LINK_ROLE_AS_LABEL;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.AUTOMATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CORRECTION;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
@@ -33,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -50,22 +53,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.Configuration;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff2.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.util.MergeCas;
+import de.tudarmstadt.ukp.clarin.webanno.support.StopWatch;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 
@@ -89,8 +91,8 @@ public class SuggestionBuilder
     private final UserDao userRepository;
     private final CasStorageService casStorageService;
 
-    int diffRangeBegin, diffRangeEnd;
-    boolean firstload = true;
+    private int diffRangeBegin, diffRangeEnd;
+    private boolean firstload = true;
     public static Map<Integer, Set<Integer>> crossSentenceLists;
     //
     Map<Integer, Integer> segmentBeginEnd = new HashMap<>();
@@ -140,7 +142,7 @@ public class SuggestionBuilder
             casses = listCasesforCorrection(randomAnnotationDocument, sourceDocument,
                     aBModel.getMode());
             mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
-                    false);
+                    false, false);
             String username = casses.keySet().iterator().next();
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress,
                     casses.get(username), username, aBModel.getWindowBeginOffset(),
@@ -150,7 +152,7 @@ public class SuggestionBuilder
             casses = listCassesforCuration(finishedAnnotationDocuments, randomAnnotationDocument,
                     aBModel.getMode());
             mergeCas = getMergeCas(aBModel, sourceDocument, casses, randomAnnotationDocument,
-                    false);
+                    false, false);
             updateSegment(aBModel, segmentBeginEnd, segmentNumber, segmentAdress, mergeCas,
                     WebAnnoConst.CURATION_USER,
                     WebAnnoCasUtil.getFirstSentence(mergeCas).getBegin(),
@@ -182,7 +184,7 @@ public class SuggestionBuilder
                     (System.currentTimeMillis() - start));
         }
 
-        List<DiffAdapter> adapters = CasDiff2.getAdapters(annotationService, aBModel.getProject());
+        List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService, aBModel.getProject());
 
         long diffStart = System.currentTimeMillis();
         log.debug("Calculating differences...");
@@ -196,7 +198,7 @@ public class SuggestionBuilder
                         segmentBeginEnd.size());
             }
 
-            DiffResult diff = CasDiff2.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
+            DiffResult diff = CasDiff.doDiffSingle(entryTypes, adapters, LINK_ROLE_AS_LABEL,
                     casses, begin, end);
 
             SourceListView curationSegment = new SourceListView();
@@ -396,7 +398,8 @@ public class SuggestionBuilder
      *             hum?
      */
     public CAS getMergeCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade)
+            Map<String, CAS> aCasses, AnnotationDocument randomAnnotationDocument, boolean aUpgrade,
+            boolean aMergeIncompleteAnnotations)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         CAS mergeCas = null;
@@ -433,19 +436,16 @@ public class SuggestionBuilder
         }
         // Create JCas, if it could not be loaded from the file system
         catch (Exception e) {
-            if (aState.getMode().equals(Mode.AUTOMATION)
-                    || aState.getMode().equals(Mode.CORRECTION)) {
-                mergeCas = createCorrectionCas(mergeCas, aState,
-                        randomAnnotationDocument);
-                updateDocumentTimestampAfterWrite(aState, correctionDocumentService
-                        .getCorrectionCasTimestamp(aState.getDocument()));
+            if (aState.getMode().equals(AUTOMATION) || aState.getMode().equals(CORRECTION)) {
+                mergeCas = createCorrectionCas(mergeCas, aState, randomAnnotationDocument);
+                updateDocumentTimestampAfterWrite(aState,
+                        correctionDocumentService.getCorrectionCasTimestamp(aState.getDocument()));
             }
             else {
-                mergeCas = createCurationCas(aState.getProject(),
-                        randomAnnotationDocument, aCasses,
-                        aState.getAnnotationLayers());
-                updateDocumentTimestampAfterWrite(aState, curationDocumentService
-                        .getCurationCasTimestamp(aState.getDocument()));
+                mergeCas = createCurationCas(aState, randomAnnotationDocument, aCasses,
+                        aState.getAnnotationLayers(), aMergeIncompleteAnnotations);
+                updateDocumentTimestampAfterWrite(aState,
+                        curationDocumentService.getCurationCasTimestamp(aState.getDocument()));
             }
         }
         return mergeCas;
@@ -501,9 +501,9 @@ public class SuggestionBuilder
      * For the first time a curation page is opened, create a MergeCas that contains only agreeing
      * annotations Using the CAS of the curator user.
      *
-     * @param aProject
-     *            the project
-     * @param randomAnnotationDocument
+     * @param aState
+     *            the annotator state
+     * @param aRandomAnnotationDocument
      *            an annotation document.
      * @param aCasses
      *            the CASes
@@ -513,33 +513,44 @@ public class SuggestionBuilder
      * @throws IOException
      *             if an I/O error occurs.
      */
-    public CAS createCurationCas(Project aProject, AnnotationDocument randomAnnotationDocument,
-            Map<String, CAS> aCasses, List<AnnotationLayer> aAnnotationLayers)
-        throws IOException
+    private CAS createCurationCas(AnnotatorState aState,
+            AnnotationDocument aRandomAnnotationDocument, Map<String, CAS> aCasses,
+            List<AnnotationLayer> aAnnotationLayers, boolean aMergeIncompleteAnnotations)
+        throws IOException, UIMAException, AnnotationException
     {
+        Validate.notNull(aState, "State must be specified");
+        Validate.notNull(aRandomAnnotationDocument, "Annotation document must be specified");
+        
         CAS mergeCas;
         boolean cacheEnabled = false;
         try {
             cacheEnabled = casStorageService.isCacheEnabled();
             casStorageService.disableCache();
-            mergeCas = documentService.readAnnotationCas(randomAnnotationDocument);
+            mergeCas = documentService.readAnnotationCas(aRandomAnnotationDocument);
         }
         finally {
             if (cacheEnabled) {
                 casStorageService.enableCache();
             }
         }
-        aCasses.put(WebAnnoConst.CURATION_USER, mergeCas);
 
         List<Type> entryTypes = getEntryTypes(mergeCas, aAnnotationLayers, annotationService);
+        
+        DiffResult diff;
+        try (StopWatch watch = new StopWatch(log, "CasDiff")) {
+            diff = CasDiff.doDiffSingle(annotationService, aState.getProject(), entryTypes,
+                    LINK_ROLE_AS_LABEL, aCasses, 0,
+                    mergeCas.getDocumentText().length());
+        }
 
-        DiffResult diff = CasDiff2.doDiffSingle(annotationService, aProject, entryTypes,
-                LinkCompareBehavior.LINK_ROLE_AS_LABEL, aCasses, 0,
-                mergeCas.getDocumentText().length());
+        try (StopWatch watch = new StopWatch(log, "CasMerge")) {
+            CasMerge casMerge = new CasMerge(annotationService);
+            casMerge.setMergeIncompleteAnnotations(aMergeIncompleteAnnotations);
+            casMerge.reMergeCas(diff, aState.getDocument(), aState.getUser().getUsername(),
+                    mergeCas, aCasses);
+        }
 
-        mergeCas = MergeCas.reMergeCas(diff, aCasses);
-
-        curationDocumentService.writeCurationCas(mergeCas, randomAnnotationDocument.getDocument(),
+        curationDocumentService.writeCurationCas(mergeCas, aRandomAnnotationDocument.getDocument(),
                 false);
         
         return mergeCas;

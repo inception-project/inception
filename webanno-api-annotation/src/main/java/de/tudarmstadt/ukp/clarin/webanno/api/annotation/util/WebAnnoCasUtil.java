@@ -713,7 +713,12 @@ public class WebAnnoCasUtil
                     + "] has no feature called [" + aFeatureName + "]");
         }
         
-        switch (feature.getRange().getName()) {
+        return isPrimitiveType(feature.getRange());
+    }
+
+    public static boolean isPrimitiveType(Type aType)
+    {
+        switch (aType.getName()) {
         case CAS.TYPE_NAME_STRING: // fallthrough
         case CAS.TYPE_NAME_BOOLEAN: // fallthrough
         case CAS.TYPE_NAME_FLOAT: // fallthrough
@@ -723,7 +728,7 @@ public class WebAnnoCasUtil
             return false;
         }
     }
-    
+
     public static <T> T getFeature(FeatureStructure aFS, String aFeatureName)
     {
         Feature feature = aFS.getType().getFeatureByBaseName(aFeatureName);

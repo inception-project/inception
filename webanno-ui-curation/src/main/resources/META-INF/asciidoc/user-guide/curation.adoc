@@ -84,6 +84,18 @@ The annotations which were not chosen to be in the merged file are marked dark b
 | rejected; different to the corresponding annotation in the upper *Annotation* pane
 |===
 
+.Merging strategies
+By default, the merging strategy only considers annotations if all annotators made the same 
+annotation at the same location (i.e. complete and agreeing annotations) - i.e. it considers any 
+annotations not provided by all annotators as a disagreement between the annotators.
+
+However, there are situations where it is desirable to merge annotations from all annotators, even
+if some did not provide it. For example, if your project has two annotators, one working on POS
+tagging and another working on lemmatization, then as a curator, you might simply want to merge the
+annotators from the two. This can be done by using the **Re-merge** action and activating the
+checkbox **Merge incomplete annotations**. This will re-merge the current document (i.e. discard
+the entire state of curation and merge from scratch).
+
 .Anonymized curation
 By default, the curator can see the annotators names on the curation page. However, in some cases,
 it may not be desirable for the curator to see the names. In this case, enable the option

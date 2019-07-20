@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -61,6 +62,7 @@ public abstract class AnnotationPageBase
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     private @SpringBean UserPreferencesService userPreferenceService;
+    private @SpringBean UserDao userRepository;
     
     private ChallengeResponseDialog resetDocumentDialog;
     private ActionBarLink resetDocumentLink;
@@ -118,7 +120,8 @@ public abstract class AnnotationPageBase
             resetDocumentLink.onConfigure(_this -> {
                 AnnotatorState state = AnnotationPageBase.this.getModelObject();
                 _this.setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
+                        .isAnnotationFinished(state.getDocument(), state.getUser())
+                                && state.getUser().equals(userRepository.getCurrentUser()));
             });
         }
         return resetDocumentLink;

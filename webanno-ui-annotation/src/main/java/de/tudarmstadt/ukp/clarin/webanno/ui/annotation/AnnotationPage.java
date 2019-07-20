@@ -57,6 +57,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.urlfragment.UrlFragment;
 
@@ -74,7 +75,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEven
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
@@ -125,6 +128,7 @@ public class AnnotationPage
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
+    private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
@@ -258,7 +262,8 @@ public class AnnotationPage
                 
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
+                        .isAnnotationFinished(state.getDocument(), state.getUser()) 
+                        && !isUserViewingOthersWork());
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -526,7 +531,10 @@ public class AnnotationPage
         
         AnnotatorState state = getModelObject();
         
-        state.setUser(userRepository.getCurrentUser());
+        
+        if (state.getUser() == null) {
+            state.setUser(userRepository.getCurrentUser());
+        }
 
         try {
             // Check if there is an annotation document entry in the database. If there is none,
@@ -546,8 +554,10 @@ public class AnnotationPage
             state.reset();
             
             // Initialize timestamp in state
-            updateDocumentTimestampAfterWrite(state, documentService
-                    .getAnnotationCasTimestamp(state.getDocument(), state.getUser().getUsername()));
+            if (!isUserViewingOthersWork()) {
+                updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
+                        state.getDocument(), state.getUser().getUsername()));
+            }
 
             // Load constraints
             state.setConstraints(constraintsService.loadConstraints(state.getProject()));
@@ -571,7 +581,8 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
+            if (!isUserViewingOthersWork()
+                    && SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         NEW_TO_ANNOTATION_IN_PROGRESS);
             }
@@ -590,7 +601,8 @@ public class AnnotationPage
             
             applicationEventPublisherHolder.get().publishEvent(
                     new DocumentOpenedEvent(this, editorCas, getModelObject().getDocument(),
-                            getModelObject().getUser().getUsername()));
+                            getModelObject().getUser().getUsername(),
+                            userRepository.getCurrentUser().getUsername()));
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -729,9 +741,10 @@ public class AnnotationPage
             return;
         }
         
-        // Check access to project
+        // Check access to project for annotator or current user if admin is viewing
         if (project != null
-                && !projectService.isAnnotator(project, getModelObject().getUser())) {
+                && !projectService.isAnnotator(project, getModelObject().getUser())
+                && !projectService.isManager(project, userRepository.getCurrentUser())) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
@@ -741,7 +754,8 @@ public class AnnotationPage
                 .existsAnnotationDocument(document, getModelObject().getUser())) {
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
-            if (AnnotationDocumentState.IGNORE.equals(adoc.getState())) {
+            if (AnnotationDocumentState.IGNORE.equals(adoc.getState())
+                    && !isUserViewingOthersWork()) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
@@ -779,4 +793,24 @@ public class AnnotationPage
             }
         }
     }
+
+    private boolean isUserViewingOthersWork()
+    {
+        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
+    }
+
+    @Override
+    protected void loadPreferences() throws BeansException, IOException
+    {
+        if (isUserViewingOthersWork()) {
+            AnnotatorState state = getModelObject();
+            PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
+                    state, userRepository.getCurrentUser().getUsername());
+        }
+        else {
+            super.loadPreferences();
+        }
+    }
+    
+    
 }

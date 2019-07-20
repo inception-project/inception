@@ -22,6 +22,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
@@ -46,6 +48,7 @@ import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
@@ -75,14 +78,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -140,7 +141,7 @@ public class CurationPage
     private CurationContainer curationContainer;
 
     private CurationPanel curationPanel;
-    private ChallengeResponseDialog remergeDocumentDialog;
+    private MergeDialog remergeDocumentDialog;
     private ActionBarLink remergeDocumentLink;
 
     private WebMarkupContainer finishDocumentIcon;
@@ -262,7 +263,7 @@ public class CurationPage
         add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
 
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        remergeDocumentDialog = new ChallengeResponseDialog("remergeDocumentDialog",
+        remergeDocumentDialog = new MergeDialog("remergeDocumentDialog",
                 new StringResourceModel("RemergeDocumentDialog.title", this),
                 new StringResourceModel("RemergeDocumentDialog.text", this).setModel(getModel())
                         .setParameters(documentNameModel),
@@ -545,13 +546,22 @@ public class CurationPage
         finishDocumentDialog.show(aTarget);
     }
 
-    private void actionRemergeDocument(AjaxRequestTarget aTarget) throws IOException
+    private void actionRemergeDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
+        throws Exception
     {
         AnnotatorState state = CurationPage.this.getModelObject();
+
+        // Remove the current curation CAS
         curationDocumentService.removeCurationDocumentContent(state.getDocument(),
                 state.getUser().getUsername());
+
+        // Initialize a new one ...
+        prepareMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations());
+
+        // ... and load it
         actionLoadDocument(aTarget);
-        info("Re-merge finished!");
+
+        success("Re-merge finished!");
         aTarget.add(getFeedbackPanel());
     }
 
@@ -598,7 +608,7 @@ public class CurationPage
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
             // ANNOTATION_FINISHED
-            if (!SourceDocumentState.CURATION_FINISHED.equals(state.getDocument().getState())) {
+            if (!CURATION_FINISHED.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
@@ -611,35 +621,7 @@ public class CurationPage
                 aTarget.add(CurationPage.this);
             }
     
-            List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
-    
-            for (AnnotationDocument annotationDocument : documentService
-                    .listAnnotationDocuments(state.getDocument())) {
-                if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
-                    finishedAnnotationDocuments.add(annotationDocument);
-                }
-            }
-    
-            SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
-            AnnotationDocument randomAnnotationDocument = null;
-            if (finishedAnnotationDocuments.size() > 0) {
-                randomAnnotationDocument = finishedAnnotationDocuments.get(0);
-            }
-            else {
-                throw new IllegalStateException("There are no finished annotation documents!");
-            }
-    
-            // upgrade CASes for each user, what if new type is added once the user finished
-            // annotation
-            for (AnnotationDocument ad : finishedAnnotationDocuments) {
-                upgradeCasAndSave(ad.getDocument(), ad.getUser());
-            }
-            Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
-                    randomAnnotationDocument, state.getMode());
-            CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
-                    randomAnnotationDocument, true);
+            CAS mergeCas = prepareMergeCas(false);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
             state.reset();
@@ -682,6 +664,43 @@ public class CurationPage
         }
     
         LOG.info("END LOAD_DOCUMENT_ACTION");
+    }
+    
+    private CAS prepareMergeCas(boolean aMergeIncompleteAnnotations)
+        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
+    {
+        AnnotatorState state = getModelObject();
+        
+        List<AnnotationDocument> finishedAnnotationDocuments = new ArrayList<>();
+        
+        for (AnnotationDocument annotationDocument : documentService
+                .listAnnotationDocuments(state.getDocument())) {
+            if (annotationDocument.getState().equals(FINISHED)) {
+                finishedAnnotationDocuments.add(annotationDocument);
+            }
+        }
+        
+        SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
+                correctionDocumentService, curationDocumentService, annotationService,
+                userRepository);
+        AnnotationDocument randomAnnotationDocument = null;
+        if (finishedAnnotationDocuments.size() > 0) {
+            randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+        }
+        else {
+            throw new IllegalStateException("There are no finished annotation documents!");
+        }
+
+        // upgrade CASes for each user, what if new type is added once the user finished
+        // annotation
+        for (AnnotationDocument ad : finishedAnnotationDocuments) {
+            upgradeCasAndSave(ad.getDocument(), ad.getUser());
+        }
+        Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
+                randomAnnotationDocument, state.getMode());
+        CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,
+                randomAnnotationDocument, true, aMergeIncompleteAnnotations);
+        return mergeCas;
     }
 
     @Override

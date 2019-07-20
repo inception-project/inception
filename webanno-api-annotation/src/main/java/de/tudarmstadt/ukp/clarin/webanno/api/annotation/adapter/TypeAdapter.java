@@ -189,4 +189,10 @@ public interface TypeAdapter
      * finished document.
      */
     List<Pair<LogMessage, AnnotationFS>> validate(CAS aCas);
+    
+    /**
+     * Disable the adapter from dispatching any events. This is useful for backend bulk operations
+     * that should not be tracked in detail.
+     */
+    void silenceEvents();
 }
