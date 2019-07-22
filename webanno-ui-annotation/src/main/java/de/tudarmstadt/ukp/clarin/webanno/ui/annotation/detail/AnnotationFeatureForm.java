@@ -40,6 +40,7 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.attributes.AjaxCallListener;
 import org.apache.wicket.ajax.attributes.AjaxRequestAttributes;
@@ -67,6 +68,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.time.Duration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.googlecode.wicket.kendo.ui.form.TextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -138,6 +141,7 @@ public class AnnotationFeatureForm
         add(layerSelector = createDefaultAnnotationLayerSelector());
         add(featureEditorPanel = createFeatureEditorPanel());
         add(createSelectedAnnotationTypeLabel());
+        setDefaultButton(null);
     }
 
     private WebMarkupContainer createFeatureEditorPanel()
@@ -151,10 +155,40 @@ public class AnnotationFeatureForm
 
         container.add(createNoFeaturesWarningLabel());
         container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
+        container.add(createFocusResetHelper());
         container.add(createSelectedTextLabel());
         container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
 
         return container;
+    }
+
+    private TextField<String> createFocusResetHelper()
+    {
+        TextField<String> textfield = new TextField<>("focusResetHelper");
+        textfield.setModel(Model.of());
+        textfield.setOutputMarkupId(true);
+        textfield.add(new AjaxPreventSubmitBehavior());
+        textfield.add(new AjaxFormComponentUpdatingBehavior("focus")
+        {
+            private static final long serialVersionUID = -3030093250599939537L;
+
+            @Override
+            protected void onUpdate(AjaxRequestTarget aTarget)
+            {
+                List<FeatureEditor> editors = new ArrayList<>();
+                featureEditorPanelContent.getItems().next()
+                        .visitChildren(FeatureEditor.class, (e, visit) -> {
+                            editors.add((FeatureEditor) e);
+                            visit.dontGoDeeper();
+                        });
+                
+                if (!editors.isEmpty()) {
+                    aTarget.focusComponent(editors.get(editors.size() - 1).getFocusComponent());
+                }
+            }
+        });
+        
+        return textfield;
     }
 
     private Label createNoFeaturesWarningLabel()
@@ -746,6 +780,12 @@ public class AnnotationFeatureForm
             editor.setOutputMarkupId(true);
             editor.setOutputMarkupPlaceholderTag(true);
             
+            // Ensure that markup IDs of feature editor focus components remain constant across
+            // refreshes of the feature editor panel. This is required to restore the focus.
+            editor.getFocusComponent().setOutputMarkupId(true);
+            editor.getFocusComponent()
+                    .setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
+            
             if (!featureState.feature.getLayer().isReadonly()) {
                 AnnotatorState state = getModelObject();
 
@@ -780,12 +820,6 @@ public class AnnotationFeatureForm
             else {
                 editor.getFocusComponent().setEnabled(false);
             }
-
-            // Ensure that markup IDs of feature editor focus components remain constant across
-            // refreshes of the feature editor panel. This is required to restore the focus.
-            editor.getFocusComponent().setOutputMarkupId(true);
-            editor.getFocusComponent()
-                    .setMarkupId(ID_PREFIX + editor.getModelObject().feature.getId());
             
             item.add(editor);
         }
@@ -868,6 +902,40 @@ public class AnnotationFeatureForm
                             editorPanel.actionCreateForward(aTarget, cas);
                         } else {
                             editorPanel.actionCreateOrUpdate(aTarget, cas);
+                        }
+                        
+                        // If the focus was lost during the update, then try force-focusing the
+                        // next editor or the first one if we are on the last one.
+                        if (aTarget.getLastFocusedElementId() == null) {
+                            List<FeatureEditor> allEditors = new ArrayList<>();
+                            featureEditorPanelContent.visitChildren(FeatureEditor.class,
+                                (editor, visit) -> {
+                                    allEditors.add((FeatureEditor) editor);
+                                    visit.dontGoDeeper();
+                                });
+
+                            if (!allEditors.isEmpty()) {
+                                FeatureEditor currentEditor = getComponent()
+                                        .findParent(FeatureEditor.class);
+                                
+                                int i = allEditors.indexOf(currentEditor);
+                                
+                                // If the current editor cannot be found then move the focus to the
+                                // first editor
+                                if (i == -1) {
+                                    aTarget.focusComponent(allEditors.get(0).getFocusComponent());
+                                }
+                                // ... if it is the last one, say at the last one
+                                else if (i >= (allEditors.size() - 1)) {
+                                    aTarget.focusComponent(allEditors.get(allEditors.size() - 1)
+                                            .getFocusComponent());
+                                }
+                                // ... otherwise move the focus to the next editor
+                                else {
+                                    aTarget.focusComponent(
+                                            allEditors.get(i + 1).getFocusComponent());
+                                }
+                            }
                         }
                     }
                     catch (Exception e) {

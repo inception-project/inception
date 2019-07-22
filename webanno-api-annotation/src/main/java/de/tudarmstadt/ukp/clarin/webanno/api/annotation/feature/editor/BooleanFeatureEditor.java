@@ -19,10 +19,14 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.markup.ComponentTag;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPicker;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkbox.bootstrapcheckbox.BootstrapCheckBoxPickerConfig;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class BooleanFeatureEditor
@@ -35,7 +39,22 @@ public class BooleanFeatureEditor
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
 
-        field = new CheckBox("value");
+        add(new Label("feature", getModelObject().feature.getUiName()));
+
+        BootstrapCheckBoxPickerConfig config = new BootstrapCheckBoxPickerConfig();
+        config.withReverse(true);
+        field = new BootstrapCheckBoxPicker("value", config) {
+            private static final long serialVersionUID = -3413189824637877732L;
+
+            @Override
+            protected void onComponentTag(ComponentTag aTag)
+            {
+                super.onComponentTag(aTag);
+                
+                aTag.put("data-group-cls", "btn-group-justified");
+            }
+        };
+        
         add(field);
     }
 
