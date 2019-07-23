@@ -146,6 +146,11 @@ public class SchedulingService
     @EventListener
     public void distributeWebSocketMessage(ApplicationEvent aEvent)
     {
+        if (application == null) {
+            log.error("Wicket Application is null");
+            return;
+        }
+        
         if (aEvent instanceof TaskUpdateEvent) {
             TaskUpdateEvent taskUpdate = (TaskUpdateEvent) aEvent;
             
@@ -164,6 +169,7 @@ public class SchedulingService
             // send message to all connections
             for (IWebSocketConnection connection : userConnections) {
                 connection.sendMessage(taskUpdate);
+                log.info(String.format("Send event: %s", taskUpdate.toString()));
             }
         }
     }

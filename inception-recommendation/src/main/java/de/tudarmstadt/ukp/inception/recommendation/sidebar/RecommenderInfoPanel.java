@@ -39,6 +39,8 @@ import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
 import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
 import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -72,11 +74,16 @@ public class RecommenderInfoPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean DocumentService documentService;
     
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
-        
         setOutputMarkupId(true);
+        
+        WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
+        mainContainer.setOutputMarkupId(true);
+        add(mainContainer);
         
         ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
         {
@@ -85,6 +92,7 @@ public class RecommenderInfoPanel
             @Override
             protected void populateItem(ListItem<Recommender> item)
             {
+                // FIXME: NPE
                 User user = userService.getCurrentUser();
                 Recommender recommender = item.getModelObject();
                 List<EvaluatedRecommender> activeRecommenders = recommendationService
@@ -110,12 +118,17 @@ public class RecommenderInfoPanel
                 resultsContainer.add(new Label("recall",
                         evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
                 item.add(resultsContainer);
+                
+                // FIXME
+//                add(new CollapseBehavior(item));
+                
+                
             }
         };
         searchResultGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject())));
-        add(searchResultGroups);
-        
+        searchResultGroups.setOutputMarkupId(true);
+        mainContainer.add(searchResultGroups);
         add(new WebSocketBehavior() {
 
             private static final long serialVersionUID = 1L;
@@ -123,14 +136,15 @@ public class RecommenderInfoPanel
             @Override
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
             {
+                log.info(String.format("Received event: %s", aMessage.toString()));
                 if (aMessage instanceof RecommenderTaskEvent) {
-                    aHandler.add(searchResultGroups);
+                    aHandler.add(mainContainer);
                 }
             }
             
         });
     }
-    
+        
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();

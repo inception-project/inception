@@ -74,7 +74,7 @@ public class RecommenderTaskEvent
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("TaskUpdateEvent [");
+        builder.append("RecommenderTaskEvent [");
         builder.append("user=");
         builder.append(getUser());
         builder.append(", ");

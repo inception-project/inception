@@ -108,9 +108,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
-import de.tudarmstadt.ukp.inception.recommendation.event.PreditionTaskUpdateEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderState;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -874,11 +874,10 @@ public class RecommendationServiceImpl
     private void publishPredictionUpdateEvent(String aUserName, double aRecommenderCount, 
             int aRecommenderSize, Recommender aRecommender)
     {
-        // TODO Auto-generated method stub
         double progress = aRecommenderCount / aRecommenderSize;
         RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
                 RecommenderState.PREDICTION_STARTED : RecommenderState.PREDICTION_FINISHED;
-        appEventPublisher.publishEvent(new PreditionTaskUpdateEvent(this, aUserName, 
+        appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUserName, 
                 TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 
