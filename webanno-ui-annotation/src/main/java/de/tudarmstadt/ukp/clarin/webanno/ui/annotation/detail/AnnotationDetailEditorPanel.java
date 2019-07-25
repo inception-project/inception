@@ -275,7 +275,7 @@ public abstract class AnnotationDetailEditorPanel
      * 
      * @see #getTagForKeySequence(String, Map)
      */
-    Map<String, String> buildKeySequenceToTagMap()
+    private Map<String, String> buildKeySequenceToTagMap()
     {
         AnnotationFeature f = annotationService
                 .listAnnotationFeature(getModelObject().getDefaultAnnotationLayer()).get(0);

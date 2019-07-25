@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
 import org.apache.wicket.model.IModel;
 
@@ -39,6 +40,8 @@ public class InputFieldTextFeatureEditor
     @Override
     protected AbstractTextComponent createInputField()
     {
-        return new TextField<String>("value");
+        TextField<String> textfield = new TextField<>("value");
+        textfield.add(new AjaxPreventSubmitBehavior());
+        return textfield;
     }
 }

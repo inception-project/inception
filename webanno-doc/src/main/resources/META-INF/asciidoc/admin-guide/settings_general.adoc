@@ -43,5 +43,10 @@
 | Whether regular users can access their own profile to change their password and other profile information. This setting has no effect when running in pre-authentication mode.
 | false
 | true
+
+| userSelection.hideUsers
+| Whether the list of users show in the users tab of the project settings is restricted. If this setting is enable, the full name of a user has to be entered into the input field before the user can be added. If this setting is disabled, it is possible to see all enabled users and to add any of them to the project.
+| false
+| true
 |===
 
