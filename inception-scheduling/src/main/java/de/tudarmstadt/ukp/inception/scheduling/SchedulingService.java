@@ -146,6 +146,8 @@ public class SchedulingService
     @EventListener
     public void distributeWebSocketMessage(ApplicationEvent aEvent)
     {
+//        log.info(String.format("Distributing event: %s", aEvent.toString()));
+        
         if (application == null) {
             log.error("Wicket Application is null");
             return;
@@ -160,11 +162,23 @@ public class SchedulingService
     
             // get all connections for the user
             List<IWebSocketConnection> userConnections = new ArrayList<>();
+            
+//            log.info(String.format("Found %d sessions for user %s", sessionRegistry
+//                    .getAllSessions(taskUpdate.getUser(), false).size(),
+//                    taskUpdate.getUser()));
+            
             for (SessionInformation sessionInfo : sessionRegistry
                     .getAllSessions(taskUpdate.getUser(), false)) {
+//                log.info(String.format("SessionId connections for user %s is %s", 
+//                        taskUpdate.getUser(),
+//                        sessionInfo.getSessionId()));
+                
                 userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
                         sessionInfo.getSessionId()));
             }
+
+            log.info(String.format("Found %d connections for user %s", userConnections.size(),
+                    taskUpdate.getUser()));
             
             // send message to all connections
             for (IWebSocketConnection connection : userConnections) {

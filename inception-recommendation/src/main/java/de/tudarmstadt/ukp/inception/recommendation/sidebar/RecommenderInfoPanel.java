@@ -37,6 +37,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
 import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
+import org.apache.wicket.protocol.ws.api.message.ConnectedMessage;
 import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -51,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -76,6 +76,9 @@ public class RecommenderInfoPanel
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
+    private WebMarkupContainer resultsContainer;
+    private ListView<Recommender> recommenderGroups; 
+    
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
@@ -85,15 +88,14 @@ public class RecommenderInfoPanel
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
-        ListView<Recommender> searchResultGroups = new ListView<Recommender>("recommender")
+        recommenderGroups = new ListView<Recommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
             protected void populateItem(ListItem<Recommender> item)
             {
-                // FIXME: NPE
-                User user = userService.getCurrentUser();
+                User user = getPanelModelObject().getUser();
                 Recommender recommender = item.getModelObject();
                 List<EvaluatedRecommender> activeRecommenders = recommendationService
                         .getActiveRecommenders(user, recommender.getLayer());
@@ -107,31 +109,27 @@ public class RecommenderInfoPanel
                 item.add(new LambdaAjaxLink("acceptAll", _target -> 
                         actionAcceptAll(_target, recommender)));
                 
-                WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
-                resultsContainer.setVisible(evalResult.isPresent());
-                resultsContainer.add(new Label("f1Score",
-                        evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
-                resultsContainer.add(new Label("accuracy",
-                        evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
-                resultsContainer.add(new Label("precision",
-                        evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
-                resultsContainer.add(new Label("recall",
-                        evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+                resultsContainer = createResultsContainer(evalResult);
                 item.add(resultsContainer);
-                
-                // FIXME
-//                add(new CollapseBehavior(item));
-                
-                
             }
         };
-        searchResultGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
+        
+        recommenderGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
                 .listEnabledRecommenders(aModel.getObject().getProject())));
-        searchResultGroups.setOutputMarkupId(true);
-        mainContainer.add(searchResultGroups);
+        recommenderGroups.setOutputMarkupId(true);
+        mainContainer.add(recommenderGroups);
+        
         add(new WebSocketBehavior() {
 
             private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConnect(ConnectedMessage aMessage)
+            {
+                super.onConnect(aMessage);
+                log.info(String.format("User with sessionID %s connected.",
+                        aMessage.getSessionId()));
+            }
 
             @Override
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
@@ -141,11 +139,27 @@ public class RecommenderInfoPanel
                     aHandler.add(mainContainer);
                 }
             }
-            
         });
     }
         
-    public AnnotatorState getModelObject()
+    private WebMarkupContainer createResultsContainer(
+            Optional<EvaluationResult> evalResult)
+    {
+        WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
+        resultsContainer.setVisible(evalResult.isPresent());
+        resultsContainer.add(new Label("f1Score",
+                evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
+        resultsContainer.add(new Label("accuracy",
+                evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
+        resultsContainer.add(new Label("precision",
+                evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
+        resultsContainer.add(new Label("recall",
+                evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
+        
+        return resultsContainer;
+    }
+    
+    public AnnotatorState getPanelModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
     }
@@ -159,14 +173,13 @@ public class RecommenderInfoPanel
     private void actionAcceptAll(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        User user = userService.getCurrentUser();
-        AnnotatorState state = getModelObject();
+        AnnotatorState state = getPanelModelObject();
+        User user = state.getUser();
         
         AnnotationPageBase page = findParent(AnnotationPageBase.class);
         
         CAS cas = page.getEditorCas();
-        
-        SourceDocument document = state.getDocument();
+     
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
@@ -185,26 +198,13 @@ public class RecommenderInfoPanel
             AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
             AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
                     layer);
-            int address = recommendationService.upsertFeature(annotationService,
-                    state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
+            recommendationService.upsertFeature(annotationService,
+                    state.getDocument(), user.getUsername(), cas, layer, feature,
                     suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
     
             // Hide the suggestion. This is faster than having to recalculate the visibility status
             // for the entire document or even for the part visible on screen.
             suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
-        
-//            // Log the action to the learning record
-//            learningRecordService.logRecord(document, aState.getUser().getUsername(),
-//                    suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
-//            
-//            // Send an application event that the suggestion has been accepted
-//            AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
-//            applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
-//                document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
-//            
-//            // Send a UI event that the suggestion has been accepted
-//            aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-//                    new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));    }
         }
         
         // Save CAS after annotations have been created
