@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+import java.util.Optional;
+
 import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.springframework.context.ApplicationEvent;
 
@@ -27,14 +29,21 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
     private final String username;
     private final double progress;
     private final TaskState state;
-    
+    private final Optional<String> errorMsg;
     
     public TaskUpdateEvent(Object aSource, String aUserName, TaskState aState, double aProgress)
+    {
+        this(aSource, aUserName, aState, aProgress, null);
+    }
+    
+    public TaskUpdateEvent(Object aSource, String aUserName, TaskState aState, double aProgress,
+            String aErrorMsg)
     {
         super(aSource);
         username = aUserName;
         state = aState;
         progress = aProgress;
+        errorMsg = Optional.ofNullable(aErrorMsg);
     }
 
     public String getUser()
@@ -52,20 +61,37 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
         return state;
     }
 
+    public Optional<String> getErrorMsg()
+    {
+        return errorMsg;
+    }
+
     @Override
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
         builder.append("TaskUpdateEvent [");
-        builder.append("user=");
-        builder.append(username);
-        builder.append(", ");
+        builder.append(infoToString());
         builder.append("state=");
         builder.append(state);
         builder.append(", ");
+        builder.append("]");
+        return builder.toString();
+    }
+
+    protected String infoToString()
+    {
+        StringBuilder builder = new StringBuilder();
+        if (errorMsg.isPresent()) {
+            builder.append("error=\"");
+            builder.append(errorMsg.get());
+            builder.append("\", ");
+        }
+        builder.append("user=");
+        builder.append(username);
+        builder.append(", ");
         builder.append("progress=");
         builder.append(progress);
-        builder.append("]");
         return builder.toString();
     }
     

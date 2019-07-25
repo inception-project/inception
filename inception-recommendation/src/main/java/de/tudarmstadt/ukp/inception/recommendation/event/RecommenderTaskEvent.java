@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.event;
 
+import java.util.Optional;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
@@ -30,17 +32,25 @@ public class RecommenderTaskEvent
     private final Recommender recommender;
     private final boolean active;
     private final RecommenderState recommenderState;
-    private final EvaluationResult result;
+    private final Optional<EvaluationResult> result;
 
+    public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,
+            double aProgress, Recommender aRecommender, boolean aActive,
+            RecommenderState aRecommenderState, EvaluationResult aResult, String aError)
+    {
+        super(aSource, aUserName, aState, aProgress, aError);
+        recommender = aRecommender;
+        active = aActive;
+        recommenderState = aRecommenderState;
+        result = Optional.ofNullable(aResult);
+    }
+    
     public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,
             double aProgress, Recommender aRecommender, boolean aActive,
             RecommenderState aRecommenderState, EvaluationResult aResult)
     {
-        super(aSource, aUserName, aState, aProgress);
-        recommender = aRecommender;
-        active = aActive;
-        recommenderState = aRecommenderState;
-        result = aResult;
+        this(aSource, aUserName, aState, aProgress, aRecommender, aActive, aRecommenderState, null,
+                null);
     }
     
     public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,
@@ -65,7 +75,7 @@ public class RecommenderTaskEvent
         return recommenderState;
     }
 
-    public EvaluationResult getResult()
+    public Optional<EvaluationResult> getResult()
     {
         return result;
     }
@@ -75,20 +85,21 @@ public class RecommenderTaskEvent
     {
         StringBuilder builder = new StringBuilder();
         builder.append("RecommenderTaskEvent [");
-        builder.append("user=");
-        builder.append(getUser());
+        builder.append(infoToString());
         builder.append(", ");
         builder.append("state=");
         builder.append(recommenderState);
-        builder.append(", ");
-        builder.append("progress=");
-        builder.append(getProgress());
         builder.append(", ");
         builder.append("recommender=");
         builder.append(recommender.getName());
         builder.append(", ");
         builder.append("active=");
         builder.append(active);
+        if (result.isPresent()) {
+            builder.append(", ");
+            builder.append("result=");
+            builder.append(result.get().toString());
+        }
         builder.append("]");
         return builder.toString();
     }

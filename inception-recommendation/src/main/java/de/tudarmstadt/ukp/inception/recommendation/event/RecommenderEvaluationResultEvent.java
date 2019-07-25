@@ -39,16 +39,4 @@ public class RecommenderEvaluationResultEvent extends RecommenderTaskEvent
     {
         return duration;
     }
-    
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("RecommenderEvaluationResultEvent [recommender=");
-        builder.append(getRecommender());
-        builder.append(", user=");
-        builder.append(getUser());
-        builder.append("]");
-        return builder.toString();
-    }
 }

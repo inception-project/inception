@@ -68,16 +68,15 @@ public class RecommenderEvaluationResultEventAdapter
 
             details.recommenderId = aEvent.getRecommender().getId();
             
-            EvaluationResult result = aEvent.getResult();
-            details.accuracy = result.computeAccuracyScore();
-            details.f1 = result.computeF1Score();
-            details.precision = result.computePrecisionScore();
-            details.recall = result.computeRecallScore();
-            
-            
-            details.trainSetSize = result.getTrainingSetSize();
-            details.testSetSize = result.getTestSetSize();
-
+            if (aEvent.getResult().isPresent()) {
+                EvaluationResult result = aEvent.getResult().get();
+                details.accuracy = result.computeAccuracyScore();
+                details.f1 = result.computeF1Score();
+                details.precision = result.computePrecisionScore();
+                details.recall = result.computeRecallScore();                
+                details.trainSetSize = result.getTrainingSetSize();
+                details.testSetSize = result.getTestSetSize();
+            }
             details.active = aEvent.isActive();
             details.duration = aEvent.getDuration();
             details.threshold = aEvent.getRecommender().getThreshold();

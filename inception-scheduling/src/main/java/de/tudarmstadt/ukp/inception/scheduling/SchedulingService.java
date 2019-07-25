@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.protocol.ws.WebSocketSettings;
@@ -167,6 +168,7 @@ public class SchedulingService
 //                    .getAllSessions(taskUpdate.getUser(), false).size(),
 //                    taskUpdate.getUser()));
             
+            List<String> ids = new ArrayList<>();
             for (SessionInformation sessionInfo : sessionRegistry
                     .getAllSessions(taskUpdate.getUser(), false)) {
 //                log.info(String.format("SessionId connections for user %s is %s", 
@@ -175,10 +177,12 @@ public class SchedulingService
                 
                 userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
                         sessionInfo.getSessionId()));
+                ids.add(sessionInfo.getSessionId());
             }
 
-            log.info(String.format("Found %d connections for user %s", userConnections.size(),
-                    taskUpdate.getUser()));
+            log.info(String.format("Found %d connections for user %s with ids %s \n",
+                    userConnections.size(), taskUpdate.getUser(),
+                    ids.stream().collect(Collectors.joining(","))));
             
             // send message to all connections
             for (IWebSocketConnection connection : userConnections) {
