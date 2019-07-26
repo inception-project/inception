@@ -69,6 +69,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 
 public class LinkFeatureEditor
     extends FeatureEditor
@@ -221,18 +222,6 @@ public class LinkFeatureEditor
                     
                     aBehavior.setOption("placeholder", Options.asString("Select role"));
                     
-                    // If a slot is armed, then load the slot's role into the dropdown
-                    AnnotatorState state = stateModel.getObject();
-                    if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                            .equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>)
-                                LinkFeatureEditor.this.getModelObject().value;
-                        setModelObject(links.get(state.getArmedSlot()).role);
-                    }
-                    else {
-                        setModelObject("");
-                    }
-
                     // Trigger a re-loading of the tagset from the server as constraints may have
                     // changed the ordering
                     Optional<AjaxRequestTarget> target = RequestCycle.get()
@@ -245,40 +234,26 @@ public class LinkFeatureEditor
                     }
                 }
             };
-
-            content.add(field);
         }
         else {
-            field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setOutputMarkupId(true);
-                }
-                
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-                    FeatureState featureState = LinkFeatureEditor.this.getModelObject();
-
-                    if (state.isSlotArmed()
-                            && featureState.feature.equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>)
-                                featureState.value;
-                        setModelObject(links.get(state.getArmedSlot()).role);
-                    }
-                    else {
-                        setModelObject("");
-                    }
-                }
-            };
-            field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
-            content.add(field);
+            field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"));
         }
+
+        field.add(LambdaBehavior.onConfigure(_this -> {
+            // If a slot is armed, then load the slot's role into the dropdown
+            FeatureState featureState = LinkFeatureEditor.this.getModelObject();
+            AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+            if (state.isSlotArmed() && featureState.feature.equals(state.getArmedFeature())) {
+                List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) featureState.value;
+                field.setModelObject(links.get(state.getArmedSlot()).role);
+            }
+            else {
+                field.setModelObject("");
+            }
+        }));
+        field.setOutputMarkupId(true);
+        field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        content.add(field);
 
         // Shows whether constraints are triggered or not
         // also shows state of constraints use.
