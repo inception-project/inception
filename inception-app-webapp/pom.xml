@@ -327,6 +327,10 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-javax</artifactId>
+    </dependency>
 
     <!-- Spring dependencies -->
     <dependency>
@@ -500,8 +504,8 @@
     </dependency>
     -->
     <dependency>
-      <groupId>org.apache.wicket</groupId>
-      <artifactId>wicket-native-websocket-javax</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
     </dependency>
   </dependencies>
   <build>
