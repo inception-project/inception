@@ -26,7 +26,7 @@ repository on Github.
 
 === Development workflow
 
-Every feature or bugfix needs to be tracked in an issue on Github. Development is done in branches
+Every feature or bugfix needs to be tracked in an issue on Github. Development is done in branches. 
 Based on the milestone (see the issue description on Github), the new branch is either created from
 master (if the code should be in the next major release) or from a bugfix release branch
 (if the code should be in the next minor release). In order to get the code in production,
@@ -38,7 +38,7 @@ guides you through the best way of doing this:
 - Every feature or bugfix needs to be tracked in an issue on Github. If there is no issue for the
 feature yet, create an issue first.
 - Create a branch based on the branch to which you wish to contribute. Normally, you should create
-this branch from the master branch of the respective project. In the case you want to fix a bug in
+this branch from the master branch of the respective project. In the case that you want to fix a bug in
 the latest released version, you should consider to branch off the latest maintenance branch (e.g.
 0.10.x). If you are not sure, ask via the issue you have just created. Do *not* make changes directly
 to the master or maintenance branches. The name of the branch should be e.g.
@@ -223,7 +223,7 @@ Community Version is used, but this guide should also apply to the Enterprise Ve
 After checking out {product-name} from Github, open Intellij and import the project. The easiest
 way is to go to `File -> Open` and the select the `pom.xml` in the {product-name} root directory.
 IntelliJ IDEA will then guide you through the import process, the defaults work out of the box.
-INCEpTION now can be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
+INCEpTION can now be started via running `inception-app-webapp/src/main/java/de/tudarmstadt/ukp/inception/INCEpTION.java`.
 
 === Checkstyle and Formatting
 
@@ -251,8 +251,8 @@ the application. First, download Apache Tomcat from `http://tomcat.apache.org/` 
 Then, you need to create a Tomcat server runtime configuration in `Run | Edit Configurations…`. Click on the `+` icon,
 select `Tomcat Server -> Local`.  Click on the `Deployment` tab and then on the `+` icon to select an artifact to deploy.
 Choose the exploded war version. Select the `Server` tab, navigate to the path of your Tomcat server, and update the
-on `Update` action to `Update classes and resources` for both. Make sure that all port settings are different.
-You now can start or debug your web application via Tomcat. When starting throws an permission error, make sure that
+`on Update` action to `Update classes and resources` for both. Make sure that all port settings are different.
+You now can start or debug your web application via Tomcat. If starting throws a permission error, make sure that
 the mentioned file, e.g. `catalina.sh` is marked as executable.
 
 *Experimental:* If desired, you can also use hot-code replacement via http://hotswapagent.org[HotswapAgent].
