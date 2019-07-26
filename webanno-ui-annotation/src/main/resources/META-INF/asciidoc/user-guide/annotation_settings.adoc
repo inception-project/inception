@@ -43,7 +43,7 @@ last annotation was made. This can be useful to avoid manual navigation.
 The *Read-only palette* controls the coloring of annotations on read-only layers. This setting
 overrides any per-layer preferences.
 
-== Layer perferences
+== Layer preferences
 
 In this section you can select which annotation layers are displayed during annotation and how
 they are displayed.
