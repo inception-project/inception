@@ -155,6 +155,8 @@ tutorial, it is sufficient.
 
 When making predictions, we also set the score feature to put a number on the quality of the annotation.
 The UIMA score feature to set can be obtained by calling `getScoreFeature` inside a `RecommendationEngine`.
+In addition, we provide an explanation for the score through the UIMA feature obtained by calling
+`getScoreExplanationFeature` inside a `RecommendationEngine`.
 
 .Making the predictions
 [source,java,indent=0]
