@@ -48,6 +48,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 
+import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration;
+
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
@@ -143,6 +145,10 @@ public class INCEpTION
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
+        // add this property in the case of .war deployment
+        builder.properties( 
+                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED 
+                + "=false" );
         init(builder);
         return builder;
     }

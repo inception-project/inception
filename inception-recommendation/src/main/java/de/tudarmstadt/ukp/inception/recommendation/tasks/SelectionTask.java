@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
@@ -100,7 +101,7 @@ public class SelectionTask
                 continue;
             }
     
-            List<Recommender> activeRecommenders = new ArrayList<>();
+            List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
             for (Recommender r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from
@@ -144,12 +145,14 @@ public class SelectionTask
                     if (recommender.isAlwaysSelected()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - always selected",
                                 userName, recommenderName, recommenderName);
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(
+                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
                         continue;
                     } else if (!factory.isEvaluable()) {
                         log.debug("[{}][{}]: Activating [{}] without evaluating - not evaluable",
                                 userName, recommenderName, recommenderName);
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(
+                                new EvaluatedRecommender(recommender, EvaluationResult.skipped()));
                         continue;
                     }
     
@@ -163,7 +166,7 @@ public class SelectionTask
                     boolean activated;
                     if (score >= threshold) {
                         activated = true;
-                        activeRecommenders.add(recommender);
+                        activeRecommenders.add(new EvaluatedRecommender(recommender, result));
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
                                 user.getUsername(), recommenderName, score,
                                 threshold);

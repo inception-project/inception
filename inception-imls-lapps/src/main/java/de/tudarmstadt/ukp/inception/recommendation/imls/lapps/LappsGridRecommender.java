@@ -102,6 +102,10 @@ public class LappsGridRecommender
                 predictedAnnotation.setBooleanValue(isPredictionFeature, true);
             }
             
+            // Drop the tokens we got from the remote service since their boundaries might not
+            // match ours.
+            select(aCas, getType(aCas, Token.class)).forEach(aCas::removeFsFromIndexes);
+            
             // If the remote service did not return tokens (or if we didn't find them...), then
             // let's just re-add the tokens that we originally sent. We need the tokens later
             // when extracting the predicted annotations

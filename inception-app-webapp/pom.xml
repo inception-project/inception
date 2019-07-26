@@ -242,6 +242,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-ui-tagsets</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-brat</artifactId>
       <exclusions>
         <exclusion>
@@ -495,6 +499,10 @@
       <version>${javamelody.version}</version>
     </dependency>
     -->
+    <dependency>
+      <groupId>org.apache.wicket</groupId>
+      <artifactId>wicket-native-websocket-javax</artifactId>
+    </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -715,8 +723,9 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-doc</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
@@ -740,7 +749,6 @@
               <usedDependency>org.springframework.boot:spring-boot-starter-web</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-validation</usedDependency>
               <usedDependency>org.springframework.boot:spring-boot-starter-tomcat</usedDependency>
-              <usedDependency>com.giffing.wicket.spring.boot.starter:wicket-spring-boot-starter</usedDependency>
               <usedDependency>org.springframework:spring-webmvc</usedDependency>
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
@@ -750,6 +758,7 @@
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
                 <usedDependency>org.aspectj:aspectjrt</usedDependency>
               -->
+              <usedDependency>org.apache.wicket:wicket-native-websocket-javax</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
