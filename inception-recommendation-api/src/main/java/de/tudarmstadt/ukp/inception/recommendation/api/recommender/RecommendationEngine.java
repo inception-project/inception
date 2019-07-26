@@ -115,8 +115,8 @@ public abstract class RecommendationEngine {
     
     protected Feature getScoreExplanationFeature(CAS aCas) 
     {
-    	String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-    	return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
+        String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
     protected Feature getIsPredictionFeature(CAS aCas)

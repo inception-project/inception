@@ -114,8 +114,8 @@ public class StringMatchingRecommenderTest
             .anyMatch(prediction -> getScore(prediction) > 0.0 && getScore(prediction) < 1.0 );
         
         assertThat(predictions)
-    	.as("There is no score explanation")
-    	.allMatch(prediction -> getScoreExplanation(prediction) == null);
+            .as("There is no score explanation")
+            .allMatch(prediction -> getScoreExplanation(prediction) == null);
     }
 
     @Test
@@ -354,6 +354,6 @@ public class StringMatchingRecommenderTest
     
     private static String getScoreExplanation(AnnotationFS fs)
     {
-    	return RecommenderTestHelper.getScoreExplanation(fs, "value");
+        return RecommenderTestHelper.getScoreExplanation(fs, "value");
     }
 }

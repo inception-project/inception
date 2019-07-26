@@ -219,8 +219,8 @@ public class RecommendationSpanRenderer
                                 String.format("Confidence: %.2f", ao.getConfidence())));
                     }
                     if (ao.getConfidenceExplanation().isPresent()) {
-                    	vdoc.add(new VComment(vid, VCommentType.INFO,
-                    			"Explanation: " + ao.getConfidenceExplanation().get()));
+                        vdoc.add(new VComment(vid, VCommentType.INFO,
+                                "Explanation: " + ao.getConfidenceExplanation().get()));
                     }
                     if (pref.isShowAllPredictions() && !ao.isVisible()) {
                         vdoc.add(new VComment(vid, VCommentType.INFO,

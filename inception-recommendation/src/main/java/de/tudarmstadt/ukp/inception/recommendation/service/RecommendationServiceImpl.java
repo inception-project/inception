@@ -831,8 +831,10 @@ public class RecommendationServiceImpl
 
         Type predictedType = CasUtil.getType(aCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
-        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_SUFFIX);
-        Feature scoreExplanationFeature = predictedType.getFeatureByBaseName(featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
+        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_SUFFIX);
+        Feature scoreExplanationFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
         Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         int predictionCount = 0;
@@ -1026,8 +1028,10 @@ public class RecommendationServiceImpl
                     String scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
                     td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
                     
-                    String scoreExplanationFeatureName = feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
-                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature", CAS.TYPE_NAME_STRING);
+                    String scoreExplanationFeatureName = feature.getName() + 
+                            FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature", 
+                            CAS.TYPE_NAME_STRING);
                 }
 
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);

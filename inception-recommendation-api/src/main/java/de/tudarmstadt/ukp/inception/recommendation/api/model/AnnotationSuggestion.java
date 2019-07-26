@@ -186,7 +186,7 @@ public class AnnotationSuggestion
     
     public Optional<String> getConfidenceExplanation() 
     {
-    	return confidenceExplanation;
+        return confidenceExplanation;
     }
 
     public long getRecommenderId()
