@@ -24,7 +24,7 @@ annotation, select a span of text or double click on a word.
 If a relation layer is defined on top of a span layer, clicking on a corresponding span annotation
 and dragging the mouse creates a relation annotation.
 
-One an annotation has been created or if an annotation is selected, the *Annotation* box shows
+Once an annotation has been created or if an annotation is selected, the *Annotation* box shows
 the features of the annotation.
 
 The result of changing the active layer in the *Layer* box while an annotation is selected depends
