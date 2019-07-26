@@ -30,7 +30,6 @@ import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
@@ -68,6 +67,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class LinkFeatureEditor
     extends FeatureEditor
@@ -224,7 +225,7 @@ public class LinkFeatureEditor
                     AnnotatorState state = stateModel.getObject();
                     if (state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                             .equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>)
                                 LinkFeatureEditor.this.getModelObject().value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
@@ -248,7 +249,7 @@ public class LinkFeatureEditor
             content.add(field);
         }
         else {
-            content.add(field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"))
+            field = new TextField<String>("newRole", PropertyModel.of(this, "newRole"))
             {
                 private static final long serialVersionUID = 1L;
 
@@ -266,7 +267,7 @@ public class LinkFeatureEditor
 
                     if (state.isSlotArmed()
                             && featureState.feature.equals(state.getArmedFeature())) {
-                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) 
+                        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>)
                                 featureState.value;
                         setModelObject(links.get(state.getArmedSlot()).role);
                     }
@@ -274,7 +275,9 @@ public class LinkFeatureEditor
                         setModelObject("");
                     }
                 }
-            });
+            };
+            field.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+            content.add(field);
         }
 
         // Shows whether constraints are triggered or not
@@ -312,7 +315,7 @@ public class LinkFeatureEditor
         add(constraintsInUseIndicator);
 
         // Add a new empty slot with the specified role
-        content.add(new AjaxButton("add")
+        content.add(new LambdaAjaxLink("add", this::actionAdd)
         {
             private static final long serialVersionUID = 1L;
 
@@ -324,19 +327,11 @@ public class LinkFeatureEditor
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(!(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature())));
-                // setEnabled(!(model.isSlotArmed()
-                // && aModel.feature.equals(model.getArmedFeature())));
-            }
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionAdd(aTarget);
             }
         });
 
         // Allows user to update slot
-        content.add(new AjaxButton("set")
+        content.add(new LambdaAjaxLink("set", this::actionSet)
         {
 
             private static final long serialVersionUID = 7923695373085126646L;
@@ -349,19 +344,11 @@ public class LinkFeatureEditor
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));
-                // setEnabled(model.isSlotArmed()
-                // && aModel.feature.equals(model.getArmedFeature()));
-            }
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionSet(aTarget);
             }
         });
 
         // Add a new empty slot with the specified role
-        content.add(new AjaxButton("del")
+        content.add(new LambdaAjaxLink("del", this::actionDel)
         {
             private static final long serialVersionUID = 1L;
 
@@ -373,14 +360,6 @@ public class LinkFeatureEditor
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
                         .equals(state.getArmedFeature()));
-                // setEnabled(model.isSlotArmed()
-                // && aModel.feature.equals(model.getArmedFeature()));
-            }
-
-            @Override
-            protected void onSubmit(AjaxRequestTarget aTarget)
-            {
-                actionDel(aTarget);
             }
         });
     }
