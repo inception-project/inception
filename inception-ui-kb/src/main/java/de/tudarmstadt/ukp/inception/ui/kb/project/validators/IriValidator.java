@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,30 +15,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.ui.kb.project;
+package de.tudarmstadt.ukp.inception.ui.kb.project.validators;
 
 import org.apache.wicket.validation.IValidatable;
 import org.apache.wicket.validation.IValidator;
 import org.apache.wicket.validation.ValidationError;
-import org.apache.wicket.validation.validator.UrlValidator;
 import org.eclipse.rdf4j.model.util.URIUtil;
 
-public class Validators
+public class IriValidator implements IValidator<String>
 {
-
-    public static final IValidator<String> IRI_VALIDATOR = new IValidator<String>()
+    @Override
+    public void validate(IValidatable<String> validatable)
     {
-        private static final long serialVersionUID = 7022579868551171981L;
-    
-        @Override
-        public void validate(IValidatable<String> validatable)
-        {
-            if (!URIUtil.isValidURIReference(validatable.getValue())) {
-                validatable.error(new ValidationError(this));
-            }
+        if (!URIUtil.isValidURIReference(validatable.getValue())) {
+            validatable.error(new ValidationError(this));
         }
-    };
-    public static final UrlValidator URL_VALIDATOR = new UrlValidator(
-        new String[] { "http", "https" });
-
+    }
 }

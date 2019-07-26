@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 @Component
 public class NamedEntityLinkerFactory
@@ -60,7 +61,7 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender)
+    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
     {
         NamedEntityLinkerTraits traits = readTraits(aRecommender);
         

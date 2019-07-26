@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparingInt;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
@@ -29,6 +28,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -64,7 +64,6 @@ public class StringMatchingRecommender
 
     private final Logger log = LoggerFactory.getLogger(getClass());
     private final StringMatchingRecommenderTraits traits;
-    private List<GazeteerEntry> pretrainData = emptyList();
 
     public StringMatchingRecommender(Recommender aRecommender,
             StringMatchingRecommenderTraits aTraits)
@@ -74,14 +73,23 @@ public class StringMatchingRecommender
         traits = aTraits;
     }
 
-    public void pretrain(List<GazeteerEntry> aData)
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
     {
+        return aContext.get(KEY_MODEL).map(Objects::nonNull).orElse(false);
+    }
+    
+    public void pretrain(List<GazeteerEntry> aData, RecommenderContext aContext)
+    {
+        Trie<DictEntry> dict = createTrie();
+
         if (aData != null) {
-            pretrainData = aData;
+            for (GazeteerEntry entry : aData) {
+                learn(dict, entry.text, entry.label);
+            }
         }
-        else {
-            pretrainData = emptyList();
-        }
+        
+        aContext.put(KEY_MODEL, dict);
     }
 
     private <T> Trie<T> createTrie()
@@ -90,16 +98,10 @@ public class StringMatchingRecommender
     }
     
     @Override
-    public void train(RecommenderContext aContext, List<CAS> aCasses)
+    public void train(RecommenderContext aContext, List<CAS> aCasses) throws RecommendationException
     {
-        Trie<DictEntry> dict = createTrie();
+        Trie<DictEntry> dict = aContext.get(KEY_MODEL).orElse(createTrie());
         
-        // Load the pre-train data into the trie before learning from the annotated data
-        for (GazeteerEntry entry : pretrainData) {
-            learn(dict, entry.text, entry.label);
-        }
-        
-        // Learn from the annotated data
         for (CAS cas : aCasses) {
             Type predictedType = getPredictedType(cas);
             Feature predictedFeature = getPredictedFeature(cas);
@@ -110,7 +112,6 @@ public class StringMatchingRecommender
         }
         
         aContext.put(KEY_MODEL, dict);
-        aContext.markAsReadyForPrediction();
         
         log.debug("Learned dictionary model with {} entries", dict.size());
     }

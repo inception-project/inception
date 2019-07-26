@@ -165,17 +165,15 @@ public class RecommendationSpanRenderer
             }
             
             // Sort and filter labels under threshold value
-            List<LabelMapKey> filtered = maxConfidencePerLabel.entrySet().stream()
+            // Note: the order in which annotations are rendered is only indicative to the 
+            // frontend (e.g. brat) which may choose to re-order them (e.g. for layout reasons).
+            List<LabelMapKey> sortedAndfiltered = maxConfidencePerLabel.entrySet().stream()
                     .sorted((e1, e2) -> Double.compare(e2.getValue(), e1.getValue()))
                     .limit(pref.getMaxPredictions())
                     .map(Entry::getKey).collect(Collectors.toList());
 
             // Render annotations for each label
-            for (LabelMapKey label : labelMap.keySet()) {
-                if (!filtered.contains(label)) {
-                    continue;
-                }
-
+            for (LabelMapKey label : sortedAndfiltered) {
                 // Create VID using the recommendation with the lowest recommendationId
                 AnnotationSuggestion canonicalRecommendation = suggestion.stream()
                         // check for label or feature for no-label annotations as key
