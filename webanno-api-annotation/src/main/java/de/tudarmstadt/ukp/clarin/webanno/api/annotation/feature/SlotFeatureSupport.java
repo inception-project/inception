@@ -92,20 +92,21 @@ public class SlotFeatureSupport
         List<FeatureType> types = new ArrayList<>();
         
         // Slot features are only supported on span layers
-        if (WebAnnoConst.SPAN_TYPE.equals(aAnnotationLayer.getType())) {
+        if (!WebAnnoConst.CHAIN_TYPE.equals(aAnnotationLayer.getType())
+                && !WebAnnoConst.RELATION_TYPE.equals(aAnnotationLayer.getType())) {
             // Add layers of type SPAN available in the project
             for (AnnotationLayer spanLayer : annotationService
                     .listAnnotationLayer(aAnnotationLayer.getProject())) {
                 
                 if (
-                        Token.class.getName().equals(spanLayer.getName()) || 
-                        Sentence.class.getName().equals(spanLayer.getName())) 
+                        Token.class.getName().equals(spanLayer.getName()) ||
+                        Sentence.class.getName().equals(spanLayer.getName()))
                 {
                     continue;
                 }
 
                 if (WebAnnoConst.SPAN_TYPE.equals(spanLayer.getType())) {
-                    types.add(new FeatureType(spanLayer.getName(), 
+                    types.add(new FeatureType(spanLayer.getName(),
                             "Link: " + spanLayer.getUiName(), featureSupportId));
                 }
             }

@@ -41,8 +41,7 @@ annotation and moves on. Otherwise the current annotation is removed if the feat
 (no value entered) when completing the annotation.
 
 Press *ENTER* to complete the annotation and to move on to the next token. In the general case, 
-a new annotation is created on the next token and it is loaded into the feature editor. However, 
-if stacking or overlapping annotations not permitted and if there is already an annotation on that
+a new annotation is created on the next token and it is loaded into the feature editor. However, if it is not permitted to stack annotations or make them overlap (i.e. if the value of the behaviour setting for *Overlap* is set to anything else than *Any*) and if there is already an annotation on that
 token, this would naturally fail. In this case, no new annotation is created and instead an existing annotation is opened for
 editing. 
 
