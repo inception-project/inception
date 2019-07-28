@@ -734,7 +734,7 @@ public class CasMergeTest
         AnnotationFS existing = mergeCAs.createAnnotation(type, 0, 1);
         existing.setFeatureValue(sourceFeature, originToken);
         existing.setFeatureValue(targetFeature, targetToken);
-        mergeCAs.addFsToIndexes(clickedFs);
+        mergeCAs.addFsToIndexes(existing);
 
         assertThatExceptionOfType(AnnotationException.class)
                 .isThrownBy(() -> sut.mergeRelationAnnotation(null, null, depLayer, mergeCAs, 
