@@ -100,6 +100,7 @@
     <!-- Editor extensions -->
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <module>inception-review-editor</module>
     <!-- Schema extensions -->
     <module>inception-layer-docmetadata</module>
     <module>inception-image</module>
@@ -276,6 +277,11 @@
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-review-editor</artifactId>
+        <version>0.11.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-active-learning</artifactId>
         <version>0.11.0-SNAPSHOT</version>
       </dependency>
@@ -410,7 +416,7 @@
         <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
         <version>${wicket-jquery-ui.version}</version>
       </dependency>
-      
+
       <!-- SPRING -->
       <dependency>
         <groupId>org.springframework</groupId>
@@ -482,9 +488,9 @@
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
       </dependency>
-      
+
       <!-- LUCENE MTAS -->
-    
+
       <dependency>
         <groupId>org.apache.lucene</groupId>
         <artifactId>lucene-core</artifactId>
@@ -569,7 +575,7 @@
           </exclusion>
         </exclusions>
       </dependency>
-    
+
       <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
@@ -625,7 +631,7 @@
         <artifactId>inception-search-mtas</artifactId>
         <version>0.11.0-SNAPSHOT</version>
       </dependency>
-      <!--  
+      <!--
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-search-mimir</artifactId>
@@ -654,7 +660,7 @@
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
       </dependency>
-      
+
       <dependency>
         <groupId>dom4j</groupId>
         <artifactId>dom4j</artifactId>
@@ -684,7 +690,7 @@
         <artifactId>dkpro-core-io-html-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
-      
+
       <dependency>
         <groupId>org.dkpro.core</groupId>
         <artifactId>dkpro-core-io-conll-asl</artifactId>
@@ -706,8 +712,8 @@
         <type>pom</type>
         <scope>import</scope>
       </dependency>
-      
-      <!--  
+
+      <!--
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-bom</artifactId>
@@ -716,7 +722,7 @@
         <scope>import</scope>
       </dependency>
       -->
-  
+
       <dependency>
         <groupId>org.eclipse.rdf4j</groupId>
         <artifactId>rdf4j-config</artifactId>
@@ -1029,7 +1035,7 @@
         <artifactId>jsonld-java</artifactId>
         <version>0.12.3</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.elasticsearch</groupId>
         <artifactId>elasticsearch</artifactId>
@@ -1050,13 +1056,13 @@
         <artifactId>elasticsearch-rest-high-level-client</artifactId>
         <version>${elasticsearch.version}</version>
       </dependency>
-        
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>c3</artifactId>
         <version>0.6.6</version>
       </dependency>
-    
+
       <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>d3js</artifactId>
@@ -1064,7 +1070,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <build>
     <plugins>
       <plugin>
@@ -1125,7 +1131,7 @@
         <configuration>
           <failOnWarning>true</failOnWarning>
           <ignoredDependencies combine.children="append">
-            <!-- 
+            <!--
               - Logging is used via reflection and cannot be detected by Maven
             -->
             <dependency>org.apache.logging.log4j:log4j-slf4j-impl</dependency>
@@ -1133,15 +1139,15 @@
             <dependency>org.slf4j:log4j-over-slf4j</dependency>
             <dependency>org.slf4j:jcl-over-slf4j</dependency>
             <dependency>commons-logging:commons-logging</dependency>
-            <!-- 
+            <!--
               - JAXB is used via reflection and cannot be detected by Maven
             -->
             <dependency>javax.xml.bind:jaxb-api</dependency>
             <dependency>com.sun.xml.bind:jaxb-core</dependency>
             <dependency>com.sun.xml.bind:jaxb-impl</dependency>
             <dependency>javax.activation:javax.activation-api</dependency>
-            <!-- 
-              - h2database and data-jpa, used via reflection in tests in search-mtas, 
+            <!--
+              - h2database and data-jpa, used via reflection in tests in search-mtas,
               - cannot be detected by Maven
              -->
             <dependency>com.h2database:h2</dependency>

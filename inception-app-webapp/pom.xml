@@ -34,7 +34,7 @@
       <groupId>xml-apis</groupId>
       <artifactId>xml-apis</artifactId>
     </dependency>
-  
+
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
@@ -74,13 +74,13 @@
         </exclusion>
       </exclusions>
     </dependency>
-    
+
     <!-- INCEPTION - ANNOTATION RECOMMENDATION FUNCTIONALITY -->
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-recommendation</artifactId>
     </dependency>
-    <!--  
+    <!--
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-imls-dl4j</artifactId>
@@ -155,6 +155,10 @@
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-pdf-editor</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-review-editor</artifactId>
     </dependency>
 
     <!-- READER/WRITER DEPENDENCIES -->
@@ -437,7 +441,7 @@
       <groupId>org.hibernate</groupId>
       <artifactId>hibernate-entitymanager</artifactId>
     </dependency>
-    
+
     <!-- JAXB DEPENDENCIES -->
     <dependency>
       <groupId>javax.xml.bind</groupId>
@@ -455,12 +459,12 @@
       <groupId>javax.activation</groupId>
       <artifactId>javax.activation-api</artifactId>
     </dependency>
-        
+
     <!-- Spring Boot dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
-    </dependency>    
+    </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -492,7 +496,7 @@
       <groupId>com.giffing.wicket.spring.boot.starter</groupId>
       <artifactId>wicket-spring-boot-starter</artifactId>
     </dependency>
-    <!--  
+    <!--
     <dependency>
       <groupId>net.bull.javamelody</groupId>
       <artifactId>javamelody-spring-boot-starter</artifactId>
@@ -506,17 +510,17 @@
   </dependencies>
   <build>
     <plugins>
-      <!-- 
+      <!--
         This module has a slight complex setup to allow making it work in a command line build
          as well as in an m2e build.
-        
+
         The general procedure is:
         1) generate asciidoc HTML (also PDF when on the command line)
         2) sync generated HTML + images to a proper package under src/main/resources
            This is the reason why src/main/resources is excluded from version control
-        3) let Maven pick up the stuff from src/main/resources and make it available to m2e 
+        3) let Maven pick up the stuff from src/main/resources and make it available to m2e
            workspace builds or package it into a JAR
-           
+
         When running in m2e, building of PDFs is skipped.
         Mind that rebuilding of HTML from asciidoc works in Eclipse only on an explicit project clean.
         There is no incremental build!
@@ -625,7 +629,7 @@
             <configuration>
               <tasks>
                 <mkdir dir="src/main/resources/public/doc" />
-                <!-- 
+                <!--
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
                 an endless build loop in Eclipse.
                  -->
@@ -703,6 +707,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-brat</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-html-editor</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-pdf-editor</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-review-editor</usedDependency>
               <!-- INCEpTION IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-json</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
@@ -711,7 +716,7 @@
               <!-- usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
-              <!-- Detected because we explicitly exclude their menu items  
+              <!-- Detected because we explicitly exclude their menu items
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-annotation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-curation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-monitoring</usedDependency>
@@ -857,7 +862,7 @@
       <build>
         <plugins>
           <plugin>
-            <!-- 
+            <!--
               This plugin must be declared before the ant-run plugin because during the package
               phase, it creates a the files which the "copy-war-to-jar" execution of the ant-run
               plugin running also in the package phase requires.
@@ -908,7 +913,7 @@
         <property>
           <name>!m2e.version</name>
         </property>
-        <!-- 
+        <!--
          - Build PDFs currently does not work with Java 10 because of a problem parsing the
          - version string: https://github.com/jruby/jruby-openssl/issues/157
          -->
