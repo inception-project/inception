@@ -1,7 +1,8 @@
 <!-- Generate a nice TOC -->
-<script src="https://code.jquery.com/jquery-1.11.3.min.js"></script>
-<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js"></script>
+<script src="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"></script>
+<script src="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"></script>
+<script src="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"></script>
+<script src="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"></script>
 <!-- We do not need the tocify CSS because the asciidoc CSS already provides most of what we neeed -->
 
 <style>
@@ -48,7 +49,7 @@
             // Set to 'none' to use the tocify classes
             theme: "none",
             // Handle book (may contain h1) and article (only h2 deeper)
-            selectors: $( "#content" ).has( "h1" ).size() > 0 ? "h1,h2,h3,h4,h5" : "h2,h3,h4,h5",
+            selectors: $( "#content" ).has( "h1" ).length > 0 ? "h1,h2,h3,h4,h5" : "h2,h3,h4,h5",
             ignoreSelector: ".discrete"
         });
 
