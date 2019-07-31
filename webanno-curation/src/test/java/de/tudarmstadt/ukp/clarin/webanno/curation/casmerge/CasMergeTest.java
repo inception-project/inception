@@ -24,8 +24,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.creat
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostMultiSPanFeatureFS;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 import static java.util.Arrays.asList;
@@ -67,8 +67,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.SpanDiffAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.SpanPosition;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanPosition;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
@@ -534,7 +535,7 @@ public class CasMergeTest
         casByUser.put("user2", asList(jcasA.getCas()));
 
         CasDiff.DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                CasDiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(0, diff.getIncompleteConfigurationSets().size());
@@ -568,7 +569,7 @@ public class CasMergeTest
         casByUser.put("user2", asList(jcasA.getCas()));
 
         CasDiff.DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                CasDiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
         assertEquals(0, diff.getDifferingConfigurationSets().size());
         assertEquals(2, diff.getIncompleteConfigurationSets().size());
