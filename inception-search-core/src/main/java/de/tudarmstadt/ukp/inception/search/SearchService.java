@@ -40,7 +40,7 @@ public interface SearchService
 
     /**
      * Receive the search results un-grouped as a list.
-     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature)}
+     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, int, int)}
      */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
@@ -54,6 +54,9 @@ public interface SearchService
      * @param aDocument limit search to this document or search in the whole project if null
      * @param aAnnotationLayer the layer that the grouping feature belongs to
      * @param aAnnotationFeature the feature that is used to group the results
+     * @param aOffset offset used for the paging of the search results i.e. the index of the first
+     *                search result of the page
+     * @param aCount number of search results to be returned, starting from aOffset
      * @return a Map where the keys are the group-keys (e.g. feature-values) and the values are
      * lists of search results that belong to this group.
      * @throws IOException
@@ -61,7 +64,7 @@ public interface SearchService
      */
     Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
         SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException;
+        AnnotationFeature aAnnotationFeature, long aOffset, long aCount) throws IOException, ExecutionException;
 
     void reindex(Project aproject) throws IOException;
 

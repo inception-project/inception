@@ -303,6 +303,11 @@ public class MtasDocumentIndex
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
 
+        long offset = aRequest.getOffset();
+        long count = aRequest.getCount();
+        long current = 0;
+
+        resultIteration:
         while (leafReaderContextIterator.hasNext()) {
             LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
             try {
@@ -312,8 +317,7 @@ public class MtasDocumentIndex
                 CodecInfo mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
                 if (spans != null) {
                     while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc()
-                                || segmentReader.getLiveDocs().get(spans.docID())) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc() || segmentReader.getLiveDocs().get(spans.docID())) {
                             Document document = segmentReader.document(spans.docID());
 
                             // Retrieve user
@@ -321,27 +325,25 @@ public class MtasDocumentIndex
 
                             // Retrieve source and annotation document ids
                             String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            String rawAnnotationDocumentId = document
-                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
                             if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
                                 log.trace("Indexed document lacks source/annotation document IDs"
-                                        + " - source: {}, annotation: {}",
-                                        rawSourceDocumentId, rawAnnotationDocumentId);
+                                        + " - source: {}, annotation: {}", rawSourceDocumentId,
+                                    rawAnnotationDocumentId);
                                 continue;
 
                             }
                             long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                             long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
-                            
+
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
-                            Optional<SourceDocument> limitedToDocument = aRequest
-                                    .getLimitedToDocument();
+                            Optional<SourceDocument> limitedToDocument = aRequest.getLimitedToDocument();
                             if (limitedToDocument.isPresent() && !Objects
-                                    .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
+                                .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
                                 log.trace("Query limited to document {}, skipping results for "
-                                        + "document {}",
-                                        limitedToDocument.get().getId(), sourceDocumentId);
+                                        + "document {}", limitedToDocument.get().getId(),
+                                    sourceDocumentId);
                                 continue;
                             }
 
@@ -350,19 +352,18 @@ public class MtasDocumentIndex
                                 // Exclude result if the retrieved document is a sourcedocument
                                 // (that is, has annotationDocument = -1) AND it has a
                                 // corresponding annotation document for this user
-                                log.trace("Skipping results from indexed source document {} in"
-                                        + "favor of results from the corresponding annotation "
-                                        + "document", sourceDocumentId);
+                                log.trace("Skipping results from indexed source document {} in" + "favor of results from the corresponding annotation "
+                                    + "document", sourceDocumentId);
                                 continue;
                             }
-                            else if (annotationDocumentId != -1
-                                    && !aRequest.getUser().getUsername().equals(user)) {
+                            else if (annotationDocumentId != -1 && !aRequest.getUser().getUsername()
+                                .equals(user)) {
                                 // Exclude result if the retrieved document is an annotation
                                 // document (that is, annotationDocument != -1 and its username
                                 // is different from the quering user
                                 log.trace("Skipping results from annotation document for user {} "
                                         + "which does not match the requested user {}", user,
-                                        aRequest.getUser().getUsername());
+                                    aRequest.getUser().getUsername());
                                 continue;
                             }
 
@@ -374,16 +375,24 @@ public class MtasDocumentIndex
                             // log.debug("******** New doc {}-{}", + spans.docID(), idValue);
 
                             while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                                if (current < offset) {
+                                    current++;
+                                    continue;
+                                }
+                                if (current - offset + 1 > count) {
+                                    break resultIteration;
+                                }
                                 int matchStart = spans.startPosition();
                                 int matchEnd = spans.endPosition();
-                                
+
                                 int windowStart = Math.max(matchStart - RESULT_WINDOW_SIZE, 0);
                                 int windowEnd = matchEnd + RESULT_WINDOW_SIZE - 1;
-                                
+
                                 // Retrieve all indexed objects within the matching range
-                                List<MtasTokenString> tokens = mtasCodecInfo.getObjectsByPositions(
-                                        field, spans.docID(), windowStart, windowEnd);
-                                
+                                List<MtasTokenString> tokens = mtasCodecInfo
+                                    .getObjectsByPositions(field, spans.docID(), windowStart,
+                                        windowEnd);
+
                                 tokens.sort(Comparator.comparing(MtasTokenString::getOffsetStart));
 
                                 if (tokens.isEmpty()) {
@@ -396,34 +405,28 @@ public class MtasDocumentIndex
                                 StringBuilder rightContext = new StringBuilder();
                                 result.setDocumentId(sourceDocumentId);
                                 result.setDocumentTitle(documentTitle);
-                                result.setOffsetStart(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart && 
-                                                t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetStart)
-                                        .min()
-                                        .getAsInt());
-                                result.setOffsetEnd(tokens.stream()
-                                        .filter(t -> t.getPositionStart() >= matchStart && 
-                                                t.getPositionEnd() < matchEnd)
-                                        .mapToInt(MtasTokenString::getOffsetEnd)
-                                        .max()
-                                        .getAsInt());
+                                result.setOffsetStart(tokens.stream().filter(
+                                    t -> t.getPositionStart() >= matchStart && t.getPositionEnd() < matchEnd)
+                                    .mapToInt(MtasTokenString::getOffsetStart).min().getAsInt());
+                                result.setOffsetEnd(tokens.stream().filter(
+                                    t -> t.getPositionStart() >= matchStart && t.getPositionEnd() < matchEnd)
+                                    .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
-                                
+
                                 MtasTokenString prevToken = null;
                                 for (MtasTokenString token : tokens) {
                                     if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
                                         continue;
                                     }
-                                    
+
                                     // When searching for an annotation, we don't get the matching
                                     // text back... not sure why...
                                     String tokenText = CodecUtil.termValue(token.getValue());
                                     if (tokenText == null) {
                                         continue;
                                     }
-                                    
+
                                     if (token.getPositionStart() < matchStart) {
                                         fill(leftContext, prevToken, token);
                                         leftContext.append(tokenText);
@@ -464,7 +467,6 @@ public class MtasDocumentIndex
                                     // if no annotation feature is specified group by document title
                                     addToResults(results, result.getDocumentTitle(), result);
                                 }
-
 
                             }
                         }

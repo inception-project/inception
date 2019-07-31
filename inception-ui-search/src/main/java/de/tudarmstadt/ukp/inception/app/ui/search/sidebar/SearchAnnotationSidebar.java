@@ -36,6 +36,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import de.tudarmstadt.ukp.inception.search.ResultsGroup;
+import de.tudarmstadt.ukp.inception.search.SearchResultsProvider;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -55,6 +57,8 @@ import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Fragment;
+import org.apache.wicket.markup.repeater.Item;
+import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -117,6 +121,7 @@ public class SearchAnnotationSidebar
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
     private IModel<Map<String, ResultsGroup>> groupedSearchResults;
+    private SearchResultsProvider resultsProvider;
     private Map<String, Boolean> groupLevelSelections;
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
         .of(new CreateAnnotationsOptions());
@@ -162,7 +167,7 @@ public class SearchAnnotationSidebar
             _target.add(searchOptionsForm);
         }));
 
-        groupedSearchResults = LambdaModel.of(this::getSearchResultsGrouped);
+        resultsProvider = getSearchResultsGrouped();
 
         // Add link for re-indexing the project
         searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
@@ -175,14 +180,14 @@ public class SearchAnnotationSidebar
         resultsGroupContainer.setOutputMarkupId(true);
         mainContainer.add(resultsGroupContainer);
 
-        ListView<ResultsGroup> searchResultGroups = new ListView<ResultsGroup>("searchResultGroups")
+        DataView<Entry<String, ResultsGroup>> searchResultGroups = new DataView<Entry<String, ResultsGroup>>("searchResultGroups", resultsProvider)
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<ResultsGroup> item)
+            protected void populateItem(Item<Entry<String, ResultsGroup>> item)
             {
-                ResultsGroup result = item.getModelObject();
+                ResultsGroup result = item.getModelObject().getValue();
                 item.add(new Label("groupTitle", LoadableDetachableModel
                         .of(() -> result.getGroupKey() + " (" + result.getResults().size() + ")")));
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
@@ -193,11 +198,11 @@ public class SearchAnnotationSidebar
                         groupedSearchResults.getObject().get(result.getGroupKey()))));
             }
         };
-        searchResultGroups.setModel(LoadableDetachableModel.of(() -> 
+        /*searchResultGroups.setModel(LoadableDetachableModel.of(() ->
                 groupedSearchResults.getObject().values().stream()
                         .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
                         .collect(Collectors.toList())));
-        resultsGroupContainer.add(searchResultGroups);
+        resultsGroupContainer.add(searchResultGroups);*/
 
         Form<Void> annotationForm = new Form<>("annotateForm");
         // create annotate-button and options form
@@ -304,10 +309,10 @@ public class SearchAnnotationSidebar
         aTarget.addChildren(getPage(), IFeedback.class);
     }
     
-    private Map<String, ResultsGroup> getSearchResultsGrouped()
+    private SearchResultsProvider getSearchResultsGrouped()
     {
         if (isBlank(targetQuery.getObject())) {
-            return Collections.emptyMap();
+            return null;//Collections.emptyMap();
         }
 
         // If a layer is selected but no feature show error
@@ -315,7 +320,7 @@ public class SearchAnnotationSidebar
             && searchOptions.getObject().getGroupingFeature() == null) {
             error(
                 "A feature has to be selected in order to group by feature values. If you want to group by document title, select none for both layer and feature.");
-            return Collections.emptyMap();
+            return null;//Collections.emptyMap();
         }
         
         try {
@@ -327,19 +332,16 @@ public class SearchAnnotationSidebar
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
             SearchOptions opt = searchOptions.getObject();
-            Map<String, ResultsGroup> queryResults = searchService
-                    .query(currentUser, project, targetQuery.getObject(), limitToDocument,
-                            opt.getGroupingLayer(), opt.getGroupingFeature())
-                    .entrySet().stream().collect(Collectors.toMap(Entry::getKey, e -> 
-                            new ResultsGroup(e.getKey(), e.getValue())));
+            SearchResultsProvider searchResultsProvider = new SearchResultsProvider(currentUser, project, targetQuery.getObject(), limitToDocument,
+                opt.getGroupingLayer(), opt.getGroupingFeature());
 
             // init group level selection as soon as we know what the group-keys are
-            groupLevelSelections = initGroupLevelSelections(queryResults.keySet());
-            return queryResults;
+            //groupLevelSelections = initGroupLevelSelections(queryResults.keySet());
+            return searchResultsProvider;
         }
         catch (Exception e) {
             error("Error in the query: " + e.getMessage());
-            return Collections.emptyMap();
+            return null;//Collections.emptyMap();
         }
     }
 
@@ -502,29 +504,6 @@ public class SearchAnnotationSidebar
             }
         }
         return true;
-    }
-
-    private class ResultsGroup implements Serializable
-    {
-        private static final long serialVersionUID = -4448435773623997560L;
-        private final String groupKey;
-        private final List<SearchResult> results;
-        
-        public ResultsGroup(String aGroupKey, List<SearchResult> aResults)
-        {
-            groupKey = aGroupKey;
-            results = aResults;
-        }
-        
-        public String getGroupKey()
-        {
-            return groupKey;
-        }
-        
-        public List<SearchResult> getResults()
-        {
-            return results;
-        }
     }
     
     private class SearchResultGroup

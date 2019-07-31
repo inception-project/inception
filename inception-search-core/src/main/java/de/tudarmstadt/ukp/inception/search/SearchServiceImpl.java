@@ -327,7 +327,7 @@ public class SearchServiceImpl
         SourceDocument aDocument) throws IOException, ExecutionException
     {
         Map<String, List<SearchResult>> groupedResults = query(aUser, aProject, aQuery, aDocument,
-            null, null);
+            null, null, 0, Integer.MAX_VALUE);
         List<SearchResult> resultsAsList = new ArrayList<>();
         groupedResults.values().stream()
             .forEach(resultsGroup -> resultsAsList.addAll(resultsGroup));
@@ -338,7 +338,7 @@ public class SearchServiceImpl
     @Transactional
     public Map<String, List<SearchResult>> query(User aUser,
         Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature) throws IOException, ExecutionException
+        AnnotationFeature aAnnotationFeature, long offset, long count) throws IOException, ExecutionException
     {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
@@ -384,7 +384,7 @@ public class SearchServiceImpl
 
                 results = index.getPhysicalIndex().executeQuery(
                     new SearchQueryRequest(aProject, aUser, aQuery, aDocument,
-                        aAnnotationLayer, aAnnotationFeature));
+                        aAnnotationLayer, aAnnotationFeature, offset, count));
             }
 
         }

@@ -36,20 +36,23 @@ public class SearchQueryRequest
     private final AnnotationLayer annoationLayer;
     private final AnnotationFeature annotationFeature;
 
+    private final long offset;
+    private final long count;
+
     public SearchQueryRequest(Project aProject, User aUser, String aQuery)
     {
         this(aProject, aUser, aQuery, null);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
-            SourceDocument aLimitedToDocument)
+        SourceDocument aLimitedToDocument)
     {
-        this(aProject, aUser, aQuery, aLimitedToDocument, null, null);
+        this(aProject, aUser, aQuery, aLimitedToDocument, null, null, 0, Integer.MAX_VALUE);
     }
 
     public SearchQueryRequest(Project aProject, User aUser, String aQuery,
         SourceDocument aLimitedToDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature)
+        AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
     {
         super();
         project = aProject;
@@ -58,6 +61,8 @@ public class SearchQueryRequest
         limitedToDocument = aLimitedToDocument;
         annoationLayer = aAnnotationLayer;
         annotationFeature = aAnnotationFeature;
+        offset = aOffset;
+        count = aCount;
     }
 
     public Project getProject()
@@ -88,5 +93,15 @@ public class SearchQueryRequest
     public AnnotationFeature getAnnotationFeature()
     {
         return annotationFeature;
+    }
+
+    public long getOffset()
+    {
+        return offset;
+    }
+
+    public long getCount()
+    {
+        return count;
     }
 }
