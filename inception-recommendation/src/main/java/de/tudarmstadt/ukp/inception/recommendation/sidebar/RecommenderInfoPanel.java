@@ -46,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
@@ -134,7 +133,7 @@ public class RecommenderInfoPanel
         
         CAS cas = page.getEditorCas();
         
-        SourceDocument document = state.getDocument();
+        //SourceDocument document = state.getDocument();
         Predictions predictions = recommendationService.getPredictions(user, state.getProject());
 
         // TODO #176 use the document Id once it it available in the CAS
@@ -146,37 +145,64 @@ public class RecommenderInfoPanel
                 .filter(f -> f.getKey().getDocumentName().equals(sourceDocumentName))
                 .filter(f -> f.getKey().getRecommenderId() == aRecommender.getId().longValue())
                 .map(Map.Entry::getValue)
+                .filter(s -> s.isVisible())
                 .collect(Collectors.toList());
 
+        int accepted = 0;
+        int skippedDueToConflict = 0;
         for (AnnotationSuggestion suggestion : suggestions) {
-            // Upsert an annotation based on the suggestion
-            AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
-            AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
-                    layer);
-            int address = recommendationService.upsertFeature(annotationService,
-                    state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
-                    suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
-    
-            // Hide the suggestion. This is faster than having to recalculate the visibility status
-            // for the entire document or even for the part visible on screen.
-            suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+            try {
+                // Upsert an annotation based on the suggestion
+                AnnotationLayer layer = annotationService.getLayer(suggestion.getLayerId());
+                AnnotationFeature feature = annotationService.getFeature(suggestion.getFeature(),
+                        layer);
+                int address = recommendationService.upsertFeature(annotationService,
+                        state.getDocument(), state.getUser().getUsername(), cas, layer, feature,
+                        suggestion.getLabel(), suggestion.getBegin(), suggestion.getEnd());
         
-//            // Log the action to the learning record
-//            learningRecordService.logRecord(document, aState.getUser().getUsername(),
-//                    suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
+                // Hide the suggestion. This is faster than having to recalculate the visibility
+                // status for the entire document or even for the part visible on screen.
+                suggestion.hide(FLAG_TRANSIENT_ACCEPTED);
+            
+//               // Log the action to the learning record
+//               learningRecordService.logRecord(document, aState.getUser().getUsername(),
+//                       suggestion, layer, feature, ACCEPTED, MAIN_EDITOR);
 //            
-//            // Send an application event that the suggestion has been accepted
-//            AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
-//            applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
-//                document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
+//               // Send an application event that the suggestion has been accepted
+//               AnnotationFS fs = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class, address);
+//               applicationEventPublisher.publishEvent(new RecommendationAcceptedEvent(this,
+//                   document, aState.getUser().getUsername(), fs, feature, suggestion.getLabel()));
 //            
-//            // Send a UI event that the suggestion has been accepted
-//            aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
-//                    new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));    }
+//               // Send a UI event that the suggestion has been accepted
+//               aTarget.getPage().send(aTarget.getPage(), Broadcast.BREADTH,
+//                       new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));    }
+                accepted++;
+            }
+            catch (AnnotationException e) {
+                // FIXME We assume that any exception thrown here is because of a conflict with 
+                // an existing annotation - but actually it would be good to have proper
+                // subclasses of the AnnotationException for different cases such that we can 
+                // provide a better account of why certain suggestions were not accepted.
+                skippedDueToConflict++;
+            }
         }
         
         // Save CAS after annotations have been created
         page.writeEditorCas(cas);
+
+        if (accepted > 0) {
+            success(String.format("Accepted %d suggestions", accepted));
+            // we don't add the feedback panel to the AJAX target here because that happens during
+            // the actionRefreshDocument() below anyway and adding it here already would make
+            // the message disappear immediately
+        }
+
+        if (skippedDueToConflict > 0) {
+            warn(String.format("Skipped %d suggestions due to conflicts", skippedDueToConflict));
+            // we don't add the feedback panel to the AJAX target here because that happens during
+            // the actionRefreshDocument() below anyway and adding it here already would make
+            // the message disappear immediately
+        }
         
         page.actionRefreshDocument(aTarget);
     }
