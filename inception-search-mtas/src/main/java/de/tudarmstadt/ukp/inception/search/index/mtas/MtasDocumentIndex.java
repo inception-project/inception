@@ -241,6 +241,34 @@ public class MtasDocumentIndex
         }
     }
 
+    @Override
+    public long numberofQueryResults(SearchQueryRequest aRequest) throws ExecutionException
+    {
+        try {
+            log.trace("Determining number of results for query {} on index {}", aRequest, getIndexDir());
+
+            Directory directory = FSDirectory.open(getIndexDir().toPath());
+            IndexReader indexReader = DirectoryReader.open(directory);
+
+            String modifiedQuery = parseQuery(aRequest.getQuery());
+            MtasSpanQuery mtasSpanQuery;
+            try (Reader reader = new StringReader(modifiedQuery)) {
+                MtasCQLParser parser = new MtasCQLParser(reader);
+                mtasSpanQuery = parser.parse(FIELD_CONTENT, DEFAULT_PREFIX, null, null, null);
+            }
+
+            return countResults(indexReader, aRequest, mtasSpanQuery);
+        }
+        catch (mtas.parser.cql.ParseException e) {
+            log.error("Unable to parse query: [{}]" + aRequest.getQuery(), e);
+            throw new ExecutionException("Unable to parse query [" + aRequest.getQuery() + "]", e);
+        }
+        catch (Exception e) {
+            log.error("Query execution error", e);
+            throw (new ExecutionException("Query execution error", e));
+        }
+    }
+
     private String parseQuery(String aQuery)
     {
         String result;
@@ -276,6 +304,93 @@ public class MtasDocumentIndex
         return result;
     }
 
+    private long countResults(IndexReader aIndexReader,
+        SearchQueryRequest aRequest, MtasSpanQuery q) throws IOException
+    {
+        ListIterator<LeafReaderContext> leafReaderContextIterator = aIndexReader.leaves()
+            .listIterator();
+
+        IndexSearcher searcher = new IndexSearcher(aIndexReader);
+
+        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
+            aRequest.getUser());
+
+        final float boost = 0;
+        SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
+
+        long current = 0;
+
+        while (leafReaderContextIterator.hasNext()) {
+            LeafReaderContext leafReaderContext = leafReaderContextIterator.next();
+            try {
+                Spans spans = spanweight.getSpans(leafReaderContext, SpanWeight.Postings.POSITIONS);
+                SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
+                if (spans != null) {
+                    while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc() || segmentReader.getLiveDocs().get(spans.docID())) {
+                            Document document = segmentReader.document(spans.docID());
+
+                            // Retrieve user
+                            String user = document.get(FIELD_USER);
+
+                            // Retrieve source and annotation document ids
+                            String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
+                                log.trace("Indexed document lacks source/annotation document IDs"
+                                        + " - source: {}, annotation: {}", rawSourceDocumentId,
+                                    rawAnnotationDocumentId);
+                                continue;
+
+                            }
+                            long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
+                            long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+
+                            // If the query is limited to a given document, skip any results
+                            // which are not in the given document
+                            Optional<SourceDocument> limitedToDocument = aRequest.getLimitedToDocument();
+                            if (limitedToDocument.isPresent() && !Objects
+                                .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
+                                log.trace("Query limited to document {}, skipping results for "
+                                        + "document {}", limitedToDocument.get().getId(),
+                                    sourceDocumentId);
+                                continue;
+                            }
+
+                            if (annotatableDocuments.containsKey(sourceDocumentId)
+                                && annotationDocumentId == -1) {
+                                // Exclude result if the retrieved document is a sourcedocument
+                                // (that is, has annotationDocument = -1) AND it has a
+                                // corresponding annotation document for this user
+                                log.trace("Skipping results from indexed source document {} in" + "favor of results from the corresponding annotation "
+                                    + "document", sourceDocumentId);
+                                continue;
+                            }
+                            else if (annotationDocumentId != -1 && !aRequest.getUser().getUsername()
+                                .equals(user)) {
+                                // Exclude result if the retrieved document is an annotation
+                                // document (that is, annotationDocument != -1 and its username
+                                // is different from the quering user
+                                log.trace("Skipping results from annotation document for user {} "
+                                        + "which does not match the requested user {}", user,
+                                    aRequest.getUser().getUsername());
+                                continue;
+                            }
+
+                            while (spans.nextStartPosition() != Spans.NO_MORE_POSITIONS) {
+                                current++;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e) {
+                log.error("Unable to process query results", e);
+            }
+        }
+        return current;
+    }
+
     private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
     {
         Map<Long, Long> annotateableDocuments =  new HashMap<>();
@@ -306,6 +421,7 @@ public class MtasDocumentIndex
         long offset = aRequest.getOffset();
         long count = aRequest.getCount();
         long current = 0;
+
 
         resultIteration:
         while (leafReaderContextIterator.hasNext()) {
@@ -382,6 +498,7 @@ public class MtasDocumentIndex
                                 if (current - offset + 1 > count) {
                                     break resultIteration;
                                 }
+                                current++;
                                 int matchStart = spans.startPosition();
                                 int matchEnd = spans.endPosition();
 

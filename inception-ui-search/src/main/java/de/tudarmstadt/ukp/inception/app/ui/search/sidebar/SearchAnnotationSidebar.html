@@ -77,6 +77,15 @@
                         data-container="body"></select>
                   </div>
                 </div>
+                <div class="form-group">
+                  <label wicket:for="itemsPerPage" class="control-label col-sm-3">
+                    <wicket:message key="itemsPerPage"/>
+                  </label>
+                  <div class="col-sm-9">
+                    <select wicket:id="itemsPerPage" class="form-control"
+                        data-container="body"></select>
+                  </div>
+              </div>
               </div>
             </div>
             <div class="panel-footer text-right">
@@ -104,6 +113,7 @@
               <wicket:container wicket:id="group" />
             </wicket:container>
           </table>
+          <span wicket:id="pagingNavigator"></span>
         </div>
         <form wicket:id="annotateForm" style="margin-top: 5px">
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">

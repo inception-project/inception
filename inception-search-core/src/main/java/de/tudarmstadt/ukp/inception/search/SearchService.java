@@ -40,7 +40,7 @@ public interface SearchService
 
     /**
      * Receive the search results un-grouped as a list.
-     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, int, int)}
+     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long, long)}
      */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
@@ -77,4 +77,8 @@ public interface SearchService
     void indexDocument(AnnotationDocument aAnnotationDocument, CAS aJCas);
 
     boolean isIndexInProgress(Project aProject);
+
+    long determineNumOfQueryResults(User aUser, Project aProject, String aQuery,
+        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+        AnnotationFeature aAnnotationFeature) throws ExecutionException;
 }

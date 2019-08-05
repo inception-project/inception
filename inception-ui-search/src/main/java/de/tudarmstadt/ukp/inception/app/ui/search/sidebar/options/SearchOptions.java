@@ -30,6 +30,8 @@ public class SearchOptions extends Options
 
     private AnnotationFeature groupingFeature;
 
+    private long itemsPerPage = 10;
+
     public boolean isLimitedToCurrentDocument()
     {
         return limitedToCurrentDocument;
@@ -58,5 +60,15 @@ public class SearchOptions extends Options
     public void setGroupingFeature(AnnotationFeature aGroupingFeature)
     {
         groupingFeature = aGroupingFeature;
+    }
+
+    public long getItemsPerPage()
+    {
+        return itemsPerPage;
+    }
+
+    public void setItemsPerPage(long aItemsPerPage)
+    {
+        itemsPerPage = aItemsPerPage;
     }
 }
