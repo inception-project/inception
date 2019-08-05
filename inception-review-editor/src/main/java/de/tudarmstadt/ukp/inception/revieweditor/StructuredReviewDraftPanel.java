@@ -105,7 +105,8 @@ public class StructuredReviewDraftPanel
                 VID vid = new VID(aItem.getModelObject().addr);
 
                 DocumentAnnotationPanel panel = 
-                    new DocumentAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid), title);
+                    new DocumentAnnotationPanel(CID_ANNOTATION_DETAILS, Model.of(vid),
+                        casProvider, model.getObject().getProject(), title);
                 aItem.add(panel);
 
                 aItem.setOutputMarkupId(true);
