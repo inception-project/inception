@@ -61,10 +61,6 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-api-ner-asl</artifactId>
     </dependency>
 
@@ -100,11 +96,6 @@
       <artifactId>discriminator</artifactId>
       <version>2.4.0</version>
     </dependency>
-    <dependency>
-      <groupId>org.lappsgrid</groupId>
-      <artifactId>vocabulary</artifactId>
-      <version>2.5.0</version>
-    </dependency>
 
     <!-- Spring -->
     <dependency>
@@ -127,11 +118,6 @@
     <dependency>
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.commons</groupId>
-      <artifactId>commons-lang3</artifactId>
     </dependency>
 
     <dependency>
