@@ -90,7 +90,9 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("sampleSlotAnnotation1");
         failingTests.add("sampleSlotAnnotation2");
         failingTests.add("testUnsetSlotFeature");
-
+        failingTests.add("testZeroWidthAnnotationBeforeFirstTokenIsMovedToBeginOfFirstToken");
+        failingTests.add("testZeroWidthAnnotationBetweenTokenIsMovedToEndOfPreviousToken");
+        
         return failingTests.contains(aMethodName);
     }
 
