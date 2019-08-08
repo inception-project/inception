@@ -54,6 +54,17 @@ public class TsvSchema
     
     private List<TsvColumn> columns = new ArrayList<>();
     private Set<Type> chainHeadTypes = new HashSet<>();
+    private Set<Type> ignoredTypes = new HashSet<>();
+    
+    public void ignoreType(Type aType)
+    {
+        ignoredTypes.add(aType);
+    }
+    
+    public Set<Type> getIgnoredTypes()
+    {
+        return ignoredTypes;
+    }
 
     public void addColumn(TsvColumn aColumn)
     {

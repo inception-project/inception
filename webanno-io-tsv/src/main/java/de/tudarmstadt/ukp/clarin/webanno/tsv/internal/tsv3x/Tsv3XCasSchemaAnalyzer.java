@@ -59,6 +59,8 @@ public class Tsv3XCasSchemaAnalyzer
     {
         TsvSchema schema = new TsvSchema();
 
+        Set<Type> ignoredTypes = new HashSet<>();
+
         Set<Type> chainLinkTypes = new HashSet<>();
         
         // Consider only direct subtypes of the UIMA Annotation type. Currently, WebAnno only
@@ -96,6 +98,7 @@ public class Tsv3XCasSchemaAnalyzer
                 break;
             case INCOMPATIBLE:
                 // Do not generate a column definition for incompatible types.
+                ignoredTypes.add(type);
                 break;
             }
         }
@@ -106,8 +109,11 @@ public class Tsv3XCasSchemaAnalyzer
             Feature firstFeat = type.getFeatureByBaseName(CHAIN_FIRST_FEAT);
             if (firstFeat != null && chainLinkTypes.contains(firstFeat.getRange())) {
                 schema.addChainHeadType(type);
+                ignoredTypes.remove(type);
             }
         }
+        
+        ignoredTypes.forEach(schema::ignoreType);
         
         return schema;
     }
