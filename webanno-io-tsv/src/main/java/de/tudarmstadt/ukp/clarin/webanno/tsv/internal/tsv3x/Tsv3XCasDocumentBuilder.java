@@ -139,8 +139,12 @@ public class Tsv3XCasDocumentBuilder
                 // token before the start token using floorEntry(end) - so let's try to correct this
                 if (
                         // found begin token but found the wrong one
-                        (beginTokenEntry != null && beginTokenEntry.getValue().getEnd() < begin) ||
-                        // didn't find end begin because annotation starts before the first token
+                        (
+                                beginTokenEntry != null && 
+                                beginTokenEntry.getValue().getEnd() < begin && 
+                                tokenEndIndex.higherEntry(begin) != null
+                        ) ||
+                        // didn't find begin token because annotation starts before the first token
                         beginTokenEntry == null
                 ) {
                     beginTokenEntry = tokenEndIndex.higherEntry(begin);
@@ -158,7 +162,11 @@ public class Tsv3XCasDocumentBuilder
                 // token after the end token using ceilingEntry(end) - so let's try to correct this
                 if (
                         // found end token but found the wrong one
-                        (endTokenEntry != null && endTokenEntry.getValue().getBegin() > end) ||
+                        (
+                                endTokenEntry != null && 
+                                endTokenEntry.getValue().getBegin() > end &&
+                                tokenEndIndex.lowerEntry(end) != null
+                        ) ||
                         // didn't find end token because annotation ends beyond the last token
                         endTokenEntry == null
                 ) {
@@ -198,10 +206,20 @@ public class Tsv3XCasDocumentBuilder
                     }
                 }
                 else if (zeroWitdh) {
-                    TsvSubToken t = beginToken.createSubToken(begin, min(beginToken.getEnd(), end));
+                    // If the zero-width annotation happens in the space between tokens or after
+                    // the last token, we move it to the end of the closest preceding token in order
+                    // not to have to drop it entirely.
+                    int position = min(beginToken.getEnd(), end);
+                    // ... or if the annotation is before the first token, then we move it to the
+                    // begin of the first token 
+                    if (position < beginToken.getBegin()) {
+                        position = beginToken.getBegin();
+                    }
+                    TsvSubToken t = beginToken.createSubToken(position, position);
                     doc.mapFS2Unit(annotation, t);
                     t.addUimaAnnotation(annotation, addDisambiguationIdIfStacked);
-                } else {
+                }
+                else {
                     // Annotation covers only suffix of the begin token - we need to create a 
                     // suffix sub-token unit on the begin token. The new sub-token defines the ID of
                     // the annotation.
