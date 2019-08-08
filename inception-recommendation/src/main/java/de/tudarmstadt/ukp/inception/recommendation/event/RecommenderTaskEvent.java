@@ -49,8 +49,8 @@ public class RecommenderTaskEvent
             double aProgress, Recommender aRecommender, boolean aActive,
             RecommenderState aRecommenderState, EvaluationResult aResult)
     {
-        this(aSource, aUserName, aState, aProgress, aRecommender, aActive, aRecommenderState, null,
-                null);
+        this(aSource, aUserName, aState, aProgress, aRecommender, aActive, aRecommenderState,
+                aResult, null);
     }
     
     public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,

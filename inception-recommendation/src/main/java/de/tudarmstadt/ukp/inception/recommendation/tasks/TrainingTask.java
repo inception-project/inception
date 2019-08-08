@@ -35,6 +35,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -69,6 +70,7 @@ public class TrainingTask
     private @Autowired DocumentService documentService;
     private @Autowired RecommendationService recommendationService;
     private @Autowired SchedulingService schedulingService;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     public TrainingTask(User aUser, Project aProject, String aTrigger)
     {
@@ -211,7 +213,7 @@ public class TrainingTask
         double progress = aRecommenderCount / aRecommenderSize;
         RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ?
                 RecommenderState.TRAINING_STARTED : RecommenderState.TRAINING_FINISHED;
-        getSchedulerCallback().accept(new RecommenderTaskEvent(this, aUser.getUsername(), 
+        appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUser.getUsername(), 
                 TaskState.RUNNING, progress, aRecommender, true, recommenderState));
     }
 

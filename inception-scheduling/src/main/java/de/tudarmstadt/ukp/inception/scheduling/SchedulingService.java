@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.stream.Collectors;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.protocol.ws.WebSocketSettings;
@@ -33,7 +32,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -51,6 +50,7 @@ public class SchedulingService
     private final ThreadPoolExecutor executor;
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired Application application;
+    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final List<Task> runningTasks;
 
@@ -68,7 +68,7 @@ public class SchedulingService
     {
         Task task = (Task) aRunnable;
         runningTasks.add(task);
-        distributeWebSocketMessage(
+        appEventPublisher.publishEvent(
                 new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.RUNNING, 0.0));
     }
 
@@ -76,7 +76,7 @@ public class SchedulingService
     {
         Task task = (Task) aRunnable;
         runningTasks.remove(task);
-        distributeWebSocketMessage(
+        appEventPublisher.publishEvent(
                 new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.DONE, 1.0));
     }
 
@@ -110,11 +110,8 @@ public class SchedulingService
         }
 
         log.debug("Enqueuing task [{}]", aTask);
-        distributeWebSocketMessage(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
+        appEventPublisher.publishEvent(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
                 TaskState.SCHEDULED, 0.0));
-
-        // set callback to websocket distribution
-        aTask.setSchedulerCallback(this::distributeWebSocketMessage);
         
         // This autowires the task fields manually.
         AutowireCapableBeanFactory factory = applicationContext.getAutowireCapableBeanFactory();
@@ -145,50 +142,47 @@ public class SchedulingService
     }
 
     @EventListener
-    public void distributeWebSocketMessage(ApplicationEvent aEvent)
+    public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdateEvent)
     {
-//        log.info(String.format("Distributing event: %s", aEvent.toString()));
-        
+        log.info(String.format("Distributing event: %s", aTaskUpdateEvent.toString()));
+
         if (application == null) {
             log.error("Wicket Application is null");
             return;
         }
-        
-        if (aEvent instanceof TaskUpdateEvent) {
-            TaskUpdateEvent taskUpdate = (TaskUpdateEvent) aEvent;
-            
-            WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
-            IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
-                    .getConnectionRegistry();
-    
-            // get all connections for the user
-            List<IWebSocketConnection> userConnections = new ArrayList<>();
-            
-//            log.info(String.format("Found %d sessions for user %s", sessionRegistry
-//                    .getAllSessions(taskUpdate.getUser(), false).size(),
-//                    taskUpdate.getUser()));
-            
-            List<String> ids = new ArrayList<>();
-            for (SessionInformation sessionInfo : sessionRegistry
-                    .getAllSessions(taskUpdate.getUser(), false)) {
-//                log.info(String.format("SessionId connections for user %s is %s", 
-//                        taskUpdate.getUser(),
-//                        sessionInfo.getSessionId()));
-                
-                userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
-                        sessionInfo.getSessionId()));
-                ids.add(sessionInfo.getSessionId());
-            }
 
-            log.info(String.format("Found %d connections for user %s with ids %s \n",
-                    userConnections.size(), taskUpdate.getUser(),
-                    ids.stream().collect(Collectors.joining(","))));
-            
-            // send message to all connections
-            for (IWebSocketConnection connection : userConnections) {
-                connection.sendMessage(taskUpdate);
-                log.info(String.format("Send event: %s", taskUpdate.toString()));
-            }
+        WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
+        IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
+                .getConnectionRegistry();
+
+        // get all connections for the user
+        List<IWebSocketConnection> userConnections = new ArrayList<>();
+
+        // log.info(String.format("Found %d sessions for user %s", sessionRegistry
+        // .getAllSessions(taskUpdate.getUser(), false).size(),
+        // taskUpdate.getUser()));
+
+        List<String> ids = new ArrayList<>();
+        for (SessionInformation sessionInfo : sessionRegistry
+                .getAllSessions(aTaskUpdateEvent.getUser(), false)) {
+            // log.info(String.format("SessionId connections for user %s is %s",
+            // taskUpdate.getUser(),
+            // sessionInfo.getSessionId()));
+
+            userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
+                    sessionInfo.getSessionId()));
+            ids.add(sessionInfo.getSessionId());
         }
+
+//        log.info(String.format("Found %d connections for user %s with ids %s \n",
+//                userConnections.size(), aTaskUpdateEvent.getUser(),
+//                ids.stream().collect(Collectors.joining(","))));
+
+        // send message to all connections
+        for (IWebSocketConnection connection : userConnections) {
+            connection.sendMessage(aTaskUpdateEvent);
+            log.info(String.format("Send event: %s", aTaskUpdateEvent.toString()));
+        }
+
     }
 }

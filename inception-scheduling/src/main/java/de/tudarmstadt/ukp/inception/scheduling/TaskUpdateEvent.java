@@ -72,9 +72,8 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
         StringBuilder builder = new StringBuilder();
         builder.append("TaskUpdateEvent [");
         builder.append(infoToString());
-        builder.append("state=");
+        builder.append(", state=");
         builder.append(state);
-        builder.append(", ");
         builder.append("]");
         return builder.toString();
     }

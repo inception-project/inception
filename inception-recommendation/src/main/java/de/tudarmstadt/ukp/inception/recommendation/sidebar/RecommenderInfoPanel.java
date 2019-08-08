@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommende
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderTaskEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 
 public class RecommenderInfoPanel
     extends Panel
@@ -134,8 +134,8 @@ public class RecommenderInfoPanel
             @Override
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
             {
-                log.info(String.format("Received event: %s", aMessage.toString()));
-                if (aMessage instanceof RecommenderTaskEvent) {
+                if (aMessage instanceof RecommenderEvaluationResultEvent) {
+                    log.info(String.format("Received event: %s", aMessage.toString()));
                     aHandler.add(mainContainer);
                 }
             }
