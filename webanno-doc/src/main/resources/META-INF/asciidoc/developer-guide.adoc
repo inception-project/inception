@@ -43,6 +43,8 @@ include::{include-dir}annotation-schema-feature-support-extensions.adoc[leveloff
 
 include::{include-dir}annotation-schema-layer-support-extensions.adoc[leveloffset=+2]
 
+include::{include-dir}annotation-schema-layer-behavior-extensions.adoc[leveloffset=+2]
+
 include::{include-dir}annotation-editor.adoc[leveloffset=+1]
 
 include::{include-dir}annotation-editor-paging.adoc[leveloffset=+2]
