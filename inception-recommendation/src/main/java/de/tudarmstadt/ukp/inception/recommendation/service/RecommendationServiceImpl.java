@@ -53,12 +53,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.admin.CASMgr;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -824,8 +820,7 @@ public class RecommendationServiceImpl
                         log.trace("[{}][{}]: Generating predictions for layer [{}]", username,
                                 r.getRecommender().getName(), layer.getUiName());
                         
-                        cloneCAS(originalCas.get(), predictionCas);
-                        monkeyPatchTypeSystem(aProject, predictionCas);
+                        cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
@@ -1037,20 +1032,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    private CAS cloneCAS(CAS aSourceCas, CAS aTargetCas) throws CASException
+    public CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
+        throws UIMAException, IOException
     {
-        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aSourceCas);
-        Serialization.deserializeCASComplete(ser, (CASMgr) aTargetCas);
-        
-        // Make sure JCas is properly initialized too
-        aTargetCas.getJCas();
-        
-        return aTargetCas;
-    }
-
-    public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
-            throws UIMAException, IOException {
-
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
             TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
 
@@ -1070,7 +1054,9 @@ public class RecommendationServiceImpl
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
-            annoService.upgradeCas(aCas, tsd);
+            annoService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }
+
+        return aTargetCas;
     }
 }
