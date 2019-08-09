@@ -202,7 +202,6 @@ public class TrainingTask
                 }
             }
         }
-
         schedulingService.enqueue(new PredictionTask(user, getProject(),
                         "TrainingTask after training was finished"));
     }

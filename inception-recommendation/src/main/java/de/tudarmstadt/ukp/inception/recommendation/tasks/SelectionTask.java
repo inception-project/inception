@@ -184,6 +184,16 @@ public class SelectionTask
                                 user.getUsername(), recommenderName, score,
                                 threshold);
                     }
+                    
+                 // TODO: remove, for testing
+                    try {
+                        Thread.sleep(20000);
+                    }
+                    catch (InterruptedException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                    //FIXME: published before activerecommenders are updated!!! -> re-render fetches those
                     publishEvalEvent(user, recommenders.size(), recommenderCount, recommender,
                             start, result, activated);
                 }
@@ -198,6 +208,8 @@ public class SelectionTask
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
 
+     
+        
         schedulingService.enqueue(new TrainingTask(user, getProject(),
                 "SelectionTask after activating recommenders"));
     }

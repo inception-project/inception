@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_TRANSIENT_ACCEPTED;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +79,11 @@ public class RecommenderInfoPanel
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private WebMarkupContainer resultsContainer;
-    private ListView<Recommender> recommenderGroups; 
+    private ListView<Optional<EvaluationResult>> recommenderGroups; 
+    
+    // map recommender id to most recent evaluation result
+    //TODO need to also save recommender name
+    private LoadableDetachableModel<Map<Long,Optional<EvaluationResult>>> recommenderEvals;
     
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -88,21 +94,19 @@ public class RecommenderInfoPanel
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
-        recommenderGroups = new ListView<Recommender>("recommender")
+        
+        //recommendationService
+        //.listEnabledRecommenders(aModel.getObject().getProject())
+        recommenderEvals = LoadableDetachableModel.of(this::initRecommenderEvals);
+        recommenderGroups = new ListView<Optional<EvaluationResult>>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<Recommender> item)
+            protected void populateItem(ListItem<Optional<EvaluationResult>> item)
             {
-                User user = getPanelModelObject().getUser();
-                Recommender recommender = item.getModelObject();
-                List<EvaluatedRecommender> activeRecommenders = recommendationService
-                        .getActiveRecommenders(user, recommender.getLayer());
-                Optional<EvaluationResult> evalResult = activeRecommenders.stream()
-                        .filter(r -> r.getRecommender().equals(recommender))
-                        .map(EvaluatedRecommender::getEvaluationResult)
-                        .findAny();
+                //TODO: get recommender from somewhere ??
+                Optional<EvaluationResult> evalResult = item.getModelObject();
                 item.add(new Label("name", recommender.getName()));
                 item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
 
@@ -113,9 +117,7 @@ public class RecommenderInfoPanel
                 item.add(resultsContainer);
             }
         };
-        
-        recommenderGroups.setModel(LoadableDetachableModel.of(() -> recommendationService
-                .listEnabledRecommenders(aModel.getObject().getProject())));
+        recommenderGroups.setDefaultModel(LoadableDetachableModel.of(this::getEvaluationResults));
         recommenderGroups.setOutputMarkupId(true);
         mainContainer.add(recommenderGroups);
         
@@ -141,7 +143,38 @@ public class RecommenderInfoPanel
             }
         });
     }
-        
+
+    private List<Optional<EvaluationResult>> getEvaluationResults()
+    {
+        return new ArrayList<Optional<EvaluationResult>>(recommenderEvals.getObject().values());
+    }
+    
+    @Override
+    protected void onDetach()
+    {
+        // the recommenderEvals model is not set as a default model, needs to be detached manually
+        if (recommenderEvals != null) {
+            recommenderEvals.detach();
+        }
+        super.onDetach();
+    }
+
+    private Map<Long, Optional<EvaluationResult>> initRecommenderEvals()
+    {
+        Map<Long, Optional<EvaluationResult>> evals = new HashMap<>();
+        for (Recommender recommender : recommendationService
+                .listEnabledRecommenders(getPanelModelObject().getProject())) {
+            List<EvaluatedRecommender> activeRecommenders = recommendationService
+                    .getActiveRecommenders(userService.getCurrentUser(), recommender.getLayer());
+            Optional<EvaluationResult> evalResult = activeRecommenders.stream()
+                    .filter(r -> r.getRecommender().equals(recommender))
+                    .map(EvaluatedRecommender::getEvaluationResult)
+                    .findAny();
+            evals.put(recommender.getId(), evalResult);
+        }
+        return evals;
+    }
+
     private WebMarkupContainer createResultsContainer(
             Optional<EvaluationResult> evalResult)
     {
