@@ -437,8 +437,11 @@ public interface AnnotationSchemaService
      * a slow call. The CAS is not automatically persisted - the calling code
      * needs to take care of this.
      */
-    public void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
+    void upgradeCas(CAS aCas, TypeSystemDescription aTargetTypeSystem)
             throws UIMAException, IOException;
+    
+    void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+        throws UIMAException, IOException;
     
     /**
      * @see #upgradeCas(CAS, SourceDocument, String)
