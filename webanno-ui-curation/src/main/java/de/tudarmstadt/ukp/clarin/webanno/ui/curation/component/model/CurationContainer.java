@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,8 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
- * A model for curation container comprises of {@link SourceListView}, {@link SourceDocument},
- * and {@link Project}.
+ * A model for curation container comprises of {@link SourceListView}, {@link SourceDocument}, and
+ * {@link Project}.
  */
 public class CurationContainer
     implements Serializable
@@ -43,7 +44,7 @@ public class CurationContainer
 
     public List<SourceListView> getCurationViews()
     {
-        LinkedList<Integer> viewsBegin = new LinkedList<>(curationViewByBegin.keySet());
+        List<Integer> viewsBegin = new ArrayList<>(curationViewByBegin.keySet());
         Collections.sort(viewsBegin);
         List<SourceListView> curationViews = new LinkedList<>();
         for (Integer begin : viewsBegin) {
@@ -57,27 +58,18 @@ public class CurationContainer
         return curationViewByBegin;
     }
 
-    public void setCurationSegmentByBegin(Map<Integer, SourceListView> curationViewByBegin)
+    public void setCurationSegmentByBegin(Map<Integer, SourceListView> aCurationViewByBegin)
     {
-        this.curationViewByBegin = curationViewByBegin;
+        curationViewByBegin = aCurationViewByBegin;
     }
 
-
-    @Override
-    public String toString()
-    {
-        return "curationSegmentByBegin" + curationViewByBegin.toString();
-
-    }
-
-    public AnnotatorState getAnnotatorState()
+    public AnnotatorState getState()
     {
         return state;
     }
 
-    public void setState(AnnotatorState bratAnnotatorModel)
+    public void setState(AnnotatorState aState)
     {
-        this.state = bratAnnotatorModel;
+        state = aState;
     }
-
 }

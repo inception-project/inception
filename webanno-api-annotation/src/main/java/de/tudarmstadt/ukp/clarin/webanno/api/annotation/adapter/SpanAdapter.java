@@ -39,6 +39,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -128,7 +129,7 @@ public class SpanAdapter
             Type theType = CasUtil.getType(aCas, getAttachTypeName());
             Feature attachFeature = theType.getFeatureByBaseName(getAttachFeatureName());
             if (CasUtil.selectCovered(aCas, theType, aBegin, aEnd).isEmpty()) {
-                throw new AnnotationException("No annotation of type [" + getAttachTypeName()
+                throw new IllegalPlacementException("No annotation of type [" + getAttachTypeName()
                         + "] to attach to at location [" + aBegin + "-" + aEnd + "].");
             }
             CasUtil.selectCovered(aCas, theType, aBegin, aEnd).get(0)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * Throw an exception if either a target or origin span annotation is not merged before the arc
- * annotation merging is attempted
- *
+ * Thrown if there is a problem during CAS merge operation.
  */
-public class NoOriginOrTargetAnnotationSelectedException
-    extends IllegalPlacementException
+public class CasMergeException
+    extends AnnotationException
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = -6460916278737957937L;
 
-    public NoOriginOrTargetAnnotationSelectedException(String message)
+    public CasMergeException()
+    {
+        super();
+    }
+
+    public CasMergeException(String message)
     {
         super(message);
     }
 
+    public CasMergeException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public CasMergeException(Throwable aCause)
+    {
+        super(aCause);
+    }   
 }

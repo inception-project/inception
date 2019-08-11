@@ -133,7 +133,7 @@ public class CurationPanel
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
 
-        state = getModelObject().getAnnotatorState();
+        state = getModelObject().getState();
         if (state != null) {
             userAnnotationSegments
                     .setSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);

@@ -61,12 +61,18 @@ and disagreemens between annotators. All annotations on which all annotators agr
 copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
 
 The annotator's panes are color-coded according to their relation with the contents of the *Annotation*
-pane and according to the agreement status. If the annotations were the same, they are marked *grey* in the lower panes. If the annotations are disparate, the markings are dark blue in the lower frames. By default, they are not taken into the merged file. If you choose one annotation to be right by clicking on it, the chosen annotation will turn green in the frame of the corresponding annotator. Also, the annotation will say *USE* next to the classification. 
+pane and according to the agreement status. If the annotations were the same, they are marked *grey* in the lower panels. If the annotators do not agree, the respective annotations are show in dark blue in the lower panels. By default, they are not taken into the merged file (cf. <<merging-strategies>>). 
 
-Note that the *Annotation* pane is not color-coded. It uses whatever coloring strategy is configured
-in the *Settings* dialog.
+**Left-click** on an annotation in one of the lower panels to merge it. This action copies the annotation to the upper panel. The merged annotation will turn green in the lower panel from which it was selected. If other annotators had a conflicting opinion, these will turn red in the lower panels of the respective annotators. 
 
-The annotations which were not chosen to be in the merged file are marked dark blue. The annotations which were wrongly classified are marked in red.
+**Right-click** on an annotation in the lower panels to bring up a menu with additional options.
+
+* **Merge all XXX**: merge all annotations of the given type from the selected annotator. Note that
+  this overrides any annotations of the type which may previously have been merged or manually 
+  created in the upper panel.
+
+NOTE: The upper *Annotation* pane is not color-coded. It uses whatever coloring strategy is
+      configured in the *Settings* dialog.
 
 .Explanation of the annotation colors in the annotator's panes (lower panes)
 [cols="1,3"]
@@ -84,7 +90,8 @@ The annotations which were not chosen to be in the merged file are marked dark b
 | rejected; different to the corresponding annotation in the upper *Annotation* pane
 |===
 
-.Merging strategies
+[#merging-strategies]
+== Merging strategies
 By default, the merging strategy only considers annotations if all annotators made the same 
 annotation at the same location (i.e. complete and agreeing annotations) - i.e. it considers any 
 annotations not provided by all annotators as a disagreement between the annotators.
@@ -96,7 +103,7 @@ annotators from the two. This can be done by using the **Re-merge** action and a
 checkbox **Merge incomplete annotations**. This will re-merge the current document (i.e. discard
 the entire state of curation and merge from scratch).
 
-.Anonymized curation
+== Anonymized curation
 By default, the curator can see the annotators names on the curation page. However, in some cases,
 it may not be desirable for the curator to see the names. In this case, enable the option
 *Anonymous curation* in the project detail settings. Users with the curator role will then only
