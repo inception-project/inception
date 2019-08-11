@@ -1,5 +1,5 @@
 /*
- * Copyright 2013
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,33 +17,25 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 
-/**
- * Thrown if there is a problem during CAS diff computation.
- */
-public class CasDiffException
-    extends AnnotationException
+public enum LinkCompareBehavior
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    /**
+     * The link target is considered to be the label. As a consequence, the
+     * {@link Position#compareTo} method includes the role label into comparison but not the
+     * link target.
+     */
+    LINK_TARGET_AS_LABEL,
 
-    public CasDiffException()
+    /**
+     * The link role is considered to be the label and the {@link Position#compareTo} method
+     * takes the link target into account
+     */
+    LINK_ROLE_AS_LABEL;
+    
+    public String getName()
     {
-        super();
+        return toString();
     }
-
-    public CasDiffException(String message)
-    {
-        super(message);
-    }
-
-    public CasDiffException(String aMessage, Throwable aCause)
-    {
-        super(aMessage, aCause);
-    }
-
-    public CasDiffException(Throwable aCause)
-    {
-        super(aCause);
-    }   
 }
