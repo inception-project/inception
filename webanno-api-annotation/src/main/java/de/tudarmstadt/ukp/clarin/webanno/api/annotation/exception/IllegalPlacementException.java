@@ -1,5 +1,5 @@
 /*
- * Copyright 2012
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,35 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
 /**
- * Throw an exception if either a target or origin span annotation is not merged before the arc
- * annotation merging is attempted
- *
+ * Indicates that an attempt to place an annotation at a given position failed because the 
+ * annotation cannot be placed there. E.g. an attempt to create a relation between virtual
+ * annotations.
  */
-public class NoOriginOrTargetAnnotationSelectedException
-    extends IllegalPlacementException
+public class IllegalPlacementException
+    extends AnnotationException
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = -2462468061228980782L;
 
-    public NoOriginOrTargetAnnotationSelectedException(String message)
+    public IllegalPlacementException()
     {
-        super(message);
+        super();
     }
 
+    public IllegalPlacementException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public IllegalPlacementException(String aMessage)
+    {
+        super(aMessage);
+    }
+
+    public IllegalPlacementException(Throwable aCause)
+    {
+        super(aCause);
+    }
 }

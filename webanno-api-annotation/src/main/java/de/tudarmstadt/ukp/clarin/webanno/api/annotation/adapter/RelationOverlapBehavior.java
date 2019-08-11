@@ -41,6 +41,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
@@ -79,7 +80,7 @@ public class RelationOverlapBehavior
                 .findAny().isPresent();
             
             if (hasAnyOverlapping) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + layer.getUiName()
                         + "] at this location - no overlap or stacking is allowed for this layer.");
             }
@@ -93,7 +94,7 @@ public class RelationOverlapBehavior
                 .findAny().isPresent();
             
             if (hasStacking) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + layer.getUiName()
                         + "] at this location - stacking is not allowed for this layer.");
             }
@@ -107,7 +108,7 @@ public class RelationOverlapBehavior
                 .findAny().isPresent();
             
             if (hasOverlapping) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + layer.getUiName()
                         + "] at this location - only stacking is allowed for this layer.");
             }

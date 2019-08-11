@@ -35,16 +35,10 @@ public class UserAnnotationSegment
     private String documentResponse;
     private String collectionData = "{}";
     private String username = "";
-    //NEw Additions
     private AnnotatorState state;
     private AnnotationSelection annotationSelection;
     private Map<String, Map<Integer, AnnotationSelection>> selectionByUsernameAndAddress;
 
-    public UserAnnotationSegment()
-    {
-        // TODO Auto-generated constructor stub
-    }
-    
     public String getDocumentResponse()
     {
         return documentResponse;

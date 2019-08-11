@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model;
 
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
-import java.io.IOException;
-
-import org.apache.uima.UIMAException;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
@@ -33,9 +30,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.jquery.ui.settings.JQueryUILibrarySettings;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratVisualizer;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAjaxResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.brat.resource.BratAnnotatorUiResourceReference;
@@ -57,10 +52,13 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
  * arc, the Method onSelectAnnotationForMerge() is called. Override that method to receive the
  * result in another Wicket panel.
  */
-public class BratSuggestionVisualizer
+public abstract class BratSuggestionVisualizer
     extends BratVisualizer
 {
     private static final long serialVersionUID = 6653508018500736430L;
+
+    private static final String PARAM_ACTION = "action";
+
     private AbstractDefaultAjaxBehavior controller;
     
     private @SpringBean ProjectService projectService;
@@ -85,8 +83,9 @@ public class BratSuggestionVisualizer
                 username = getModelObject().getUsername();
             }
         }
-        Label label = new Label("username", username);
-        add(label);
+        
+        add(new Label("username", username));
+
         controller = new AbstractDefaultAjaxBehavior()
         {
             private static final long serialVersionUID = 1133593826878553307L;
@@ -95,10 +94,9 @@ public class BratSuggestionVisualizer
             protected void respond(AjaxRequestTarget aTarget)
             {
                 try {
-                    onSelectAnnotationForMerge(aTarget);
+                    onClientEvent(aTarget);
                 }
-                catch (UIMAException | ClassNotFoundException | IOException
-                        | AnnotationException e) {
+                catch (Exception e) {
                     aTarget.addChildren(getPage(), IFeedback.class);
                     error("Error: " + e.getMessage());
                 }
@@ -190,9 +188,6 @@ public class BratSuggestionVisualizer
         return getModelObject().getCollectionData();
     }
 
-    protected void onSelectAnnotationForMerge(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        // Overriden in Curation Panel
-    }
+    protected abstract void onClientEvent(AjaxRequestTarget aTarget)
+        throws Exception;
 }

@@ -39,6 +39,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -79,7 +80,7 @@ public class SpanOverlapBehavior
         case NO_OVERLAP:
             boolean hasAnyOverlapping = !selectOverlapping(aCas, type, aBegin, aEnd).isEmpty();
             if (hasAnyOverlapping) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + aAdapter.getLayer().getUiName()
                         + "] at this location - no overlap or stacking is allowed for this layer.");
             }
@@ -87,7 +88,7 @@ public class SpanOverlapBehavior
         case OVERLAP_ONLY:
             boolean hasStacking = !selectAt(aCas, type, aBegin, aEnd).isEmpty();
             if (hasStacking) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + aAdapter.getLayer().getUiName()
                         + "] at this location - stacking is not allowed for this layer.");
             }
@@ -97,7 +98,7 @@ public class SpanOverlapBehavior
                 .filter(fs -> !stacking(aRequest, fs))
                 .findAny().isPresent();
             if (hasOverlapping) {
-                throw new AnnotationException("Cannot create another annotation of layer ["
+                throw new IllegalPlacementException("Cannot create another annotation of layer ["
                         + aAdapter.getLayer().getUiName()
                         + "] at this location - only stacking is allowed for this layer.");
             }

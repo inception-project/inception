@@ -4265,8 +4265,11 @@ Util.profileStart('before render');
       registerHandlers($svgDiv, [
           'mouseover', 'mouseout', 'mousemove',
           'mouseup', 'mousedown',
-          'dragstart',
-          'dblclick', 'click'
+          'dragstart', 
+          'dblclick', 'click', 
+// WEBANNO EXTENSION BEGIN - #1388 Support context menu
+          'contextmenu'
+// WEBANNO EXTENSION END - #1388 Support context menu
       ]);
       registerHandlers($(document), [
           'keydown', 'keypress',
