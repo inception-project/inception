@@ -1,5 +1,5 @@
 /*
- * Copyright 2013
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,34 +15,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.casdiff;
+package de.tudarmstadt.ukp.clarin.webanno.curation.casmerge;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 
 /**
- * Thrown if there is a problem during CAS diff computation.
+ * Indiates that the prerequisites to perform a merge operation are not fulfilled. E.g. on an 
+ * attempt to merge a relation if no suitable endpoints for the relations are present in the target
+ * CAS.
  */
-public class CasDiffException
+public class UnfulfilledPrerequisitesException
     extends AnnotationException
 {
-    private static final long serialVersionUID = 1280015349963924638L;
+    private static final long serialVersionUID = -6592130672804779018L;
 
-    public CasDiffException()
+    public UnfulfilledPrerequisitesException()
     {
         super();
     }
 
-    public CasDiffException(String message)
+    public UnfulfilledPrerequisitesException(String message)
     {
         super(message);
     }
 
-    public CasDiffException(String aMessage, Throwable aCause)
+    public UnfulfilledPrerequisitesException(String aMessage, Throwable aCause)
     {
         super(aMessage, aCause);
     }
 
-    public CasDiffException(Throwable aCause)
+    public UnfulfilledPrerequisitesException(Throwable aCause)
     {
         super(aCause);
     }   

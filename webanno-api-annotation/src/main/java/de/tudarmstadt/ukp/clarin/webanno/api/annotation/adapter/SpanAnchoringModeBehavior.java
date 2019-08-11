@@ -29,6 +29,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.ChainLayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
@@ -53,7 +54,7 @@ public class SpanAnchoringModeBehavior
     {
         if (aRequest.getBegin() == aRequest.getEnd()) {
             if (!aAdapter.getLayer().getAnchoringMode().isZeroSpanAllowed()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "Cannot create zero-width annotation on layers that lock to token boundaries.");
             }
 
@@ -84,7 +85,7 @@ public class SpanAnchoringModeBehavior
             List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
                         
@@ -95,7 +96,7 @@ public class SpanAnchoringModeBehavior
             List<AnnotationFS> tokens = selectOverlapping(aCas, tokenType, aRange[0], aRange[1]);
 
             if (tokens.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No tokens found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
 
@@ -111,7 +112,7 @@ public class SpanAnchoringModeBehavior
                     aRange[1]);
             
             if (sentences.isEmpty()) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "No sentences found int range [" + aRange[0] + "-" + aRange[1] + "]");
             }
             

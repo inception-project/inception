@@ -2,13 +2,13 @@
  * Copyright 2015
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -146,7 +146,7 @@ public class CasMerge
      * agreement
      *
      * @param aDiff
-     *            the {@code CasDiff2.DiffResult}
+     *            the {@link DiffResult}
      * @param aCases
      *            a map of {@code CAS}s for each users and the random merge
      */
@@ -609,39 +609,6 @@ public class CasMerge
         }
     }
 
-    private static void setFeatureValue(FeatureStructure aFS, Feature aFeature, Object aValue)
-    {
-        switch (aFeature.getRange().getName()) {
-        case CAS.TYPE_NAME_STRING:
-            aFS.setStringValue(aFeature, aValue == null ? null : aValue.toString());
-            break;
-        case CAS.TYPE_NAME_BOOLEAN:
-            aFS.setBooleanValue(aFeature, Boolean.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_FLOAT:
-            aFS.setFloatValue(aFeature, Float.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_INTEGER:
-            aFS.setIntValue(aFeature, Integer.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_BYTE:
-            aFS.setByteValue(aFeature, Byte.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_DOUBLE:
-            aFS.setDoubleValue(aFeature, Double.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_LONG:
-            aFS.setLongValue(aFeature, Long.valueOf(aValue.toString()));
-            break;
-        case CAS.TYPE_NAME_SHORT:
-            aFS.setShortValue(aFeature, Short.valueOf(aValue.toString()));
-            break;
-        default:
-            return;
-            // return aFS.getFeatureValue(aFeature);
-        }
-    }
-
     private static boolean existsSameAt(CAS aCas, AnnotationFS aFs)
     {
         return selectAt(aCas, aFs.getType(), aFs.getBegin(), aFs.getEnd()).stream()
@@ -662,31 +629,8 @@ public class CasMerge
                 .collect(Collectors.toList());
     }
 
-    private void copySpanAnnotation(SourceDocument aDocument, String aUsername,
-            SpanAdapter aAdapter, AnnotationFS aSourceFs, CAS aCas)
-        throws AnnotationException
-    {
-        // Create the annotation - this also takes care of attaching to an annotation if necessary
-        AnnotationFS targetFS = aAdapter.add(aDocument, aUsername, aCas, aSourceFs.getBegin(),
-                aSourceFs.getEnd());
-
-        copyFeatures(aDocument, aUsername, aAdapter, targetFS, aSourceFs);
-    }
-    
-    private void copyRelationAnnotation(SourceDocument aDocument, String aUsername,
-            RelationAdapter aAdapter, CAS aTargetCas, AnnotationFS aTargetOriginFs,
-            AnnotationFS aTargetTargetFs, AnnotationFS aSourceFs)
-        throws AnnotationException
-    {
-        AnnotationFS targetFS = aAdapter.add(aDocument, aUsername, aTargetOriginFs, aTargetTargetFs,
-                aTargetCas);
-
-        copyFeatures(aDocument, aUsername, aAdapter, targetFS, aSourceFs);
-    }
-    
     private void copyFeatures(SourceDocument aDocument, String aUsername, TypeAdapter aAdapter,
             FeatureStructure aTargetFS, FeatureStructure aSourceFs)
-        throws AnnotationException
     {
         // Cache the feature list instead of hammering the database
         List<AnnotationFeature> features = featureCache.computeIfAbsent(aAdapter.getLayer(),
@@ -696,8 +640,8 @@ public class CasMerge
             Feature sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
 
             if (sourceFeature == null) {
-                throw new AnnotationException("Target CAS type [" + sourceFsType.getName()
-                        + "] does not contain a feature named [" + feature.getName() + "]");
+                throw new IllegalStateException("Target CAS type [" + sourceFsType.getName()
+                        + "] does not define a feature named [" + feature.getName() + "]");
             }
 
             if (shouldIgnoreFeatureOnMerge(aSourceFs, sourceFeature)) {
@@ -707,38 +651,6 @@ public class CasMerge
             Object value = aAdapter.getFeatureValue(feature, aSourceFs);
             aAdapter.setFeatureValue(aDocument, aUsername, aTargetFS.getCAS(), getAddr(aTargetFS),
                     feature, value);
-        }
-    }
-
-    /**
-     * Modify existing non-stackable annotations from one of the users annotation
-     */
-    private static void modifySpanAnnotation(AnnotationFS aTargetFs, AnnotationFS aSourceFs)
-    {
-        for (Feature f : aSourceFs.getType().getFeatures()) {
-            if (shouldIgnoreFeatureOnMerge(aSourceFs, f)) {
-                continue;
-            }
-            setFeatureValue(aTargetFs, f, getFeatureValue(aSourceFs, f));
-        }
-    }
-
-    private static void modifyRelationAnnotation(RelationAdapter aAdapter, AnnotationFS aTargetFs,
-            AnnotationFS aSourceFs)
-    {
-        Type type = aSourceFs.getType();
-        Feature sourceFeat = type.getFeatureByBaseName(aAdapter.getSourceFeatureName());
-        Feature targetFeat = type.getFeatureByBaseName(aAdapter.getTargetFeatureName());
-
-        for (Feature f : aSourceFs.getType().getFeatures()) {
-            if (shouldIgnoreFeatureOnMerge(aSourceFs, f)) {
-                continue;
-            }
-            if (f.equals(sourceFeat) || f.equals(targetFeat)) {
-                continue;
-            }
-
-            setFeatureValue(aTargetFs, f, getFeatureValue(aSourceFs, f));
         }
     }
 
@@ -758,14 +670,14 @@ public class CasMerge
                 aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
     }
 
-    public void mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
+    public CasMergeOpertationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
             AnnotationLayer aAnnotationLayer, CAS aTargetCas, AnnotationFS aSourceFs,
             boolean aAllowStacking)
         throws AnnotationException
     {
         if (existsSameAt(aTargetCas, aSourceFs)) {
-            throw new AnnotationException("Same annotation already exists in the target document. "
-                    + "Please add it manually.");
+            throw new AlreadyMergedException(
+                    "The annotation already exists in the target document.");
         }
 
         SpanAdapter adapter = (SpanAdapter) schemaService.getAdapter(aAnnotationLayer);
@@ -777,18 +689,24 @@ public class CasMerge
         List<AnnotationFS> existingAnnos = selectAt(aTargetCas, aSourceFs.getType(),
                 aSourceFs.getBegin(), aSourceFs.getEnd());
         if (existingAnnos.isEmpty() || aAllowStacking) {
-            copySpanAnnotation(aDocument, aUsername, adapter, aSourceFs, aTargetCas);
+            // Create the annotation via the adapter - this also takes care of attaching to an
+            // annotation if necessary
+            AnnotationFS mergedSpan = adapter.add(aDocument, aUsername, aTargetCas,
+                    aSourceFs.getBegin(), aSourceFs.getEnd());
+            
+            copyFeatures(aDocument, aUsername, adapter, mergedSpan, aSourceFs);
+            return CasMergeOpertationResult.CREATED;
         }
-
         // b) if stacking is not allowed, modify the existing annotation with this one
         else {
-            modifySpanAnnotation(existingAnnos.get(0), aSourceFs);
+            copyFeatures(aDocument, aUsername, adapter, existingAnnos.get(0), aSourceFs);
+            return CasMergeOpertationResult.UPDATED;
         }
     }
 
-    public void mergeRelationAnnotation(SourceDocument aDocument, String aUsername,
-            AnnotationLayer aAnnotationLayer, CAS aTargetCas, AnnotationFS aSourceFs,
-            boolean aAllowStacking)
+    public CasMergeOpertationResult mergeRelationAnnotation(SourceDocument aDocument,
+            String aUsername, AnnotationLayer aAnnotationLayer, CAS aTargetCas,
+            AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
     {
         RelationAdapter adapter = (RelationAdapter) schemaService.getAdapter(aAnnotationLayer);
@@ -807,22 +725,23 @@ public class CasMerge
 
         // check if target/source exists in the mergeview
         if (candidateOrigins.isEmpty() || candidateTargets.isEmpty()) {
-            throw new AnnotationException("Both the source and target annotation"
-                    + " should exist in the target document. Please first merge/create them");
+            throw new UnfulfilledPrerequisitesException("Both the source and target annotation"
+                    + " must exist in the target document. Please first merge/create them");
         }
 
         if (candidateOrigins.size() > 1) {
-            throw new AnnotationException(
+            throw new MergeConflictException(
                     "Stacked sources exist in the target document. Cannot merge this relation.");
         }
         
         if (candidateTargets.size() > 1) {
-            throw new AnnotationException(
+            throw new MergeConflictException(
                     "Stacked targets exist in the target document. Cannot merge this relation.");
         }
         
         if (!candidateRelations.isEmpty()) {
-            throw new AnnotationException("The annotation already exists in the target document.");
+            throw new AlreadyMergedException(
+                    "The annotation already exists in the target document.");
         }
 
         AnnotationFS originFs = candidateOrigins.get(0);
@@ -835,7 +754,7 @@ public class CasMerge
                     adapter.getAttachFeatureName(), AnnotationFS.class);
             
             if (originAttachAnnotation == null || targetAttachAnnotation == null) {
-                throw new AnnotationException(
+                throw new UnfulfilledPrerequisitesException(
                         "No annotation to attach to. Cannot merge this relation.");
             }
         }
@@ -843,11 +762,14 @@ public class CasMerge
         List<AnnotationFS> existingAnnos = selectCandidateRelationsAt(aTargetCas, aSourceFs,
                 originFs, targetFs);
         if (existingAnnos.isEmpty() || aAllowStacking) {
-            copyRelationAnnotation(aDocument, aUsername, adapter, aTargetCas, originFs, targetFs,
-                    aSourceFs);
+            AnnotationFS mergedRelation = adapter.add(aDocument, aUsername, originFs, targetFs,
+                    aTargetCas);
+            copyFeatures(aDocument, aUsername, adapter, mergedRelation, aSourceFs);
+            return CasMergeOpertationResult.CREATED;
         }
         else {
-            modifyRelationAnnotation(adapter, existingAnnos.get(0), aSourceFs);
+            copyFeatures(aDocument, aUsername, adapter, existingAnnos.get(0), aSourceFs);
+            return CasMergeOpertationResult.UPDATED;
         }
     }
 
@@ -865,7 +787,7 @@ public class CasMerge
 
         AnnotationFS targetFs;
         if (candidateHosts.size() == 0) {
-            throw new AnnotationException(
+            throw new UnfulfilledPrerequisitesException(
                     "The base annotation do not exist. Please add it first. ");
         }
         AnnotationFS mergeFs = candidateHosts.get(0);
@@ -912,18 +834,17 @@ public class CasMerge
     }
 
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)
-        throws AnnotationException
+        throws UnfulfilledPrerequisitesException
     {
         List<AnnotationFS> targets = getCandidateAnnotations(aCas, aOldTraget);
 
         if (targets.size() == 0) {
-            throw new AnnotationException(
-                    "This target annotation do not exist." + " Copy or create the target first ");
+            throw new UnfulfilledPrerequisitesException(
+                    "This target annotation do not exist. Copy or create the target first ");
         }
 
         if (targets.size() > 1) {
-
-            throw new AnnotationException("There are multiple targets on the mergeview."
+            throw new UnfulfilledPrerequisitesException("There are multiple targets on the mergeview."
                     + " Can not copy this slot annotation.");
         }
         return targets;
