@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.project.layers;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.COREFERENCE_RELATION_FEATURE;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static org.apache.commons.collections.CollectionUtils.isEmpty;
@@ -66,7 +68,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.export.ImportUtil;
@@ -81,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -392,6 +394,8 @@ public class ProjectLayersPanel
     public class FeatureSelectionForm
         extends Form<AnnotationFeature>
     {
+        private static final String CID_CREATE_FEATURE = "createFeature";
+        
         private static final long serialVersionUID = -1L;
 
         public FeatureSelectionForm(String id, IModel<AnnotationFeature> aModel)
@@ -439,31 +443,30 @@ public class ProjectLayersPanel
                     return "";
                 }
             });
+            
+            LambdaAjaxLink createButton = new LambdaAjaxLink(CID_CREATE_FEATURE,
+                    this::actionCreateFeature);
+            createButton.add(enabledWhen(() -> 
+                    layerDetailForm.getModelObject() != null
+                    && !layerDetailForm.getModelObject().isBuiltIn()
+                    && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE)
+                
+            ));
+            add(createButton);
+        }
+        
+        private void actionCreateFeature(AjaxRequestTarget aTarget)
+        {
+            // cancel selection of feature list
+            selectedFeature.setObject(null);
 
-            add(new Button("new", new StringResourceModel("label"))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public void onSubmit()
-                {
-                    // cancel selection of feature list
-                    selectedFeature.setObject(null);
-
-                    AnnotationFeature newFeature = new AnnotationFeature();
-                    newFeature.setLayer(layerDetailForm.getModelObject());
-                    newFeature.setProject(ProjectLayersPanel.this.getModelObject());
-                    featureDetailForm.setDefaultModelObject(newFeature);
-                }
-
-                @Override
-                public boolean isEnabled()
-                {
-                    return layerDetailForm.getModelObject() != null
-                            && !layerDetailForm.getModelObject().isBuiltIn()
-                            && !layerDetailForm.getModelObject().getType().equals(CHAIN_TYPE);
-                }
-            });
+            AnnotationFeature newFeature = new AnnotationFeature();
+            newFeature.setLayer(layerDetailForm.getModelObject());
+            newFeature.setProject(ProjectLayersPanel.this.getModelObject());
+            featureDetailForm.setDefaultModelObject(newFeature);
+            
+            aTarget.add(featureDetailForm);
+            aTarget.focusComponent(featureDetailForm.getInitialFocusComponent());
         }
 
         private List<AnnotationFeature> listFeatures()
@@ -474,7 +477,7 @@ public class ProjectLayersPanel
                     && !layerDetailForm.getModelObject().isLinkedListBehavior()) {
                 List<AnnotationFeature> filtered = new ArrayList<>();
                 for (AnnotationFeature f : features) {
-                    if (!WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
+                    if (!COREFERENCE_RELATION_FEATURE.equals(f.getName())) {
                         filtered.add(f);
                     }
                 }
