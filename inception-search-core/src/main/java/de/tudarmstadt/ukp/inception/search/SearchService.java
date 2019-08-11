@@ -39,8 +39,9 @@ public interface SearchService
         throws IOException, ExecutionException;
 
     /**
-     * Receive the search results un-grouped as a list.
-     * See {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, long, long)}
+     * Receive the search results un-grouped as a list. See
+     * {@link #query(User, Project, String, SourceDocument, AnnotationLayer, AnnotationFeature, 
+     * long, long)}
      */
     List<SearchResult> query(User aUser, Project aProject, String aQuery, SourceDocument aDocument)
         throws IOException, ExecutionException;
@@ -63,8 +64,9 @@ public interface SearchService
      * @throws ExecutionException
      */
     Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
-        SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature, long aOffset, long aCount) throws IOException, ExecutionException;
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long aOffset, long aCount)
+        throws IOException, ExecutionException;
 
     void reindex(Project aproject) throws IOException;
 

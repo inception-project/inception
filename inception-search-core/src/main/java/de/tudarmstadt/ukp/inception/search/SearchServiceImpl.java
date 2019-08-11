@@ -336,9 +336,10 @@ public class SearchServiceImpl
 
     @Override
     @Transactional
-    public Map<String, List<SearchResult>> query(User aUser,
-        Project aProject, String aQuery, SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
-        AnnotationFeature aAnnotationFeature, long offset, long count) throws IOException, ExecutionException
+    public Map<String, List<SearchResult>> query(User aUser, Project aProject, String aQuery,
+            SourceDocument aDocument, AnnotationLayer aAnnotationLayer,
+            AnnotationFeature aAnnotationFeature, long offset, long count)
+        throws IOException, ExecutionException
     {
         log.debug("Starting query for user [{}] in project [{}]({})", aUser.getUsername(),
                 aProject.getName(), aProject.getId());
@@ -553,8 +554,9 @@ public class SearchServiceImpl
 
                 log.debug("Running query: [{}]", aQuery);
 
-                numResults = index.getPhysicalIndex().numberofQueryResults(new SearchQueryRequest(aProject, aUser, aQuery, aDocument,
-                    aAnnotationLayer, aAnnotationFeature, 0L, 0L));
+                numResults = index.getPhysicalIndex()
+                        .numberofQueryResults(new SearchQueryRequest(aProject, aUser, aQuery,
+                                aDocument, aAnnotationLayer, aAnnotationFeature, 0L, 0L));
             }
 
         }

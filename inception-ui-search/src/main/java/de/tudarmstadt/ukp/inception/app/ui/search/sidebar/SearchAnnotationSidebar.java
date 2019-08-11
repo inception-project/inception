@@ -24,19 +24,19 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.inception.search.ResultsGroup;
-import de.tudarmstadt.ukp.inception.search.SearchResultsProvider;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
-import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
@@ -54,7 +54,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.navigation.paging.PagingNavigator;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.repeater.Item;
-import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.markup.repeater.data.DataView;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
@@ -94,6 +93,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.CreateAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.DeleteAnnotationsOptions;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
+import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
@@ -115,15 +115,15 @@ public class SearchAnnotationSidebar
 
     private final WebMarkupContainer mainContainer;
     private final WebMarkupContainer resultsGroupContainer;
+    private final SearchResultsProvider resultsProvider;
 
     private IModel<String> targetQuery = Model.of("");
     private IModel<SearchOptions> searchOptions = CompoundPropertyModel.of(new SearchOptions());
     private IModel<List<ResultsGroup>> groupedSearchResults = new ListModel<>();
-    private SearchResultsProvider resultsProvider =  new SearchResultsProvider(searchService, groupedSearchResults);
     private IModel<CreateAnnotationsOptions> createOptions = CompoundPropertyModel
-        .of(new CreateAnnotationsOptions());
+            .of(new CreateAnnotationsOptions());
     private IModel<DeleteAnnotationsOptions> deleteOptions = CompoundPropertyModel
-        .of(new DeleteAnnotationsOptions());
+            .of(new DeleteAnnotationsOptions());
     private DataView<ResultsGroup> searchResultGroups;
 
     DropDownChoice<AnnotationFeature> groupingFeature = new BootstrapSelect<>("groupingFeature",
@@ -138,6 +138,9 @@ public class SearchAnnotationSidebar
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
 
         currentUser = userRepository.getCurrentUser();
+        
+        resultsProvider = new SearchResultsProvider(searchService,
+                groupedSearchResults);
         
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -301,11 +304,14 @@ public class SearchAnnotationSidebar
             }
 
             @Override
-            protected void onConfigure() {
+            protected void onConfigure()
+            {
                 super.onConfigure();
-                for(ResultsGroup resultsGroup :  groupedSearchResults.getObject()) {
+                for (ResultsGroup resultsGroup : groupedSearchResults.getObject()) {
                     if (resultsGroup.getGroupKey().equals(aGroupKey)) {
-                        List<SearchResult> unselectedResults = resultsGroup.getResults().stream().filter( sr -> !sr.isSelectedForAnnotation()).collect(Collectors.toList());
+                        List<SearchResult> unselectedResults = resultsGroup.getResults().stream()
+                                .filter(sr -> !sr.isSelectedForAnnotation())
+                                .collect(Collectors.toList());
                         if (unselectedResults.isEmpty()) {
                             setModelObject(true);
                         }
@@ -354,8 +360,8 @@ public class SearchAnnotationSidebar
             applicationEventPublisher.get().publishEvent(new SearchQueryEvent(this, project,
                     currentUser.getUsername(), targetQuery.getObject(), limitToDocument));
             SearchOptions opt = searchOptions.getObject();
-            resultsProvider.initializeQuery(currentUser, project, targetQuery.getObject(), limitToDocument,
-                opt.getGroupingLayer(), opt.getGroupingFeature());
+            resultsProvider.initializeQuery(currentUser, project, targetQuery.getObject(),
+                    limitToDocument, opt.getGroupingLayer(), opt.getGroupingFeature());
             groupedSearchResults.setObject(null);
             return;
         }

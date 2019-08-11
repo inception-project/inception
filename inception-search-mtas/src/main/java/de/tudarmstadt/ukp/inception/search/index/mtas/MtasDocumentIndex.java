@@ -245,7 +245,8 @@ public class MtasDocumentIndex
     public long numberofQueryResults(SearchQueryRequest aRequest) throws ExecutionException
     {
         try {
-            log.trace("Determining number of results for query {} on index {}", aRequest, getIndexDir());
+            log.trace("Determining number of results for query {} on index {}", aRequest,
+                    getIndexDir());
 
             Directory directory = FSDirectory.open(getIndexDir().toPath());
             IndexReader indexReader = DirectoryReader.open(directory);
@@ -327,7 +328,8 @@ public class MtasDocumentIndex
                 SegmentReader segmentReader = (SegmentReader) leafReaderContext.reader();
                 if (spans != null) {
                     while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc() || segmentReader.getLiveDocs().get(spans.docID())) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc()
+                                || segmentReader.getLiveDocs().get(spans.docID())) {
                             Document document = segmentReader.document(spans.docID());
 
                             // Retrieve user
@@ -335,7 +337,8 @@ public class MtasDocumentIndex
 
                             // Retrieve source and annotation document ids
                             String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            String rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document
+                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
                             if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
                                 log.trace("Indexed document lacks source/annotation document IDs"
                                         + " - source: {}, annotation: {}", rawSourceDocumentId,
@@ -348,7 +351,8 @@ public class MtasDocumentIndex
 
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
-                            Optional<SourceDocument> limitedToDocument = aRequest.getLimitedToDocument();
+                            Optional<SourceDocument> limitedToDocument = aRequest
+                                    .getLimitedToDocument();
                             if (limitedToDocument.isPresent() && !Objects
                                 .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
                                 log.trace("Query limited to document {}, skipping results for "
@@ -433,7 +437,8 @@ public class MtasDocumentIndex
                 CodecInfo mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
                 if (spans != null) {
                     while (spans.nextDoc() != Spans.NO_MORE_DOCS) {
-                        if (segmentReader.numDocs() == segmentReader.maxDoc() || segmentReader.getLiveDocs().get(spans.docID())) {
+                        if (segmentReader.numDocs() == segmentReader.maxDoc()
+                                || segmentReader.getLiveDocs().get(spans.docID())) {
                             Document document = segmentReader.document(spans.docID());
 
                             // Retrieve user
@@ -441,7 +446,8 @@ public class MtasDocumentIndex
 
                             // Retrieve source and annotation document ids
                             String rawSourceDocumentId = document.get(FIELD_SOURCE_DOCUMENT_ID);
-                            String rawAnnotationDocumentId = document.get(FIELD_ANNOTATION_DOCUMENT_ID);
+                            String rawAnnotationDocumentId = document
+                                    .get(FIELD_ANNOTATION_DOCUMENT_ID);
                             if (rawSourceDocumentId == null || rawAnnotationDocumentId == null) {
                                 log.trace("Indexed document lacks source/annotation document IDs"
                                         + " - source: {}, annotation: {}", rawSourceDocumentId,
@@ -454,7 +460,8 @@ public class MtasDocumentIndex
 
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
-                            Optional<SourceDocument> limitedToDocument = aRequest.getLimitedToDocument();
+                            Optional<SourceDocument> limitedToDocument = aRequest
+                                    .getLimitedToDocument();
                             if (limitedToDocument.isPresent() && !Objects
                                 .equals(limitedToDocument.get().getId(), sourceDocumentId)) {
                                 log.trace("Query limited to document {}, skipping results for "
@@ -522,12 +529,15 @@ public class MtasDocumentIndex
                                 StringBuilder rightContext = new StringBuilder();
                                 result.setDocumentId(sourceDocumentId);
                                 result.setDocumentTitle(documentTitle);
-                                result.setOffsetStart(tokens.stream().filter(
-                                    t -> t.getPositionStart() >= matchStart && t.getPositionEnd() < matchEnd)
-                                    .mapToInt(MtasTokenString::getOffsetStart).min().getAsInt());
-                                result.setOffsetEnd(tokens.stream().filter(
-                                    t -> t.getPositionStart() >= matchStart && t.getPositionEnd() < matchEnd)
-                                    .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
+                                result.setOffsetStart(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart
+                                                && t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetStart).min()
+                                        .getAsInt());
+                                result.setOffsetEnd(tokens.stream()
+                                        .filter(t -> t.getPositionStart() >= matchStart
+                                                && t.getPositionEnd() < matchEnd)
+                                        .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
 
