@@ -116,6 +116,7 @@ public class DocumentAnnotationPanel
                     .getFeatureSupport(featureState.feature);
                 editor = featureSupport.createEditor(CID_FEATURE,
                     DocumentAnnotationPanel.this, null, null, item.getModel());
+                editor.setEnabled(false);
 
                 if (!featureState.feature.getLayer().isReadonly()) {
                     // Whenever it is updating an annotation, it updates automatically when a
