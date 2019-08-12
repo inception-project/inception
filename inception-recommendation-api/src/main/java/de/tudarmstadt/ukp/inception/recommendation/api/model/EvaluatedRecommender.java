@@ -17,27 +17,66 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.model;
 
+import java.io.Serializable;
+import java.util.Optional;
+
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 
-public class EvaluatedRecommender
+public class EvaluatedRecommender implements Serializable
 {
+    private static final long serialVersionUID = -2875836319933901200L;
+    
     private final Recommender recommender;
     private final EvaluationResult evaluationResult;
+    private final boolean active;
     
-    public EvaluatedRecommender(Recommender aRecommender, EvaluationResult aEvaluationResult)
+    public EvaluatedRecommender(Recommender aRecommender, EvaluationResult aEvaluationResult,
+            boolean aActive)
     {
         super();
         recommender = aRecommender;
         evaluationResult = aEvaluationResult;
+        active = aActive;
     }
     
+    public EvaluatedRecommender(Recommender aRecommender)
+    {
+        this(aRecommender, null, false);
+    }
+
     public Recommender getRecommender()
     {
         return recommender;
     }
     
-    public EvaluationResult getEvaluationResult()
+    public Optional<EvaluationResult> getEvaluationResult()
     {
-        return evaluationResult;
+        return Optional.ofNullable(evaluationResult);
     }
+
+    public boolean isActive()
+    {
+        return active;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder();
+        builder.append("EvaluatedRecommender [");
+        builder.append("recommender=");
+        builder.append(recommender.getName());
+        builder.append(", ");
+        builder.append("active=");
+        builder.append(active);
+        if (evaluationResult != null) {
+            builder.append(", ");
+            builder.append("result=");
+            builder.append(evaluationResult.toString());
+        }
+        builder.append("]");
+        return builder.toString();
+    }
+    
+    
 }

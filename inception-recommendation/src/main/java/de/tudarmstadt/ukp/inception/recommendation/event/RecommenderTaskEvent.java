@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 import java.util.Optional;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.scheduling.TaskState;
 import de.tudarmstadt.ukp.inception.scheduling.TaskUpdateEvent;
@@ -29,20 +30,16 @@ public class RecommenderTaskEvent
 {
     private static final long serialVersionUID = -8145958134839351139L;
     
-    private final Recommender recommender;
-    private final boolean active;
     private final RecommenderState recommenderState;
-    private final Optional<EvaluationResult> result;
-
+    private final EvaluatedRecommender evaluatedRecommender;
+    
     public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,
             double aProgress, Recommender aRecommender, boolean aActive,
             RecommenderState aRecommenderState, EvaluationResult aResult, String aError)
     {
         super(aSource, aUserName, aState, aProgress, aError);
-        recommender = aRecommender;
-        active = aActive;
         recommenderState = aRecommenderState;
-        result = Optional.ofNullable(aResult);
+        evaluatedRecommender = new EvaluatedRecommender(aRecommender, aResult, aActive);
     }
     
     public RecommenderTaskEvent(Object aSource, String aUserName, TaskState aState,
@@ -62,12 +59,12 @@ public class RecommenderTaskEvent
     
     public Recommender getRecommender()
     {
-        return recommender;
+        return evaluatedRecommender.getRecommender();
     }
     
     public boolean isActive()
     {
-        return active;
+        return evaluatedRecommender.isActive();
     }
 
     public RecommenderState getRecommenderState()
@@ -77,9 +74,14 @@ public class RecommenderTaskEvent
 
     public Optional<EvaluationResult> getResult()
     {
-        return result;
+        return evaluatedRecommender.getEvaluationResult();
     }
 
+    public EvaluatedRecommender getEvaluatedRecommender()
+    {
+        return evaluatedRecommender;
+    }
+    
     @Override
     public String toString()
     {
@@ -91,10 +93,11 @@ public class RecommenderTaskEvent
         builder.append(recommenderState);
         builder.append(", ");
         builder.append("recommender=");
-        builder.append(recommender.getName());
+        builder.append(getRecommender().getName());
         builder.append(", ");
         builder.append("active=");
-        builder.append(active);
+        builder.append(isActive());
+        Optional<EvaluationResult> result = getResult();
         if (result.isPresent()) {
             builder.append(", ");
             builder.append("result=");

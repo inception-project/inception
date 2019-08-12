@@ -37,6 +37,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
 import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
 import org.apache.wicket.protocol.ws.api.message.ConnectedMessage;
@@ -79,11 +80,10 @@ public class RecommenderInfoPanel
     private final Logger log = LoggerFactory.getLogger(getClass());
     
     private WebMarkupContainer resultsContainer;
-    private ListView<Optional<EvaluationResult>> recommenderGroups; 
+    private ListView<EvaluatedRecommender> recommenderGroups; 
     
-    // map recommender id to most recent evaluation result
-    //TODO need to also save recommender name
-    private LoadableDetachableModel<Map<Long,Optional<EvaluationResult>>> recommenderEvals;
+    // map recommender id to most recent evaluation result and recommender info
+    private IModel<HashMap<Long,EvaluatedRecommender>> recommenderEvals;
     
     public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
     {
@@ -94,19 +94,17 @@ public class RecommenderInfoPanel
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
-        
-        //recommendationService
-        //.listEnabledRecommenders(aModel.getObject().getProject())
-        recommenderEvals = LoadableDetachableModel.of(this::initRecommenderEvals);
-        recommenderGroups = new ListView<Optional<EvaluationResult>>("recommender")
+        recommenderEvals = new Model<HashMap<Long,EvaluatedRecommender>>(initRecommenderEvals());
+        recommenderGroups = new ListView<EvaluatedRecommender>("recommender")
         {
             private static final long serialVersionUID = -631500052426449048L;
 
             @Override
-            protected void populateItem(ListItem<Optional<EvaluationResult>> item)
+            protected void populateItem(ListItem<EvaluatedRecommender> item)
             {
-                //TODO: get recommender from somewhere ??
-                Optional<EvaluationResult> evalResult = item.getModelObject();
+                EvaluatedRecommender evalRecommender = item.getModelObject();
+                Optional<EvaluationResult> evalResult = evalRecommender.getEvaluationResult();
+                Recommender recommender = evalRecommender.getRecommender();
                 item.add(new Label("name", recommender.getName()));
                 item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
 
@@ -129,7 +127,7 @@ public class RecommenderInfoPanel
             protected void onConnect(ConnectedMessage aMessage)
             {
                 super.onConnect(aMessage);
-                log.info(String.format("User with sessionID %s connected.",
+                log.debug(String.format("User with sessionID %s connected.",
                         aMessage.getSessionId()));
             }
 
@@ -137,40 +135,66 @@ public class RecommenderInfoPanel
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
             {
                 if (aMessage instanceof RecommenderEvaluationResultEvent) {
-                    log.info(String.format("Received event: %s", aMessage.toString()));
+                    log.debug(String.format("Received event: %s", aMessage.toString()));
+                    RecommenderEvaluationResultEvent resultEvent = 
+                            (RecommenderEvaluationResultEvent) aMessage;
+                    Recommender recommender = resultEvent.getRecommender();
+                    // update list of evaluated recommenders with their results and re-render
+                    recommenderEvals.getObject().put(recommender.getId(),
+                            resultEvent.getEvaluatedRecommender());
                     aHandler.add(mainContainer);
                 }
             }
         });
     }
 
-    private List<Optional<EvaluationResult>> getEvaluationResults()
-    {
-        return new ArrayList<Optional<EvaluationResult>>(recommenderEvals.getObject().values());
-    }
     
     @Override
     protected void onDetach()
     {
-        // the recommenderEvals model is not set as a default model, needs to be detached manually
+        super.onDetach();
         if (recommenderEvals != null) {
             recommenderEvals.detach();
         }
-        super.onDetach();
     }
 
-    private Map<Long, Optional<EvaluationResult>> initRecommenderEvals()
+
+    private List<EvaluatedRecommender> getEvaluationResults()
     {
-        Map<Long, Optional<EvaluationResult>> evals = new HashMap<>();
+        return new ArrayList<EvaluatedRecommender>(recommenderEvals.getObject().values());
+    }
+    
+    /**
+     * Initialize a map with previously evaluated recommenders of the current user and project 
+     * and their results.
+     */
+    private HashMap<Long, EvaluatedRecommender> initRecommenderEvals()
+    {
+        HashMap<Long, EvaluatedRecommender> evals = new HashMap<>();
         for (Recommender recommender : recommendationService
                 .listEnabledRecommenders(getPanelModelObject().getProject())) {
+            
+//            if (recommenderEvals != null &&
+//                    recommenderEvals.containsKey(recommender.getId())) {
+//                continue;
+//            }
+            
             List<EvaluatedRecommender> activeRecommenders = recommendationService
-                    .getActiveRecommenders(userService.getCurrentUser(), recommender.getLayer());
-            Optional<EvaluationResult> evalResult = activeRecommenders.stream()
-                    .filter(r -> r.getRecommender().equals(recommender))
-                    .map(EvaluatedRecommender::getEvaluationResult)
-                    .findAny();
-            evals.put(recommender.getId(), evalResult);
+                    .getActiveRecommenders(getPanelModelObject().getUser(), recommender.getLayer());
+
+            boolean foundEval = false;
+            for (EvaluatedRecommender evalRecommender : activeRecommenders) {
+                if (evalRecommender.getRecommender().equals(recommender)) { // this recommender has
+                                                                            // a valid result
+                    evals.put(recommender.getId(), evalRecommender);
+                    foundEval = true;
+                }
+            }
+            if (foundEval) {
+                continue;
+            }
+            // FIXME: will this also add recommenders from other users?
+            evals.put(recommender.getId(), new EvaluatedRecommender(recommender));
         }
         return evals;
     }

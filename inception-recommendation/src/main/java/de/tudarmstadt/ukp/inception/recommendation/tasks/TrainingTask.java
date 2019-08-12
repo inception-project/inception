@@ -193,8 +193,6 @@ public class TrainingTask
                     recommendationService.putContext(user, recommender, ctx);
 
                     publishTrainingEvents(user, recommenderCount, recommender, recommenders.size());
-                    //new TaskUpdateEvent(this, user.getUsername(),
-                    //TaskState.TRAINING_FINISHED, recommender.getId())
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),

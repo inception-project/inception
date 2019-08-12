@@ -173,7 +173,7 @@ public class SelectionTask
                     boolean activated;
                     if (score >= threshold) {
                         activated = true;
-                        activeRecommenders.add(new EvaluatedRecommender(recommender, result));
+                        activeRecommenders.add(new EvaluatedRecommender(recommender, result, true));
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
                                 user.getUsername(), recommenderName, score,
                                 threshold);
@@ -184,18 +184,9 @@ public class SelectionTask
                                 user.getUsername(), recommenderName, score,
                                 threshold);
                     }
-                    
-                 // TODO: remove, for testing
-                    try {
-                        Thread.sleep(20000);
-                    }
-                    catch (InterruptedException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-                    //FIXME: published before activerecommenders are updated!!! -> re-render fetches those
                     publishEvalEvent(user, recommenders.size(), recommenderCount, recommender,
                             start, result, activated);
+                    
                 }
                 catch (Throwable e) {
                     log.error("[{}][{}]: Failed", userName, recommenderName, e);
@@ -204,7 +195,6 @@ public class SelectionTask
                                     String.format("Recommender %s failed.", recommender)));
                 }
             }
-    
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
 
@@ -221,7 +211,7 @@ public class SelectionTask
         log.debug("[{}][{}]: Activating [{}] without evaluating - {}",
                 userName, aRecommenderName, aRecommenderName, aMessage);
         aActiveRecommenders.add(
-                new EvaluatedRecommender(aRecommender, EvaluationResult.skipped()));
+                new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), true));
         appEventPublisher
                 .publishEvent(new TaskUpdateEvent(this, userName, TaskState.DONE, 1,
                         String.format("Activated %s recommender %s.", aMessage,
@@ -241,7 +231,7 @@ public class SelectionTask
                 progress, aRecommender, aActivated, 
                 recommenderState, aResult, duration); 
         appEventPublisher.publishEvent(event);
-        log.info(String.format("Published event: %s", event.toString()));
+        log.debug(String.format("Published event: %s", event.toString()));
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

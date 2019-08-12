@@ -29,7 +29,7 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
     private final String username;
     private final double progress;
     private final TaskState state;
-    private final Optional<String> errorMsg;
+    private final String errorMsg;
     
     public TaskUpdateEvent(Object aSource, String aUserName, TaskState aState, double aProgress)
     {
@@ -43,7 +43,7 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
         username = aUserName;
         state = aState;
         progress = aProgress;
-        errorMsg = Optional.ofNullable(aErrorMsg);
+        errorMsg = aErrorMsg;
     }
 
     public String getUser()
@@ -63,7 +63,7 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
 
     public Optional<String> getErrorMsg()
     {
-        return errorMsg;
+        return Optional.ofNullable(errorMsg);
     }
 
     @Override
@@ -81,9 +81,9 @@ public class TaskUpdateEvent extends ApplicationEvent implements IWebSocketPushM
     protected String infoToString()
     {
         StringBuilder builder = new StringBuilder();
-        if (errorMsg.isPresent()) {
+        if (errorMsg != null) {
             builder.append("error=\"");
-            builder.append(errorMsg.get());
+            builder.append(errorMsg);
             builder.append("\", ");
         }
         builder.append("user=");

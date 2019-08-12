@@ -144,10 +144,8 @@ public class SchedulingService
     @EventListener
     public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdateEvent)
     {
-        log.info(String.format("Distributing event: %s", aTaskUpdateEvent.toString()));
 
         if (application == null) {
-            log.error("Wicket Application is null");
             return;
         }
 
@@ -157,31 +155,17 @@ public class SchedulingService
 
         // get all connections for the user
         List<IWebSocketConnection> userConnections = new ArrayList<>();
-
-        // log.info(String.format("Found %d sessions for user %s", sessionRegistry
-        // .getAllSessions(taskUpdate.getUser(), false).size(),
-        // taskUpdate.getUser()));
-
         List<String> ids = new ArrayList<>();
         for (SessionInformation sessionInfo : sessionRegistry
                 .getAllSessions(aTaskUpdateEvent.getUser(), false)) {
-            // log.info(String.format("SessionId connections for user %s is %s",
-            // taskUpdate.getUser(),
-            // sessionInfo.getSessionId()));
-
             userConnections.addAll(webSocketConnectionRegistry.getConnections(application,
                     sessionInfo.getSessionId()));
             ids.add(sessionInfo.getSessionId());
         }
-
-//        log.info(String.format("Found %d connections for user %s with ids %s \n",
-//                userConnections.size(), aTaskUpdateEvent.getUser(),
-//                ids.stream().collect(Collectors.joining(","))));
-
         // send message to all connections
         for (IWebSocketConnection connection : userConnections) {
             connection.sendMessage(aTaskUpdateEvent);
-            log.info(String.format("Send event: %s", aTaskUpdateEvent.toString()));
+            log.debug(String.format("Send wicket event: %s", aTaskUpdateEvent.toString()));
         }
 
     }
