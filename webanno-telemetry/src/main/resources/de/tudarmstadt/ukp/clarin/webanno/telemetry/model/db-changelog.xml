@@ -1,6 +1,6 @@
 <?xml version="1.1" encoding="UTF-8" standalone="no"?>
 <!--
- # Copyright 2017
+ # Copyright 2019
  # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  # Technische Universität Darmstadt
  #
@@ -17,14 +17,34 @@
  # limitations under the License.
 -->
 <databaseChangeLog 
-  xmlns="http://www.liquibase.org/xml/ns/dbchangelog" 
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="
     http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
     http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
-  <include file="de/tudarmstadt/ukp/clarin/webanno/security/model/db-changelog.xml"/>
-  <include file="de/tudarmstadt/ukp/clarin/webanno/model/db-changelog.xml"/>
-  <include file="de/tudarmstadt/ukp/clarin/webanno/telemetry/model/db-changelog.xml"/>
-  <include file="de/tudarmstadt/ukp/clarin/webanno/automation/model/db-changelog.xml"/>
+  
+  <changeSet author="WebAnno Team" id="20190712-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="telemetry_settings" />
+      </not>
+    </preConditions>
+    <createTable tableName="telemetry_settings">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="support" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="version" type="INT">
+        <constraints nullable="false" />
+      </column>
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="updated" type="datetime(6)" />
+    </createTable>
+  </changeSet>  
 </databaseChangeLog>

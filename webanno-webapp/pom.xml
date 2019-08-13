@@ -85,6 +85,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-project</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-telemetry</artifactId>
+    </dependency>
 
     <!-- WICKET DEPENDENCIES -->
     <dependency>
@@ -417,9 +421,10 @@
               <!-- WebAnno Documentation module - needed but no Java dependency -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-doc</usedDependency>
               <!-- WebAnno backend modules - used via Spring -->
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
-              <usedDependency> de.tudarmstadt.ukp.clarin.webanno:webanno-automation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-automation</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
               <!-- WebAnno IO Modules - used via Spring -->
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tei</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
