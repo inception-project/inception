@@ -54,22 +54,22 @@
     </repository>
   </distributionManagement>
   <properties>
-    <jackson.version>2.9.8</jackson.version>
+    <jackson.version>2.9.9</jackson.version>
     <uima.version>2.10.2</uima.version>
     <uimafit.version>2.4.0</uimafit.version>
-    <spring.version>5.1.3.RELEASE </spring.version>
-    <spring.boot.version>1.5.18.RELEASE</spring.boot.version>
-    <spring.security.version>4.2.10.RELEASE</spring.security.version>
+    <spring.version>5.1.9.RELEASE </spring.version>
+    <spring.boot.version>1.5.22.RELEASE</spring.boot.version>
+    <spring.security.version>4.2.13.RELEASE</spring.security.version>
     <slf4j.version>1.7.25</slf4j.version>
     <log4j.version>2.7</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
-    <wicket.version>8.3.0</wicket.version>
+    <wicket.version>8.5.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
-    <wicket-bootstrap.version>2.0.6</wicket-bootstrap.version>
-    <wicket-jquery-selectors.version>2.0.2</wicket-jquery-selectors.version>
-    <wicket-webjars.version>2.0.8</wicket-webjars.version>    
-    <wicket-spring-boot.version>2.1.5</wicket-spring-boot.version>
+    <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
+    <wicket-bootstrap.version>2.0.10</wicket-bootstrap.version>
+    <wicket-jquery-selectors.version>2.0.6</wicket-jquery-selectors.version>
+    <wicket-webjars.version>2.0.15</wicket-webjars.version>    
+    <wicket-spring-boot.version>2.1.7</wicket-spring-boot.version>
     <hibernate.version>5.3.7.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
     <dkpro.version>1.7.0</dkpro.version>
@@ -77,7 +77,7 @@
     <batik.version>1.9.1</batik.version>
     <json.version>20180130</json.version>
     <mockito.version>2.23.4</mockito.version>
-    <assertj.version>3.11.1</assertj.version>
+    <assertj.version>3.13.2</assertj.version>
   </properties>
   <repositories>
     <repository>
@@ -243,6 +243,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
         <artifactId>webanno-diag</artifactId>
+        <version>3.5.8-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-telemetry</artifactId>
         <version>3.5.8-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -470,6 +475,12 @@
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>wicket-bootstrap-less</artifactId>
         <version>${wicket-bootstrap.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.junit.vintage</groupId>
+            <artifactId>junit-vintage-engine</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>de.agilecoders.wicket.webjars</groupId>
@@ -909,6 +920,7 @@
     <module>webanno-constraints</module>
     <module>webanno-export</module>
     <module>webanno-api-automation</module>
+    <module>webanno-telemetry</module>
     <!-- UI -->
     <module>webanno-brat</module>
     <module>webanno-ui-core</module>
@@ -1130,6 +1142,7 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <excludes>
+                    <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
                     <exclude>suppressions.xml</exclude>

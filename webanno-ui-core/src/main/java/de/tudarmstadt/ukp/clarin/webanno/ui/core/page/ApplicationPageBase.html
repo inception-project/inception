@@ -27,19 +27,6 @@
   <title><wicket:message key="product.name" /> - <wicket:message key="page.title" /></title>
   
   <wicket:header-items/>
-  
-  <script>
-    /* see https://stackoverflow.com/a/26408903 */
-    $(function () {
-      $('[data-toggle="popover"]').popover({
-        html : true,
-        content: function() {
-              var content = $(this).attr("data-popover-content");
-              return $(content).children(".popover-body").html();
-            }
-      });
-    });
-  </script>
 </head>
 <body>
   <div>
@@ -63,36 +50,9 @@
   <div wicket:id="feedbackPanel" class="feedback-panel"></div>
 
   <div class="page-footer">
-    <span>
-      Technische Universität Darmstadt -- 
-      Computer Science Department -- 
-      <wicket:message key="product.name" /> --
-      <wicket:container wicket:id="version"/>
-    </span>   
-    
-    <wicket:container wicket:id="warnings">
-      <div class="dev-warnings pull-right">
-        <a class="alert alert-warning"
-           role="button"
-           data-toggle="popover"
-           data-placement="top"
-           data-trigger="focus"
-           tabindex="0"
-           title="Warnings"
-           data-html="true"
-           data-popover-content="#warning-popover">
-             <i class="fa fa-fw fa-warning"></i> Warnings</a>
-      </div>
+    <wicket:container wicket:id="footerItems">
+      <wicket:container wicket:id="item"/>
     </wicket:container>
-    
-    <div id="warning-popover" class="hidden">
-        <div class="popover-body">
-          <ul>
-            <li wicket:id="embeddedDbWarning"></li>
-            <li wicket:id="browserWarning"></li>
-          </ul>          
-        </div>
-    </div>   
   </div>
 </body>
 </html>

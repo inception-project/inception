@@ -1,0 +1,53 @@
+<!--
+#Copyright 2019
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <form wicket:id="form" class="flex-content flex-v-container">
+    <div class="col-sm-12">
+      <div class="form-group" wicket:enclosure="enabled">
+        <div class="flex-h-container flex-gutter">
+          <div class="flex-content">
+            <p>
+              This telemetry collector helps the developer team of
+              <wicket:message key="product.name" />
+              discover the number of installations and the size of the user base. These are
+              important indicators for the success of the product and are e.g. included in reports
+              to funders. Please support the future development of
+              <wicket:message key="product.name" />
+              by submitting these <b>anonymous usage statistics</b> to the developers at UKP Lab,
+              Technische Universität Darmstadt, Germany.
+            </p>
+            <p>
+              The anonymous usage statistics are sent to our server every time the application is
+              started.
+            </p>
+            <p>
+              Use the <b>Toogle details...</b> button above to discover which data we collect and
+              why.
+            </p>
+          </div>
+          <div class="checkboxx-toggle-button">
+            <input wicket:id="enabled" type="checkbox"/>
+          </div>
+        </div>  
+      </div>
+    </div>
+  </form>
+</wicket:panel>
+</html>
