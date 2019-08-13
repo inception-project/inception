@@ -20,6 +20,8 @@ package de.tudarmstadt.ukp.inception.curation;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -36,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -62,13 +65,13 @@ public class CurationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction, int aBegin, int aEnd)
         throws AnnotationException, IOException
     {
-        // only process actions relevant curation
+        // only process actions relevant to curation
         if (!aParamId.getExtensionId().equals(EXTENSION_ID)) {
             return;
         }
         // Annotation has been selected for gold
         if (SpanAnnotationResponse.is(aAction)) { //TODO is this action only for spans
-            //, what about relations
+                                                  //, what about relations ?
             // TODO: store annotation in user CAS
         }
         
@@ -78,7 +81,6 @@ public class CurationEditorExtension
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
-        // TODO Auto-generated method stub
         String currentUser = aState.getUser().getUsername();
         long projectId = aState.getProject().getId();
         Optional<List<User>> selectedUsers = curationService
@@ -96,9 +98,17 @@ public class CurationEditorExtension
                             user.getUsername(), projectId));
                     continue;
                 }
-                // FIXME cannot add the same annotations, change VID ?
-                preRenderer.render(aVdoc, aWindowBeginOffset, aWindowEndOffset, userCas.get(),
-                        aState.getAnnotationLayers()); //TODO: might need to filter the layers
+                VDocument tmpDoc = new VDocument();
+                preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas.get(),
+                        aState.getAnnotationLayers()); //TODO: might need to filter the layers?
+                // copy all arcs and spans to existing doc with new VID
+                for (VObject vobj : tmpDoc.vobjects()) {
+                    VID vid = vobj.getVid();
+                    VID extendedVID = parse(vid, vid.getExtensionPayload());
+                    vobj.setVid(extendedVID);
+                    aVdoc.add(vobj);
+                }
+                // TODO: add comment with username
             }
             catch (IOException e) {
                 log.error(String.format("Could not retrieve CAS for user %s and project %d",
@@ -109,4 +119,23 @@ public class CurationEditorExtension
         }
     }
 
+    @Override
+    public VID parse(VID aParamId, String aVIDString)
+    {
+        // format is <USER>:<VID> with standard VID format <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
+        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" 
+                + "(?<VID>\\d+)").matcher(aVIDString);
+        if (!matcher.matches()) {
+            return aParamId;
+        }
+        
+        if (matcher.group("VID") == null || 
+                matcher.group("USER") != null ) {
+            return aParamId;
+        }
+        
+        String vidStr = matcher.group("VID");
+        String username = matcher.group("USER");
+        return new CurationVID(aParamId.getExtensionId(), username, VID.parse(vidStr));
+    }
 }

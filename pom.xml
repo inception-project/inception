@@ -111,17 +111,12 @@
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
     <module>inception-imls-external</module>
-    <module>inception-log</module>
-    <module>inception-support</module>
-    <module>inception-testing</module>
-    <module>inception-layer-docmetadata</module>
-    <module>inception-image</module>
-    <module>inception-scheduling</module>
     <module>inception-imls-lapps</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
+    <!-- Curation -->
     <module>inception-curation</module>
   </modules>
   <repositories>

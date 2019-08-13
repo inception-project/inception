@@ -117,6 +117,11 @@ public class RecommendationEditorExtension
             AjaxRequestTarget aTarget, CAS aCas, VID aVID, String aAction, int aBegin, int aEnd)
         throws IOException, AnnotationException
     {
+        // only process actions relevant to recommendation
+        if (!aVID.getExtensionId().equals(BEAN_NAME)) {
+            return;
+        }
+        
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
             actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
@@ -265,5 +270,11 @@ public class RecommendationEditorExtension
         RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
                 recommendationService, learningRecordService, fsRegistry, documentService,
                 aWindowBeginOffset, aWindowEndOffset);
+    }
+
+    @Override
+    public VID parse(VID aParamId, String aVIDString)
+    {
+        return VID.parse(aVIDString);
     }
 }

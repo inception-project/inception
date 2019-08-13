@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,6 +77,7 @@ public class CurationSidebar
     private AnnotatorState state;
 //    private AnnotationPage annoPage;
 
+    // FIXME: only show to people who are curators
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
@@ -153,6 +155,7 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
+        usersForm.add(visibleWhen(() -> !usersForm.getModelObject().isEmpty()));
         return usersForm;
     }
     
