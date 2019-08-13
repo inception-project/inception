@@ -943,7 +943,8 @@ public class AnnotationSchemaServiceImpl
      * results to the target CAS. An in-place upgrade can be achieved by using the same CAS as
      * source and target.
      */
-    private void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
+    @Override
+    public void upgradeCas(CAS aSourceCas, CAS aTargetCas, TypeSystemDescription aTargetTypeSystem)
         throws UIMAException, IOException
     {
         // Save source CAS type system (do this early since we might do an in-place upgrade)

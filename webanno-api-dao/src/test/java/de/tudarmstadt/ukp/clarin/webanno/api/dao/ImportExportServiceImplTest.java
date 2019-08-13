@@ -25,6 +25,7 @@ import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
@@ -91,6 +92,8 @@ public class ImportExportServiceImplTest
         // ensure this is actually callable and doesn't run into a mocked version which simply 
         // returns null.
         when(schemaService.getFullProjectTypeSystem(any(), anyBoolean())).thenCallRealMethod();
+        doCallRealMethod().when(schemaService).upgradeCas(any(), any(),
+                any(TypeSystemDescription.class));
     }
 
     @Test

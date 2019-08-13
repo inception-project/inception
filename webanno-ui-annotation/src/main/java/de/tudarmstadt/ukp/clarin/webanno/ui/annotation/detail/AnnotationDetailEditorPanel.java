@@ -83,6 +83,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -492,7 +494,7 @@ public abstract class AnnotationDetailEditorPanel
                         aBegin, aEnd));
             }
             else {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                     "Unable to create annotation of type [" + CAS.TYPE_NAME_ANNOTATION
                         + "]. Please click an annotation in stead of selecting new text.");
             }
@@ -532,7 +534,7 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (isAnnotationFinished()) {
-            throw new AnnotationException("This document is already closed. Please ask your "
+            throw new NotEditableException("This document is already closed. Please ask your "
                 + "project manager to re-open it via the Monitoring page");
         }
 
@@ -552,7 +554,7 @@ public abstract class AnnotationDetailEditorPanel
             AnnotationFS targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
             
             if (!originFS.getType().equals(targetFS.getType())) {
-                throw new AnnotationException(
+                throw new IllegalPlacementException(
                         "Cannot create relation between spans on different layers");
             }
             
@@ -576,7 +578,7 @@ public abstract class AnnotationDetailEditorPanel
             // Otherwise, look up the possible relation layer(s) in the database.
             else {
                 state.setSelectedAnnotationLayer(getRelationLayerFor(originLayer).orElseThrow(
-                    () -> new AnnotationException("No relation annotation allowed on layer ["
+                    () -> new IllegalPlacementException("No relation annotation allowed on layer ["
                             + state.getDefaultAnnotationLayer().getUiName() + "]")));
             }
 
@@ -639,7 +641,7 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         if (isAnnotationFinished()) {
-            throw new AnnotationException("This document is already closed. Please ask your "
+            throw new NotEditableException("This document is already closed. Please ask your "
                     + "project manager to re-open it via the Monitoring page");
         }
 

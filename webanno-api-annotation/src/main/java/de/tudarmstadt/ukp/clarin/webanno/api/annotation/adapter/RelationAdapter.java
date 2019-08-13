@@ -38,6 +38,7 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationUpdateEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -152,7 +153,7 @@ public class RelationAdapter
         throws AnnotationException
     {
         if (targetFS == null || originFS == null) {
-            throw new AnnotationException("Relation must have a source and a target!");
+            throw new IllegalPlacementException("Relation must have a source and a target!");
         }
 
         // Set the relation offsets in DKPro Core style - the relation recieves the offsets from

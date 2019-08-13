@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2012
+#Copyright 2019
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -19,9 +19,8 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div wicket:id="feedbackPanel">[Feedback]</div>
-    <div class="sentence-list-view" wicket:id="sentenceListView">
-      <div wicket:id="sentence"></div>
+    <div class="pull-left" wicket:enclosure="telemetry">
+      <a wicket:id="telemetry"><i class="fa fa-heartbeat"></i></a>
     </div>
   </wicket:panel>
 </body>

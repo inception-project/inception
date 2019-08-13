@@ -1,0 +1,50 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<!--
+ # Copyright 2019
+ # Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ # Technische Universität Darmstadt
+ #
+ # Licensed under the Apache License, Version 2.0 (the "License");
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ # 
+ #  http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an "AS IS" BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
+-->
+<databaseChangeLog 
+  xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd 
+    http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+  
+  <changeSet author="WebAnno Team" id="20190712-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="telemetry_settings" />
+      </not>
+    </preConditions>
+    <createTable tableName="telemetry_settings">
+      <column autoIncrement="true" name="id" type="BIGINT">
+        <constraints primaryKey="true" />
+      </column>
+      <column name="support" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+      <column name="version" type="INT">
+        <constraints nullable="false" />
+      </column>
+      <column name="traits" type="LONGTEXT">
+        <constraints nullable="true" />
+      </column>
+      <column name="created" type="datetime(6)" />
+      <column name="updated" type="datetime(6)" />
+    </createTable>
+  </changeSet>  
+</databaseChangeLog>

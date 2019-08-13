@@ -994,25 +994,10 @@ public class ProjectServiceImpl
     }
 
     @Override
+    @Deprecated
     public boolean isAdmin(Project aProject, User aUser)
     {
-        boolean user = false;
-        try {
-            List<ProjectPermission> permissionLevels = listProjectPermissionLevel(aUser, aProject);
-            for (ProjectPermission permissionLevel : permissionLevels) {
-                if (StringUtils.equalsIgnoreCase(permissionLevel.getLevel().getName(),
-                        PermissionLevel.MANAGER.getName())) {
-                    user = true;
-                    break;
-                }
-            }
-        }
-    
-        catch (NoResultException ex) {
-            log.info("No permision is given to this user " + ex);
-        }
-    
-        return user;
+        return isManager(aProject, aUser);
     }
 
     @Override
