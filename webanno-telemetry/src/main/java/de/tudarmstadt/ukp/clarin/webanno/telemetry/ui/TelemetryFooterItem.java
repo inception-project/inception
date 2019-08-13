@@ -22,7 +22,7 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItem;
 
-@Order(-1)
+@Order(-100)
 @org.springframework.stereotype.Component
 public class TelemetryFooterItem
     implements FooterItem

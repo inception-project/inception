@@ -36,9 +36,9 @@ public class ToggleBox
     {
         super(aId);
         
-        getConfig().withIconNull("<i class=\"fa fa-question\"> Click to choose...</i>");
-        getConfig().withIconChecked("<i class=\"fa fa-check\"> Enabled</i>");
-        getConfig().withIconUnchecked("<i class=\"fa fa-ban\"> Disabled</i>");
+        getConfig().withIconNull("<i class=\"fa fa-question\"></i> Click to choose...");
+        getConfig().withIconChecked("<i class=\"fa fa-check\"></i> Enabled");
+        getConfig().withIconUnchecked("<i class=\"fa fa-ban\"></i> Disabled");
         getConfig().withEnclosedLabel(false);
         
         add(new ChoiceRequiredValidator());
