@@ -174,11 +174,6 @@ public class RecommenderInfoPanel
         for (Recommender recommender : recommendationService
                 .listEnabledRecommenders(getPanelModelObject().getProject())) {
             
-//            if (recommenderEvals != null &&
-//                    recommenderEvals.containsKey(recommender.getId())) {
-//                continue;
-//            }
-            
             List<EvaluatedRecommender> activeRecommenders = recommendationService
                     .getActiveRecommenders(getPanelModelObject().getUser(), recommender.getLayer());
 
@@ -193,7 +188,6 @@ public class RecommenderInfoPanel
             if (foundEval) {
                 continue;
             }
-            // FIXME: will this also add recommenders from other users?
             evals.put(recommender.getId(), new EvaluatedRecommender(recommender));
         }
         return evals;

@@ -32,7 +32,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
@@ -50,7 +49,6 @@ public class SchedulingService
     private final ThreadPoolExecutor executor;
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired Application application;
-    private @Autowired ApplicationEventPublisher appEventPublisher;
 
     private final List<Task> runningTasks;
 
@@ -68,7 +66,7 @@ public class SchedulingService
     {
         Task task = (Task) aRunnable;
         runningTasks.add(task);
-        appEventPublisher.publishEvent(
+        applicationContext.publishEvent(
                 new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.RUNNING, 0.0));
     }
 
@@ -76,7 +74,7 @@ public class SchedulingService
     {
         Task task = (Task) aRunnable;
         runningTasks.remove(task);
-        appEventPublisher.publishEvent(
+        applicationContext.publishEvent(
                 new TaskUpdateEvent(task, task.getUser().getUsername(), TaskState.DONE, 1.0));
     }
 
@@ -110,7 +108,7 @@ public class SchedulingService
         }
 
         log.debug("Enqueuing task [{}]", aTask);
-        appEventPublisher.publishEvent(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
+        applicationContext.publishEvent(new TaskUpdateEvent(aTask, aTask.getUser().getUsername(),
                 TaskState.SCHEDULED, 0.0));
         
         // This autowires the task fields manually.
@@ -144,7 +142,6 @@ public class SchedulingService
     @EventListener
     public void distributeWebSocketMessage(TaskUpdateEvent aTaskUpdateEvent)
     {
-
         if (application == null) {
             return;
         }
@@ -152,7 +149,6 @@ public class SchedulingService
         WebSocketSettings webSocketSettings = WebSocketSettings.Holder.get(application);
         IWebSocketConnectionRegistry webSocketConnectionRegistry = webSocketSettings
                 .getConnectionRegistry();
-
         // get all connections for the user
         List<IWebSocketConnection> userConnections = new ArrayList<>();
         List<String> ids = new ArrayList<>();
