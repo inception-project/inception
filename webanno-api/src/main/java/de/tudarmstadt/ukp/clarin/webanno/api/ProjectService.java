@@ -405,20 +405,18 @@ public interface ProjectService
      */
     boolean isManager(Project aProject, User aUser);
     
+    /**
+     * @deprecated Use {@link #isManager(Project, User)}
+     */
     @Deprecated
     default boolean isProjectAdmin(Project aProject, User aUser) {
         return isManager(aProject, aUser);
     }
 
     /**
-     * Determine if the User is an admin of a project
-     *
-     * @param aProject
-     *            the project.
-     * @param aUser
-     *            the user.
-     * @return if the user is an admin.
+     * @deprecated Use {@link #isManager(Project, User)}
      */
+    @Deprecated
     boolean isAdmin(Project aProject, User aUser);
 
     /**

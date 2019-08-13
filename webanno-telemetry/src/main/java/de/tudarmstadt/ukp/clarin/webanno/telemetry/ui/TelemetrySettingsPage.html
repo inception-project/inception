@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+#Copyright 2019
+#Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<head>
+  <wicket:head>
+    <style>
+      .page-content {
+        justify-content: center;
+      }
+     </style>
+  </wicket:head>
+</head><body>
+  <wicket:extend>
+    <form wicket:id="form" class="flex-content flex-v-container flex-gutter" style="max-width: 60em;">
+      <div class="flex-h-container flex-gutter">
+        <div class="flex-content">
+          <p>
+            In order to support the development of <wicket:message key="product.name"/>, it would
+            like to collect some data and send it home. Please review the settings below and 
+            opt in or our of the respective data collections. Once you are done, use the 
+            <b><wicket:message key="save"/></b> button on the left side to save your choices. If
+            there were any changes to the data collection process, this page will appear again
+            when an administrator logs in. You can always revise your choices by accessing this
+            page via the <i class="fa fa-heartbeat"></i> icon in the page footer.
+          </p>
+        </div>
+        <div>
+          <input wicket:id="save" type="submit" class="btn btn-primary" wicket:message="value:save"/> 
+        </div>
+      </div>
+      <div class="flex-content flex-h-container flex-gutter">
+        <div class="scrolling flex-content flex-v-container flex-gutter">
+          <div wicket:id="settings" class="panel panel-default">
+            <div class="panel-heading">
+              <h3 class="panel-title flex-h-container">
+                <span wicket:id="name" class="flex-content"/>
+                <span>
+                  <input wicket:id="toggleDetails" type="button" class="btn btn-xs btn-default" value="Toggle details..."/> 
+                </span>
+              </h3>
+            </div>
+            <div class="panel-body flex-v-container">
+              <div wicket:id="traitsEditor"/>
+              <div wicket:id="details"/>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </wicket:extend>
+</body>
+</html>
