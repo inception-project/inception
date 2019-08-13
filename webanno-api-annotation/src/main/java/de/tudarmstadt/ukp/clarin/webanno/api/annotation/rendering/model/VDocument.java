@@ -137,4 +137,22 @@ public class VDocument
     {
         return Collections.unmodifiableCollection(annotationLayers.values());
     }
+
+    public Collection<VObject> vobjects()
+    {
+        Collection<VObject> objects = new ArrayList<>();
+        objects.addAll(spans.values());
+        objects.addAll(arcs.values());
+        return Collections.unmodifiableCollection(objects);
+    }
+
+    public void add(VObject aVobj)
+    {
+        if (aVobj instanceof VSpan) {
+            add((VSpan) aVobj);
+        }
+        else if (aVobj instanceof VArc) {
+            add((VArc) aVobj);
+        }
+    }
 }

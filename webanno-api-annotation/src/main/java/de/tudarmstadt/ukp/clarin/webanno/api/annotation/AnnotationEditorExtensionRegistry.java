@@ -42,4 +42,9 @@ public interface AnnotationEditorExtensionRegistry
 
     void fireRender(CAS aCas, AnnotatorState aModelObject, VDocument aVdoc,
             int aWindowBeginOffset, int aWindowEndOffset);
+
+    /**
+     * Refer aIdString to editor extension with given Id to parse into VID
+     */
+    VID parseId(VID aParamId, String aVIDString);
 }

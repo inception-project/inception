@@ -46,9 +46,14 @@ public class VID
     private static final String SLOT = "SLOT";
     private static final String EXTENSION = "EXT";
     private static final String LAYER = "LAYER";
+    private static final String EXT_PAYLOAD = "PAYLOAD";
 
+    public static final Pattern PATTERN_EXT = Pattern.compile(
+            "(?:(?<EXT>\\w+)\\:)" + 
+            "(?<PAYLOAD>\\d+)"
+            );
+    
     public static final Pattern PATTERN_VID = Pattern.compile(
-            "(?:(?<EXT>\\w+)\\:)?" + 
             "(?<ID>-?\\d+)" +
             "(?:\\-(?<SUB>\\d+))?" +
             "(?:\\.(?<ATTR>\\d+))?" +
@@ -66,6 +71,7 @@ public class VID
     private final int attribute;
     private final int slot;
     private final String extensionId;
+    private final String extensionPayload;
 
     public VID(FeatureStructure aFS)
     {
@@ -75,6 +81,12 @@ public class VID
     public VID(int aAnnotationID)
     {
         this(null, aAnnotationID, NONE, NONE, NONE);
+    }
+    
+    public VID(String aExtensionId, String aPayload)
+    {
+        this(aExtensionId, -1l, NONE, NONE,
+                NONE, NONE, aPayload);
     }
 
     public VID(AnnotationFS aFS, int aAttribute)
@@ -131,12 +143,20 @@ public class VID
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot)
     {
+        this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
+
+    }
+    
+    public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
+            int aAttribute, int aSlot, String aExtensionPayload)
+    {
         annotationId = aAnnotationID;
         subAnnotationId = aSubAnnotationId;
         attribute = aAttribute;
         slot = aSlot;
         extensionId = aExtensionId;
         layerId = aLayerId;
+        extensionPayload = aExtensionPayload;
     }
 
     public boolean isSet()
@@ -196,6 +216,11 @@ public class VID
         return extensionId;
     }
 
+    public String getExtensionPayload()
+    {
+        return extensionPayload;
+    }
+
     public static VID parseOptional(String aVid)
     {
         if (StringUtils.isNotBlank(aVid)) {
@@ -208,14 +233,28 @@ public class VID
 
     public static VID parse(String aVid)
     {
-        Matcher m = PATTERN_VID.matcher(aVid);
+        Matcher m = PATTERN_EXT.matcher(aVid);
+        
+        if (m.matches()) {
+            String extId = null;
+            String extPayload = null;
+            
+            if (m.group(EXTENSION) != null) {
+                extId = m.group(EXTENSION);
+            }
+            if (m.group(EXT_PAYLOAD) != null) {
+                extPayload = m.group(EXT_PAYLOAD);
+            }
+            return new VID(extId, extPayload);
+        }
+        
+        m = PATTERN_VID.matcher(aVid);
         if (m.matches()) {
             int annotationId = Integer.valueOf(m.group(ID));
             int subAnnotationId = NONE;
             int feature = NONE;
             int slot = NONE;
             int layerId = NONE;
-            String extensionId = null;
 
             if (m.group(SUB) != null) {
                 subAnnotationId = Integer.valueOf(m.group(SUB));
@@ -226,13 +265,10 @@ public class VID
             if (m.group(SLOT) != null) {
                 slot = Integer.valueOf(m.group(SLOT));
             }
-            if (m.group(EXTENSION) != null) {
-                extensionId = m.group(EXTENSION);
-            }
             if (m.group(LAYER) != null) {
                 layerId = Integer.valueOf(m.group(LAYER));
             }
-            return new VID(extensionId, layerId, annotationId, subAnnotationId, feature, slot);
+            return new VID(null, layerId, annotationId, subAnnotationId, feature, slot);
         }
         else {
             throw new IllegalArgumentException("Cannot parse visual identifier [" + aVid + "]");
@@ -247,6 +283,8 @@ public class VID
         if (isNotBlank(extensionId)) {
             sb.append(extensionId);
             sb.append(':');
+            sb.append(extensionPayload);
+            return sb.toString();
         }
 
         sb.append(annotationId);

@@ -47,4 +47,10 @@ public interface AnnotationEditorExtension
      */
     void render(CAS aCas, AnnotatorState aState, VDocument vdoc, int aWindowBeginOffset,
             int aWindowEndOffset);
+    
+    /**
+     * Parse given VID text to VID
+     */
+    VID parse(VID aParamId, String aVIDString);
+
 }
