@@ -2,7 +2,7 @@
  * Copyright 2017
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -43,6 +44,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.dkpro.core.api.resources.ResourceUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.SAXException;
@@ -58,7 +60,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.dkpro.core.api.resources.ResourceUtils;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.PdfAnnoPanel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.DocumentModel;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
@@ -255,7 +256,7 @@ public class PdfAnnotationEditor
             if (origin.isSynthetic() || target.isSynthetic()) {
                 throw new AnnotationException("Cannot create relations on suggestions");
             }
-            
+
             AnnotationFS originFs = selectByAddr(aCas, AnnotationFS.class, origin.getId());
             AnnotationFS targetFs = selectByAddr(aCas, AnnotationFS.class, target.getId());
 
@@ -349,7 +350,7 @@ public class PdfAnnotationEditor
                 ? page + 1 : page).getEnd();
             List<Offset> offsets = new ArrayList<>();
             offsets.add(new Offset(begin, begin));
-            offsets.add(new Offset(end, end));
+            offsets.add(new Offset(end + 1, end + 1));
             offsets =
                 PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
             int newBegin = offsets.stream().mapToInt(Offset::getBegin).min().getAsInt();

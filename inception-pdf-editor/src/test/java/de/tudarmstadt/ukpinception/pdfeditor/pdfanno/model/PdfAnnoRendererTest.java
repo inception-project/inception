@@ -20,16 +20,16 @@ package de.tudarmstadt.ukpinception.pdfeditor.pdfanno.model;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.NO_OVERLAP;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.linesOf;
+import static org.assertj.core.api.Assertions.contentOf;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Scanner;
@@ -172,14 +172,12 @@ public class PdfAnnoRendererTest
         preRenderer.render(vdoc, 0, cas.getDocumentText().length(), cas,
                 schemaService.listAnnotationLayer(project));
 
-        List expectedAnnoFileLines = linesOf(new File("src/test/resources/rendererTestAnnoFile.anno"), "UTF-8");
-
         PdfExtractFile pdfExtractFile = new PdfExtractFile(pdftxt, new HashMap<>());
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(expectedAnnoFileLines)
-            .isEqualTo(Arrays.asList(annoFile.getAnnoFileContent().split("\n")));
+        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
+                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**
@@ -207,18 +205,38 @@ public class PdfAnnoRendererTest
         // List of PDFAnno offsets
         // indices represent line numbers in the PDFExtractFile for the according character
         List<Offset> offsets = new ArrayList<>();
+        offsets.add(new Offset(3, 3));
+        offsets.add(new Offset(3, 4));
+        offsets.add(new Offset(3, 5));
+        offsets.add(new Offset(3, 6));
         offsets.add(new Offset(3, 7));
+        offsets.add(new Offset(3, 8));
+        offsets.add(new Offset(6, 8));
+        offsets.add(new Offset(7, 7));
+        offsets.add(new Offset(7, 8));
+        offsets.add(new Offset(8, 8));
         offsets.add(new Offset(8, 13));
+        offsets.add(new Offset(28, 28));
         offsets.add(new Offset(28, 30));
         offsets.add(new Offset(35, 38));
         // convert to offests for document in INCEpTION
         List<Offset> docOffsets =
             PdfAnnoRenderer.convertToDocumentOffsets(offsets, documentModel, pdfExtractFile);
         List<Offset> expectedOffsets = new ArrayList<>();
-        expectedOffsets.add(new Offset(0, 5));
-        expectedOffsets.add(new Offset(6, 12));
-        expectedOffsets.add(new Offset(29, 32));
-        expectedOffsets.add(new Offset(38, 42));
+        expectedOffsets.add(new Offset(0, 0));
+        expectedOffsets.add(new Offset(0, 1));
+        expectedOffsets.add(new Offset(0, 2));
+        expectedOffsets.add(new Offset(0, 3));
+        expectedOffsets.add(new Offset(0, 4));
+        expectedOffsets.add(new Offset(0, 6));
+        expectedOffsets.add(new Offset(3, 6));
+        expectedOffsets.add(new Offset(4, 4));
+        expectedOffsets.add(new Offset(4, 6));
+        expectedOffsets.add(new Offset(6, 6));
+        expectedOffsets.add(new Offset(6, 11));
+        expectedOffsets.add(new Offset(29, 29));
+        expectedOffsets.add(new Offset(29, 31));
+        expectedOffsets.add(new Offset(38, 41));
         assertThat(docOffsets).isEqualTo(expectedOffsets);
     }
 }

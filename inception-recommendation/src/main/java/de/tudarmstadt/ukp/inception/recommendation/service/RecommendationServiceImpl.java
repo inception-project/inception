@@ -97,6 +97,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.LearningRecordService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
@@ -201,11 +202,11 @@ public class RecommendationServiceImpl
     
     @Override
     public void setActiveRecommenders(User aUser, AnnotationLayer aLayer,
-            List<Recommender> aRecommenders)
+            List<EvaluatedRecommender> aRecommenders)
     {
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
-            MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = state
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = state
                     .getActiveRecommenders();
             activeRecommenders.remove(aLayer);
             activeRecommenders.putAll(aLayer, aRecommenders);
@@ -213,11 +214,11 @@ public class RecommendationServiceImpl
     }
     
     @Override
-    public List<Recommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
+    public List<EvaluatedRecommender> getActiveRecommenders(User aUser, AnnotationLayer aLayer)
     {
         RecommendationState state = getState(aUser.getUsername(), aLayer.getProject());
         synchronized (state) {
-            MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = 
                     state.getActiveRecommenders();
             return new ArrayList<>(activeRecommenders.get(aLayer));
         }
@@ -494,11 +495,20 @@ public class RecommendationServiceImpl
     }
 
     @Override
-    public RecommenderContext getContext(User aUser, Recommender aRecommender)
+    public Optional<RecommenderContext> getContext(User aUser, Recommender aRecommender)
     {
         RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
         synchronized (state) {
             return state.getContext(aRecommender);
+        }
+    }
+    
+    @Override
+    public void putContext(User aUser, Recommender aRecommender, RecommenderContext aContext)
+    {
+        RecommendationState state = getState(aUser.getUsername(), aRecommender.getProject());
+        synchronized (state) {
+            state.putContext(aRecommender, aContext);
         }
     }
     
@@ -582,7 +592,7 @@ public class RecommendationServiceImpl
     private static class RecommendationState
     {
         private Preferences preferences = new Preferences();
-        private MultiValuedMap<AnnotationLayer, Recommender> activeRecommenders = 
+        private MultiValuedMap<AnnotationLayer, EvaluatedRecommender> activeRecommenders = 
                 new HashSetValuedHashMap<>();
         private Map<Recommender, RecommenderContext> contexts = new ConcurrentHashMap<>();
         private Predictions activePredictions;
@@ -598,13 +608,13 @@ public class RecommendationServiceImpl
             preferences = aPreferences;
         }
 
-        public MultiValuedMap<AnnotationLayer, Recommender> getActiveRecommenders()
+        public MultiValuedMap<AnnotationLayer, EvaluatedRecommender> getActiveRecommenders()
         {
             return activeRecommenders;
         }
 
         public void setActiveRecommenders(
-            MultiValuedMap<AnnotationLayer, Recommender> aActiveRecommenders)
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> aActiveRecommenders)
         {
             activeRecommenders = aActiveRecommenders;
         }
@@ -639,14 +649,22 @@ public class RecommendationServiceImpl
         }
         
         /**
-         * Returns the context for the given recommender or creates a new one if there is none so
-         * far.
+         * Returns the context for the given recommender if there is one.
          */
-        public RecommenderContext getContext(Recommender aRecommender)
+        public Optional<RecommenderContext> getContext(Recommender aRecommender)
         {
             Validate.notNull(aRecommender, "Recommender must be specified");
             
-            return contexts.computeIfAbsent(aRecommender, (v) -> new RecommenderContext());
+            return Optional.ofNullable(contexts.get(aRecommender));
+        }
+        
+        public void putContext(Recommender aRecommender, RecommenderContext aContext)
+        {
+            Validate.notNull(aRecommender, "Recommender must be specified");
+            Validate.notNull(aContext, "Context must be specified");
+            Validate.isTrue(aContext.isClosed(), "Context must be closed");
+            
+            contexts.put(aRecommender, aContext);
         }
                 
         public void removePredictions(Recommender aRecommender)
@@ -667,14 +685,15 @@ public class RecommendationServiceImpl
             // Remove from activeRecommenders map.
             // We have to do this, otherwise training and prediction continues for the
             // recommender when a new task is triggered.
-            MultiValuedMap<AnnotationLayer, Recommender> newActiveRecommenders = 
+            MultiValuedMap<AnnotationLayer, EvaluatedRecommender> newActiveRecommenders = 
                     new HashSetValuedHashMap<>();
-            MapIterator<AnnotationLayer, Recommender> it = activeRecommenders.mapIterator();
+            MapIterator<AnnotationLayer, EvaluatedRecommender> it = activeRecommenders
+                    .mapIterator();
 
             while (it.hasNext()) {
                 AnnotationLayer layer = it.next();
-                Recommender rec = it.getValue();
-                if (!rec.equals(aRecommender)) {
+                EvaluatedRecommender rec = it.getValue();
+                if (!rec.getRecommender().equals(aRecommender)) {
                     newActiveRecommenders.put(layer, rec);
                 }
             }
@@ -707,7 +726,7 @@ public class RecommendationServiceImpl
                     continue nextLayer;
                 }
 
-                List<Recommender> recommenders = getActiveRecommenders(aUser, layer);
+                List<EvaluatedRecommender> recommenders = getActiveRecommenders(aUser, layer);
                 
                 if (recommenders.isEmpty()) {
                     log.trace("[{}]: No active recommenders on layer [{}]", username,
@@ -715,36 +734,39 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
-                nextRecommender: for (Recommender r : recommenders) {
+                nextRecommender: for (EvaluatedRecommender r : recommenders) {
                     
                     // Make sure we have the latest recommender config from the DB - the one from
                     // the active recommenders list may be outdated
                     Recommender recommender;
 
                     try {
-                        recommender = getRecommender(r.getId());
+                        recommender = getRecommender(r.getRecommender().getId());
                     }
                     catch (NoResultException e) {
                         log.info("[{}][{}]: Recommender no longer available... skipping",
-                                username, r.getName());
+                                username, r.getRecommender().getName());
                         continue nextRecommender;
                     }
 
                     if (!recommender.isEnabled()) {
-                        log.debug("[{}][{}]: Disabled - skipping", username, r.getName());
+                        log.debug("[{}][{}]: Disabled - skipping", username,
+                                r.getRecommender().getName());
                         continue nextRecommender;
                     }
 
-                    RecommenderContext ctx = getContext(aUser, recommender);
+                    Optional<RecommenderContext> context = getContext(aUser, recommender);
 
-                    if (!ctx.isReadyForPrediction()) {
-                        log.info("Context for recommender [{}]({}) for user [{}] on document "
-                                + "[{}]({}) in project [{}]({}) is not ready yet - skipping recommender",
+                    if (!context.isPresent()) {
+                        log.info("No context available for recommender [{}]({}) for user [{}] "
+                                + "on document [{}]({}) in project [{}]({}) - skipping recommender",
                                 recommender.getName(), recommender.getId(), username,
                                 document.getName(), document.getId(),
                                 document.getProject().getName(), document.getProject().getId());
                         continue nextRecommender;
                     }
+                    
+                    RecommenderContext ctx = context.get();
 
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
                     
@@ -752,7 +774,7 @@ public class RecommendationServiceImpl
                     // by this type of recommender
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                + "- skipping recommender", username, r.getName());
+                                + "- skipping recommender", username, r.getRecommender().getName());
                         continue nextRecommender;
                     }
 
@@ -789,13 +811,21 @@ public class RecommendationServiceImpl
                     }
 
                     try {
+                        RecommendationEngine recommendationEngine = factory.build(recommender);
+                        
+                        if (!recommendationEngine.isReadyForPrediction(ctx)) {
+                            log.info("Recommender context [{}]({}) for user [{}] in project "
+                                    + "[{}]({}) is not ready for prediction - skipping recommender",
+                                    recommender.getName(), recommender.getId(), username,
+                                    document.getProject().getName(), document.getProject().getId());
+                            continue nextRecommender;
+                        }
+
                         log.trace("[{}][{}]: Generating predictions for layer [{}]", username,
-                                r.getName(), layer.getUiName());
+                                r.getRecommender().getName(), layer.getUiName());
                         
                         cloneCAS(originalCas.get(), predictionCas);
                         monkeyPatchTypeSystem(aProject, predictionCas);
-
-                        RecommendationEngine recommendationEngine = factory.build(recommender);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
@@ -855,6 +885,13 @@ public class RecommendationServiceImpl
             }
 
             List<AnnotationFS> tokens = CasUtil.selectCovered(tokenType, annotationFS);
+            if (tokens.isEmpty()) {
+                // This can happen if a recommender uses different token boundaries (e.g. if a 
+                // remote service performs its own tokenization). We might be smart here by looking
+                // for overlapping tokens instead of contained tokens.
+                continue;
+            }
+            
             AnnotationFS firstToken = tokens.get(0);
             AnnotationFS lastToken = tokens.get(tokens.size() - 1);
 

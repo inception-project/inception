@@ -162,7 +162,7 @@ async function displayViewer () {
       if (e.pageNumber !== window.pageRender) {
         const snapshot = window.pagechangeEventCounter
         setTimeout(() => {
-          if (snapshot === pagechangeEventCounter && e.pageNumber != window.pageRender) {
+          if (snapshot === pagechangeEventCounter && e.pageNumber !== window.pageRender) {
             window.pageRender = e.pageNumber
             window.pagechangeEventCounter = 0
             getAnnotations()
