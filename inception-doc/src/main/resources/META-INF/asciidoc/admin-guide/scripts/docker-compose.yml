@@ -14,14 +14,14 @@ services:
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
-      - MYSQL_USER=inception
+      - MYSQL_USER=${DBUSER}
       - MYSQL_PORT=3306
-      - MYSQL_PASSWORD=inception
+      - MYSQL_PASSWORD=${DBPASSWORD}
     volumes:
       - ${INCEPTION_HOME}/mysql-data:/var/lib/mysql
     command: ["--character-set-server=utf8", "--collation-server=utf8_bin"]
     healthcheck:
-      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-pinception", "-uinception"]
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-p${DBPASSWORD}", "-u${DBUSER}"]
       interval: 20s
       timeout: 10s
       retries: 10
@@ -29,7 +29,7 @@ services:
       inception-net:
 
   webserver:
-    image: "inceptionproject/inception:latest"
+    image: "inceptionproject/inception:{revnumber}"
     container_name: inception_webserver
     ports:
       - "${INCEPTION_PORT}:8080"
@@ -37,8 +37,8 @@ services:
       - INCEPTION_DB_DIALECT=org.hibernate.dialect.MySQL5InnoDBDialect
       - INCEPTION_DB_DRIVER=com.mysql.jdbc.Driver
       - INCEPTION_DB_URL=jdbc:mysql://mysqlserver:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
-      - INCEPTION_DB_USERNAME=inception
-      - INCEPTION_DB_PASSWORD=inception
+      - INCEPTION_DB_USERNAME=${DBUSER}
+      - INCEPTION_DB_PASSWORD=${DBPASSWORD}
     volumes:
       - ${INCEPTION_HOME}/server-data:/export
     depends_on:
