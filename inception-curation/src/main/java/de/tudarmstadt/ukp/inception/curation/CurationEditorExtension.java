@@ -124,18 +124,19 @@ public class CurationEditorExtension
     {
         // format is <USER>:<VID> with standard VID format <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
         Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" 
-                + "(?<VID>\\d+)").matcher(aVIDString);
+                + "(?<VID>.+)").matcher(aVIDString);
         if (!matcher.matches()) {
             return aParamId;
         }
         
         if (matcher.group("VID") == null || 
-                matcher.group("USER") != null ) {
+                matcher.group("USER") == null ) {
             return aParamId;
         }
         
         String vidStr = matcher.group("VID");
         String username = matcher.group("USER");
-        return new CurationVID(aParamId.getExtensionId(), username, VID.parse(vidStr));
+        return new CurationVID(aParamId.getExtensionId(), aParamId.getExtensionPayload(), username, 
+                VID.parse(vidStr));
     }
 }
