@@ -24,7 +24,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +96,9 @@ import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.config.SearchProperties;
 import de.tudarmstadt.ukp.inception.search.event.SearchQueryEvent;
+
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -110,6 +112,7 @@ public class SearchAnnotationSidebar
     private @SpringBean SearchService searchService;
     private @SpringBean UserDao userRepository;
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
+    private @SpringBean SearchProperties searchProperties;
 
     private User currentUser;
 
@@ -199,10 +202,6 @@ public class SearchAnnotationSidebar
                         result.getGroupKey(), LambdaModel.of(() -> result)));
             }
         };
-        /*searchResultGroups.setModel(LoadableDetachableModel.of(() ->
-                groupedSearchResults.getObject().values().stream()
-                        .sorted(Comparator.comparing(ResultsGroup::getGroupKey))
-                        .collect(Collectors.toList())));*/
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
         mainContainer.add(new PagingNavigator("pagingNavigator", searchResultGroups));
@@ -252,15 +251,11 @@ public class SearchAnnotationSidebar
         mainContainer.add(annotationForm);
     }
 
-    private DropDownChoice<Long> createResultsPerPageSelection(String aId)
+    private DropDownChoice<Integer> createResultsPerPageSelection(String aId)
     {
-        List<Long> choices = new ArrayList<>();
-        // TODO: define the values somewhere else or replace with a numberfield
-        choices.add(5L);
-        choices.add(10L);
-        choices.add(20L);
-        choices.add(50L);
-        DropDownChoice<Long> itemsPerPageChoice = new BootstrapSelect<>(aId, choices);
+        List<Integer> choices = Arrays.stream(searchProperties.getPagesSizes()).boxed().collect(
+            Collectors.toList());
+        DropDownChoice<Integer> itemsPerPageChoice = new BootstrapSelect<>(aId, choices);
         return itemsPerPageChoice;
     }
 

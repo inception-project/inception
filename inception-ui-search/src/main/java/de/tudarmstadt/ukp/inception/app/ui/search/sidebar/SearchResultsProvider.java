@@ -42,6 +42,7 @@ public class SearchResultsProvider implements IDataProvider
 
     private SearchService searchService;
 
+    // Query settings
     private User user;
     private Project project;
     private String query;
@@ -49,11 +50,11 @@ public class SearchResultsProvider implements IDataProvider
     private AnnotationLayer annotationLayer;
     private AnnotationFeature annotationFeature;
 
+    // Cache
     private long totalResults = 0;
     private IModel<List<ResultsGroup>> currentPageCache;
-    private long pageCacheState = -1; // -1 if a new query has been initialized, different otherwise
-    private long currentoffset = -1; //
-    private long currentcount = -1;
+    private long currentOffset = -1;
+    private long currentCount = -1;
 
     public SearchResultsProvider(SearchService aSearchService,
             IModel<List<ResultsGroup>> aCurrentPageCache)
@@ -69,38 +70,34 @@ public class SearchResultsProvider implements IDataProvider
             currentPageCache.setObject(Collections.emptyList());
             return currentPageCache.getObject().iterator();
         }
-        // Query if:
-        // We just initialized a new query (pageCacheState = -1) (might be replaced with
-        // currentPageCache.getObject() == null)
-        // or
-        // we want to retrieve a new page of the current query (currentoffset != first, currentcount
-        // != count)
-        if (pageCacheState == -1 || (currentoffset != first || currentcount != count)) {
+        // Query if we just initialized a new query currentPageCache.getObject() == null or we want
+        // to retrieve a new page of the current query (currentOffset != first,
+        // currentCount != count)
+        if (currentPageCache.getObject() == null || (currentOffset != first
+            || currentCount != count)) {
             try {
                 List<ResultsGroup> queryResults = searchService
-                        .query(user, project, query, document, annotationLayer, annotationFeature,
-                                first, count)
-                        .entrySet().stream().map(e -> new ResultsGroup(e.getKey(), e.getValue()))
-                        .collect(Collectors.toList());
+                    .query(user, project, query, document, annotationLayer, annotationFeature,
+                        first, count).entrySet().stream()
+                    .map(e -> new ResultsGroup(e.getKey(), e.getValue()))
+                    .collect(Collectors.toList());
                 currentPageCache.setObject(queryResults);
-                // groupLevelSelectionsCache = initGroupLevelSelections(queryResults.stream().map(rg
-                // -> rg.getGroupKey()).collect(Collectors.toSet()));
-                pageCacheState = 1;
-                currentcount = count;
-                currentoffset = first;
+                currentCount = count;
+                currentOffset = first;
                 return queryResults.iterator();
             }
             catch (IOException e) {
                 e.printStackTrace();
+                return null;
             }
             catch (ExecutionException e) {
                 e.printStackTrace();
+                return null;
             }
         }
         else {
             return currentPageCache.getObject().iterator();
         }
-        return null;
     }
 
     @Override
@@ -145,7 +142,7 @@ public class SearchResultsProvider implements IDataProvider
         annotationFeature = aAnnotationFeature;
 
         totalResults = -1;  // reset size cache
-        pageCacheState = -1; // reset page cache
+        currentPageCache.setObject(null); // reset page cache
 
     }
 
