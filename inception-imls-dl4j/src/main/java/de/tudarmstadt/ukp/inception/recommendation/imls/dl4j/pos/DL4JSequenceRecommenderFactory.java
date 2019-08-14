@@ -29,7 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 @Component
 @ConditionalOnProperty(prefix = "recommenders.dl4j.token-sequence", name = "enabled", 
@@ -71,7 +70,7 @@ public class DL4JSequenceRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender, RecommenderContext aContext)
+    public RecommendationEngine build(Recommender aRecommender)
     {
         DL4JSequenceRecommenderTraits traits = new DL4JSequenceRecommenderTraits();
         return new DL4JSequenceRecommender(aRecommender, traits,

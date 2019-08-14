@@ -93,7 +93,11 @@ public class ExternalRecommender
     @Override
     public boolean isReadyForPrediction(RecommenderContext aContext)
     {
-        return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        if (traits.isTrainable()) {
+            return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        } else {
+            return true;
+        }
     }
     
     @Override

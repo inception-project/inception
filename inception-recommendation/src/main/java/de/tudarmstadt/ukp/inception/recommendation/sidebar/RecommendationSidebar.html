@@ -34,14 +34,14 @@
             <div class="col-sm-12">
               <div class="form-horizontal">
                 <div class="form-group" wicket:enclosure="maxPredictions">
-                  <label class="col-sm-6 control-label"><wicket:message key="maxSuggestions"/></label>
-                  <div class="col-sm-6">
+                  <label class="col-sm-4 control-label"><wicket:message key="maxSuggestions"/></label>
+                  <div class="col-sm-8">
                     <input wicket:id="maxPredictions" type="number" class="form-control"/>
                   </div>
                 </div>
                 <div class="form-group" wicket:enclosure="showAllPredictions">
-                  <label class="col-sm-6 control-label"><wicket:message key="showAll"/></label>
-                  <div class="col-sm-6">
+                  <label class="col-sm-4 control-label"><wicket:message key="showAll"/></label>
+                  <div class="col-sm-8">
                     <div class="checkbox">
                       <label wicket:for="showAllPredictions">
                         <input wicket:id="showAllPredictions" type="checkbox"/>
@@ -57,6 +57,7 @@
           </div>
         </form>
         <div wicket:id="learningCurve" ></div>
+        <div wicket:id="recommenders" ></div>
       </div>
     </div>
   </div>
