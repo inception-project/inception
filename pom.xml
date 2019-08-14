@@ -57,18 +57,18 @@
     <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
     <dkpro.version>1.11.0</dkpro.version>
-    <spring.version>5.1.7.RELEASE</spring.version>
-    <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
-    <wicket.version>8.3.0</wicket.version>
+    <spring.version>5.1.9.RELEASE</spring.version>
+    <spring.boot.version>1.5.22.RELEASE</spring.boot.version>
+    <wicket.version>8.5.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
-    <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
+    <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
-    <mockito.version>2.23.4</mockito.version>
-    <assertj.version>3.12.1</assertj.version>
-    <okhttp.version>3.13.1</okhttp.version>
+    <mockito.version>2.27.0</mockito.version>
+    <assertj.version>3.13.2</assertj.version>
+    <okhttp.version>3.14.2</okhttp.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
@@ -598,7 +598,7 @@
       <dependency>
         <groupId>com.squareup.okio</groupId>
         <artifactId>okio</artifactId>
-        <version>1.14.0</version>
+        <version>1.17.4</version>
       </dependency>
       <dependency>
         <groupId>com.squareup.okhttp3</groupId>
