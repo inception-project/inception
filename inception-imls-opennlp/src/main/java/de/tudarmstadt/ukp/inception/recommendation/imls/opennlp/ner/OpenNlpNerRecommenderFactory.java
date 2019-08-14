@@ -51,7 +51,8 @@ public class OpenNlpNerRecommenderFactory
     }
 
     @Override
-    public RecommendationEngine build(Recommender aRecommender) {
+    public RecommendationEngine build(Recommender aRecommender) 
+    {
         OpenNlpNerRecommenderTraits traits = new OpenNlpNerRecommenderTraits();
         return new OpenNlpNerRecommender(aRecommender, traits);
     }

@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.tasks;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_REQUIRED;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,8 +45,10 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -93,8 +98,8 @@ public class TrainingTask
                 continue;
             }
             
-            List<Recommender> recommenders = recommendationService.getActiveRecommenders(user,
-                    layer);
+            List<EvaluatedRecommender> recommenders = recommendationService
+                    .getActiveRecommenders(user, layer);
     
             if (recommenders.isEmpty()) {
                 log.debug("[{}][{}]: No active recommenders, skipping training.",
@@ -102,44 +107,53 @@ public class TrainingTask
                 continue;
             }
             
-            for (Recommender r : recommenders) {
+            for (EvaluatedRecommender r : recommenders) {
                 // Make sure we have the latest recommender config from the DB - the one from the
                 // active recommenders list may be outdated
                 Recommender recommender;
                 try {
-                    recommender = recommendationService.getRecommender(r.getId());
+                    recommender = recommendationService.getRecommender(r.getRecommender().getId());
                 }
                 catch (NoResultException e) {
                     log.info("[{}][{}]: Recommender no longer available... skipping",
-                            user.getUsername(), r.getName());
+                            user.getUsername(), r.getRecommender().getName());
                     continue;
                 }
                 
                 if (!recommender.isEnabled()) {
-                    log.debug("[{}][{}]: Disabled - skipping", user.getUsername(), r.getName());
+                    log.debug("[{}][{}]: Disabled - skipping", user.getUsername(),
+                            r.getRecommender().getName());
                     continue;
                 }
                 
                 long startTime = System.currentTimeMillis();
-                RecommenderContext context = recommendationService.getContext(user, recommender);
-                RecommendationEngineFactory factory = recommendationService
-                    .getRecommenderFactory(recommender);
                 
-                if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                    log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                            + "- skipping recommender", user.getUsername(), r.getName());
-                    continue;
-                }
-
                 try {
-                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                    RecommendationEngineFactory factory = recommendationService
+                            .getRecommenderFactory(recommender);
+
+                    if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
+                        log.info("[{}][{}]: Recommender configured with invalid layer or feature "
+                                        + "- skipping recommender",
+                                user.getUsername(), r.getRecommender().getName());
+                        continue;
+                    }
                     
-                    // If the engine does not require/support training, then we mark the context
-                    // as ready for prediction and skip the training step
-                    if (!recommendationEngine.requiresTraining()) {
-                        log.info("[{}][{}]: Engine does not require training",
+                    RecommendationEngine recommendationEngine = factory.build(recommender);
+                   
+                    RecommenderContext ctx = recommendationEngine
+                            .newContext(recommendationService.getContext(user, recommender)
+                                    .orElse(RecommenderContext.EMPTY_CONTEXT));
+                    
+                    RecommendationEngineCapability capability = recommendationEngine
+                            .getTrainingCapability();
+                    
+                    // If engine does not support training, mark engine ready and skip to prediction
+                    if (capability == TRAINING_NOT_SUPPORTED) {
+                        log.info("[{}][{}]: Engine does not support training",
                                 user.getUsername(), recommender.getName());
-                        context.markAsReadyForPrediction();
+                        ctx.close();
+                        recommendationService.putContext(user, recommender, ctx);
                         continue;
                     }
                     
@@ -151,14 +165,25 @@ public class TrainingTask
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
+                    // If no data for training is available, but the engine requires training, 
+                    // do not mark as ready
+                    if (cassesForTraining.isEmpty() && capability == TRAINING_REQUIRED) {
+                        log.info("[{}][{}]: There are no annotations available to train on",
+                                user.getUsername(), recommender.getName());
+                        continue;
+                    }
+                    
                     log.info("[{}][{}]: Training model on [{}] out of [{}] documents ...",
                             user.getUsername(), recommender.getName(), cassesForTraining.size(),
                             casses.get().size());
                     
-                    recommendationEngine.train(context, cassesForTraining);
+                    recommendationEngine.train(ctx, cassesForTraining);
                     
                     log.info("[{}][{}]: Training complete ({} ms)", user.getUsername(),
                             recommender.getName(), (System.currentTimeMillis() - startTime));
+                    
+                    ctx.close();
+                    recommendationService.putContext(user, recommender, ctx);
                 }
                 catch (Throwable e) {
                     log.info("[{}][{}]: Training failed ({} ms)", user.getUsername(),

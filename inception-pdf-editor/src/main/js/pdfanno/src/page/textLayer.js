@@ -17,6 +17,38 @@ export function setup (analyzeData) {
 }
 
 /**
+ * Find index between characters in the text.
+ * Used for zero-width span annotations.
+ * @param page - the page number.
+ * @param point - { x, y } coords.
+ * @return {*} - The nearest text index to the given point.
+ */
+window.findIndex = function (page, point) {
+
+  const metaList = pages[page - 1].meta
+
+  for (let i = 0, len = metaList.length; i < len; i++) {
+    const info = metaList[i]
+
+    if (!info) {
+      continue
+    }
+
+    const { position, char, x, y, w, h } = extractMeta(info)
+
+    if (y <= point.y && point.y <= (y + h)) {
+      if (x <= point.x && point.x <= x + w / 2) {
+        return position
+      } else if (x + w / 2 < point.x && point.x <= x + w) {
+        return position + 1
+      }
+    }
+  }
+
+  return null
+}
+
+/**
  * Find the text.
  * @param page - the page number.
  * @param point - { x, y } coords.
@@ -50,9 +82,10 @@ window.findText = function (page, point) {
  * @param page - the page number.
  * @param startPosition - the start position in pdftxt.
  * @param endPosition - the end position in pdftxt.
+ * @param allowZeroWidth - whether zero-width spans are allowed or not, required for range usage
  * @returns {Array} - the texts.
  */
-window.findTexts = function (page, startPosition, endPosition) {
+window.findTexts = function (page, startPosition, endPosition, allowZeroWidth) {
 
   const items = []
 
@@ -76,16 +109,57 @@ window.findTexts = function (page, startPosition, endPosition) {
     }
 
     const data = extractMeta(info)
+    var last = data
     const { position } = data
 
-    if (startPosition <= position) {
-      inRange = true
-      items.push(data)
-    }
+    // if zero-width spans are allowed interprete ranges different from PDFAnno default
+    // [3,3] is zero-width, [3,4] is one character
+    if (allowZeroWidth) {
+      if (startPosition === endPosition && startPosition === position) {
+        data.w = 1
+        data.x = data.x - 1
+        items.push(data)
+        break
+      }
 
-    if (endPosition <= position) {
-      break
+      if (startPosition <= position && position < endPosition) {
+        inRange = true
+        items.push(data)
+      }
+
+      if (position === endPosition) {
+        break
+      }
+
+      if (last.position < data.position) last = data
+    // if zero-width spans are not allowed interprete ranges as PDFAnno does usually
+    // [3,3] is one character, [3,4] are two characters
+    } else {
+      if (startPosition <= position) {
+        inRange = true
+        items.push(data)
+      }
+
+      if (endPosition <= position) {
+        break
+      }
     }
+  }
+
+  // handle case where position is the very last index for a zero-width span
+  // which does not exist in the pdfextract file and therefore cannot be found
+  // use the previous character box and "append" the zero-width span after it
+  if (items.length === 0 && startPosition === endPosition && page === pages.length && allowZeroWidth) {
+    items.push({
+      position: startPosition,
+      page: last.page,
+      type: last.type,
+      char: '',
+      x: last.x + last.w,
+      y: last.y,
+      w: 1,
+      h: last.h
+    })
   }
 
   return items
