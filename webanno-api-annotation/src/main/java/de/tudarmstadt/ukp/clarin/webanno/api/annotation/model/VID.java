@@ -50,7 +50,7 @@ public class VID
 
     public static final Pattern PATTERN_EXT = Pattern.compile(
             "(?:(?<EXT>\\w+)\\:)" + 
-            "(?<PAYLOAD>\\d+)"
+            "(?<PAYLOAD>.+)"
             );
     
     public static final Pattern PATTERN_VID = Pattern.compile(
