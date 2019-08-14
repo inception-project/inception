@@ -31,10 +31,10 @@ code for this example can be found in the **inception-example-imls-data-majority
 To get started, check out the most recent source code of {product-name} from
 https://github.com/inception-project/inception[Github] and import it as a Maven project in the IDE
 of your choice. Add a new module to the INCEpTION project itself, we will call it
-**inception-imls-data-majority**.
+**inception-example-imls-data-majority**.
 
 In the root `pom.xml` of the {product-name} project, add your recommender as a dependency. Update 
-the version of the entry you just created to the version you find in the _pom.xml_ of the
+the version of the dependency entry you just created to the version you find in the _pom.xml_ of the
 {product-name} project. It should look like this:
 
 [source,xml,indent=0,subs="+attributes"]
@@ -108,7 +108,7 @@ to ensure type safety.
 
 Training consists of extracting annotations followed by training and saving the model. The 
 platform needs to know whether the recommender is ready for prediction, this is done by 
-calling `aContext.markAsReadyForPrediction()`.
+overriding `RecommendationEngine::isReadyForPrediction`.
 
 .Training routine
 [source,java,indent=0]
@@ -155,6 +155,8 @@ tutorial, it is sufficient.
 
 When making predictions, we also set the score feature to put a number on the quality of the annotation.
 The UIMA score feature to set can be obtained by calling `getScoreFeature` inside a `RecommendationEngine`.
+When creating predictions, make sure to call `annotation.setBooleanValue(isPredictionFeature, true);` so
+that {product-name} knows it is a prediction, not a real annotation.
 
 .Making the predictions
 [source,java,indent=0]
