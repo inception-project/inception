@@ -36,18 +36,18 @@ public class CurationVIDTest
     @Test
     public void testParse()
     {
-        assertParseVid(VID.parse("ext:kevin:10"),  "ext", -1, 10, -1, -1, -1, "kevin", "kevin:10");
-        assertParseVid(VID.parse("ext:kevin:10.1"), "ext", -1, 10, -1,  1, -1, "kevin", "kevin:10.1");
-        assertParseVid(VID.parse("ext:kevin:10.1.2"), "ext",  -1, 10, -1,  1,  2, "kevin", "kevin:10.1.2");
-        assertParseVid(VID.parse("ext:kevin:10-1.2.3"), "ext",  -1, 10,  1,  2,  3, "kevin", "kevin:10-1.2.3");
-        assertParseVid(VID.parse("ext:kevin:10-1.2.3@1"), "ext", 1, 10,  1,  2,  3, "kevin", "kevin:10-1.2.3@1");
+        assertParseVid(VID.parse("ext:10-kevin:10"),  "ext", -1, 10, -1, -1, -1, "kevin", "kevin:10");
+        assertParseVid(VID.parse("ext:10-kevin:10.1"), "ext", -1, 10, -1,  1, -1, "kevin", "kevin:10.1");
+        assertParseVid(VID.parse("ext:10-kevin:10.1.2"), "ext",  -1, 10, -1,  1,  2, "kevin", "kevin:10.1.2");
+        assertParseVid(VID.parse("ext:10-kevin:10-1.2.3"), "ext",  -1, 10,  1,  2,  3, "kevin", "kevin:10-1.2.3");
+        assertParseVid(VID.parse("ext:10-kevin:10-1.2.3@1"), "ext", 1, 10,  1,  2,  3, "kevin", "kevin:10-1.2.3@1");
     }
 
     private void assertParseVid(VID aVID, String aExtensionId, int aLayerId, int aAnnotationID,
             int aSubAnnotationId, int aAttribute, int aSlot, String aUsername,
             String aExtensionPayload)
     {
-        VID a = extension.parse(aVID, aExtensionPayload);
+        VID a = extension.parse(aVID);
         assertEquals(aExtensionId, a.getExtensionId());
         assertEquals(aExtensionPayload, a.getExtensionPayload());
         assertEquals(aUsername, ((CurationVID) a).getUsername());

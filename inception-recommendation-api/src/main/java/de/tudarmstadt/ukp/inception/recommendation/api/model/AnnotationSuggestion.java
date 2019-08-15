@@ -236,7 +236,9 @@ public class AnnotationSuggestion
 
     public VID getVID()
     {
-        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id, VID.NONE, VID.NONE);
+        String payload = new VID(layerId, (int) recommenderId, id).toString();
+        return new VID(EXTENSION_ID, layerId, (int) recommenderId, id,
+                payload);
     }
 
     @Override

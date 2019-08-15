@@ -69,12 +69,38 @@ public class CurationEditorExtension
         if (!aParamId.getExtensionId().equals(EXTENSION_ID)) {
             return;
         }
+        
+        VID extendedVID = parse(aParamId);
         // Annotation has been selected for gold
         if (SpanAnnotationResponse.is(aAction)) { //TODO is this action only for spans
                                                   //, what about relations ?
             // TODO: store annotation in user CAS
         }
         
+    }
+
+    /**
+     * Parse extension payload of given VID into CurationVID
+     */
+    protected VID parse(VID aParamId)
+    {
+        // format of extension payload is <USER>:<VID> with standard VID format
+        // <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
+        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" 
+                + "(?<VID>.+)").matcher(aParamId.getExtensionPayload());
+        if (!matcher.matches()) {
+            return aParamId;
+        }
+        
+        if (matcher.group("VID") == null || 
+                matcher.group("USER") == null ) {
+            return aParamId;
+        }
+        
+        String vidStr = matcher.group("VID");
+        String username = matcher.group("USER");
+        return new CurationVID(aParamId.getExtensionId(), aParamId.getExtensionPayload(), username, 
+                VID.parse(vidStr));
     }
 
     @Override
@@ -104,7 +130,7 @@ public class CurationEditorExtension
                 // copy all arcs and spans to existing doc with new VID
                 for (VObject vobj : tmpDoc.vobjects()) {
                     VID vid = vobj.getVid();
-                    VID extendedVID = parse(vid, vid.getExtensionPayload());
+                    VID extendedVID = parse(vid);
                     vobj.setVid(extendedVID);
                     aVdoc.add(vobj);
                 }
@@ -117,26 +143,5 @@ public class CurationEditorExtension
             }
 
         }
-    }
-
-    @Override
-    public VID parse(VID aParamId, String aVIDString)
-    {
-        // format is <USER>:<VID> with standard VID format <ID>-<SUB>.<ATTR>.<SLOT>@<LAYER>
-        Matcher matcher = Pattern.compile("(?:(?<USER>\\w+)\\:)" 
-                + "(?<VID>.+)").matcher(aVIDString);
-        if (!matcher.matches()) {
-            return aParamId;
-        }
-        
-        if (matcher.group("VID") == null || 
-                matcher.group("USER") == null ) {
-            return aParamId;
-        }
-        
-        String vidStr = matcher.group("VID");
-        String username = matcher.group("USER");
-        return new CurationVID(aParamId.getExtensionId(), aParamId.getExtensionPayload(), username, 
-                VID.parse(vidStr));
     }
 }

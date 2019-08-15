@@ -121,14 +121,18 @@ public class RecommendationEditorExtension
         if (!aVID.getExtensionId().equals(BEAN_NAME)) {
             return;
         }
-        
+        VID vid = VID.parse(aVID.getExtensionPayload());
+        VID extendedVID = new VID(aVID.getExtensionId(), vid.getLayerId(), vid.getId(), 
+                vid.getSubId(), vid.getAttribute(), vid.getSlot(), aVID.getExtensionPayload());
         // Create annotation
         if (SpanAnnotationResponse.is(aAction)) {
-            actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
+            actionAcceptRecommendation(aActionHandler, aState, aTarget, aCas, extendedVID, aBegin,
+                    aEnd);
         }
         // Reject annotation
         else if (DoActionResponse.is(aAction)) {
-            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, aVID, aBegin, aEnd);
+            actionRejectRecommendation(aActionHandler, aState, aTarget, aCas, extendedVID, aBegin,
+                    aEnd);
         }
     }
     
@@ -272,9 +276,4 @@ public class RecommendationEditorExtension
                 aWindowBeginOffset, aWindowEndOffset);
     }
 
-    @Override
-    public VID parse(VID aParamId, String aVIDString)
-    {
-        return VID.parse(aVIDString);
-    }
 }
