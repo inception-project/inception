@@ -32,13 +32,13 @@ public class PredictionGroupTest
     public void thatAddingElementsToGroupWorks()
     {
         AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", 1, "value", "doc1",
-                0, 1, "a", "A", "#A", 0.1);
+                0, 1, "a", "A", "#A", 0.1, "E1");
         AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", 1, "value", "doc1",
-                0, 1, "b", "B", "#B", 0.2);
+                0, 1, "b", "B", "#B", 0.2, "E2");
         AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", 1, "value", "doc1",
-                0, 1, "c", "C", "#C", 0.1);
+                0, 1, "c", "C", "#C", 0.1, "E1");
         AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", 1, "value", "doc1",
-                0, 1, "d", "D", "#D", 0.3);
+                0, 1, "d", "D", "#D", 0.3, "E3");
 
         // Ensure that group grows and that all elements are added properly
         SuggestionGroup sut = new SuggestionGroup();
@@ -60,13 +60,13 @@ public class PredictionGroupTest
     public void thatSortingWorks()
     {
         AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", 1, "value", "doc1",
-                0, 1, "a", "A", "#A", 0.1);
+                0, 1, "a", "A", "#A", 0.1, "E1");
         AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", 1, "value", "doc1",
-                0, 1, "b", "B", "#B", 0.2);
+                0, 1, "b", "B", "#B", 0.2, "E2");
         AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", 1, "value", "doc1",
-                0, 1, "c", "C", "#C", 0.1);
+                0, 1, "c", "C", "#C", 0.1, "E1");
         AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", 1, "value", "doc1",
-                0, 1, "d", "D", "#D", 0.3);
+                0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
         
@@ -87,13 +87,13 @@ public class PredictionGroupTest
     public void thatTopDeltasAreCorrect()
     {
         AnnotationSuggestion rec1Sug1 = new AnnotationSuggestion(1, 1, "rec1", 1, "value", "doc1",
-                0, 1, "a", "A", "#A", 0.1);
+                0, 1, "a", "A", "#A", 0.1, "E1");
         AnnotationSuggestion rec1Sug2 = new AnnotationSuggestion(2, 1, "rec1", 1, "value", "doc1",
-                0, 1, "b", "B", "#B", 0.2);
+                0, 1, "b", "B", "#B", 0.2, "E2");
         AnnotationSuggestion rec2Sug1 = new AnnotationSuggestion(3, 2, "rec2", 1, "value", "doc1",
-                0, 1, "c", "C", "#C", 0.1);
+                0, 1, "c", "C", "#C", 0.1, "E1");
         AnnotationSuggestion rec2Sug2 = new AnnotationSuggestion(4, 2, "rec2", 1, "value", "doc1",
-                0, 1, "d", "D", "#D", 0.3);
+                0, 1, "d", "D", "#D", 0.3, "E3");
 
         SuggestionGroup sut = new SuggestionGroup(rec1Sug1, rec1Sug2, rec2Sug1, rec2Sug2);
                 

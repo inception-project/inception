@@ -870,7 +870,10 @@ public class RecommendationServiceImpl
 
         Type predictedType = CasUtil.getType(aCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
-        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
+        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_SUFFIX);
+        Feature scoreExplanationFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
         Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         int predictionCount = 0;
@@ -897,12 +900,13 @@ public class RecommendationServiceImpl
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = annotationFS.getDoubleValue(scoreFeature);
+            String scoreExplanation = annotationFS.getStringValue(scoreExplanationFeature);
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
                     aRecommender.getLayer().getId(), featureName, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
-                    label, score);
+                    label, score, scoreExplanation);
 
             result.add(ao);
             id++;
@@ -1063,8 +1067,13 @@ public class RecommendationServiceImpl
                 }
 
                 for (FeatureDescription feature : td.getFeatures()) {
-                    String scoreFeatureName = feature.getName() + "_score";
+                    String scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
                     td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
+                    
+                    String scoreExplanationFeatureName = feature.getName() + 
+                            FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature", 
+                            CAS.TYPE_NAME_STRING);
                 }
 
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
