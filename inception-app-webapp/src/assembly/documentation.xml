@@ -57,4 +57,13 @@
       </unpackOptions>
     </dependencySet>
   </dependencySets>
+  <fileSets>
+    <fileSet>
+      <directory>../inception-example-imls-data-majority/src/main/resources</directory>
+      <outputDirectory>/</outputDirectory>
+        <includes>
+          <include>**/META-INF/asciidoc/**</include>
+        </includes>
+    </fileSet>
+  </fileSets>
 </assembly>
