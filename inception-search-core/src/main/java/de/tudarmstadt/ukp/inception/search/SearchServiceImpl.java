@@ -383,7 +383,7 @@ public class SearchServiceImpl
                 log.debug("Running query: [{}]", aQuery);
 
                 results = index.getPhysicalIndex().executeQuery(
-                    new SearchQueryRequest(aProject, aUser.getUsername(), aQuery, aDocument,
+                    new SearchQueryRequest(aProject, aUser, aQuery, aDocument,
                         aAnnotationLayer, aAnnotationFeature));
             }
 

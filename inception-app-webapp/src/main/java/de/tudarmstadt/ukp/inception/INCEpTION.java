@@ -41,12 +41,15 @@ import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.DelegatingPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.crypto.password.StandardPasswordEncoder;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
+
+import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAutoConfig.WebSocketWicketWebInitializerAutoConfiguration;
 
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
@@ -97,6 +100,7 @@ import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulati
         "classpath:/META-INF/application-context.xml",
         "classpath:/META-INF/rest-context.xml", 
         "classpath:/META-INF/static-resources-context.xml" })
+@EnableAsync
 public class INCEpTION
     extends SpringBootServletInitializer
 {
@@ -145,6 +149,10 @@ public class INCEpTION
     {
         SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
         builder.properties("running.from.commandline=false");
+        // add this property in the case of .war deployment
+        builder.properties( 
+                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED 
+                + "=false" );
         init(builder);
         return builder;
     }

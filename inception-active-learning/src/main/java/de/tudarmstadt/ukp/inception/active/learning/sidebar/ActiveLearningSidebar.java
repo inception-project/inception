@@ -119,9 +119,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Predictions;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.recommendation.event.AjaxPredictionsSwitchedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.AjaxRecommendationRejectedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEvent;
 
 public class ActiveLearningSidebar
     extends AnnotationSidebar_ImplBase
@@ -1252,9 +1252,9 @@ public class ActiveLearningSidebar
     }
     
     @OnEvent
-    public void onPredictionsSwitched(AjaxPredictionsSwitchedEvent aEvent)
+    public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
-        reactToChangeInPredictions(aEvent.getTarget());
+        reactToChangeInPredictions(aEvent.getRequestHandler());
         // As a reaction to the change in predictions, the highlights may have to be placed at 
         // a different location. This the prediction switch is announced late in the rendering
         // process and the highlights have already been added to the VDocument at this time, 

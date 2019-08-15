@@ -56,7 +56,7 @@
   <properties>
     <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
-    <dkpro.version>1.10.0</dkpro.version>
+    <dkpro.version>1.11.0</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
     <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
     <wicket.version>8.3.0</wicket.version>
@@ -75,39 +75,47 @@
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
+    <!-- Build infrastructure modules -->
     <module>inception-build</module>
+    <!-- Core application modules -->
+    <module>inception-log</module>
+    <module>inception-support</module>
+    <module>inception-scheduling</module>
+    <module>inception-testing</module>
+    <module>inception-ui-core</module>
     <module>inception-app-webapp</module>
+    <!-- Internal search -->
     <module>inception-ui-search</module>
     <module>inception-search-core</module>
     <module>inception-search-mtas</module>
+    <!-- External search -->
     <module>inception-external-search-core</module>
     <module>inception-external-search-elastic</module>
     <module>inception-external-search-pubannotation</module>
     <module>inception-ui-external-search</module>
+    <!-- Knowledge base -->
     <module>inception-kb</module>
-    <module>inception-ui-core</module>
     <module>inception-ui-kb</module>
+    <module>inception-concept-linking</module>
+    <!-- Editor extensions -->
     <module>inception-html-editor</module>
     <module>inception-pdf-editor</module>
+    <!-- Schema extensions -->
+    <module>inception-layer-docmetadata</module>
+    <module>inception-image</module>
+    <!-- Recommendation system -->
     <module>inception-recommendation-api</module>
     <module>inception-recommendation</module>
     <module>inception-active-learning</module>
-    <module>inception-concept-linking</module>
     <module>inception-imls-opennlp</module>
     <module>inception-imls-stringmatch</module>
     <module>inception-imls-dl4j</module>
     <module>inception-imls-external</module>
-    <module>inception-log</module>
-    <module>inception-support</module>
-    <module>inception-testing</module>
-    <module>inception-layer-docmetadata</module>
-    <module>inception-image</module>
-    <module>inception-scheduling</module>
+    <module>inception-imls-lapps</module>
     <!-- Examples -->
     <module>inception-example-imls-data-majority</module>
     <!-- Documentation -->
     <module>inception-doc</module>
-
   </modules>
   <repositories>
     <!-- For RELEASEes of WebAnno / DKPro Core-->
@@ -304,6 +312,11 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-imls-external</artifactId>
+        <version>0.11.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+        <artifactId>inception-imls-lapps</artifactId>
         <version>0.11.0-SNAPSHOT</version>
       </dependency>
       <dependency>
@@ -655,8 +668,8 @@
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.testing-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-testing-asl</artifactId>
         <version>${dkpro.version}</version>
         <exclusions>
           <exclusion>
@@ -667,20 +680,20 @@
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.html-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-html-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
       
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core.io.conll-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-io-conll-asl</artifactId>
         <version>${dkpro.version}</version>
       </dependency>
 
       <dependency>
-        <groupId>de.tudarmstadt.ukp.dkpro.core</groupId>
-        <artifactId>de.tudarmstadt.ukp.dkpro.core-asl</artifactId>
+        <groupId>org.dkpro.core</groupId>
+        <artifactId>dkpro-core-asl</artifactId>
         <version>${dkpro.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -1283,6 +1296,7 @@
                 <configuration>
                   <consoleOutput>true</consoleOutput>
                   <excludes>
+                    <exclude>.factorypath</exclude>
                     <exclude>.gitignore</exclude>
                     <exclude>.checkstyle</exclude>
                     <exclude>suppressions.xml</exclude>
