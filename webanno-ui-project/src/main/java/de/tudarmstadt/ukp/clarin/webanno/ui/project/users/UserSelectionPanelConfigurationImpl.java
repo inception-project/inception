@@ -25,7 +25,7 @@ import org.springframework.stereotype.Component;
 public class UserSelectionPanelConfigurationImpl
     implements UserSelectionPanelConfiguration
 {
-    public static final String PROPERTY_PREFIX = "userSelection";
+    public static final String PROPERTY_PREFIX = "user-selection";
 
     private boolean hideUsers;
 
