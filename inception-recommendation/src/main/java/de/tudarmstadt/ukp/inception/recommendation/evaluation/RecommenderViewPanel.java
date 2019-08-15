@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -31,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 
 public class RecommenderViewPanel
     extends Panel
@@ -89,17 +91,15 @@ public class RecommenderViewPanel
         setVisible(recommenderModel != null && recommenderModel.getObject() != null);
         
         if (recommenderModel != null && recommenderModel.getObject() != null) {
-            String name = recommenderModel.getObject().getLayer().getName();
-            String[] split = name.split("\\.");
-            layer.setDefaultModel(Model.of(split[split.length - 1]));
+            String name = recommenderModel.getObject().getLayer().getUiName();
+            layer.setDefaultModel(Model.of(name));
 
-            name = recommenderModel.getObject().getFeature().getName();
-            split = name.split("\\.");
-            feature.setDefaultModel(Model.of(split[split.length - 1]));
+            name = recommenderModel.getObject().getFeature().getUiName();
+            feature.setDefaultModel(Model.of(name));
 
             name = recommenderModel.getObject().getTool();
-            split = name.split("\\.");
-            tool.setDefaultModel(Model.of(split[split.length - 1]));
+            RecommendationEngineFactory factory = recommenderRegistry.getFactory(name);
+            tool.setDefaultModel(Model.of(factory.getName()));
         }
     }
 }

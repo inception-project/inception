@@ -89,7 +89,7 @@ public class LearningCurveChartPanel
         dropDownPanel.setOutputMarkupId(true);
         add(dropDownPanel);
         
-        selectedMetric = RecommenderEvaluationScoreMetricEnum.ACCURACY;
+        selectedMetric = RecommenderEvaluationScoreMetricEnum.Accuracy;
     }
     
 
@@ -224,13 +224,13 @@ public class LearningCurveChartPanel
                 double score;
                 
                 switch (selectedMetric ) {
-                case ACCURACY:
+                case Accuracy:
                     score = detail.accuracy;
                     break;
-                case PRECISION:
+                case Precision:
                     score = detail.precision;
                     break;
-                case RECALL:
+                case Recall:
                     score = detail.recall;
                     break;
                 case F1:

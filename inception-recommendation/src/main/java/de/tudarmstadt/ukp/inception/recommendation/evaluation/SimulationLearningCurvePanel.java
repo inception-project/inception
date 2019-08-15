@@ -104,7 +104,7 @@ public class SimulationLearningCurvePanel
                 new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
-        selectedValue = RecommenderEvaluationScoreMetricEnum.ACCURACY;
+        selectedValue = RecommenderEvaluationScoreMetricEnum.Accuracy;
 
         dropdown.add(new AjaxFormComponentUpdatingBehavior("change")
         {
@@ -227,7 +227,7 @@ public class SimulationLearningCurvePanel
         }
 
         evaluationResults = new ArrayList<EvaluationResult>();
-
+        
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
         while (splitStrategy.hasNext()) {
@@ -270,13 +270,13 @@ public class SimulationLearningCurvePanel
             }
 
             switch (selectedValue) {
-            case ACCURACY:
+            case Accuracy:
                 score = evaluationResult.computeAccuracyScore();
                 break;
-            case PRECISION:
+            case Precision:
                 score = evaluationResult.computePrecisionScore();
                 break;
-            case RECALL:
+            case Recall:
                 score = evaluationResult.computeRecallScore();
                 break;
             case F1:
