@@ -53,12 +53,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.admin.CASMgr;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -824,8 +820,7 @@ public class RecommendationServiceImpl
                         log.trace("[{}][{}]: Generating predictions for layer [{}]", username,
                                 r.getRecommender().getName(), layer.getUiName());
                         
-                        cloneCAS(originalCas.get(), predictionCas);
-                        monkeyPatchTypeSystem(aProject, predictionCas);
+                        cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
@@ -870,7 +865,10 @@ public class RecommendationServiceImpl
 
         Type predictedType = CasUtil.getType(aCas, typeName);
         Feature predictedFeature = predictedType.getFeatureByBaseName(featureName);
-        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + "_score");
+        Feature scoreFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_SUFFIX);
+        Feature scoreExplanationFeature = predictedType.getFeatureByBaseName(featureName + 
+                FEATURE_NAME_SCORE_EXPLANATION_SUFFIX);
         Feature predictionFeature = predictedType.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
 
         int predictionCount = 0;
@@ -897,12 +895,13 @@ public class RecommendationServiceImpl
 
             String label = annotationFS.getFeatureValueAsString(predictedFeature);
             double score = annotationFS.getDoubleValue(scoreFeature);
+            String scoreExplanation = annotationFS.getStringValue(scoreExplanationFeature);
             String name = aRecommender.getName();
 
             AnnotationSuggestion ao = new AnnotationSuggestion(id, aRecommender.getId(), name,
                     aRecommender.getLayer().getId(), featureName, aDocument.getName(),
                     firstToken.getBegin(), lastToken.getEnd(), annotationFS.getCoveredText(), label,
-                    label, score);
+                    label, score, scoreExplanation);
 
             result.add(ao);
             id++;
@@ -1037,20 +1036,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    private CAS cloneCAS(CAS aSourceCas, CAS aTargetCas) throws CASException
+    public CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
+        throws UIMAException, IOException
     {
-        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aSourceCas);
-        Serialization.deserializeCASComplete(ser, (CASMgr) aTargetCas);
-        
-        // Make sure JCas is properly initialized too
-        aTargetCas.getJCas();
-        
-        return aTargetCas;
-    }
-
-    public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
-            throws UIMAException, IOException {
-
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
             TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
 
@@ -1063,14 +1051,21 @@ public class RecommendationServiceImpl
                 }
 
                 for (FeatureDescription feature : td.getFeatures()) {
-                    String scoreFeatureName = feature.getName() + "_score";
+                    String scoreFeatureName = feature.getName() + FEATURE_NAME_SCORE_SUFFIX;
                     td.addFeature(scoreFeatureName, "Score feature", CAS.TYPE_NAME_DOUBLE);
+                    
+                    String scoreExplanationFeatureName = feature.getName() + 
+                            FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+                    td.addFeature(scoreExplanationFeatureName, "Score explanation feature", 
+                            CAS.TYPE_NAME_STRING);
                 }
 
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
-            annoService.upgradeCas(aCas, tsd);
+            annoService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }
+
+        return aTargetCas;
     }
 }
