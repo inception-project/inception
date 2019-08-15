@@ -44,6 +44,16 @@
       <artifactId>asciidoctorj-diagram</artifactId>
       <version>1.5.12</version>
     </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery.tocify.js</artifactId>
+      <version>1.9.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.webjars</groupId>
+      <artifactId>jquery-migrate</artifactId>
+      <version>3.0.0</version>
+    </dependency>
   </dependencies>
   <build>
     <pluginManagement>
@@ -57,9 +67,15 @@
                 - Maven doesn't detect that we tell asciidoctor to use the diagram module
               -->
               <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
+              <!--
+                - Maven doesn't detect JS dependencies. We use this in docinfo.html
+              -->
+              <usedDependency>org.webjars:jquery.tocify.js</usedDependency>
+              <usedDependency>org.webjars:jquery-migrate</usedDependency>
             </usedDependencies>
           </configuration>
         </plugin>
       </plugins>
     </pluginManagement>
-  </build></project>
+  </build>
+</project>

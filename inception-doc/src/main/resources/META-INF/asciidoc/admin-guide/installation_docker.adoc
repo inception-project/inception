@@ -20,9 +20,9 @@
 
 If you have Docker installed, you can run {product-name} using
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -it --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 The command downloads {product-name} from Dockerhub and starts it on port 8080. If this port is not
@@ -32,16 +32,16 @@ The logs will be printed to the console. To stop the container, press `CTRL-C`.
 
 To run the {product-name} docker in the background use 
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
+$ docker run -d --name inception -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
-Logs are accessible by typing 
+Logs are accessible by typing
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker logs inception
+$ docker logs inception
 ----
 
 NOTE: Use `docker run` only the first time that you run {product-name}. If you try it a second time, Docker
@@ -51,16 +51,16 @@ NOTE: Use `docker run` only the first time that you run {product-name}. If you t
       
 When you want to run {product-name} again later, use the command
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker start -ai inception
+$ docker start -ai inception
 ----
 
 or for the background mode 
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker start inception
+$ docker start inception
 ----
 
 == Storing data on the host
@@ -79,9 +79,9 @@ $ mkdir /srv/inception
 
 When you run {product-name} via Docker, you then mount this folder into the container:
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
+$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
 ----
 
 == Settings file
@@ -90,7 +90,7 @@ The dockerized {product-name} expects the `settings.properties` file in the `/ex
 injecting a custom `settings.properties` file into the container, it is strongly recommender to
 use the instructions above (Storing data on the host) to mount a folder from the host system to 
 `/export` then to place the into the mounted folder `settings.properties`. Thus, if you follow
-the instructions above, the settings file would go to `/srv/webanno/settings.properties` on the host
+the instructions above, the settings file would go to `/srv/inception/settings.properties` on the host
 system.
 
 == Connecting to a MySQL database
@@ -99,38 +99,56 @@ By default, {product-name} uses an embedded SQL database to store its metadata (
 annotations and knowledge bases, these are stored in files on disk). For production use, it is highly
 recommended to use a separate MySQL database instead of the embedded SQL database.
 
-You can do so by providing a second Docker for MySQL (see for example link:https://hub.docker.com/_/mysql/[this one]).
-We provide a docker-compose example file, which combines the two containers. In order to use this, download link:admin-guide/scripts/docker-compose.yml[docker-compose.yml] and place it into any folder, change to that folder, and issue the commands
+== Docker Compose
+
+Using Docker Compose, you can manage multiple related containers. This section illustrates how to use
+Docker Compose to jointly set up a {product-name} container as well as a database container (i.e. 
+link:https://hub.docker.com/_/mysql/[this one]).
+
+The following Compose script sets these containers up.
 
 [source,text,subs="+attributes"]
+.Docker Compose script
 ----
-export INCEPTION_HOME=/srv/inception
-export INCEPTION_PORT=8080
-docker-compose -p inception up -d
+include::scripts/docker-compose.yml[]
 ----
 
-This will start two docker containers: `inception_mysqlserver_1`, and `inception_webserver_1`. You can check the logs of each by running 
+Place the script into any folder, change to that folder, and issue the following commands which
+define the username/password you wish to use for {product-name} to talk to the database, the
+folder on the host system where the application data is stored, and the port on which the 
+application will run. The last command starts the containers.
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker logs inception_mysqlserver_1
-docker logs inception_webserver_1
+$ export DBUSER=<USER_NAME>
+$ export DBPASSWORD=<PASSWORD>
+$ export INCEPTION_HOME=/srv/inception
+$ export INCEPTION_PORT=8080
+$ docker-compose -p inception up -d
+----
+
+This will start two docker containers: `inception_mysqlserver_1`, and `inception_webserver_1`. 
+You can check the logs of each by running 
+
+[source,shell,subs="+attributes"]
+----
+$ docker logs inception_mysqlserver_1
+$ docker logs inception_webserver_1
 ----
 
 The actual name of these containers might vary. A list of running containers can be retrieved by
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker ps
+$ docker ps
 ----
 
-Two directories in your {product-name} home folder will be created: `mysql-data` and `webserver-data`. No data is stored in the containers themselves, you are safe to delete them with 
+Two directories in your {product-name} home folder will be created: `mysql-data` and `webserver-data`.
+No data is stored in the containers themselves, you are safe to delete them with 
 
-[source,text,subs="+attributes"]
+[source,shell,subs="+attributes"]
 ----
-docker-compose -p inception down
+$ docker-compose -p inception down
 ----
 
 You can also just stop or pause them, please see the link:https://docs.docker.com/compose/[docker-compose reference] for details.
-
-NOTE: The settings within the docker-compose.yml file are just examples. Adjust the database URL, username, and password accordingly.
