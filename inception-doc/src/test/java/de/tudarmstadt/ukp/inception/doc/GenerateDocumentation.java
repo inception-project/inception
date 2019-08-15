@@ -86,6 +86,8 @@ public class GenerateDocumentation
         Path outputDir = Paths.get(System.getProperty("user.dir")).resolve("target")
                 .resolve("doc-out");
 
+        Files.createDirectories(outputDir);
+
         List<Path> modules = new ArrayList<>();
         modules.addAll(getAsciiDocs(webannoDir));
         modules.addAll(getAsciiDocs(inceptionDir));
