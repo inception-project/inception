@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static org.apache.uima.fit.util.CasUtil.getType;
 
 import java.util.List;
@@ -30,8 +32,8 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public abstract class RecommendationEngine {
-
+public abstract class RecommendationEngine
+{
     protected final Recommender recommender;
     protected final String layerName;
     protected final String featureName;
@@ -85,14 +87,38 @@ public abstract class RecommendationEngine {
 // end::methodDefinition[]
 
     /**
-     * Whether or not this engine supports training. If training is not supported, the call to
-     * {@link #train} should be skipped and {@link #predict} should be called immediately. Note
-     * that the engine cannot expect a model to be present in the {@link RecommenderContext} if
-     * training is skipped - this is meant only for engines that use pre-trained models.
+     * This method should be called before attempting to call {@link #predict} to ensure that the
+     * given context contains sufficient information to perform prediction. If this method returns
+     * {@code false}, calling {@link #predict} might result in an exception being thrown or in
+     * predictions being invalid/unusable.
+     * 
+     * @return if the recommender can use the given context to make predictions. This is usually the
+     *         case if the recommender has previously initialized the context with a trained model.
+     *         However, some recommenders might be able to provide recommendations without a trained
+     *         model, e.g. using some kind of fall back mechanism.
      */
-    public boolean requiresTraining()
+    public abstract boolean isReadyForPrediction(RecommenderContext aContext);
+    
+    /** 
+     * Returns which training capabilities this engine has.
+     * If training is not supported, the call to {@link #train} should be skipped and 
+     * {@link #predict} should be called immediately.   
+     * Note that the engine cannot expect a model to be present in the {@link RecommenderContext} if
+     * training is skipped or fails - this is meant only for engines that use pre-trained models.
+     */
+    public RecommendationEngineCapability getTrainingCapability()
     {
-        return true;
+        return RecommendationEngineCapability.TRAINING_SUPPORTED;
+    }
+    
+    /**
+     * Create a new context given the previous context. This allows incrementally training 
+     * recommenders to salvage information from the current context for a new iteration. By default,
+     * no information is copy and simply new context is created.
+     */
+    public RecommenderContext newContext(RecommenderContext aCurrentContext)
+    {
+        return new RecommenderContext();
     }
 
     protected Type getPredictedType(CAS aCas)
@@ -107,8 +133,14 @@ public abstract class RecommendationEngine {
 
     protected Feature getScoreFeature(CAS aCas)
     {
-        String scoreFeatureName = featureName + "_score";
+        String scoreFeatureName = featureName + FEATURE_NAME_SCORE_SUFFIX;
         return getPredictedType(aCas).getFeatureByBaseName(scoreFeatureName);
+    }
+    
+    protected Feature getScoreExplanationFeature(CAS aCas) 
+    {
+        String scoreExplanationFeature = featureName + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+        return getPredictedType(aCas).getFeatureByBaseName(scoreExplanationFeature);
     }
 
     protected Feature getIsPredictionFeature(CAS aCas)

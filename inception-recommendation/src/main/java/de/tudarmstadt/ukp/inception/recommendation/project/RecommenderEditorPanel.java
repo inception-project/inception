@@ -376,10 +376,14 @@ public class RecommenderEditorPanel
                 || aRecommender.getTool() == null) {
             return null;
         }
+        
         RecommendationEngineFactory factory = recommenderRegistry
                 .getFactory(aRecommender.getTool());
+        
+        String factoryName = factory != null ? factory.getName() : "NO FACTORY!";
+        
         return String.format(Locale.US, "[%s@%s] %s", aRecommender.getLayer().getUiName(),
-                aRecommender.getFeature().getUiName(), factory.getName());
+                aRecommender.getFeature().getUiName(), factoryName);
     }
     
     @Override
@@ -401,17 +405,22 @@ public class RecommenderEditorPanel
 
         // Since toolChoice uses a lambda model, it needs to be notified explicitly.
         toolChoice.modelChanged();
-        
+
+        Recommender recommender = recommenderModel.getObject();
+
+        // New recommenders should run on all states
+        if (recommender.getId() == null) {
+            statesForTraining.setObject(getAllPossibleDocumentStates());
+        }
+
         // For new recommenders, default to auto-generation of name, for existing recommenders,
         // do not auto-generate name unless asked to
-        Recommender recommender = recommenderModel.getObject();
         if (
                 recommender.getId() == null || 
                 Objects.equals(recommender.getName(), generateName(recommender))
         ) {
             autoGenerateNameCheckBox.setModelObject(true);
             autoUpdateName(null, nameField, recommenderModel.getObject());
-            statesForTraining.setObject(getAllPossibleDocumentStates());
         }
         else {
             autoGenerateNameCheckBox.setModelObject(false);

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.imls.external;
 
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_SUPPORTED;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -25,6 +27,7 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.cas.CAS;
@@ -48,8 +51,10 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.DataSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResult;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -60,8 +65,13 @@ import okhttp3.Response;
 public class ExternalRecommender
     extends RecommendationEngine
 {
+    public static final Key<Boolean> KEY_TRAINING_COMPLETE = new Key<>("training_complete");
+    
     private static final Logger LOG = LoggerFactory.getLogger(ExternalRecommender.class);
     private static final MediaType JSON = MediaType.parse("application/json");
+    private static final long CONNECT_TIMEOUT = 30;
+    private static final long WRITE_TIMEOUT = 30;
+    private static final long READ_TIMEOUT = 30;
 
     private final Recommender recommender;
     private final ExternalRecommenderTraits traits;
@@ -73,15 +83,27 @@ public class ExternalRecommender
 
         recommender = aRecommender;
         traits = aTraits;
-        client = new OkHttpClient();
+        client = new OkHttpClient.Builder()
+                .connectTimeout(CONNECT_TIMEOUT,TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+                .build();
     }
 
+    @Override
+    public boolean isReadyForPrediction(RecommenderContext aContext)
+    {
+        if (traits.isTrainable()) {
+            return aContext.get(KEY_TRAINING_COMPLETE).orElse(false);
+        } else {
+            return true;
+        }
+    }
+    
     @Override
     public void train(RecommenderContext aContext, List<CAS> aCasses)
         throws RecommendationException
     {
-        aContext.markAsReadyForPrediction();
-
         TrainingRequest trainingRequest = new TrainingRequest();
         List<Document> documents = new ArrayList<>();
 
@@ -104,7 +126,6 @@ public class ExternalRecommender
 
         trainingRequest.setDocuments(documents);
 
-
         HttpUrl url = HttpUrl.parse(traits.getRemoteUrl()).newBuilder()
             .addPathSegment("train")
             .build();
@@ -121,6 +142,8 @@ public class ExternalRecommender
             String msg = format("Request was not successful: [%d] - [%s]", code, responseBody);
             throw new RecommendationException(msg);
         }
+        
+        aContext.put(KEY_TRAINING_COMPLETE, true);
     }
 
     @Override
@@ -273,8 +296,12 @@ public class ExternalRecommender
     }
 
     @Override
-    public boolean requiresTraining()
+    public RecommendationEngineCapability getTrainingCapability() 
     {
-        return traits.isTrainable();
+        if (traits.isTrainable()) {
+            return TRAINING_SUPPORTED;
+        } else {
+            return TRAINING_NOT_SUPPORTED;
+        }
     }
 }

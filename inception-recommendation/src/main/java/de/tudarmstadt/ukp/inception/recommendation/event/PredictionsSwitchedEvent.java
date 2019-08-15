@@ -23,14 +23,14 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 
-public class AjaxPredictionsSwitchedEvent
+public class PredictionsSwitchedEvent
 {
     private final IPartialPageRequestHandler requestHandler;
     private final CAS cas;
     private final AnnotatorState state;
     private final VDocument vdoc;
 
-    public AjaxPredictionsSwitchedEvent(IPartialPageRequestHandler aTarget, CAS aCas,
+    public PredictionsSwitchedEvent(IPartialPageRequestHandler aTarget, CAS aCas,
             AnnotatorState aState, VDocument aVDoc)
     {
         requestHandler = aTarget;
@@ -39,7 +39,7 @@ public class AjaxPredictionsSwitchedEvent
         vdoc = aVDoc;
     }
 
-    public IPartialPageRequestHandler getTarget()
+    public IPartialPageRequestHandler getRequestHandler()
     {
         return requestHandler;
     }
