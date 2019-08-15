@@ -39,7 +39,7 @@ import org.apache.wicket.request.cycle.PageRequestHandlerTracker;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.resource.PackageResourceReference;
 import org.apache.wicket.request.resource.SharedResourceReference;
-import org.apache.wicket.resource.DynamicJQueryResourceReference;
+import org.apache.wicket.resource.JQueryResourceReference;
 import org.apache.wicket.resource.loader.IStringResourceLoader;
 import org.apache.wicket.resource.loader.NestedStringResourceLoader;
 import org.apache.wicket.settings.ExceptionSettings;
@@ -314,7 +314,7 @@ public abstract class WicketApplicationBase
 
     protected void initDynamicJQueryResourceReference()
     {
-        getJavaScriptLibrarySettings().setJQueryReference(new DynamicJQueryResourceReference());
+        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV3());
     }
 
     protected void initNestedStringResourceLoader()
@@ -334,11 +334,6 @@ public abstract class WicketApplicationBase
         }
     }
 
-//    protected void initSpring()
-//    {
-//        getComponentInstantiationListeners().add(new SpringComponentInjector(this));
-//    }
-    
     @Override
     public Class<? extends WebPage> getSignInPageClass()
     {
