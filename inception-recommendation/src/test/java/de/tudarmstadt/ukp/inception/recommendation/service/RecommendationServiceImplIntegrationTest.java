@@ -19,6 +19,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_IS_PREDICTION;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_EXPLANATION_SUFFIX;
+import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.FEATURE_NAME_SCORE_SUFFIX;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -182,7 +184,8 @@ public class RecommendationServiceImplIntegrationTest
 
         assertThat(type.getFeatures())
                 .extracting(Feature::getShortName)
-                .contains(feature.getName() + "_score")
+                .contains(feature.getName() + FEATURE_NAME_SCORE_SUFFIX)
+                .contains(feature.getName() + FEATURE_NAME_SCORE_EXPLANATION_SUFFIX)
                 .contains(FEATURE_NAME_IS_PREDICTION);
     }
 
