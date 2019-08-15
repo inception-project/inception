@@ -629,6 +629,7 @@
             <configuration>
               <tasks>
                 <mkdir dir="src/main/resources/public/doc" />
+
                 <!-- 
                 It is important that we SYNC here instead of delete/copy, otherwise we may run into
                 an endless build loop in Eclipse.
@@ -640,6 +641,15 @@
                     <include name="**/*.jpg" />
                   </fileset>
                 </sync>
+
+                <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
+                  <include name="**/*.html"/>
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
+                </replace>
+
               </tasks>
             </configuration>
           </execution>
