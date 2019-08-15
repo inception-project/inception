@@ -50,7 +50,8 @@ public class VID
 
     public static final Pattern PATTERN_EXT = Pattern.compile(
             "(?:(?<EXT>\\w+)\\:)" + 
-            "(?<PAYLOAD>.+)"
+            "(?<ID>\\d+)" +
+            "(?:\\-(?<PAYLOAD>.+))?"
             );
     
     public static final Pattern PATTERN_VID = Pattern.compile(
@@ -75,76 +76,78 @@ public class VID
 
     public VID(FeatureStructure aFS)
     {
-        this(null, getAddr(aFS), NONE, NONE, NONE);
+        this(getAddr(aFS), NONE, NONE, NONE);
     }
 
     public VID(int aAnnotationID)
     {
-        this(null, aAnnotationID, NONE, NONE, NONE);
+        this(aAnnotationID, NONE, NONE, NONE);
     }
     
-    public VID(String aExtensionId, String aPayload)
+    public VID(int aAnnotationID, String aExtensionId, String aPayload)
     {
-        this(aExtensionId, -1l, NONE, NONE,
+        this(aExtensionId, -1l, aAnnotationID, NONE,
                 NONE, NONE, aPayload);
     }
 
     public VID(AnnotationFS aFS, int aAttribute)
     {
-        this(null, getAddr(aFS), NONE, aAttribute, NONE);
+        this(getAddr(aFS), NONE, aAttribute, NONE);
     }
 
     public VID(int aAnnotationID, int aAttribute)
     {
-        this(null, aAnnotationID, NONE, aAttribute, NONE);
+        this(aAnnotationID, NONE, aAttribute, NONE);
     }
 
     public VID(AnnotationFS aFS, int aAttribute, int aSlot)
     {
-        this(null, getAddr(aFS), NONE, aAttribute, aSlot);
+        this(getAddr(aFS), NONE, aAttribute, aSlot);
     }
 
     public VID(int aAnnotationID, int aAttribute, int aSlot)
     {
-        this(null, aAnnotationID, NONE, aAttribute, aSlot);
-    }
-
-    public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute, int aSlot)
-    {
-        this(null, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+        this(aAnnotationID, NONE, aAttribute, aSlot);
     }
 
     public VID(AnnotationFS aFS, int aSubAnnotationId, int aAttribute, int aSlot)
     {
-        this(null, getAddr(aFS), aSubAnnotationId, aAttribute, aSlot);
+        this(getAddr(aFS), aSubAnnotationId, aAttribute, aSlot);
     }
 
     public VID(String aExtensionId, int aAnnotationID)
     {
-        this(aExtensionId, aAnnotationID, NONE, NONE, NONE);
+        this(aAnnotationID, aExtensionId, null);
     }
-
-    public VID(String aExtensionId, int aAnnotationID, int aAttribute)
-    {
-        this(aExtensionId, aAnnotationID, NONE, aAttribute, NONE);
-    }
-
-    public VID(String aExtensionId, int aAnnotationID, int aAttribute, int aSlot)
-    {
-        this(aExtensionId, aAnnotationID, NONE, aAttribute, aSlot);
-    }
-
-    public VID(String aExtensionId, int aAnnotationID, int aSubAnnotationId, int aAttribute,
+    
+    public VID(int aAnnotationID, int aSubAnnotationId, int aAttribute,
             int aSlot)
     {
-        this(aExtensionId, -1l, aAnnotationID, aSubAnnotationId, aAttribute, aSlot);
+        this(null, -1l, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
+    }
+    
+    public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId)
+    {
+        this(null, aLayerId, aAnnotationID, aSubAnnotationId, NONE, NONE, null);
+    }
+    
+    public VID(long aLayerId, int aAnnotationID, int aSubAnnotationId,
+            int aAttribute, int aSlot)
+    {
+        this(null, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
     }
 
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
             int aAttribute, int aSlot)
     {
         this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, aAttribute, aSlot, null);
-
+    }
+    
+    public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
+            String aExtensionPayload)
+    {
+        this(aExtensionId, aLayerId, aAnnotationID, aSubAnnotationId, NONE, NONE,
+                aExtensionPayload);
     }
     
     public VID(String aExtensionId, long aLayerId, int aAnnotationID, int aSubAnnotationId,
@@ -230,7 +233,7 @@ public class VID
             return new VID(NONE);
         }
     }
-
+    
     public static VID parse(String aVid)
     {
         Matcher m = PATTERN_EXT.matcher(aVid);
@@ -238,6 +241,7 @@ public class VID
         if (m.matches()) {
             String extId = null;
             String extPayload = null;
+            int annotationId = Integer.valueOf(m.group(ID));
             
             if (m.group(EXTENSION) != null) {
                 extId = m.group(EXTENSION);
@@ -245,7 +249,7 @@ public class VID
             if (m.group(EXT_PAYLOAD) != null) {
                 extPayload = m.group(EXT_PAYLOAD);
             }
-            return new VID(extId, extPayload);
+            return new VID(annotationId, extId, extPayload);
         }
         
         m = PATTERN_VID.matcher(aVid);
@@ -283,7 +287,11 @@ public class VID
         if (isNotBlank(extensionId)) {
             sb.append(extensionId);
             sb.append(':');
-            sb.append(extensionPayload);
+            sb.append(annotationId);
+            if (extensionPayload != null) {
+                sb.append("-");
+                sb.append(extensionPayload);
+            }
             return sb.toString();
         }
 

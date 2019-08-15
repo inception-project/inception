@@ -172,9 +172,6 @@ public class BratAnnotationEditor
                 else {
                     paramId = VID.parseOptional(request.getParameterValue(PARAM_ARC_ID).toString());
                 }
-                if (paramId.isSynthetic()) {
-                    paramId = extensionRegistry.parseId(paramId, paramId.getExtensionPayload());
-                }
 
                 // Load the CAS if necessary
                 // Make sure we load the CAS only once here in case of an annotation action.

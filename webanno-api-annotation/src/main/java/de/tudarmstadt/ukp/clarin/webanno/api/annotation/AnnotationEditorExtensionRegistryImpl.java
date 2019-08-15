@@ -120,15 +120,4 @@ public class AnnotationEditorExtensionRegistryImpl
             ext.render(aCas, aModelObject, aVdoc, aWindowBeginOffset, aWindowEndOffset);
         }
     }
-
-    @Override
-    public VID parseId(VID aParamId, String aVIDString)
-    {
-        for (AnnotationEditorExtension ext : getExtensions()) {
-            if (ext.getBeanName().equals(aParamId.getExtensionId())) {
-                return ext.parse(aParamId, aVIDString);
-            }
-        }
-        return aParamId;
-    }
 }
