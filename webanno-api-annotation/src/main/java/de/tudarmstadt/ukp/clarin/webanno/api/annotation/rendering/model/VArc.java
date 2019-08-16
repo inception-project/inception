@@ -96,4 +96,9 @@ public class VArc
     {
         target = aTarget;
     }
+    
+    public void setColor(String aColor)
+    {
+        colorHint = aColor;
+    }
 }
