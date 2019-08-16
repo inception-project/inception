@@ -763,7 +763,8 @@ public class RecommendationServiceImpl
                     }
                     
                     RecommenderContext ctx = context.get();
-
+                    ctx.setUser(aUser);
+                    
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
                     
                     // Check that configured layer and feature are accepted 
