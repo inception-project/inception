@@ -89,7 +89,7 @@ public class CurationServiceImpl implements CurationService
     private class CurationState
     {
         private List<User> selectedUsers;
-        // source document of the curated document
+        // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
                 

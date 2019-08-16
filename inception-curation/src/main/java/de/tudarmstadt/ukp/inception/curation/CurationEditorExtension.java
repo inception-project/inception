@@ -30,6 +30,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -37,8 +39,12 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -53,6 +59,8 @@ public class CurationEditorExtension
     
     private @Autowired CurationService curationService;
     private @Autowired PreRenderer preRenderer;
+    private @Autowired AnnotationSchemaService annotationService;
+    private @Autowired DocumentService documentService;
     
     @Override
     public String getBeanName()
@@ -74,9 +82,50 @@ public class CurationEditorExtension
         // Annotation has been selected for gold
         if (SpanAnnotationResponse.is(aAction)) { //TODO is this action only for spans
                                                   //, what about relations ?
-            // TODO: store annotation in user CAS
+            saveAnnotation(aPanel, aState, aTarget, aCas, extendedVID, aBegin, aEnd);
         }
         
+    }
+
+    /**
+     * Save annotation identified by aVID from given CAS in curator's CAS
+     * @throws AnnotationException 
+     * @throws IOException 
+     */
+    private void saveAnnotation(AnnotationActionHandler aPanel, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin, int aEnd)
+        throws IOException, AnnotationException
+    {
+        // TODO look at webanno suggestionviewpanel onclientevent -> mergeSpan etc., then save in CAS
+        
+        // get curator's CAS
+//        SourceDocument doc = aState.getDocument();
+//        Optional<CAS> curatorCAS = Optional.empty();
+//        // FIXME: aCas should already be curation CAS if it was selected (and opened)
+//        curatorCAS = curationService.retrieveCurationCAS(aState.getUser().getUsername(),
+//                aState.getProject().getId(), doc);
+//
+//        if (!curatorCAS.isPresent()) {
+//            log.error(
+//                    String.format("Curator CAS for %s not found", aState.getUser().getUsername()));
+//            return;
+//        }
+//        // get user CAS
+//        CAS srcCAS = documentService.readAnnotationCas(doc, ((CurationVID) aVID).getUsername());
+//        
+//        // create/update anno in curator CAS
+//        AnnotationFS fs = selectByAddr(srcCAS, AnnotationFS.class, aVID.getId());
+//        CAS destCAS = curatorCAS.get();
+//        CasCopier copier = new CasCopier(srcCAS, destCAS);
+//        FeatureStructure curatedFs = copier.copyFs(fs);
+//        destCAS.addFsToIndexes(curatedFs);
+//        int address = WebAnnoCasUtil.getAddr(curatedFs);
+//        
+//        // Set selection to the accepted annotation and select it and load it into the detail editor
+//        // panel
+//        aState.getSelection().selectSpan(new VID(address), destCAS, aBegin, aEnd);
+//        aPanel.actionSelect(aTarget, destCAS);            
+//        aPanel.actionCreateOrUpdate(aTarget, destCAS);
     }
 
     /**
@@ -126,15 +175,26 @@ public class CurationEditorExtension
                 }
                 VDocument tmpDoc = new VDocument();
                 preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas.get(),
-                        aState.getAnnotationLayers()); //TODO: might need to filter the layers?
+                        aState.getAnnotationLayers());
                 // copy all arcs and spans to existing doc with new VID
+                String username = user.getUsername();
+                String color = "#cccccc"; //this is the same color as for recommendations
                 for (VObject vobj : tmpDoc.vobjects()) {
                     VID vid = vobj.getVid();
-                    VID extendedVID = parse(vid);
+                    VID extendedVID = new CurationVID(EXTENSION_ID, username + ":" + vid.toString(),
+                            username, vid);
                     vobj.setVid(extendedVID);
                     aVdoc.add(vobj);
+                    // change color for other users' annos
+                    if (vobj instanceof VSpan) {
+                        ((VSpan) vobj).setColor(color);
+                    }
+                    else if (vobj instanceof VArc) {
+                        ((VArc) vobj).setColor(color);
+                    }
+                    // set user name as comment
+                    aVdoc.add(new VComment(extendedVID, VCommentType.INFO, username));
                 }
-                // TODO: add comment with username
             }
             catch (IOException e) {
                 log.error(String.format("Could not retrieve CAS for user %s and project %d",

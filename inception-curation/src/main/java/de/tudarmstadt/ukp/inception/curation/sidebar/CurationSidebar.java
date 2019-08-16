@@ -112,6 +112,7 @@ public class CurationSidebar
 
     private void updateSettings()
     {
+        // FIXME: needs to open curation-doc if it is selected as destination
         String currentUsername = userRepository.getCurrentUser().getUsername();
         long project = state.getProject().getId();
 
@@ -155,7 +156,7 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
-        usersForm.add(visibleWhen(() -> !usersForm.getModelObject().isEmpty()));
+        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
         return usersForm;
     }
     
