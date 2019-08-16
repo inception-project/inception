@@ -144,6 +144,7 @@ public class TrainingTask
                     RecommenderContext ctx = recommendationEngine
                             .newContext(recommendationService.getContext(user, recommender)
                                     .orElse(RecommenderContext.EMPTY_CONTEXT));
+                    ctx.setUser(user);
                     
                     RecommendationEngineCapability capability = recommendationEngine
                             .getTrainingCapability();
