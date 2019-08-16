@@ -30,7 +30,7 @@ public class SearchOptions extends Options
 
     private AnnotationFeature groupingFeature;
 
-    private long itemsPerPage = 10;
+    private long itemsPerPage;
 
     public boolean isLimitedToCurrentDocument()
     {

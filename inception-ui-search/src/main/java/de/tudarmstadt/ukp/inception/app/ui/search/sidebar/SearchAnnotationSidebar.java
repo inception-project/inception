@@ -202,6 +202,7 @@ public class SearchAnnotationSidebar
                         result.getGroupKey(), LambdaModel.of(() -> result)));
             }
         };
+        searchOptions.getObject().setItemsPerPage(searchProperties.getPagesSizes()[0]);
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
         resultsGroupContainer.add(searchResultGroups);
         mainContainer.add(new PagingNavigator("pagingNavigator", searchResultGroups));
@@ -246,16 +247,16 @@ public class SearchAnnotationSidebar
         }));
 
         annotationForm.setDefaultButton(annotateButton);
-        annotationForm.add(visibleWhen(() -> true));//!groupedSearchResults.getObject().isEmpty()));
+        annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
 
         mainContainer.add(annotationForm);
     }
 
-    private DropDownChoice<Integer> createResultsPerPageSelection(String aId)
+    private DropDownChoice<Long> createResultsPerPageSelection(String aId)
     {
-        List<Integer> choices = Arrays.stream(searchProperties.getPagesSizes()).boxed().collect(
+        List<Long> choices = Arrays.stream(searchProperties.getPagesSizes()).boxed().collect(
             Collectors.toList());
-        DropDownChoice<Integer> itemsPerPageChoice = new BootstrapSelect<>(aId, choices);
+        DropDownChoice<Long> itemsPerPageChoice = new BootstrapSelect<>(aId, choices);
         return itemsPerPageChoice;
     }
 

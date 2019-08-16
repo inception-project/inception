@@ -9,17 +9,22 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("inception.search")
 public class SearchPropertiesImpl implements SearchProperties
 {
-    int[] pagesSizes = {10, 20, 50, 100, 500, 1000};
+    long[] pagesSizes = {10, 20, 50, 100, 500, 1000};
 
     @Override
-    public int[] getPagesSizes()
+    public long[] getPageSizes()
     {
         return pagesSizes;
     }
 
     @Override
-    public void setPagesSizes(String[] aPagesSizes)
+    public void setPageSizes(String[] aPageSizes)
     {
-        this.pagesSizes = Arrays.stream(aPagesSizes).mapToInt(Integer::parseInt).toArray();
+        for (int i = 0; i < aPageSizes.length; i++) {
+            if (aPageSizes[i] == "all") {
+                aPageSizes[i] = Long.toString(Long.MAX_VALUE);
+            }
+        }
+        this.pagesSizes = Arrays.stream(aPageSizes).mapToLong(Long::parseLong).toArray();
     }
 }

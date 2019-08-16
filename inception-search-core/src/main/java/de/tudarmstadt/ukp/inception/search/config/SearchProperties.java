@@ -2,7 +2,7 @@ package de.tudarmstadt.ukp.inception.search.config;
 
 public interface SearchProperties
 {
-    int[] getPagesSizes();
+    long[] getPageSizes();
 
-    void setPagesSizes(String[] aPagesSizes);
+    void setPageSizes(String[] aPagesSizes);
 }
