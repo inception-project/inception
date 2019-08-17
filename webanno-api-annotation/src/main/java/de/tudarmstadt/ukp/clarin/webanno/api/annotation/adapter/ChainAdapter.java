@@ -39,6 +39,10 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainLinkDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.ChainSpanDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -96,7 +100,12 @@ public class ChainAdapter
             request = behavior.onCreate(this, request);
         }
         
-        return createChainElementAnnotation(request);
+        AnnotationFS newSpan = createChainElementAnnotation(request);
+        
+        publishEvent(new ChainSpanCreatedEvent(this, aRequest.getDocument(), aRequest.getUsername(),
+                getLayer(), newSpan));
+        
+        return newSpan;
     }
     
     private AnnotationFS createChainElementAnnotation(CreateSpanAnnotationRequest aRequest)
@@ -202,6 +211,8 @@ public class ChainAdapter
                 }
             }
         }
+        
+        publishEvent(new ChainLinkCreatedEvent(this, aDocument, aUsername, getLayer(), aOriginFs));
 
         // We do not actually create a new FS for the arc. Features are set on the originFS.
         return WebAnnoCasUtil.getAddr(aOriginFs);
@@ -211,14 +222,14 @@ public class ChainAdapter
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
         if (aVid.getSubId() == VID.NONE) {
-            deleteSpan(aCas, aVid.getId());
+            deleteSpan(aDocument, aUsername, aCas, aVid.getId());
         }
         else {
-            deleteArc(aCas, aVid.getId());
+            deleteLink(aDocument, aUsername, aCas, aVid.getId());
         }
     }
 
-    private void deleteArc(CAS aCas, int aAddress)
+    private void deleteLink(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)
     {
         AnnotationFS linkToDelete = WebAnnoCasUtil.selectByAddr(aCas, AnnotationFS.class,
                 aAddress);
@@ -229,9 +240,12 @@ public class ChainAdapter
 
         // Disconnect the tail from the head
         setNextLink(linkToDelete, null);
+        
+        publishEvent(
+                new ChainLinkDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
     }
 
-    private void deleteSpan(CAS aCas, int aAddress)
+    private void deleteSpan(SourceDocument aDocument, String aUsername, CAS aCas, int aAddress)
     {
         Type chainType = CasUtil.getType(aCas, getChainTypeName());
 
@@ -305,6 +319,9 @@ public class ChainAdapter
             throw new IllegalStateException(
                     "Unexpected situation while removing link. Please contact developers.");
         }
+        
+        publishEvent(
+                new ChainSpanDeletedEvent(this, aDocument, aUsername, getLayer(), linkToDelete));
     }
 
     @Override

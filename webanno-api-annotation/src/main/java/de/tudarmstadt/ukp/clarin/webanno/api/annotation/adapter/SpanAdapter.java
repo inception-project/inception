@@ -109,7 +109,7 @@ public class SpanAdapter
                 request.getEnd());
 
         publishEvent(new SpanCreatedEvent(this, request.getDocument(), request.getUsername(),
-                newAnnotation));
+                getLayer(), newAnnotation));
 
         return newAnnotation;
     }
