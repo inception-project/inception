@@ -21,24 +21,28 @@
  * 
  * the arrayOfLeaningCurves also includes x-axis.
  */
+ 
+
 function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var xAxixType = 'indexed';
     var plotType = 'step';
-    var height = 350;
-    var width = 350;
+    var heightResizingFactor = 250;
+    var widthResizingFactor = 500;
+    
     var xTick = {
     	format : function(a) {
     		return Math.round(1e2 * a) / 1e2;
     	}
     };
     
+    var isCategoryChart = (arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) < 1;
+    var size = {};
 	// make the type of x-axis "category" (shows x in category intervals of size 1). 
     // It is for better visualization when the x-axis represents test data size (annotationpage)
-    if ((arrayOfLearningCurves[0][2] - arrayOfLearningCurves[0][1]) < 1) 
+    if (isCategoryChart) 
 	{
 		xAxixType = "category";
-		height = 650;
-		width = 900;
+		size = {height: $(window).height()-heightResizingFactor} ;
 	}
 
     // if we just have one value per data-row, we cannot visualize a step
@@ -58,10 +62,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     // draw the chart with the help of the arrayOfLearningCurves
     var e = c3.generate({
         bindto: "#canvas",
-        size: {
-            height: height,
-            width: width
-        },
+        size : size,
         data: {
         	empty:{label:{text:"No Data Available"}},
             x: "x",
@@ -84,4 +85,13 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
             }
         }
     });
+    
+    window.addEventListener('resize', (event) => {
+    	if(isCategoryChart)
+    	{
+    		e.resize({height: $(window).height()-heightResizingFactor, width: $(window).width()- widthResizingFactor})
+    	}
+    });
 }
+
+
