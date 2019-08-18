@@ -18,38 +18,25 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class RelationUpdateEvent extends ApplicationEvent implements HybridApplicationUIEvent
+public abstract class RelationEvent
+    extends AnnotationEvent
 {
     private static final long serialVersionUID = -8621413642390759892L;
     
-    private final SourceDocument document;
-    private final String user;
     private final AnnotationFS targetAnno;
     private final AnnotationFS sourceAnno;
 
-    public RelationUpdateEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
+    public RelationEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
     {
-        super(aSource);
-        document = aDocument;
-        user = aUser;
+        super(aSource, aDocument, aUser, aLayer);
+        
         targetAnno = aTargetAnnotation;
         sourceAnno = aSourceAnnotation;
-    }
-
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-
-    public String getUser()
-    {
-        return user;
     }
 
     public AnnotationFS getTargetAnnotation()
@@ -66,12 +53,13 @@ public class RelationUpdateEvent extends ApplicationEvent implements HybridAppli
     public String toString()
     {   
         StringBuilder builder = new StringBuilder();
-        builder.append("RelationCreatedEvent [");
-        if (document != null) {
+        builder.append(getClass().getSimpleName());
+        builder.append(" [");
+        if (getDocument() != null) {
             builder.append("docID=");
-            builder.append(document.getId());
+            builder.append(getDocument());
             builder.append(", user=");
-            builder.append(user);
+            builder.append(getUser());
             builder.append(", ");
         }
         builder.append("relation=[");

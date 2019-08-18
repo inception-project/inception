@@ -52,12 +52,14 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.FSUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -86,13 +88,22 @@ public class CasMerge
     private static final Logger LOG = LoggerFactory.getLogger(CasMerge.class);
     
     private final AnnotationSchemaService schemaService;
+    private final ApplicationEventPublisher eventPublisher;
+    
     private boolean mergeIncompleteAnnotations = false;
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
     
     public CasMerge(AnnotationSchemaService aSchemaService)
     {
+        this(aSchemaService, null);
+    }
+    
+    public CasMerge(AnnotationSchemaService aSchemaService,
+            ApplicationEventPublisher aEventPublisher)
+    {
         schemaService = aSchemaService;
+        eventPublisher = aEventPublisher;
     }
     
     public void setMergeIncompleteAnnotations(boolean aMergeIncompleteAnnotations)
@@ -307,6 +318,11 @@ public class CasMerge
                     messages.add(LogMessage.error(this, "%s", e.getMessage()));
                 }
             }
+        }
+        
+        if (eventPublisher != null) {
+            eventPublisher.publishEvent(
+                    new BulkAnnotationEvent(this, aTargetDocument, aTargetUsername, null));
         }
         
 //        Set<FeatureStructure> slotFeaturesToReset = new HashSet<>();
