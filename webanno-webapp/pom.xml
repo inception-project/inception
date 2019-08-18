@@ -93,6 +93,10 @@
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-plugin-manager</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
+    </dependency>
     
     <dependency>
       <groupId>org.apache.uima</groupId>
