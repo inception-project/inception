@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.panel.Panel;
