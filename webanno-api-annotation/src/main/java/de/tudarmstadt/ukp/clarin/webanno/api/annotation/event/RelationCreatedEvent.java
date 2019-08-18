@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -23,15 +23,15 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class SpanDeletedEvent
-    extends SpanEvent
+public class RelationCreatedEvent
+    extends RelationEvent
     implements HybridApplicationUIEvent
 {
-    private static final long serialVersionUID = 5206262614840209407L;
-    
-    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+    private static final long serialVersionUID = 1729547025986959164L;
+
+    public RelationCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer, AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aUser, aLayer, aTargetAnnotation, aSourceAnnotation);
     }
 }

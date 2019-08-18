@@ -92,8 +92,8 @@ public abstract class TypeAdapter_ImplBase
         Object newValue = getValue(fs, aFeature);
         
         if (!Objects.equals(oldValue, newValue)) {
-            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, fs, aFeature,
-                    newValue, oldValue));
+            publishEvent(new FeatureValueUpdatedEvent(this, aDocument, aUsername, getLayer(), fs,
+                    aFeature, newValue, oldValue));
         }
     }
     

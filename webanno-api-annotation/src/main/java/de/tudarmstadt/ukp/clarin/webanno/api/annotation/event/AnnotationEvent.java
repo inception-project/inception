@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,35 +15,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.event;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class AfterAnnotationUpdateEvent
+public abstract class AnnotationEvent
     extends ApplicationEvent
 {
-    private static final long serialVersionUID = 686641613168415460L;
+    private static final long serialVersionUID = -7460965556870957082L;
     
-    private final AnnotationDocument document;
-    private final CAS cas;
+    private final SourceDocument document;
+    private final String user;
+    private final AnnotationLayer layer;
 
-    public AfterAnnotationUpdateEvent(Object aSource, AnnotationDocument aDocument, CAS aCas)
+    public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer)
     {
         super(aSource);
         document = aDocument;
-        cas = aCas;
+        user = aUser;
+        layer = aLayer;
     }
 
-    public AnnotationDocument getDocument()
+    public SourceDocument getDocument()
     {
         return document;
     }
 
-    public CAS getCas()
+    public String getUser()
     {
-        return cas;
+        return user;
+    }
+    
+    public AnnotationLayer getLayer()
+    {
+        return layer;
     }
 }

@@ -36,7 +36,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -142,8 +143,8 @@ public class RelationAdapter
 
         AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
                 request.getOriginFs(), request.getTargetFs());
-        publishEvent(new RelationUpdateEvent(this, request.getDocument(), request.getUsername(),
-                relationAnno, getSourceAnnotation(relationAnno)));
+        publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
+                getLayer(), relationAnno, getSourceAnnotation(relationAnno)));
 
         return relationAnno;
     }
@@ -178,7 +179,7 @@ public class RelationAdapter
     {
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
-        publishEvent(new RelationUpdateEvent(this, aDocument, aUsername,
+        publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(),
                 fs, getSourceAnnotation(fs)));
     }
 

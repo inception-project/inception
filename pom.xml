@@ -57,7 +57,7 @@
   </distributionManagement>
   <properties>
     <jackson.version>2.9.9</jackson.version>
-    <uima.version>3.0.2</uima.version>
+    <uima.version>3.1.0</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
     <spring.version>5.1.9.RELEASE </spring.version>
     <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
