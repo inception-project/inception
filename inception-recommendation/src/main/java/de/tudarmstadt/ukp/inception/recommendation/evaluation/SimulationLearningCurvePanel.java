@@ -64,6 +64,7 @@ public class SimulationLearningCurvePanel
     private static final String MID_CHART_CONTAINER = "chart-container";
     private static final String MID_SIMULATION_START_BUTTON = "simulation-start-button";
     private static final String MID_FORM = "form";
+    private static final String OUTPUT_MID_CHART_CONTAINER = "chart-container";
     
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
@@ -123,6 +124,7 @@ public class SimulationLearningCurvePanel
         
         emptyPanel  = new EmptyPanel(MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupPlaceholderTag(true);
+        emptyPanel.setMarkupId(OUTPUT_MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupId(true);
         form.add(emptyPanel);
         

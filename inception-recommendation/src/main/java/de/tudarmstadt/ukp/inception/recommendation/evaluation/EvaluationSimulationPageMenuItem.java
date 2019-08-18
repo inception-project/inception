@@ -44,7 +44,7 @@ public class EvaluationSimulationPageMenuItem
     @Override
     public String getIcon()
     {
-        return "images/learning.png";
+        return "images/chart_line.png";
     }
 
     @Override

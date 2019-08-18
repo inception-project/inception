@@ -89,7 +89,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     window.addEventListener('resize', (event) => {
     	if(isCategoryChart)
     	{
-    		e.resize({height: $(window).height()-heightResizingFactor, width: $(window).width()- widthResizingFactor})
+    		e.resize({height: $(window).height()-heightResizingFactor, width: $("#chart-container").width()-10})
     	}
     });
 }
