@@ -56,7 +56,7 @@
   <properties>
     <webanno.version>3.6.0-SNAPSHOT</webanno.version>
     <uima.version>2.10.3</uima.version>
-    <dkpro.version>1.11.0</dkpro.version>
+    <dkpro.version>1.11.1</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
     <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
     <wicket.version>8.3.0</wicket.version>
