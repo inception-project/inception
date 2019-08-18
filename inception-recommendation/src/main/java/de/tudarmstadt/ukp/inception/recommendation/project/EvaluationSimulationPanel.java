@@ -119,10 +119,12 @@ public class EvaluationSimulationPanel
 
         String scores = scoresAndTrainingSizes[0];
         String trainingSizes = scoresAndTrainingSizes[1];
+        String defaultErrorMessage = scoresAndTrainingSizes[2];
 
-        if (scores.isEmpty()) {
-            LOG.warn("There were no evaluation to show");
-            return null;
+        if (scores == null || scores.isEmpty()) {
+            String errorMessage = "There were no evaluation to show";
+            LOG.warn(errorMessage);
+            return new LearningCurve(errorMessage);
         }
 
         Map<String, String> curveData = new HashMap<String, String>();
@@ -131,7 +133,8 @@ public class EvaluationSimulationPanel
         LearningCurve learningCurve = new LearningCurve();
         learningCurve.setCurveData(curveData);
         learningCurve.setXaxis(trainingSizes);
-
+        learningCurve.setErrorMessage(defaultErrorMessage);
+        
         return learningCurve;
     }
     
@@ -144,11 +147,14 @@ public class EvaluationSimulationPanel
      */
     private String[] evaluate()
     {
+        String errorMessage = "No Data Available";
+        
         //there must be some recommender selected by the user on the UI
         if (selectedRecommenderPanel.getObject() == null
                 || selectedRecommenderPanel.getObject().getTool() == null) {
-            LOG.error("Please select a recommender from the list");
-            return null;
+            errorMessage = "Please select a recommender from the list";
+            LOG.error(errorMessage);
+            return new String[] {null, null, errorMessage};
         }
 
         //get all the source documents related to the project
@@ -163,7 +169,7 @@ public class EvaluationSimulationPanel
                 casList.add(cas);
             }
             catch (IOException e1) {
-                LOG.error("Unable to render chart", e1);
+                LOG.error("Unable to create cas list", e1);
                 return;
             }
         });
@@ -177,8 +183,9 @@ public class EvaluationSimulationPanel
         RecommendationEngine recommender = factory.build(selectedRecommenderPanel.getObject());
         
         if (recommender == null) {
-            LOG.warn("Unknown Recommender selected");
-            return null;
+            errorMessage = "Unknown Recommender selected";
+            LOG.warn(errorMessage);
+            return new String[] {null, null, errorMessage };
         }
         
         StringBuilder sbScore = new StringBuilder();
@@ -211,6 +218,6 @@ public class EvaluationSimulationPanel
             sbTrainingSize.append(trainingSize).append(",");
         }
 
-        return new String[] {sbScore.toString(), sbTrainingSize.toString() };
+        return new String[] {sbScore.toString(), sbTrainingSize.toString(), errorMessage };
     }
 }

@@ -21,8 +21,7 @@
  * 
  * the arrayOfLeaningCurves also includes x-axis.
  */
-function updateLearningCurveDiagram(arrayOfLearningCurves) {
-	
+function updateLearningCurveDiagram(arrayOfLearningCurves, errorMessage) {
     var xAxixType = 'indexed';
     var plotType = 'step';
     var xTick = {
@@ -55,7 +54,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var e = c3.generate({
         bindto: "#canvas",
         data: {
-        	empty:{label:{text:"No Data Available"}},
+        	empty:{label:{text:errorMessage}},
             x: "x",
             columns: arrayOfLearningCurves,
             types: plotTypes

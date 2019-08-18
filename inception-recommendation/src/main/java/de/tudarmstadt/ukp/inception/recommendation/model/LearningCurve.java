@@ -26,7 +26,18 @@ public class LearningCurve implements Serializable
     
     private Map<String,String> curveData;
     private String xAxis;
+    private String errorMessage;
     
+    
+    public LearningCurve()
+    {
+    }
+
+    public LearningCurve(String aErrorMessage)
+    {
+        errorMessage = aErrorMessage;
+    }
+
     public Map<String, String> getCurveData()
     {
         return curveData;
@@ -46,4 +57,15 @@ public class LearningCurve implements Serializable
     {
         this.xAxis = aXAxis;
     }
+
+    public String getErrorMessage()
+    {
+        return errorMessage;
+    }
+
+    public void setErrorMessage(String errorMessage)
+    {
+        this.errorMessage = errorMessage;
+    }
+    
 }

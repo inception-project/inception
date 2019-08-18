@@ -100,7 +100,7 @@ public class ChartPanel
                 "       contentType:'application/json',",
                 "       dataType:'json',",
                 "       success : function(result){",
-                "           updateLearningCurveDiagram(result)",
+                "           updateLearningCurveDiagram(result,'"+model.getObject().getErrorMessage()+"')",
                 "       }",
                 "   })",
                 "})");
