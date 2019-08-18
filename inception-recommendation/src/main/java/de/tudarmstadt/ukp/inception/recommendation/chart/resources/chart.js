@@ -27,7 +27,6 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     var xAxixType = 'indexed';
     var plotType = 'step';
     var heightResizingFactor = 250;
-    var widthResizingFactor = 500;
     
     var xTick = {
     	format : function(a) {
@@ -89,7 +88,7 @@ function updateLearningCurveDiagram(arrayOfLearningCurves) {
     window.addEventListener('resize', (event) => {
     	if(isCategoryChart)
     	{
-    		e.resize({height: $(window).height()-heightResizingFactor, width: $("#chart-container").width()-10})
+    		e.resize({height: $(window).height()-heightResizingFactor, width: $("#html-chart-container").width()-10})
     	}
     });
 }
