@@ -74,6 +74,14 @@
       <artifactId>commons-io</artifactId>
     </dependency>
     <dependency>
+      <!-- 
+        This is required by MTAS despite it not being declared as a dependency: 
+        MtasPosition.add(MtasPosition.java:178)
+      -->
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
     </dependency>
@@ -134,11 +142,6 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-test</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-test</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -233,6 +236,19 @@
       <scope>test</scope>
     </dependency>
     <!-- Testing END -->
-
   </dependencies>  
-</project>
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-dependency-plugin</artifactId>
+          <configuration>
+            <usedDependencies>
+              <usedDependency>commons-lang:commons-lang</usedDependency>
+            </usedDependencies>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build></project>

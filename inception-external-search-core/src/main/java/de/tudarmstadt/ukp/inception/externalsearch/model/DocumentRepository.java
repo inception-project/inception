@@ -23,6 +23,7 @@ import java.util.Objects;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
@@ -44,7 +45,7 @@ public class DocumentRepository
     private static final long serialVersionUID = 7748907568443136301L;
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -124,10 +125,12 @@ public class DocumentRepository
     @Override
     public boolean equals(Object o)
     {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
         DocumentRepository that = (DocumentRepository) o;
         return Objects.equals(id, that.id) && Objects.equals(name, that.name);
     }

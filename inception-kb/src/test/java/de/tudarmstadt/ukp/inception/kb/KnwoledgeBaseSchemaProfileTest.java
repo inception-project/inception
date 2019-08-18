@@ -27,7 +27,6 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class KnwoledgeBaseSchemaProfileTest
 {
-
     @Test public void checkKBProfileAndKBObject_ShouldReturnMatchingSchemaProfile()
     {
         String name = "Test KB";

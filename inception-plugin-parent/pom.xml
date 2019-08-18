@@ -37,8 +37,8 @@
   </properties>
   <dependencies>
     <dependency>
-      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-plugin-api</artifactId>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
       <scope>provided</scope>
     </dependency>
     <dependency>

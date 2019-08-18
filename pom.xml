@@ -54,11 +54,11 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>3.6.0-SNAPSHOT</webanno.version>
-    <uima.version>2.10.3</uima.version>
-    <dkpro.version>1.11.1</dkpro.version>
+    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
+    <uima.version>3.1.0</uima.version>
+    <dkpro.version>2.0.0-SNAPSHOT</dkpro.version>
     <spring.version>5.1.7.RELEASE</spring.version>
-    <spring.boot.version>1.5.21.RELEASE</spring.boot.version>
+    <spring.boot.version>2.1.4.RELEASE</spring.boot.version>
     <wicket.version>8.3.0</wicket.version>
     <wicketstuff.version>${wicket.version}</wicketstuff.version>
     <wicket-jquery-ui.version>${wicket.version}</wicket-jquery-ui.version>
@@ -66,10 +66,9 @@
     <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
-    <mockito.version>2.23.4</mockito.version>
-    <assertj.version>3.12.1</assertj.version>
+    <mockito.version>2.27.0</mockito.version>
+    <assertj.version>3.12.2</assertj.version>
     <okhttp.version>3.13.1</okhttp.version>
-    <pf4j.version>2.6.0</pf4j.version>
     <maven.surefire.heap>6g</maven.surefire.heap>
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
@@ -580,23 +579,6 @@
           <exclusion>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-          </exclusion>
-        </exclusions>
-      </dependency>
-    
-      <dependency>
-        <groupId>org.pf4j</groupId>
-        <artifactId>pf4j</artifactId>
-        <version>${pf4j.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.pf4j</groupId>
-        <artifactId>pf4j-spring</artifactId>
-        <version>0.5.0</version>
-        <exclusions>
-          <exclusion>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
           </exclusion>
         </exclusions>
       </dependency>
@@ -1126,7 +1108,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
-        <version>1.3</version>
+        <version>1.4</version>
         <executions>
           <execution>
             <phase>validate</phase>
@@ -1386,7 +1368,7 @@
           <plugin>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>1.10</version>
+            <version>3.0.0</version>
             <executions>
               <execution>
                 <id>addToSourceFolder</id>

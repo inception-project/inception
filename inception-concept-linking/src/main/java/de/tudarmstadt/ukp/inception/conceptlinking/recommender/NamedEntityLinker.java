@@ -107,9 +107,9 @@ public class NamedEntityLinker
             Collection<AnnotationFS> namesPerDocument = new ArrayList<>();
             Type sentenceType = getType(cas, Sentence.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(cas, sentenceType,
                 predictedType);
-            for (Map.Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Map.Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 Collection<AnnotationFS> tokens = e.getValue().stream()
                     // If the identifier has not been set
                     .filter(a -> a.getStringValue(predictedFeature) == null)
@@ -118,8 +118,7 @@ public class NamedEntityLinker
             }
 
             // TODO #176 use the document Id once it is available in the CAS
-            nameSamples.add(
-                new ImmutablePair<>(getDocumentUri(cas), namesPerDocument));
+            nameSamples.add(new ImmutablePair<>(getDocumentUri(cas), namesPerDocument));
         }
         return nameSamples;
     }
@@ -134,7 +133,7 @@ public class NamedEntityLinker
                         "Key [" + KEY_MODEL + "] not found in context"));
         
         return model.stream().anyMatch(pair -> pair.getLeft().equals(aDocumentUri)
-        && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
+                && pair.getRight().stream().anyMatch(t -> t.getBegin() == token.getBegin()));
     }
 
     @Override

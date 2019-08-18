@@ -23,10 +23,10 @@ import java.util.Set;
 
 import org.pf4j.PluginWrapper;
 
-import de.tudarmstadt.ukp.inception.plugin.api.InceptionPlugin;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.Plugin;
 
 public class DataMajorityNerRecommenderPlugin
-    extends InceptionPlugin
+    extends Plugin
 {
     public DataMajorityNerRecommenderPlugin(PluginWrapper aWrapper)
     {

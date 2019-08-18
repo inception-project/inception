@@ -2,7 +2,11 @@ pdfanno = "0.5.0"
 pdfextract = "0.3.2"
 
 [[spans]]
+<<<<<<< HEAD
+id = "15"
+=======
 id = "175"
+>>>>>>> master
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -10,7 +14,11 @@ text = "Karin"
 textrange = [3,8]
 
 [[spans]]
+<<<<<<< HEAD
+id = "16"
+=======
 id = "181"
+>>>>>>> master
 page = 1
 label = "VVFIN"
 color = "#8dd3c7"
@@ -18,7 +26,11 @@ text = "fliegt"
 textrange = [8,14]
 
 [[spans]]
+<<<<<<< HEAD
+id = "17"
+=======
 id = "187"
+>>>>>>> master
 page = 1
 label = "APPR"
 color = "#8dd3c7"
@@ -26,7 +38,11 @@ text = "nach"
 textrange = [14,18]
 
 [[spans]]
+<<<<<<< HEAD
+id = "18"
+=======
 id = "193"
+>>>>>>> master
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -34,7 +50,11 @@ text = "New"
 textrange = [18,21]
 
 [[spans]]
+<<<<<<< HEAD
+id = "19"
+=======
 id = "199"
+>>>>>>> master
 page = 1
 label = "NE"
 color = "#8dd3c7"
@@ -42,7 +62,11 @@ text = "York"
 textrange = [21,25]
 
 [[spans]]
+<<<<<<< HEAD
+id = "20"
+=======
 id = "205"
+>>>>>>> master
 page = 1
 label = "$."
 color = "#8dd3c7"
@@ -50,7 +74,11 @@ text = "."
 textrange = [25,28]
 
 [[spans]]
+<<<<<<< HEAD
+id = "21"
+=======
 id = "211"
+>>>>>>> master
 page = 1
 label = "PPER"
 color = "#8dd3c7"
@@ -58,7 +86,11 @@ text = "Sie"
 textrange = [28,31]
 
 [[spans]]
+<<<<<<< HEAD
+id = "22"
+=======
 id = "217"
+>>>>>>> master
 page = 2
 label = "VMFIN"
 color = "#8dd3c7"
@@ -66,7 +98,11 @@ text = "will"
 textrange = [31,35]
 
 [[spans]]
+<<<<<<< HEAD
+id = "23"
+=======
 id = "223"
+>>>>>>> master
 page = 2
 label = "ADV"
 color = "#8dd3c7"
@@ -74,7 +110,11 @@ text = "dort"
 textrange = [35,39]
 
 [[spans]]
+<<<<<<< HEAD
+id = "24"
+=======
 id = "229"
+>>>>>>> master
 page = 2
 label = "NN"
 color = "#8dd3c7"
@@ -82,7 +122,11 @@ text = "Urlaub"
 textrange = [39,45]
 
 [[spans]]
+<<<<<<< HEAD
+id = "25"
+=======
 id = "235"
+>>>>>>> master
 page = 2
 label = "VVINF"
 color = "#8dd3c7"
@@ -90,10 +134,18 @@ text = "machen"
 textrange = [45,51]
 
 [[spans]]
+<<<<<<< HEAD
+id = "26"
+=======
 id = "241"
+>>>>>>> master
 page = 2
 label = "$."
 color = "#8dd3c7"
 text = "."
+<<<<<<< HEAD
+textrange = [51,51]
+=======
 textrange = [51,52]
+>>>>>>> master
 

@@ -73,7 +73,7 @@ public class SubjectObjectFeatureSupportTest
         feat1.setMode(MultiValueMode.ARRAY);
         
         List<LinkWithRoleModel> links = new ArrayList<>();
-        links.add(new LinkWithRoleModel("role", "label", 13));
+        links.add(new LinkWithRoleModel("role", "label", 3));
         
         cas.setDocumentText("label");
         Type targetType = cas.getTypeSystem().getType(feat1.getType());

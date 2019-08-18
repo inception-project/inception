@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
@@ -48,13 +47,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
@@ -77,9 +76,8 @@ public class ConceptLinkingServiceImpl
 
     private final KnowledgeBaseService kbService;
     private final EntityLinkingProperties properties;
+    private final RepositoryProperties repoProperties;
 
-    @Value(value = "${repository.path}/resources/stopwords-en.txt")
-    private File stopwordsFile;
     private Set<String> stopwords;
 
     private final List<EntityRankingFeatureGenerator> featureGeneratorsProxy;
@@ -88,6 +86,7 @@ public class ConceptLinkingServiceImpl
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
             EntityLinkingProperties aProperties,
+            RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
                     aFeatureGenerators)
     {
@@ -97,17 +96,14 @@ public class ConceptLinkingServiceImpl
         kbService = aKbService;
         properties = aProperties;
         featureGeneratorsProxy = aFeatureGenerators;
+        repoProperties = aRepoProperties;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        if (stopwordsFile != null) {
-            stopwords = FileUtils.loadStopwordFile(stopwordsFile);
-        }
-        else {
-            stopwords = emptySet();
-        }
+        File stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
+        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
     }
     
     @EventListener
