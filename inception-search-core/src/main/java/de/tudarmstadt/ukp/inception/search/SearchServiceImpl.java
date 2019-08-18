@@ -41,7 +41,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeProjectRemovedEvent;
@@ -306,7 +306,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent) throws Exception
     {
         log.trace("Starting afterAnnotationUpdate");
 
