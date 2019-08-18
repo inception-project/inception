@@ -38,7 +38,7 @@ import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.traits.LappsGridRe
 
 @Component
 @ConditionalOnProperty(prefix = "recommenders.lappsgrid", name = "enabled",
-        matchIfMissing = false)
+        matchIfMissing = true)
 public class LappsGridRecommenderFactory
     extends RecommendationEngineFactoryImplBase<LappsGridRecommenderTraits>
 {
