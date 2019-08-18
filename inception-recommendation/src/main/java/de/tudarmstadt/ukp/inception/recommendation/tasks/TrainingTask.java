@@ -163,7 +163,7 @@ public class TrainingTask
                             .stream()
                             .filter(e -> !recommender.getStatesIgnoredForTraining()
                                     .contains(e.state))
-                            .filter(e -> containsTargetAnnotation(recommender, e.cas))
+                            .filter(e -> containsTargetTypeAndFeature(recommender, e.cas))
                             .map(e -> e.cas)
                             .collect(Collectors.toList());
 
@@ -219,9 +219,24 @@ public class TrainingTask
         return casses;
     }
 
-    private boolean containsTargetAnnotation(Recommender aRecommender, CAS aCas)
+    private boolean containsTargetTypeAndFeature(Recommender aRecommender, CAS aCas)
     {
-        Type type = CasUtil.getType(aCas, aRecommender.getLayer().getName());
+        Type type;
+        try {
+            type = CasUtil.getType(aCas, aRecommender.getLayer().getName());
+        }
+        catch (IllegalArgumentException e ) {
+            // If the CAS does not contain the target type at all, then it cannot contain any
+            // annotations of that type.
+            return false;
+        }
+        
+        if (type.getFeatureByBaseName(aRecommender.getFeature().getName()) == null) {
+            // If the CAS does not contain the target feature, then there won't be any training
+            // data.
+            return false;            
+        }
+        
         return CasUtil.iterator(aCas, type).hasNext();
     }
 

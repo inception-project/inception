@@ -120,8 +120,6 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
-    private static final double NO_SCORE = 0.0;
     private static final int TRAININGS_PER_SELECTION = 5;
 
     private @PersistenceContext EntityManager entityManager;
@@ -422,7 +420,8 @@ public class RecommendationServiceImpl
         clearState(aEvent.getDocument().getProject());
     }
 
-    private void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
+    @Override
+    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
 
@@ -493,7 +492,8 @@ public class RecommendationServiceImpl
         }
     }
     
-    private void clearState(String aUsername)
+    @Override
+    public void clearState(String aUsername)
     {
         Validate.notNull(aUsername, "Username must be specified");
         
@@ -826,19 +826,6 @@ public class RecommendationServiceImpl
                                     e);
                             continue nextDocument;
                         }
-                        try {
-                            annoService.upgradeCasIfRequired(originalCas.get(), document,
-                                    username);
-                        }
-                        catch (UIMAException | IOException e) {
-                            log.error(
-                                    "Cannot upgrade annotation CAS for user [{}] of document "
-                                            + "[{}]({}) in project [{}]({}) - skipping document",
-                                    username, document.getName(), document.getId(),
-                                    document.getProject().getName(), document.getProject().getId(),
-                                    e);
-                            continue nextDocument;
-                        }
                     }
 
                     try {
@@ -961,8 +948,22 @@ public class RecommendationServiceImpl
     public void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
+        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
+        // method is implemented in such a way that it gracefully handles cases where the CAS and
+        // the project type system are not in sync - specifically the CAS where the project defines
+        // layers or features which do not exist in the CAS.
+        
         // Collect all annotations of the given layer within the view window
-        Type type = CasUtil.getType(aCas, aLayer.getName());
+        Type type;
+        try {
+            type = CasUtil.getType(aCas, aLayer.getName());
+        }
+        catch (IllegalArgumentException e) {
+            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
+            // to the latest version of the type system yet. If this is the case, we'll just skip.
+            return;
+        }
+        
         List<AnnotationFS> annotationsInWindow = select(aCas, type).stream()
                 .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
                 .collect(toList());
@@ -984,6 +985,13 @@ public class RecommendationServiceImpl
         for (AnnotationFeature feature : annoService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
+            if (feat == null) {
+                // The feature does not exist in the type system of the CAS. Probably it has not
+                // been upgraded to the latest version of the type system yet. If this is the case,
+                // we'll just skip.
+                return;
+            }
+            
             // Reduce the annotations to the ones which have a non-null feature value. We need to
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
