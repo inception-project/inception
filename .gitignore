@@ -8,3 +8,6 @@ target
 *.iml
 .idea
 cache
+idea/
+.factorypath
+idea/

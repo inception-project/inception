@@ -78,7 +78,8 @@ public class TrainingTask
         Project project = getProject();
         User user = getUser();
 
-        log.debug("Running training task for user [{}] in project [{}]",  user, project);
+        log.debug("[{}]: Starting training for user [{}] in project [{}] triggered by [{}]...",
+                user, project, getTrigger());
 
         // Read the CASes only when they are accessed the first time. This allows us to skip reading
         // the CASes in case that no layer / recommender is available or if no recommender requires
@@ -144,6 +145,7 @@ public class TrainingTask
                     RecommenderContext ctx = recommendationEngine
                             .newContext(recommendationService.getContext(user, recommender)
                                     .orElse(RecommenderContext.EMPTY_CONTEXT));
+                    ctx.setUser(user);
                     
                     RecommendationEngineCapability capability = recommendationEngine
                             .getTrainingCapability();
