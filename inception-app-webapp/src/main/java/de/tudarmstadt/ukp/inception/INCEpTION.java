@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.AgreementPageMenuIte
 import de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page.MonitoringPageMenuItem;
 import de.tudarmstadt.ukp.inception.app.config.InceptionApplicationContextInitializer;
 import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
-import de.tudarmstadt.ukp.inception.recommendation.evaluation.EvaluationSimulationPageMenuItem;
 
 /**
  * Boots INCEpTION in standalone JAR or WAR modes.
