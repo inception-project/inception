@@ -78,6 +78,7 @@
     <springfox.version>2.9.2</springfox.version>
     <batik.version>1.9.1</batik.version>
     <json.version>20180813</json.version>
+    <pf4j.version>2.6.0</pf4j.version>
     <mockito.version>2.27.0</mockito.version>
     <assertj.version>3.13.2</assertj.version>
   </properties>
@@ -397,6 +398,16 @@
         <version>4.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-plugin-api</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
+        <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+        <artifactId>webanno-plugin-manager</artifactId>
+        <version>4.0.0-SNAPSHOT</version>
+      </dependency>
+      <dependency>
         <groupId>org.json</groupId>
         <artifactId>json</artifactId>
         <version>${json.version}</version>
@@ -658,6 +669,23 @@
         <groupId>javax.activation</groupId>
         <artifactId>javax.activation-api</artifactId>
         <version>1.2.0</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j</artifactId>
+        <version>${pf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.pf4j</groupId>
+        <artifactId>pf4j-spring</artifactId>
+        <version>0.5.0</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
 
       <dependency>
@@ -940,6 +968,9 @@
     <module>webanno-export</module>
     <module>webanno-api-automation</module>
     <module>webanno-telemetry</module>
+    <module>webanno-plugin-api</module>
+    <module>webanno-plugin-manager</module>
+    <module>webanno-plugin-parent</module>
     <!-- UI -->
     <module>webanno-brat</module>
     <module>webanno-ui-core</module>
