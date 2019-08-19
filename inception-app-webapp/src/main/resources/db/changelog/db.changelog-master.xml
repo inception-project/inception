@@ -25,6 +25,7 @@
     http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
   <include file="de/tudarmstadt/ukp/clarin/webanno/security/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/clarin/webanno/model/db-changelog.xml"/>
+  <include file="de/tudarmstadt/ukp/clarin/webanno/telemetry/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/kb/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/recommendation/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/log/model/db-changelog.xml"/>
