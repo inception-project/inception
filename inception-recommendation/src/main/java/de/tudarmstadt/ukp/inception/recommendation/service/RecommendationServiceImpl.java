@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -49,16 +50,10 @@ import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
-import org.apache.uima.cas.admin.CASMgr;
-import org.apache.uima.cas.impl.CASCompleteSerializer;
-import org.apache.uima.cas.impl.Serialization;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.resource.ResourceInitializationException;
@@ -82,10 +77,12 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -142,8 +139,8 @@ public class RecommendationServiceImpl
     private final LearningRecordService learningRecordService;
     
     private @Autowired ApplicationEventPublisher appEventPublisher;
-    
-    private final ConcurrentMap<Pair<User, Project>, AtomicInteger> trainingTaskCounter;
+   
+    private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
 
     @Autowired
@@ -386,36 +383,58 @@ public class RecommendationServiceImpl
                 .getResultList();
     }
 
-    /**
-     * This is called whenever a document is opened (because of the implicit CAS upgrade and saving
-     * of the CAS that happens when a document is opened) as well as when any updates to annotations
-     * are made. Therefore, we do not need an extra event listener for {@link DocumentOpenedEvent}
-     */
     @EventListener
-    public void afterAnnotationUpdate(AfterAnnotationUpdateEvent aEvent)
+    public void onDocumentOpened(DocumentOpenedEvent aEvent)
     {
-        triggerTrainingAndClassification(aEvent.getDocument().getUser(),
-                aEvent.getDocument().getProject(), "AfterAnnotationUpdateEvent");
+        Project project = aEvent.getDocument().getProject();
+        String user = aEvent.getAnnotator();
+
+        // If there already is a state, we just re-use it. We only trigger a new training if there
+        // is no state yet.
+        if (!states.containsKey(new RecommendationStateKey(user, project))) {
+            triggerTrainingAndClassification(user, project, "DocumentOpenedEvent");
+        }
+    }
+
+    @EventListener
+    public void onAnnotation(AnnotationEvent aEvent)
+    {
+        // Whenever annotations are changed, we trigger a new training and classification run
+        triggerTrainingAndClassification(aEvent.getUser(),
+                aEvent.getDocument().getProject(), "AnnotationEvent");
     }
 
     @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
     {
+        // When removing a recommender, it is sufficient to delete its predictions from the current
+        // state. Since (so far) recommenders do not depend on each other, we wouldn't need to 
+        // trigger a training rung.
         RecommendationState state = getState(aEvent.getUser(), aEvent.getProject());
         synchronized (state) {
             state.removePredictions(aEvent.getRecommender());
         }
-        triggerTrainingAndClassification(aEvent.getUser(), aEvent.getProject(),
-                "RecommenderDeletedEvent");
     }
-    
+
+    @EventListener
+    public void onDocumentCreated(AfterDocumentCreatedEvent aEvent)
+    {
+        clearState(aEvent.getDocument().getProject());
+    }
+
+    @EventListener
+    public void onDocumentCreated(BeforeDocumentRemovedEvent aEvent)
+    {
+        clearState(aEvent.getDocument().getProject());
+    }
+
     private void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
 
         // Update the task count
-        Pair<User, Project> key = new ImmutablePair<>(user, aProject);
-        AtomicInteger count = trainingTaskCounter.computeIfAbsent(key,
+        AtomicInteger count = trainingTaskCounter.computeIfAbsent(
+            new RecommendationStateKey(user.getUsername(), aProject),
             _key -> new AtomicInteger(0));
 
         // If it is time for a selection task, we just start a selection task.
@@ -487,10 +506,21 @@ public class RecommendationServiceImpl
         synchronized (states) {
             states.keySet().removeIf(key -> aUsername.equals(key.getUser()));
             trainingTaskCounter.keySet()
-                    .removeIf(key -> aUsername.equals(key.getKey().getUsername()));
+                    .removeIf(key -> aUsername.equals(key.getUser()));
         }
     }
-    
+
+    private void clearState(Project aProject)
+    {
+        Validate.notNull(aProject, "Project must be specified");
+        
+        synchronized (states) {
+            states.keySet().removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+            trainingTaskCounter.keySet()
+                    .removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+        }
+    }
+
     @Override
     public boolean switchPredictions(User aUser, Project aProject)
     {
@@ -774,7 +804,8 @@ public class RecommendationServiceImpl
                     }
                     
                     RecommenderContext ctx = context.get();
-
+                    ctx.setUser(aUser);
+                    
                     RecommendationEngineFactory<?> factory = getRecommenderFactory(recommender);
                     
                     // Check that configured layer and feature are accepted 
@@ -831,8 +862,7 @@ public class RecommendationServiceImpl
                         log.trace("[{}][{}]: Generating predictions for layer [{}]", username,
                                 r.getRecommender().getName(), layer.getUiName());
                         
-                        cloneCAS(originalCas.get(), predictionCas);
-                        monkeyPatchTypeSystem(aProject, predictionCas);
+                        cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
                         // Perform the actual prediction
                         recommendationEngine.predict(ctx, predictionCas);
@@ -1061,20 +1091,9 @@ public class RecommendationServiceImpl
         }
     }
 
-    private CAS cloneCAS(CAS aSourceCas, CAS aTargetCas) throws CASException
+    public CAS cloneAndMonkeyPatchCAS(Project aProject, CAS aSourceCas, CAS aTargetCas)
+        throws UIMAException, IOException
     {
-        CASCompleteSerializer ser = Serialization.serializeCASComplete((CASMgr) aSourceCas);
-        Serialization.deserializeCASComplete(ser, (CASMgr) aTargetCas);
-        
-        // Make sure JCas is properly initialized too
-        aTargetCas.getJCas();
-        
-        return aTargetCas;
-    }
-
-    public void monkeyPatchTypeSystem(Project aProject, CAS aCas)
-            throws UIMAException, IOException {
-
         try (StopWatch watch = new StopWatch(log, "adding score features")) {
             TypeSystemDescription tsd = annoService.getFullProjectTypeSystem(aProject);
 
@@ -1099,7 +1118,9 @@ public class RecommendationServiceImpl
                 td.addFeature(FEATURE_NAME_IS_PREDICTION, "Is Prediction", CAS.TYPE_NAME_BOOLEAN);
             }
 
-            annoService.upgradeCas(aCas, tsd);
+            annoService.upgradeCas(aSourceCas, aTargetCas, tsd);
         }
+
+        return aTargetCas;
     }
 }
