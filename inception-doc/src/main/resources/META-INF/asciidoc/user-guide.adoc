@@ -138,6 +138,8 @@ include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
+include::{include-dir}projects_recommendation_lappsgrid.adoc[leveloffset=+2]
+
 include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
 
 include::{include-dir}projects_export.adoc[leveloffset=+2]
