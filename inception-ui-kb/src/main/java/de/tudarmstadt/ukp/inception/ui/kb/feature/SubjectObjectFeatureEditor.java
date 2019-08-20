@@ -212,7 +212,7 @@ public class SubjectObjectFeatureEditor
 
     private boolean roleLabelSlotIsSelected()
     {
-        return stateModel.getObject().isArmedSlot(getModelObject().feature, 0);
+        return stateModel.getObject().isArmedSlot(getModelObject().vid, getModelObject().feature, 0);
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
@@ -224,7 +224,7 @@ public class SubjectObjectFeatureEditor
             aTarget.add(getOwner());
         }
         else {
-            state.setArmedSlot(getModelObject().feature, 0);
+            state.setArmedSlot(getModelObject().vid, getModelObject().feature, 0);
             aTarget.add(getOwner());
         }
     }
