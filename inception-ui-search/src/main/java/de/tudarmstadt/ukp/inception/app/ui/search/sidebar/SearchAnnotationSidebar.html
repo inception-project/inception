@@ -98,6 +98,7 @@
         </form>
         
         <div class="scrolling flex-content">
+          <span wicket:id="pagingNavigator"></span>
           <table wicket:id="resultsGroupContainer" class="table table-striped table-condensed">
             <wicket:container wicket:id="searchResultGroups">
               <tr valign="middle" style="line-height: 2em;">
@@ -113,7 +114,6 @@
               <wicket:container wicket:id="group" />
             </wicket:container>
           </table>
-          <span wicket:id="pagingNavigator"></span>
         </div>
         <form wicket:id="annotateForm" style="margin-top: 5px">
           <div class="form-group flex-h-container flex-gutter flex-only-internal-gutter">
