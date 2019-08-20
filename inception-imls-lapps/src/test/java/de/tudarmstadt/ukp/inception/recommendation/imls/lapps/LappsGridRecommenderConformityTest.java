@@ -67,8 +67,6 @@ public class LappsGridRecommenderConformityTest
 
         predict(aService.getUrl(), cas);
 
-        System.out.println(aService.getName());
-
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
                 .as("Prediction should contain Tokens")

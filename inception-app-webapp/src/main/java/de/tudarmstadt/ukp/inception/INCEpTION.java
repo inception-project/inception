@@ -93,6 +93,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
         // Include WebAnno entity packages separately so we can skip the automation entities!
         "de.tudarmstadt.ukp.clarin.webanno.model",
         "de.tudarmstadt.ukp.clarin.webanno.security",
+        "de.tudarmstadt.ukp.clarin.webanno.telemetry",
         "de.tudarmstadt.ukp.inception" })
 @ImportResource({ 
         "classpath:/META-INF/application-context.xml",
