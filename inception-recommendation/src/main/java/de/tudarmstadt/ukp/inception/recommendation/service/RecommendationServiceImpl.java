@@ -30,10 +30,12 @@ import static org.apache.uima.fit.util.CasUtil.select;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -61,6 +63,9 @@ import org.apache.uima.resource.metadata.FeatureDescription;
 import org.apache.uima.resource.metadata.TypeDescription;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
+import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.request.cycle.IRequestCycleListener;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,10 +80,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
@@ -120,8 +127,6 @@ public class RecommendationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-
-    private static final double NO_SCORE = 0.0;
     private static final int TRAININGS_PER_SELECTION = 5;
 
     private @PersistenceContext EntityManager entityManager;
@@ -133,15 +138,34 @@ public class RecommendationServiceImpl
     private final AnnotationSchemaService annoService;
     private final DocumentService documentService;
     private final LearningRecordService learningRecordService;
+    private final ProjectService projectService;
     
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
+    
+    private IRequestCycleListener triggerTraingRunListener;
+
+    /*
+     * Marks user/projects to which annotations were added during this request. 
+     */
+    @SuppressWarnings("serial")
+    private static final MetaDataKey<Set<RecommendationStateKey>> DIRTIES = 
+            new MetaDataKey<Set<RecommendationStateKey>>() {};
+
+    /*
+     * Marks for which CASes have been saved during this request (probably the ones to which
+     * annotations have been added above).
+     */
+    @SuppressWarnings("serial")
+    private static final MetaDataKey<Set<RecommendationStateKey>> COMMITTED = 
+            new MetaDataKey<Set<RecommendationStateKey>>() {};
 
     @Autowired
     public RecommendationServiceImpl(SessionRegistry aSessionRegistry, UserDao aUserRepository,
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
-            DocumentService aDocumentService, LearningRecordService aLearningRecordService)
+            DocumentService aDocumentService, LearningRecordService aLearningRecordService,
+            ProjectService aProjectService)
     {
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
@@ -150,6 +174,7 @@ public class RecommendationServiceImpl
         annoService = aAnnoService;
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
+        projectService = aProjectService;
         
         trainingTaskCounter = new ConcurrentHashMap<>();
         states = new ConcurrentHashMap<>();
@@ -162,14 +187,14 @@ public class RecommendationServiceImpl
             EntityManager aEntityManager)
     {
         this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
-                aAnnoService, aDocumentService, aLearningRecordService);
+                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null);
         
         entityManager = aEntityManager;
     }
 
     public RecommendationServiceImpl(EntityManager aEntityManager)
     {
-        this(null, null, null, null, null, null, null);
+        this(null, null, null, null, null, null, null, (ProjectService) null);
 
         entityManager = aEntityManager;
     }
@@ -390,12 +415,54 @@ public class RecommendationServiceImpl
         }
     }
 
+    /* 
+     * There can be multiple annotation changes in a single user request. Thus, we do not
+     * trigger a training on every action but rather mark the project/user as dirty and trigger
+     * the training only when we get a CAS-written event on a dirty project/user.
+     */
     @EventListener
     public void onAnnotation(AnnotationEvent aEvent)
     {
-        // Whenever annotations are changed, we trigger a new training and classification run
-        triggerTrainingAndClassification(aEvent.getUser(),
-                aEvent.getDocument().getProject(), "AnnotationEvent");
+        RequestCycle requestCycle = RequestCycle.get();
+        
+        if (requestCycle == null) {
+            return;
+        }
+        
+        Set<RecommendationStateKey> dirties = requestCycle.getMetaData(DIRTIES);
+        if (dirties == null) {
+            dirties = new HashSet<>();
+            requestCycle.setMetaData(DIRTIES, dirties);
+        }
+        
+        dirties.add(
+                new RecommendationStateKey(aEvent.getUser(), aEvent.getDocument().getProject()));
+    }
+    
+    /*
+     * We only want to schedule training runs as a reaction to the user performing an action. We
+     * don't need to keep training all the time if the user isn't even going to look at the results.
+     * Thus, we make use of the Wicket RequestCycle here.
+     */
+    @EventListener
+    public void onAfterCasWritten(AfterCasWrittenEvent aEvent)
+    {
+        RequestCycle requestCycle = RequestCycle.get();
+        
+        if (requestCycle == null) {
+            return;
+        }
+        
+        Set<RecommendationStateKey> committed = requestCycle.getMetaData(COMMITTED);
+        if (committed == null) {
+            committed = new HashSet<>();
+            requestCycle.setMetaData(COMMITTED, committed);
+        }
+        
+        committed.add(new RecommendationStateKey(aEvent.getDocument().getUser(),
+                aEvent.getDocument().getProject()));        
+        
+        requestCycle.getListeners().add(triggerTrainingTaskListener());
     }
 
     @EventListener
@@ -422,7 +489,8 @@ public class RecommendationServiceImpl
         clearState(aEvent.getDocument().getProject());
     }
 
-    private void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
+    @Override
+    public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
 
@@ -445,7 +513,7 @@ public class RecommendationServiceImpl
     
     @EventListener
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public void onApplicationEvent(SessionDestroyedEvent event)
+    public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
         // Could be an anonymous session without information.
@@ -493,7 +561,8 @@ public class RecommendationServiceImpl
         }
     }
     
-    private void clearState(String aUsername)
+    @Override
+    public void clearState(String aUsername)
     {
         Validate.notNull(aUsername, "Username must be specified");
         
@@ -826,19 +895,6 @@ public class RecommendationServiceImpl
                                     e);
                             continue nextDocument;
                         }
-                        try {
-                            annoService.upgradeCasIfRequired(originalCas.get(), document,
-                                    username);
-                        }
-                        catch (UIMAException | IOException e) {
-                            log.error(
-                                    "Cannot upgrade annotation CAS for user [{}] of document "
-                                            + "[{}]({}) in project [{}]({}) - skipping document",
-                                    username, document.getName(), document.getId(),
-                                    document.getProject().getName(), document.getProject().getId(),
-                                    e);
-                            continue nextDocument;
-                        }
                     }
 
                     try {
@@ -961,8 +1017,22 @@ public class RecommendationServiceImpl
     public void calculateVisibility(CAS aCas, String aUser, AnnotationLayer aLayer,
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd)
     {
+        // NOTE: In order to avoid having to upgrade the "original CAS" in computePredictions,this
+        // method is implemented in such a way that it gracefully handles cases where the CAS and
+        // the project type system are not in sync - specifically the CAS where the project defines
+        // layers or features which do not exist in the CAS.
+        
         // Collect all annotations of the given layer within the view window
-        Type type = CasUtil.getType(aCas, aLayer.getName());
+        Type type;
+        try {
+            type = CasUtil.getType(aCas, aLayer.getName());
+        }
+        catch (IllegalArgumentException e) {
+            // Type does not exist in the type system of the CAS. Probably it has not been upgraded
+            // to the latest version of the type system yet. If this is the case, we'll just skip.
+            return;
+        }
+        
         List<AnnotationFS> annotationsInWindow = select(aCas, type).stream()
                 .filter(fs -> aWindowBegin <= fs.getBegin() && fs.getEnd() <= aWindowEnd)
                 .collect(toList());
@@ -984,6 +1054,13 @@ public class RecommendationServiceImpl
         for (AnnotationFeature feature : annoService.listAnnotationFeature(aLayer)) {
             Feature feat = type.getFeatureByBaseName(feature.getName());
 
+            if (feat == null) {
+                // The feature does not exist in the type system of the CAS. Probably it has not
+                // been upgraded to the latest version of the type system yet. If this is the case,
+                // we'll just skip.
+                return;
+            }
+            
             // Reduce the annotations to the ones which have a non-null feature value. We need to
             // use a multi-valued map here because there may be multiple annotations at a
             // given position.
@@ -1081,7 +1158,7 @@ public class RecommendationServiceImpl
                 TypeDescription td = tsd.getType(layer.getName());
 
                 if (td == null) {
-                    log.debug("Could not monkey patch type [{}]", layer.getName());
+                    log.trace("Could not monkey patch type [{}]", layer.getName());
                     continue;
                 }
 
@@ -1102,5 +1179,43 @@ public class RecommendationServiceImpl
         }
 
         return aTargetCas;
+    }
+    
+    private synchronized IRequestCycleListener triggerTrainingTaskListener()
+    {
+        if (triggerTraingRunListener == null) {
+            triggerTraingRunListener = new IRequestCycleListener()
+            {
+                @Override
+                public void onEndRequest(RequestCycle cycle)
+                {
+                    Set<RecommendationStateKey> dirties = cycle.getMetaData(DIRTIES);
+                    Set<RecommendationStateKey> committed = cycle.getMetaData(COMMITTED);
+                    
+                    if (dirties == null || committed == null) {
+                        return;
+                    }
+
+                    for (RecommendationStateKey committedKey : committed) {
+                        if (!dirties.contains(committedKey)) {
+                            // Committed but not dirty, so nothing to do.
+                            continue;
+                        }
+                        
+                        Project project = projectService.getProject(committedKey.getProjectId());
+                        if (project == null) {
+                            // Concurrent action has deleted project, so we can ignore this
+                            continue;
+                        }
+                        
+                        triggerTrainingAndClassification(
+                                committedKey.getUser(), project, 
+                                "Committed dirty CAS at end of request");
+                    }
+                };
+            };
+        }
+        
+        return triggerTraingRunListener;
     }
 }
