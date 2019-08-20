@@ -26,6 +26,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -90,7 +92,7 @@ public class VisibilityCalculationTests
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
         
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
-                recordService, null);
+                recordService, (EntityManager) null);
     }
 
     @Test
