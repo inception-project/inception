@@ -134,4 +134,8 @@ public interface RecommendationService
             Collection<SuggestionGroup> aRecommendations, int aWindowBegin, int aWindowEnd);
 
     List<Recommender> listEnabledRecommenders(AnnotationLayer aLayer);
+
+    void clearState(String aUsername);
+
+    void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName);
 }
