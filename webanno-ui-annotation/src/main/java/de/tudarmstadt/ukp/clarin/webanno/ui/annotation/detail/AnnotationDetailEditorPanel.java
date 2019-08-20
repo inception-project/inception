@@ -492,6 +492,8 @@ public abstract class AnnotationDetailEditorPanel
 
                 id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aCas,
                         aBegin, aEnd));
+                // TODO #1404
+                state.getSelection().selectSpan(new VID(id), aCas, aBegin, aEnd);
             }
             else {
                 throw new IllegalPlacementException(
@@ -503,7 +505,7 @@ public abstract class AnnotationDetailEditorPanel
             id = aVID.getId();
         }
 
-        // Fill the annotation into the slow
+        // Fill the annotation into the slot
         try {
             setSlot(aTarget, aCas, id);
         }
@@ -1299,8 +1301,10 @@ public abstract class AnnotationDetailEditorPanel
             }
 
             Serializable value = null;
+            VID vid = null;
             if (aFS != null) {
                 value = annotationService.getAdapter(aLayer).getFeatureValue(feature, aFS);
+                vid = new VID(aFS);
             }
             else if (aRemembered != null) {
                 value = aRemembered.get(feature);
@@ -1312,18 +1316,18 @@ public abstract class AnnotationDetailEditorPanel
                     if (feature.getLayer().isLinkedListBehavior()
                         && WebAnnoConst.COREFERENCE_RELATION_FEATURE.equals(feature
                         .getName())) {
-                        featureState = new FeatureState(feature, value);
+                        featureState = new FeatureState(vid, feature, value);
                     }
                 }
                 else {
                     if (WebAnnoConst.COREFERENCE_TYPE_FEATURE.equals(feature.getName())) {
-                        featureState = new FeatureState(feature, value);
+                        featureState = new FeatureState(vid, feature, value);
                     }
                 }
 
             }
             else {
-                featureState = new FeatureState(feature, value);
+                featureState = new FeatureState(vid, feature, value);
             }
 
             if (featureState != null) {

@@ -145,7 +145,7 @@ public class LinkFeatureEditor
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
-                        && state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                        && state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
                     label = new Label("label", "<Select to fill>");
                 }
                 else {
@@ -168,7 +168,7 @@ public class LinkFeatureEditor
                     @Override
                     public String getObject()
                     {
-                        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+                        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
                             return "; background: orange";
                         }
                         else {
@@ -473,7 +473,7 @@ public class LinkFeatureEditor
             LinkWithRoleModel m = new LinkWithRoleModel();
             m.role = (String) field.getModelObject();
             links.add(m);
-            state.setArmedSlot(LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+            state.setArmedSlot(getModelObject().vid, LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
@@ -536,12 +536,12 @@ public class LinkFeatureEditor
     {
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
 
-        if (state.isArmedSlot(getModelObject().feature, aItem.getIndex())) {
+        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
             state.clearArmedSlot();
             aTarget.add(content);
         }
         else {
-            state.setArmedSlot(getModelObject().feature, aItem.getIndex());
+            state.setArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
             aTarget.add(getOwner());

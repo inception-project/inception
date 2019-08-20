@@ -143,9 +143,9 @@ public interface AnnotatorState
     @Override
     Selection getSelection();
 
-    void setArmedSlot(AnnotationFeature aName, int aIndex);
+    void setArmedSlot(VID aVid, AnnotationFeature aName, int aIndex);
 
-    boolean isArmedSlot(AnnotationFeature aName, int aIndex);
+    boolean isArmedSlot(VID aVid, AnnotationFeature aName, int aIndex);
 
     void clearArmedSlot();
 
@@ -154,6 +154,8 @@ public interface AnnotatorState
     AnnotationFeature getArmedFeature();
 
     int getArmedSlot();
+    
+    VID getArmedVid();
 
     // ---------------------------------------------------------------------------------------------
     // User preferences

@@ -357,6 +357,10 @@ public class BratAnnotationEditor
             // When filling a slot, the current selection is *NOT* changed. The
             // Span annotation which owns the slot that is being filled remains
             // selected!
+            // TODO #1404
+            if (selection.getAnnotation().getId() != state.getArmedVid().getId()) {
+                selection.selectSpan(state.getArmedVid(), aCas, offsets.getBegin(), offsets.getEnd());
+            }
             getActionHandler().actionFillSlot(aTarget, aCas, offsets.getBegin(), offsets.getEnd(),
                     paramId);
         }

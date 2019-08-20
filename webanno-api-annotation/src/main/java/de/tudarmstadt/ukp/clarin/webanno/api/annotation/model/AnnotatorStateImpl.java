@@ -163,6 +163,8 @@ public class AnnotatorStateImpl
     private PagingStrategy pagingStrategy;
     
     private List<Unit> visibleUnits;
+    
+    private VID armedVid;
 
     public AnnotatorStateImpl(Mode aMode)
     {
@@ -537,21 +539,23 @@ public class AnnotatorStateImpl
     private int armedSlot = -1;
 
     @Override
-    public void setArmedSlot(AnnotationFeature aName, int aIndex)
+    public void setArmedSlot(VID aVid, AnnotationFeature aName, int aIndex)
     {
+        armedVid = aVid;
         armedFeature = aName;
         armedSlot = aIndex;
     }
 
     @Override
-    public boolean isArmedSlot(AnnotationFeature aName, int aIndex)
+    public boolean isArmedSlot(VID aVid, AnnotationFeature aFeature, int aIndex)
     {
-        return ObjectUtils.equals(aName, armedFeature) && aIndex == armedSlot;
+        return Objects.equals(aVid, armedVid) && Objects.equals(aFeature, armedFeature) && aIndex == armedSlot;
     }
 
     @Override
     public void clearArmedSlot()
     {
+        armedVid = VID.NONE_ID;
         armedFeature = null;
         armedSlot = -1;
     }
@@ -572,6 +576,11 @@ public class AnnotatorStateImpl
     public int getArmedSlot()
     {
         return armedSlot;
+    }
+    
+    @Override
+    public VID getArmedVid() {
+        return armedVid;
     }
  
     @Override
