@@ -770,7 +770,7 @@ public class RecommendationServiceImpl
                     continue;
                 }
 
-                double recommenderCount = 0;
+                int recommenderCount = 0;
                 nextRecommender: for (EvaluatedRecommender r : recommenders) {
                     recommenderCount++;
                     // Make sure we have the latest recommender config from the DB - the one from
@@ -901,10 +901,10 @@ public class RecommendationServiceImpl
         return predictions;
     }
 
-    private void publishPredictionUpdateEvent(String aUserName, double aRecommenderCount, 
+    private void publishPredictionUpdateEvent(String aUserName, int aRecommenderCount, 
             int aRecommenderSize, Recommender aRecommender)
     {
-        double progress = aRecommenderCount / aRecommenderSize;
+        double progress = (double) aRecommenderCount / aRecommenderSize;
         RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
                 RecommenderState.PREDICTION_STARTED : RecommenderState.PREDICTION_FINISHED;
         appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUserName, 

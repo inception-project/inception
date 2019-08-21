@@ -106,7 +106,7 @@ public class SelectionTask
     
             List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
-            double recommenderCount = 0;
+            int recommenderCount = 0;
             for (Recommender r : recommenders) {
                 recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from
@@ -117,7 +117,7 @@ public class SelectionTask
                 }
                 catch (NoResultException e) {
                     log.info("[{}][{}]: Recommender no longer available... skipping",
-                            user.getUsername(), r.getName());
+                            userName, r.getName());
                     continue;
                 }
 
@@ -136,30 +136,26 @@ public class SelectionTask
                     if (factory == null) {
                         log.error("[{}][{}]: No recommender factory available for [{}]",
                                 userName, r.getName(), r.getTool());
-                        appEventPublisher.publishEvent(new TaskUpdateEvent(this, userName,
-                                TaskState.DONE, 1,
-                                String.format("No recommender factory available.", recommender)));
                         continue;
                     }
                     
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
                         log.info("[{}][{}]: Recommender configured with invalid layer or feature "
-                                + "- skipping recommender", user.getUsername(), r.getName());
-                        appEventPublisher.publishEvent(new TaskUpdateEvent(this, userName,
-                                TaskState.DONE, 1,
-                                String.format("Invalid layer or feature for %s", recommender)));
+                                + "- skipping recommender", userName, r.getName());
                         continue;
                     }
                     
                     RecommendationEngine recommendationEngine = factory.build(recommender);
 
                     if (recommender.isAlwaysSelected()) {
-                        handleSkippedRecommenderEvals(userName, activeRecommenders, recommender,
-                                recommenderName, "always-selected");
-                        continue;
-                    } else if (!factory.isEvaluable()) {
-                        handleSkippedRecommenderEvals(userName, activeRecommenders, recommender,
-                                recommenderName, "non-evaluable");
+                        handleEvaluationSkipped(userName, recommenders.size(), recommenderCount,
+                                activeRecommenders, recommender, recommenderName,
+                                "Activated always selected recommender.", start);
+                    }
+                    else if (!factory.isEvaluable()) {
+                        handleEvaluationSkipped(userName, recommenders.size(), recommenderCount,
+                                activeRecommenders, recommender, recommenderName,
+                                "Activated non-evaluable recommender.", start);
                         continue;
                     }
     
@@ -175,16 +171,16 @@ public class SelectionTask
                         activated = true;
                         activeRecommenders.add(new EvaluatedRecommender(recommender, result, true));
                         log.info("[{}][{}]: Activated ({} is above threshold {})",
-                                user.getUsername(), recommenderName, score,
+                                userName, recommenderName, score,
                                 threshold);
                     }
                     else {
                         activated = false;
                         log.info("[{}][{}]: Not activated ({} is not above threshold {})",
-                                user.getUsername(), recommenderName, score,
+                                userName, recommenderName, score,
                                 threshold);
                     }
-                    publishEvalEvent(user, recommenders.size(), recommenderCount, recommender,
+                    publishEvalEvent(userName, recommenders.size(), recommenderCount, recommender,
                             start, result, activated);
                     
                 }
@@ -204,34 +200,33 @@ public class SelectionTask
                 "SelectionTask after activating recommenders"));
     }
 
-    protected void handleSkippedRecommenderEvals(String userName,
-            List<EvaluatedRecommender> aActiveRecommenders, Recommender aRecommender,
-            String aRecommenderName, String aMessage)
+    private void handleEvaluationSkipped(String userName, int aRecommenderSize,
+            int aRecommenderCount, List<EvaluatedRecommender> aActiveRecommenders,
+            Recommender aRecommender, String aRecommenderName, String aMessage, long start)
     {
-        log.debug("[{}][{}]: Activating [{}] without evaluating - {}",
-                userName, aRecommenderName, aRecommenderName, aMessage);
-        aActiveRecommenders.add(
-                new EvaluatedRecommender(aRecommender, EvaluationResult.skipped(), true));
-        appEventPublisher
-                .publishEvent(new TaskUpdateEvent(this, userName, TaskState.DONE, 1,
-                        String.format("Activated %s recommender %s.", aMessage,
-                                aRecommender)));
+        log.debug("[{}][{}]: {}", userName, aRecommenderName, aMessage);
+        EvaluationResult skipped = EvaluationResult.skipped();
+        aActiveRecommenders.add(new EvaluatedRecommender(aRecommender,
+                skipped, true));
+        //publish
+        publishEvalEvent(userName, aRecommenderSize, aRecommenderCount, aRecommender,
+                start, skipped, true);
     }
 
-    private void publishEvalEvent(User user, int aRecommenderSize, double aRecommenderCount,
+    private void publishEvalEvent(String user, int aRecommenderSize, int aRecommenderCount,
             Recommender aRecommender, long aStart, EvaluationResult aResult, boolean aActivated)
     {
         RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ? 
                 RecommenderState.EVALUATION_STARTED : 
                     RecommenderState.EVALUATION_FINISHED;
-        double progress = aRecommenderCount / aRecommenderSize;
+        double progress = (double) aRecommenderCount / aRecommenderSize;
         long duration = System.currentTimeMillis() - aStart;
         RecommenderEvaluationResultEvent event = new RecommenderEvaluationResultEvent(this, 
-                user.getUsername(), TaskState.RUNNING, 
+                user, TaskState.RUNNING, 
                 progress, aRecommender, aActivated, 
                 recommenderState, aResult, duration); 
         appEventPublisher.publishEvent(event);
-        log.debug(String.format("Published event: %s", event.toString()));
+        log.debug("Published event: {}", event.toString());
     }
 
     private List<CAS> readCasses(Project aProject, String aUserName)

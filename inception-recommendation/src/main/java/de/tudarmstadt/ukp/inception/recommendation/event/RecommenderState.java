@@ -21,25 +21,4 @@ public enum RecommenderState
 {
     TRAINING_STARTED, TRAINING_FINISHED, EVALUATION_STARTED, EVALUATION_FINISHED,
     PREDICTION_STARTED, PREDICTION_FINISHED;
-    
-    @Override
-    public String toString()
-    {
-        switch (this) {
-        case TRAINING_STARTED:
-            return "Training";
-        case TRAINING_FINISHED:
-            return "Finished Training";
-        case EVALUATION_STARTED:
-            return "Evaluating";
-        case EVALUATION_FINISHED:
-            return "Finished Evaluation";
-        case PREDICTION_FINISHED:
-            return "Finished Prediction";
-        case PREDICTION_STARTED:
-            return "Predicting";
-        default:
-            return name();
-        }
-    }
 }

@@ -161,7 +161,7 @@ public class SchedulingService
         // send message to all connections
         for (IWebSocketConnection connection : userConnections) {
             connection.sendMessage(aTaskUpdateEvent);
-            log.debug(String.format("Send wicket event: %s", aTaskUpdateEvent.toString()));
+            log.debug("Send wicket event: {}", aTaskUpdateEvent.toString());
         }
 
     }

@@ -107,6 +107,8 @@ public class RecommenderInfoPanel
                 Recommender recommender = evalRecommender.getRecommender();
                 item.add(new Label("name", recommender.getName()));
                 item.add(new Label("state", evalResult.isPresent() ? "active" : "off"));
+                // TODO: show info if recommender is always active 
+                // or non-evaluable ("skipped" result)
 
                 item.add(new LambdaAjaxLink("acceptAll", _target -> 
                         actionAcceptAll(_target, recommender)));
@@ -127,21 +129,22 @@ public class RecommenderInfoPanel
             protected void onConnect(ConnectedMessage aMessage)
             {
                 super.onConnect(aMessage);
-                log.debug(String.format("User with sessionID %s connected.",
-                        aMessage.getSessionId()));
+                log.debug("User with sessionID {} connected.",
+                        aMessage.getSessionId());
             }
 
             @Override
             protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
             {
                 if (aMessage instanceof RecommenderEvaluationResultEvent) {
-                    log.debug(String.format("Received event: %s", aMessage.toString()));
+                    log.debug("Received event: {}", aMessage.toString());
                     RecommenderEvaluationResultEvent resultEvent = 
                             (RecommenderEvaluationResultEvent) aMessage;
                     Recommender recommender = resultEvent.getRecommender();
                     // update list of evaluated recommenders with their results and re-render
                     recommenderEvals.getObject().put(recommender.getId(),
                             resultEvent.getEvaluatedRecommender());
+                    // FIXME: sometimes cannot add resultContainer because of rendering cycle ???
                     aHandler.add(mainContainer);
                 }
             }
@@ -172,10 +175,10 @@ public class RecommenderInfoPanel
     {
         HashMap<Long, EvaluatedRecommender> evals = new HashMap<>();
         for (Recommender recommender : recommendationService
-                .listEnabledRecommenders(getPanelModelObject().getProject())) {
+                .listEnabledRecommenders(getModelObject().getProject())) {
             
             List<EvaluatedRecommender> activeRecommenders = recommendationService
-                    .getActiveRecommenders(getPanelModelObject().getUser(), recommender.getLayer());
+                    .getActiveRecommenders(getModelObject().getUser(), recommender.getLayer());
 
             boolean foundEval = false;
             for (EvaluatedRecommender evalRecommender : activeRecommenders) {
@@ -210,7 +213,7 @@ public class RecommenderInfoPanel
         return resultsContainer;
     }
     
-    public AnnotatorState getPanelModelObject()
+    public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
     }
@@ -224,7 +227,7 @@ public class RecommenderInfoPanel
     private void actionAcceptAll(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        AnnotatorState state = getPanelModelObject();
+        AnnotatorState state = getModelObject();
         User user = state.getUser();
         
         AnnotationPageBase page = findParent(AnnotationPageBase.class);

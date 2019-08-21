@@ -20,21 +20,4 @@ package de.tudarmstadt.ukp.inception.scheduling;
 public enum TaskState
 {
     RUNNING, SCHEDULED, WAITING, DONE;
-
-    @Override
-    public String toString()
-    {
-        switch (this) {
-        case DONE:
-            return "Done";
-        case RUNNING:
-            return "Running";
-        case SCHEDULED:
-            return "Scheduled";
-        case WAITING:
-            return "Waiting on task";
-        default:
-            return name();
-        }
-    }
 }

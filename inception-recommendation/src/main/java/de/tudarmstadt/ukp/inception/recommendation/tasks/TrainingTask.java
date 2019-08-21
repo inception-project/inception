@@ -113,7 +113,7 @@ public class TrainingTask
                 continue;
             }
             
-            double recommenderCount = 0;
+            int recommenderCount = 0;
             for (EvaluatedRecommender r : recommenders) {
                 recommenderCount++;
                 // Make sure we have the latest recommender config from the DB - the one from the
@@ -206,10 +206,10 @@ public class TrainingTask
                         "TrainingTask after training was finished"));
     }
 
-    private void publishTrainingEvents(User aUser, double aRecommenderCount,
+    private void publishTrainingEvents(User aUser, int aRecommenderCount,
             Recommender aRecommender, int aRecommenderSize)
     {
-        double progress = aRecommenderCount / aRecommenderSize;
+        double progress = (double) aRecommenderCount / aRecommenderSize;
         RecommenderState recommenderState = aRecommenderCount < aRecommenderSize ?
                 RecommenderState.TRAINING_STARTED : RecommenderState.TRAINING_FINISHED;
         appEventPublisher.publishEvent(new RecommenderTaskEvent(this, aUser.getUsername(), 
