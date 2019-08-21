@@ -56,12 +56,14 @@ public class PredictionTask
         Project project = getProject();
         List<SourceDocument> docs = documentService.listSourceDocuments(project);
 
-        log.info("[{}]: Starting prediction...", user.getUsername());
+        log.debug("[{}][{}]: Starting prediction for project [{}] triggered by [{}]...", getId(),
+                user.getUsername(), project, getTrigger());
+        
         long startTime = System.currentTimeMillis();
 
         Predictions predictions = recommendationService.computePredictions(user, project, docs);
         
-        log.debug("[{}]: Prediction complete ({} ms)", user.getUsername(),
+        log.debug("[{}][{}]: Prediction complete ({} ms)", getId(), user.getUsername(),
                 (System.currentTimeMillis() - startTime));
 
         recommendationService.putIncomingPredictions(user, project, predictions);
