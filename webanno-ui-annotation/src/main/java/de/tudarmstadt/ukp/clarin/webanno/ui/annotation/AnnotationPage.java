@@ -796,7 +796,9 @@ public class AnnotationPage
 
     private boolean isUserViewingOthersWork()
     {
-        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
+        AnnotatorState state = getModelObject();
+        return !state.getMode().equals(Mode.CURATION) && 
+                !state.getUser().equals(userRepository.getCurrentUser());
     }
 
     @Override

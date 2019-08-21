@@ -670,7 +670,7 @@ public class CasMerge
                 aFeature.getName().equals(CAS.FEATURE_FULL_NAME_END);
     }
 
-    public CasMergeOpertationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
+    public CasMergeOperationResult mergeSpanAnnotation(SourceDocument aDocument, String aUsername,
             AnnotationLayer aAnnotationLayer, CAS aTargetCas, AnnotationFS aSourceFs,
             boolean aAllowStacking)
         throws AnnotationException
@@ -695,16 +695,21 @@ public class CasMerge
                     aSourceFs.getBegin(), aSourceFs.getEnd());
             
             copyFeatures(aDocument, aUsername, adapter, mergedSpan, aSourceFs);
-            return CasMergeOpertationResult.CREATED;
+            int mergedSpanAddr = getAddr(mergedSpan);
+            return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
+                    mergedSpanAddr, mergedSpanAddr);
         }
         // b) if stacking is not allowed, modify the existing annotation with this one
         else {
-            copyFeatures(aDocument, aUsername, adapter, existingAnnos.get(0), aSourceFs);
-            return CasMergeOpertationResult.UPDATED;
+            AnnotationFS annoToUpdate = existingAnnos.get(0);
+            copyFeatures(aDocument, aUsername, adapter, annoToUpdate, aSourceFs);
+            int mergedSpanAddr = getAddr(annoToUpdate);
+            return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
+                    mergedSpanAddr, mergedSpanAddr);
         }
     }
 
-    public CasMergeOpertationResult mergeRelationAnnotation(SourceDocument aDocument,
+    public CasMergeOperationResult mergeRelationAnnotation(SourceDocument aDocument,
             String aUsername, AnnotationLayer aAnnotationLayer, CAS aTargetCas,
             AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
@@ -765,15 +770,19 @@ public class CasMerge
             AnnotationFS mergedRelation = adapter.add(aDocument, aUsername, originFs, targetFs,
                     aTargetCas);
             copyFeatures(aDocument, aUsername, adapter, mergedRelation, aSourceFs);
-            return CasMergeOpertationResult.CREATED;
+
+            return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
+                    getAddr(mergedRelation), getAddr(aSourceFs));
         }
         else {
-            copyFeatures(aDocument, aUsername, adapter, existingAnnos.get(0), aSourceFs);
-            return CasMergeOpertationResult.UPDATED;
+            AnnotationFS mergeTargetFS = existingAnnos.get(0);
+            copyFeatures(aDocument, aUsername, adapter, mergeTargetFS, aSourceFs);
+            return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
+                    getAddr(mergeTargetFS), getAddr(aSourceFs));
         }
     }
 
-    public void mergeSlotFeature(SourceDocument aDocument, String aUsername,
+    public CasMergeOperationResult mergeSlotFeature(SourceDocument aDocument, String aUsername,
             AnnotationLayer aAnnotationLayer, CAS aTargetCas,
             AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)
         throws AnnotationException
@@ -788,7 +797,7 @@ public class CasMerge
         AnnotationFS targetFs;
         if (candidateHosts.size() == 0) {
             throw new UnfulfilledPrerequisitesException(
-                    "The base annotation do not exist. Please add it first. ");
+                    "The base annotation does not exist. Please add it first. ");
         }
         AnnotationFS mergeFs = candidateHosts.get(0);
         int liIndex = aSourceSlotIndex;
@@ -831,6 +840,8 @@ public class CasMerge
         links.remove(duplicateLink);
 
         setFeature(mergeFs, slotFeature, links);
+        return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
+                getAddr(mergeFs), getAddr(mergeFs));
     }
 
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)
