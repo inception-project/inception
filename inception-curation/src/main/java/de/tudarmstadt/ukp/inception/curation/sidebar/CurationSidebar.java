@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -38,6 +39,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
@@ -47,9 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -75,9 +79,9 @@ public class CurationSidebar
     private String selectedCurationTarget = DEFAULT_CURATION_TARGET;
     
     private AnnotatorState state;
-//    private AnnotationPage annoPage;
+    private AnnotationPage annoPage;
 
-    // FIXME: only show to people who are curators
+    // TODO: only show to people who are curators
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
@@ -101,7 +105,7 @@ public class CurationSidebar
             @Override
             protected void onSubmit()
             {
-                updateSettings();
+                updateCurator();
             }            
         };
         RadioChoice<String> curationTargetBtn = new RadioChoice<String>("curationTargetRadioBtn",
@@ -110,20 +114,36 @@ public class CurationSidebar
         mainContainer.add(targetForm);
     }
 
-    private void updateSettings()
+    private void updateCurator()
     {
-        // FIXME: needs to open curation-doc if it is selected as destination
-        String currentUsername = userRepository.getCurrentUser().getUsername();
+        // no change
+        if (selectedCurationTarget.equals(state.getUser().getUsername())) {
+            return;
+        }
+        
+        // update stored curator 
         long project = state.getProject().getId();
-
+        User curator = userRepository.getCurrentUser();
+        String currentUsername = curator.getUsername();
         if (selectedCurationTarget.equals(DEFAULT_CURATION_TARGET)) {
-            
             curationService.updateCurationName(currentUsername,
                     project, currentUsername);
+            state.setMode(Mode.ANNOTATION);
         }
         else {
+            if (!userRepository.exists(CURATION_USER)) {
+                userRepository.create(new User(CURATION_USER, Role.ROLE_USER));
+                // TODO: give rights: curator?
+            }
+            curator = userRepository.get(CURATION_USER);
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
+            state.setMode(Mode.CURATION);
         }
+        
+        // open curation-doc
+        state.setUser(curator);
+        RequestCycle.get().find(AjaxRequestTarget.class)
+                .ifPresent(t -> annoPage.actionRefreshDocument(t));
     }
     
     private Form<List<User>> createUserSelection()

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +38,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -45,7 +49,11 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
-import de.tudarmstadt.ukp.clarin.webanno.brat.message.SpanAnnotationResponse;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Component(CurationEditorExtension.EXTENSION_ID)
@@ -54,6 +62,10 @@ public class CurationEditorExtension
     implements AnnotationEditorExtension
 {
     public static final String EXTENSION_ID = "curationEditorExtension";
+    
+    // actions from the ui as of webanno #1388
+    private static final String ACTION_SELECT_ARC_FOR_MERGE = "selectArcForMerge";
+    private static final String ACTION_SELECT_SPAN_FOR_MERGE = "selectSpanForMerge";
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -77,55 +89,87 @@ public class CurationEditorExtension
         if (!aParamId.getExtensionId().equals(EXTENSION_ID)) {
             return;
         }
-        
         VID extendedVID = parse(aParamId);
-        // Annotation has been selected for gold
-        if (SpanAnnotationResponse.is(aAction)) { //TODO is this action only for spans
-                                                  //, what about relations ?
-            saveAnnotation(aPanel, aState, aTarget, aCas, extendedVID, aBegin, aEnd);
-        }
         
+        String actionDesc = aAction.toString();
+        if (!actionDesc.equals(ACTION_SELECT_SPAN_FOR_MERGE) && 
+                !actionDesc.equals(ACTION_SELECT_ARC_FOR_MERGE)) {
+            return;
+        }
+        // Annotation has been selected for gold
+        saveAnnotation(aAction, aPanel, aState, aTarget, aCas, extendedVID, aBegin, aEnd);        
     }
 
     /**
-     * Save annotation identified by aVID from given CAS in curator's CAS
-     * @throws AnnotationException 
-     * @throws IOException 
+     * Save annotation identified by aVID from user CAS to given curator's CAS
      */
-    private void saveAnnotation(AnnotationActionHandler aPanel, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aVID, int aBegin, int aEnd)
+    private void saveAnnotation(String aAction, AnnotationActionHandler aPanel,
+            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aTargetCas, VID aVID, int aBegin,
+            int aEnd)
         throws IOException, AnnotationException
     {
-        // TODO look at webanno suggestionviewpanel onclientevent -> mergeSpan etc., then save in CAS
+        AnnotationLayer layer = annotationService.getLayer(aVID.getLayerId());
         
-        // get curator's CAS
-//        SourceDocument doc = aState.getDocument();
-//        Optional<CAS> curatorCAS = Optional.empty();
-//        // FIXME: aCas should already be curation CAS if it was selected (and opened)
-//        curatorCAS = curationService.retrieveCurationCAS(aState.getUser().getUsername(),
-//                aState.getProject().getId(), doc);
-//
-//        if (!curatorCAS.isPresent()) {
-//            log.error(
-//                    String.format("Curator CAS for %s not found", aState.getUser().getUsername()));
-//            return;
-//        }
-//        // get user CAS
-//        CAS srcCAS = documentService.readAnnotationCas(doc, ((CurationVID) aVID).getUsername());
-//        
-//        // create/update anno in curator CAS
-//        AnnotationFS fs = selectByAddr(srcCAS, AnnotationFS.class, aVID.getId());
-//        CAS destCAS = curatorCAS.get();
-//        CasCopier copier = new CasCopier(srcCAS, destCAS);
-//        FeatureStructure curatedFs = copier.copyFs(fs);
-//        destCAS.addFsToIndexes(curatedFs);
-//        int address = WebAnnoCasUtil.getAddr(curatedFs);
-//        
-//        // Set selection to the accepted annotation and select it and load it into the detail editor
-//        // panel
-//        aState.getSelection().selectSpan(new VID(address), destCAS, aBegin, aEnd);
-//        aPanel.actionSelect(aTarget, destCAS);            
-//        aPanel.actionCreateOrUpdate(aTarget, destCAS);
+        // get user CAS and annotation (to be merged into curator's)
+        SourceDocument doc = aState.getDocument();
+        String srcUser = ((CurationVID) aVID).getUsername();
+        
+        if (!documentService.existsAnnotationDocument(doc, srcUser)) {
+            log.error(
+                  String.format("Source CAS of %s for curation not found", srcUser));
+            return;
+        }
+        
+        CAS srcCas = documentService.readAnnotationCas(doc, srcUser);
+        AnnotationFS sourceAnnotation = selectAnnotationByAddr(srcCas, aVID.getId());
+        
+        // merge into curator's CAS depending on annotation type (span or arc)
+        CasMerge casMerge = new CasMerge(annotationService);
+        CasMergeOperationResult mergeResult;
+        if (ACTION_SELECT_SPAN_FOR_MERGE.equals(aAction.toString())) {
+            mergeResult = casMerge.mergeSpanAnnotation(doc, srcUser, layer, aTargetCas,
+                    sourceAnnotation, layer.isAllowStacking());
+            // open created/updates FS in annotation detail editorpanel
+            aState.getSelection().selectSpan(new VID(mergeResult.getOriginFSAddress()), aTargetCas,
+                    aBegin, aEnd);
+            
+        }
+        else if (ACTION_SELECT_ARC_FOR_MERGE.equals(aAction.toString())) {
+            // this is a slot arc
+            if (aVID.isSlotSet()) {
+                TypeAdapter adapter = annotationService.getAdapter(layer);
+                AnnotationFeature feature = adapter.listFeatures().stream().sequential()
+                        .skip(aVID.getAttribute()).findFirst().get();
+
+                mergeResult = casMerge.mergeSlotFeature(doc, srcUser, layer, aTargetCas,
+                        sourceAnnotation, feature.getName(), aVID.getSlot());
+                // open created/updates FS in annotation detail editorpanel
+                aState.getSelection().selectSpan(new VID(mergeResult.getOriginFSAddress()),
+                        aTargetCas, aBegin, aEnd);
+            }
+            // normal relation annotation arc is clicked
+            else {
+                mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
+                        sourceAnnotation, layer.isAllowStacking());
+                // open created/updates FS in annotation detail editorpanel 
+                AnnotationFS originFS = selectAnnotationByAddr(aTargetCas,
+                        mergeResult.getOriginFSAddress());
+                AnnotationFS targetFS = selectAnnotationByAddr(aTargetCas,
+                        mergeResult.getTargetFSAddress());
+                aState.getSelection().selectArc(new VID(mergeResult.getOriginFSAddress()), originFS,
+                        targetFS);
+            }
+        }
+        
+        aPanel.actionSelect(aTarget, aTargetCas);
+        aPanel.actionCreateOrUpdate(aTarget, aTargetCas);
+        
+//        // save merged Cas, might not need if using aPanel.actionCreateOrUpdate
+//        User curator = aState.getUser(); 
+//        documentService.writeAnnotationCas(aTargetCas, doc, curator, true); //??? correct method
+//        updateDocumentTimestampAfterWrite(aState, documentService
+//                .getAnnotationCasTimestamp(doc, curator.getUsername()));  // why do we also need 
+                                                               //this, we set update to true above?
     }
 
     /**
@@ -166,15 +210,15 @@ public class CurationEditorExtension
 
         for (User user : selectedUsers.get()) {
             try {
-                Optional<CAS> userCas = curationService.retrieveCurationCAS(user.getUsername(),
-                        projectId, aState.getDocument());
-                if (!userCas.isPresent()) {
+                CAS userCas = documentService
+                        .readAnnotationCas(aState.getDocument(), user.getUsername());
+                if (userCas == null) {
                     log.error(String.format("Could not retrieve CAS for user %s and project %d",
                             user.getUsername(), projectId));
                     continue;
                 }
                 VDocument tmpDoc = new VDocument();
-                preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas.get(),
+                preRenderer.render(tmpDoc, aWindowBeginOffset, aWindowEndOffset, userCas,
                         aState.getAnnotationLayers());
                 // copy all arcs and spans to existing doc with new VID
                 String username = user.getUsername();
