@@ -150,7 +150,7 @@ public class QualifierFeatureEditor
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
-                    && state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+                    && state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                     label = new Label("label", "<Select to fill>");
                 }
                 else {
@@ -173,7 +173,7 @@ public class QualifierFeatureEditor
                     @Override
                     public String getObject()
                     {
-                        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+                        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                             return "; background: orange";
                         }
                         else {
@@ -531,13 +531,13 @@ public class QualifierFeatureEditor
     {
         AnnotatorState state = QualifierFeatureEditor.this.stateModel.getObject();
 
-        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();
             selectedRole = null;
             aTarget.add(content);
         }
         else {
-            state.setArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex());
+            state.setArmedSlot(getModelObject(), aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
             selectedRole = new KBHandle();

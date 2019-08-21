@@ -238,10 +238,6 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             FeatureState featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService.listTags(featureState.feature.getTagset());
-            // TODO: this probably needs to be solved in another, better way
-            // remove possible older duplicate
-            annotationPage.getModelObject().getFeatureStates().remove(featureState);
-            annotationPage.getModelObject().getFeatureStates().add(featureState);
         }
 
         return featureStates;

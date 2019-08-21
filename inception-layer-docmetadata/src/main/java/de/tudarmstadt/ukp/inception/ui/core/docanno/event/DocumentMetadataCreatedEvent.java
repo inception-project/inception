@@ -18,54 +18,20 @@
 package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
 import org.apache.uima.cas.AnnotationBaseFS;
-import org.springframework.context.ApplicationEvent;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DocumentMetadataCreatedEvent extends ApplicationEvent
+public class DocumentMetadataCreatedEvent
+    extends DocumentMetadataEvent
+    implements AnnotationCreatedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
     
-    private final SourceDocument document;
-    private final String user;
-    private final AnnotationBaseFS annotation;
-    
     public DocumentMetadataCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationBaseFS aAnnotation)
+            AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {
-        super(aSource);
-        document = aDocument;
-        user = aUser;
-        annotation = aAnnotation;
-    }
-    
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-    
-    public String getUser()
-    {
-        return user;
-    }
-    
-    public AnnotationBaseFS getAnnotation()
-    {
-        return annotation;
-    }
-
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("DocumentMetadataCreatedEvent [");
-        if (document != null) {
-            builder.append("docID=");
-            builder.append(document.getId());
-            builder.append(", user=");
-            builder.append(user);
-        }
-        builder.append("]");
-        return builder.toString();
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
     }
 }
