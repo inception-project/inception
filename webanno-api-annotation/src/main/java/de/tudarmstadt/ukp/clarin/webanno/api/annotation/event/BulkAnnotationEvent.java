@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,21 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.cas.text.AnnotationFS;
-
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class SpanDeletedEvent
-    extends SpanEvent
-    implements HybridApplicationUIEvent
+/**
+ * Indicates that many annotations have been affected at once. This is used on bulk operations
+ * instead of generating an event for every individual change. 
+ * 
+ * @see TypeAdapter_ImplBase#silenceEvents()
+ */
+public class BulkAnnotationEvent
+    extends AnnotationEvent
 {
-    private static final long serialVersionUID = 5206262614840209407L;
-    
-    public SpanDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+    private static final long serialVersionUID = -1187536069360130349L;
+
+    public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
+            AnnotationLayer aLayer)
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super(aSource, aDocument, aUser, aLayer);
     }
 }

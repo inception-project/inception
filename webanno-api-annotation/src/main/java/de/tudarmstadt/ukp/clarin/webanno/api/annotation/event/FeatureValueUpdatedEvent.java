@@ -20,48 +20,35 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 
 import org.apache.uima.cas.FeatureStructure;
-import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class FeatureValueUpdatedEvent
-    extends ApplicationEvent
+    extends AnnotationEvent
     implements HybridApplicationUIEvent
 {
     private static final long serialVersionUID = -6246331778850797138L;
     
-    private final SourceDocument document;
-    private final String user;
     private final FeatureStructure fs;
     private final AnnotationFeature feature;
     private final Object oldValue;
     private final Object newValue;
     
     public FeatureValueUpdatedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            FeatureStructure aFS, AnnotationFeature aFeature, Object aNewValue, Object aOldValue)
+            AnnotationLayer aLayer, FeatureStructure aFS, AnnotationFeature aFeature,
+            Object aNewValue, Object aOldValue)
     {
-        super(aSource);
+        super(aSource, aDocument, aUser, aLayer);
         
-        document = aDocument;
-        user = aUser;
         fs = aFS;
         feature = aFeature;
         oldValue = aOldValue;
         newValue = aNewValue;
     }
 
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-    
-    public String getUser()
-    {
-        return user;
-    }
-    
     public FeatureStructure getFS()
     {
         return fs;
@@ -87,11 +74,11 @@ public class FeatureValueUpdatedEvent
     {
         StringBuilder builder = new StringBuilder();
         builder.append("FeatureValueUpdatedEvent [");
-        if (document != null) {
+        if (getDocument() != null) {
             builder.append("docID=");
-            builder.append(document.getId());
+            builder.append(getDocument());
             builder.append(", user=");
-            builder.append(user);
+            builder.append(getUser());
             builder.append(", ");
         }
         builder.append("addr=");

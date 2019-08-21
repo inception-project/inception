@@ -205,15 +205,18 @@ public class CasStorageServiceImpl
 
             // Now write the new version to "<username>.ser" or CURATION_USER.ser
             WebAnnoCasUtil.setDocumentId(aCas, aUserName);
+            
+            long start = System.currentTimeMillis();
             CasPersistenceUtils.writeSerializedCas(aCas,
                     new File(annotationFolder, aUserName + ".ser"));
+            long duration = System.currentTimeMillis() - start;
 
             try (MDC.MDCCloseable closable = MDC.putCloseable(Logging.KEY_PROJECT_ID,
                     String.valueOf(aDocument.getProject().getId()))) {
                 log.debug(
-                        "Updated annotations for user [{}] on document [{}]({}) in project [{}]({})",
+                        "Updated annotations for user [{}] on document [{}]({}) in project [{}]({}) in {}ms",
                         aUserName, aDocument.getName(), aDocument.getId(),
-                        aDocument.getProject().getName(), aDocument.getProject().getId());
+                        aDocument.getProject().getName(), aDocument.getProject().getId(), duration);
             }
 
             if (currentVersion.length() < oldVersion.length()) {
@@ -387,6 +390,8 @@ public class CasStorageServiceImpl
         throws IOException
     {
         synchronized (lock) {
+            long start = System.currentTimeMillis();
+            
             // Check if we have the CAS in the cache
             if (isCacheEnabled()) {
                 CasCacheEntry entry = getCache().get(CasCacheKey.of(aDocument, aUsername));
@@ -435,17 +440,20 @@ public class CasStorageServiceImpl
             // Add/update the CAS metadata
             CasMetadataUtils.addOrUpdateCasMetadata(cas, casFile, aDocument, aUsername);
             
+            long duration = System.currentTimeMillis() - start;
+            
             // Update the cache
             if (isCacheEnabled()) {
                 CasCacheEntry entry = new CasCacheEntry();
                 entry.cas = cas;
                 entry.writes++;
                 getCache().put(CasCacheKey.of(aDocument, aUsername), entry);
-                log.debug("Loaded CAS [{},{}] from {} and stored in cache", aDocument.getId(),
-                        aUsername, source);
+                log.debug("Loaded CAS [{},{}] from {} in {}ms and stored in cache",
+                        aDocument.getId(), aUsername, source, duration);
             }
             else {
-                log.debug("Loaded CAS [{},{}] from {}", aDocument.getId(), aUsername, source);
+                log.debug("Loaded CAS [{},{}] from {} in {}ms", aDocument.getId(), aUsername,
+                        source, duration);
             }
             
             return cas;
