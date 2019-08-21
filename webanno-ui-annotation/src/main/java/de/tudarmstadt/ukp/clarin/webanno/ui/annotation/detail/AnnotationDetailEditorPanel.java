@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -82,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
@@ -92,6 +94,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.Evaluator;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
@@ -102,6 +105,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
@@ -466,34 +470,43 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     @Override
-    public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aBegin, int aEnd, VID aVID)
+    public void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
+            int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws AnnotationException, IOException
     {
         assert aCas != null;
 
         AnnotatorState state = getModelObject();
-    
-        // REC: I'm not sure this should be fired here. Leaving it commented in case we need it.
-        // Otherwise, should be removed in due time.
-        // extensionRegistry.fireAction(AnnotationDetailEditorPanel.this, getModelObject(), aTarget,
-        // aCas, aVID, aBegin, aEnd);
         
+        if (isUserViewingOthersWork()) {
+            throw new NotEditableException("This document belongs to another user.");
+        }
+
+        if (isAnnotationFinished()) {
+            throw new NotEditableException("This document is already closed. Please ask your "
+                + "project manager to re-open it via the Monitoring page.");
+        }
+    
         // If this method is called when no slot is armed, it must be a bug!
         if (!state.isSlotArmed()) {
             throw new IllegalStateException("No slot is armed.");
         }
 
-        // Fill slot with new annotation (only works if a concrete type is set for the link feature!
-        int id;
-        if (aVID.isNotSet()) {
-            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().getType())) {
-                SpanAdapter adapter = (SpanAdapter) annotationService.getAdapter(annotationService
-                        .findLayer(state.getProject(), state.getArmedFeature().getType()));
+        // If the user did not select an existing annotation but simply marked a span of text to
+        // fill a slot, then we try to create a new span annotation corresponding to the slot
+        // filler type defined in the feature. However, this only works if the slot filler is a
+        // concrete span type defined in the project, not if the user simply defined
+        // CAS.TYPE_NAME_ANNOTATION to allow for arbitrary slot fillers. In the latter case, we
+        // abort the operation with an IllegalPlacementException.
+        int slotFillerAddr;
+        if (aExistingSlotFillerId.isNotSet()) {
+            if (!CAS.TYPE_NAME_ANNOTATION.equals(state.getArmedFeature().feature.getType())) {
+                SpanAdapter adapter = (SpanAdapter) annotationService
+                        .getAdapter(annotationService.findLayer(state.getProject(),
+                                state.getArmedFeature().feature.getType()));
 
-                id = getAddr(adapter.add(state.getDocument(), state.getUser().getUsername(), aCas,
-                        aBegin, aEnd));
-                // TODO #1404
-                state.getSelection().selectSpan(new VID(id), aCas, aBegin, aEnd);
+                slotFillerAddr = getAddr(adapter.add(state.getDocument(),
+                        state.getUser().getUsername(), aCas, aSlotFillerBegin, aSlotFillerEnd));
             }
             else {
                 throw new IllegalPlacementException(
@@ -502,16 +515,47 @@ public abstract class AnnotationDetailEditorPanel
             }
         }
         else {
-            id = aVID.getId();
+            slotFillerAddr = aExistingSlotFillerId.getId();
         }
 
-        // Fill the annotation into the slot
-        try {
-            setSlot(aTarget, aCas, id);
+        // Inject the slot filler into the respective slot
+        FeatureStructure slotHostFS = selectFsByAddr(aCas, state.getArmedFeature().vid.getId());
+        AnnotationLayer slotHostLayer = annotationService.findLayer(state.getProject(), slotHostFS);
+        TypeAdapter slotHostAdapter = annotationService.getAdapter(slotHostLayer);
+        List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getArmedFeature().value;
+        LinkWithRoleModel link = links.get(state.getArmedSlot());
+        link.targetAddr = slotFillerAddr;
+        link.label = selectAnnotationByAddr(aCas, slotFillerAddr).getCoveredText();
+        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
+                aCas, state.getArmedFeature().vid.getId(), slotHostAdapter,
+                asList(state.getArmedFeature()));
+        
+        // NOTE: we do NOT delegate to actionCreateOrUpdate here because most of the things
+        // that actionCreateOrUpdate does are not required for slot filling and we also because
+        // slot filling requires special treatment. This also means, we don't delegate to
+        // internalCommitAnnotation and repeat the necessary code here. However, we DO delegate
+        // to internalCompleteAnnotation to save the CAS after the annotation.
+
+        internalCompleteAnnotation(aTarget, aCas);
+
+        // If the armed slot is located in the annotation detail editor panel (right side), then 
+        // we need to re-render it and also update the annotator state with the changes that we made
+        // to the CAS
+        if (state.getSelection().getAnnotation().equals(state.getArmedFeature().vid)) {
+            // Make sure that panel is re-rendered when a slot is filled
+            aTarget.add(annotationFeatureForm.getFeatureEditorPanel());
+                        
+            // Loading feature editor values from CAS
+            loadFeatureEditorModels(aCas, aTarget);
         }
-        catch (Exception e) {
-            handleException(this, aTarget, e);
+        // ... if the SLOT HOST annotation is NOT open in the detail panel on the right, then 
+        // select SLOT FILLER an open it there
+        else {
+            state.getSelection().selectSpan(selectAnnotationByAddr(aCas, slotFillerAddr));
+            actionSelect(aTarget, aCas);
         }
+        
+        state.clearArmedSlot();
     }
 
     @Override
@@ -763,7 +807,6 @@ public abstract class AnnotationDetailEditorPanel
         loadFeatureEditorModels(aCas, aTarget);
 
         // onAnnotate callback
-        LOG.trace("onAnnotate()");
         onAnnotate(aTarget);
         
         // Perform auto-scroll if it is enabled
@@ -848,7 +891,8 @@ public abstract class AnnotationDetailEditorPanel
         // point to the span type to which the relation attaches, not to the relation type!
         TypeAdapter adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
 
-        // If this is an annotation creation action, create the annotation
+        // If no annotation is selected, then we assume this is an annotation creation action,
+        // create the annotation
         if (state.getSelection().getAnnotation().isNotSet()) {
             // Load the feature editors with the remembered values (if any)
             loadFeatureEditorModels(aCas, aTarget);
@@ -858,51 +902,32 @@ public abstract class AnnotationDetailEditorPanel
         // Update the features of the selected annotation from the values presently in the
         // feature editors
         List<FeatureState> featureStates = state.getFeatureStates();
-        
+        commitFeatureStatesToFeatureStructure(state.getDocument(), state.getUser().getUsername(),
+                aCas, state.getSelection().getAnnotation().getId(), adapter, featureStates);
+    }
+    
+    /**
+     * Commits the values from the given feature states into the annotation with the given
+     * target FS address in the given target CAS using the provided type adapter.
+     */
+    private void commitFeatureStatesToFeatureStructure(SourceDocument aDocment, String aUsername,
+            CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
+            List<FeatureState> aFeatureStates)
+    {
         List<AnnotationFeature> features = new ArrayList<>();
-        for (FeatureState featureState : featureStates) {
+        for (FeatureState featureState : aFeatureStates) {
             features.add(featureState.feature);
             
-            LOG.trace("actionAnnotate() writing feature editor models to CAS "
-                    + featureState.feature.getUiName() + " = " + featureState.value);
-            try {
-                adapter.setFeatureValue(state.getDocument(), state.getUser().getUsername(), aCas,
-                        state.getSelection().getAnnotation().getId(), featureState.feature,
-                        featureState.value);
-            }
-            catch (IllegalArgumentException e) {
-                // If any of the feature values could not be set, produce an error message and 
-                // abort
-                error(e.getMessage());
-                aTarget.addChildren(getPage(), IFeedback.class);
-                return;
-            }
+            LOG.trace("Committing feature states to CAS: {} = {}", featureState.feature.getUiName(),
+                    featureState.value);
+            aAdapter.setFeatureValue(aDocment, aUsername, aTargetCas,
+                    aTargetFsAddr, featureState.feature,
+                    featureState.value);
         }
         
-        // Generate info message
-        if (state.getSelection().getAnnotation().isSet()) {
-            String bratLabelText = TypeUtil.getUiLabelText(adapter,
-                    selectAnnotationByAddr(aCas, state.getSelection().getAnnotation().getId()),
-                    features);
-            info(generateMessage(state.getSelectedAnnotationLayer(), bratLabelText, false));
-        }
-
-        // Update progress information
-        LOG.trace("actionAnnotate() updating progress information");
-        int sentenceNumber = getSentenceNumber(aCas, state.getSelection().getBegin());
-        state.setFocusUnitIndex(sentenceNumber);
-        state.getDocument().setSentenceAccessed(sentenceNumber);
-
-        // Remember the current feature values independently for spans and relations
-        LOG.trace("actionAnnotate() remembering feature editor values");
-        state.rememberFeatures();
-
-        // Loading feature editor values from CAS
-        loadFeatureEditorModels(aCas, aTarget);
-
-        // onAnnotate callback
-        LOG.trace("onAnnotate()");
-        onAnnotate(aTarget);
+        String bratLabelText = TypeUtil.getUiLabelText(aAdapter,
+                selectFsByAddr(aTargetCas, aTargetFsAddr), features);
+        info(generateMessage(aAdapter.getLayer(), bratLabelText, false));
     }
 
     public AttachStatus checkAttachStatus(AjaxRequestTarget aTarget, Project aProject,
@@ -936,7 +961,7 @@ public abstract class AnnotationDetailEditorPanel
         attachStatus.attachCount += attachedSpans.size();
         */
 
-        Set<AnnotationFS> attachedLinks = getAttachedLinks(aFS, layer);
+        Set<FeatureStructure> attachedLinks = getAttachedLinks(aFS, layer);
         boolean attachedToReadOnlyLinks = attachedLinks.stream().anyMatch(relFS -> {
             AnnotationLayer relLayer = annotationService.findLayer(aProject, relFS);
             return relLayer.isReadonly();
@@ -1052,10 +1077,11 @@ public abstract class AnnotationDetailEditorPanel
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
                     .listAttachedLinkFeatures(layer)) {
-                Type linkType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
+                Type linkHostType = CasUtil.getType(aCas, linkFeature.getLayer().getName());
 
-                for (AnnotationFS linkFS : CasUtil.select(aCas, linkType)) {
-                    List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature, linkFS);
+                for (FeatureStructure linkHostFS : CasUtil.selectFS(aCas, linkHostType)) {
+                    List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
+                            linkHostFS);
                     Iterator<LinkWithRoleModel> i = links.iterator();
                     boolean modified = false;
                     while (i.hasNext()) {
@@ -1063,13 +1089,25 @@ public abstract class AnnotationDetailEditorPanel
                         if (link.targetAddr == getAddr(fs)) {
                             i.remove();
                             LOG.debug("Cleared slot [" + link.role + "] in feature ["
-                                + linkFeature.getName() + "] on annotation [" + getAddr(linkFS)
+                                + linkFeature.getName() + "] on annotation [" + getAddr(linkHostFS)
                                 + "]");
                             modified = true;
                         }
                     }
                     if (modified) {
-                        setFeature(linkFS, linkFeature, links);
+                        setFeature(linkHostFS, linkFeature, links);
+                        
+                        // If the currently armed slot is part of this link, then we disarm the slot
+                        // to avoid the armed slot no longer pointing at the index which the user 
+                        // had selected it to point at.
+                        FeatureState armedFeature = state.getArmedFeature();
+                        if (
+                                armedFeature != null && 
+                                WebAnnoCasUtil.getAddr(linkHostFS) == armedFeature.vid.getId() &&
+                                armedFeature.feature.equals(linkFeature)
+                        ) {
+                            state.clearArmedSlot();
+                        }
                     }
                 }
             }
@@ -1082,7 +1120,8 @@ public abstract class AnnotationDetailEditorPanel
         }
 
         // Actually delete annotation
-        adapter.delete(state, aCas, state.getSelection().getAnnotation());
+        adapter.delete(state.getDocument(), state.getUser().getUsername(), aCas,
+                state.getSelection().getAnnotation());
     }
 
     @Override
@@ -1159,33 +1198,6 @@ public abstract class AnnotationDetailEditorPanel
         getModelObject().moveToSelection(aCas);
     }
 
-    @SuppressWarnings("unchecked")
-    private void setSlot(AjaxRequestTarget aTarget, CAS aCas, int aAnnotationId)
-    {
-        AnnotatorState state = getModelObject();
-
-        // Set an armed slot
-        if (!state.getSelection().isArc() && state.isSlotArmed()) {
-            List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) state.getFeatureState(state
-                .getArmedFeature()).value;
-            LinkWithRoleModel link = links.get(state.getArmedSlot());
-            link.targetAddr = aAnnotationId;
-            link.label = selectAnnotationByAddr(aCas, aAnnotationId).getCoveredText();
-        }
-
-        // Auto-commit if working on existing annotation
-        if (state.getSelection().getAnnotation().isSet()) {
-            try {
-                actionCreateOrUpdate(aTarget, aCas);
-            }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
-            }
-        }
-
-        state.clearArmedSlot();
-    }
-
     public void loadFeatureEditorModels(AjaxRequestTarget aTarget)
         throws AnnotationException
     {
@@ -1201,6 +1213,10 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
+    /**
+     * Loads the feature states either from the CAS (if an annotation is selected) or from the
+     * remembered values (if no annotation is selected).
+     */
     public void loadFeatureEditorModels(CAS aCas, AjaxRequestTarget aTarget)
         throws AnnotationException
     {
@@ -1232,9 +1248,8 @@ public abstract class AnnotationDetailEditorPanel
                 try {
                     layer = annotationService.findLayer(state.getProject(), annoFs);
                     state.setSelectedAnnotationLayer(layer);
-                    LOG.trace(String.format(
-                        "loadFeatureEditorModels() selectedLayer set from selection: %s",
-                        state.getSelectedAnnotationLayer().getUiName()));
+                    LOG.trace("loadFeatureEditorModels() selectedLayer set from selection: {}",
+                            state.getSelectedAnnotationLayer().getUiName());
                 }
                 catch (NoResultException e) {
                     clearFeatureEditorModels(aTarget);
@@ -1367,6 +1382,13 @@ public abstract class AnnotationDetailEditorPanel
         // Overriden in CurationPanel
     }
 
+    /**
+     * This is used only on the AutomationPage.
+     * 
+     * @deprecated A reasonable replacement for this should be an event listener for
+     *             {@link AnnotationCreatedEvent}.
+     */
+    @Deprecated
     protected void onAnnotate(AjaxRequestTarget aTarget)
     {
         // Overriden in AutomationPage
@@ -1517,10 +1539,10 @@ public abstract class AnnotationDetailEditorPanel
         clearFeatureEditorModels(aTarget);
     }
 
-    private Set<AnnotationFS> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
+    private Set<FeatureStructure> getAttachedLinks(AnnotationFS aFs, AnnotationLayer aLayer)
     {
         CAS cas = aFs.getCAS();
-        Set<AnnotationFS> attachedLinks = new HashSet<>();
+        Set<FeatureStructure> attachedLinks = new HashSet<>();
         TypeAdapter adapter = annotationService.getAdapter(aLayer);
         if (adapter instanceof SpanAdapter) {
             for (AnnotationFeature linkFeature : annotationService
@@ -1529,8 +1551,8 @@ public abstract class AnnotationDetailEditorPanel
                         && LinkMode.WITH_ROLE.equals(linkFeature.getLinkMode())) {
                     // Fetch slot hosts that could link to the current FS and check if any of
                     // them actually links to the current FS
-                    Type linkType = CasUtil.getType(cas, linkFeature.getLayer().getName());
-                    for (AnnotationFS linkFS : CasUtil.select(cas, linkType)) {
+                    Type linkHost = CasUtil.getType(cas, linkFeature.getLayer().getName());
+                    for (FeatureStructure linkFS : CasUtil.selectFS(cas, linkHost)) {
                         List<LinkWithRoleModel> links = adapter.getFeatureValue(linkFeature,
                                 linkFS);
                         for (int li = 0; li < links.size(); li++) {

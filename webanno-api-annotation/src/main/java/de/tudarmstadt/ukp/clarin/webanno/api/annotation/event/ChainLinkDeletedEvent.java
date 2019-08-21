@@ -21,11 +21,10 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class ChainLinkDeletedEvent
     extends ChainEvent
-    implements HybridApplicationUIEvent
+    implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = -1577299485779966337L;
 

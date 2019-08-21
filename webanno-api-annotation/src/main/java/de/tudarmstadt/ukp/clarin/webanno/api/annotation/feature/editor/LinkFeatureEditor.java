@@ -46,6 +46,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
@@ -56,6 +57,7 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -145,7 +147,7 @@ public class LinkFeatureEditor
 
                 final Label label;
                 if (aItem.getModelObject().targetAddr == -1
-                        && state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+                        && state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                     label = new Label("label", "<Select to fill>");
                 }
                 else {
@@ -168,7 +170,7 @@ public class LinkFeatureEditor
                     @Override
                     public String getObject()
                     {
-                        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+                        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
                             return "; background: orange";
                         }
                         else {
@@ -473,7 +475,7 @@ public class LinkFeatureEditor
             LinkWithRoleModel m = new LinkWithRoleModel();
             m.role = (String) field.getModelObject();
             links.add(m);
-            state.setArmedSlot(getModelObject().vid, LinkFeatureEditor.this.getModelObject().feature, links.size() - 1);
+            state.setArmedSlot(getModelObject(), links.size() - 1);
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
@@ -536,12 +538,12 @@ public class LinkFeatureEditor
     {
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
 
-        if (state.isArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex())) {
+        if (state.isArmedSlot(getModelObject(), aItem.getIndex())) {
             state.clearArmedSlot();
             aTarget.add(content);
         }
         else {
-            state.setArmedSlot(getModelObject().vid, getModelObject().feature, aItem.getIndex());
+            state.setArmedSlot(getModelObject(), aItem.getIndex());
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
             aTarget.add(getOwner());
@@ -571,5 +573,12 @@ public class LinkFeatureEditor
             aComponent.error("Error: " + e.getMessage());
             LOG.error("Error: " + e.getMessage(), e);
         }
+    }
+    
+    @OnEvent
+    public void onAnnotationDeleted(AnnotationDeletedEvent aEvent)
+    {
+        // It could be that a slot filler was deleted - so just in case, we re-render ourself.
+        aEvent.getRequestTarget().add(this);
     }
 }

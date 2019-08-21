@@ -144,7 +144,8 @@ public class RelationAdapter
         AnnotationFS relationAnno = createRelationAnnotation(request.getCas(),
                 request.getOriginFs(), request.getTargetFs());
         publishEvent(new RelationCreatedEvent(this, request.getDocument(), request.getUsername(),
-                getLayer(), relationAnno, getSourceAnnotation(relationAnno)));
+                getLayer(), relationAnno, getTargetAnnotation(relationAnno),
+                getSourceAnnotation(relationAnno)));
 
         return relationAnno;
     }
@@ -180,7 +181,7 @@ public class RelationAdapter
         AnnotationFS fs = selectByAddr(aCas, AnnotationFS.class, aVid.getId());
         aCas.removeFsFromIndexes(fs);
         publishEvent(new RelationDeletedEvent(this, aDocument, aUsername, getLayer(),
-                fs, getSourceAnnotation(fs)));
+                fs, getTargetAnnotation(fs), getSourceAnnotation(fs)));
     }
 
     private AnnotationFS getSourceAnnotation(AnnotationFS aTargetFs)
@@ -188,6 +189,13 @@ public class RelationAdapter
         Feature sourceFeature = aTargetFs.getType().getFeatureByBaseName(sourceFeatureName);
         AnnotationFS sourceToken = (AnnotationFS) aTargetFs.getFeatureValue(sourceFeature);
         return sourceToken;
+    }
+
+    private AnnotationFS getTargetAnnotation(AnnotationFS aTargetFs)
+    {
+        Feature targetFeature = aTargetFs.getType().getFeatureByBaseName(targetFeatureName);
+        AnnotationFS targetToken = (AnnotationFS) aTargetFs.getFeatureValue(targetFeature);
+        return targetToken;
     }
 
     public String getSourceFeatureName()
