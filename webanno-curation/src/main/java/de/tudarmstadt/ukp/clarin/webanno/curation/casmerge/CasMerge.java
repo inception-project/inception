@@ -713,7 +713,7 @@ public class CasMerge
             copyFeatures(aDocument, aUsername, adapter, mergedSpan, aSourceFs);
             int mergedSpanAddr = getAddr(mergedSpan);
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
-                    mergedSpanAddr, mergedSpanAddr);
+                    mergedSpanAddr);
         }
         // b) if stacking is not allowed, modify the existing annotation with this one
         else {
@@ -721,7 +721,7 @@ public class CasMerge
             copyFeatures(aDocument, aUsername, adapter, annoToUpdate, aSourceFs);
             int mergedSpanAddr = getAddr(annoToUpdate);
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
-                    mergedSpanAddr, mergedSpanAddr);
+                    mergedSpanAddr);
         }
     }
 
@@ -788,13 +788,13 @@ public class CasMerge
             copyFeatures(aDocument, aUsername, adapter, mergedRelation, aSourceFs);
 
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.CREATED,
-                    getAddr(mergedRelation), getAddr(aSourceFs));
+                    getAddr(mergedRelation));
         }
         else {
             AnnotationFS mergeTargetFS = existingAnnos.get(0);
             copyFeatures(aDocument, aUsername, adapter, mergeTargetFS, aSourceFs);
             return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
-                    getAddr(mergeTargetFS), getAddr(aSourceFs));
+                    getAddr(mergeTargetFS));
         }
     }
 
@@ -857,7 +857,7 @@ public class CasMerge
 
         setFeature(mergeFs, slotFeature, links);
         return new CasMergeOperationResult(CasMergeOperationResult.ResultState.UPDATED,
-                getAddr(mergeFs), getAddr(mergeFs));
+                getAddr(mergeFs));
     }
 
     private static List<AnnotationFS> checkAndGetTargets(CAS aCas, AnnotationFS aOldTraget)

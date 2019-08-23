@@ -199,10 +199,7 @@ public class BratAnnotationEditor
                     }
                     else if (DoActionResponse.is(action)) {
                         if (paramId.isSynthetic()) {
-                            Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action, offsets.getBegin(),
-                                    offsets.getEnd());
+                            fireExtensionAction(aTarget, request, action, paramId, cas);
                         }
                         else {
                             actionDoAction(aTarget, request, cas, paramId);
@@ -210,10 +207,7 @@ public class BratAnnotationEditor
                     }
                     else {
                         if (paramId.isSynthetic()) {
-                            Offsets offsets = getOffsetsFromRequest(request, cas, paramId);
-                            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
-                                    aTarget, cas, paramId, action, offsets.getBegin(),
-                                    offsets.getEnd());
+                            fireExtensionAction(aTarget, request, action, paramId, cas);
                         }
                         else {
                             // HACK: If an arc was clicked that represents a link feature, then 
@@ -279,6 +273,24 @@ public class BratAnnotationEditor
         };
 
         add(requestHandler);
+    }
+    
+    private void fireExtensionAction(AjaxRequestTarget aTarget,
+            final IRequestParameters request, String action, VID paramId, CAS cas)
+        throws IOException, AnnotationException
+    {
+        Optional<Offsets> optOffsets = getOffsetsFromRequest(request, cas,
+                paramId);
+        if (optOffsets.isPresent()) {
+            Offsets offsets = optOffsets.get();
+            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                    aTarget, cas, paramId, action, offsets.getBegin(),
+                    offsets.getEnd());
+        }
+        else {
+            extensionRegistry.fireAction(getActionHandler(), getModelObject(),
+                    aTarget, cas, paramId, action, -1, -1);
+        }
     }
 
     private Object actionLookupNormData(AjaxRequestTarget aTarget, IRequestParameters request,
@@ -348,32 +360,35 @@ public class BratAnnotationEditor
             CAS aCas, VID paramId)
         throws IOException, AnnotationException
     {
-        Offsets offsets = getOffsetsFromRequest(request, aCas, paramId);
-
-        AnnotatorState state = getModelObject();
-        Selection selection = state.getSelection();
-
-        if (state.isSlotArmed()) {
-            // When filling a slot, the current selection is *NOT* changed. The
-            // Span annotation which owns the slot that is being filled remains
-            // selected!
-            getActionHandler().actionFillSlot(aTarget, aCas, offsets.getBegin(), offsets.getEnd(),
-                    paramId);
-        }
-        else {
-            if (!paramId.isSynthetic()) {
-                selection.selectSpan(paramId, aCas, offsets.getBegin(), offsets.getEnd());
-
-                if (selection.getAnnotation().isNotSet()) {
-                    // Create new annotation
-                    getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-                }
-                else {
-                    getActionHandler().actionSelect(aTarget, aCas);
+        Optional<Offsets> optOffsets = getOffsetsFromRequest(request, aCas, paramId);
+        
+        if (optOffsets.isPresent()) {
+            Offsets offsets = optOffsets.get();
+            AnnotatorState state = getModelObject();
+            Selection selection = state.getSelection();
+    
+            if (state.isSlotArmed()) {
+                // When filling a slot, the current selection is *NOT* changed. The
+                // Span annotation which owns the slot that is being filled remains
+                // selected!
+                getActionHandler().actionFillSlot(aTarget, aCas, offsets.getBegin(),
+                        offsets.getEnd(), paramId);
+            }
+            else {
+                if (!paramId.isSynthetic()) {
+                    selection.selectSpan(paramId, aCas, offsets.getBegin(), offsets.getEnd());
+    
+                    if (selection.getAnnotation().isNotSet()) {
+                        // Create new annotation
+                        getActionHandler().actionCreateOrUpdate(aTarget, aCas);
+                    }
+                    else {
+                        getActionHandler().actionSelect(aTarget, aCas);
+                    }
                 }
             }
         }
-
+        
         return new SpanAnnotationResponse();
     }
     
@@ -438,13 +453,17 @@ public class BratAnnotationEditor
      * selected annotations or offsets contained in the request for the creation of a new
      * annotation.
      */
-    private Offsets getOffsetsFromRequest(IRequestParameters request, CAS aCas, VID aVid)
+    private Optional<Offsets> getOffsetsFromRequest(IRequestParameters request, CAS aCas, VID aVid)
         throws  IOException
     {
         if (aVid.isNotSet() || aVid.isSynthetic()) {
             // Create new span annotation - in this case we get the offset information from the
             // request
             String offsets = request.getParameterValue(PARAM_OFFSETS).toString();
+            
+            if (offsets == null) {
+                return Optional.empty();
+            }
             OffsetsList offsetLists = JSONUtil.getObjectMapper().readValue(offsets,
                     OffsetsList.class);
 
@@ -452,13 +471,13 @@ public class BratAnnotationEditor
                     + offsetLists.get(0).getBegin();
             int annotationEnd = getModelObject().getWindowBeginOffset()
                     + offsetLists.get(offsetLists.size() - 1).getEnd();
-            return new Offsets(annotationBegin, annotationEnd);
+            return Optional.of(new Offsets(annotationBegin, annotationEnd));
         }
         else {
             // Edit existing span annotation - in this case we look up the offsets in the CAS
             // Let's not trust the client in this case.
             AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(aCas, aVid.getId());
-            return new Offsets(fs.getBegin(), fs.getEnd());
+            return Optional.of(new Offsets(fs.getBegin(), fs.getEnd()));
         }
     }
 

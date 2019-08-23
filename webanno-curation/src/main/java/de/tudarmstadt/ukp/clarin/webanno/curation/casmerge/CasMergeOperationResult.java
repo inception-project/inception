@@ -33,13 +33,11 @@ public class CasMergeOperationResult
     }
     
     private final ResultState state;
-    private final int originFSAddress;
-    private final int targetFSAddress;
+    private final int resultFSAddress;
     
-    public CasMergeOperationResult(ResultState aState, int aOriginFSAddress, int aTargetFSAddress) {
+    public CasMergeOperationResult(ResultState aState, int aResultAddress) {
         state = aState;
-        originFSAddress = aOriginFSAddress;
-        targetFSAddress = aTargetFSAddress;
+        resultFSAddress = aResultAddress;
     }
 
     public ResultState getState()
@@ -47,14 +45,8 @@ public class CasMergeOperationResult
         return state;
     }
 
-    public int getOriginFSAddress()
+    public int getResultFSAddress()
     {
-        return originFSAddress;
+        return resultFSAddress;
     }
-
-    public int getTargetFSAddress()
-    {
-        return targetFSAddress;
-    }
-    
 }
