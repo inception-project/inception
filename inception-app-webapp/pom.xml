@@ -270,6 +270,10 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-telemetry</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-doc</artifactId>
     </dependency>
 
@@ -712,6 +716,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-ui-tagsets</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-project</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-remote</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
               <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
