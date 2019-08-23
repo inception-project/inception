@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.11.0</version>
   </parent>
   <artifactId>inception-imls-stringmatch</artifactId>
   <name>INCEpTION - ML - String Matching</name>
