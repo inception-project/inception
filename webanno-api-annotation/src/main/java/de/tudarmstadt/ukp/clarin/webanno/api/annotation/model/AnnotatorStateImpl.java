@@ -29,9 +29,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.springframework.context.ApplicationEventPublisher;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SlotArmedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
@@ -165,16 +163,9 @@ public class AnnotatorStateImpl
     
     private List<Unit> visibleUnits;
     
-    private transient ApplicationEventPublisher eventPublisher;
-    
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
-    }
-    
-    public AnnotatorStateImpl(Mode aMode, ApplicationEventPublisher aEventPublisher) {
-        this(aMode);
-        eventPublisher = aEventPublisher;
     }
 
     @Override
@@ -549,9 +540,6 @@ public class AnnotatorStateImpl
     {
         armedFeatureState = aState;
         armedSlot = aIndex;
-        if (eventPublisher != null) {
-            eventPublisher.publishEvent(new SlotArmedEvent(this, aState, aIndex));
-        }
     }
 
     @Override

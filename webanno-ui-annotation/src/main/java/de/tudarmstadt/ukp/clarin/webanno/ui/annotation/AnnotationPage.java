@@ -186,8 +186,7 @@ public class AnnotationPage
     
     private void commonInit()
     {
-        setModel(Model.of(
-                new AnnotatorStateImpl(Mode.ANNOTATION, applicationEventPublisherHolder.get())));
+        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
 

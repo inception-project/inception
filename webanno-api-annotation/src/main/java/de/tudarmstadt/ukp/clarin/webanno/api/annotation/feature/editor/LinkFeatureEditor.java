@@ -28,9 +28,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -58,13 +62,13 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SlotArmedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -477,6 +481,7 @@ public class LinkFeatureEditor
             m.role = (String) field.getModelObject();
             links.add(m);
             state.setArmedSlot(getModelObject(), links.size() - 1);
+            sendRenderSlotsEvent();
 
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
@@ -545,6 +550,7 @@ public class LinkFeatureEditor
         }
         else {
             state.setArmedSlot(getModelObject(), aItem.getIndex());
+            sendRenderSlotsEvent();
             // Need to re-render the whole form because a slot in another
             // link editor might get unarmed
             aTarget.add(getOwner());
@@ -584,10 +590,24 @@ public class LinkFeatureEditor
     }
     
     @OnEvent
-    public void onSlotArmed(SlotArmedEvent aEvent)
+    public void onRenderSlotsEvent(RenderSlotsEvent aEvent)
     {
         // Redraw because it could happen that the slot is armed with another feature.
-        aEvent.getRequestTarget().add(this);
+        aEvent.getRequestHandler().add(this);
         
+    }
+    
+    private void sendRenderSlotsEvent() {
+        Page page = null;
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            page = (Page) handler.get().getPage();
+        };
+
+        if (page == null) {
+            page = getPage();
+        }
+        send(page, Broadcast.BREADTH,
+                new RenderSlotsEvent(RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
     }
 }
