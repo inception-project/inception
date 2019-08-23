@@ -366,7 +366,7 @@
         <artifactId>inception-search-mtas</artifactId>
         <version>0.11.0-SNAPSHOT</version>
       </dependency>
-      </dependency>
+      <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-curation</artifactId>
         <version>0.11.0-SNAPSHOT</version>
@@ -631,6 +631,7 @@
         <groupId>com.h2database</groupId>
         <artifactId>h2</artifactId>
         <version>1.4.197</version>
+      </dependency>
      
       <!-- JAXB DEPENDENCIES -->
       <dependency>

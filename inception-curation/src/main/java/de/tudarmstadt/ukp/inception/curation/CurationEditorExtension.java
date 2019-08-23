@@ -26,6 +26,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
@@ -35,6 +37,7 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtension;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
@@ -63,9 +66,9 @@ public class CurationEditorExtension
 {
     public static final String EXTENSION_ID = "curationEditorExtension";
     
-    // actions from the ui as of webanno #1388
-    private static final String ACTION_SELECT_ARC_FOR_MERGE = "selectArcForMerge";
-    private static final String ACTION_SELECT_SPAN_FOR_MERGE = "selectSpanForMerge";
+    // actions from the ui when selecting span or arc annotation
+    private static final String ACTION_SELECT_ARC = "arcOpenDialog"; 
+    private static final String ACTION_SELECT_SPAN = "spanOpenDialog";
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -91,9 +94,7 @@ public class CurationEditorExtension
         }
         VID extendedVID = parse(aParamId);
         
-        String actionDesc = aAction.toString();
-        if (!actionDesc.equals(ACTION_SELECT_SPAN_FOR_MERGE) && 
-                !actionDesc.equals(ACTION_SELECT_ARC_FOR_MERGE)) {
+        if (!aAction.equals(ACTION_SELECT_ARC) && !aAction.equals(ACTION_SELECT_SPAN)) {
             return;
         }
         // Annotation has been selected for gold
@@ -126,15 +127,15 @@ public class CurationEditorExtension
         // merge into curator's CAS depending on annotation type (span or arc)
         CasMerge casMerge = new CasMerge(annotationService);
         CasMergeOperationResult mergeResult;
-        if (ACTION_SELECT_SPAN_FOR_MERGE.equals(aAction.toString())) {
+        if (ACTION_SELECT_SPAN.equals(aAction.toString())) {
             mergeResult = casMerge.mergeSpanAnnotation(doc, srcUser, layer, aTargetCas,
                     sourceAnnotation, layer.isAllowStacking());
             // open created/updates FS in annotation detail editorpanel
-            aState.getSelection().selectSpan(new VID(mergeResult.getOriginFSAddress()), aTargetCas,
+            aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()), aTargetCas,
                     aBegin, aEnd);
             
         }
-        else if (ACTION_SELECT_ARC_FOR_MERGE.equals(aAction.toString())) {
+        else if (ACTION_SELECT_ARC.equals(aAction.toString())) {
             // this is a slot arc
             if (aVID.isSlotSet()) {
                 TypeAdapter adapter = annotationService.getAdapter(layer);
@@ -144,19 +145,23 @@ public class CurationEditorExtension
                 mergeResult = casMerge.mergeSlotFeature(doc, srcUser, layer, aTargetCas,
                         sourceAnnotation, feature.getName(), aVID.getSlot());
                 // open created/updates FS in annotation detail editorpanel
-                aState.getSelection().selectSpan(new VID(mergeResult.getOriginFSAddress()),
+                aState.getSelection().selectSpan(new VID(mergeResult.getResultFSAddress()),
                         aTargetCas, aBegin, aEnd);
             }
             // normal relation annotation arc is clicked
             else {
+                // FIXME: somewhere origin and target get mixed up
                 mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
                         sourceAnnotation, layer.isAllowStacking());
                 // open created/updates FS in annotation detail editorpanel 
-                AnnotationFS originFS = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getOriginFSAddress());
-                AnnotationFS targetFS = selectAnnotationByAddr(aTargetCas,
-                        mergeResult.getTargetFSAddress());
-                aState.getSelection().selectArc(new VID(mergeResult.getOriginFSAddress()), originFS,
+                AnnotationFS mergedAnno = selectAnnotationByAddr(aTargetCas,
+                        mergeResult.getResultFSAddress());
+                Type depType = mergedAnno.getType();
+                Feature originFeat = depType.getFeatureByBaseName(WebAnnoConst.FEAT_REL_SOURCE);
+                Feature targetFeat = depType.getFeatureByBaseName(WebAnnoConst.FEAT_REL_TARGET);
+                AnnotationFS originFS = (AnnotationFS) mergedAnno.getFeatureValue(originFeat);
+                AnnotationFS targetFS = (AnnotationFS) mergedAnno.getFeatureValue(targetFeat);
+                aState.getSelection().selectArc(new VID(mergeResult.getResultFSAddress()), originFS,
                         targetFS);
             }
         }
@@ -192,8 +197,8 @@ public class CurationEditorExtension
         
         String vidStr = matcher.group("VID");
         String username = matcher.group("USER");
-        return new CurationVID(aParamId.getExtensionId(), aParamId.getExtensionPayload(), username, 
-                VID.parse(vidStr));
+        return new CurationVID(aParamId.getExtensionId(), username, 
+                VID.parse(vidStr), aParamId.getExtensionPayload());
     }
 
     @Override
@@ -225,8 +230,9 @@ public class CurationEditorExtension
                 String color = "#cccccc"; //this is the same color as for recommendations
                 for (VObject vobj : tmpDoc.vobjects()) {
                     VID vid = vobj.getVid();
-                    VID extendedVID = new CurationVID(EXTENSION_ID, username + ":" + vid.toString(),
-                            username, vid);
+                    VID extendedVID = new CurationVID(EXTENSION_ID, username, 
+                            new VID(vobj.getLayer().getId(), vid.getId(), vid.getSubId(), 
+                                    vid.getAttribute(), vid.getSlot()));
                     vobj.setVid(extendedVID);
                     aVdoc.add(vobj);
                     // change color for other users' annos

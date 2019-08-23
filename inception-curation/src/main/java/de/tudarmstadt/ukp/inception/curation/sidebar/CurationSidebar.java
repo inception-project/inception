@@ -136,6 +136,9 @@ public class CurationSidebar
                 // TODO: give rights: curator?
             }
             curator = userRepository.get(CURATION_USER);
+            if (curator == null) {
+                userRepository.create(new User(CURATION_USER));
+            }
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
             state.setMode(Mode.CURATION);
         }

@@ -26,13 +26,20 @@ public class CurationVID
     
     private final String username;
     
-    public CurationVID(String aExtId, String aExtPayload, String aUsername, VID aVID)
+    public CurationVID(String aExtId, String aUsername, VID aVID)
     {
         super(aExtId, aVID.getLayerId(), aVID.getId(), aVID.getSubId(), aVID.getAttribute(),
-                aVID.getSlot(), aExtPayload);
+                aVID.getSlot(), aUsername + ":" + aVID.toString());
+        username = aUsername;
+    } 
+
+    public CurationVID(String aExtId, String aUsername, VID aVID, String aExtensionPayload)
+    {
+        super(aExtId, aVID.getLayerId(), aVID.getId(), aVID.getSubId(), aVID.getAttribute(),
+                aVID.getSlot(), aExtensionPayload);
         username = aUsername;
     }
-    
+
     public String getUsername()
     {
         return username;
