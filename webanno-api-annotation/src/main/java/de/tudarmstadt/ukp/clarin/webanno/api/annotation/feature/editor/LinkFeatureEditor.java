@@ -58,6 +58,7 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.SlotArmedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -580,5 +581,13 @@ public class LinkFeatureEditor
     {
         // It could be that a slot filler was deleted - so just in case, we re-render ourself.
         aEvent.getRequestTarget().add(this);
+    }
+    
+    @OnEvent
+    public void onSlotArmed(SlotArmedEvent aEvent)
+    {
+        // Redraw because it could happen that the slot is armed with another feature.
+        aEvent.getRequestTarget().add(this);
+        
     }
 }
