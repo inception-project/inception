@@ -162,6 +162,11 @@ public class VID
         extensionPayload = aExtensionPayload;
     }
 
+    public static VID copyVID(VID aVID) {
+        return new VID(aVID.getExtensionId(), aVID.getLayerId(), aVID.getId(), aVID.getSubId(),
+                aVID.getAttribute(), aVID.getSlot(), aVID.getExtensionPayload());
+    }
+    
     public boolean isSet()
     {
         return annotationId >= 0;

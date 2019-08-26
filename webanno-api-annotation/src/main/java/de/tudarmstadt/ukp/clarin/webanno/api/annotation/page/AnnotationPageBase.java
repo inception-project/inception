@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentenceCovering;
 import static org.apache.uima.fit.util.CasUtil.select;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
@@ -121,7 +123,7 @@ public abstract class AnnotationPageBase
                 AnnotatorState state = AnnotationPageBase.this.getModelObject();
                 _this.setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser())
-                                && state.getUser().equals(userRepository.getCurrentUser()));
+                                && isUserViewingOthersWork(state, userRepository.getCurrentUser()));
             });
         }
         return resetDocumentLink;
@@ -311,5 +313,15 @@ public abstract class AnnotationPageBase
         AnnotatorState state = getModelObject();
         PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                 state, state.getUser().getUsername());
+    }
+    
+    /**
+     * User is viewing other people's work (read-only), but not as Curation User
+     */
+    public static boolean isUserViewingOthersWork(AnnotatorState aState, User aCurrentUser)
+    {
+        User user = aState.getUser();
+        return !user.getUsername().equals(CURATION_USER) && 
+                !user.equals(aCurrentUser);
     }
 }

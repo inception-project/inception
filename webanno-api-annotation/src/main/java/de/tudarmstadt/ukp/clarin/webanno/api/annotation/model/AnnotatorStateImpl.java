@@ -270,12 +270,6 @@ public class AnnotatorStateImpl
     }
 
     @Override
-    public void setMode(Mode aMode)
-    {
-        mode = aMode;
-    }
-
-    @Override
     public User getUser()
     {
         return user;

@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.Selection;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -652,9 +653,10 @@ public class AnnotationFeatureForm
         super.onConfigure();
         
         // set read only if annotation is finished or the user is viewing other's work
-        setEnabled(getModelObject().getDocument() != null 
+        AnnotatorState state = getModelObject();
+        setEnabled(state.getDocument() != null   
                 && !editorPanel.isAnnotationFinished()
-                && getModelObject().getUser().equals(userDao.getCurrentUser()));
+                && AnnotationPageBase.isUserViewingOthersWork(state, userDao.getCurrentUser()));
     }
 
     public void updateLayersDropdown()

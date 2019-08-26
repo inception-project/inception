@@ -529,7 +529,8 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionAnnotate");
         
-        if (isUserViewingOthersWork()) {
+        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(), 
+                userRepository.getCurrentUser())) {
             return;
         }
 
@@ -636,7 +637,8 @@ public abstract class AnnotationDetailEditorPanel
     {
         LOG.trace("actionCreateForward()");
         
-        if (isUserViewingOthersWork()) {
+        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(), 
+                userRepository.getCurrentUser())) {
             return;
         }
 
@@ -726,12 +728,6 @@ public abstract class AnnotationDetailEditorPanel
         internalCompleteAnnotation(aTarget, aCas);
         
         aTarget.add(annotationFeatureForm);
-    }
-
-
-    private boolean isUserViewingOthersWork()
-    {
-        return !getModelObject().getUser().equals(userRepository.getCurrentUser());
     }
 
     /**

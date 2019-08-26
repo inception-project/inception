@@ -263,7 +263,7 @@ public class AnnotationPage
                 AnnotatorState state = AnnotationPage.this.getModelObject();
                 setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser()) 
-                        && !isUserViewingOthersWork());
+                        && !isUserViewingOthersWork(state, userRepository.getCurrentUser()));
             }
         });
         finishDocumentIcon = new FinishImage("finishImage", getModel());
@@ -554,7 +554,7 @@ public class AnnotationPage
             state.reset();
             
             // Initialize timestamp in state
-            if (!isUserViewingOthersWork()) {
+            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
                 updateDocumentTimestampAfterWrite(state, documentService.getAnnotationCasTimestamp(
                         state.getDocument(), state.getUser().getUsername()));
             }
@@ -581,7 +581,7 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isUserViewingOthersWork()
+            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())
                     && SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                 documentService.transitionSourceDocumentState(state.getDocument(),
                         NEW_TO_ANNOTATION_IN_PROGRESS);
@@ -755,7 +755,8 @@ public class AnnotationPage
             AnnotationDocument adoc = documentService.getAnnotationDocument(document,
                     getModelObject().getUser());
             if (AnnotationDocumentState.IGNORE.equals(adoc.getState())
-                    && !isUserViewingOthersWork()) {
+                    && !isUserViewingOthersWork(getModelObject(), 
+                            userRepository.getCurrentUser())) {
                 error("Document [" + document.getId() + "] in project [" + project.getId()
                         + "] is locked for user [" + getModelObject().getUser().getUsername()
                         + "]");
@@ -794,18 +795,11 @@ public class AnnotationPage
         }
     }
 
-    private boolean isUserViewingOthersWork()
-    {
-        AnnotatorState state = getModelObject();
-        return !state.getMode().equals(Mode.CURATION) && 
-                !state.getUser().equals(userRepository.getCurrentUser());
-    }
-
     @Override
     protected void loadPreferences() throws BeansException, IOException
     {
-        if (isUserViewingOthersWork()) {
-            AnnotatorState state = getModelObject();
+        AnnotatorState state = getModelObject();
+        if (isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
             PreferencesUtil.loadPreferences(userPreferenceService, annotationService,
                     state, userRepository.getCurrentUser().getUsername());
         }
