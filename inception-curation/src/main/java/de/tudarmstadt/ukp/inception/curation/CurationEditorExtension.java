@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.curation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VArc;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VComment;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VCommentType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VDocument;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VObject;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.model.VSpan;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
@@ -150,7 +151,6 @@ public class CurationEditorExtension
             }
             // normal relation annotation arc is clicked
             else {
-                // FIXME: somewhere origin and target get mixed up
                 mergeResult = casMerge.mergeRelationAnnotation(doc, srcUser, layer, aTargetCas,
                         sourceAnnotation, layer.isAllowStacking());
                 // open created/updates FS in annotation detail editorpanel 
@@ -168,13 +168,6 @@ public class CurationEditorExtension
         
         aPanel.actionSelect(aTarget, aTargetCas);
         aPanel.actionCreateOrUpdate(aTarget, aTargetCas);
-        
-//        // save merged Cas, might not need if using aPanel.actionCreateOrUpdate
-//        User curator = aState.getUser(); 
-//        documentService.writeAnnotationCas(aTargetCas, doc, curator, true); //??? correct method
-//        updateDocumentTimestampAfterWrite(aState, documentService
-//                .getAnnotationCasTimestamp(doc, curator.getUsername()));  // why do we also need 
-                                                               //this, we set update to true above?
     }
 
     /**
@@ -215,8 +208,8 @@ public class CurationEditorExtension
 
         for (User user : selectedUsers.get()) {
             try {
-                CAS userCas = documentService
-                        .readAnnotationCas(aState.getDocument(), user.getUsername());
+                CAS userCas = documentService.readAnnotationCas(aState.getDocument(),
+                        user.getUsername());
                 if (userCas == null) {
                     log.error(String.format("Could not retrieve CAS for user %s and project %d",
                             user.getUsername(), projectId));
@@ -227,24 +220,44 @@ public class CurationEditorExtension
                         aState.getAnnotationLayers());
                 // copy all arcs and spans to existing doc with new VID
                 String username = user.getUsername();
-                String color = "#cccccc"; //this is the same color as for recommendations
-                for (VObject vobj : tmpDoc.vobjects()) {
-                    VID vid = vobj.getVid();
-                    VID extendedVID = new CurationVID(EXTENSION_ID, username, 
-                            new VID(vobj.getLayer().getId(), vid.getId(), vid.getSubId(), 
+                String color = "#cccccc"; // this is the same color as for recommendations
+
+                // copy all spans and add to map as possible varc dependents
+                // spans with new vids identified by their old vid for lookup in varcs
+                Map<VID, VSpan> newIdSpan = new HashMap<>();
+                for (VSpan vspan : tmpDoc.spans()) {
+                    VID aDepVID = vspan.getVid();
+                    VID prevVID = VID.copyVID(aDepVID);
+                    VID newVID = new CurationVID(EXTENSION_ID, username,
+                            new VID(vspan.getLayer().getId(), aDepVID.getId(), aDepVID.getSubId(),
+                                    aDepVID.getAttribute(), aDepVID.getSlot()));
+                    vspan.setVid(newVID);
+                    vspan.setColor(color);
+                    newIdSpan.put(prevVID, vspan);
+                    // set user name as comment
+                    aVdoc.add(new VComment(newVID, VCommentType.INFO, username));
+                    aVdoc.add(vspan);
+                }
+
+                // copy arcs to VDoc
+                for (VArc varc : tmpDoc.arcs()) {
+                    // update varc vid
+                    VID vid = varc.getVid();
+                    VID extendedVID = new CurationVID(EXTENSION_ID, username,
+                            new VID(varc.getLayer().getId(), vid.getId(), vid.getSubId(),
                                     vid.getAttribute(), vid.getSlot()));
-                    vobj.setVid(extendedVID);
-                    aVdoc.add(vobj);
-                    // change color for other users' annos
-                    if (vobj instanceof VSpan) {
-                        ((VSpan) vobj).setColor(color);
-                    }
-                    else if (vobj instanceof VArc) {
-                        ((VArc) vobj).setColor(color);
-                    }
+                    varc.setVid(extendedVID);
+                    // set target and src with new vids for arc
+                    VSpan targetSpan = newIdSpan.get(varc.getTarget());
+                    VSpan srcSpan = newIdSpan.get(varc.getSource());
+                    varc.setSource(srcSpan.getVid());
+                    varc.setTarget(targetSpan.getVid());
+                    varc.setColor(color);
                     // set user name as comment
                     aVdoc.add(new VComment(extendedVID, VCommentType.INFO, username));
+                    aVdoc.add(varc);
                 }
+
             }
             catch (IOException e) {
                 log.error(String.format("Could not retrieve CAS for user %s and project %d",
@@ -254,4 +267,5 @@ public class CurationEditorExtension
 
         }
     }
+
 }

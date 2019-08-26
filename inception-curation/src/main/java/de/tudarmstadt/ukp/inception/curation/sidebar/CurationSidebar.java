@@ -17,9 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -27,7 +29,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -41,6 +45,8 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
@@ -48,8 +54,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -65,6 +71,8 @@ public class CurationSidebar
 {
     private static final long serialVersionUID = -4195790451286055737L;
     private static final String DEFAULT_CURATION_TARGET = "my document";
+    
+    private Logger log = LoggerFactory.getLogger(getClass());
     
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
@@ -88,7 +96,6 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         state = aModel.getObject();
-//        annoPage = aAnnotationPage;
         WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
@@ -114,13 +121,9 @@ public class CurationSidebar
         mainContainer.add(targetForm);
     }
 
+    // FIXME: still cannot access annotation detail editor when CURATION_USER is selected
     private void updateCurator()
     {
-        // no change
-        if (selectedCurationTarget.equals(state.getUser().getUsername())) {
-            return;
-        }
-        
         // update stored curator 
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
@@ -128,19 +131,33 @@ public class CurationSidebar
         if (selectedCurationTarget.equals(DEFAULT_CURATION_TARGET)) {
             curationService.updateCurationName(currentUsername,
                     project, currentUsername);
-            state.setMode(Mode.ANNOTATION);
         }
         else {
             if (!userRepository.exists(CURATION_USER)) {
-                userRepository.create(new User(CURATION_USER, Role.ROLE_USER));
-                // TODO: give rights: curator?
+                try {
+                    User curationUser = new User(CURATION_USER, Role.ROLE_USER);
+                    userRepository.create(curationUser);
+                    AnnotationDocument annotationDocument = documentService
+                            .createOrGetAnnotationDocument(state.getDocument(), curationUser);
+                    // Update the annotation document CAS
+                    CAS editorCas = documentService.readAnnotationCas(annotationDocument,
+                            FORCE_CAS_UPGRADE);
+                    // After creating an new CAS or upgrading the CAS, we need to save it
+                    documentService.writeAnnotationCas(editorCas, annotationDocument, true);
+                }
+                catch (IOException e) {
+                    String errorMsg = String.format("Could not create/read/write "
+                            + "CURATOR_USER Cas: %s", e.getMessage());
+                    log.error(errorMsg);
+                    error(errorMsg);
+                    
+                    RequestCycle.get().find(AjaxRequestTarget.class)
+                        .ifPresent(t -> t.addChildren(getPage(), IFeedback.class));
+                }
+
             }
             curator = userRepository.get(CURATION_USER);
-            if (curator == null) {
-                userRepository.create(new User(CURATION_USER));
-            }
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
-            state.setMode(Mode.CURATION);
         }
         
         // open curation-doc
@@ -223,7 +240,7 @@ public class CurationSidebar
     {
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), state.getProject().getId(), users);
+                state.getUser().getUsername(), state.getProject().getId(), users);
         // refresh should call render of PreRenderer and render of editor-extensions ?
         //annoPage.actionRefreshDocument(aTarget);
     }

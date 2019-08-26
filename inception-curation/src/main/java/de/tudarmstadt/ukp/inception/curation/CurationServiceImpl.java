@@ -29,10 +29,17 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
+import org.springframework.security.core.session.SessionDestroyedEvent;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 @Component
@@ -42,6 +49,9 @@ public class CurationServiceImpl implements CurationService
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
     
     private @Autowired DocumentService documentService;
+    private @Autowired SessionRegistry sessionRegistry;
+    private @Autowired ProjectService projectService;
+    private @Autowired UserDao userRegistry;
 
     public CurationServiceImpl()
     {
@@ -163,6 +173,29 @@ public class CurationServiceImpl implements CurationService
         synchronized (curationStates)
         {
             curationStates.remove(new CurationStateKey(aCurrentUser, aProjectId));
+        }
+    }
+    
+    @EventListener
+    public void onSessionDestroyed(SessionDestroyedEvent event)
+    {
+        SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
+        // Could be an anonymous session without information.
+        if (info != null) {
+            String username = (String) info.getPrincipal();
+            clearState(username);
+        }
+    }
+
+    private void clearState(String aUsername)
+    {
+//        projectService.listAccessibleProjects(userRegistry.get(aUsername)).stream()
+//            .map(Project::getId)
+//            .forEach(pId -> removeCurrentUserInformation(aUsername, pId));
+        User currentUser = userRegistry.get(aUsername);
+        List<Project> projects = projectService.listAccessibleProjects(currentUser);
+        for (Project project : projects) {
+            removeCurrentUserInformation(aUsername, project.getId());
         }
     }
 
