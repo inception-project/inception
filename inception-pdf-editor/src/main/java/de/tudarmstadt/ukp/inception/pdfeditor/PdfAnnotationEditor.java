@@ -97,10 +97,11 @@ public class PdfAnnotationEditor
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-        if (aModel.getObject().getDocument().getFormat().equals(PdfFormatSupport.ID)) {
+        String format = aModel.getObject().getDocument().getFormat(); 
+        if (format.equals(PdfFormatSupport.ID)) {
             add(new PdfAnnoPanel(VIS, aModel, this));
         } else {
-            add(new WrongFileFormatPanel(VIS));
+            add(new WrongFileFormatPanel(VIS, format));
         }
     }
 

@@ -19,9 +19,12 @@
       xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
 <body>
 <wicket:panel>
-    <h1 class="col-xs-10 col-xs-offset-1" style="text-align: center;">
-        The opened file was not imported as PDF document and cannot be opened by the PDF editor.
-        Please use another editor.
+    <!--    <h1 class="col-xs-10 col-xs-offset-1" style="text-align: center;">-->
+    <h1 class="col-xs-offset-1 col-xs-10" style="text-align: center;">
+        <p>The opened file was not imported with the PDF format.</p>
+        <p>It cannot be opened by the PDF editor.</p>
+        <p>The following file format was used: <label wicket:id="format"></label></p>
+        <p>Please use another editor or reimport with the correct format.</p>
     </h1>
 </wicket:panel>
 </body>
