@@ -27,18 +27,26 @@ public abstract class RelationEvent
 {
     private static final long serialVersionUID = -8621413642390759892L;
     
+    private final AnnotationFS relation;
     private final AnnotationFS targetAnno;
     private final AnnotationFS sourceAnno;
 
     public RelationEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
+            AnnotationLayer aLayer, AnnotationFS aRelationFS, AnnotationFS aTargetAnnotation,
+            AnnotationFS aSourceAnnotation)
     {
         super(aSource, aDocument, aUser, aLayer);
         
+        relation = aRelationFS;
         targetAnno = aTargetAnnotation;
         sourceAnno = aSourceAnnotation;
     }
 
+    public AnnotationFS getAnnotation()
+    {
+        return relation;
+    }
+    
     public AnnotationFS getTargetAnnotation()
     {
         return targetAnno;

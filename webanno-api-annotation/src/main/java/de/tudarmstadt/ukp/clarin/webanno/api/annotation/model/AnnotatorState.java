@@ -143,15 +143,20 @@ public interface AnnotatorState
     @Override
     Selection getSelection();
 
-    void setArmedSlot(AnnotationFeature aName, int aIndex);
+    /**
+     * Mark a slot in the given feature state as armed. Note that this feature state does not
+     * necessarily belong to the feature states for the annotation detail panel (cf. 
+     * {@link #getFeatureStates()}) but may belong to some other feature editor elsewhere in the UI.
+     */
+    void setArmedSlot(FeatureState aState, int aIndex);
 
-    boolean isArmedSlot(AnnotationFeature aName, int aIndex);
+    boolean isArmedSlot(FeatureState aState, int aIndex);
 
     void clearArmedSlot();
 
     boolean isSlotArmed();
 
-    AnnotationFeature getArmedFeature();
+    FeatureState getArmedFeature();
 
     int getArmedSlot();
 

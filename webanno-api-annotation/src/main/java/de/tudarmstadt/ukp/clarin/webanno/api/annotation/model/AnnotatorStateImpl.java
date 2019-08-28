@@ -27,12 +27,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.Page;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
+import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -163,7 +168,7 @@ public class AnnotatorStateImpl
     private PagingStrategy pagingStrategy;
     
     private List<Unit> visibleUnits;
-
+    
     public AnnotatorStateImpl(Mode aMode)
     {
         mode = aMode;
@@ -533,39 +538,53 @@ public class AnnotatorStateImpl
         annotationDocumentTimestamp = null;
     }
 
-    private AnnotationFeature armedFeature;
+    private FeatureState armedFeatureState;
     private int armedSlot = -1;
 
     @Override
-    public void setArmedSlot(AnnotationFeature aName, int aIndex)
+    public void setArmedSlot(FeatureState aState, int aIndex)
     {
-        armedFeature = aName;
+        armedFeatureState = aState;
         armedSlot = aIndex;
+        
+        // Rerender all slots to deselect all slots that are not armed anymore
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, Broadcast.BREADTH,
+                    new RenderSlotsEvent(
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
+        }
     }
 
     @Override
-    public boolean isArmedSlot(AnnotationFeature aName, int aIndex)
+    public boolean isArmedSlot(FeatureState aState, int aIndex)
     {
-        return ObjectUtils.equals(aName, armedFeature) && aIndex == armedSlot;
+        if (armedFeatureState == null) {
+            return false;
+        }
+        
+        return Objects.equals(aState.vid, armedFeatureState.vid)
+                && Objects.equals(aState.feature, armedFeatureState.feature) && aIndex == armedSlot;
     }
 
     @Override
     public void clearArmedSlot()
     {
-        armedFeature = null;
+        armedFeatureState = null;
         armedSlot = -1;
     }
 
     @Override
     public boolean isSlotArmed()
     {
-        return armedFeature != null;
+        return armedFeatureState != null;
     }
 
     @Override
-    public AnnotationFeature getArmedFeature()
+    public FeatureState getArmedFeature()
     {
-        return armedFeature;
+        return armedFeatureState;
     }
 
     @Override
@@ -573,7 +592,7 @@ public class AnnotatorStateImpl
     {
         return armedSlot;
     }
- 
+    
     @Override
     public List<FeatureState> getFeatureStates()
     {
