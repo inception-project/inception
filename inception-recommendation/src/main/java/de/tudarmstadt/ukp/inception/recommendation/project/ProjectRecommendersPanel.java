@@ -19,12 +19,10 @@ package de.tudarmstadt.ukp.inception.recommendation.project;
 
 import static de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService.MAX_RECOMMENDATIONS_DEFAULT;
 
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
@@ -41,7 +39,6 @@ public class ProjectRecommendersPanel
     private IModel<Recommender> selectedRecommenderModel;
     
     private final RecommenderEditorPanel recommenderEditorPanel;
-    private final LambdaAjaxLink lambdaAjaxLink;
 
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
@@ -55,16 +52,18 @@ public class ProjectRecommendersPanel
         add(recommenderEditorPanel);
 
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDERS,
-                projectModel, selectedRecommenderModel);
+                projectModel, selectedRecommenderModel, true);
         recommenderListPanel.setCreateAction(_target -> {
+            Recommender recommender = new Recommender();    
+            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT); 
+            selectedRecommenderModel.setObject(recommender);    
+            recommenderEditorPanel.modelChanged();
         });
         recommenderListPanel.setChangeAction(_target -> {
             recommenderEditorPanel.modelChanged();
             _target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
-        lambdaAjaxLink = new LambdaAjaxLink(MID_CREATE_BUTTON, this::actionCreate);
-        add(lambdaAjaxLink);
     }
 
     @Override
@@ -72,14 +71,5 @@ public class ProjectRecommendersPanel
     {
         super.onModelChanged();
         selectedRecommenderModel.setObject(null);
-    }
-
-    private void actionCreate(AjaxRequestTarget aTarget)
-    {
-        Recommender recommender = new Recommender();
-        recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
-        selectedRecommenderModel.setObject(recommender);
-        recommenderEditorPanel.modelChanged();
-        aTarget.add(recommenderEditorPanel);
     }
 }

@@ -66,7 +66,7 @@ public class EvaluationSimulationPage
         add(recommenderViewPanel);
 
         RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDER_LIST,
-                Model.of(projectModel), selectedRecommenderModel);
+                Model.of(projectModel), selectedRecommenderModel, false);
         recommenderListPanel.setCreateAction(_target -> {
             Recommender recommender = new Recommender();
             recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);

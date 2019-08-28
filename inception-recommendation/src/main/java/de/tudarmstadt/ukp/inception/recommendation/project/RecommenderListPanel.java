@@ -25,6 +25,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink; 
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ListPanel_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
@@ -44,7 +45,7 @@ public class RecommenderListPanel
     private OverviewListChoice<Recommender> overviewList;
     
     public RecommenderListPanel(String id, IModel<Project> aProject,
-            IModel<Recommender> aRecommender)
+            IModel<Recommender> aRecommender, boolean showCreateButton)
     {
         super(id);
         
@@ -59,6 +60,13 @@ public class RecommenderListPanel
         overviewList.setChoices(LambdaModel.of(this::listRecommenders));
         overviewList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", this::onChange));
         add(overviewList);
+        
+        LambdaAjaxLink lambdaAjaxLink = new LambdaAjaxLink("create", this::actionCreate);
+        add(lambdaAjaxLink);  
+        
+        if (!showCreateButton)        {
+            lambdaAjaxLink.setVisible(false);
+        }
     }
     
     private List<Recommender> listRecommenders()
