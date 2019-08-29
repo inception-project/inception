@@ -337,7 +337,7 @@ public class LinkFeatureEditor
 
                 AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
                 setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                        .equals(state.getArmedFeature()));
+                        .equals(state.getArmedFeature().feature));
             }
         });
     }
