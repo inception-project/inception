@@ -63,6 +63,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.coloring.ColoringStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -94,6 +95,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaMenuItem;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.ContextMenu;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
@@ -133,6 +135,7 @@ public class SuggestionViewPanel
     private @SpringBean CorrectionDocumentService correctionDocumentService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisher;
 
     public SuggestionViewPanel(String id, IModel<List<UserAnnotationSegment>> aModel)
     {
@@ -217,21 +220,22 @@ public class SuggestionViewPanel
             }
 
             // check if clicked on a span
+            CasMerge casMerge = new CasMerge(annotationService);
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
-                mergeSpan(targetCas, sourceCas, sourceVid, sourceState.getDocument(),
+                mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), layer);
             }
             // check if clicked on an arc (relation or slot)
             else if (ACTION_SELECT_ARC_FOR_MERGE.equals(action.toString())) {
                 // this is a slot arc
                 if (sourceVid.isSlotSet()) {
-                    mergeSlot(targetCas, sourceCas, sourceVid, sourceState.getDocument(),
+                    mergeSlot(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                             sourceState.getUser().getUsername(), layer);
                 }
                 // normal relation annotation arc is clicked
                 else {
-                    mergeRelation(targetCas, sourceCas, sourceVid, sourceState.getDocument(),
-                            sourceState.getUser().getUsername(), layer);
+                    mergeRelation(casMerge, targetCas, sourceCas, sourceVid,
+                            sourceState.getDocument(), sourceState.getUser().getUsername(), layer);
                 }
             }
 
@@ -267,6 +271,9 @@ public class SuggestionViewPanel
         int created = 0;
         Set<String> otherErrors = new LinkedHashSet<>();
         
+        CasMerge casMerge = new CasMerge(annotationService);
+        casMerge.setSilenceEvents(true);
+        
         nextAnnotation: for (AnnotationFS ann : select(sourceCas,
                 adapter.getAnnotationType(sourceCas))) {
             try {
@@ -274,11 +281,11 @@ public class SuggestionViewPanel
 
                 switch (aLayer.getType()) {
                 case SPAN_TYPE:
-                    result = mergeSpan(targetCas, sourceCas, new VID(ann),
+                    result = mergeSpan(casMerge, targetCas, sourceCas, new VID(ann),
                             sourceState.getDocument(), sourceState.getUser().getUsername(), aLayer);
                     break;
                 case RELATION_TYPE:
-                    result = mergeRelation(targetCas, sourceCas, new VID(ann),
+                    result = mergeRelation(casMerge, targetCas, sourceCas, new VID(ann),
                             sourceState.getDocument(), sourceState.getUser().getUsername(), aLayer);
                     break;
                 default:
@@ -328,6 +335,10 @@ public class SuggestionViewPanel
             otherErrors.forEach(this::error);
         }
         
+        applicationEventPublisher.get()
+                .publishEvent(new BulkAnnotationEvent(this, sourceState.getDocument(),
+                        sourceState.getUser().getUsername(), adapter.getLayer()));
+        
         aTarget.addChildren(getPage(), IFeedback.class);
         
         onChange(aTarget);
@@ -338,19 +349,19 @@ public class SuggestionViewPanel
         // Overriden in curationPanel
     }
 
-    private CasMergeOpertationResult mergeSpan(CAS aTargetCas, CAS aSourceCas, VID aSourceVid,
-            SourceDocument aSourceDocument, String aSourceUser, AnnotationLayer aLayer)
+    private CasMergeOpertationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
+            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
+            AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
     {
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
-        
-        CasMerge casMerge = new CasMerge(annotationService);
-        return casMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
+
+        return aCasMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
                 sourceAnnotation, aLayer.isAllowStacking());
     }
 
-    private void mergeSlot(CAS aCas, CAS aSourceCas, VID aSourceVid, SourceDocument aSourceDocument,
-            String aSourceUser, AnnotationLayer aLayer)
+    private void mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas, VID aSourceVid,
+            SourceDocument aSourceDocument, String aSourceUser, AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
@@ -359,20 +370,18 @@ public class SuggestionViewPanel
         AnnotationFeature feature = adapter.listFeatures().stream().sequential()
                 .skip(aSourceVid.getAttribute()).findFirst().get();
 
-        CasMerge casMerge = new CasMerge(annotationService);
-        casMerge.mergeSlotFeature(aSourceDocument, aSourceUser, aLayer, aCas, sourceAnnotation,
+        aCasMerge.mergeSlotFeature(aSourceDocument, aSourceUser, aLayer, aCas, sourceAnnotation,
                 feature.getName(), aSourceVid.getSlot());
     }
 
-    private CasMergeOpertationResult mergeRelation(CAS aCas, CAS aSourceCas, VID aSourceVid,
-            SourceDocument aSourceDocument, String aSourceUser,
+    private CasMergeOpertationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
+            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
         AnnotationFS sourceAnnotation = selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        CasMerge casMerge = new CasMerge(annotationService);
-        return casMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
+        return aCasMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
                 sourceAnnotation, aLayer.isAllowStacking());
     }
 
