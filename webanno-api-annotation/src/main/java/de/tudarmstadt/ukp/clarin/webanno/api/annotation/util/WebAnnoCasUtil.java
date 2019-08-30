@@ -33,6 +33,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -124,7 +126,8 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
-        return selectCovering(aCas, getType(aCas, Sentence.class), aBegin, aBegin).stream()
+        return StreamSupport.stream(aCas.getAnnotationIndex(
+                    getType(aCas, Sentence.class)).spliterator(), false)
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
                 .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
                 .findFirst()
@@ -157,12 +160,9 @@ public class WebAnnoCasUtil
 
     public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
     {
-        List<AnnotationFS> covered = CasUtil.selectCovered(aCas, type, aBegin, aEnd);
-
-        // Remove all that do not have the exact same offset
-        covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));
-
-        return covered;
+        return StreamSupport.stream(aCas.getAnnotationIndex(type).spliterator(), false)
+            .filter(cur -> cur.getBegin() == aBegin && cur.getEnd() == aEnd)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -181,6 +181,11 @@ public class WebAnnoCasUtil
      */
     public static AnnotationFS selectSingleFsAt(CAS aCas, Type aType, int aBegin, int aEnd)
     {
+//        return StreamSupport.stream(aCas.getAnnotationIndex(aType).spliterator(), false)
+//            .filter(cur -> cur.getBegin() == aBegin && cur.getEnd() == aEnd)
+//            .findFirst()
+//            .orElse(null);
+        
         for (AnnotationFS anFS : selectCovered(aCas, aType, aBegin, aEnd)) {
             if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
                 return anFS;
