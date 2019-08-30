@@ -1018,12 +1018,9 @@ public class CasDiff
          */
         public boolean isAgreement(ConfigurationSet aConfigurationSet)
         {
-            if (!data.containsValue(aConfigurationSet)) {
-                throw new IllegalArgumentException("Configuration set does not belong to this diff");
-            }
-
             if (data.get(aConfigurationSet.position) != aConfigurationSet) {
-                throw new IllegalArgumentException("Configuration set position mismatch");
+                throw new IllegalArgumentException(
+                        "Configuration set does not belong to this diff or positions mismatch");
             }
             
             // If there is only a single configuration in the set, we call it an agreement
@@ -1054,12 +1051,9 @@ public class CasDiff
          */
         public boolean isComplete(ConfigurationSet aConfigurationSet)
         {
-            if (!data.containsValue(aConfigurationSet)) {
-                throw new IllegalArgumentException("Configuration set does not belong to this diff");
-            }
-
             if (data.get(aConfigurationSet.position) != aConfigurationSet) {
-                throw new IllegalArgumentException("Configuration set position mismatch");
+                throw new IllegalArgumentException(
+                        "Configuration set does not belong to this diff or positions mismatch");
             }
 
             Boolean complete = completenessCache.get(aConfigurationSet);
