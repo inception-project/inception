@@ -28,18 +28,28 @@
                 <div>
                     <ul wicket:id="featuresContainer" class="list-group">
                         <li wicket:id="features" class="list-group-item">
-                            <div wicket:id="feature"
-                                 class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
+                            <div wicket:id="feature" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
                         </li>
                     </ul>
                 </div>
                 <div>
-                    <h5>Here be linked span annotations.</h5>
-<!--                    <ul wicket:id="annotationsContainer" class="list-group">-->
-<!--                        <li wicket:id="annotations" class="list-group-item">-->
-<!--                            <div wicket:id="annotationDetails"></div>-->
-<!--                        </li>-->
-<!--                    </ul>-->
+                    <div wicket:id="linkFeaturesContainer">
+                        <div wicket:id="linkFeatures">
+                            <div class="panel panel-default panel-flex flex-content">
+                                <div class="panel-heading">
+                                    <h3 wicket:id="linkFeatureTitle" class="panel-title"></h3>
+                                </div>
+                                <div class="panel-body flex-v-container">
+                                    <div wicket:id="spansContainer">
+                                        <div wicket:id="spans">
+                                            <div wicket:id="span" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
+                                            <br/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
