@@ -1,14 +1,14 @@
 = Document metadata
 
 Before being able to configure document-level annotations, you need to define an annotation layer of 
-type *Document metadata* on the Project *Settings*, *Layers* tab. For this:
+type *Document metadata* on the project *Settings*, *Layers* tab. For this:
 
-* Go to Settings -> Layers and click the Create button
-* Enter a name for the annotation layer e.g. "Meta" and set its type to "Document metadata"
-* Click save
-* On the right side of the page, you can now configure features for this annotation layer by clicking Create
-* Again, choose a name and type for the feature e.g. "value" of type "Primitive:String"
-* Click save
+* Go to *Settings -> Layers* and click the *Create* button
+* Enter a name for the annotation layer (e.g. `Author`) and set its type to *Document metadata*
+* Click *Save*
+* On the right side of the page, you can now configure features for this annotation layer by clicking *Create*
+* Again, choose a name and type for the feature e.g. `name` of type *Primitive: String*
+* Click *Save*
 
 On the annotation page, you can now:
 
@@ -19,5 +19,7 @@ On the annotation page, you can now:
 image::metadata-sidebar.png[align="center"]
 
 NOTE: This is an experimental feature not recommended for serious use. However, you can try it out
-      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file. 
+      and enable it by adding `documentmetadata.enabled=true` to the `settings.properties` file. In 
+      particular, curation of document metadata annotations is not possible and they are not supported
+      by the TSV format. They can be im-/exported via XMI or Binary CAS though.
 
