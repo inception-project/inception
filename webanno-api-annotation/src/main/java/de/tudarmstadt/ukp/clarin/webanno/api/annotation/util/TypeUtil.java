@@ -24,6 +24,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 
@@ -124,7 +125,7 @@ public final class TypeUtil
      * @param aFeatures the features.
      * @return the label.
      */
-    public static String getUiLabelText(TypeAdapter aAdapter, AnnotationFS aFs,
+    public static String getUiLabelText(TypeAdapter aAdapter, FeatureStructure aFs,
             List<AnnotationFeature> aFeatures)
     {
         StringBuilder bratLabelText = new StringBuilder();

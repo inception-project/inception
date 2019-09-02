@@ -54,6 +54,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
@@ -93,6 +96,7 @@ public class CasMerge
     private boolean mergeIncompleteAnnotations = false;
     private boolean silenceEvents = false;
     private Map<AnnotationLayer, List<AnnotationFeature>> featureCache = new HashMap<>();
+    private LoadingCache<AnnotationLayer, TypeAdapter> adapterCache;
     
     public CasMerge(AnnotationSchemaService aSchemaService)
     {
@@ -104,6 +108,20 @@ public class CasMerge
     {
         schemaService = aSchemaService;
         eventPublisher = aEventPublisher;
+        
+        adapterCache = Caffeine.newBuilder()
+                .maximumSize(100)
+                .build(schemaService::getAdapter);
+    }
+    
+    public void setSilenceEvents(boolean aSilenceEvents)
+    {
+        silenceEvents = aSilenceEvents;
+    }
+    
+    public boolean isSilenceEvents()
+    {
+        return silenceEvents;
     }
     
     public void setMergeIncompleteAnnotations(boolean aMergeIncompleteAnnotations)
@@ -216,7 +234,7 @@ public class CasMerge
                 continue;
             }
 
-            LOG.trace("Processing {} span positions on layer {}", positions.size(), layerName);
+            LOG.debug("Processing {} span positions on layer {}", positions.size(), layerName);
 
             // First we merge the spans so that we can attach the relations to something later.
             // Slots are also excluded for the moment
@@ -256,7 +274,7 @@ public class CasMerge
                 continue;
             }
 
-            LOG.trace("Processing {} slot positions on layer [{}]", positions.size(), layerName);
+            LOG.debug("Processing {} slot positions on layer [{}]", positions.size(), layerName);
             
             for (SpanPosition position : positions) {
                 LOG.trace(" |   processing {}", position);
@@ -295,7 +313,7 @@ public class CasMerge
                 continue;
             }
 
-            LOG.trace("Processing {} relation positions on layer [{}]", positions.size(),
+            LOG.debug("Processing {} relation positions on layer [{}]", positions.size(),
                     layerName);
             
             for (RelationPosition position : positions) {
@@ -696,7 +714,7 @@ public class CasMerge
                     "The annotation already exists in the target document.");
         }
 
-        SpanAdapter adapter = (SpanAdapter) schemaService.getAdapter(aAnnotationLayer);
+        SpanAdapter adapter = (SpanAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
         }
@@ -725,7 +743,7 @@ public class CasMerge
             AnnotationFS aSourceFs, boolean aAllowStacking)
         throws AnnotationException
     {
-        RelationAdapter adapter = (RelationAdapter) schemaService.getAdapter(aAnnotationLayer);
+        RelationAdapter adapter = (RelationAdapter) adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
         }
@@ -794,7 +812,7 @@ public class CasMerge
             AnnotationFS aSourceFs, String aSourceFeature, int aSourceSlotIndex)
         throws AnnotationException
     {
-        TypeAdapter adapter = schemaService.getAdapter(aAnnotationLayer);
+        TypeAdapter adapter = adapterCache.get(aAnnotationLayer);
         if (silenceEvents) {
             adapter.silenceEvents();
         }

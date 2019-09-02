@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -17,20 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.AnnotationBaseFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
-public class SpanCreatedEvent
-    extends SpanEvent
-    implements AnnotationCreatedEvent
+public interface AnnotationCreatedEvent
+    extends HybridApplicationUIEvent
 {
-    private static final long serialVersionUID = 5206262614840209407L;
+    SourceDocument getDocument();
 
-    public SpanCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
-    {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
-    }
+    String getUser();
+
+    AnnotationLayer getLayer();
+
+    AnnotationBaseFS getAnnotation();
 }

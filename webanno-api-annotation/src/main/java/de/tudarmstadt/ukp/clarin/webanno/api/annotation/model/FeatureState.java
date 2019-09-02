@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.model;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.RulesIndicator;
@@ -36,9 +37,11 @@ public class FeatureState
     public List<Tag> tagset;
     public List<PossibleValue> possibleValues;
     public RulesIndicator indicator = new RulesIndicator();
+    public VID vid;
 
-    public FeatureState(AnnotationFeature aFeature, Serializable aValue)
+    public FeatureState(VID aVid, AnnotationFeature aFeature, Serializable aValue)
     {
+        vid = aVid;
         feature = aFeature;
         value = aValue;
 
@@ -50,41 +53,17 @@ public class FeatureState
         }
     }
 
-    // Two feature models are considered equal if they apply to the same feature. The value and
-    // other properties are excluded. This is important so that the CachingReuseStrategy used by
-    // FeatureEditorPanelContent can properly match its RefreshingView items to the models which
-    // in turn is required such that we can send a "read" signal to Kendo ComboBoxes to refresh
-    // their dropdowns when constraints are active.
     @Override
-    public int hashCode()
-    {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + ((feature == null) ? 0 : feature.hashCode());
-        return result;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FeatureState that = (FeatureState) o;
+        return feature.equals(that.feature) &&
+                vid.equals(that.vid);
     }
 
     @Override
-    public boolean equals(Object obj)
-    {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        FeatureState other = (FeatureState) obj;
-        if (feature == null) {
-            if (other.feature != null) {
-                return false;
-            }
-        }
-        else if (!feature.equals(other.feature)) {
-            return false;
-        }
-        return true;
+    public int hashCode() {
+        return Objects.hash(feature, vid);
     }
 }

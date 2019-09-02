@@ -63,9 +63,23 @@ public interface AnnotationActionHandler
     
     /**
      * Fill the currently armed slot with the given annotation.
+     * 
+     * @param aTarget
+     *            the AJAX request target.
+     * @param aCas
+     *            the CAS in which the slot is going to be filled.
+     * @param aSlotFillerBegin
+     *            the begin of the span selected by the user to create a new annotation or the begin
+     *            of the span of the selected existing annotation.
+     * @param aSlotFillerEnd
+     *            the corresponding end.
+     * @param aExistingSlotFillerId
+     *            the {@link VID} of a selected existing annotation. If no annotation has been
+     *            selected, this is {@link VID#NONE_ID} and {@link VID#isSet()} returns
+     *            {@code false}.
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aBegin, int aEnd,
-            VID paramId)
+    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
+            int aSlotFillerEnd, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
     
     CAS getEditorCas()

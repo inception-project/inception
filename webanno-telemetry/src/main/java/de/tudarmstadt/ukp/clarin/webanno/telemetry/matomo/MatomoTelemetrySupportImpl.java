@@ -151,13 +151,28 @@ public class MatomoTelemetrySupportImpl
                 .map(traits -> traits.isEnabled() != null && traits.isEnabled() == true)
                 .orElse(false);
     }
-    
+
+    public boolean isEnabled(List<TelemetrySettings> aSettings)
+    {
+        return aSettings.stream()
+                .filter(settings -> settings.getSupport().equals(getId()))
+                .findFirst()
+                .map(this::readTraits)
+                .map(traits -> traits.isEnabled() != null && traits.isEnabled() == true)
+                .orElse(false);
+    }
+
     @Override
     @EventListener
     @Async
     public void onApplicationReady(ApplicationReadyEvent aEvent)
     {
-        sendTelemetry();
+        if (isEnabled()) {
+            sendTelemetry();
+        }
+        else {
+            log.debug("Telemetry disabled");
+        }
     }
     
     @Override
@@ -165,13 +180,18 @@ public class MatomoTelemetrySupportImpl
     @Async
     public void onTelemetrySettingsSaved(TelemetrySettingsSavedEvent aEvent)
     {
-        sendTelemetry();
+        if (isEnabled(aEvent.getSettings())) {
+            sendTelemetry();
+        }
+        else {
+            log.debug("Telemetry disabled");
+        }
     }
     
     private void sendTelemetry()
     {
-        if (tracker == null || !isEnabled()) {
-            log.debug("Telemetry disabled");
+        if (tracker == null) {
+            log.debug("Telemetry unavailable");
             return;
         }
         

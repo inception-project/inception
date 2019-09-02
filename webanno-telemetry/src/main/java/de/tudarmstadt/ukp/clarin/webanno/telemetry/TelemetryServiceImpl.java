@@ -167,6 +167,6 @@ public class TelemetryServiceImpl
             writeSettings(settings);
         }
         
-        eventPublisher.publishEvent(new TelemetrySettingsSavedEvent(this));
+        eventPublisher.publishEvent(new TelemetrySettingsSavedEvent(this, aSettings));
     }
 }
