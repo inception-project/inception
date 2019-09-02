@@ -27,6 +27,8 @@ import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.image.Image;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
+import org.apache.wicket.markup.html.link.Link;
 import org.apache.wicket.markup.html.link.StatelessLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -61,14 +63,16 @@ public class DashboardMenu
             {
                 MenuItem item = aItem.getModelObject();
                 final Class<? extends Page> pageClass = item.getPageClass();
-                StatelessLink<Void> menulink = new StatelessLink<Void>("item")
-                {
-                    private static final long serialVersionUID = 4110674757822252390L;
-
-                    @Override
-                    public void onClick()
+                
+                Link<Void> menulink;
+                if (isSendProjectIdToPage()) {
+                    menulink = new StatelessLink<Void>("item")
                     {
-                        if (isSendProjectIdToPage()) {
+                        private static final long serialVersionUID = 4110674757822252390L;
+
+                        @Override
+                        public void onClick()
+                        {
                             Project project = Session.get()
                                     .getMetaData(SessionMetaData.CURRENT_PROJECT);
                             // For legacy WebAnno pages, we set PAGE_PARAM_PROJECT_ID while
@@ -79,11 +83,12 @@ public class DashboardMenu
                             }
                             setResponsePage(pageClass, params);
                         }
-                        else {
-                            setResponsePage(pageClass);
-                        }
-                    }
-                };
+                    };
+                }
+                else {
+                    menulink = new BookmarkablePageLink<>("item", pageClass);
+                }
+                
                 UrlResourceReference imageRef = new UrlResourceReference(Url.parse(item.getIcon()));
                 imageRef.setContextRelative(true);
                 menulink.add(new Image("icon", imageRef));
