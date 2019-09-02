@@ -17,55 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.event;
 
-import org.apache.uima.cas.FeatureStructure;
-import org.springframework.context.ApplicationEvent;
+import org.apache.uima.cas.AnnotationBaseFS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
-public class DocumentMetadataDeletedEvent extends ApplicationEvent
+public class DocumentMetadataDeletedEvent
+    extends DocumentMetadataEvent
+    implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = 5206262614840209407L;
     
-    private final SourceDocument document;
-    private final String user;
-    private final FeatureStructure annotation;
-    
     public DocumentMetadataDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            FeatureStructure aAnnotation)
+            AnnotationLayer aLayer, AnnotationBaseFS aAnnotation)
     {
-        super(aSource);
-        document = aDocument;
-        user = aUser;
-        annotation = aAnnotation;
-    }
-    
-    public SourceDocument getDocument()
-    {
-        return document;
-    }
-    
-    public String getUser()
-    {
-        return user;
-    }
-    
-    public FeatureStructure getAnnotation()
-    {
-        return annotation;
-    }
-    
-    @Override
-    public String toString()
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append("DocumentMetadataDeletedEvent [");
-        if (document != null) {
-            builder.append("docID=");
-            builder.append(document.getId());
-            builder.append(", user=");
-            builder.append(user);
-        }
-        builder.append("]");
-        return builder.toString();
+        super(aSource, aDocument, aUser, aLayer, aAnnotation);
     }
 }

@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.AnnotationBaseFS;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
@@ -104,7 +103,8 @@ public class DocumentMetadataLayerAdapter
         AnnotationBaseFS newAnnotation = aCas.createFS(type);
         aCas.addFsToIndexes(newAnnotation);
         
-        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, newAnnotation));
+        publishEvent(new DocumentMetadataCreatedEvent(this, aDocument, aUsername, getLayer(),
+                newAnnotation));
         
         return newAnnotation;
     }
@@ -112,10 +112,10 @@ public class DocumentMetadataLayerAdapter
     @Override
     public void delete(SourceDocument aDocument, String aUsername, CAS aCas, VID aVid)
     {
-        FeatureStructure fs = selectFsByAddr(aCas, aVid.getId());
+        AnnotationBaseFS fs = (AnnotationBaseFS) selectFsByAddr(aCas, aVid.getId());
         aCas.removeFsFromIndexes(fs);
 
-        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, fs));
+        publishEvent(new DocumentMetadataDeletedEvent(this, aDocument, aUsername, getLayer(), fs));
     }
     
     @Override
