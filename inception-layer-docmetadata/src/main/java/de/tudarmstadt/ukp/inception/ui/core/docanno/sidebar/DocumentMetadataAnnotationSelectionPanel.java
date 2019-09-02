@@ -50,6 +50,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
@@ -94,11 +95,13 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
     private final WebMarkupContainer annotationsContainer;
+    private final AnnotationActionHandler actionHandler;
     private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            CasProvider aCasProvider, AnnotationPage aAnnotationPage)
+            CasProvider aCasProvider, AnnotationPage aAnnotationPage,
+            AnnotationActionHandler aActionHandler)
     {
         super(aId, aProject);
 
@@ -110,6 +113,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         jcasProvider = aCasProvider;
         project = aProject;
         selectedLayer = Model.of();
+        actionHandler = aActionHandler;
         detailPanels = new ArrayList<>();
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
@@ -205,7 +209,7 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 } else {
                     detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel);
+                        jcasProvider, project, annotationPage, selectionPanel, actionHandler);
                     detailPanel.setVisible(renderVisible);
                     detailPanels.add(detailPanel);
                 }

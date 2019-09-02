@@ -524,7 +524,8 @@ public class ActiveLearningSidebar
         // link feature types and the likes).
         Object wrappedFeatureValue = featureSupport.wrapFeatureValue(feat, null,
                 aCurrentRecommendation.getLabel());
-        FeatureState featureState = new FeatureState(feat, (Serializable) wrappedFeatureValue);
+        FeatureState featureState = new FeatureState(aCurrentRecommendation.getVID(), 
+            feat, (Serializable) wrappedFeatureValue);
         
         // Populate the tagset moving the tags with recommended labels to the top 
         List<Tag> tagList = annotationService.listTags(feat.getTagset());

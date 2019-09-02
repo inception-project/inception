@@ -78,8 +78,6 @@
     <!-- Build infrastructure modules -->
     <module>inception-build</module>
     <!-- Core application modules -->
-    <module>inception-plugin-api</module>
-    <module>inception-plugin-manager</module>
     <module>inception-plugin-parent</module>
     <module>inception-log</module>
     <module>inception-support</module>
@@ -225,12 +223,12 @@
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-manager</artifactId>
-        <version>0.11.0-SNAPSHOT</version>
+        <version>0.12.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
         <artifactId>inception-plugin-api</artifactId>
-        <version>0.11.0-SNAPSHOT</version>
+        <version>0.12.0-SNAPSHOT</version>
       </dependency>
       <dependency>
         <groupId>de.tudarmstadt.ukp.inception.app</groupId>
