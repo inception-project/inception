@@ -89,15 +89,17 @@ public class SpanAnnotationPanel
             CAS cas = casProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, link.targetAddr);
             VID vid = new VID(fs);
+            AnnotationLayer layer = annotationService.findLayer(project, fs);
             
-            List<FeatureState> features = listFeatures(fs, vid);
+            List<FeatureState> features = listFeatures(fs, layer, vid);
     
             featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
             featuresContainer.setOutputMarkupId(true);
             featuresContainer.add(createFeaturesList(features));
-    
-            featuresContainer.add(new Label(CID_LAYER, "layer"));
-            featuresContainer.add(new Label(CID_TEXT, "text"));
+            
+            featuresContainer.add(new Label(CID_LAYER, layer.getUiName()));
+            // TODO: there are probably better ways to get the text of an annotation?
+            featuresContainer.add(new Label(CID_TEXT, link.label));
             
             add(featuresContainer);
         }
@@ -106,14 +108,15 @@ public class SpanAnnotationPanel
         }
     }
     
-    private List<FeatureState> listFeatures(FeatureStructure aFs, VID aVid)
+    private List<FeatureState> listFeatures(FeatureStructure aFs,
+        AnnotationLayer aLayer, VID aVid)
     {
-        AnnotationLayer layer = annotationService.findLayer(project, aFs);
-        TypeAdapter adapter = annotationService.getAdapter(layer);
+        
+        TypeAdapter adapter = annotationService.getAdapter(aLayer);
     
         // Populate from feature structure
         List<FeatureState> featureStates = new ArrayList<>();
-        for (AnnotationFeature feature : annotationService.listAnnotationFeature(layer)) {
+        for (AnnotationFeature feature : annotationService.listAnnotationFeature(aLayer)) {
             if (!feature.isEnabled()) {
                 continue;
             }
