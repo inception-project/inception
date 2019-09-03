@@ -67,7 +67,7 @@
           class="annotatation-detail-panel flex-content flex-v-container flex-gutter">
         <div wicket:id=deleteAnnotationDialog></div>
         <div wicket:id=replaceAnnotationDialog></div>
-        <div class="panel panel-default">
+        <div wicket:id="layerContainer" class="panel panel-default">
           <div class="panel-body">
             <div class="col-sm-12">
               <div class="form-horizontal">
@@ -118,7 +118,7 @@
               </div>
 
               <div wicket:id="featureEditorsContainer" class="form-horizontal">
-                <div class="form-group" wicket:enclosure="selectedAnnotationLayer">
+                <div wicket:id="selectedAnnotationLayerContainer" class="form-group">
                   <label class="col-sm-3 control-label">Layer</label>
                   <div class="col-sm-9">
                     <span class="form-control" readonly><wicket:container wicket:id="selectedAnnotationLayer"/></span>

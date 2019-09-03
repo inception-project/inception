@@ -117,6 +117,9 @@ public class AnnotationFeatureForm
     private Label relationHint;
     private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
+    private WebMarkupContainer layerContainer;
+    private WebMarkupContainer selectedLayerContainer;
+    private WebMarkupContainer featureEditorsContainer;
 
     private final AnnotationDetailEditorPanel editorPanel;
     
@@ -130,15 +133,17 @@ public class AnnotationFeatureForm
     {
         super(id, new CompoundPropertyModel<>(aState));
         editorPanel = aEditorPanel;
-        add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
+        layerContainer = new WebMarkupContainer("layerContainer");
+        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
         add(createDeleteButton());
         add(createReverseButton());
         add(createClearButton());
-        add(relationHint = createRelationHint());
-        add(layerSelector = createDefaultAnnotationLayerSelector());
+        layerContainer.add(relationHint = createRelationHint());
+        layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
+        add(layerContainer);
         add(featureEditorPanel = createFeatureEditorPanel());
         add(createSelectedAnnotationTypeLabel());
         setDefaultButton(null);
@@ -146,20 +151,25 @@ public class AnnotationFeatureForm
 
     private WebMarkupContainer createFeatureEditorPanel()
     {
-        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
-        container.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer");
+        featureEditorsContainer.add(
+                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
 
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
-        container.setOutputMarkupPlaceholderTag(true);
+        featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
 
-        container.add(createNoFeaturesWarningLabel());
-        container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
-        container.add(createFocusResetHelper());
-        container.add(createSelectedTextLabel());
-        container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
+        featureEditorsContainer.add(createNoFeaturesWarningLabel());
+        featureEditorsContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
+        featureEditorsContainer.add(createFocusResetHelper());
+        featureEditorsContainer.add(createSelectedTextLabel());
+        selectedLayerContainer =
+                new WebMarkupContainer("selectedAnnotationLayerContainer");
+        selectedLayerContainer.add(
+                selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
+        featureEditorsContainer.add(selectedLayerContainer);
 
-        return container;
+        return featureEditorsContainer;
     }
 
     private TextField<String> createFocusResetHelper()
@@ -655,6 +665,21 @@ public class AnnotationFeatureForm
         setEnabled(getModelObject().getDocument() != null 
                 && !editorPanel.isAnnotationFinished()
                 && getModelObject().getUser().equals(userDao.getCurrentUser()));
+    
+        List<AnnotationLayer> spanLayer = 
+                getModelObject().getAnnotationLayers().stream()
+                        .filter(l -> l.isEnabled() && l.getType().equals("span"))
+                        .collect(Collectors.toList());
+    
+        if (spanLayer.size() <= 1) {
+            layerContainer.setVisible(false);
+            selectedLayerContainer.setVisible(false);
+        } else {
+            layerContainer.setVisible(true);
+            selectedLayerContainer.setVisible(true);
+        }
+        add(layerContainer);
+        add(featureEditorsContainer);
     }
 
     public void updateLayersDropdown()
