@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
@@ -160,9 +159,7 @@ public class WebAnnoCasUtil
 
     public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
     {
-        return StreamSupport.stream(aCas.getAnnotationIndex(type).spliterator(), false)
-            .filter(cur -> cur.getBegin() == aBegin && cur.getEnd() == aEnd)
-            .collect(Collectors.toList());
+        return CasUtil.selectAt(aCas, type, aBegin, aEnd);
     }
 
     /**
