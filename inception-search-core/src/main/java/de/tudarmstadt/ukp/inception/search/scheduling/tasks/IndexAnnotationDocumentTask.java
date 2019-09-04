@@ -45,6 +45,10 @@ public class IndexAnnotationDocumentTask
     @Override
     public boolean matches(Task aTask)
     {
+        if (!(aTask instanceof IndexAnnotationDocumentTask)) {
+            return false;
+        }
+        
         return getAnnotationDocument().getId() == aTask.getAnnotationDocument().getId();
     }
 

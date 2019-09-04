@@ -52,6 +52,10 @@ public class ReindexTask
     @Override
     public boolean matches(Task aTask)
     {
+        if (!(aTask instanceof ReindexTask)) {
+            return false;
+        }
+        
         return getProject().getId() == aTask.getProject().getId();
     }
 }
