@@ -118,7 +118,6 @@ public class AnnotationFeatureForm
     private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
     private WebMarkupContainer layerContainer;
-    private WebMarkupContainer featureEditorsContainer;
 
     private final AnnotationDetailEditorPanel editorPanel;
     
@@ -142,6 +141,13 @@ public class AnnotationFeatureForm
         add(createClearButton());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
+        layerContainer.add(visibleWhen(() -> {
+            List<AnnotationLayer> spanLayer = 
+                    getModelObject().getAnnotationLayers().stream()
+                            .filter(l -> l.isEnabled() && l.getType().equals("span"))
+                            .collect(Collectors.toList());
+            return !(spanLayer.size() <= 1);
+        }));
         add(layerContainer);
         add(featureEditorPanel = createFeatureEditorPanel());
         add(createSelectedAnnotationTypeLabel());
@@ -150,21 +156,21 @@ public class AnnotationFeatureForm
 
     private WebMarkupContainer createFeatureEditorPanel()
     {
-        featureEditorsContainer = new WebMarkupContainer("featureEditorsContainer");
-        featureEditorsContainer.add(
+        WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
+        container.add(
                 visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
 
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
-        featureEditorsContainer.setOutputMarkupPlaceholderTag(true);
+        container.setOutputMarkupPlaceholderTag(true);
 
-        featureEditorsContainer.add(createNoFeaturesWarningLabel());
-        featureEditorsContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
-        featureEditorsContainer.add(createFocusResetHelper());
-        featureEditorsContainer.add(createSelectedTextLabel());
-        featureEditorsContainer.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
+        container.add(createNoFeaturesWarningLabel());
+        container.add(featureEditorPanelContent = createFeatureEditorPanelContent());
+        container.add(createFocusResetHelper());
+        container.add(createSelectedTextLabel());
+        container.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
 
-        return featureEditorsContainer;
+        return container;
     }
 
     private TextField<String> createFocusResetHelper()
@@ -660,22 +666,6 @@ public class AnnotationFeatureForm
         setEnabled(getModelObject().getDocument() != null 
                 && !editorPanel.isAnnotationFinished()
                 && getModelObject().getUser().equals(userDao.getCurrentUser()));
-    
-        List<AnnotationLayer> spanLayer = 
-                getModelObject().getAnnotationLayers().stream()
-                        .filter(l -> l.isEnabled() && l.getType().equals("span"))
-                        .collect(Collectors.toList());
-    
-        if (spanLayer.size() <= 1) {
-            layerContainer.setVisible(false);
-            selectedAnnotationLayer.setVisible(false);
-        } else {
-            layerContainer.setVisible(true);
-            selectedAnnotationLayer.setVisible(true);
-        }
-        add(layerContainer);
-        featureEditorsContainer.add(selectedAnnotationLayer);
-        add(featureEditorsContainer);
     }
 
     public void updateLayersDropdown()

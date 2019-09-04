@@ -90,7 +90,6 @@ public class CurationPanel
 
     private SuggestionViewPanel suggestionViewPanel;
 
-    private final WebMarkupContainer sentenceListContainer;
     private final WebMarkupContainer sentencesListView;
     private final WebMarkupContainer crossSentAnnoView;
 
@@ -264,16 +263,12 @@ public class CurationPanel
     
         };
         crossSentAnnoView.add(crossSentAnnoList);
-
-        // add container for sentences panel
-        sentenceListContainer = new WebMarkupContainer("sentenceListContainer");
-        sentenceListContainer.setOutputMarkupPlaceholderTag(true);
-        sentenceListContainer.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
-        add(sentenceListContainer);
-
+    
         // add container for list of sentences panel
         sentencesListView = new WebMarkupContainer("sentencesListView");
         sentencesListView.setOutputMarkupPlaceholderTag(true);
+        sentencesListView.add(LambdaBehavior.visibleWhen(() -> state.getDocument() != null));
+        add(sentencesListView);
         sentencesListView.add(new ListView<SourceListView>("sentencesList",
                 LoadableDetachableModel.of(() -> getModelObject().getCurationViews()))
         {
@@ -285,8 +280,6 @@ public class CurationPanel
                 item.add(new SentenceLink("sentenceNumber", item.getModel()));
             }
         });
-        
-        sentenceListContainer.add(sentencesListView);
     }
     
     private List<String> invisibleCrossSentenceAnnotations()
