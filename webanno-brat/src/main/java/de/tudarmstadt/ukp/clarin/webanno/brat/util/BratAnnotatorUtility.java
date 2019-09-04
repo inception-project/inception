@@ -106,12 +106,12 @@ public class BratAnnotatorUtility
         
         // Transfer token boundaries
         for (AnnotationFS t : selectTokens(aCas)) {
-            aCas.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));
+            target.addFsToIndexes(createToken(target, t.getBegin(), t.getEnd()));
         }
 
         // Transfer sentence boundaries
         for (AnnotationFS s : selectSentences(aCas)) {
-            aCas.addFsToIndexes(createSentence(target, s.getBegin(), s.getEnd()));
+            target.addFsToIndexes(createSentence(target, s.getBegin(), s.getEnd()));
         }
 
         return target;
