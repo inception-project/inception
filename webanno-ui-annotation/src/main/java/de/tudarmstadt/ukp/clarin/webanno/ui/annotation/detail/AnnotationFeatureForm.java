@@ -118,7 +118,6 @@ public class AnnotationFeatureForm
     private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
     private WebMarkupContainer layerContainer;
-    private WebMarkupContainer selectedLayerContainer;
     private WebMarkupContainer featureEditorsContainer;
 
     private final AnnotationDetailEditorPanel editorPanel;
@@ -163,11 +162,7 @@ public class AnnotationFeatureForm
         featureEditorsContainer.add(featureEditorPanelContent = createFeatureEditorPanelContent());
         featureEditorsContainer.add(createFocusResetHelper());
         featureEditorsContainer.add(createSelectedTextLabel());
-        selectedLayerContainer =
-                new WebMarkupContainer("selectedAnnotationLayerContainer");
-        selectedLayerContainer.add(
-                selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
-        featureEditorsContainer.add(selectedLayerContainer);
+        featureEditorsContainer.add(selectedAnnotationLayer = createSelectedAnnotationLayerLabel());
 
         return featureEditorsContainer;
     }
@@ -673,12 +668,13 @@ public class AnnotationFeatureForm
     
         if (spanLayer.size() <= 1) {
             layerContainer.setVisible(false);
-            selectedLayerContainer.setVisible(false);
+            selectedAnnotationLayer.setVisible(false);
         } else {
             layerContainer.setVisible(true);
-            selectedLayerContainer.setVisible(true);
+            selectedAnnotationLayer.setVisible(true);
         }
         add(layerContainer);
+        featureEditorsContainer.add(selectedAnnotationLayer);
         add(featureEditorsContainer);
     }
 
