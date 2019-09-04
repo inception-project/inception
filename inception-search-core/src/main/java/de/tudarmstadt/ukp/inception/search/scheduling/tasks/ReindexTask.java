@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.search.scheduling.tasks;
 
 import java.io.IOException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -30,6 +32,8 @@ import de.tudarmstadt.ukp.inception.search.SearchService;
 public class ReindexTask
     extends Task
 {
+    private Logger log = LoggerFactory.getLogger(getClass());
+    
     private @Autowired SearchService searchService;
 
     public ReindexTask(Project aProject)
@@ -41,11 +45,11 @@ public class ReindexTask
     public void run()
     {
         try {
-            // Reindex project
             searchService.reindex(super.getProject());
         }
         catch (IOException e) {
-            e.printStackTrace();
+            log.error("Unable to reindex project [{}]({})", getProject().getName(),
+                    getProject().getId(), e);
         }
     }
     
