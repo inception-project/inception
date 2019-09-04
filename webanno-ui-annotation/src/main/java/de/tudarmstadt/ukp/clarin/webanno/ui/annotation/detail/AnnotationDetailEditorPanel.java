@@ -24,11 +24,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getSentenceNumber;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.isSame;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
+import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -690,7 +690,7 @@ public abstract class AnnotationDetailEditorPanel
             SpanAdapter adapter = (SpanAdapter) annotationService
                     .getAdapter(state.getDefaultAnnotationLayer());
             Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-            AnnotationFS annotation = selectSingleFsAt(aCas, type, nextToken.getBegin(),
+            AnnotationFS annotation = selectSingleAt(aCas, type, nextToken.getBegin(),
                     nextToken.getEnd());
             
             // If there is no existing annotation of if stacking is allowed then we create a new one
@@ -1555,8 +1555,9 @@ public abstract class AnnotationDetailEditorPanel
             Type spanType = CasUtil.getType(cas, aLayer.getAttachType().getName());
             Feature attachFeature = spanType.getFeatureByBaseName(aLayer.getAttachFeature()
                 .getName());
+            final Type type = spanType;
 
-            for (AnnotationFS attachedFs : selectAt(cas, spanType, aFs.getBegin(), aFs.getEnd())) {
+            for (AnnotationFS attachedFs : selectAt(cas, type, aFs.getBegin(), aFs.getEnd())) {
                 if (isSame(attachedFs.getFeatureValue(attachFeature), aFs)) {
                     attachedSpans.add(attachedFs);
                 }
