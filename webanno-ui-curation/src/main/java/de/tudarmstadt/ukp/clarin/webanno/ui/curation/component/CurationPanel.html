@@ -91,7 +91,12 @@
   <wicket:panel>
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
 
-      <div class="flex-sidebar flex-v-container flex-gutter" wicket:enclosure="sentencesListView">
+      <!-- 
+         We cannot put a 'wicket:enclosure="sentencesListView"' on this div because this 
+         inevitably causes the sentence list to "jump up" when re-rendering it (i.e. when paging
+         or when selecting a sentence).
+       -->
+      <div wicket:id="sentenceListContainer" class="flex-sidebar flex-v-container flex-gutter">
         <div class="flex-content panel panel-default panel-flex">
           <div class="panel-heading">
             <h3 class="panel-title">Sentences</h3>
