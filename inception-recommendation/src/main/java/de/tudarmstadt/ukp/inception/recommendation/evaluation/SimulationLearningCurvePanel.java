@@ -113,6 +113,10 @@ public class SimulationLearningCurvePanel
 
             protected void onUpdate(AjaxRequestTarget _target)
             {
+                if (chartPanel == null)                {
+                    return;
+                }
+                
                 selectedValue = dropdown.getModelObject();
                 form.addOrReplace(chartPanel);
                 _target.add(chartPanel);
