@@ -63,4 +63,43 @@ public final class MtasUtils
         buffer.flip();
         return buffer.getInt();
     }
+    
+    public static char[] bytesToChars(byte[] aBytes)
+    {
+        // Reserve sufficient space of the length and the char-encoded byte array
+        char[] chars = new char[2 + (aBytes.length / 2) + (aBytes.length % 2)];
+
+        // Encode the length of the byte array
+        chars[0] = (char) ((aBytes.length & 0xFFFF0000) >> 16);
+        chars[1] = (char) (aBytes.length & 0x0000FFFF);
+        
+        // Encode the byte array into the char array
+        for (int i = 0; i < aBytes.length; i++) {
+            if (i % 2 == 0) {
+                chars[2 + (i / 2)] |= (char) (aBytes[i] << 8);
+            }
+            else {
+                chars[2 + (i / 2)] |= (char) (aBytes[i] & 0x00FF);
+            }
+        }
+        
+        return chars;
+    }
+    
+    public static byte[] charsToBytes(char[] aChars)
+    {
+        int len = ((int) aChars[0] << 16) | aChars[1];
+        byte[] bytes = new byte[len];
+        
+        for (int i = 0; i < len; i++) {
+            if (i % 2 == 0) {
+                bytes[i] = (byte) (aChars[2 + (i / 2)] >>> 8);
+            }
+            else {
+                bytes[i] = (byte) (aChars[2 + (i / 2)] & 0x00FF);
+            }
+        }
+        
+        return bytes;
+    }
 }
