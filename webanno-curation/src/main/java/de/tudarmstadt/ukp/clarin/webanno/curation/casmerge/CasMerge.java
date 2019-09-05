@@ -190,8 +190,6 @@ public class CasMerge
     {
         silenceEvents = true;
         
-        int mergeConflict = 0;
-        int alreadyMerged = 0;
         int updated = 0;
         int created = 0;
         Set<LogMessage> messages = new LinkedHashSet<>();
@@ -258,9 +256,19 @@ public class CasMerge
                 try {
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative();
-                    mergeSpanAnnotation(aTargetDocument, aTargetUsername,
-                            type2layer.get(position.getType()), aTargetCas, sourceFS, false);
+                    CasMergeOpertationResult result = mergeSpanAnnotation(aTargetDocument,
+                            aTargetUsername, type2layer.get(position.getType()), aTargetCas,
+                            sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
+                    
+                    switch (result) {
+                    case CREATED:
+                        created++;
+                        break;
+                    case UPDATED:
+                        updated++;
+                        break;
+                    }
                 }
                 catch (AnnotationException e) {
                     LOG.trace(" `-> not merged annotation: {}", e.getMessage());
@@ -336,9 +344,19 @@ public class CasMerge
                 try {
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative();
-                    mergeRelationAnnotation(aTargetDocument, aTargetUsername,
-                            type2layer.get(position.getType()), aTargetCas, sourceFS, false);
+                    CasMergeOpertationResult result = mergeRelationAnnotation(aTargetDocument,
+                            aTargetUsername, type2layer.get(position.getType()), aTargetCas,
+                            sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
+                    
+                    switch (result) {
+                    case CREATED:
+                        created++;
+                        break;
+                    case UPDATED:
+                        updated++;
+                        break;
+                    }
                 }
                 catch (AnnotationException e) {
                     LOG.trace(" `-> not merged annotation: {}", e.getMessage());
