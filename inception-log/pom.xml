@@ -118,6 +118,11 @@
       <artifactId>javax.persistence-api</artifactId>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.ben-manes.caffeine</groupId>
+      <artifactId>caffeine</artifactId>
+    </dependency>
+
     <!-- Testing -->
 
     <dependency>
