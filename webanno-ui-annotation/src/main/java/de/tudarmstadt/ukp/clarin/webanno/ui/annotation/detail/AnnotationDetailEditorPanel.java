@@ -83,6 +83,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.ChainAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.SpanAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
