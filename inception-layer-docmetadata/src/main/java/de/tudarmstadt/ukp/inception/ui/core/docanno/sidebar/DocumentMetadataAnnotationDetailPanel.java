@@ -60,6 +60,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -67,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.inception.ui.core.docanno.layer.DocumentMetadataLayerSupport;
 
 public class DocumentMetadataAnnotationDetailPanel extends Panel
 {
@@ -153,8 +154,9 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                     // component for the feature lost focus - but updating is for every component
                     // edited LinkFeatureEditors must be excluded because the auto-update will break
                     // the ability to add slots. Adding a slot is NOT an annotation action.
-                    if (!featureState.feature.getLayer().getType()
-                        .equals(DocumentMetadataLayerSupport.TYPE)) {
+                    AnnotationFeature feature = featureState.feature;
+                    if (!(feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                        && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
                         addAnnotateActionBehavior(editor);
                     }
 
