@@ -74,7 +74,7 @@
     <wicket-spring-boot.version>2.1.7</wicket-spring-boot.version>
     <hibernate.version>5.3.10.Final</hibernate.version>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-    <dkpro.version>2.0.0-SNAPSHOT</dkpro.version>
+    <dkpro.version>2.0.0</dkpro.version>
     <springfox.version>2.9.2</springfox.version>
     <batik.version>1.9.1</batik.version>
     <json.version>20180813</json.version>
