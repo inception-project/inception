@@ -245,11 +245,11 @@ public class MtasUimaParser
         }
         
         Pair<AnnotationFS, Integer> endToken;
-        if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1) == null) {
+        if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd()) == null) {
             endToken = tokenEndIndex.lastEntry().getValue();
         }
         else {
-            endToken = tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1).getValue();
+            endToken = tokenEndIndex.ceilingEntry(aAnnotation.getEnd()).getValue();
         }
         return new Range(beginToken.getValue(), endToken.getValue(), beginToken.getKey().getBegin(),
                 endToken.getKey().getEnd());
