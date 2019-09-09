@@ -43,6 +43,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -69,7 +70,7 @@ import okhttp3.OkHttpClient;
 
 @Component
 public class MatomoTelemetrySupportImpl
-    implements MatomoTelemetrySupport
+    implements MatomoTelemetrySupport, DisposableBean
 {
     public static final String MATOMO_TELEMETRY_SUPPORT_ID = "MatomoTelemetry";
     
@@ -213,6 +214,12 @@ public class MatomoTelemetrySupportImpl
                 .orElse(false);
     }
 
+    @Override
+    public void destroy() throws Exception
+    {
+        scheduler.shutdownNow();
+    }
+    
     @Override
     @EventListener
     @Async
