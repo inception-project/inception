@@ -123,7 +123,8 @@ public abstract class AnnotationPageBase
                 AnnotatorState state = AnnotationPageBase.this.getModelObject();
                 _this.setEnabled(state.getDocument() != null && !documentService
                         .isAnnotationFinished(state.getDocument(), state.getUser())
-                                && isUserViewingOthersWork(state, userRepository.getCurrentUser()));
+                                && !isUserViewingOthersWork(state, 
+                                        userRepository.getCurrentUser()));
             });
         }
         return resetDocumentLink;
@@ -214,7 +215,7 @@ public abstract class AnnotationPageBase
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    protected abstract void actionLoadDocument(AjaxRequestTarget aTarget);
+    public abstract void actionLoadDocument(AjaxRequestTarget aTarget);
 
     /**
      * Re-render the document and update all related UI elements.

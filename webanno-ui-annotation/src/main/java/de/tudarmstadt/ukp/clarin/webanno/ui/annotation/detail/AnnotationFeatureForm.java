@@ -656,7 +656,7 @@ public class AnnotationFeatureForm
         AnnotatorState state = getModelObject();
         setEnabled(state.getDocument() != null   
                 && !editorPanel.isAnnotationFinished()
-                && AnnotationPageBase.isUserViewingOthersWork(state, userDao.getCurrentUser()));
+                && !AnnotationPageBase.isUserViewingOthersWork(state, userDao.getCurrentUser()));
     }
 
     public void updateLayersDropdown()
