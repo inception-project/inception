@@ -17,28 +17,20 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
-import java.util.List;
-import java.util.Optional;
-
-import de.tudarmstadt.ukp.clarin.webanno.telemetry.model.TelemetrySettings;
-
-public interface TelemetryService
+public enum DeploymentMode
 {
-    List<TelemetrySupport> getTelemetrySupports();
+    /**
+     * Probably running as a service based on the standalone JAR using the embedded server.
+     */
+    SERVER_JAR,
+    
+    /**
+     * Probably running as a service based on the WAR file using an external application server.
+     */
+    SERVER_WAR,
 
     /**
-     * Reads the telemetry settings from the DB. If there are no settings yet, this method returns
-     * a new settings object.
+     * Probably running as a desktop application.
      */
-    <T> TelemetrySettings readOrCreateSettings(TelemetrySupport<T> aSupport);
-
-    <T> Optional<TelemetrySettings> readSettings(TelemetrySupport<T> aSupport);
-
-    void writeAllSettings(List<TelemetrySettings> aSettings);
-    
-    List<TelemetrySettings> listSettings();
-
-    Optional<TelemetrySupport> getTelemetrySuppport(String aSupport);
-
-    DeploymentMode getDeploymentMode();
+    DESKTOP;
 }
