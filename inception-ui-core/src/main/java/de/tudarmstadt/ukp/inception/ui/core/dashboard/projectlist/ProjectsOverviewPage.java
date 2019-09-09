@@ -103,6 +103,7 @@ public class ProjectsOverviewPage
     private static final String MID_PROJECT_ARCHIVE_UPLOAD = "projectArchiveUpload";
     private static final String MID_LEAVE_PROJECT = "leaveProject";
     private static final String MID_CONFIRM_LEAVE = "confirmLeave";
+    private static final String MID_EMPTY_LIST_LABEL = "emptyListLabel";
 
     private static final long serialVersionUID = -2159246322262294746L;
 
@@ -118,6 +119,8 @@ public class ProjectsOverviewPage
     private IModel<Set<PermissionLevel>> activeRoleFilters;
     private ConfirmationDialog confirmLeaveDialog;
     
+    private Label emptyListLabel;
+    
     public ProjectsOverviewPage()
     {
         add(projectListContainer = createProjectList());
@@ -128,6 +131,10 @@ public class ProjectsOverviewPage
                 new StringResourceModel("leaveDialog.title", this),
                 new StringResourceModel("leaveDialog.text", this)));
         activeRoleFilters = Model.ofSet(new HashSet<>());
+        
+        emptyListLabel = new Label(MID_EMPTY_LIST_LABEL, Model.of(
+                "At the moment there are no projects, To create your first project, click the button 'create new project'. To see how it works, click the button 'Get Started'."));
+        projectListContainer.add(emptyListLabel);
     }
     
     private LambdaAjaxLink createNewProjectLink()
@@ -202,9 +209,16 @@ public class ProjectsOverviewPage
 
                 if (getModelObject().isEmpty()) {
                     warn("There are no projects accessible to you matching the filter criteria.");
+                    emptyListLabel.setVisible(true);
+
+                }
+                else {
+                    emptyListLabel.setVisible(false);
                 }
             }
         };
+        
+        
         
         WebMarkupContainer projectList = new WebMarkupContainer(MID_PROJECTS);
         projectList.setOutputMarkupPlaceholderTag(true);
