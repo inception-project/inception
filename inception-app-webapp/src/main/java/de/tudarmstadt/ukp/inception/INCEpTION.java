@@ -87,7 +87,6 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 AutomationTrainingDocumentExporter.class,
                 // INCEpTION uses the original DKPro Core CoNLL-U components
                 ConllUFormatSupport.class,
-                // exclude curation from dashboard
                 CurationPageMenuItem.class
         })})
 @EntityScan(basePackages = {

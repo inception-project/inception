@@ -212,6 +212,10 @@
       <artifactId>javax.activation-api</artifactId>
       <scope>runtime</scope>
     </dependency>
+    <dependency>
+    	<groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+    	<artifactId>webanno-ui-curation</artifactId>
+    </dependency>
   </dependencies>
   <dependencyManagement>
     <dependencies>

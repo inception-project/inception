@@ -17,11 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,9 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -54,9 +50,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -117,14 +113,13 @@ public class CurationSidebar
         };
         RadioChoice<String> curationTargetBtn = new RadioChoice<String>("curationTargetRadioBtn",
                 new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets);
+        curationTargetBtn.setPrefix("<br/>");
         targetForm.add(curationTargetBtn);
         mainContainer.add(targetForm);
     }
 
-    // FIXME: still cannot access annotation detail editor when CURATION_USER is selected
     private void updateCurator()
     {
-        // update stored curator 
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
         String currentUsername = curator.getUsername();
@@ -134,34 +129,26 @@ public class CurationSidebar
         }
         else {
             if (!userRepository.exists(CURATION_USER)) {
-                try {
-                    User curationUser = new User(CURATION_USER, Role.ROLE_USER);
-                    userRepository.create(curationUser);
-                    AnnotationDocument annotationDocument = documentService
-                            .createOrGetAnnotationDocument(state.getDocument(), curationUser);
-                    // Update the annotation document CAS
-                    CAS editorCas = documentService.readAnnotationCas(annotationDocument,
-                            FORCE_CAS_UPGRADE);
-                    // After creating an new CAS or upgrading the CAS, we need to save it
-                    documentService.writeAnnotationCas(editorCas, annotationDocument, true);
-                }
-                catch (IOException e) {
-                    String errorMsg = String.format("Could not create/read/write "
-                            + "CURATOR_USER Cas: %s", e.getMessage());
-                    log.error(errorMsg);
-                    error(errorMsg);
-                    
-                    RequestCycle.get().find(AjaxRequestTarget.class)
-                        .ifPresent(t -> t.addChildren(getPage(), IFeedback.class));
-                }
-
+                User curationUser = new User(CURATION_USER, Role.ROLE_USER);
+                userRepository.create(curationUser);
+                projectService.createProjectPermission(new ProjectPermission(state.getProject(),
+                        CURATION_USER, PermissionLevel.ANNOTATOR));
+                projectService.createProjectPermission(new ProjectPermission(state.getProject(),
+                        CURATION_USER, PermissionLevel.CURATOR));
+                curator = userRepository.get(CURATION_USER);
+                state.setUser(curator);
+                state.getSelection().clear();
+                curationService.updateCurationName(currentUsername, project, CURATION_USER);
+                RequestCycle.get().find(AjaxRequestTarget.class)
+                        .ifPresent(t -> annoPage.actionLoadDocument(t));
+                return;
             }
             curator = userRepository.get(CURATION_USER);
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
         }
-        
         // open curation-doc
         state.setUser(curator);
+        state.getSelection().clear();
         RequestCycle.get().find(AjaxRequestTarget.class)
                 .ifPresent(t -> annoPage.actionRefreshDocument(t));
     }
