@@ -167,7 +167,7 @@ public class CurationEditorExtension
         }
         
         aPanel.actionSelect(aTarget, aTargetCas);
-        aPanel.actionCreateOrUpdate(aTarget, aTargetCas);
+        aPanel.actionCreateOrUpdate(aTarget, aTargetCas);  //should also update timestamps
     }
 
     /**

@@ -39,7 +39,6 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +56,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
@@ -66,7 +66,7 @@ public class CurationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -4195790451286055737L;
-    private static final String DEFAULT_CURATION_TARGET = "my document";
+    private static final String DEFAULT_CURATION_TARGET = "  my document";
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -77,9 +77,10 @@ public class CurationSidebar
     private @SpringBean DocumentService documentService;
     
     private CheckGroup<User> selectedUsers;
+    private Form<List<User>> usersForm;
 
     private final List<String> curationTargets = Arrays
-            .asList(new String[] { DEFAULT_CURATION_TARGET, "curation document" });
+            .asList(new String[] { DEFAULT_CURATION_TARGET, "  curation document" });
     private String selectedCurationTarget = DEFAULT_CURATION_TARGET;
     
     private AnnotatorState state;
@@ -92,25 +93,20 @@ public class CurationSidebar
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
         state = aModel.getObject();
+        annoPage = aAnnotationPage;
         WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
         // set up user-checklist
-        Form<List<User>> usersForm = createUserSelection();
+        usersForm = createUserSelection();
+        usersForm.setOutputMarkupId(true);
         mainContainer.add(usersForm);
         
         // set up curation target radio button
-        Form<Void> targetForm = new Form<Void>("settingsForm") {
-            
-            private static final long serialVersionUID = -5535838955781542216L;
-
-            @Override
-            protected void onSubmit()
-            {
-                updateCurator();
-            }            
-        };
+        Form<Void> targetForm = new Form<Void>("settingsForm");
+        LambdaAjaxButton<Void> applyButton = new LambdaAjaxButton<>("apply", this::updateCurator);
+        targetForm.add(applyButton);
         RadioChoice<String> curationTargetBtn = new RadioChoice<String>("curationTargetRadioBtn",
                 new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets);
         curationTargetBtn.setPrefix("<br/>");
@@ -118,7 +114,7 @@ public class CurationSidebar
         mainContainer.add(targetForm);
     }
 
-    private void updateCurator()
+    private void updateCurator(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
@@ -135,38 +131,26 @@ public class CurationSidebar
                         CURATION_USER, PermissionLevel.ANNOTATOR));
                 projectService.createProjectPermission(new ProjectPermission(state.getProject(),
                         CURATION_USER, PermissionLevel.CURATOR));
-                curator = userRepository.get(CURATION_USER);
-                state.setUser(curator);
-                state.getSelection().clear();
-                curationService.updateCurationName(currentUsername, project, CURATION_USER);
-                RequestCycle.get().find(AjaxRequestTarget.class)
-                        .ifPresent(t -> annoPage.actionLoadDocument(t));
-                return;
             }
             curator = userRepository.get(CURATION_USER);
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
         }
-        // open curation-doc
+        
         state.setUser(curator);
         state.getSelection().clear();
-        RequestCycle.get().find(AjaxRequestTarget.class)
-                .ifPresent(t -> annoPage.actionRefreshDocument(t));
+        updateUsers(aTarget, aForm);
+        //open curation doc
+        annoPage.actionLoadDocument(aTarget);
     }
     
     private Form<List<User>> createUserSelection()
     {
         Form<List<User>> usersForm = new Form<List<User>>("usersForm",
-                LoadableDetachableModel.of(this::listSelectedUsers))
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            protected void onSubmit()
-            {
-                showUsers();
-            }
-
-        };
+                LoadableDetachableModel.of(this::listSelectedUsers));
+        LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clear", this::clearUsers);
+        LambdaAjaxButton<Void> showButton = new LambdaAjaxButton<>("show", this::updateUsers);
+        usersForm.add(clearButton);
+        usersForm.add(showButton);
         selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
         ListView<User> users = new ListView<User>("users",
                 LoadableDetachableModel.of(this::listUsers))
@@ -223,13 +207,21 @@ public class CurationSidebar
         }
     }
 
-    private void showUsers()
+    private void updateUsers(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
                 state.getUser().getUsername(), state.getProject().getId(), users);
-        // refresh should call render of PreRenderer and render of editor-extensions ?
-        //annoPage.actionRefreshDocument(aTarget);
+        aTarget.add(usersForm);
+        annoPage.actionRefreshDocument(aTarget);
+    }
+    
+    private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm) {
+        selectedUsers.setModelObject(new ArrayList<>());
+        curationService.clearUsersSelectedForCuration(
+                state.getUser().getUsername(), state.getProject().getId());
+        aTarget.add(usersForm);
+        annoPage.actionRefreshDocument(aTarget);
     }
 
 }

@@ -56,4 +56,6 @@ public interface CurationService
      * Removed stored curation information after user session has ended
      */
     public void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
+
+    public void clearUsersSelectedForCuration(String aUsername, Long aId);
 }

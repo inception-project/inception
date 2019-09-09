@@ -39,7 +39,8 @@
           </table>
           </div>
           <div class="panel-footer text-right">
-              <input class="btn btn-primary" type="submit" wicket:message="value:show"/>
+              <input wicket:id="show" class="btn btn-primary" type="submit" wicket:message="value:show"/>
+              <input wicket:id="clear" class="btn btn-default" type="submit" wicket:message="value:clear"/>
           </div>
         </form>
         <form wicket:id="settingsForm" class="panel panel-default panel-small">
@@ -51,7 +52,7 @@
               <span wicket:id="curationTargetRadioBtn"></span>
           </div>
           <div class="panel-footer text-right">
-            <input class="btn btn-primary" type="submit" wicket:message="value:apply"/>
+            <input wicket:id="apply" class="btn btn-primary" type="submit" wicket:message="value:apply"/>
           </div>
         </form>
       </div>

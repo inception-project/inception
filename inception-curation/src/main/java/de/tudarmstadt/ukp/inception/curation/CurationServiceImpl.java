@@ -189,14 +189,24 @@ public class CurationServiceImpl implements CurationService
 
     private void clearState(String aUsername)
     {
-//        projectService.listAccessibleProjects(userRegistry.get(aUsername)).stream()
-//            .map(Project::getId)
-//            .forEach(pId -> removeCurrentUserInformation(aUsername, pId));
-        User currentUser = userRegistry.get(aUsername);
-        List<Project> projects = projectService.listAccessibleProjects(currentUser);
-        for (Project project : projects) {
-            removeCurrentUserInformation(aUsername, project.getId());
+        projectService.listAccessibleProjects(userRegistry.get(aUsername)).stream()
+            .map(Project::getId)
+            .forEach(pId -> removeCurrentUserInformation(aUsername, pId));
+//        User currentUser = userRegistry.get(aUsername);
+//        List<Project> projects = projectService.listAccessibleProjects(currentUser);
+//        for (Project project : projects) {
+//            removeCurrentUserInformation(aUsername, project.getId());
+//        }
+    }
+
+    @Override
+    public void clearUsersSelectedForCuration(String aUsername, Long aProjectId)
+    {
+        synchronized (curationStates)
+        {
+            getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
         }
+        
     }
 
 }
