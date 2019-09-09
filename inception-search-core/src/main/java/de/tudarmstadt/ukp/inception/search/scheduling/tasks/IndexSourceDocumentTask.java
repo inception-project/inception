@@ -51,6 +51,10 @@ public class IndexSourceDocumentTask
     @Override
     public boolean matches(Task aTask)
     {
+        if (!(aTask instanceof IndexSourceDocumentTask)) {
+            return false;
+        }
+        
         return getSourceDocument().getId() == aTask.getSourceDocument().getId();
     }
 }
