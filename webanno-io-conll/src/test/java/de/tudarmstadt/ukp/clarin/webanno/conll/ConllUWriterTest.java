@@ -26,13 +26,13 @@ import java.io.File;
 import org.apache.uima.analysis_engine.AnalysisEngine;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.dkpro.core.testing.DkproTestContext;
 import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.dkpro.core.api.metadata.type.DocumentMetaData;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
-import de.tudarmstadt.ukp.dkpro.core.testing.DkproTestContext;
 
 public class ConllUWriterTest
 {
@@ -51,7 +51,8 @@ public class ConllUWriterTest
         dmd.setDocumentId("output");
 
         AnalysisEngine writer = createEngine(ConllUWriter.class, 
-                ConllUWriter.PARAM_TARGET_LOCATION, target);
+                ConllUWriter.PARAM_TARGET_LOCATION, target,
+                ConllUWriter.PARAM_OVERWRITE, true);
 
         writer.process(jcas);
 
