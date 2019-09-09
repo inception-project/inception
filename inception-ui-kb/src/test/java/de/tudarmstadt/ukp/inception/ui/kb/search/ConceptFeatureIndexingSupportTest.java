@@ -146,7 +146,7 @@ public class ConceptFeatureIndexingSupportTest
 
         MtasUimaParser sut = new MtasUimaParser(project, annotationSchemaService,
                 featureIndexingSupportRegistry);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas);
+        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
         
         List<MtasToken> tokens = new ArrayList<>();
