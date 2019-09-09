@@ -22,7 +22,7 @@ import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBy
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -42,7 +42,9 @@ public class MtasUtilsTest
     public void bytesToCharsRoundtripRandom() throws NoSuchAlgorithmException
     {
         byte[] input = new byte[65535];
-        SecureRandom.getInstanceStrong().nextBytes(input);
+        
+        Random rnd = new Random();
+        rnd.nextBytes(input);
 
         byte[] output = charsToBytes(bytesToChars(input));
 
