@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry;
 
 import static java.util.Objects.isNull;
 
+import java.awt.GraphicsEnvironment;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,6 +31,8 @@ import javax.persistence.PersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -55,6 +58,11 @@ public class TelemetryServiceImpl
     
     private List<TelemetrySupport> telemetrySupports;
     
+    @Value("${running.from.commandline}")
+    private boolean runningFromCommandline;
+    
+    private int port = -1;
+    
     public TelemetryServiceImpl(
             @Lazy @Autowired(required = false) List<TelemetrySupport> aTelemetrySupports,
             ApplicationEventPublisher aEventPublisher)
@@ -67,6 +75,12 @@ public class TelemetryServiceImpl
     public void onContextRefreshedEvent(ContextRefreshedEvent aEvent)
     {
         init();
+    }
+
+    @EventListener
+    public void onApplicationEvent(WebServerInitializedEvent aEvt)
+    {
+        port = aEvt.getWebServer().getPort();
     }
     
     public void init()
@@ -83,6 +97,38 @@ public class TelemetryServiceImpl
         }
         
         telemetrySupports = Collections.unmodifiableList(tsp);
+    }
+    
+    /**
+     * The embedded server was used (i.e. not running as a WAR).
+     */
+    public boolean isEmbeddedServerDeployment()
+    {
+        return port != -1 && runningFromCommandline;
+    }
+    
+    public boolean isDesktopInstance()
+    {
+        return  // The embedded server was used (i.e. not running as a WAR)
+                isEmbeddedServerDeployment() &&
+                // There is no console available (happens which double-clicking on the JAR)
+                System.console() == null && 
+                // There is a graphical environment available
+                !GraphicsEnvironment.isHeadless() ;
+    }
+    
+    @Override
+    public DeploymentMode getDeploymentMode()
+    {
+        if (isDesktopInstance()) {
+            return DeploymentMode.DESKTOP;
+        }
+        else if (isEmbeddedServerDeployment()) {
+            return DeploymentMode.SERVER_JAR;
+        }
+        else {
+            return DeploymentMode.SERVER_WAR;
+        }
     }
     
     @Override
