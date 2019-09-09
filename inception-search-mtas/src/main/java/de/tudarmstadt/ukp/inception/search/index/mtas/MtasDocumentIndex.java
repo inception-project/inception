@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.search.index.mtas;
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -70,12 +71,11 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
@@ -565,9 +565,12 @@ public class MtasDocumentIndex
                         aAnnotationDocumentId, aUser);
                 
                 // Prepare bytearray with document content to be indexed
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                bos.close();
+                String encodedCAS; 
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                    //XmiCasSerializer.serialize(aCas, null, bos, true, null);
+                    CasIOUtils.save(aCas, bos, SERIALIZED_TSI);
+                    encodedCAS = new String(MtasUtils.bytesToChars(bos.toByteArray()));
+                }
 
                 // Calculate timestamp that will be indexed
                 String timestamp = DateTools.dateToString(new Date(),
@@ -586,8 +589,7 @@ public class MtasDocumentIndex
                 doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-                doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                        Field.Store.NO));
+                doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
     
                 // Add document to the Lucene index
                 indexWriter.addDocument(doc);
@@ -601,7 +603,7 @@ public class MtasDocumentIndex
                         project.getName(), project.getId(), aSourceDocumentId,
                         aAnnotationDocumentId, aUser, timestamp);
             }
-            catch (SAXException e) {
+            catch (Exception e) {
                 log.error("Unable to index document", e);
             }
         }
@@ -887,7 +889,7 @@ public class MtasDocumentIndex
                 log.info("Indexing all documents in the project [{}]({})", project.getName(),
                         project.getId());
                 indexAllDocuments();
-                log.debug("All documents have been indexed in the project [{}]({})",
+                log.info("All documents have been indexed in the project [{}]({})",
                         project.getName(), project.getId());
             } else {
                 log.debug("Index has not been opened. No documents have been indexed.");
