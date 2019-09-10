@@ -28,6 +28,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
+
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
