@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.telemetry.ui;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.authroles.authorization.strategies.role.annotations.AuthorizeInstantiation;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -66,10 +69,15 @@ public class TelemetrySettingsPage extends ApplicationPageBase
                 // we can rely on the support being present here.
                 TelemetrySupport<?> support = telemetryService
                         .getTelemetrySuppport(aItem.getModelObject().getSupport()).get();
+                
+                int version = support.getVersion();
 
                 aItem.add(new Label("name", support.getName()));
 
                 aItem.add(support.createTraitsEditor("traitsEditor", aItem.getModel()));
+                
+                aItem.add(new WebMarkupContainer("reviewRequiredMessage").add(visibleWhen(
+                    () -> aItem.getModelObject().getVersion() < version)));
                 
                 TelemetryDetailsPanel details = new TelemetryDetailsPanel("details",
                         new ListModel<TelemetryDetail>(support.getDetails()));
@@ -93,14 +101,20 @@ public class TelemetrySettingsPage extends ApplicationPageBase
     
     private void actionSave(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
+        // Update the versions of the saved settings
+        for (TelemetrySettings settings : settingModel.getObject()) {
+            // We already filtered for settings where the support exists in listSettings, so
+            // we can rely on the support being present here.
+            TelemetrySupport<?> support = telemetryService
+                    .getTelemetrySuppport(settings.getSupport()).get();
+            settings.setVersion(support.getVersion());
+        }
+        
         // The individual traits editors are responsible for committing their content to the traits
         // objects and for committing the traits to the TelemetrySettings object. So here, we only
         // update the TelemetrySettings objects in the DB.
         telemetryService.writeAllSettings(settingModel.getObject());
 
-//        success("Settings updated");
-//        aTarget.addChildren(getPage(), IFeedback.class);
-        
         // If saving was successful, redirect to the home page
         setResponsePage(getApplication().getHomePage());
     }

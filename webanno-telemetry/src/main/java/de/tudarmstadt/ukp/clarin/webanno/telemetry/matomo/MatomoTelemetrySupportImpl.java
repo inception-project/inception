@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.telemetry.matomo;
 
 import static ch.rasc.piwik.tracking.QueryParameter.ACTION_NAME;
 import static ch.rasc.piwik.tracking.QueryParameter.HEADER_USER_AGENT;
-import static ch.rasc.piwik.tracking.QueryParameter.NEW_VISIT;
 import static ch.rasc.piwik.tracking.QueryParameter.USER_ID;
 import static ch.rasc.piwik.tracking.QueryParameter.VISITOR_ID;
 import static ch.rasc.piwik.tracking.QueryParameter.VISIT_CUSTOM_VARIABLE;
@@ -30,7 +29,11 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -40,11 +43,13 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
 
 import ch.rasc.piwik.tracking.PiwikConfig;
@@ -52,6 +57,7 @@ import ch.rasc.piwik.tracking.PiwikRequest;
 import ch.rasc.piwik.tracking.PiwikTracker;
 import com.github.openjson.JSONArray;
 import com.github.openjson.JSONObject;
+
 import de.tudarmstadt.ukp.clarin.webanno.api.identity.InstanceIdentityService;
 import de.tudarmstadt.ukp.clarin.webanno.model.InstanceIdentity;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -64,9 +70,14 @@ import okhttp3.OkHttpClient;
 
 @Component
 public class MatomoTelemetrySupportImpl
-    implements MatomoTelemetrySupport
+    implements MatomoTelemetrySupport, DisposableBean
 {
     public static final String MATOMO_TELEMETRY_SUPPORT_ID = "MatomoTelemetry";
+    
+    public static final String ACTION_BOOT = "boot";
+    public static final String ACTION_HELLO = "hello";
+    public static final String ACTION_PING = "ping";
+    public static final String ACTION_ALIVE = "alive";
     
     private final Logger log = LoggerFactory.getLogger(getClass());
     
@@ -80,18 +91,24 @@ public class MatomoTelemetrySupportImpl
     private final TelemetryService telemetryService;
     private final UserDao userService;
     private final String applicationName;
-    
+
+    private SessionRegistry sessionRegistry;
+
     private PiwikTracker tracker;
+    
+    private ScheduledExecutorService scheduler;
     
     @Autowired
     public MatomoTelemetrySupportImpl(TelemetryService aTelemetryService,
             InstanceIdentityService aIdentityService, UserDao aUserDao,
+            SessionRegistry aSessionRegistry,
             @Value("${spring.application.name}") String aApplicationName)
     {
         telemetryService = aTelemetryService;
         identityService = aIdentityService;
         userService = aUserDao;
         applicationName = aApplicationName;
+        sessionRegistry = aSessionRegistry;
         
         PiwikConfig config = new PiwikConfig.Builder()
                 .scheme(TELEMETRY_SERVER_SCHEME)
@@ -100,6 +117,17 @@ public class MatomoTelemetrySupportImpl
                 .addIdSite(TELEMETRY_SITE_ID)
                 .build();
 
+        scheduler = Executors.newSingleThreadScheduledExecutor();
+        
+        // Pinging at a 29 minute interval allows Matomo to detect continuous activity. Pings are
+        // only send if here are actually active users logged in.
+        scheduler.scheduleAtFixedRate(() -> sendPing(), 29, 29, TimeUnit.MINUTES);
+        
+        // Server deployments are expected to run for a very long time. Also, they may be without
+        // any active users for a long time. So we send an alive signal every 24 hours no matter
+        // if any users are actively logged in
+        scheduler.scheduleAtFixedRate(() -> sendAlive(), 24, 24, TimeUnit.HOURS);
+        
         try {
             SSLContext trustAllSslContext = SSLContext.getInstance("SSL");
             trustAllSslContext.init(null, trustAllCerts, new java.security.SecureRandom());
@@ -132,28 +160,52 @@ public class MatomoTelemetrySupportImpl
     @Override
     public int getVersion()
     {
-        return 1;
+        return 2;
     }
     
     @Override
     public boolean hasValidSettings()
     {
-        return telemetryService.readSettings(this)
-                .map(this::readTraits)
+        Optional<TelemetrySettings> settings = telemetryService.readSettings(this);
+        
+        if (!settings.isPresent()) {
+            return false;
+        }
+        
+        boolean outdated = settings.get().getVersion() < getVersion();
+        if (outdated) {
+            return false;
+        }
+        
+        return settings.map(this::readTraits)
                 .map(traits -> traits.isEnabled() != null)
                 .orElse(false);
     }
     
     public boolean isEnabled()
     {
-        return telemetryService.readSettings(this)
-                .map(this::readTraits)
+        Optional<TelemetrySettings> settings = telemetryService.readSettings(this);
+        
+        if (!settings.isPresent()) {
+            return false;
+        }
+        
+        boolean outdated = settings.get().getVersion() < getVersion();
+        if (outdated) {
+            return false;
+        }
+        
+        return settings.map(this::readTraits)
                 .map(traits -> traits.isEnabled() != null && traits.isEnabled() == true)
                 .orElse(false);
     }
 
     public boolean isEnabled(List<TelemetrySettings> aSettings)
     {
+        // When we get this event, we don't really need to check for the version since this event
+        // is generated from the settings page itself when the settings are updated - thus they
+        // must have the latest version.
+        
         return aSettings.stream()
                 .filter(settings -> settings.getSupport().equals(getId()))
                 .findFirst()
@@ -163,12 +215,18 @@ public class MatomoTelemetrySupportImpl
     }
 
     @Override
+    public void destroy() throws Exception
+    {
+        scheduler.shutdownNow();
+    }
+    
+    @Override
     @EventListener
     @Async
     public void onApplicationReady(ApplicationReadyEvent aEvent)
     {
         if (isEnabled()) {
-            sendTelemetry();
+            sendTelemetry(ACTION_BOOT);
         }
         else {
             log.debug("Telemetry disabled");
@@ -181,14 +239,36 @@ public class MatomoTelemetrySupportImpl
     public void onTelemetrySettingsSaved(TelemetrySettingsSavedEvent aEvent)
     {
         if (isEnabled(aEvent.getSettings())) {
-            sendTelemetry();
+            sendTelemetry(ACTION_HELLO);
         }
         else {
             log.debug("Telemetry disabled");
         }
     }
     
-    private void sendTelemetry()
+    private void sendPing()
+    {
+        if (!isEnabled()) {
+            return;
+        }
+
+        if (sessionRegistry.getAllPrincipals().size() == 0) {
+            return;
+        }
+
+        sendTelemetry(ACTION_PING);
+    }
+
+    private void sendAlive()
+    {
+        if (!isEnabled()) {
+            return;
+        }
+
+        sendTelemetry(ACTION_ALIVE);
+    }
+
+    private void sendTelemetry(String aAction)
     {
         if (tracker == null) {
             log.debug("Telemetry unavailable");
@@ -204,22 +284,25 @@ public class MatomoTelemetrySupportImpl
         payload.put("2",
                 new JSONArray(asList("version", getVersionProperties().getProperty(PROP_VERSION))));
         payload.put("3", new JSONArray(
-                asList("activeUsers", String.valueOf(userService.listEnabledUsers().size()))));
+                asList("activeUsers", String.valueOf(sessionRegistry.getAllPrincipals().size()))));
+        payload.put("4", new JSONArray(
+                asList("enabledUsers", String.valueOf(userService.listEnabledUsers().size()))));
+        payload.put("5", new JSONArray(
+                asList("deploymentMode", telemetryService.getDeploymentMode().toString())));
         
         PiwikRequest request = PiwikRequest.builder()
                 .url(TELEMETRY_CONTEXT)
                 .putParameter(HEADER_USER_AGENT, System.getProperty("os.name"))
-                .putParameter(ACTION_NAME, "boot")
+                .putParameter(ACTION_NAME, aAction)
                 .putParameter(VISITOR_ID, Long.toHexString(uuid.getMostSignificantBits()))
                 .putParameter(USER_ID, id.getId())
                 .putParameter(VISIT_CUSTOM_VARIABLE, payload.toString())
-                .putParameter(NEW_VISIT, 1)
                 .build();
 
         boolean success = tracker.send(request);
 
         if (success) {
-            log.debug("Telemetry sent");
+            log.debug("Telemetry sent ({})", aAction);
         }
         else {
             log.debug("Unable to reach telemetry server");
@@ -255,11 +338,22 @@ public class MatomoTelemetrySupportImpl
                         + "discover which operating systems are important to our users and should "
                         + "be supported."),
                 new TelemetryDetail("Active users", 
+                        String.valueOf(sessionRegistry.getAllPrincipals().size()), 
+                        "The number of users logged in to the instance. Since a single instance "
+                        + "can support many users, this is an important number for us to discover "
+                        + "the size of our user base. Again, this number is important e.g. when "
+                        + "reporting to funders."),
+                new TelemetryDetail("Enabled users", 
                         String.valueOf(userService.listEnabledUsers().size()), 
                         "The number of enabled users in the application. Since a single instance "
                         + "can support many users, this is an important number for us to discover "
                         + "the size of our user base. Again, this number is important e.g. when "
-                        + "reporting to funders.")
+                        + "reporting to funders."),
+                new TelemetryDetail("Deployment mode", 
+                        String.valueOf(telemetryService.getDeploymentMode()), 
+                        "The mode of deployment. Desktop-based deployments are expected to be "
+                        + "restarted regularly while server-based deployments are expected to be "
+                        + "running for a long time.")
                 );
     }
     
