@@ -349,7 +349,7 @@ public class SuggestionViewPanel
         // Overriden in curationPanel
     }
     
-    private CasMergeOpertationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
+    private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
             VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
@@ -374,7 +374,7 @@ public class SuggestionViewPanel
                 feature.getName(), aSourceVid.getSlot());
     }
 
-    private CasMergeOpertationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
+    private CasMergeOperationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
             VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
             AnnotationLayer aLayer)
         throws AnnotationException, IOException

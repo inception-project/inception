@@ -478,7 +478,8 @@ public abstract class AnnotationDetailEditorPanel
 
         AnnotatorState state = getModelObject();
         
-        if (isUserViewingOthersWork()) {
+        if (AnnotationPageBase.isUserViewingOthersWork(getModelObject(),
+                userRepository.getCurrentUser())) {
             throw new NotEditableException("This document belongs to another user.");
         }
 

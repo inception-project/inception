@@ -256,12 +256,12 @@ public class CasMerge
                 try {
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative();
-                    CasMergeOpertationResult result = mergeSpanAnnotation(aTargetDocument,
+                    CasMergeOperationResult result = mergeSpanAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
                     
-                    switch (result) {
+                    switch (result.getState()) {
                     case CREATED:
                         created++;
                         break;
@@ -344,12 +344,12 @@ public class CasMerge
                 try {
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
                             .getRepresentative();
-                    CasMergeOpertationResult result = mergeRelationAnnotation(aTargetDocument,
+                    CasMergeOperationResult result = mergeRelationAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
                     LOG.trace(" `-> merged annotation with agreement");
                     
-                    switch (result) {
+                    switch (result.getState()) {
                     case CREATED:
                         created++;
                         break;
@@ -563,7 +563,7 @@ public class CasMerge
             AnnotationFS mergedSpan = adapter.add(aDocument, aUsername, aTargetCas,
                     aSourceFs.getBegin(), aSourceFs.getEnd());
             
-            int mergedSpan = -1;
+            int mergedSpanAddr = -1;
             try {
                 copyFeatures(aDocument, aUsername, adapter, mergedSpan, aSourceFs);
                 mergedSpanAddr = getAddr(mergedSpan);
