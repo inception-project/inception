@@ -357,34 +357,34 @@ public class BratAnnotationEditor
     }
     
     private SpanAnnotationResponse actionSpan(AjaxRequestTarget aTarget, IRequestParameters request,
-            CAS aCas, VID paramId)
+            CAS aCas, VID aSelectedAnnotation)
         throws IOException, AnnotationException
     {
-        Optional<Offsets> optOffsets = getOffsetsFromRequest(request, aCas, paramId);
-        
-        if (optOffsets.isPresent()) {
-            Offsets offsets = optOffsets.get();
-            AnnotatorState state = getModelObject();
-            Selection selection = state.getSelection();
-    
-            if (state.isSlotArmed()) {
-                // When filling a slot, the current selection is *NOT* changed. The
-                // Span annotation which owns the slot that is being filled remains
-                // selected!
-                getActionHandler().actionFillSlot(aTarget, aCas, offsets.getBegin(),
-                        offsets.getEnd(), paramId);
-            }
-            else {
-                if (!paramId.isSynthetic()) {
-                    selection.selectSpan(paramId, aCas, offsets.getBegin(), offsets.getEnd());
-    
-                    if (selection.getAnnotation().isNotSet()) {
-                        // Create new annotation
-                        getActionHandler().actionCreateOrUpdate(aTarget, aCas);
-                    }
-                    else {
-                        getActionHandler().actionSelect(aTarget, aCas);
-                    }
+        // This is the span the user has marked in the browser in order to create a new slot-filler
+        // annotation OR the span of an existing annotation which the user has selected.
+        Offsets userSelectedSpan = getOffsetsFromRequest(request, aCas, aSelectedAnnotation);
+
+        AnnotatorState state = getModelObject();
+        Selection selection = state.getSelection();
+
+        if (state.isSlotArmed()) {
+            // When filling a slot, the current selection is *NOT* changed. The
+            // Span annotation which owns the slot that is being filled remains
+            // selected!
+            getActionHandler().actionFillSlot(aTarget, aCas, userSelectedSpan.getBegin(),
+                    userSelectedSpan.getEnd(), aSelectedAnnotation);
+        }
+        else {
+            if (!aSelectedAnnotation.isSynthetic()) {
+                selection.selectSpan(aSelectedAnnotation, aCas, userSelectedSpan.getBegin(),
+                        userSelectedSpan.getEnd());
+
+                if (selection.getAnnotation().isNotSet()) {
+                    // Create new annotation
+                    getActionHandler().actionCreateOrUpdate(aTarget, aCas);
+                }
+                else {
+                    getActionHandler().actionSelect(aTarget, aCas);
                 }
             }
         }

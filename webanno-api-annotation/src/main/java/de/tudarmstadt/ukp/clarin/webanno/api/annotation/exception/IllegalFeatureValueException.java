@@ -1,5 +1,5 @@
 /*
- * Copyright 2017
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
@@ -15,22 +15,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception;
 
-import org.apache.uima.cas.text.AnnotationFS;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-
-public class SpanCreatedEvent
-    extends SpanEvent
-    implements AnnotationCreatedEvent
+public class IllegalFeatureValueException
+    extends AnnotationException
 {
-    private static final long serialVersionUID = 5206262614840209407L;
+    private static final long serialVersionUID = -5120144780593360107L;
 
-    public SpanCreatedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aAnnotation)
+    public IllegalFeatureValueException()
     {
-        super(aSource, aDocument, aUser, aLayer, aAnnotation);
+        super();
+    }
+    
+    public IllegalFeatureValueException(String message)
+    {
+        super(message);
+    }
+
+    public IllegalFeatureValueException(String aMessage, Throwable aCause)
+    {
+        super(aMessage, aCause);
+    }
+
+    public IllegalFeatureValueException(Throwable aCause)
+    {
+        super(aCause);
     }
 }

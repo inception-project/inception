@@ -78,6 +78,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -89,6 +90,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
@@ -245,7 +247,6 @@ public class CurationPage
                         upgradeCasAndSave(state.getDocument(), username);
 
                         actionLoadDocument(aTarget);
-                        curationPanel.getEditor().loadFeatureEditorModels(aTarget);
                     }
                     catch (Exception e) {
                         LOG.error("Unable to load data", e);
@@ -600,10 +601,7 @@ public class CurationPage
         
         AnnotatorState state = getModelObject();
         
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepository.get(username);
-
-        state.setUser(user);
+        state.setUser(userRepository.getCurrentUser());
 
         try {
             // Update source document state to CURRATION_INPROGRESS, if it was not
@@ -613,14 +611,18 @@ public class CurationPage
                         ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS);
             }
     
+            // Load constraints
+            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
+            
             // Load user preferences
             loadPreferences();
             
-            // Re-render whole page as sidebar size preference may have changed
-            if (aTarget != null) {
-                aTarget.add(CurationPage.this);
+            // if project is changed, reset some project specific settings
+            if (currentprojectId != state.getProject().getId()) {
+                state.clearRememberedFeatures();
+                currentprojectId = state.getProject().getId();
             }
-    
+            
             CAS mergeCas = prepareMergeCas(false);
     
             // (Re)initialize brat model after potential creating / upgrading CAS
@@ -631,13 +633,8 @@ public class CurationPage
                     .getCurationCasTimestamp(state.getDocument()));
                         
             // Initialize the visible content
-            state.moveToUnit(mergeCas, aFocus, TOP);
-    
-            // if project is changed, reset some project specific settings
-            if (currentprojectId != state.getProject().getId()) {
-                state.clearRememberedFeatures();
-            }
-    
+            state.moveToUnit(mergeCas, aFocus + 1, TOP);
+        
             currentprojectId = state.getProject().getId();
     
             SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
@@ -650,13 +647,12 @@ public class CurationPage
             curationPanel.init(aTarget, curationContainer);
             //curationPanel.updatePanel(aTarget, curationContainer);
             
-            // Load constraints
-            state.setConstraints(constraintsService.loadConstraints(state.getProject()));
-    
+            // Populate the layer dropdown box
+            curationPanel.getEditor().loadFeatureEditorModels(aTarget);
+
+            // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
-                aTarget.add(documentNamePanel);
-                aTarget.add(remergeDocumentLink);
-                aTarget.add(finishDocumentLink);
+                WicketUtil.refreshPage(aTarget, getPage());
             }
         }
         catch (Exception e) {
@@ -688,7 +684,18 @@ public class CurationPage
             randomAnnotationDocument = finishedAnnotationDocuments.get(0);
         }
         else {
-            throw new IllegalStateException("There are no finished annotation documents!");
+            throw new IllegalStateException("This document has the state "
+                    + state.getDocument().getState() + " but "
+                    + "there are no finished annotation documents! This "
+                    + "can for example happen when curation on a document has already started "
+                    + "and afterwards all annotators have been remove from the project, have been "
+                    + "disabled or if all were put back into " + AnnotationDocumentState.IN_PROGRESS
+                    + " mode. It can "
+                    + "also happen after importing a project when the users and/or permissions "
+                    + "were not imported (only admins can do this via the projects page in the) "
+                    + "administration dashboard and if none of the imported users have been "
+                    + "enabled via the users management page after the import (also something "
+                    + "that only administrators can do).");
         }
 
         // upgrade CASes for each user, what if new type is added once the user finished

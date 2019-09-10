@@ -21,17 +21,17 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class RelationDeletedEvent
     extends RelationEvent
-    implements HybridApplicationUIEvent
+    implements AnnotationDeletedEvent
 {
     private static final long serialVersionUID = -3212535102141634478L;
 
     public RelationDeletedEvent(Object aSource, SourceDocument aDocument, String aUser,
-            AnnotationLayer aLayer, AnnotationFS aTargetAnnotation, AnnotationFS aSourceAnnotation)
+            AnnotationLayer aLayer, AnnotationFS aRelationFS, AnnotationFS aTargetAnnotation,
+            AnnotationFS aSourceAnnotation)
     {
-        super(aSource, aDocument, aUser, aLayer, aTargetAnnotation, aSourceAnnotation);
+        super(aSource, aDocument, aUser, aLayer, aRelationFS, aTargetAnnotation, aSourceAnnotation);
     }
 }

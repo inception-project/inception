@@ -44,7 +44,6 @@ public class NumberFeatureEditor<T extends Number>
         }
         case CAS.TYPE_NAME_FLOAT: {
             field = new NumberTextField<>("value", Float.class);
-            add(field);
             break;
         }
         default:

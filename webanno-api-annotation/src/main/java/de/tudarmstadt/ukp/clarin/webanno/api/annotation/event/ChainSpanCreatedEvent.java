@@ -21,11 +21,10 @@ import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.event.HybridApplicationUIEvent;
 
 public class ChainSpanCreatedEvent
     extends ChainEvent
-    implements HybridApplicationUIEvent
+    implements AnnotationCreatedEvent
 {
     private static final long serialVersionUID = 3606931476385064522L;
 

@@ -23,9 +23,10 @@ import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectCovered;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.CasUtil.selectFollowing;
+import static org.apache.uima.fit.util.CasUtil.selectSingle;
+import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,6 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.StreamSupport;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -124,7 +126,8 @@ public class WebAnnoCasUtil
      */
     public static boolean isBeginEndInSameSentence(CAS aCas, int aBegin, int aEnd)
     {
-        return selectCovering(aCas, getType(aCas, Sentence.class), aBegin, aBegin).stream()
+        return StreamSupport.stream(aCas.getAnnotationIndex(
+                    getType(aCas, Sentence.class)).spliterator(), false)
                 .filter(s -> s.getBegin() <= aBegin && aBegin < s.getEnd())
                 .filter(s -> s.getBegin() <= aEnd && aEnd <= s.getEnd())
                 .findFirst()
@@ -153,40 +156,6 @@ public class WebAnnoCasUtil
         CasUtil.getAnnotationType(aCas, aType);
         
         return aCas.getLowLevelCAS().ll_getFSForRef(aAddress);
-    }
-
-    public static List<AnnotationFS> selectAt(CAS aCas, final Type type, int aBegin, int aEnd)
-    {
-        List<AnnotationFS> covered = CasUtil.selectCovered(aCas, type, aBegin, aEnd);
-
-        // Remove all that do not have the exact same offset
-        covered.removeIf(cur -> !(cur.getBegin() == aBegin && cur.getEnd() == aEnd));
-
-        return covered;
-    }
-
-    /**
-     * Get an annotation using the begin/offsets and its type. If there is more than one annotation
-     * at this point, get one of them.
-     *
-     * @param aCas
-     *            the CAS.
-     * @param aType
-     *            the type.
-     * @param aBegin
-     *            the begin offset.
-     * @param aEnd
-     *            the end offset.
-     * @return the annotation FS.
-     */
-    public static AnnotationFS selectSingleFsAt(CAS aCas, Type aType, int aBegin, int aEnd)
-    {
-        for (AnnotationFS anFS : selectCovered(aCas, aType, aBegin, aEnd)) {
-            if (anFS.getBegin() == aBegin && anFS.getEnd() == aEnd) {
-                return anFS;
-            }
-        }
-        return null;
     }
 
     /**
@@ -353,11 +322,11 @@ public class WebAnnoCasUtil
     {
         Type tokenType = getType(aCas, Token.class);
         
-        AnnotationFS currentToken = CasUtil.selectSingleAt(aCas, tokenType, aBegin, aEnd);
+        AnnotationFS currentToken = selectSingleAt(aCas, tokenType, aBegin, aEnd);
         // thid happens when tokens such as Dr. OR Ms. selected with double
         // click, which make seletected text as Dr OR Ms
         if (currentToken == null) {
-            currentToken = CasUtil.selectSingleAt(aCas, tokenType, aBegin, aEnd + 1);
+            currentToken = selectSingleAt(aCas, tokenType, aBegin, aEnd + 1);
         }
         AnnotationFS nextToken = null;
 
@@ -947,7 +916,7 @@ public class WebAnnoCasUtil
         Type type = getType(aCas, DocumentMetaData.class);
         FeatureStructure dmd;
         try {
-            dmd = CasUtil.selectSingle(aCas, type);
+            dmd = selectSingle(aCas, type);
         }
         catch (IllegalArgumentException e) {
             dmd = createDocumentMetadata(aCas);
@@ -987,7 +956,7 @@ public class WebAnnoCasUtil
     {
         try {
             Type type = getType(aCas, DocumentMetaData.class);
-            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            FeatureStructure dmd = selectSingle(aCas, type);
             return FSUtil.getFeature(dmd, "documentId", String.class);
         }
         catch (IllegalArgumentException e) {
@@ -999,7 +968,7 @@ public class WebAnnoCasUtil
     {
         try {
             Type type = getType(aCas, DocumentMetaData.class);
-            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            FeatureStructure dmd = selectSingle(aCas, type);
             return FSUtil.getFeature(dmd, "documentUri", String.class);
         }
         catch (IllegalArgumentException e) {
@@ -1011,7 +980,7 @@ public class WebAnnoCasUtil
     {
         try {
             Type type = getType(aCas, DocumentMetaData.class);
-            FeatureStructure dmd = CasUtil.selectSingle(aCas, type);
+            FeatureStructure dmd = selectSingle(aCas, type);
             return FSUtil.getFeature(dmd, "documentTitle", String.class);
         }
         catch (IllegalArgumentException e) {
