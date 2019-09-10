@@ -19,12 +19,77 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <head>
   <wicket:head>
-    <style>
-      .page-content {
-        flex-direction: column !important;
-      }
-    </style>
-  </wicket:head>
+  <style type="text/css">
+    .page-content {
+      flex-direction: column !important;
+    }
+    
+    .curation-sentence-item {
+        margin: 2px 2px;
+        padding: 2px 2px;
+    }
+    
+    .curation-sentence-number {
+      border: 1px solid white;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+        margin: 1px 1px;
+      padding: 1px 1px;
+      display: inline-block;
+        min-width: 4em;
+        max-width: 7.9em;
+      text-align: center;
+    }
+
+    .curation-sentence-number a {
+      display: block;
+      text-decoration: none !important;
+      color: black !important;
+      border-radius: 4px 4px 4px 4px;
+      -moz-border-radius: 4px 4px 4px 4px;
+      -webkit-border-radius: 4px 4px 4px 4px;
+    }
+    
+    .curation-sentence-list {
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+        box-sizing: border-box;
+        width: 100%;
+        height: 550px;
+        overflow: scroll;
+    }
+
+    .hidden-view {
+        background-color: #DFDFDF;
+    }
+    
+    .in-range {
+        border: 1px solid black;
+    }
+    
+    .out-range {
+        border: 1px solid white;
+    }
+    
+    .agree {
+      
+    }
+    
+    .disagree {
+        background-color: red;
+    }
+    
+    .current {
+      box-shadow: 0px 0px 5px 1px rgba(231,166,26,1);
+        border: 1px solid rgba(231,166,26,1);
+    }
+    
+    .suggestion-panel-body {
+      overflow-x: auto;
+    }
+  </style>
+</wicket:head>
 </head>
 <body>
   <wicket:extend>
@@ -46,12 +111,6 @@
                     src="images/drawer_open.png" title="Open" /><br />Open
                 </a></li>
                 <li wicket:id="showRemergeDocumentDialog" />
-                <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
-                    src="images/document_back.png" title="Previous document" /><br />Prev.
-                </a></li>
-                <li><a wicket:id="showNextDocument" title="press Shift+PgDown"> <img
-                    src="images/document_next.png" title="Next document " /><br />Next
-                </a></li>
                 <li><a wicket:id="showExportDialog"> <img
                     src="images/document_export.png" title="Export"  /><br />Export
                 </a></li>
@@ -61,9 +120,6 @@
               </ul>
             </fieldset>
           </li>
-
-          <li wicket:id="pageNavigator"/>
-
 
           <li>
             <fieldset>
@@ -96,14 +152,75 @@
           </li>
         </ul>
       </div>
-      <div class="locationbar">
-        <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
-          wicket:id="numberOfPages"></span>
-        </span>
-      </div>
     </div>
 
-    <div wicket:id="curationPanel" class="flex-content flex-h-container"></div>
+    <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
+      <!-- 
+         We cannot put a 'wicket:enclosure="sentencesListView"' on this div because this 
+         inevitably causes the sentence list to "jump up" when re-rendering it (i.e. when paging
+         or when selecting a sentence).
+       -->
+      <div wicket:id="sentenceListContainer" class="flex-sidebar flex-v-container flex-gutter">
+        <div class="flex-content panel panel-default panel-flex">
+          <div class="panel-heading">
+            <h3 class="panel-title">Sentences</h3>
+          </div>
+          <div class="scrolling panel-body">
+            <div wicket:id="sentencesListView" style="border-collapse: collapse;">
+              <span wicket:id="sentencesList" class="curation-sentence-number">
+                <a wicket:id="sentenceNumber"></a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="centerArea" class="flex-content flex-v-container">
+        <div class="flex-content flex-v-container flex-gutter">
+          <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter" style="flex: 0.75;">
+            <div class="flex-content panel panel-primary panel-flex">
+              <div class="panel-heading">
+                <h3 class="panel-title">
+                  <span wicket:id="documentNamePanel"/> 
+                  <span wicket:id="numberOfPages" style="float: right;"/>
+                </h3>
+              </div>
+              <div class="panel-body flex-v-container" style="padding: 0px;">
+                <nav class="flex-h-container">
+                  <span wicket:id="documentNavigator" />
+                  <span wicket:id="pageNavigator"/>
+                </nav>
+                <div wicket:id="mergeView" class="text-center flex-content flex-v-container"></div>
+              </div>
+            </div>
+    
+            <div class="panel panel-default" wicket:enclosure="crossSentAnnoView">
+              <div class="panel-heading">
+                <h3 class="panel-title">Invisible annotations on other pages</h3>
+              </div>
+              <div class="panel-body">
+                <span wicket:id="crossSentAnnoView">
+                  <span wicket:id="crossSentAnnoList">
+                    <span wicket:id="crossAnnoSent"></span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div wicket:id="suggestionViewPanel" class="scrolling flex-content">
+            <div wicket:id="contextMenu" style="width: 250px;"></div>
+            <div class="sentence-list-view" wicket:id="sentenceListView">
+              <div wicket:id="sentence"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
+        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+      </div>
+    </div>
   </wicket:extend>
 </body>
 </html>

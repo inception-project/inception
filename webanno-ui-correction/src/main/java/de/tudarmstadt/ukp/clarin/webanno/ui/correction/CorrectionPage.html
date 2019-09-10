@@ -50,12 +50,6 @@
                 <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
                     src="images/drawer_open.png" title="Open" /><br />Open
                 </a></li>
-                <li><a wicket:id="showPreviousDocument" title="press Shift+PgUp"> <img
-                    src="images/document_back.png" title="Previous document" /><br />Prev.
-                </a></li>
-                <li><a wicket:id="showNextDocument" title="press Shift+PgDown"> <img
-                    src="images/document_next.png" title="Next document " /><br />Next
-                </a></li>
                 <li><a wicket:id="showExportDialog"> <img
                     src="images/document_export.png" title="Export" /><br />Export
                 </a></li>
@@ -65,9 +59,6 @@
               </ul>
             </fieldset>
           </li>
-
-          <li wicket:id="pageNavigator"/>
-
 
           <li>
             <fieldset>
@@ -102,21 +93,26 @@
           </li>
         </ul>
       </div>
-      <div class="locationbar">
-        <span wicket:id="documentNamePanel"></span> <span style="float: right;"> <span
-          wicket:id="numberOfPages"></span>
-        </span>
-      </div>
     </div>
 
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
-      <div class="flex-content flex-v-container">
+      <div wicket:id="centerArea" class="flex-content flex-v-container">
         <div class="flex-content flex-v-container flex-gutter">
-          <div class="flex-content panel panel-primary panel-flex" wicket:enclosure="mergeView">
+          <div class="flex-content panel panel-primary panel-flex">
             <div class="panel-heading">
-              <h3 class="panel-title">Annotation</h3>
+              <h3 class="panel-title">
+                <span wicket:id="documentNamePanel"/> 
+                <span wicket:id="numberOfPages" style="float: right;"/>
+              </h3>
             </div>
-            <div wicket:id="mergeView" class="panel-body text-center flex-v-container"></div>
+            <div class="panel-body flex-v-container" style="padding: 0px;">
+              <nav class="flex-h-container">
+                <span wicket:id="documentNavigator" />
+                <span wicket:id="pageNavigator"/>
+              </nav>
+              <div wicket:id="mergeView" class="flex-content text-center flex-v-container"></div>
+            </div>
+            
           </div>
           
           <div wicket:id="correctionView" class="flex-content flex-v-container">

@@ -40,6 +40,7 @@ import org.springframework.beans.BeansException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
@@ -50,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
@@ -130,6 +130,7 @@ public abstract class AnnotationPageBase
     /**
      * Show the previous document, if exist
      */
+    @Deprecated
     protected void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToPreviousDocument(getListOfDocs());
@@ -202,7 +203,7 @@ public abstract class AnnotationPageBase
         }
     }
 
-    protected abstract List<SourceDocument> getListOfDocs();
+    public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
     
@@ -212,7 +213,7 @@ public abstract class AnnotationPageBase
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    protected abstract void actionLoadDocument(AjaxRequestTarget aTarget);
+    public abstract void actionLoadDocument(AjaxRequestTarget aTarget);
 
     /**
      * Re-render the document and update all related UI elements.

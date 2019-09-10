@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.support.lambda;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
 import java.util.MissingResourceException;
 
@@ -30,6 +30,10 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.Url;
 import org.apache.wicket.request.resource.ResourceReference;
 import org.apache.wicket.request.resource.UrlResourceReference;
+
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.SerializableMethodDelegate;
 
 public class ActionBarLink
     extends Panel
@@ -100,7 +104,7 @@ public class ActionBarLink
             catch (MissingResourceException e) {
                 // Nothing to do
             }
-            link.add(image);
+            link.addOrReplace(image);
         }
         
         super.onBeforeRender();

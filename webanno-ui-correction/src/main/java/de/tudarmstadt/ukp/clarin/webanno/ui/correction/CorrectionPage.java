@@ -58,6 +58,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -79,7 +81,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
@@ -97,9 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationCon
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is the main class for the correction page. Displays in the lower panel the Automatically
@@ -140,6 +138,7 @@ public class CorrectionPage
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
 
+    private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
@@ -162,9 +161,20 @@ public class CorrectionPage
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
         
+        centerArea = new WebMarkupContainer("centerArea");
+        centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
+        centerArea.setOutputMarkupPlaceholderTag(true);
+        centerArea.add(createDocumentInfoLabel());
+        centerArea.add(new DocumentNavigator("documentNavigator", this));
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
+                this::getEditorCas);
+        centerArea.add(annotationEditor);
+        add(centerArea);
+
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy()
+        centerArea.add(
+                getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
@@ -176,7 +186,7 @@ public class CorrectionPage
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
-
+        
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
         if (getModelObject().getDocument() != null) {
@@ -221,18 +231,12 @@ public class CorrectionPage
         };
 
         suggestionView.setOutputMarkupId(true);
-        add(suggestionView);
+        centerArea.add(suggestionView);
 
         rightSidebar.add(detailEditor = createDetailEditor());
         
-        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
-            this::getEditorCas);
-        add(annotationEditor);
-
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        add(createDocumentInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -280,14 +284,6 @@ public class CorrectionPage
                                 || !state.getProject().isDisableExport()));
             }
         });
-
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -391,7 +387,7 @@ public class CorrectionPage
     }
 
     @Override
-    protected List<SourceDocument> getListOfDocs()
+    public List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
@@ -549,7 +545,7 @@ public class CorrectionPage
     }
     
     @Override
-    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         LOG.info("BEGIN LOAD_DOCUMENT_ACTION");
 
@@ -661,7 +657,7 @@ public class CorrectionPage
             curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
-            aTarget.add(get(MID_NUMBER_OF_PAGES));
+            aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);

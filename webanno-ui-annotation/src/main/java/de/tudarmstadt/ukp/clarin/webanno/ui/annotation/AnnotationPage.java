@@ -71,6 +71,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -88,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -103,9 +104,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDial
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * A wicket page for the Brat Annotation/Visualization page. Included components for pagination,
@@ -147,6 +145,7 @@ public class AnnotationPage
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
     
+    private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
 
@@ -192,13 +191,17 @@ public class AnnotationPage
 
         add(createUrlFragmentBehavior());      
         
+        centerArea = new WebMarkupContainer("centerArea");
+        centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
+        centerArea.setOutputMarkupPlaceholderTag(true);
+        centerArea.add(createDocumentInfoLabel());
+        centerArea.add(new DocumentNavigator("documentNavigator", this));
         createAnnotationEditor(null);
-        
+        add(centerArea);
+
         add(createRightSidebar());
 
         add(createLeftSidebar());
-        
-        add(createDocumentInfoLabel());
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -233,14 +236,6 @@ public class AnnotationPage
                     && (projectService.isAdmin(state.getProject(), state.getUser())
                             || !state.getProject().isDisableExport()));
         }));
-
-        add(new ActionBarLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));
-
-        add(new ActionBarLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));
 
         add(new ActionBarLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
@@ -329,10 +324,9 @@ public class AnnotationPage
         }
 
         annotationEditor = factory.create("editor", getModel(), detailEditor, this::getEditorCas);
-        annotationEditor.add(visibleWhen(() -> state.getDocument() != null));
         annotationEditor.setOutputMarkupPlaceholderTag(true);
         
-        addOrReplace(annotationEditor);
+        centerArea.addOrReplace(annotationEditor);
         
         // Give the new editor an opportunity to configure the current paging strategy
         factory.initState(state);
@@ -350,9 +344,11 @@ public class AnnotationPage
         }
         
         // Use the proper page navigator and position labels for the current paging strategy
-        addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
-        addOrReplace(state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
-                .add(visibleWhen(() -> getModelObject().getDocument() != null)));
+        centerArea
+                .addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
+        centerArea.addOrReplace(
+                state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
+                        .add(visibleWhen(() -> getModelObject().getDocument() != null)));
     }
 
     private SidebarPanel createLeftSidebar()
@@ -378,7 +374,7 @@ public class AnnotationPage
     }
 
     @Override
-    protected List<SourceDocument> getListOfDocs()
+    public List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
@@ -520,7 +516,7 @@ public class AnnotationPage
     }
 
     @Override
-    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         actionLoadDocument(aTarget, 0);
     }
@@ -624,7 +620,7 @@ public class AnnotationPage
         }
         
         aTarget.addChildren(getPage(), IFeedback.class);
-        aTarget.add(get(MID_NUMBER_OF_PAGES));
+        aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         
         // Update URL for current document
         updateUrlFragment(aTarget);

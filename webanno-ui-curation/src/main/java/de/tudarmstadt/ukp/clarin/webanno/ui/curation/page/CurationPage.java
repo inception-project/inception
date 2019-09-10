@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_DOCU
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_FOCUS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -31,6 +33,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,18 +46,28 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Session;
+import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
+import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.AjaxLink;
+import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
+import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Form;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -68,6 +82,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CorrectionDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
@@ -75,6 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -86,22 +104,22 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.CurationPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -128,8 +146,6 @@ public class CurationPage
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
 
-    private DocumentNamePanel documentNamePanel;
-    
     private long currentprojectId;
 
     // Open the dialog window on first load
@@ -142,13 +158,37 @@ public class CurationPage
 
     private CurationContainer curationContainer;
 
-    private CurationPanel curationPanel;
+    private WebMarkupContainer centerArea;
     private MergeDialog remergeDocumentDialog;
     private ActionBarLink remergeDocumentLink;
 
     private WebMarkupContainer finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
     private LambdaAjaxLink finishDocumentLink;
+
+    private SuggestionViewPanel suggestionViewPanel;
+
+    private WebMarkupContainer sentenceListContainer;
+    private WebMarkupContainer sentencesListView;
+    private WebMarkupContainer crossSentAnnoView;
+
+    private AnnotationEditorBase annotationEditor;
+    private AnnotationDetailEditorPanel editor;
+
+    private ListView<String> crossSentAnnoList;
+    
+    public SourceListView curationView;
+    private List<SourceListView> sourceListModel;
+
+    private int fSn = 0;
+    private int lSn = 0;
+    
+    /**
+     * Map for tracking curated spans. Key contains the address of the span, the value contains the
+     * username from which the span has been selected
+     */
+    private Map<String, Map<Integer, AnnotationSelection>> annotationSelectionByUsernameAndAddress =
+            new HashMap<>();
     
     public CurationPage()
     {
@@ -188,9 +228,17 @@ public class CurationPage
     {
         setModel(Model.of(new AnnotatorStateImpl(Mode.CURATION)));
         
+        centerArea = new WebMarkupContainer("centerArea");
+        centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
+        centerArea.setOutputMarkupPlaceholderTag(true);
+        centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        add(centerArea);
+        
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy()
+        centerArea.add(
+                getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
@@ -201,27 +249,6 @@ public class CurationPage
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        curationPanel = new CurationPanel("curationPanel", this, new Model<>(
-                curationContainer))
-        {
-            private static final long serialVersionUID = 2175915644696513166L;
-
-            @Override
-            protected void onChange(AjaxRequestTarget aTarget)
-            {
-                try {
-                    actionRefreshDocument(aTarget);
-                }
-                catch (Exception e) {
-                    handleException(aTarget, e);
-                }
-            }
-        };
-        add(curationPanel);
-
-        add(documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel()));
-        documentNamePanel.setOutputMarkupId(true);
 
         add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
                 getAllowedProjects())
@@ -306,14 +333,6 @@ public class CurationPage
             }
         });
         
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));
-
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
@@ -364,6 +383,179 @@ public class CurationPage
             }
         }));
         finishDocumentLink.add(finishDocumentIcon);
+        
+        WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
+        sidebarCell.setOutputMarkupPlaceholderTag(true);
+        // Override sidebar width from preferences
+        sidebarCell.add(new AttributeModifier("style",
+            () -> String.format("flex-basis: %d%%;",
+                    getModelObject() != null
+                            ? getModelObject().getPreferences().getSidebarSize()
+                            : 10)));
+        add(sidebarCell);
+        
+        curationView = new SourceListView();
+        
+        List<UserAnnotationSegment> segments = new LinkedList<>();
+        UserAnnotationSegment userAnnotationSegments = new UserAnnotationSegment();
+
+        if (getModelObject() != null) {
+            userAnnotationSegments
+                    .setSelectionByUsernameAndAddress(annotationSelectionByUsernameAndAddress);
+            userAnnotationSegments.setAnnotatorState(getModelObject());
+            segments.add(userAnnotationSegments);
+        }
+        
+        // update source list model only first time.
+        sourceListModel = sourceListModel == null ? curationContainer.getCurationViews()
+                : sourceListModel;
+    
+        suggestionViewPanel = new SuggestionViewPanel("suggestionViewPanel",
+                new ListModel<>(segments))
+        {
+            private static final long serialVersionUID = 2583509126979792202L;
+    
+            @Override
+            public void onChange(AjaxRequestTarget aTarget)
+            {
+                try {
+                    // update begin/end of the curationsegment based on annotator state changes
+                    // (like sentence change in auto-scroll mode,....
+                    aTarget.addChildren(getPage(), IFeedback.class);
+                    CurationPage.this.updatePanel(aTarget, curationContainer);
+                }
+                catch (UIMAException e) {
+                    error(ExceptionUtils.getRootCause(e));
+                }
+                catch (ClassNotFoundException | AnnotationException | IOException e) {
+                    error("Error: " + e.getMessage());
+                }
+            }
+        };
+        suggestionViewPanel.setOutputMarkupPlaceholderTag(true);
+        suggestionViewPanel.add(visibleWhen(
+            () -> getModelObject() != null && getModelObject().getDocument() != null));
+        centerArea.add(suggestionViewPanel);
+    
+        editor = new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this,
+                getModel())
+        {
+            private static final long serialVersionUID = 2857345299480098279L;
+    
+            @Override
+            protected void onChange(AjaxRequestTarget aTarget)
+            {
+                aTarget.addChildren(getPage(), IFeedback.class);
+    
+                try {
+                    updatePanel(aTarget, curationContainer);
+                }
+                catch (UIMAException e) {
+                    LOG.error("Error: " + e.getMessage(), e);
+                    error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+                }
+                catch (Exception e) {
+                    LOG.error("Error: " + e.getMessage(), e);
+                    error("Error: " + e.getMessage());
+                }
+            }
+    
+            @Override
+            protected void onAutoForward(AjaxRequestTarget aTarget)
+            {
+                annotationEditor.requestRender(aTarget);
+            }
+    
+            @Override
+            protected void onConfigure()
+            {
+                super.onConfigure();
+                
+                setEnabled(getModelObject() != null && getModelObject().getDocument() != null
+                        && !documentService
+                                .getSourceDocument(getModelObject().getDocument().getProject(),
+                                        getModelObject().getDocument().getName())
+                                .getState().equals(SourceDocumentState.CURATION_FINISHED));
+            }
+            
+            @Override
+            public CAS getEditorCas() throws IOException
+            {
+                return CurationPage.this.getEditorCas();
+            }
+        };
+        sidebarCell.add(editor);
+    
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), editor,
+            this::getEditorCas);
+        annotationEditor.setHighlightEnabled(false);
+        annotationEditor.add(visibleWhen(
+            () -> getModelObject() != null && getModelObject().getDocument() != null));
+        annotationEditor.setOutputMarkupPlaceholderTag(true);
+        // reset sentenceAddress and lastSentenceAddress to the orginal once
+        centerArea.add(annotationEditor);
+    
+        // add container for the list of sentences where annotations exists crossing multiple
+        // sentences outside of the current page
+        crossSentAnnoView = new WebMarkupContainer("crossSentAnnoView");
+        crossSentAnnoView.setOutputMarkupPlaceholderTag(true);
+        crossSentAnnoView.add(visibleWhen(
+            () -> getModelObject() != null && getModelObject().getDocument() != null));
+        centerArea.add(crossSentAnnoView);
+        crossSentAnnoList = new ListView<String>("crossSentAnnoList",
+                this::invisibleCrossSentenceAnnotations)
+        {
+            private static final long serialVersionUID = 8539162089561432091L;
+    
+            @Override
+            protected void populateItem(ListItem<String> item)
+            {
+                String crossSentAnno = item.getModelObject();
+    
+                // ajax call when clicking on a sentence on the left side
+                final AbstractDefaultAjaxBehavior click = new AbstractDefaultAjaxBehavior()
+                {
+                    private static final long serialVersionUID = 5803814168152098822L;
+    
+                    @Override
+                    protected void respond(AjaxRequestTarget aTarget)
+                    {
+                        // Expand curation view
+                    }
+                };
+    
+                // add subcomponents to the component
+                item.add(click);
+                item.add(new AjaxLabel("crossAnnoSent", crossSentAnno, click));
+            }
+    
+        };
+        crossSentAnnoView.add(crossSentAnnoList);
+
+        // add container for sentences panel
+        sentenceListContainer = new WebMarkupContainer("sentenceListContainer");
+        sentenceListContainer.setOutputMarkupPlaceholderTag(true);
+        sentenceListContainer.add(visibleWhen(
+            () -> getModelObject() != null && getModelObject().getDocument() != null));
+        add(sentenceListContainer);
+
+        // add container for list of sentences panel
+        sentencesListView = new WebMarkupContainer("sentencesListView");
+        sentencesListView.setOutputMarkupPlaceholderTag(true);
+        sentencesListView.add(new ListView<SourceListView>("sentencesList",
+                LoadableDetachableModel.of(() -> curationContainer.getCurationViews()))
+        {
+            private static final long serialVersionUID = 8539162089561432091L;
+
+            @Override
+            protected void populateItem(ListItem<SourceListView> item)
+            {
+                item.add(new SentenceLink("sentenceNumber", item.getModel()));
+            }
+        });
+        
+        sentenceListContainer.add(sentencesListView);
+        
     }
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -423,15 +615,9 @@ public class CurationPage
     }
     
     @Override
-    protected List<SourceDocument> getListOfDocs()
+    public List<SourceDocument> getListOfDocs()
     {
         return curationDocumentService.listCuratableSourceDocuments(getModelObject().getProject());
-    }
-
-    private void updatePanel(CurationContainer aCurationContainer, AjaxRequestTarget aTarget)
-    {
-        AnnotatorState state = getModelObject();
-        curationPanel.setDefaultModelObject(curationContainer);
     }
 
     /**
@@ -450,19 +636,6 @@ public class CurationPage
         response.render(OnLoadHeaderItem.forScript(jQueryString));
     }
 
-    @Override
-    public CAS getEditorCas()
-        throws IOException
-    {
-        AnnotatorState state = getModelObject();
-
-        if (state.getDocument() == null) {
-            throw new IllegalStateException("Please open a document first!");
-        }
-
-        return curationDocumentService.readCurationCas(state.getDocument());
-    }
-    
     @Override
     public void writeEditorCas(CAS aCas) throws IOException
     {
@@ -494,8 +667,7 @@ public class CurationPage
     {
         getModelObject().toggleScriptDirection();
 
-        curationPanel.updatePanel(aTarget, curationContainer);
-        updatePanel(curationContainer, aTarget);
+        updatePanel(aTarget, curationContainer);
     }
 
     private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
@@ -514,8 +686,7 @@ public class CurationPage
             // the visible sentences 
             state.getPagingStrategy().recalculatePage(state, mergeCas);
             
-            curationPanel.updatePanel(aTarget, curationContainer);
-            updatePanel(curationContainer, aTarget);
+            updatePanel(aTarget, curationContainer);
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -541,7 +712,7 @@ public class CurationPage
             
             aCallbackTarget.add(finishDocumentIcon);
             aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(curationPanel.getEditor());
+            aCallbackTarget.add(editor);
             aCallbackTarget.add(remergeDocumentLink);
         });
         finishDocumentDialog.show(aTarget);
@@ -586,7 +757,7 @@ public class CurationPage
     }
 
     @Override
-    protected void actionLoadDocument(AjaxRequestTarget aTarget)
+    public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         actionLoadDocument(aTarget, 0);
     }
@@ -642,13 +813,11 @@ public class CurationPage
                     userRepository);
             curationContainer = builder.buildCurationContainer(state);
             curationContainer.setState(state);
-            curationPanel.getEditor().reset(aTarget);
-            updatePanel(curationContainer, aTarget);
-            curationPanel.init(aTarget, curationContainer);
-            //curationPanel.updatePanel(aTarget, curationContainer);
+            editor.reset(aTarget);
+            init(aTarget, curationContainer);
             
             // Populate the layer dropdown box
-            curationPanel.getEditor().loadFeatureEditorModels(aTarget);
+            editor.loadFeatureEditorModels(aTarget);
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -714,9 +883,8 @@ public class CurationPage
     public void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
         try {
-            curationPanel.updatePanel(aTarget, curationContainer);
-            updatePanel(curationContainer, aTarget);
-            aTarget.add(get(MID_NUMBER_OF_PAGES));
+            updatePanel(aTarget, curationContainer);
+            aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);
@@ -822,6 +990,217 @@ public class CurationPage
                     error("Error reading CAS " + e.getMessage());
                 }
             }
+        }
+    }
+    
+    private List<String> invisibleCrossSentenceAnnotations()
+    {
+        int fSN = getModelObject().getFirstVisibleUnitIndex();
+        int lSN = getModelObject().getLastVisibleUnitIndex();
+
+        List<String> crossSentAnnos = new ArrayList<>();
+        if (SuggestionBuilder.crossSentenceLists != null) {
+            for (int sn : SuggestionBuilder.crossSentenceLists.keySet()) {
+                if (sn >= fSN && sn <= lSN) {
+                    List<Integer> cr = new ArrayList<>();
+                    for (int c : SuggestionBuilder.crossSentenceLists.get(sn)) {
+                        if (c < fSN || c > lSN) {
+                            cr.add(c);
+                        }
+                    }
+                    if (!cr.isEmpty()) {
+                        crossSentAnnos.add(sn + "-->" + cr);
+                    }
+                }
+            }
+        }
+
+        return crossSentAnnos;
+    }
+    
+    public class SentenceLink extends AjaxLink<SourceListView>
+    {
+        private static final long serialVersionUID = 4558300090461815010L;
+
+        public SentenceLink(String aId, IModel<SourceListView> aModel)
+        {
+            super(aId, aModel);
+            setBody(Model.of(aModel.getObject().getSentenceNumber().toString()));
+        }
+        
+        @Override
+        protected void onComponentTag(ComponentTag aTag)
+        {
+            super.onComponentTag(aTag);
+            
+            final SourceListView curationViewItem = getModelObject();
+            
+            // Is in focus?
+            if (curationViewItem.getSentenceNumber() == CurationPage.this.getModelObject()
+                    .getFocusUnitIndex()) {
+                aTag.append("class", "current", " ");
+            }
+            
+            // Agree or disagree?
+            String cC = curationViewItem.getSentenceState().getValue();
+            if (cC != null) {
+                aTag.append("class", "disagree", " ");
+            }
+            else {
+                aTag.append("class", "agree", " ");
+            }
+            
+            // In range or not?
+            if (curationViewItem.getSentenceNumber() >= fSn
+                    && curationViewItem.getSentenceNumber() <= lSn) {
+                aTag.append("class", "in-range", " ");
+            }
+            else {
+                aTag.append("class", "out-range", " ");
+            }
+        }
+        
+        @Override
+        protected void onAfterRender()
+        {
+            super.onAfterRender();
+            
+            // The sentence list is refreshed using AJAX. Unfortunately, the renderHead() method
+            // of the AjaxEventBehavior created by AjaxLink does not seem to be called by Wicket
+            // during an AJAX rendering, causing the sentence links to loose their functionality.
+            // Here, we ensure that the callback scripts are attached to the sentence links even
+            // during AJAX updates.
+            if (isEnabledInHierarchy()) {
+                RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(_target -> {
+                    for (AjaxEventBehavior b : getBehaviors(AjaxEventBehavior.class)) {
+                        _target.appendJavaScript(b.getCallbackScript());
+                    }
+                });
+            }
+        }
+        
+        @Override
+        public void onClick(AjaxRequestTarget aTarget)
+        {
+            final SourceListView curationViewItem = getModelObject();
+            curationView = curationViewItem;
+            fSn = 0;
+            try {
+                AnnotatorState state = CurationPage.this.getModelObject();
+                CAS cas = curationDocumentService.readCurationCas(state.getDocument());
+                updateCurationView(curationContainer, curationViewItem, aTarget,
+                        cas);
+                updatePanel(aTarget, curationContainer);
+                state.setFocusUnitIndex(curationViewItem.getSentenceNumber());
+            }
+            catch (UIMAException e) {
+                error("Error: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+            catch (ClassNotFoundException | AnnotationException | IOException e) {
+                error("Error: " + e.getMessage());
+            }
+        }
+    }
+
+    public void setModelObject(CurationContainer aModel)
+    {
+        setDefaultModelObject(aModel);
+    }
+
+    private void updateCurationView(final CurationContainer curationContainer,
+            final SourceListView curationViewItem, AjaxRequestTarget aTarget, CAS aCas)
+    {
+        AnnotatorState state = CurationPage.this.getModelObject();
+        state.getPagingStrategy().moveToOffset(state, aCas, curationViewItem.getBegin(), CENTERED);
+        curationContainer.setState(state);
+        onChange(aTarget);
+    }
+
+    protected void onChange(AjaxRequestTarget aTarget)
+    {
+        try {
+            actionRefreshDocument(aTarget);
+        }
+        catch (Exception e) {
+            handleException(aTarget, e);
+        }
+    }
+
+    @Override
+    public CAS getEditorCas()
+        throws IOException
+    {
+        AnnotatorState state = CurationPage.this.getModelObject();
+        
+        if (state.getDocument() == null) {
+            throw new IllegalStateException("Please open a document first!");
+        }
+
+        // If we have a timestamp, then use it to detect if there was a concurrent access
+        verifyAndUpdateDocumentTimestamp(state, curationDocumentService
+                .getCurationCasTimestamp(state.getDocument()));
+
+        return curationDocumentService.readCurationCas(state.getDocument());
+    }
+    
+    public void init(AjaxRequestTarget aTarget, CurationContainer aCC)
+        throws UIMAException, ClassNotFoundException, IOException
+    {
+        commonUpdate();
+        
+        suggestionViewPanel.init(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+                curationView);
+    }
+
+    public void updatePanel(AjaxRequestTarget aTarget, CurationContainer aCC)
+        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
+    {
+        commonUpdate();
+        
+        // Render the main annotation editor (upper part)
+        annotationEditor.requestRender(aTarget);
+        
+        // Render the user annotation segments (lower part)
+        suggestionViewPanel.updatePanel(aTarget, aCC, annotationSelectionByUsernameAndAddress,
+                curationView);
+        
+        // Render the sentence list sidebar
+        aTarget.add(sentencesListView);
+    }
+    
+    private void commonUpdate() throws IOException
+    {
+        AnnotatorState state = CurationPage.this.getModelObject();
+
+        curationView.setCurationBegin(state.getWindowBeginOffset());
+        curationView.setCurationEnd(state.getWindowEndOffset());
+        fSn = state.getFirstVisibleUnitIndex();
+        lSn = state.getLastVisibleUnitIndex();
+    }
+
+    /**
+     * Class for combining an on click ajax call and a label
+     */
+    class AjaxLabel
+        extends Label
+    {
+        private static final long serialVersionUID = -4528869530409522295L;
+        private AbstractAjaxBehavior click;
+    
+        public AjaxLabel(String id, String label, AbstractAjaxBehavior aClick)
+        {
+            super(id, label);
+            click = aClick;
+        }
+    
+        @Override
+        public void onComponentTag(ComponentTag tag)
+        {
+            // add onclick handler to the browser
+            // if clicked in the browser, the function
+            // click.response(AjaxRequestTarget target) is called on the server side
+            tag.put("ondblclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
+            tag.put("onclick", "Wicket.Ajax.get({'u':'" + click.getCallbackUrl() + "'})");
         }
     }
 }
