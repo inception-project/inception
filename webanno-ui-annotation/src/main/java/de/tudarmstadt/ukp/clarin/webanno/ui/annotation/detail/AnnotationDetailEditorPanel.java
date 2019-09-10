@@ -70,6 +70,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import com.googlecode.wicket.kendo.ui.form.TextField;
 
@@ -87,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -1697,5 +1699,20 @@ public abstract class AnnotationDetailEditorPanel
     public static class AttachStatus {
         boolean readOnlyAttached;
         int attachCount;
+    }
+    
+    @OnEvent
+    public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
+    {
+        AjaxRequestTarget target = aEvent.getTarget();
+        // Auto-commit if working on existing annotation
+        if (getModelObject().getSelection().getAnnotation().isSet()) {
+            try {
+                actionCreateOrUpdate(target, getEditorCas());
+            }
+            catch (Exception e) {
+                handleException(this, target, e);
+            }
+        }
     }
 }

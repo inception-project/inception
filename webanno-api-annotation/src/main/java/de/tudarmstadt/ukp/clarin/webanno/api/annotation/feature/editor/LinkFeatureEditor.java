@@ -28,9 +28,13 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.core.request.handler.IPageRequestHandler;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -61,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -520,20 +525,20 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        FeatureState fs = state.getArmedFeature();
 
+        LinkWithRoleModel linkWithRoleModel = links.get(state.getArmedSlot());
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
 
         aTarget.add(content);
-
-        // Auto-commit if working on existing annotation
-        if (state.getSelection().getAnnotation().isSet()) {
-            try {
-                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
-            }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
-            }
+    
+        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
+        if (handler.isPresent()) {
+            Page page = (Page) handler.get().getPage();
+            page.send(page, Broadcast.BREADTH,
+                    new LinkFeatureDeletedEvent(fs, aTarget, linkWithRoleModel,
+                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
         }
     }
 
