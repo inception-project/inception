@@ -1,4 +1,4 @@
-// Copyright 2018
+// Copyright 2019
 // Ubiquitous Knowledge Processing (UKP) Lab
 // Technische Universität Darmstadt
 // 
@@ -14,8 +14,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-== External Recommender
+== LAPPS Grid
 
-This recommender allows to use external web-services to generate predictions. For details on the
-protocol used in the communication with the external services, please refer to the developer
-documentation.
+This recommender allows to use LAPPS Grid web-services to generate predictions. Only services
+taking the inputs are supported:
+
+.Inputs
+* Text
+* Tokens
+* Sentences
+
+Furthermore, the services must produce annotations on one of the following built-in layers:
+
+.Outputs
+* Part-of-speech
+* Lemma
+* Named entity
+
+The recommender comes with a list of pre-configured services that can be conveniently chosen from.
+However, note that these services use versioned URLs and as LAPPS Grid evolves, these the services
+might be upgrade and become available under different URLs. 

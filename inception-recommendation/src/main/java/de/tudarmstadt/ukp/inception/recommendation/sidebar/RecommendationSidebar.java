@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.Form;
@@ -42,6 +43,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAn
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -91,6 +93,8 @@ public class RecommendationSidebar
 
         form.add(new CheckBox("showAllPredictions"));
 
+        form.add(new LambdaAjaxLink("retrain", this::actionRetrain));
+
         form.add(new LambdaAjaxButton<>("save", (_target, _form) -> 
                 aAnnotationPage.actionRefreshDocument(_target)));
 
@@ -125,6 +129,14 @@ public class RecommendationSidebar
         aEvent.getRequestHandler().add(warning);
     }
 
+    private void actionRetrain(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = getModelObject();
+        recommendationService.clearState(state.getUser().getUsername());
+        recommendationService.triggerTrainingAndClassification(state.getUser().getUsername(),
+                state.getProject(), "User request via sidebar");
+    }
+    
     private List<String> findMismatchedRecommenders()
     {
         List<String> mismatchedRecommenderNames = new ArrayList<>();

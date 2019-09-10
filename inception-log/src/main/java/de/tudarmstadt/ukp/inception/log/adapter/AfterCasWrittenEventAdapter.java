@@ -19,32 +19,32 @@ package de.tudarmstadt.ukp.inception.log.adapter;
 
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterAnnotationUpdateEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 
 @Component
-public class AfterAnnotationUpdateEventAdapter
-    implements EventLoggingAdapter<AfterAnnotationUpdateEvent>
+public class AfterCasWrittenEventAdapter
+    implements EventLoggingAdapter<AfterCasWrittenEvent>
 {
     @Override
     public boolean accepts(Object aEvent)
     {
-        return aEvent instanceof AfterAnnotationUpdateEvent;
+        return aEvent instanceof AfterCasWrittenEvent;
     }
     
     @Override
-    public long getDocument(AfterAnnotationUpdateEvent aEvent)
+    public long getDocument(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getDocument().getId();
     }
     
     @Override
-    public long getProject(AfterAnnotationUpdateEvent aEvent)
+    public long getProject(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getProject().getId();
     }
     
     @Override
-    public String getAnnotator(AfterAnnotationUpdateEvent aEvent)
+    public String getAnnotator(AfterCasWrittenEvent aEvent)
     {
         return aEvent.getDocument().getUser();
     }

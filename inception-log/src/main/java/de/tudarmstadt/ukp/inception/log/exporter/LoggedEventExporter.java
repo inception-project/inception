@@ -43,6 +43,8 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.util.MinimalPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.dao.export.exporters.SourceDocumentExporter;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExporter;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 
@@ -163,6 +166,12 @@ public class LoggedEventExporter implements ProjectExporter
             return;
         }
 
+        LoadingCache<String, SourceDocument> documentCache = Caffeine.newBuilder()
+                .maximumSize(10_000)
+                .build(documentName -> documentService
+                        .getSourceDocument(aProject, documentName));
+
+        
         try (JsonParser jParser = new ObjectMapper().getFactory()
                 .createParser(aZip.getInputStream(entry))) {
 
@@ -172,8 +181,10 @@ public class LoggedEventExporter implements ProjectExporter
             Iterator<ExportedLoggedEvent> i = jParser.readValuesAs(ExportedLoggedEvent.class);
             while (i.hasNext()) {
                 // Flush events
-                if (batch.size() > 500) {
+                if (batch.size() >= 25_000) {
                     eventRepository.create(batch.stream().toArray(LoggedEvent[]::new));
+                    batch.clear();
+                    LOG.trace("... {} events imported ...", eventCount);
                 }
                 
                 ExportedLoggedEvent exportedEvent = i.next();
@@ -188,8 +199,7 @@ public class LoggedEventExporter implements ProjectExporter
 
                 // If an event is not associated with a document, then the default ID -1 is used
                 if (exportedEvent.getDocumentName() != null) {
-                    event.setDocument(documentService
-                            .getSourceDocument(aProject, exportedEvent.getDocumentName()).getId());
+                    event.setDocument(documentCache.get(exportedEvent.getDocumentName()).getId());
                 }
                 else {
                     event.setDocument(-1);
