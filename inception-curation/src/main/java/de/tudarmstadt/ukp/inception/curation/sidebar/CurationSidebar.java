@@ -51,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
-import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
@@ -113,6 +112,16 @@ public class CurationSidebar
         targetForm.add(curationTargetBtn);
         mainContainer.add(targetForm);
     }
+    
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+        setEnabled(!documentService
+                .isAnnotationFinished(state.getDocument(), state.getUser()));
+    }
+
 
     private void updateCurator(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
@@ -124,15 +133,7 @@ public class CurationSidebar
                     project, currentUsername);
         }
         else {
-            if (!userRepository.exists(CURATION_USER)) {
-                User curationUser = new User(CURATION_USER, Role.ROLE_USER);
-                userRepository.create(curationUser);
-                projectService.createProjectPermission(new ProjectPermission(state.getProject(),
-                        CURATION_USER, PermissionLevel.ANNOTATOR));
-                projectService.createProjectPermission(new ProjectPermission(state.getProject(),
-                        CURATION_USER, PermissionLevel.CURATOR));
-            }
-            curator = userRepository.get(CURATION_USER);
+            curator = new User(CURATION_USER, Role.ROLE_USER);
             curationService.updateCurationName(currentUsername, project, CURATION_USER);
         }
         

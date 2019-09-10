@@ -494,6 +494,10 @@ public class RecommendationServiceImpl
     {
         User user = userRepository.get(aUser);
 
+        if (user == null) {
+            return;
+        }
+        
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
             new RecommendationStateKey(user.getUsername(), aProject),
