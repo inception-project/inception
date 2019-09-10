@@ -21,7 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.stream.Collectors.groupingBy;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -419,8 +419,8 @@ public class SearchAnnotationSidebar
         List<FeatureState> featureStates = state.getFeatureStates();
         
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleAt(aCas, type, aSearchResult.getOffsetStart(),
-            aSearchResult.getOffsetEnd());
+        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
+            aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
         boolean overrideExisting = createOptions.getObject().isOverrideExistingAnnotations();
 
@@ -454,8 +454,8 @@ public class SearchAnnotationSidebar
             SpanAdapter aAdapter, SearchResult aSearchResult)
     {
         Type type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleAt(aCas, type, aSearchResult.getOffsetStart(),
-                aSearchResult.getOffsetEnd());
+        AnnotationFS annoFS = selectAt(aCas, type, aSearchResult.getOffsetStart(),
+                aSearchResult.getOffsetEnd()).stream().findFirst().orElse(null);
 
         if (annoFS == null || !featureValuesMatchCurrentState(annoFS)
                 && deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
