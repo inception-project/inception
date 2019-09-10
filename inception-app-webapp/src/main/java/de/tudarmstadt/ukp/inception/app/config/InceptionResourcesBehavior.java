@@ -23,6 +23,8 @@ import org.apache.wicket.markup.head.CssHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 
+import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReference;
+import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.app.css.InceptionCssReference;
 
@@ -39,6 +41,15 @@ public class InceptionResourcesBehavior
         // Loading WebAnno CSS here so it can override JQuery/Kendo CSS
         aResponse.render(CssHeaderItem.forReference(InceptionCssReference.get()));
         aResponse.render(JavaScriptHeaderItem.forReference(WebAnnoJavascriptReference.get()));
+        
+        // Loading resources for the tour guide feature for the new users
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/enjoyhint.js")));
+        aResponse.render(JavaScriptHeaderItem
+                .forReference(new WebjarsJavaScriptResourceReference("enjoyhint/current/jquery.enjoyhint.js")));
+        aResponse.render(CssHeaderItem.forReference(new WebjarsCssResourceReference("enjoyhint/current/jquery.enjoyhint.css")));
+        aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jquery.scrollTo/current/jquery.scrollTo.js")));
+        aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("kinetic/current/kinetic.min.js")));
     }
     
     public static InceptionResourcesBehavior get()

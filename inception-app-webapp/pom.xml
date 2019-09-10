@@ -499,6 +499,19 @@
       <groupId>org.apache.wicket</groupId>
       <artifactId>wicket-native-websocket-javax</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>org.webjars.bowergithub.xbsoftware</groupId>
+      <artifactId>enjoyhint</artifactId>
+	</dependency> 
+	<dependency>
+	    <groupId>org.webjars.npm</groupId>
+	    <artifactId>kinetic</artifactId>
+	</dependency>
+	<dependency>
+	    <groupId>org.webjars.bower</groupId>
+	    <artifactId>jquery.scrollTo</artifactId>
+	</dependency>
   </dependencies>
   <build>
     <plugins>
