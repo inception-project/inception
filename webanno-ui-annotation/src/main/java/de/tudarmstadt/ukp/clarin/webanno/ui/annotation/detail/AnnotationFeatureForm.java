@@ -141,13 +141,9 @@ public class AnnotationFeatureForm
         add(createClearButton());
         layerContainer.add(relationHint = createRelationHint());
         layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
-        layerContainer.add(visibleWhen(() -> {
-            List<AnnotationLayer> spanLayer = 
-                    getModelObject().getAnnotationLayers().stream()
-                            .filter(l -> l.isEnabled() && l.getType().equals("span"))
-                            .collect(Collectors.toList());
-            return !(spanLayer.size() <= 1);
-        }));
+        layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
+                .map(layerChoices -> layerChoices.size() > 1)
+                .orElse(false).getObject()));
         add(layerContainer);
         add(featureEditorPanel = createFeatureEditorPanel());
         add(createSelectedAnnotationTypeLabel());
