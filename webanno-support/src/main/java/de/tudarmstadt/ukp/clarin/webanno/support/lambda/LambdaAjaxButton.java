@@ -30,6 +30,7 @@ public class LambdaAjaxButton<T>
 
     private AjaxFormCallback<T> action;
     private AjaxExceptionHandler exceptionHandler;
+    private boolean triggerAfterSubmit;
 
     public LambdaAjaxButton(String aId, AjaxFormCallback<T> aAction)
     {
@@ -44,9 +45,31 @@ public class LambdaAjaxButton<T>
         exceptionHandler = aExceptionHandler;
     }
 
-    @SuppressWarnings("unchecked")
+    public LambdaAjaxButton<T> triggerAfterSubmit()
+    {
+        triggerAfterSubmit = true;
+        return this;
+    }
+
     @Override
-    protected void onSubmit(AjaxRequestTarget aTarget)
+    public void onSubmit(AjaxRequestTarget aTarget)
+    {
+        if (!triggerAfterSubmit) {
+            action(aTarget);
+        }
+    }
+    
+    @Override
+    public void onAfterSubmit(AjaxRequestTarget aTarget)
+    {
+        if (triggerAfterSubmit) {
+            action(aTarget);
+        }
+    }
+    
+    
+    @SuppressWarnings("unchecked")
+    private void action(AjaxRequestTarget aTarget)
     {
         try {
             action.accept(aTarget, (Form<T>) getForm());

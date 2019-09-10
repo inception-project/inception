@@ -1173,4 +1173,18 @@
       </column>
     </addColumn>
   </changeSet>  
+
+  <changeSet author="WebAnno Team" id="20190711-1">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="instance_identity" />
+      </not>
+    </preConditions>
+    <createTable tableName="instance_identity">
+      <column name="id" type="VARCHAR(255)">
+        <constraints nullable="false" />
+      </column>
+    </createTable>
+    <addPrimaryKey columnNames="id" tableName="instance_identity" />
+  </changeSet>  
 </databaseChangeLog>

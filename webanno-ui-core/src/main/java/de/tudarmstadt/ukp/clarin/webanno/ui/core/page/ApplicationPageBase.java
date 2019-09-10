@@ -18,25 +18,20 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
-import org.apache.wicket.Session;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
-import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
-import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.protocol.http.ClientProperties;
-import org.apache.wicket.protocol.http.WebSession;
-import org.apache.wicket.protocol.http.request.WebClientInfo;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -47,7 +42,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.BootstrapFeedbackPanel;
-import de.tudarmstadt.ukp.clarin.webanno.support.db.DatabaseDriverService;
+import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptor;
+import de.tudarmstadt.ukp.clarin.webanno.support.interceptors.GlobalInterceptorsRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
 
 public abstract class ApplicationPageBase
     extends WebPage
@@ -63,11 +60,9 @@ public abstract class ApplicationPageBase
     };
     
     private FeedbackPanel feedbackPanel;
-    private Label versionLabel;
-    private Label embeddedDbWarning;
-    private Label browserWarning;
 
-    private @SpringBean DatabaseDriverService dbDriverService;
+    private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
+    private @SpringBean FooterItemRegistry footerItemRegistry;
 
     protected ApplicationPageBase()
     {
@@ -82,6 +77,25 @@ public abstract class ApplicationPageBase
 
     private void commonInit()
     {
+        for (GlobalInterceptor interceptor : interceptorsRegistry.getInterceptors()) {
+            interceptor.intercept(this);
+        }
+
+        List<Component> footerItems = footerItemRegistry.getFooterItems().stream()
+                .map(c -> c.create("item"))
+                .collect(Collectors.toList());
+        
+        add(new ListView<Component>("footerItems", footerItems)
+        {
+            private static final long serialVersionUID = 5912513189482015963L;
+
+            @Override
+            protected void populateItem(ListItem<Component> aItem)
+            {
+                aItem.add(aItem.getModelObject());
+            }
+        });
+        
         Properties settings = SettingsUtil.getSettings();
         
         // Override locale to be used by application
@@ -132,24 +146,6 @@ public abstract class ApplicationPageBase
             return true;
         });
         add(feedbackPanel);
-        
-        versionLabel = new Label("version", SettingsUtil.getVersionString());
-        add(versionLabel);
-        
-        // set up warnings shown when using an embedded DB or some unsupported browser
-        boolean isBrowserWarningVisible = isBrowserWarningVisible(settings);
-        boolean isDatabaseWarningVisible = isDatabaseWarningVisible(settings);
-        
-        embeddedDbWarning = new Label("embeddedDbWarning", new ResourceModel("warning.database"));
-        embeddedDbWarning.setVisible(isDatabaseWarningVisible);
-        add(embeddedDbWarning);
-        browserWarning = new Label("browserWarning", new ResourceModel("warning.browser"));
-        browserWarning.setVisible(isBrowserWarningVisible);
-        add(browserWarning);
-        
-        WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
-        warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);  
-        add(warningsContainer);
     }
 
     @Override
@@ -169,39 +165,5 @@ public abstract class ApplicationPageBase
     public FeedbackPanel getFeedbackPanel()
     {
         return feedbackPanel;
-    }
-    
-    private boolean isDatabaseWarningVisible(Properties settings) {
-        boolean isUsingEmbeddedDatabase;
-        try {
-            String driver = dbDriverService.getDatabaseDriverName();
-            isUsingEmbeddedDatabase = StringUtils.contains(driver.toLowerCase(Locale.US), "hsql");
-        } catch (Throwable e) {
-            LOG.warn("Unable to determine which database is being used", e);
-            isUsingEmbeddedDatabase = false;
-        }
-        boolean ignoreWarning = "false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_EMBEDDED_DATABASE));
-
-        return isUsingEmbeddedDatabase && !ignoreWarning;
-    }
-    
-    private boolean isBrowserWarningVisible(Properties settings) { 
-        RequestCycle requestCycle = RequestCycle.get();
-        WebClientInfo clientInfo;
-        if (Session.exists()) {
-            WebSession session = WebSession.get();
-            clientInfo = session.getClientInfo();
-        } else {
-            clientInfo = new WebClientInfo(requestCycle);
-        }
-        ClientProperties clientProperties = clientInfo.getProperties();
-        boolean isUsingUnsupportedBrowser = !clientProperties.isBrowserSafari()
-                && !clientProperties.isBrowserChrome();
-        
-        boolean ignoreWarning = "false".equalsIgnoreCase(
-                settings.getProperty(SettingsUtil.CFG_WARNINGS_UNSUPPORTED_BROWSER));
-
-        return isUsingUnsupportedBrowser && !ignoreWarning;
     }
 }

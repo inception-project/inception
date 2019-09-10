@@ -53,6 +53,10 @@ html, body {
   background-color: @navbar-default-bg;
   border-color: @navbar-default-border;
   border-top: 1px solid;
+  
+  a, a:hover, a:focus {
+  	color: black;
+  }
 }
 
 .feedback-panel {
@@ -258,14 +262,21 @@ span.form-control {
 .fit-child-loose > * { position: absolute; left: 5px; right: 5px; top: 5px; bottom: 5px; resize: none; }
 
 /* style for the warning popover in the page footer */
-.dev-warnings > .alert {
-  padding: 0px 5px 0px 5px;
-  border: none;
-  color: yellow;
-  background-color: red;
-}
-.dev-warnings .popover-content ul {
-  padding-left: 18px;
+.dev-warnings {
+	.alert {
+	  padding: 0px 5px 0px 5px;
+	  border: none;
+	  color: yellow;
+	  background-color: red;
+	}
+	
+ .popover-content ul {
+    padding-left: 18px;
+  }
+  
+  a, a:hover, a:focus {
+	  color: yellow;
+  }
 }
 
 /* remove top border in tabbed panels */

@@ -91,7 +91,7 @@ public class User
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = true)
     private Date updated;
-    
+
     public User()
     {
         // No-args constructor required for ORM.

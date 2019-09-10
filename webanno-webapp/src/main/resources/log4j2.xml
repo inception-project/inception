@@ -41,6 +41,7 @@
     <Logger name="de.tudarmstadt" level="INFO"/>
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
+    <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
     
     <Root level="WARN">
       <AppenderRef ref="ConsoleAppender" />

@@ -201,7 +201,11 @@ public class ConllUWriter
                         FSUtil.getFeature(sentence, "id", String.class));
             }
             if (writeTextHeader) {
-                aOut.printf("# %s = %s\n", ConllUReader.META_TEXT, sentence.getCoveredText());
+                String sentenceText = sentence.getCoveredText();
+                // CoNLL-U does not support line breaks in the sentence text, so we need to replace
+                // such characters.
+                sentenceText = StringUtils.replaceChars(sentenceText, "\n\r", "  ");
+                aOut.printf("# %s = %s\n", ConllUReader.META_TEXT, sentenceText);
             }
             
             // Tokens
