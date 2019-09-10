@@ -28,7 +28,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
 import static org.apache.uima.fit.util.CasUtil.selectAt;
-import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -690,8 +689,8 @@ public abstract class AnnotationDetailEditorPanel
             SpanAdapter adapter = (SpanAdapter) annotationService
                     .getAdapter(state.getDefaultAnnotationLayer());
             Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-            AnnotationFS annotation = selectSingleAt(aCas, type, nextToken.getBegin(),
-                    nextToken.getEnd());
+            AnnotationFS annotation = selectAt(aCas, type, nextToken.getBegin(), nextToken.getEnd())
+                    .stream().findFirst().orElse(null);
             
             // If there is no existing annotation of if stacking is allowed then we create a new one
             if (adapter.getLayer().isAllowStacking() || annotation == null) {
