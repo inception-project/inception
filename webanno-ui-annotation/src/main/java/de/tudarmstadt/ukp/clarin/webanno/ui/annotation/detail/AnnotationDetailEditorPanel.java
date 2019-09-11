@@ -1700,7 +1700,7 @@ public abstract class AnnotationDetailEditorPanel
         int attachCount;
     }
     
-    @OnEvent
+    @OnEvent(stop = true)
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
         AjaxRequestTarget target = aEvent.getTarget();
