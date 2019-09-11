@@ -91,12 +91,10 @@ public class MatomoTelemetrySupportImpl
     private final TelemetryService telemetryService;
     private final UserDao userService;
     private final String applicationName;
-
-    private SessionRegistry sessionRegistry;
+    private final SessionRegistry sessionRegistry;
+    private final ScheduledExecutorService scheduler;
 
     private PiwikTracker tracker;
-    
-    private ScheduledExecutorService scheduler;
     
     @Autowired
     public MatomoTelemetrySupportImpl(TelemetryService aTelemetryService,
@@ -252,7 +250,7 @@ public class MatomoTelemetrySupportImpl
             return;
         }
 
-        if (sessionRegistry.getAllPrincipals().size() == 0) {
+        if (sessionRegistry.getAllPrincipals().isEmpty()) {
             return;
         }
 

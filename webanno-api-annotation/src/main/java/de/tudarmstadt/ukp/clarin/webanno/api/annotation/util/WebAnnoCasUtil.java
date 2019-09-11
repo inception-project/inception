@@ -23,10 +23,10 @@ import static org.apache.uima.cas.CAS.FEATURE_BASE_NAME_LANGUAGE;
 import static org.apache.uima.fit.util.CasUtil.getAnnotationType;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 import static org.apache.uima.fit.util.CasUtil.selectCovering;
 import static org.apache.uima.fit.util.CasUtil.selectFollowing;
 import static org.apache.uima.fit.util.CasUtil.selectSingle;
-import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -322,11 +322,13 @@ public class WebAnnoCasUtil
     {
         Type tokenType = getType(aCas, Token.class);
         
-        AnnotationFS currentToken = selectSingleAt(aCas, tokenType, aBegin, aEnd);
+        AnnotationFS currentToken = selectAt(aCas, tokenType, aBegin, aEnd).stream().findFirst()
+                .orElse(null);
         // thid happens when tokens such as Dr. OR Ms. selected with double
         // click, which make seletected text as Dr OR Ms
         if (currentToken == null) {
-            currentToken = selectSingleAt(aCas, tokenType, aBegin, aEnd + 1);
+            currentToken = selectAt(aCas, tokenType, aBegin, aEnd + 1).stream().findFirst()
+                    .orElse(null);
         }
         AnnotationFS nextToken = null;
 
