@@ -22,12 +22,34 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
-public class LinkFeatureDeletedEvent
-    extends LinkFeatureEvent
+public abstract class LinkFeatureEvent
 {
-    public LinkFeatureDeletedEvent(FeatureState aFs, AjaxRequestTarget aTarget,
+    private final FeatureState fs;
+    
+    private final LinkWithRoleModel linkWithRoleModel;
+    
+    private final AjaxRequestTarget target;
+    
+    public LinkFeatureEvent(FeatureState aFs, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
-        super(aFs, aTarget, aLinkWithRoleModel);
+        fs = aFs;
+        linkWithRoleModel = aLinkWithRoleModel;
+        target = aTarget;
+    }
+    
+    public FeatureState getFeatureState()
+    {
+        return fs;
+    }
+    
+    public LinkWithRoleModel getLinkWithRoleModel()
+    {
+        return linkWithRoleModel;
+    }
+    
+    public AjaxRequestTarget getTarget()
+    {
+        return target;
     }
 }

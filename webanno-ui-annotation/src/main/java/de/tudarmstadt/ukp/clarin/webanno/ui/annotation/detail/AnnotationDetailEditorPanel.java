@@ -88,6 +88,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureSetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -1712,6 +1713,18 @@ public abstract class AnnotationDetailEditorPanel
             catch (Exception e) {
                 handleException(this, target, e);
             }
+        }
+    }
+    
+    @OnEvent(stop = true)
+    public void onLinkFeatureSetEvent(LinkFeatureSetEvent aEvent)
+    {
+        AjaxRequestTarget target = aEvent.getTarget();
+        try {
+            actionCreateOrUpdate(target, getEditorCas());
+        }
+        catch (Exception e) {
+            handleException(this, target, e);
         }
     }
 }

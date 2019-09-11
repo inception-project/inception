@@ -22,10 +22,10 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
-public class LinkFeatureDeletedEvent
+public class LinkFeatureSetEvent
     extends LinkFeatureEvent
 {
-    public LinkFeatureDeletedEvent(FeatureState aFs, AjaxRequestTarget aTarget,
+    public LinkFeatureSetEvent(FeatureState aFs, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
         super(aFs, aTarget, aLinkWithRoleModel);
