@@ -81,6 +81,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferen
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -581,10 +582,16 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isUserViewingOthersWork()
-                    && SourceDocumentState.NEW.equals(state.getDocument().getState())) {
-                documentService.transitionSourceDocumentState(state.getDocument(),
-                        NEW_TO_ANNOTATION_IN_PROGRESS);
+            if (!isUserViewingOthersWork()) {
+                if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
+                    documentService.transitionSourceDocumentState(state.getDocument(),
+                            NEW_TO_ANNOTATION_IN_PROGRESS);
+                }
+                
+                if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                    documentService.transitionAnnotationDocumentState(annotationDocument,
+                            AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+                }
             }
             
             // Reset the editor (we reload the page content below, so in order not to schedule

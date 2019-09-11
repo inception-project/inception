@@ -72,9 +72,12 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -633,9 +636,16 @@ public class CorrectionPage
             }
 
             // Update document state
-            documentService.transitionSourceDocumentState(state.getDocument(),
-                    SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);            
-            
+            if (state.getDocument().getState().equals(SourceDocumentState.NEW)) {
+                documentService.transitionSourceDocumentState(state.getDocument(),
+                        SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            }
+
+            if (AnnotationDocumentState.NEW.equals(annotationDocument.getState())) {
+                documentService.transitionAnnotationDocumentState(annotationDocument,
+                        AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
+            }
+
             // Reset the editor
             detailEditor.reset(aTarget);
             // Populate the layer dropdown box
