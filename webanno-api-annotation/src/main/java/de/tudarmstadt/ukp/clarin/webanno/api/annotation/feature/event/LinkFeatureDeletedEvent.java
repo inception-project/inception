@@ -18,15 +18,12 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
 public class LinkFeatureDeletedEvent
 {
-    private final IPartialPageRequestHandler requestHandler;
-    
     private final FeatureState fs;
     
     private final LinkWithRoleModel linkWithRoleModel;
@@ -34,15 +31,14 @@ public class LinkFeatureDeletedEvent
     private final AjaxRequestTarget target;
     
     public LinkFeatureDeletedEvent(FeatureState aFs, AjaxRequestTarget aTarget,
-            LinkWithRoleModel aLinkWithRoleModel, IPartialPageRequestHandler aRequestHandler)
+            LinkWithRoleModel aLinkWithRoleModel)
     {
         fs = aFs;
         linkWithRoleModel = aLinkWithRoleModel;
-        requestHandler = aRequestHandler;
         target = aTarget;
     }
     
-    public FeatureState getFs()
+    public FeatureState getFeatureState()
     {
         return fs;
     }
@@ -50,11 +46,6 @@ public class LinkFeatureDeletedEvent
     public LinkWithRoleModel getLinkWithRoleModel()
     {
         return linkWithRoleModel;
-    }
-    
-    public IPartialPageRequestHandler getRequestHandler()
-    {
-        return requestHandler;
     }
     
     public AjaxRequestTarget getTarget()

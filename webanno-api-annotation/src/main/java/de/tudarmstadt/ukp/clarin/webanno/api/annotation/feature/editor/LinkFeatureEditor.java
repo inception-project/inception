@@ -532,14 +532,9 @@ public class LinkFeatureEditor
         state.clearArmedSlot();
 
         aTarget.add(content);
-    
-        Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
-        if (handler.isPresent()) {
-            Page page = (Page) handler.get().getPage();
-            page.send(page, Broadcast.BREADTH,
-                    new LinkFeatureDeletedEvent(fs, aTarget, linkWithRoleModel,
-                            RequestCycle.get().find(IPartialPageRequestHandler.class).get()));
-        }
+        
+        send(this, Broadcast.BUBBLE, 
+                new LinkFeatureDeletedEvent(fs, aTarget, linkWithRoleModel));
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
