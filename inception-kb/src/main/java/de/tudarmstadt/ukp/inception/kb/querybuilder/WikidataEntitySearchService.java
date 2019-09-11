@@ -71,7 +71,7 @@ public class WikidataEntitySearchService implements GraphPattern
         patterns = new ArrayList<>();
         patterns.add(BD_SERVICE_PARAM.has(WIKIBASE_API, literalOf("EntitySearch")));
         patterns.add(BD_SERVICE_PARAM.has(WIKIBASE_ENDPOINT, literalOf("www.wikidata.org")));
-        patterns.add(BD_SERVICE_PARAM.has(WIKIBASE_LIMIT, literalOf(50)));
+        patterns.add(BD_SERVICE_PARAM.has(WIKIBASE_LIMIT, literalOf("once")));
         patterns.add(BD_SERVICE_PARAM.has(MWAPI_SEARCH, literalOf(aQuery)));
         patterns.add(BD_SERVICE_PARAM.has(MWAPI_LANGUAGE, literalOf(aLanguage)));
         patterns.add(aSubject.has(WIKIBASE_API_OUTPUT_ITEM, MWAPI_ITEM));
