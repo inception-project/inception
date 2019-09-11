@@ -1,0 +1,4 @@
+= Concept features
+
+Concept features are shown as an auto-complete field. Typing into the field triggers a query against
+the knowledge base and displays candidates in a dropdown list.
