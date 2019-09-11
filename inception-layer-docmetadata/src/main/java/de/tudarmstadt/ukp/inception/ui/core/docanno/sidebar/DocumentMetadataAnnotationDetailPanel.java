@@ -415,7 +415,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         setVisible(!isVisible());
     }
     
-    @OnEvent
+    @OnEvent(stop = true)
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
         AjaxRequestTarget target = aEvent.getTarget();
