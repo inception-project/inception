@@ -599,6 +599,8 @@ public class DocumentServiceImpl
 
         // Change the state of the source document to in progress
         transitionSourceDocumentState(aDocument, NEW_TO_ANNOTATION_IN_PROGRESS);
+        transitionAnnotationDocumentState(annotationDocument,
+                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
 
         return readAnnotationCas(annotationDocument);
     }
