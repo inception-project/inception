@@ -53,15 +53,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.AutomationStatus;
 import de.tudarmstadt.ukp.clarin.webanno.automation.model.MiraTemplate;
-import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.TrainingDocument;
@@ -73,15 +72,22 @@ public class MiraAutomationServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
     
-    @Value(value = "${repository.path}")
-    private File dir;
-
-    private @Autowired AutomationCasStorageService automationCasStorageService;
-    private @Autowired CasDoctor casDoctor;
-    private @Autowired ImportExportService importExportService;
+    private final File dir;
+    private final AutomationCasStorageService automationCasStorageService;
+    private final ImportExportService importExportService;
     
     @PersistenceContext
     private EntityManager entityManager;
+    
+    @Autowired
+    public MiraAutomationServiceImpl(RepositoryProperties aRepositoryProperties,
+            AutomationCasStorageService aAutomationCasStorageService,
+            ImportExportService aImportExportService)
+    {
+        dir = aRepositoryProperties.getPath();
+        automationCasStorageService = aAutomationCasStorageService;
+        importExportService = aImportExportService;
+    }
     
     @Override
     public List<String> listTemplates(Project aProject)

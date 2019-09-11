@@ -68,7 +68,7 @@ public class AnnotationDocument
 
     @Column(nullable = false)
     @Type(type = "de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateType")
-    private AnnotationDocumentState state = AnnotationDocumentState.IN_PROGRESS;
+    private AnnotationDocumentState state = AnnotationDocumentState.NEW;
 
     @Temporal(TemporalType.TIMESTAMP)
     private Date timestamp;
@@ -84,6 +84,11 @@ public class AnnotationDocument
     @Column(nullable = true)
     private Date updated;
 
+    public AnnotationDocument()
+    {
+        // Nothing to do
+    }
+    
     public SourceDocument getDocument()
     {
         return document;

@@ -72,6 +72,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -427,7 +428,7 @@ public class ImportExportServiceImpl
                     cas);
             ConfigurationParameterFactory.addConfigurationParameters(writer,
                     JCasFileWriter_ImplBase.PARAM_USE_DOCUMENT_ID, true,
-                    JCasFileWriter_ImplBase.PARAM_ESCAPE_DOCUMENT_ID, false,
+                    JCasFileWriter_ImplBase.PARAM_ESCAPE_FILENAME, false,
                     JCasFileWriter_ImplBase.PARAM_TARGET_LOCATION, exportTempDir,
                     JCasFileWriter_ImplBase.PARAM_STRIP_EXTENSION, aStripExtension);
 

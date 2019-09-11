@@ -117,6 +117,7 @@ public class AnnotationFeatureForm
     private Label relationHint;
     private DropDownChoice<AnnotationLayer> layerSelector;
     private List<AnnotationLayer> annotationLayers = new ArrayList<>();
+    private WebMarkupContainer layerContainer;
 
     private final AnnotationDetailEditorPanel editorPanel;
     
@@ -130,15 +131,20 @@ public class AnnotationFeatureForm
     {
         super(id, new CompoundPropertyModel<>(aState));
         editorPanel = aEditorPanel;
-        add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
+        layerContainer = new WebMarkupContainer("layerContainer");
+        layerContainer.add(forwardAnnotationCheckBox = createForwardAnnotationCheckBox());
         add(createNoAnnotationWarningLabel());
         add(deleteAnnotationDialog = createDeleteDialog());
         add(replaceAnnotationDialog = createReplaceDialog());
         add(createDeleteButton());
         add(createReverseButton());
         add(createClearButton());
-        add(relationHint = createRelationHint());
-        add(layerSelector = createDefaultAnnotationLayerSelector());
+        layerContainer.add(relationHint = createRelationHint());
+        layerContainer.add(layerSelector = createDefaultAnnotationLayerSelector());
+        layerContainer.add(visibleWhen(() -> layerSelector.getChoicesModel()
+                .map(layerChoices -> layerChoices.size() > 1)
+                .orElse(false).getObject()));
+        add(layerContainer);
         add(featureEditorPanel = createFeatureEditorPanel());
         add(createSelectedAnnotationTypeLabel());
         setDefaultButton(null);
@@ -147,7 +153,8 @@ public class AnnotationFeatureForm
     private WebMarkupContainer createFeatureEditorPanel()
     {
         WebMarkupContainer container = new WebMarkupContainer("featureEditorsContainer");
-        container.add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
+        container.add(
+                visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet()));
 
         // Add placeholder since wmc might start out invisible. Without the placeholder we
         // cannot make it visible in an AJAX call
