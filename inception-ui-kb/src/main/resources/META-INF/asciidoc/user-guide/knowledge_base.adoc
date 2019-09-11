@@ -52,4 +52,8 @@ image::kb5.png[align="center"]
 
 When creating a new annotation with this feature, then the user is offered a dropdown with possible entities from the knowledge base. This dropdown is then limited to only concepts or features or both when selecting the respective filter in the feature configuration.
 
+The *scope* setting allows to limit linking candidates to a subtree of the knowledge base. 
 
+NOTE: Selecting scope means that full-text search cannot be used. This means that queries may become
+      very slow if the scope covers a large number concepts or instances. Therefore, it is best not to choose
+      too broad scopes.
