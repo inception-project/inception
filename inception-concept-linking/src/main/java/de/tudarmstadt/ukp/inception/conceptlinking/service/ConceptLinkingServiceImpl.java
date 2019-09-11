@@ -172,7 +172,7 @@ public class ConceptLinkingServiceImpl
                             .withIdentifier(aQuery);
                     
                     if (aConceptScope != null) {
-                        iriMatchBuilder.childrenOf(aConceptScope);
+                        iriMatchBuilder.descendantsOf(aConceptScope);
                     }
                     
                     List<KBHandle> exactMatches = iriMatchBuilder
@@ -187,6 +187,13 @@ public class ConceptLinkingServiceImpl
                 }
             }
             
+            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
+            
+            if (aConceptScope != null) {
+                // Scope-limiting must always happen before label matching!
+                exactBuilder.descendantsOf(aConceptScope);
+            }
+            
             // Collect exact matches - although exact matches are theoretically contained in the
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
@@ -196,12 +203,7 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
-                    .withLabelMatchingExactlyAnyOf(exactLabels);
-                        
-            if (aConceptScope != null) {
-                exactBuilder.childrenOf(aConceptScope);
-            }
+            exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
             
             List<KBHandle> exactMatches = exactBuilder
                     .retrieveLabel()
@@ -214,14 +216,16 @@ public class ConceptLinkingServiceImpl
             result.addAll(exactMatches);
 
             if (aQuery != null && aQuery.length() > threshold) {
-                // Collect matches starting with the query - this is the main driver for the
-                // auto-complete functionality
-                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB)
-                        .withLabelStartingWith(aQuery);
+                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
                 
                 if (aConceptScope != null) {
-                    startingWithBuilder.childrenOf(aConceptScope);
+                    // Scope-limiting must always happen before label matching!
+                    startingWithBuilder.descendantsOf(aConceptScope);
                 }
+                
+                // Collect matches starting with the query - this is the main driver for the
+                // auto-complete functionality
+                startingWithBuilder.withLabelStartingWith(aQuery);
                 
                 List<KBHandle> startingWithMatches = startingWithBuilder
                         .retrieveLabel()
@@ -236,17 +240,19 @@ public class ConceptLinkingServiceImpl
             
             
             // Collect containing matches
+            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+
+            if (aConceptScope != null) {
+                // Scope-limiting must always happen before label matching!
+                containingBuilder.descendantsOf(aConceptScope);
+            }
+            
             String[] containingLabels = asList(
                     (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB)
-                    .withLabelContainingAnyOf(containingLabels);
-            
-            if (aConceptScope != null) {
-                containingBuilder.childrenOf(aConceptScope);
-            }
+            containingBuilder.withLabelContainingAnyOf(containingLabels);
             
             List<KBHandle> containingMatches = containingBuilder
                     .retrieveLabel()
