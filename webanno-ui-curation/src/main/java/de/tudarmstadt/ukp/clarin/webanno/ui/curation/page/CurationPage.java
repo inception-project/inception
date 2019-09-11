@@ -110,6 +110,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
@@ -233,6 +234,7 @@ public class CurationPage
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
+        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         add(centerArea);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
@@ -323,8 +325,6 @@ public class CurationPage
                                 || !state.getProject().isDisableExport()));
             }
         });
-        
-        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
         
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -645,14 +645,6 @@ public class CurationPage
     {
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
-    }
-
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-        throws UIMAException, ClassNotFoundException, IOException, AnnotationException
-    {
-        getModelObject().toggleScriptDirection();
-
-        updatePanel(aTarget, curationContainer);
     }
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)

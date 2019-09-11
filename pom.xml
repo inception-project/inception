@@ -496,6 +496,11 @@
          <version>${wicket-bootstrap.version}</version>
       </dependency>
       <dependency>
+        <groupId>org.webjars</groupId>
+        <artifactId>font-awesome</artifactId>
+        <version>5.10.1</version>
+      </dependency>
+      <dependency>
         <groupId>de.agilecoders.wicket</groupId>
         <artifactId>jquery-selectors</artifactId>
          <version>${wicket-jquery-selectors.version}</version>

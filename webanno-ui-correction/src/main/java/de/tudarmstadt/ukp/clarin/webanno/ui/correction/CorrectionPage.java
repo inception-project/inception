@@ -89,6 +89,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
@@ -168,6 +169,7 @@ public class CorrectionPage
         centerArea.add(new DocumentNavigator("documentNavigator", this));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
+        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -276,8 +278,6 @@ public class CorrectionPage
             }
         });
 
-        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
-        
         add(createOrGetResetDocumentDialog());
         add(createOrGetResetDocumentLink());
         
@@ -453,17 +453,6 @@ public class CorrectionPage
         openDocumentsModal.show(aTarget);
     }
     
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-            throws Exception
-    {
-        getModelObject().toggleScriptDirection();
-        annotationEditor.requestRender(aTarget);
-
-        curationContainer.setState(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer,
-                annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-
     /**
      * Reset the document by removing all annotations form the initial CAS and using the result as
      * the editor CAS.

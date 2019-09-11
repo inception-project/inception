@@ -197,6 +197,7 @@ public class AnnotationPage
         centerArea.add(new DocumentNavigator("documentNavigator", this));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
+        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         createAnnotationEditor(null);
         add(centerArea);
 
@@ -229,8 +230,6 @@ public class AnnotationPage
                             || !state.getProject().isDisableExport()));
         }));
 
-        add(new ActionBarLink("toggleScriptDirection", this::actionToggleScriptDirection));
-        
         add(createOrGetResetDocumentDialog());
         add(createOrGetResetDocumentLink());
         
@@ -444,13 +443,6 @@ public class AnnotationPage
         openDocumentsModal.show(aTarget);
     }
 
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-            throws Exception
-    {
-        getModelObject().toggleScriptDirection();
-        actionRefreshDocument(aTarget);
-    }
-    
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
