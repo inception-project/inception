@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerInitializedEvent;
+import org.springframework.boot.web.context.WebServerInitializedEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -78,9 +78,9 @@ public class TelemetryServiceImpl
     }
 
     @EventListener
-    public void onApplicationEvent(EmbeddedServletContainerInitializedEvent aEvt)
+    public void onApplicationEvent(WebServerInitializedEvent aEvt)
     {
-        port = aEvt.getEmbeddedServletContainer().getPort();
+        port = aEvt.getWebServer().getPort();
     }
     
     public void init()

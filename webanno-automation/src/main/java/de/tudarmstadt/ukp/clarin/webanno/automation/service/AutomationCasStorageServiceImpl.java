@@ -34,10 +34,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataRetrievalFailureException;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctor;
 import de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorException;
@@ -53,14 +53,15 @@ public class AutomationCasStorageServiceImpl
 
     private final Object lock = new Object();
 
-    @Value(value = "${repository.path}")
-    private File dir;
+    private final File dir;
+    private final CasDoctor casDoctor;
     
-    private @Autowired CasDoctor casDoctor;
-    
-    public AutomationCasStorageServiceImpl()
+    @Autowired
+    public AutomationCasStorageServiceImpl(RepositoryProperties aRepositoryProperties,
+            CasDoctor aCasDoctor)
     {
-        // Nothing to do
+        dir = aRepositoryProperties.getPath();
+        casDoctor = aCasDoctor;
     }
 
     /**

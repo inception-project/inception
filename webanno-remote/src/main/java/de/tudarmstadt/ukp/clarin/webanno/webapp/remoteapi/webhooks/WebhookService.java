@@ -81,6 +81,25 @@ public class WebhookService implements InitializingBean
     
     private @Autowired WebhooksConfiguration configuration;
     private @Autowired RestTemplateBuilder restTemplateBuilder;
+
+    private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
+    
+    public WebhookService()
+        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
+    {
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain,
+                String authType) -> true;
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy).build();
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
+
+        CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
+
+        nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
+        nonValidatingRequestFactory.setHttpClient(httpClient);
+    }
     
     @Override
     public void afterPropertiesSet() throws Exception
@@ -135,7 +154,7 @@ public class WebhookService implements InitializingBean
                 }
                 else {
                     restTemplate = restTemplateBuilder
-                            .requestFactory(getNonValidatingRequestFactory()).build();
+                            .requestFactory(this::getNonValidatingRequestFactory).build();
                 }
                 
                 HttpHeaders requestHeaders = new HttpHeaders();
@@ -159,26 +178,8 @@ public class WebhookService implements InitializingBean
         }
     }
     
-    private HttpComponentsClientHttpRequestFactory nonValidatingRequestFactory = null;
-    
     private HttpComponentsClientHttpRequestFactory getNonValidatingRequestFactory()
-        throws KeyManagementException, NoSuchAlgorithmException, KeyStoreException
     {
-        if (nonValidatingRequestFactory == null) {
-            TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain,
-                    String authType) -> true;
-
-            SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
-                    .loadTrustMaterial(null, acceptingTrustStrategy).build();
-
-            SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext);
-
-            CloseableHttpClient httpClient = HttpClients.custom().setSSLSocketFactory(csf).build();
-
-            nonValidatingRequestFactory = new HttpComponentsClientHttpRequestFactory();
-            nonValidatingRequestFactory.setHttpClient(httpClient);
-        }
-
         return nonValidatingRequestFactory;
     }
 }

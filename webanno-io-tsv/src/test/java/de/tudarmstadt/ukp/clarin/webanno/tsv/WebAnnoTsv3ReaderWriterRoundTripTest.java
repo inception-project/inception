@@ -75,6 +75,7 @@ public class WebAnnoTsv3ReaderWriterRoundTripTest
         failingTests.add("testAnnotationWithLeadingWhitespaceAtStart");
         failingTests.add("testMultiTokenChain");
         failingTests.add("testSingleStackedNonTokenRelationWithoutFeatureValue2");
+        failingTests.add("testSingleStackedNonTokenOverlappingRelationWithoutFeatureValue");
         failingTests.add("testSubtokenChain");
         failingTests.add("testStackedSubMultiTokenSpanWithFeatureValue");
         failingTests.add("testSubMultiTokenSpanWithFeatureValue");
