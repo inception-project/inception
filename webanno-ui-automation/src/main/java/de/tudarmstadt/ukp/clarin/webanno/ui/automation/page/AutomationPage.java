@@ -64,6 +64,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentActionBarItem;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -96,11 +98,9 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
@@ -143,7 +143,6 @@ public class AutomationPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
-    private ExportDocumentDialog exportDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -180,6 +179,7 @@ public class AutomationPage
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -258,29 +258,7 @@ public class AutomationPage
             }
         });
 
-        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-       
-        add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
-            private static final long serialVersionUID = -3082002656840117267L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (projectService.isAdmin(state.getProject(), state.getUser())
-                                || !state.getProject().isDisableExport()));
-            }
-        });
         
         add(createOrGetResetDocumentDialog());
         add(createOrGetResetDocumentLink());

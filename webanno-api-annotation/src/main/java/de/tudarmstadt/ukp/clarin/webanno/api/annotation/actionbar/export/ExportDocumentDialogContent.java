@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
 import java.io.File;
 import java.io.Serializable;

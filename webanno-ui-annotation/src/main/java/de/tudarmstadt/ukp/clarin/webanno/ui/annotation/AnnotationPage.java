@@ -71,8 +71,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentActionBarItem;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -102,7 +103,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceiv
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 
@@ -138,7 +138,6 @@ public class AnnotationPage
     private boolean initialLoadCompleted = false;
 
     private OpenDocumentDialog openDocumentsModal;
-    private ExportDocumentDialog exportDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -198,6 +197,7 @@ public class AnnotationPage
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
         createAnnotationEditor(null);
         add(centerArea);
 
@@ -217,18 +217,9 @@ public class AnnotationPage
             }
         });
         
-        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
         add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
-
-        add(new ActionBarLink("showExportDialog", exportDialog::show).onConfigure(_this -> {
-            AnnotatorState state = AnnotationPage.this.getModelObject();
-            _this.setVisible(state.getProject() != null
-                    && (projectService.isAdmin(state.getProject(), state.getUser())
-                            || !state.getProject().isDisableExport()));
-        }));
 
         add(createOrGetResetDocumentDialog());
         add(createOrGetResetDocumentLink());

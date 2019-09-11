@@ -34,7 +34,6 @@
 <body>
   <wicket:extend>
     <div wicket:id=openDocumentsModal></div>
-    <div wicket:id="exportDialog"></div>
     <div wicket:id="resetDocumentDialog"></div>
     <div wicket:id="finishDocumentDialog"></div>
 
@@ -47,9 +46,6 @@
               <ul class="horizontal">
                 <li><a wicket:id="showOpenDocumentModal" id="showOpenDocumentModal"> <img
                     src="images/drawer_open.png" title="Open" /><br />Open
-                </a></li>
-                <li><a wicket:id="showExportDialog"> <img
-                    src="images/document_export.png" title="Export" /><br />Export
                 </a></li>
               </ul>
             </fieldset>
@@ -83,6 +79,7 @@
             <div class="panel-body flex-v-container" style="padding: 0px;">
               <nav class="action-bar">
                 <span wicket:id="documentNavigator" />
+                <span wicket:id="exportDialog" />
                 <span wicket:id="pageNavigator"/>
                 <span wicket:id="toggleScriptDirection"/>
                 <span wicket:id="guidelinesDialog" />
