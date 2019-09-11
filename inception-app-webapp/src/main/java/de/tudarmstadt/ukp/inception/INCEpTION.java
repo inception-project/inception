@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import static org.springframework.boot.WebApplicationType.SERVLET;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -53,6 +55,8 @@ import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAut
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
@@ -109,6 +113,15 @@ public class INCEpTION
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+    
+    @Bean
+    public PluginManager pluginManager()
+    {
+        PluginManagerImpl pluginManager = new PluginManagerImpl(
+                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
+        return pluginManager;
     }
     
     // The WebAnno User model class picks this bean up by name!
@@ -176,16 +189,20 @@ public class INCEpTION
                 .setupScreen(INCEpTION.class.getResource("splash.png"));
         
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        // Add the main application as the root Spring context
+        builder.sources(INCEpTION.class).web(SERVLET);
+        
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
-        builder.sources(INCEpTION.class);
+        
         builder.listeners(event -> {
             if (event instanceof ApplicationReadyEvent
                     || event instanceof ShutdownDialogAvailableEvent) {
                 splash.ifPresent(it -> it.dispose());
             }
         });
+        
         builder.run(args);
     }
 }
