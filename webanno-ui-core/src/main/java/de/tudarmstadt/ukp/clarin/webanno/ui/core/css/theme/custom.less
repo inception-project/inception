@@ -305,14 +305,30 @@ a.disabled {
   z-index: 21060 !important;
 }
 
-.annotation-editor-container {
-	nav {
-		padding: 5px;
-		background-color: grey;
-		
+.action-bar {
+	padding: 5px;
+	background-color: grey;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+
 		> * {
-			padding-left: 15px;
-			padding-right: 15px;
+			padding-left: @grid-gutter-width / 4;
+			padding-right: @grid-gutter-width / 4;
 		}
-	}	
+		
+	.action-bar-group {
+		padding: 2px;
+		background-color: lightgrey;
+    border-radius: 5px;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		flex: 0;
+	}
+	
+	.action-bar-group-title {
+		padding-left: @grid-gutter-width / 2;
+		padding-right: @grid-gutter-width / 2;
+	}
 }

@@ -19,17 +19,12 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div class="action-bar-group">
-      <div class="action-bar-group-title">Document</div>
-      <div class="btn-group">
-        <button wicket:id="showPreviousDocument" class="btn btn-default" type="button">
-          <i class="fa fa-step-backward" aria-hidden="true"></i>
-        </button>
-        <button wicket:id="showNextDocument" class="btn btn-default" type="button">
-          <i class="fa fa-step-forward" aria-hidden="true"></i>
-        </button>
-      </div>
-      </div>
+    <div wicket:id="guidelinesDialog"></div>
+    <div class="btn-group">
+      <button wicket:id="showGuidelinesDialog" class="btn btn-default" type="button">
+        <i class="fa fa-book" aria-hidden="true"></i>
+      </button>
+    </div>
   </wicket:panel>
 </body>
 </html>

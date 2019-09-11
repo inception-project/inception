@@ -58,15 +58,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
@@ -91,9 +92,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
@@ -133,9 +132,7 @@ public class CorrectionPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -169,6 +166,8 @@ public class CorrectionPage
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
         centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -232,8 +231,6 @@ public class CorrectionPage
                 }
             }
         };
-
-        suggestionView.setOutputMarkupId(true);
         centerArea.add(suggestionView);
 
         rightSidebar.add(detailEditor = createDetailEditor());
@@ -255,19 +252,10 @@ public class CorrectionPage
             }
         });
 
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-        
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
-
         add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
             private static final long serialVersionUID = -708400631769656072L;
 
@@ -464,12 +452,6 @@ public class CorrectionPage
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
     }
-
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
     
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
@@ -480,36 +462,6 @@ public class CorrectionPage
         curationContainer.setState(getModelObject());
         suggestionView.updatePanel(aTarget, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        try {
-            AnnotatorState state = getModelObject();
-
-            CAS editorCas = getEditorCas();
-
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, editorCas);
-
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
-            curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setState(state);
-            
-            update(aTarget);
-            aTarget.appendJavaScript(
-                    "Wicket.Window.unloadConfirmation = false;window.location.reload()");
-            
-            // Re-render the whole page because the width of the sidebar may have changed
-            aTarget.add(this);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
-        }
     }
 
     /**

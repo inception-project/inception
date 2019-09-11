@@ -34,9 +34,7 @@
 <body>
   <wicket:extend>
     <div wicket:id=openDocumentsModal></div>
-    <div wicket:id="preferencesDialog"></div>
     <div wicket:id="exportDialog"></div>
-    <div wicket:id="guidelinesDialog"></div>
     <div wicket:id="resetDocumentDialog"></div>
     <div wicket:id="finishDocumentDialog"></div>
 
@@ -53,9 +51,6 @@
                 <li><a wicket:id="showExportDialog"> <img
                     src="images/document_export.png" title="Export" /><br />Export
                 </a></li>
-                <li><a wicket:id="showPreferencesDialog"> <img src="images/cog.png"
-                    title="Settings" /><br />Settings
-                </a></li>
               </ul>
             </fieldset>
           </li>
@@ -67,15 +62,6 @@
                 <li><a wicket:id="toggleScriptDirection"> <img
                     src="images/text_width.png" title="Script direction" /><br />LTR/RTL
                 </a></li>
-              </ul>
-            </fieldset>
-          </li>
-
-          <li>
-            <fieldset>
-              <legend>Help</legend>
-              <ul class="horizontal">
-                <li wicket:id="showGuidelinesDialog" />
               </ul>
             </fieldset>
           </li>
@@ -106,9 +92,11 @@
               </h3>
             </div>
             <div class="panel-body flex-v-container" style="padding: 0px;">
-              <nav class="flex-h-container">
+              <nav class="action-bar">
                 <span wicket:id="documentNavigator" />
                 <span wicket:id="pageNavigator"/>
+                <span wicket:id="guidelinesDialog" />
+                <span wicket:id="preferencesDialog" />
               </nav>
               <div wicket:id="mergeView" class="flex-content text-center flex-v-container"></div>
             </div>

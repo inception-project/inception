@@ -21,9 +21,7 @@
   <wicket:extend>
     <div class="flex-content flex-v-container">
       <div wicket:id=openDocumentsModal></div>
-      <div wicket:id="preferencesDialog"></div>
       <div wicket:id="exportDialog"></div>
-      <div wicket:id="guidelinesDialog"></div>
       <div wicket:id="resetDocumentDialog"></div>
       <div wicket:id="finishDocumentDialog"></div>
       <div style="display: none;">
@@ -42,7 +40,6 @@
                   </a></li>
                   
                   <li wicket:id="showExportDialog" />
-                  <li wicket:id="showPreferencesDialog" />
                 </ul>
               </fieldset>
             </li>
@@ -55,16 +52,7 @@
                 </ul>
               </fieldset>
             </li>
-  
-            <li>
-              <fieldset>
-                <legend>Help</legend>
-                <ul class="horizontal">
-                  <li wicket:id="showGuidelinesDialog" />
-                </ul>
-              </fieldset>
-            </li>
-  
+    
             <li>
               <fieldset>
                 <legend>Workflow</legend>
@@ -91,9 +79,11 @@
               </h3>
             </div>
             <div class="panel-body flex-v-container" style="padding: 0px;">
-              <nav class="flex-h-container">
+              <nav class="action-bar">
                 <span wicket:id="documentNavigator" />
                 <span wicket:id="pageNavigator" />
+                <span wicket:id="guidelinesDialog" />
+                <span wicket:id="preferencesDialog" />
               </nav>
               <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"/>
             </div>

@@ -19,8 +19,9 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <form wicket:id="form">
-      <div class="input-group" style="max-width: 20em;">
+    <form wicket:id="form" class="action-bar-group">
+      <div class="action-bar-group-title">Row</div>
+      <div class="input-group" style="max-width: 14em;">
         <span class="input-group-btn">
           <button wicket:id="showFirst" class="btn btn-default" type="button">
             <i class="fa fa-fast-backward" aria-hidden="true"></i>
@@ -29,7 +30,6 @@
             <i class="fa fa-step-backward" aria-hidden="true"></i>
           </button>
         </span>
-        <span class="input-group-addon">Page</span>
         <input type="number" wicket:id="gotoPageText" class="form-control text-center"/>
         <span class="input-group-btn">
           <button wicket:id="gotoPageLink" class="btn btn-default" type="button">

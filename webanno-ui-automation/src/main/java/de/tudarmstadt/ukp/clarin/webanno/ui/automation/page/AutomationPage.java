@@ -63,14 +63,15 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
@@ -98,9 +99,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
@@ -143,9 +142,7 @@ public class AutomationPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -179,6 +176,8 @@ public class AutomationPage
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
         centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -254,49 +253,13 @@ public class AutomationPage
                 // Reload the page using AJAX. This does not add the project/document ID to the URL,
                 // but being AJAX it flickers less.
                 actionLoadDocument(aTarget);
-                
-//                if (state.getDocument() == null) {
-//                    setResponsePage(getApplication().getHomePage());
-//                    return;
-//                }
-//
-//                try {
-//                    aCallbackTarget.addChildren(getPage(), IFeedback.class);
-//
-//                    String username = SecurityContextHolder.getContext().getAuthentication()
-//                            .getName();
-//
-//                    actionLoadDocument(aCallbackTarget);
-//                    User user = userRepository.get(username);
-//                    detailEditor.setEnabled(!FinishImage.isFinished(
-//                            new Model<AnnotatorState>(state), user, documentService));
-//                    detailEditor.loadFeatureEditorModels(aCallbackTarget);
-//                }
-//                catch (Exception e) {
-//                    handleException(aCallbackTarget, e);
-//                }
-//                finishDocumentIcon.setModelObject(state);
-//                aCallbackTarget.add(finishDocumentIcon.setOutputMarkupId(true));
-//                aCallbackTarget.appendJavaScript(
-//                        "Wicket.Window.unloadConfirmation=false;window.location.reload()");
-//                aCallbackTarget.add(documentNamePanel.setOutputMarkupId(true));
-//                aCallbackTarget.add(getOrCreatePositionInfoLabel());
             }
         });
 
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
 
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
-        
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
        
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
-
         add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
             private static final long serialVersionUID = -3082002656840117267L;
 
@@ -583,12 +546,6 @@ public class AutomationPage
         openDocumentsModal.show(aTarget);
     }
 
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
-    
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
@@ -598,36 +555,6 @@ public class AutomationPage
         curationContainer.setState(getModelObject());
         suggestionView.updatePanel(aTarget, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        try {
-            AnnotatorState state = getModelObject();
-
-            CAS editorCas = getEditorCas();
-            
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, editorCas);
-            
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
-            curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setState(state);
-            
-            update(aTarget);
-            aTarget.appendJavaScript(
-                    "Wicket.Window.unloadConfirmation = false;window.location.reload()");
-            
-            // Re-render the whole page because the width of the sidebar may have changed
-            aTarget.add(this);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
-        }
     }
     
     private void actionFinishDocument(AjaxRequestTarget aTarget)

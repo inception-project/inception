@@ -86,11 +86,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -110,9 +112,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
@@ -152,9 +152,7 @@ public class CurationPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
 
     private CurationContainer curationContainer;
 
@@ -233,6 +231,8 @@ public class CurationPage
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(new DocumentNavigator("documentNavigator", this));
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         add(centerArea);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
@@ -283,13 +283,8 @@ public class CurationPage
             }
         });        
 
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
         
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
-
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
         remergeDocumentDialog = new MergeDialog("remergeDocumentDialog",
                 new StringResourceModel("RemergeDocumentDialog.title", this),
@@ -309,10 +304,6 @@ public class CurationPage
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
         
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
-
         add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
             private static final long serialVersionUID = -8443987117825945678L;
 
@@ -656,41 +647,12 @@ public class CurationPage
         openDocumentsModal.show(aTarget);
     }
 
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
-    
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         getModelObject().toggleScriptDirection();
 
         updatePanel(aTarget, curationContainer);
-    }
-
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        AnnotatorState state = CurationPage.this.getModelObject();
-        
-        // Re-render the whole page because the width of the sidebar may have changed
-        aTarget.add(CurationPage.this);
-        
-        CAS mergeCas = null;
-        try {
-            aTarget.add(getFeedbackPanel());
-            mergeCas = curationDocumentService.readCurationCas(state.getDocument());
-            
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, mergeCas);
-            
-            updatePanel(aTarget, curationContainer);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
-        }
     }
 
     private void actionFinishDocument(AjaxRequestTarget aTarget)

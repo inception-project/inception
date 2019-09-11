@@ -74,11 +74,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.PreferencesUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -100,9 +102,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceiv
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 
@@ -138,9 +138,7 @@ public class AnnotationPage
     private boolean initialLoadCompleted = false;
 
     private OpenDocumentDialog openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
     private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
 
     private FinishImage finishDocumentIcon;
     private ConfirmationDialog finishDocumentDialog;
@@ -197,6 +195,8 @@ public class AnnotationPage
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
         centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         createAnnotationEditor(null);
         add(centerArea);
 
@@ -216,20 +216,11 @@ public class AnnotationPage
             }
         });
         
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-        
         add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
 
         add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
-
-        add(new ActionBarLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-        
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
 
         add(new ActionBarLink("showExportDialog", exportDialog::show).onConfigure(_this -> {
             AnnotatorState state = AnnotationPage.this.getModelObject();
@@ -453,43 +444,11 @@ public class AnnotationPage
         openDocumentsModal.show(aTarget);
     }
 
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
-
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
             throws Exception
     {
         getModelObject().toggleScriptDirection();
         actionRefreshDocument(aTarget);
-    }
-    
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        try {
-            AnnotatorState state = getModelObject();
-            
-            CAS cas = getEditorCas();
-            
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, cas);
-            
-            // The selection of layers may have changed. Update the dropdown
-            detailEditor.getAnnotationFeatureForm().updateLayersDropdown();
-            
-            createAnnotationEditor(aTarget);
-            
-            // Reload all AJAX-enabled children of the page but not the page itself!
-            WicketUtil.refreshPage(aTarget, getPage());
-        }
-        catch (Exception e) {
-            LOG.info("Error reading CAS: {}", e.getMessage());
-            error("Error reading CAS " + e.getMessage());
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
     }
     
     private void actionFinishDocument(AjaxRequestTarget aTarget)
