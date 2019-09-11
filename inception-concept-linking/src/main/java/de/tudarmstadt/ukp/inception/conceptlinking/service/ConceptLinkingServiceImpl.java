@@ -176,7 +176,7 @@ public class ConceptLinkingServiceImpl
                             .withIdentifier(aQuery);
                     
                     if (aConceptScope != null) {
-                        iriMatchBuilder.childrenOf(aConceptScope);
+                        iriMatchBuilder.descendantsOf(aConceptScope);
                     }
                     
                     List<KBHandle> exactMatches = iriMatchBuilder
@@ -195,7 +195,7 @@ public class ConceptLinkingServiceImpl
             
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
-                exactBuilder.childrenOf(aConceptScope);
+                exactBuilder.descendantsOf(aConceptScope);
             }
             
             // Collect exact matches - although exact matches are theoretically contained in the
@@ -224,7 +224,7 @@ public class ConceptLinkingServiceImpl
                 
                 if (aConceptScope != null) {
                     // Scope-limiting must always happen before label matching!
-                    startingWithBuilder.childrenOf(aConceptScope);
+                    startingWithBuilder.descendantsOf(aConceptScope);
                 }
                 
                 // Collect matches starting with the query - this is the main driver for the
@@ -248,7 +248,7 @@ public class ConceptLinkingServiceImpl
 
             if (aConceptScope != null) {
                 // Scope-limiting must always happen before label matching!
-                containingBuilder.childrenOf(aConceptScope);
+                containingBuilder.descendantsOf(aConceptScope);
             }
             
             String[] containingLabels = asList(
