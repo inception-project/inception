@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.ui.kb.feature;
 
+import static de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType.CONCEPT;
+
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -43,6 +46,7 @@ import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureTraits;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.graph.KBConcept;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
 import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
@@ -118,29 +122,29 @@ public class ConceptFeatureTraitsEditor
     private void refresh(AjaxRequestTarget aTarget)
     {
         Traits t = traits.getObject();
-        t.setScope(loadItem(t.getKnowledgeBase(), t.getScope() != null ? 
+        t.setScope(loadConcept(t.getKnowledgeBase(), t.getScope() != null ? 
                 t.getScope().getIdentifier() : null));
         aTarget.add(get(MID_FORM).get(MID_SCOPE));
         
     }
     
-    private KBHandle loadItem(KnowledgeBase aKB, String aIdentifier)
+    private KBHandle loadConcept(KnowledgeBase aKB, String aIdentifier)
     {
-        Optional<KBObject> kbObject;
         if (aIdentifier == null) {
             return null;
         }
 
         // Use the concept from a particular knowledge base
+        Optional<KBConcept> scope;
         if (aKB != null) {
-            kbObject = kbService.readItem(aKB, aIdentifier);
+            scope = kbService.readConcept(aKB, aIdentifier, true);
         }
         // Use the concept from any knowledge base (leave KB unselected)
         else {
-            kbObject = kbService.readItem(feature.getObject().getProject(), aIdentifier);
+            scope = kbService.readConcept(feature.getObject().getProject(), aIdentifier);
         }
 
-        return kbObject.map(KBObject::toKBHandle).orElse(null);
+        return scope.map(KBObject::toKBHandle).orElse(null);
     }
     
     /**
@@ -168,7 +172,7 @@ public class ConceptFeatureTraitsEditor
             result.setAllowedValueType(ConceptFeatureValueType.ANY_OBJECT);
         }
         
-        result.setScope(loadItem(result.getKnowledgeBase(), t.getScope()));
+        result.setScope(loadConcept(result.getKnowledgeBase(), t.getScope()));
 
         return result;
     }
@@ -199,24 +203,6 @@ public class ConceptFeatureTraitsEditor
         return kbService.getEnabledKnowledgeBases(feature.getObject().getProject());
     }
     
-    private List<KBHandle> listConcepts()
-    {
-        // If a specific KB is selected, we show the concepts inside that one
-        if (traits.getObject().knowledgeBase != null) {
-            return kbService.listAllConcepts(traits.getObject().knowledgeBase, false);
-        }
-        // Otherwise, we offer concepts from all KBs
-        else {
-            List<KBHandle> allConcepts = new ArrayList<>();
-            for (KnowledgeBase kb : kbService
-                .getEnabledKnowledgeBases(feature.getObject().getProject())) {
-                allConcepts.addAll(kbService.listAllConcepts(kb, false));
-            }
-
-            return allConcepts;
-        }
-    }
-
     private List<ConceptFeatureValueType> listAllowedTypes() {
         return Arrays.asList(ConceptFeatureValueType.values());
     }
@@ -232,11 +218,14 @@ public class ConceptFeatureTraitsEditor
      */
     private List<KBHandle> listSearchResults(String aTypedString)
     {
+        if (StringUtils.isBlank(aTypedString)) {
+            return Collections.emptyList();
+        }
+        
         Traits t = traits.getObject();
         return conceptLinkingService.getLinkingInstancesInKBScope(
-                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null,
-                null, t.getAllowedValueType(), aTypedString, null, -1, null,
-                feature.getObject().getProject());
+                t.knowledgeBase != null ? t.knowledgeBase.getRepositoryId() : null, null, CONCEPT,
+                aTypedString, null, -1, null, feature.getObject().getProject());
     }
 
     /**
