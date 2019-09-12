@@ -34,14 +34,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
-import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.util.TestFixtures;
 import de.tudarmstadt.ukp.inception.kb.ConceptFeatureValueType;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
@@ -52,7 +51,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = SpringConfig.class)
+@ContextConfiguration(classes = SpringConfig.class)
 @Transactional
 @DataJpaTest
 public class ConceptLinkingServiceImplTest
@@ -79,7 +78,7 @@ public class ConceptLinkingServiceImplTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         TestFixtures testFixtures = new TestFixtures(testEntityManager);
         kbService = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties(),
+        sut = new ConceptLinkingServiceImpl(kbService, new EntityLinkingProperties(), repoProps,
                 emptyList());
         sut.afterPropertiesSet();
         sut.init();

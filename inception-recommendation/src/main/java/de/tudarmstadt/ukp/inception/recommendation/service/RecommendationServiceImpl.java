@@ -25,7 +25,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -626,7 +626,8 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleAt(aCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
+        
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation

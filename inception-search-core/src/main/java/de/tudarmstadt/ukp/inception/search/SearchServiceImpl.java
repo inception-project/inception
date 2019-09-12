@@ -32,7 +32,6 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +40,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.BeforeDocumentRemovedEvent;
@@ -73,6 +73,7 @@ public class SearchServiceImpl
     private @Autowired ProjectService projectService;
     private @Autowired PhysicalIndexRegistry physicalIndexRegistry;
     private @Autowired IndexScheduler indexScheduler;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     // Index factory
     private PhysicalIndexFactory physicalIndexFactory;
@@ -80,9 +81,6 @@ public class SearchServiceImpl
 
     // The indexes for each project
     private static Map<Long, Index> indexes;
-
-    @Value(value = "${repository.path}")
-    private String dir;
 
     @Autowired
     public SearchServiceImpl()
@@ -122,7 +120,8 @@ public class SearchServiceImpl
             physicalIndexFactory = physicalIndexRegistry.getIndexFactory(physicalIndexFactoryName);
 
             PhysicalIndex physicalIndex = physicalIndexFactory.getNewIndex(aProject,
-                    annotationSchemaService, documentService, projectService, dir);
+                    annotationSchemaService, documentService, projectService,
+                    repositoryProperties.getPath().getAbsolutePath());
             
             // Set physical index object
             index.setPhysicalIndex(physicalIndex);
