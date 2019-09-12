@@ -25,10 +25,10 @@ import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.io.conll.ConllUReader;
-import org.dkpro.core.io.conll.ConllUWriter;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUWriter;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 @Component
@@ -72,6 +72,8 @@ public class ConllUFormatSupport
     public AnalysisEngineDescription getWriterDescription(Project aProject, CAS aCAS)
         throws ResourceInitializationException
     {
+        // TODO: The backported ConllUWriter should be removed again when DKPro Core 1.11.2 or
+        // higher is released with the appropriate fix for the line breaks within sentences
         return createEngineDescription(ConllUWriter.class);
     }
 }
