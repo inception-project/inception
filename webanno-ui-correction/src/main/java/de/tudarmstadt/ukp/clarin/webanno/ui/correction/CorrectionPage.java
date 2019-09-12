@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,7 +43,6 @@ import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -72,6 +72,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperti
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -86,13 +87,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotatorWorkflowActionBarItemGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
@@ -126,6 +127,7 @@ public class CorrectionPage
     private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private long currentprojectId;
 
@@ -133,10 +135,6 @@ public class CorrectionPage
     private boolean firstLoad = true;
 
     private ModalWindow openDocumentsModal;
-
-    private FinishImage finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
 
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
@@ -170,6 +168,34 @@ public class CorrectionPage
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
+        centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this) {
+            private static final long serialVersionUID = 6295432722700148964L;
+
+            /*
+             * This is overwritten because in addition to the reset logic, we also need to strip
+             * the annotations from the CAS.
+             */
+            @Override
+            protected void actionResetDocument(AjaxRequestTarget aTarget) throws Exception
+            {
+                AnnotatorState state = getModelObject();
+                SourceDocument document = state.getDocument();
+                User user = state.getUser();
+                AnnotationDocument adoc = documentService.getAnnotationDocument(document, user);
+                CAS cas = documentService.createOrReadInitialCas(document);
+                cas = BratAnnotatorUtility.clearAnnotations(cas);
+                
+                // Add/update the CAS metadata
+                File casFile = documentService.getCasFile(document, user.getUsername());
+                if (casFile.exists()) {
+                    addOrUpdateCasMetadata(cas, casFile, document, user.getUsername());
+                }
+                documentService.writeAnnotationCas(cas, document, user, false);
+                applicationEventPublisherHolder.get()
+                        .publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
+                actionLoadDocument(aTarget);
+            }
+        });
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -255,31 +281,6 @@ public class CorrectionPage
         });
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
-        add(createOrGetResetDocumentDialog());
-        add(createOrGetResetDocumentLink());
-        
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentLink.add(finishDocumentIcon);
     }
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -429,41 +430,6 @@ public class CorrectionPage
     {
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
-    }
-    
-    /**
-     * Reset the document by removing all annotations form the initial CAS and using the result as
-     * the editor CAS.
-     */
-    @Override
-    protected void actionResetDocument(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        CAS editorCas = documentService.createOrReadInitialCas(state.getDocument());
-        editorCas = BratAnnotatorUtility.clearAnnotations(editorCas);
-        documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser(), false);
-        actionLoadDocument(aTarget);
-    }
-    
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(detailEditor);
-            aCallbackTarget.add(createOrGetResetDocumentLink());
-        });
-        finishDocumentDialog.show(aTarget);
     }
     
     @Override

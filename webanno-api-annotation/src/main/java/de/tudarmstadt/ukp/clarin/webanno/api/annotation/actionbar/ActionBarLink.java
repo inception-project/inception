@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.SerializableMethodDelegate;
 
+@Deprecated
 public class ActionBarLink
     extends Panel
 {

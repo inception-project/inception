@@ -250,8 +250,12 @@ public class MatomoTelemetrySupportImpl
             return;
         }
 
-        if (sessionRegistry.getAllPrincipals().isEmpty()) {
+        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+        if (allPrincipals.isEmpty()) {
             return;
+        }
+        else {
+            log.debug("Telemetry detected active principals: {}", allPrincipals);
         }
 
         sendTelemetry(ACTION_PING);

@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosition.TOP;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -50,7 +49,6 @@ import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -93,7 +91,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -101,7 +98,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
@@ -139,10 +135,6 @@ public class AnnotationPage
 
     private OpenDocumentDialog openDocumentsModal;
 
-    private FinishImage finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
-    
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
@@ -198,6 +190,7 @@ public class AnnotationPage
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
+        centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         createAnnotationEditor(null);
         add(centerArea);
 
@@ -220,32 +213,6 @@ public class AnnotationPage
         add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
-
-        add(createOrGetResetDocumentDialog());
-        add(createOrGetResetDocumentLink());
-        
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = AnnotationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()) 
-                        && !isUserViewingOthersWork());
-            }
-        });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentLink.add(finishDocumentIcon);
     }
 
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -432,30 +399,6 @@ public class AnnotationPage
     {
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
-    }
-
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-            
-            // manually update state change!! No idea why it is not updated in the DB
-            // without calling createAnnotationDocument(...)
-            documentService.createAnnotationDocument(annotationDocument);
-            
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(detailEditor);
-            aCallbackTarget.add(createOrGetResetDocumentLink());
-        });
-        finishDocumentDialog.show(aTarget);
     }
 
     @Override

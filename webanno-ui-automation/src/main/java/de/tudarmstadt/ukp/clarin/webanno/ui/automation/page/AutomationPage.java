@@ -21,7 +21,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PROJECT_TYPE_AU
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.updateDocumentTimestampAfterWrite;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -48,7 +47,6 @@ import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -93,13 +91,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotatorWorkflowActionBarItemGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.automation.util.AutomationUtil;
@@ -144,10 +141,6 @@ public class AutomationPage
 
     private ModalWindow openDocumentsModal;
 
-    private FinishImage finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
-
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
@@ -180,6 +173,7 @@ public class AutomationPage
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
         centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
+        centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
@@ -259,31 +253,6 @@ public class AutomationPage
         });
 
         add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
-        add(createOrGetResetDocumentDialog());
-        add(createOrGetResetDocumentLink());
-        
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = AutomationPage.this.getModelObject();
-                setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentLink.add(finishDocumentIcon);
     }
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -522,26 +491,6 @@ public class AutomationPage
     {
         getModelObject().getSelection().clear();
         openDocumentsModal.show(aTarget);
-    }
-
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-            
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(detailEditor);
-            aCallbackTarget.add(createOrGetResetDocumentLink());
-        });
-        finishDocumentDialog.show(aTarget);
     }
     
     @Override
