@@ -23,8 +23,6 @@ NOTE: It is assumed that you plan to test the {product-name} standalone version 
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
 
-
-
 = Introduction
 
 include::{include-dir}getting-started.adoc[leveloffset=+1]
