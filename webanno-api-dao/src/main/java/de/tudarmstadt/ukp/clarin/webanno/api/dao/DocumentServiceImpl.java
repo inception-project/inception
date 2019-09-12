@@ -68,6 +68,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasUpgradeMode;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentCreatedEvent;
@@ -598,6 +599,8 @@ public class DocumentServiceImpl
 
         // Change the state of the source document to in progress
         transitionSourceDocumentState(aDocument, NEW_TO_ANNOTATION_IN_PROGRESS);
+        transitionAnnotationDocumentState(annotationDocument,
+                AnnotationDocumentStateTransition.NEW_TO_ANNOTATION_IN_PROGRESS);
 
         return readAnnotationCas(annotationDocument);
     }

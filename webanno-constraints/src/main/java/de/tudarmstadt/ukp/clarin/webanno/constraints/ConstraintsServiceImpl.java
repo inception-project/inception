@@ -37,10 +37,11 @@ import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ConstraintsGrammar;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.ParseException;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.grammar.syntaxtree.Parse;
@@ -57,11 +58,9 @@ public class ConstraintsServiceImpl
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
-    @Value(value = "${repository.path}")
-    private File dir;
+    
+    private @PersistenceContext EntityManager entityManager;
+    private @Autowired RepositoryProperties repositoryProperties;
 
     public ConstraintsServiceImpl()
     {
@@ -107,8 +106,9 @@ public class ConstraintsServiceImpl
     public String readConstrainSet(ConstraintSet aSet)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
+        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         
         String data;
@@ -130,8 +130,9 @@ public class ConstraintsServiceImpl
     public void writeConstraintSet(ConstraintSet aSet, InputStream aContent)
         throws IOException
     {
-        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
+        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         FileUtils.forceMkdir(new File(constraintRulesPath));
         FileUtils.copyInputStreamToFile(aContent, new File(constraintRulesPath, filename));
@@ -150,8 +151,9 @@ public class ConstraintsServiceImpl
     @Override
     public File exportConstraintAsFile(ConstraintSet aSet)
     {
-        String constraintRulesPath = dir.getAbsolutePath() + "/" + PROJECT_FOLDER + "/"
-                + aSet.getProject().getId() + "/" + ConstraintsService.CONSTRAINTS + "/";
+        String constraintRulesPath = repositoryProperties.getPath().getAbsolutePath() + "/"
+                + PROJECT_FOLDER + "/" + aSet.getProject().getId() + "/"
+                + ConstraintsService.CONSTRAINTS + "/";
         String filename = aSet.getId() + ".txt";
         File constraintsFile = new File(constraintRulesPath, filename);
         if (constraintsFile.exists()) {

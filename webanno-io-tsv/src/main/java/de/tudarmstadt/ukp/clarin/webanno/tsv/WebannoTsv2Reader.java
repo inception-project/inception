@@ -291,6 +291,7 @@ public class WebannoTsv2Reader
                         ((Annotation) relationAnno).setBegin(governorAnno.getBegin());
                         ((Annotation) relationAnno).setEnd(dependentAnno.getEnd());
                     }
+                    relationAnno.getCAS().addFsToIndexes(relationAnno);
 
                     relationAnno.setFeatureValue(dependentFeature, dependentAnno);
                     relationAnno.setFeatureValue(governorFeature, governorAnno);
@@ -508,9 +509,8 @@ public class WebannoTsv2Reader
                         Map<Integer, AnnotationFS> indexedAnnos = aAnnotations.get(layer);
                         AnnotationFS newAnnotation = indexedAnnos.get(index);
                         newAnnotation.getCAS().removeFsFromIndexes(newAnnotation);
-                        ((Annotation) newAnnotation).setEnd(aTokenStart + aToken.length());
+                        newAnnotation.setEnd(aTokenStart + aToken.length());
                         newAnnotation.getCAS().addFsToIndexes(newAnnotation);
-
                         index++;
                     }
                     else {
