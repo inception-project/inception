@@ -74,6 +74,7 @@ public class EvaluationSimulationPage
         });
         recommenderListPanel.setChangeAction(_target -> {
             _target.add(recommenderViewPanel);
+            evaluationSimulationPanel.recommenderChanged();
         });
         add(recommenderListPanel);
     }

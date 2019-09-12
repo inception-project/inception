@@ -25,8 +25,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
@@ -87,7 +89,7 @@ public class SimulationLearningCurvePanel
     private RecommenderEvaluationScoreMetricEnum selectedValue;
     List<EvaluationResult> evaluationResults;
     private boolean evaluate;
-    
+
     public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aSelectedRecommenderPanel)
     {
@@ -119,9 +121,7 @@ public class SimulationLearningCurvePanel
                     return;
                 }
                 
-                form.addOrReplace(chartPanel);
-                _target.add(chartPanel);
-                evaluate = false;
+                startEvaluation(_target, form);
             }
         });
 
@@ -138,26 +138,30 @@ public class SimulationLearningCurvePanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                // replace the empty panel with chart panel on click event so the chard renders
-                // with the loadable detachable model.
-                chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
-                        LoadableDetachableModel.of(this::renderChart));
-                chartPanel.setOutputMarkupPlaceholderTag(true);
-                chartPanel.setOutputMarkupId(true);
-                
-                form.addOrReplace(chartPanel);
-                _target.add(chartPanel);
-
-                evaluate = true;
+                startEvaluation(_target, _form );
             });
         
         form.add(startButton);
+    }
+
+    private void startEvaluation(IPartialPageRequestHandler aTarget, MarkupContainer aForm )
+    {
+        // replace the empty panel with chart panel on click event so the chard renders
+        // with the loadable detachable model.
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
+                LoadableDetachableModel.of(this::renderChart));
+        chartPanel.setOutputMarkupPlaceholderTag(true);
+        chartPanel.setOutputMarkupId(true);
+        
+        aForm.addOrReplace(chartPanel);
+        aTarget.add(chartPanel);
     }
     
     private LearningCurve renderChart()
     {
         String[] scoresAndTrainingSizes = evaluate();
 
+        
         if (scoresAndTrainingSizes == null) {
             // no warning message here because it has already been shown in the method
             // evaluate(_target). There are different scenarios when the score is returned
@@ -179,6 +183,8 @@ public class SimulationLearningCurvePanel
         LearningCurve learningCurve = new LearningCurve();
         learningCurve.setCurveData(curveData);
         learningCurve.setXaxis(trainingSizes);
+        
+        evaluate = false;
 
         return learningCurve;
     }
@@ -300,5 +306,11 @@ public class SimulationLearningCurvePanel
         }
 
         return new String[] { sbScore.toString(), sbTrainingSize.toString() };
+    }
+
+    public void recommenderChanged()
+    {
+        evaluate = true;
+        
     }
 }
