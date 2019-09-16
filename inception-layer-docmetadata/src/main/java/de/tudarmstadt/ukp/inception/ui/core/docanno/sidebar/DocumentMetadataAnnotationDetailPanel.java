@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core.docanno.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static java.util.Collections.emptyList;
@@ -431,22 +432,12 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         }
         catch (IOException | AnnotationException e) {
             handleException(this, target, e);
-        }        
+        }
     }
     
     @OnEvent(stop = true)
     public void onLinkFeatureSetEvent(LinkFeatureSetEvent aEvent)
     {
-        AjaxRequestTarget target = aEvent.getTarget();
-        try {
-            CAS cas = jcasProvider.get();
-            AnnotationFS fs =
-                selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
-            state.getSelection().selectSpan(fs);
-            actionHandler.actionCreateOrUpdate(target, cas);
-        }
-        catch (Exception e) {
-            handleException(this, target, e);
-        }
+        actionAnnotate(aEvent.getTarget());
     }
 }
