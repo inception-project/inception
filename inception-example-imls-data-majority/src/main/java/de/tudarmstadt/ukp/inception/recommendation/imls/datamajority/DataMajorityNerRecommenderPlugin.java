@@ -15,26 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.datamajority;
 
-import java.util.List;
+import static java.util.Collections.singleton;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
+import java.util.Set;
 
-public class PerseusSentence
+import org.pf4j.PluginWrapper;
+
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.Plugin;
+
+public class DataMajorityNerRecommenderPlugin
+    extends Plugin
 {
-    @XmlID 
-    @XmlAttribute(name = "id")
-    public String id;
-
-    @XmlAttribute(name = "subdoc")
-    public String subdoc;
-
-    @XmlAttribute(name = "document_id")
-    public String documentId;
-
-    @XmlElement(name = "word")
-    public List<PerseusWord> words;
+    public DataMajorityNerRecommenderPlugin(PluginWrapper aWrapper)
+    {
+        super(aWrapper);
+    }
+    
+    @Override
+    public Set<Class<?>> getSources()
+    {
+        return singleton(DataMajorityRecommenderFactory.class);
+    }
 }
