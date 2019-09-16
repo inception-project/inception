@@ -254,8 +254,7 @@ public class MatomoTelemetrySupportImpl
         List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
         boolean hasActiveSessions = allPrincipals.stream()
                 .map(principal -> sessionRegistry.getAllSessions(principal, false))
-                .filter(list -> !list.isEmpty())
-                .findAny().isPresent();
+                .anyMatch(list -> !list.isEmpty());
         
         if (!hasActiveSessions) {
             return;
