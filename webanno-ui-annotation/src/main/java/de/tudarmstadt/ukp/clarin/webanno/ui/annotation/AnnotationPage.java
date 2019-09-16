@@ -583,8 +583,7 @@ public class AnnotationPage
             state.moveToUnit(editorCas, aFocus + 1, TOP);
 
             // Update document state
-            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())
-                    && SourceDocumentState.NEW.equals(state.getDocument().getState())) {
+            if (!isUserViewingOthersWork(state, userRepository.getCurrentUser())) {
                 if (SourceDocumentState.NEW.equals(state.getDocument().getState())) {
                     documentService.transitionSourceDocumentState(state.getDocument(),
                             NEW_TO_ANNOTATION_IN_PROGRESS);
