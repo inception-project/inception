@@ -62,7 +62,6 @@ public class SpanAnnotationPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
     
-    private static final String CID_LAYER = "layer";
     private static final String CID_TEXT = "text";
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_FEATURES = "features";
@@ -72,8 +71,6 @@ public class SpanAnnotationPanel
     private final CasProvider casProvider;
     private final Project project;
     private WebMarkupContainer featuresContainer;
-    
-
     
     public SpanAnnotationPanel(String aId, IModel<LinkWithRoleModel> aModel,
         CasProvider aCasProvider, Project aProject)
@@ -96,8 +93,6 @@ public class SpanAnnotationPanel
             featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
             featuresContainer.setOutputMarkupId(true);
             featuresContainer.add(createFeaturesList(features));
-            
-            featuresContainer.add(new Label(CID_LAYER, layer.getUiName()));
             // TODO: there are probably better ways to get the text of an annotation?
             featuresContainer.add(new Label(CID_TEXT, link.label));
             

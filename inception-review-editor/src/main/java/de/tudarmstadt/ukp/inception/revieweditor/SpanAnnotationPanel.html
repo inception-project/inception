@@ -18,20 +18,8 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-    <ul wicket:id="featuresContainer" class="list-group">
-        <li class="list-group-item">
-            <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Layer</label>
-                    <div class="col-sm-9">
-                        <span>
-                            <wicket:container wicket:id="layer"/>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </li>
-        <li class="list-group-item">
+    <div wicket:id="featuresContainer">
+        <div class="row">
             <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Text</label>
@@ -42,10 +30,11 @@
                     </div>
                 </div>
             </div>
-        </li>
-        <li wicket:id="features" class="list-group-item">
+        </div>
+        <div wicket:id="features" class="row" style="padding-bottom: 5px; padding-top: 5px;">
             <div wicket:id="feature" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
-        </li>
-    </ul>
+        </div>
+        <hr/>
+    </div>
 </wicket:panel>
 </html>
