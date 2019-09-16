@@ -866,7 +866,6 @@
             <version>${spring.boot.version}</version>
             <configuration>
               <executable>true</executable>
-              <layout>ZIP</layout> <!-- To use the PropertiesLauncher -->
             </configuration>
             <executions>
               <execution>
