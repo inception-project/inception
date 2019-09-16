@@ -146,10 +146,6 @@
       <groupId>org.wicketstuff</groupId>
       <artifactId>wicketstuff-annotation</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.wicketstuff</groupId>
-      <artifactId>wicketstuff-input-events</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>
