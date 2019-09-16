@@ -45,7 +45,6 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.CssContentHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
@@ -91,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
@@ -99,7 +97,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicketstuff.UrlParametersReceivingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 
 /**
@@ -130,10 +127,6 @@ public class AnnotationPage
     private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
     
     private long currentprojectId;
-
-    private boolean initialLoadCompleted = false;
-
-    private OpenDocumentDialog openDocumentsModal;
 
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
@@ -185,7 +178,7 @@ public class AnnotationPage
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
@@ -197,22 +190,6 @@ public class AnnotationPage
         add(createRightSidebar());
 
         add(createLeftSidebar());
-
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
-                getAllowedProjects())
-        {
-            private static final long serialVersionUID = 5474030848589262638L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                actionLoadDocument(aTarget);
-            }
-        });
-        
-        add(new LambdaAjaxLink("initialLoadComplete", this::actionInitialLoadComplete));
-
-        add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
     }
 
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -338,12 +315,6 @@ public class AnnotationPage
     {
         super.renderHead(aResponse);
 
-        if (!initialLoadCompleted) {
-            aResponse.render(OnLoadHeaderItem
-                    .forScript("jQuery('#initialLoadComplete').trigger('click');"));
-            initialLoadCompleted = true;
-        }
-        
         aResponse.render(CssContentHeaderItem.forCSS(
                         String.format(Locale.US, ".sidebarCell { flex-basis: %d%%; }",
                                 getModelObject().getPreferences().getSidebarSize()),
@@ -382,24 +353,18 @@ public class AnnotationPage
         }
     }
     
-    private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
-    {
-        // If the page has loaded and there is no document open yet, show the open-document
-        // dialog.
-        if (getModelObject().getDocument() == null) {
-            actionShowOpenDocumentDialog(aTarget);
-        }
-        else {
-            // Make sure the URL fragement parameters are up-to-date
-            updateUrlFragment(aTarget);
-        }
-    }
-
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        openDocumentsModal.show(aTarget);
-    }
+//    private void actionInitialLoadComplete(AjaxRequestTarget aTarget)
+//    {
+//        // If the page has loaded and there is no document open yet, show the open-document
+//        // dialog.
+//        if (getModelObject().getDocument() == null) {
+//            actionShowOpenDocumentDialog(aTarget);
+//        }
+//        else {
+//            // Make sure the URL fragement parameters are up-to-date
+//            updateUrlFragment(aTarget);
+//        }
+//    }
 
     @Override
     public void actionLoadDocument(AjaxRequestTarget aTarget)

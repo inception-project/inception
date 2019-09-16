@@ -35,10 +35,7 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -87,7 +84,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
@@ -95,7 +91,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotatorWorkflowActionBarItemGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -131,11 +126,6 @@ public class CorrectionPage
 
     private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean firstLoad = true;
-
-    private ModalWindow openDocumentsModal;
-
     private WebMarkupContainer centerArea;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
@@ -163,7 +153,7 @@ public class CorrectionPage
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
@@ -265,22 +255,6 @@ public class CorrectionPage
         
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
-                getAllowedProjects())
-        {
-            private static final long serialVersionUID = 5474030848589262638L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                // Reload the page using AJAX. This does not add the project/document ID to the URL,
-                // but being AJAX it flickers less.
-                actionLoadDocument(aTarget);
-            }
-        });
-
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
     }
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -364,21 +338,6 @@ public class CorrectionPage
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
     }
 
-    /**
-     * for the first time the page is accessed, open the <b>open document dialog</b>
-     */
-    @Override
-    public void renderHead(IHeaderResponse response)
-    {
-        super.renderHead(response);
-
-        if (firstLoad) {
-            response.render(OnLoadHeaderItem
-                    .forScript("jQuery('#showOpenDocumentModal').trigger('click');"));
-            firstLoad = false;
-        }
-    }
-
     @Override
     public CAS getEditorCas()
         throws IOException
@@ -424,12 +383,6 @@ public class CorrectionPage
     {
         suggestionView.updatePanel(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        openDocumentsModal.show(aTarget);
     }
     
     @Override

@@ -51,7 +51,6 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.AjaxLink;
 import org.apache.wicket.behavior.AbstractAjaxBehavior;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -114,7 +113,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
@@ -151,8 +149,6 @@ public class CurationPage
 
     // Open the dialog window on first load
     private boolean firstLoad = true;
-
-    private ModalWindow openDocumentsModal;
 
     private CurationContainer curationContainer;
 
@@ -229,7 +225,16 @@ public class CurationPage
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(new DocumentNavigator("documentNavigator", this));
+        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects(),
+                this::listDocuments) {
+            private static final long serialVersionUID = 4342862409722750114L;
+
+            @Override
+            public void onDocumentSelected(AjaxRequestTarget aTarget)
+            {
+                CurationPage.this.onDocumentSelected(aTarget);
+            }
+        });
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
@@ -252,39 +257,6 @@ public class CurationPage
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
 
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
-                getAllowedProjects())
-        {
-            private static final long serialVersionUID = 5474030848589262638L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                AnnotatorState state = getModelObject();
-                String username = SecurityContextHolder.getContext().getAuthentication().getName();
-                /*
-                 * Changed for #152, getDocument was returning null even after opening a document
-                 * Also, surrounded following code into if block to avoid error.
-                 */
-                if (state.getProject() == null) {
-                    setResponsePage(getApplication().getHomePage());
-                    return;
-                }
-                if (state.getDocument() != null) {
-                    try {
-                        documentService.createSourceDocument(state.getDocument());
-                        upgradeCasAndSave(state.getDocument(), username);
-
-                        actionLoadDocument(aTarget);
-                    }
-                    catch (Exception e) {
-                        LOG.error("Unable to load data", e);
-                        error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                    }
-                }
-            }
-        });        
-
         IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
         remergeDocumentDialog = new MergeDialog("remergeDocumentDialog",
                 new StringResourceModel("RemergeDocumentDialog.title", this),
@@ -302,8 +274,6 @@ public class CurationPage
         });
         add(remergeDocumentLink);
 
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
         add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
                 new StringResourceModel("FinishDocumentDialog.title", this, null),
                 new StringResourceModel("FinishDocumentDialog.text", this, null)));
@@ -527,6 +497,47 @@ public class CurationPage
         
     }
     
+    protected List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
+    {
+        final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
+        List<SourceDocument> sdocs = curationDocumentService
+                .listCuratableSourceDocuments(aProject);
+        
+        for (SourceDocument sourceDocument : sdocs) {
+            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
+            dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
+            dsd.setColor(sourceDocument.getState().getColor());
+            allSourceDocuments.add(dsd);
+        }
+        return allSourceDocuments;
+    }
+    
+    public void onDocumentSelected(AjaxRequestTarget aTarget)
+    {
+        AnnotatorState state = getModelObject();
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        /*
+         * Changed for #152, getDocument was returning null even after opening a document
+         * Also, surrounded following code into if block to avoid error.
+         */
+        if (state.getProject() == null) {
+            setResponsePage(getApplication().getHomePage());
+            return;
+        }
+        if (state.getDocument() != null) {
+            try {
+                documentService.createSourceDocument(state.getDocument());
+                upgradeCasAndSave(state.getDocument(), username);
+
+                actionLoadDocument(aTarget);
+            }
+            catch (Exception e) {
+                LOG.error("Unable to load data", e);
+                error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+            }
+        }
+    }
+    
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
     {
         return new LoadableDetachableModel<List<DecoratedObject<Project>>>()
@@ -619,12 +630,6 @@ public class CurationPage
         }
     }
     
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        openDocumentsModal.show(aTarget);
-    }
-
     private void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
@@ -906,8 +911,6 @@ public class CurationPage
             // If we arrive here and the document is not null, then we have a change of document
             // or a change of focus (or both)
             if (!document.equals(getModelObject().getDocument())) {
-                // do not need to choose document
-                openDocumentsModal.setVisible(false);
                 getModelObject().setDocument(document, getListOfDocs());
                 actionLoadDocument(aTarget, focus);
             }
