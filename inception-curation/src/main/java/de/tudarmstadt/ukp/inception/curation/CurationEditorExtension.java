@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -233,6 +234,8 @@ public class CurationEditorExtension
                                     aDepVID.getAttribute(), aDepVID.getSlot()));
                     vspan.setVid(newVID);
                     vspan.setColor(color);
+                    // TODO: might be better to change after bugfix #1389
+                    vspan.setLazyDetails(Collections.emptyList());
                     newIdSpan.put(prevVID, vspan);
                     // set user name as comment
                     aVdoc.add(new VComment(newVID, VCommentType.INFO, username));

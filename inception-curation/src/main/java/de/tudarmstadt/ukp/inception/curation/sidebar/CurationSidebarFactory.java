@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 
-@Component
+@Component("curationSidebar")
 public class CurationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {

@@ -118,6 +118,7 @@
     <!-- Documentation -->
     <module>inception-doc</module>
     <!-- Curation -->
+    
     <module>inception-curation</module>
   </modules>
   <repositories>
