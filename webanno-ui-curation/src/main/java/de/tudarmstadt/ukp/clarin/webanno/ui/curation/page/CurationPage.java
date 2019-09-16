@@ -27,8 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.FocusPosit
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
@@ -57,14 +55,11 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -82,9 +77,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.SessionMetaData;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
@@ -106,8 +99,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.WicketUtil;
@@ -153,12 +144,6 @@ public class CurationPage
     private CurationContainer curationContainer;
 
     private WebMarkupContainer centerArea;
-    private MergeDialog remergeDocumentDialog;
-    private ActionBarLink remergeDocumentLink;
-
-    private WebMarkupContainer finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
 
     private SuggestionViewPanel suggestionViewPanel;
 
@@ -239,7 +224,7 @@ public class CurationPage
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
+        centerArea.add(new CuratorWorkflowActionBarItemGroup("workflowActions", this));
         add(centerArea);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
@@ -256,72 +241,6 @@ public class CurationPage
 
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        remergeDocumentDialog = new MergeDialog("remergeDocumentDialog",
-                new StringResourceModel("RemergeDocumentDialog.title", this),
-                new StringResourceModel("RemergeDocumentDialog.text", this).setModel(getModel())
-                        .setParameters(documentNameModel),
-                documentNameModel);
-        remergeDocumentDialog.setConfirmAction(this::actionRemergeDocument);
-        add(remergeDocumentDialog);
-        remergeDocumentLink = new ActionBarLink("showRemergeDocumentDialog", t -> 
-            remergeDocumentDialog.show(t));
-        remergeDocumentLink.onConfigure(_this -> {
-            AnnotatorState state = CurationPage.this.getModelObject();
-            _this.setEnabled(state.getDocument() != null && !state.getDocument().getState()
-                    .equals(SourceDocumentState.CURATION_FINISHED));
-        });
-        add(remergeDocumentLink);
-
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = CurationPage.this.getModelObject();
-                setEnabled(state.getProject() != null && state.getDocument() != null
-                        && !documentService
-                                .getSourceDocument(state.getDocument().getProject(),
-                                        state.getDocument().getName())
-                                .getState().equals(SourceDocumentState.CURATION_FINISHED));
-            }
-        });
-        finishDocumentIcon = new WebMarkupContainer("finishImage");
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentIcon.add(new AttributeModifier("src", new LoadableDetachableModel<String>()
-        {
-            private static final long serialVersionUID = 1562727305401900776L;
-
-            @Override
-            protected String load()
-            {
-                AnnotatorState state = CurationPage.this.getModelObject();
-                if (state.getProject() != null && state.getDocument() != null) {
-                    if (documentService
-                            .getSourceDocument(state.getDocument().getProject(),
-                                    state.getDocument().getName()).getState()
-                            .equals(SourceDocumentState.CURATION_FINISHED)) {
-                        return "images/accept.png";
-                    }
-                    else {
-                        return "images/inprogress.png";
-                    }
-                }
-                else {
-                    return "images/inprogress.png";
-                }
-            }
-        }));
-        finishDocumentLink.add(finishDocumentIcon);
         
         WebMarkupContainer sidebarCell = new WebMarkupContainer("rightSidebar");    
         sidebarCell.setOutputMarkupPlaceholderTag(true);
@@ -630,50 +549,6 @@ public class CurationPage
         }
     }
     
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            SourceDocument sourceDocument = state.getDocument();
-
-            if (SourceDocumentState.CURATION_FINISHED.equals(sourceDocument.getState())) {
-                documentService.transitionSourceDocumentState(sourceDocument,
-                        CURATION_FINISHED_TO_CURATION_IN_PROGRESS);
-            }
-            else {
-                documentService.transitionSourceDocumentState(sourceDocument,
-                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
-            }
-            
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(editor);
-            aCallbackTarget.add(remergeDocumentLink);
-        });
-        finishDocumentDialog.show(aTarget);
-    }
-
-    private void actionRemergeDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
-        throws Exception
-    {
-        AnnotatorState state = CurationPage.this.getModelObject();
-
-        // Remove the current curation CAS
-        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
-                state.getUser().getUsername());
-
-        // Initialize a new one ...
-        prepareMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations());
-
-        // ... and load it
-        actionLoadDocument(aTarget);
-
-        success("Re-merge finished!");
-        aTarget.add(getFeedbackPanel());
-    }
-
     public void upgradeCasAndSave(SourceDocument aDocument, String aUsername)
         throws IOException
     {
@@ -768,7 +643,7 @@ public class CurationPage
         LOG.info("END LOAD_DOCUMENT_ACTION");
     }
     
-    private CAS prepareMergeCas(boolean aMergeIncompleteAnnotations)
+    public CAS prepareMergeCas(boolean aMergeIncompleteAnnotations)
         throws IOException, UIMAException, ClassNotFoundException, AnnotationException
     {
         AnnotatorState state = getModelObject();
@@ -782,14 +657,7 @@ public class CurationPage
             }
         }
         
-        SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
-                correctionDocumentService, curationDocumentService, annotationService,
-                userRepository);
-        AnnotationDocument randomAnnotationDocument = null;
-        if (finishedAnnotationDocuments.size() > 0) {
-            randomAnnotationDocument = finishedAnnotationDocuments.get(0);
-        }
-        else {
+        if (finishedAnnotationDocuments.isEmpty()) {
             throw new IllegalStateException("This document has the state "
                     + state.getDocument().getState() + " but "
                     + "there are no finished annotation documents! This "
@@ -804,11 +672,17 @@ public class CurationPage
                     + "that only administrators can do).");
         }
 
+        AnnotationDocument randomAnnotationDocument = finishedAnnotationDocuments.get(0);
+
         // upgrade CASes for each user, what if new type is added once the user finished
         // annotation
         for (AnnotationDocument ad : finishedAnnotationDocuments) {
             upgradeCasAndSave(ad.getDocument(), ad.getUser());
         }
+        
+        SuggestionBuilder cb = new SuggestionBuilder(casStorageService, documentService,
+                correctionDocumentService, curationDocumentService, annotationService,
+                userRepository);
         Map<String, CAS> casses = cb.listCassesforCuration(finishedAnnotationDocuments,
                 randomAnnotationDocument, state.getMode());
         CAS mergeCas = cb.getMergeCas(state, state.getDocument(), casses,

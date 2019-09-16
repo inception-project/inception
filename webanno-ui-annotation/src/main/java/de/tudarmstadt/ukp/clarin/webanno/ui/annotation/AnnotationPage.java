@@ -69,7 +69,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorExtensio
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.DocumentOpenedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
@@ -182,7 +181,6 @@ public class AnnotationPage
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
         centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         createAnnotationEditor(null);
         add(centerArea);

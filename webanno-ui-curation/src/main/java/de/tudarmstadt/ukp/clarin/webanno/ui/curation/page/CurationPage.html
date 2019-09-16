@@ -93,34 +93,6 @@
 </head>
 <body>
   <wicket:extend>
-    <div wicket:id=remergeDocumentDialog></div>
-    <div wicket:id="finishDocumentDialog"></div>
-
-    <div class="actionbar">
-      <div>
-        <ul class="horizontal">
-          <li>
-            <fieldset>
-              <legend>Document</legend>
-              <ul class="horizontal">
-                <li wicket:id="showRemergeDocumentDialog" />
-              </ul>
-            </fieldset>
-          </li>
-
-          <li>
-            <fieldset>
-              <legend>Workflow</legend>
-              <ul class="horizontal">
-                <li><a wicket:id="showFinishDocumentDialog"> <img wicket:id="finishImage" /><br />Finish
-                </a></li>
-              </ul>
-            </fieldset>
-          </li>
-        </ul>
-      </div>
-    </div>
-
     <div class="annotation-editor-container flex-content flex-h-container flex-gutter">
       <!-- 
          We cannot put a 'wicket:enclosure="sentencesListView"' on this div because this 
@@ -155,10 +127,10 @@
               <div class="panel-body flex-v-container" style="padding: 0px;">
                 <nav class="action-bar">
                   <span wicket:id="documentNavigator" />
-                  <span wicket:id="exportDialog" />
                   <span wicket:id="pageNavigator"/>
                   <span wicket:id="toggleScriptDirection"/>
                   <span wicket:id="guidelinesDialog" />
+                  <span wicket:id="workflowActions" />
                   <span wicket:id="preferencesDialog" />
                 </nav>
                 <div wicket:id="mergeView" class="text-center flex-content flex-v-container"></div>

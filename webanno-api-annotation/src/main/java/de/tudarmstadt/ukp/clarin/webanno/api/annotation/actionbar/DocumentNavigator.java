@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Page_down;
 import static wicket.contrib.input.events.key.KeyType.Page_up;
@@ -31,8 +32,13 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -47,12 +53,15 @@ public class DocumentNavigator
 {
     private static final long serialVersionUID = 7061696472939390003L;
 
+    private @SpringBean ProjectService projectService;
+    
     private AnnotationPageBase page;
     private IModel<List<DecoratedObject<Project>>> projectListModel;
     private SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
             docListProvider;
     
-    private OpenDocumentDialog openDocumentsModal;
+    private final OpenDocumentDialog openDocumentsModal;
+    private final ExportDocumentDialog exportDialog;
 
     public DocumentNavigator(String aId, AnnotationPageBase aPage,
             IModel<List<DecoratedObject<Project>>> aProjectListModel)
@@ -86,6 +95,14 @@ public class DocumentNavigator
         // can dynamically add stuff to the page.
         openDocumentsModal = createOpenDocumentsDialog("item");
         page.addToFooter(openDocumentsModal);
+        
+        add(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
+        add(new LambdaAjaxLink("showExportDialog", exportDialog::show).add(visibleWhen(() -> {
+            AnnotatorState state = page.getModelObject();
+            return state.getProject() != null
+                    && (projectService.isManager(state.getProject(), state.getUser())
+                            || !state.getProject().isDisableExport());
+        })));
     }
     
     @Override

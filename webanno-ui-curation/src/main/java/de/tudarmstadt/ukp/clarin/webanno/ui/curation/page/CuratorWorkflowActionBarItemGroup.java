@@ -15,13 +15,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation;
+package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_IN_PROGRESS_TO_CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
@@ -34,27 +36,28 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5I
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
-public class AnnotatorWorkflowActionBarItemGroup
+public class CuratorWorkflowActionBarItemGroup
     extends Panel
 {
-    private static final long serialVersionUID = 4139817495914347777L;
-
+    private static final long serialVersionUID = 8596786586955459711L;
+    
     private @SpringBean DocumentService documentService;
+    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
     protected final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink finishDocumentLink;
-    private ChallengeResponseDialog resetDocumentDialog;
+    private MergeDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
 
-    public AnnotatorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
+    public CuratorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
@@ -72,7 +75,7 @@ public class AnnotatorWorkflowActionBarItemGroup
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
 
         IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
-        add(resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
+        add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
                 new StringResourceModel("ResetDocumentDialog.title", this),
                 new StringResourceModel("ResetDocumentDialog.text", this)
                         .setModel(page.getModel()).setParameters(documentNameModel),
@@ -88,7 +91,7 @@ public class AnnotatorWorkflowActionBarItemGroup
     {
         AnnotatorState state = page.getModelObject();
         
-        if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
+        if (curationDocumentService.isCurationFinished(state.getDocument())) {
             return FontAwesome5IconType.lock_s.cssClassName();
         }
         else {
@@ -99,27 +102,26 @@ public class AnnotatorWorkflowActionBarItemGroup
     protected boolean isEditable()
     {
         AnnotatorState state = page.getModelObject();
-        return state.getDocument() != null 
-                && !documentService.isAnnotationFinished(state.getDocument(), state.getUser())
-                && !isUserViewingOthersWork();
+        return state.getProject() != null && state.getDocument() != null
+                && !documentService
+                        .getSourceDocument(state.getDocument().getProject(),
+                                state.getDocument().getName())
+                        .getState().equals(CURATION_FINISHED);
     }
     
     protected void actionFinishDocument(AjaxRequestTarget aTarget)
     {
         finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
             page.actionValidateDocument(aCallbackTarget, page.getEditorCas());
-
+            
             AnnotatorState state = page.getModelObject();
-            AnnotationDocument annotationDocument = documentService
-                    .getAnnotationDocument(state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-
-            // manually update state change!! No idea why it is not updated in the DB
-            // without calling createAnnotationDocument(...)
-            documentService.createAnnotationDocument(annotationDocument);
-
+            SourceDocument sourceDocument = state.getDocument();
+            
+            if (!curationDocumentService.isCurationFinished(sourceDocument)) {
+                documentService.transitionSourceDocumentState(sourceDocument,
+                        CURATION_IN_PROGRESS_TO_CURATION_FINISHED);
+            }
+            
             page.actionRefreshDocument(aCallbackTarget);
             aCallbackTarget.add(finishDocumentLink);
             aCallbackTarget.add(resetDocumentLink);
@@ -127,15 +129,23 @@ public class AnnotatorWorkflowActionBarItemGroup
         finishDocumentDialog.show(aTarget);
     }
 
-    protected void actionResetDocument(AjaxRequestTarget aTarget) throws Exception
+    protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
+        throws Exception
     {
         AnnotatorState state = page.getModelObject();
-        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
-        page.actionLoadDocument(aTarget);
-    }
+        
+        // Remove the current curation CAS
+        curationDocumentService.removeCurationDocumentContent(state.getDocument(),
+                state.getUser().getUsername());
 
-    private boolean isUserViewingOthersWork()
-    {
-        return !page.getModelObject().getUser().equals(userRepository.getCurrentUser());
+        // Initialize a new one ...
+        ((CurationPage) page)
+                .prepareMergeCas(aForm.getModelObject().isMergeIncompleteAnnotations());
+
+        // ... and load it
+        page.actionLoadDocument(aTarget);
+
+        success("Re-merge finished!");
+        aTarget.add(page.getFeedbackPanel());
     }
 }

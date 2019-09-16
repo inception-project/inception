@@ -59,7 +59,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
@@ -162,7 +161,6 @@ public class AutomationPage
         centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
         centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
         centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new ExportDocumentActionBarItem("exportDialog", this));
         centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
