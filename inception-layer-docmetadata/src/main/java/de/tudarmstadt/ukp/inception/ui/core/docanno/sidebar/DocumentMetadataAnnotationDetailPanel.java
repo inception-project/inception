@@ -60,6 +60,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureSetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -419,9 +420,8 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     public void onLinkFeatureDeletedEvent(LinkFeatureDeletedEvent aEvent)
     {
         AjaxRequestTarget target = aEvent.getTarget();
-        CAS cas;
         try {
-            cas = jcasProvider.get();
+            CAS cas = jcasProvider.get();
             AnnotationFS fs =
                 selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
             state.getSelection().selectSpan(fs);
@@ -432,5 +432,21 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         catch (IOException | AnnotationException e) {
             handleException(this, target, e);
         }        
+    }
+    
+    @OnEvent(stop = true)
+    public void onLinkFeatureSetEvent(LinkFeatureSetEvent aEvent)
+    {
+        AjaxRequestTarget target = aEvent.getTarget();
+        try {
+            CAS cas = jcasProvider.get();
+            AnnotationFS fs =
+                selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
+            state.getSelection().selectSpan(fs);
+            actionHandler.actionCreateOrUpdate(target, cas);
+        }
+        catch (Exception e) {
+            handleException(this, target, e);
+        }
     }
 }
