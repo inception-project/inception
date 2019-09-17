@@ -87,7 +87,7 @@ Both conditions and restrictions are composed of a *path* and a *value*. The lat
 <path>="<value>"
 ----
 
-A *condition* is a way of defining whether a particular situation in {product-name} is based on annotation layers and features in it.
+A *condition* is a way of defining whether a particular situation in {product-name} is based on annotation layers and features in it. Conditions can be defined on features with string, integer or boolean values, but in any case, the value needs to be put into quotes (e.g. `someBooleanFeature="true"`, `someIntegerFeature="2"`).
 
 A *condition set* consists of one or more conditions. They are connected with logical AND as follows. 
 
@@ -96,7 +96,7 @@ A *condition set* consists of one or more conditions. They are connected with lo
 <condition> & <condition>
 ----
 
-A *restriction set* defines a set of restrictions which can be applied if a particular condition set is evaluated to true. As multiple restrictions inside one rule are interpreted as conjunctions, they are separated by the `|`-operator”.
+A *restriction set* defines a set of restrictions which can be applied if a particular condition set is evaluated to true. As multiple restrictions inside one rule are interpreted as conjunctions, they are separated by the `|`-operator. **Restrictions can only be defined on String-valued features that are associated with a tagset.**
 
 [source,text]
 ----
