@@ -493,6 +493,11 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
+        
+        // do not trigger training during curation or when viewing others' work
+        if (!user.equals(userRepository.getCurrentUser())) {
+            return;
+        }
 
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
