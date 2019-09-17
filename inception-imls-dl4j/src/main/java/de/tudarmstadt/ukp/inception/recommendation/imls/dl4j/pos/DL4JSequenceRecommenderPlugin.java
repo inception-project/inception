@@ -15,38 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
+package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlID;
+import static java.util.Collections.singleton;
 
-public class PerseusWord
+import java.util.Set;
+
+import org.pf4j.PluginWrapper;
+
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.Plugin;
+
+public class DL4JSequenceRecommenderPlugin
+    extends Plugin
 {
-    @XmlID 
-    @XmlAttribute
-    public String id;
-
-    @XmlAttribute
-    public String form;
+    public DL4JSequenceRecommenderPlugin(PluginWrapper aWrapper)
+    {
+        super(aWrapper);
+    }
     
-    @XmlAttribute
-    public String lemma;
-
-    @XmlAttribute
-    public String postag;
-
-    @XmlAttribute
-    public String relation;
-
-    @XmlAttribute
-    public String cite;
-
-    @XmlAttribute
-    public int head;
-    
-    @XmlAttribute(name = "insertion_id")
-    public String insertionId;
-    
-    @XmlAttribute
-    public String artificial;
+    @Override
+    public Set<Class<?>> getSources()
+    {
+        return singleton(DL4JSequenceRecommenderFactory.class);
+    }
 }
