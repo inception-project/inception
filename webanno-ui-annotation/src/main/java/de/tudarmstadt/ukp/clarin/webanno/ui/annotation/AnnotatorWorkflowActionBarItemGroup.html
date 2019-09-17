@@ -19,15 +19,17 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <div wicket:id="resetDocumentDialog"></div>
-    <div wicket:id="finishDocumentDialog"></div>
-    <div class="btn-group">
-      <button wicket:id="showResetDocumentDialog" class="btn btn-default" type="button">
-        <i class="fas fa-recycle"></i>
-      </button>
-      <button wicket:id="showFinishDocumentDialog" class="btn btn-default" type="button">
-        <i wicket:id="state"></i>
-      </button>
+    <div class="action-bar-group">
+      <div wicket:id="resetDocumentDialog"></div>
+      <div wicket:id="finishDocumentDialog"></div>
+      <div class="btn-group">
+        <button wicket:id="showResetDocumentDialog" class="btn btn-default" type="button">
+          <i class="fas fa-recycle"></i>
+        </button>
+        <button wicket:id="showFinishDocumentDialog" class="btn btn-default" type="button">
+          <i wicket:id="state"></i>
+        </button>
+      </div>
     </div>
   </wicket:panel>
 </body>

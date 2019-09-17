@@ -128,6 +128,7 @@ public class AnnotationPage
     private long currentprojectId;
 
     private WebMarkupContainer centerArea;
+    private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
 
@@ -177,13 +178,17 @@ public class AnnotationPage
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
         centerArea.add(createDocumentInfoLabel());
-        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
-        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
-        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
-        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
-        createAnnotationEditor(null);
         add(centerArea);
+        
+        actionBar = new WebMarkupContainer("actionBar");
+        actionBar.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
+        actionBar.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        actionBar.add(new PreferencesActionBarItem("preferencesDialog", this));
+        actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        actionBar.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
+        centerArea.add(actionBar);
+        
+        createAnnotationEditor(null);
 
         add(createRightSidebar());
 
@@ -268,7 +273,7 @@ public class AnnotationPage
         }
         
         // Use the proper page navigator and position labels for the current paging strategy
-        centerArea
+        actionBar
                 .addOrReplace(state.getPagingStrategy().createPageNavigator("pageNavigator", this));
         centerArea.addOrReplace(
                 state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, getModel())

@@ -131,6 +131,7 @@ public class AutomationPage
     private long currentprojectId;
 
     private WebMarkupContainer centerArea;
+    private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
@@ -156,19 +157,24 @@ public class AutomationPage
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
+        
         centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
-        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
-        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
-        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
-        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
+        
+        actionBar = new WebMarkupContainer("actionBar");
+        actionBar.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
+        actionBar.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        actionBar.add(new PreferencesActionBarItem("preferencesDialog", this));
+        actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        actionBar.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this));
+        centerArea.add(actionBar);
+        
         annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
                 this::getEditorCas);
         centerArea.add(annotationEditor);
         add(centerArea);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        centerArea.add(
+        actionBar.add(
                 getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())

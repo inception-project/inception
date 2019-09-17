@@ -144,6 +144,7 @@ public class CurationPage
     private CurationContainer curationContainer;
 
     private WebMarkupContainer centerArea;
+    private WebMarkupContainer actionBar;
 
     private SuggestionViewPanel suggestionViewPanel;
 
@@ -210,7 +211,11 @@ public class CurationPage
         centerArea = new WebMarkupContainer("centerArea");
         centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
         centerArea.setOutputMarkupPlaceholderTag(true);
-        centerArea.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects(),
+        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        add(centerArea);
+        
+        actionBar = new WebMarkupContainer("actionBar");
+        actionBar.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects(),
                 this::listDocuments) {
             private static final long serialVersionUID = 4342862409722750114L;
 
@@ -220,15 +225,14 @@ public class CurationPage
                 CurationPage.this.onDocumentSelected(aTarget);
             }
         });
-        centerArea.add(new DocumentNamePanel("documentNamePanel", getModel()));
-        centerArea.add(new GuidelinesActionBarItem("guidelinesDialog", this));
-        centerArea.add(new PreferencesActionBarItem("preferencesDialog", this));
-        centerArea.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
-        centerArea.add(new CuratorWorkflowActionBarItemGroup("workflowActions", this));
-        add(centerArea);
+        actionBar.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        actionBar.add(new PreferencesActionBarItem("preferencesDialog", this));
+        actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        actionBar.add(new CuratorWorkflowActionBarItemGroup("workflowActions", this));
+        centerArea.add(actionBar);
         
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        centerArea.add(
+        actionBar.add(
                 getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
         centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
