@@ -122,7 +122,10 @@ public class RecommendationSidebar
                 || !state.getUser().equals(userRepository.getCurrentUser())) {
             form.setEnabled(false);
             recommenderInfos.setEnabled(false);
+            return;
         }
+        form.setEnabled(true);
+        recommenderInfos.setEnabled(true);
     }
 
     protected void configureMismatched()

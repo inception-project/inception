@@ -494,7 +494,7 @@ public class RecommendationServiceImpl
     {
         User user = userRepository.get(aUser);
         
-        // do not trigger training during curation or when viewing others' work
+        // do not trigger training during when viewing others' work
         if (!user.equals(userRepository.getCurrentUser())) {
             return;
         }
