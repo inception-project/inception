@@ -88,11 +88,12 @@ public class DocumentNavigator
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
-        // Open the dialog if no document has been selected
-        page.add(new AutoOpenDialogBehavior());
-
         // We put the dialog into the page footer since this is presently the only place where we
-        // can dynamically add stuff to the page.
+        // can dynamically add stuff to the page. We cannot add simply to the action bar (i.e.
+        // DocumentNavigator) because the action bar only shows *after* a document has been
+        // selected. In order to allow the dialog to be rendered *before* a document has been
+        // selected (i.e. when the action bar is still not on screen), we need to attach it to the
+        // page. The same for the AutoOpenDialogBehavior we add below.
         openDocumentsModal = createOpenDocumentsDialog("item");
         page.addToFooter(openDocumentsModal);
         
@@ -103,6 +104,9 @@ public class DocumentNavigator
                     && (projectService.isManager(state.getProject(), state.getUser())
                             || !state.getProject().isDisableExport());
         })));
+        
+        // Open the dialog if no document has been selected.
+        page.add(new AutoOpenDialogBehavior());
     }
     
     @Override
