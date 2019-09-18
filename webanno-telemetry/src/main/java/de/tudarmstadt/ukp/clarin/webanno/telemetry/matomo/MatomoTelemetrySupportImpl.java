@@ -250,8 +250,17 @@ public class MatomoTelemetrySupportImpl
             return;
         }
 
-        if (sessionRegistry.getAllPrincipals().isEmpty()) {
+        // Check if there are any active (non-expired) sessions - if yes, we send a ping.
+        List<Object> allPrincipals = sessionRegistry.getAllPrincipals();
+        boolean hasActiveSessions = allPrincipals.stream()
+                .map(principal -> sessionRegistry.getAllSessions(principal, false))
+                .anyMatch(list -> !list.isEmpty());
+        
+        if (!hasActiveSessions) {
             return;
+        }
+        else {
+            log.debug("Telemetry detected active principals: {}", allPrincipals);
         }
 
         sendTelemetry(ACTION_PING);
