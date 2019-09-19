@@ -22,11 +22,13 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
@@ -300,6 +302,10 @@ public class ConceptFeatureSupport
     @Override
     public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, String aLabel)
     {
+        if (StringUtils.isEmpty(aLabel)) {
+            return Collections.emptyList();
+        }
+        
         return asList(new VLazyDetailQuery(aFeature.getName(), aLabel));
     }
     
