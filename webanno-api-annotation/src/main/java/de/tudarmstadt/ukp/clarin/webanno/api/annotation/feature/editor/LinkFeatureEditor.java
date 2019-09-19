@@ -31,6 +31,7 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -61,6 +62,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureSetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -492,6 +495,7 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        FeatureState fs = state.getArmedFeature();
 
         // Update the slot
         LinkWithRoleModel m = links.get(state.getArmedSlot());
@@ -499,18 +503,13 @@ public class LinkFeatureEditor
         links.set(state.getArmedSlot(), m); // avoid reordering
 
         aTarget.add(content);
-
-        // Commit change - but only if we set the label on a slot which was already filled/saved.
+    
+        // Send event - but only if we set the label on a slot which was already filled/saved.
         // Unset slots only exist in the link editor and if we commit the change here, we trigger
         // a reload of the feature editors from the CAS which makes the unfilled slots disappear
         // and leaves behind an armed slot pointing to a removed slot.
         if (m.targetAddr != -1) {
-            try {
-                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
-            }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
-            }
+            send(this, Broadcast.BUBBLE, new LinkFeatureSetEvent(fs, aTarget, m));
         }
     }
 
@@ -520,21 +519,16 @@ public class LinkFeatureEditor
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
                 .getModelObject().value;
         AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
+        FeatureState fs = state.getArmedFeature();
 
+        LinkWithRoleModel linkWithRoleModel = links.get(state.getArmedSlot());
         links.remove(state.getArmedSlot());
         state.clearArmedSlot();
 
         aTarget.add(content);
-
-        // Auto-commit if working on existing annotation
-        if (state.getSelection().getAnnotation().isSet()) {
-            try {
-                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
-            }
-            catch (Exception e) {
-                handleException(this, aTarget, e);
-            }
-        }
+        
+        send(this, Broadcast.BUBBLE, 
+                new LinkFeatureDeletedEvent(fs, aTarget, linkWithRoleModel));
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget, Item<LinkWithRoleModel> aItem)
