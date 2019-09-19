@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.11.0-SNAPSHOT</version>
+    <version>0.12.0-SNAPSHOT</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>inception-app-webapp</artifactId>
@@ -30,10 +30,12 @@
     <docker.image.name>inceptionproject/inception-snapshots</docker.image.name>
   </properties>
   <dependencies>
+  <!--  
     <dependency>
       <groupId>xml-apis</groupId>
       <artifactId>xml-apis</artifactId>
     </dependency>
+    -->
   
     <!-- INCEPTION - CORE DEPENDENCIES -->
     <dependency>
@@ -176,10 +178,6 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-conll-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-lif-asl</artifactId>
     </dependency>
     <dependency>
@@ -192,30 +190,18 @@
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-segmentation-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-lexmorph-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-resources-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-parameter-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-syntax-asl</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-api-io-asl</artifactId>
+      <artifactId>dkpro-core-io-perseus-asl</artifactId>
     </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-manager</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
+      <artifactId>webanno-plugin-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.clarin.webanno</groupId>
       <artifactId>webanno-automation</artifactId>
@@ -323,7 +309,7 @@
       <groupId>com.googlecode.wicket-jquery-ui</groupId>
       <artifactId>wicket-kendo-ui-theme-bootstrap</artifactId>
     </dependency>
-
+    
     <!-- Spring dependencies -->
     <dependency>
       <groupId>org.springframework</groupId>
@@ -408,8 +394,8 @@
     <!-- <artifactId>hibernate-entitymanager</artifactId> -->
     <!-- </dependency> -->
     <dependency>
-      <groupId>commons-dbcp</groupId>
-      <artifactId>commons-dbcp</artifactId>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-dbcp2</artifactId>
     </dependency>
     <dependency>
       <groupId>mysql</groupId>
@@ -456,7 +442,13 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
-    </dependency>    
+    </dependency>
+    <!--  
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-loader</artifactId>
+    </dependency>
+    -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -635,11 +627,11 @@
                 </sync>
 
                 <replace dir="src/main/resources/public/doc" failOnNoReplacements="true">
-                  <include name="**/*.html"/>
-                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js"/>
-                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js"/>
-                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js"/>
-                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js"/>
+                  <include name="**/*.html" />
+                  <replacefilter token="https://code.jquery.com/jquery-3.0.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery/current/jquery.min.js" />
+                  <replacefilter token="https://code.jquery.com/jquery-migrate-3.1.0.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-migrate/current/jquery-migrate.min.js" />
+                  <replacefilter token="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery-ui/current/jquery-ui.min.js" />
+                  <replacefilter token="https://cdnjs.cloudflare.com/ajax/libs/jquery.tocify/1.9.0/javascripts/jquery.tocify.min.js" value="../wicket/resource/de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference/webjars/jquery.tocify.js/current/js/jquery.tocify.min.js" />
                 </replace>
 
               </tasks>
@@ -690,7 +682,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
@@ -714,7 +705,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tsv</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-tcf</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-xmi</usedDependency>
-              <!-- usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency -->
+              <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-conll</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-io-text</usedDependency>
               <!-- WebAnno UI Modules - they auto-register via reflection -->
               <!-- Detected because we explicitly exclude their menu items  
@@ -735,7 +726,7 @@
               <usedDependency>de.tudarmstadt.ukp.clarin.webanno:webanno-telemetry</usedDependency>
               <!-- JDBC drivers and database stuff - used via reflection -->
               <usedDependency>org.hibernate:hibernate-entitymanager</usedDependency>
-              <usedDependency>commons-dbcp:commons-dbcp</usedDependency>
+              <usedDependency>org.apache.commons:commons-dbcp2</usedDependency>
               <usedDependency>mysql:mysql-connector-java</usedDependency>
               <usedDependency>org.hsqldb:hsqldb</usedDependency>
               <usedDependency>org.liquibase:liquibase-core</usedDependency>
@@ -760,6 +751,7 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>

@@ -50,6 +50,7 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -59,6 +60,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
+import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -90,11 +93,13 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     private final IModel<String> username;
     private final ListView<FeatureState> featureList;
     private final DocumentMetadataAnnotationSelectionPanel selectionPanel;
+    private final AnnotationActionHandler actionHandler;
     
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
             IModel<SourceDocument> aDocument, IModel<String> aUsername, CasProvider aCasProvider,
             IModel<Project> aProject, AnnotationPage aAnnotationPage,
-            DocumentMetadataAnnotationSelectionPanel aSelectionPanel)
+            DocumentMetadataAnnotationSelectionPanel aSelectionPanel,
+            AnnotationActionHandler aActionHandler)
     {
         super(aId, aModel);
 
@@ -106,6 +111,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
         jcasProvider = aCasProvider;
         project = aProject;
         selectionPanel = aSelectionPanel;
+        actionHandler = aActionHandler;
         
         add(featureList = createFeaturesList());
         
@@ -140,14 +146,19 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 FeatureSupport featureSupport = featureSupportRegistry
                         .getFeatureSupport(featureState.feature);
                 editor = featureSupport.createEditor(CID_EDITOR,
-                        DocumentMetadataAnnotationDetailPanel.this, null, null, item.getModel());
+                        DocumentMetadataAnnotationDetailPanel.this, actionHandler,
+                         annotationPage.getModel(), item.getModel());
 
                 if (!featureState.feature.getLayer().isReadonly()) {
                     // Whenever it is updating an annotation, it updates automatically when a
                     // component for the feature lost focus - but updating is for every component
                     // edited LinkFeatureEditors must be excluded because the auto-update will break
                     // the ability to add slots. Adding a slot is NOT an annotation action.
-                    addAnnotateActionBehavior(editor);
+                    AnnotationFeature feature = featureState.feature;
+                    if (!(feature.getMultiValueMode().equals(MultiValueMode.ARRAY)
+                        && feature.getLinkMode().equals(LinkMode.WITH_ROLE))) {
+                        addAnnotateActionBehavior(editor);
+                    }
 
                     // Add tooltip on label
                     StringBuilder tooltipTitle = new StringBuilder();
@@ -226,7 +237,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
                 value = adapter.getFeatureValue(feature, fs);
             }
 
-            FeatureState featureState = new FeatureState(feature, value);
+            FeatureState featureState = new FeatureState(vid, feature, value);
             featureStates.add(featureState);
             featureState.tagset = annotationService.listTags(featureState.feature.getTagset());
         }

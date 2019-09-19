@@ -7,7 +7,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *  http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,26 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
+package de.tudarmstadt.ukp.inception.pdfeditor;
 
-import java.util.List;
+import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Panel;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlID;
-
-public class PerseusSentence
+public class WrongFileFormatPanel
+    extends Panel
 {
-    @XmlID 
-    @XmlAttribute(name = "id")
-    public String id;
-
-    @XmlAttribute(name = "subdoc")
-    public String subdoc;
-
-    @XmlAttribute(name = "document_id")
-    public String documentId;
-
-    @XmlElement(name = "word")
-    public List<PerseusWord> words;
+    public WrongFileFormatPanel(String id, String format) {
+        super(id);
+        add(new Label("format", format));
+    }
 }

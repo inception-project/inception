@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception;
 
+import static org.springframework.boot.WebApplicationType.SERVLET;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -25,21 +27,20 @@ import javax.swing.JWindow;
 import javax.validation.Validator;
 
 import org.apache.catalina.connector.Connector;
+import org.apache.uima.cas.impl.CASImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigurationExcludeFilter;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.TypeExcludeFilter;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.FilterType;
-import org.springframework.context.annotation.ImportResource;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -54,7 +55,8 @@ import com.giffing.wicket.spring.boot.starter.web.config.WicketWebInitializerAut
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.AutomationService;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationMiraTemplateExporter;
 import de.tudarmstadt.ukp.clarin.webanno.automation.service.export.AutomationTrainingDocumentExporter;
-import de.tudarmstadt.ukp.clarin.webanno.conll.ConllUFormatSupport;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.PluginManager;
+import de.tudarmstadt.ukp.clarin.webanno.plugin.impl.PluginManagerImpl;
 import de.tudarmstadt.ukp.clarin.webanno.support.SettingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.LoadingSplashScreen;
 import de.tudarmstadt.ukp.clarin.webanno.support.standalone.ShutdownDialogAvailableEvent;
@@ -70,11 +72,15 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 @SpringBootApplication
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@ComponentScan(excludeFilters = {
-        @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
-        @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-        @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-        @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
+@ComponentScan(
+        basePackages = { 
+                "de.tudarmstadt.ukp.inception",  
+                "de.tudarmstadt.ukp.clarin.webanno" },
+        excludeFilters = {
+            @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
+            @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+            @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
+            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
                 // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
                 // activation strategies for menu items. Thus, we need to re-implement the menu
                 // items for INCEpTION.
@@ -82,12 +88,11 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 CurationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
+
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,
-                AutomationTrainingDocumentExporter.class,
-                // INCEpTION uses the original DKPro Core CoNLL-U components
-                ConllUFormatSupport.class
+                AutomationTrainingDocumentExporter.class
         })})
 @EntityScan(basePackages = {
         // Include WebAnno entity packages separately so we can skip the automation entities!
@@ -95,10 +100,6 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
         "de.tudarmstadt.ukp.clarin.webanno.security",
         "de.tudarmstadt.ukp.clarin.webanno.telemetry",
         "de.tudarmstadt.ukp.inception" })
-@ImportResource({ 
-        "classpath:/META-INF/application-context.xml",
-        "classpath:/META-INF/rest-context.xml", 
-        "classpath:/META-INF/static-resources-context.xml" })
 @EnableAsync
 public class INCEpTION
     extends SpringBootServletInitializer
@@ -113,6 +114,15 @@ public class INCEpTION
     public Validator validator()
     {
         return new LocalValidatorFactoryBean();
+    }
+    
+    @Bean
+    public PluginManager pluginManager()
+    {
+        PluginManagerImpl pluginManager = new PluginManagerImpl(
+                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
+        return pluginManager;
     }
     
     // The WebAnno User model class picks this bean up by name!
@@ -132,9 +142,9 @@ public class INCEpTION
     }
     
     @Bean
-    public EmbeddedServletContainerFactory servletContainer()
+    public TomcatServletWebServerFactory servletContainer()
     {
-        TomcatEmbeddedServletContainerFactory tomcat = new TomcatEmbeddedServletContainerFactory();
+        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
         if (ajpPort > 0) {
             Connector ajpConnector = new Connector(PROTOCOL);
             ajpConnector.setPort(ajpPort);
@@ -158,6 +168,9 @@ public class INCEpTION
     
     private static void init(SpringApplicationBuilder aBuilder)
     {
+        // WebAnno relies on FS IDs being stable, so we need to enable this
+        System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
+        
         aBuilder.banner(new InceptionBanner());
         aBuilder.initializers(new InceptionApplicationContextInitializer());
         aBuilder.headless(false);
@@ -167,7 +180,7 @@ public class INCEpTION
         // Traditionally, the INCEpTION configuration file is called settings.properties and is
         // either located in inception.home or under the user's home directory. Make sure we pick
         // it up from there in addition to reading the built-in application.properties file.
-        aBuilder.properties("spring.config.location="
+        aBuilder.properties("spring.config.additional-location="
                 + "${inception.home:${user.home}/.inception}/settings.properties");
     }
     
@@ -177,16 +190,20 @@ public class INCEpTION
                 .setupScreen(INCEpTION.class.getResource("splash.png"));
         
         SpringApplicationBuilder builder = new SpringApplicationBuilder();
+        // Add the main application as the root Spring context
+        builder.sources(INCEpTION.class).web(SERVLET);
+        
         // Signal that we may need the shutdown dialog
         builder.properties("running.from.commandline=true");
         init(builder);
-        builder.sources(INCEpTION.class);
+        
         builder.listeners(event -> {
             if (event instanceof ApplicationReadyEvent
                     || event instanceof ShutdownDialogAvailableEvent) {
                 splash.ifPresent(it -> it.dispose());
             }
         });
+        
         builder.run(args);
     }
 }

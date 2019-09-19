@@ -1,0 +1,24 @@
+// Copyright 2015
+// Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_evaluation]]
+= Evaluation Simulation
+
+The evaluation simulation panel provides a visualization of the performance of the selected recommender with the help of a learning curve diagram. On the bottom right of the panel, the start button performs evaluation on the selected recommender using the annotated documents in the project and plots the evaluation scores against the training data size on the graph. The evaluation score can be one of the four metrics, Accuracy, Precision, Recall and F1. There is a drop down panel to change the metric. The evaluation might take a long time.
+
+For the evaluation, the training and test data is used from all the imported documents of the project. Moreover, the data is split into *80% training data* and *20% test data*. The training data is *incremented by 250* per evaluation.
+
+image::evaluation.png[align="center"]
