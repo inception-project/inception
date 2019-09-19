@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.io.Serializable;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -24,8 +25,12 @@ import java.util.Set;
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 
-public class ConfusionMatrix
+public class ConfusionMatrix implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -5181354025073954428L;
     /**
      * Stores number of predicted labels for each gold label
      */
@@ -119,8 +124,12 @@ public class ConfusionMatrix
     /**
      * Key identifying a confusion-matrix entry by predicted and gold label.
      */
-    protected class ConfMatrixKey
+    protected class ConfMatrixKey implements Serializable
     {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 7241471544567740440L;
         private String predictedLabel;
         private String goldLabel;
         

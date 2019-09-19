@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.evaluation;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -33,8 +34,12 @@ import java.util.stream.Collector;
  * Provides macro-averaged scores on per-token basis over all labels contained in processed
  * annotated pairs except for those matching the optionally provided ignore-labels as a gold label.
  */
-public class EvaluationResult
+public class EvaluationResult implements Serializable
 {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 5842125748342833451L;
     private final int trainingSetSize;
     private final int testSetSize;
     
