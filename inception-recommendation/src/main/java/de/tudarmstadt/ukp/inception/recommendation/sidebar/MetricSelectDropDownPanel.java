@@ -31,14 +31,16 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 
+import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
+
 public class MetricSelectDropDownPanel
     extends Panel
 {
 
     private static final long serialVersionUID = 4988942370126340112L;
 
-    private static final List<RecommenderEvaluationScoreMetric> METRICS = Arrays
-            .asList(RecommenderEvaluationScoreMetric.values());
+    private static final List<RecommenderEvaluationScoreMetricEnum> METRICS = Arrays
+            .asList(RecommenderEvaluationScoreMetricEnum.values());
     
     private static final String MID_METRIC_SELECT = "select";
     private static final String MID_METRIC_LINK = "link";
@@ -50,10 +52,10 @@ public class MetricSelectDropDownPanel
     {
         super(aId);
 
-        final DropDownChoice<RecommenderEvaluationScoreMetric> dropdown = new 
-                DropDownChoice<RecommenderEvaluationScoreMetric>(
-                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetric>(METRICS.get(0)),
-                new ListModel<RecommenderEvaluationScoreMetric>(METRICS));
+        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = new 
+                DropDownChoice<RecommenderEvaluationScoreMetricEnum>(
+                MID_METRIC_SELECT, new Model<RecommenderEvaluationScoreMetricEnum>(METRICS.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetricEnum>(METRICS));
         dropdown.setRequired(true);
         dropdown.setOutputMarkupId(true);
 
