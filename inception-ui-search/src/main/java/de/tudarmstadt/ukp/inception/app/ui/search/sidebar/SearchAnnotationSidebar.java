@@ -176,9 +176,7 @@ public class SearchAnnotationSidebar
 
         // Add link for re-indexing the project
         searchOptionsForm.add(new LambdaAjaxLink("reindexProject", t -> {
-            Project project = ((IModel<AnnotatorState>) t.getPage().getDefaultModel()).getObject()
-                    .getProject();
-            searchService.reindex(project);
+            searchService.reindex(getAnnotationPage().getModelObject().getProject());
         }));
 
         resultsGroupContainer = new WebMarkupContainer("resultsGroupContainer");
@@ -196,8 +194,7 @@ public class SearchAnnotationSidebar
                 item.add(new Label("groupTitle", LoadableDetachableModel
                         .of(() -> result.getGroupKey() + " (" + result.getResults().size() + ")")));
                 item.add(createGroupLevelSelectionCheckBox("selectAllInGroup",
-
-                    result.getGroupKey()));
+                        result.getGroupKey()));
                 item.add(new SearchResultGroup("group", "resultGroup", SearchAnnotationSidebar.this,
                         result.getGroupKey(), LambdaModel.of(() -> result)));
             }
@@ -322,7 +319,8 @@ public class SearchAnnotationSidebar
         return selectAllCheckBox;
     }
 
-    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm) {
+    private void actionSearch(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
         selectedResult = null;
         groupedSearchResults.detach();
         searchResultGroups.setItemsPerPage(searchOptions.getObject().getItemsPerPage());
@@ -333,7 +331,6 @@ public class SearchAnnotationSidebar
     
     private void getSearchResultsGrouped()
     {
-
         if (isBlank(targetQuery.getObject())) {
             resultsProvider.emptyQuery();
             return;
