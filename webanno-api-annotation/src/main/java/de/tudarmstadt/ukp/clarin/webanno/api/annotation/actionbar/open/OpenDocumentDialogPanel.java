@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
@@ -37,11 +37,11 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.curation.storage.CurationDocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -65,7 +65,6 @@ public class OpenDocumentDialogPanel
 
     private @SpringBean ProjectService projectService;
     private @SpringBean DocumentService documentService;
-    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
 
     private final ButtonsForm buttonsForm;
@@ -81,16 +80,20 @@ public class OpenDocumentDialogPanel
     
     private final ModalWindow modalWindow;
     
-    
+    private final SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
+        docListProvider;
     
     public OpenDocumentDialogPanel(String aId, AnnotatorState aBModel, ModalWindow aModalWindow,
-            IModel<List<DecoratedObject<Project>>> aProjects)
+            IModel<List<DecoratedObject<Project>>> aProjects,
+            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
+                aDocListProvider)
     {
         super(aId);
         
         modalWindow = aModalWindow;
         state = aBModel;
         projects = aProjects;
+        docListProvider = aDocListProvider;
         
         projectListChoice = createProjectListChoice(aBModel);
         userListChoice = createUserListChoice();
@@ -267,65 +270,54 @@ public class OpenDocumentDialogPanel
 
         return users;
     }
-
+    
     private List<DecoratedObject<SourceDocument>> listDocuments()
     {
-        if (projectListChoice.getModelObject() == null || userListChoice.getModelObject() == null) {
+        Project project = projectListChoice.getModel().map(DecoratedObject::get).orElse(null)
+                .getObject();
+        User user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
+        
+        if (project == null || user == null) {
             return new ArrayList<>();
         }
         
+        if (docListProvider != null) {
+            return docListProvider.apply(project, user);
+        }
+        
+        return listDocuments(project, user);
+    }
+
+    private List<DecoratedObject<SourceDocument>> listDocuments(Project aProject, User aUser)
+    {
         final List<DecoratedObject<SourceDocument>> allSourceDocuments = new ArrayList<>();
 
         // Remove from the list source documents that are in IGNORE state OR
         // that do not have at least one annotation document marked as
         // finished for curation dialog
-        switch (state.getMode()) {
-        case ANNOTATION:
-        case AUTOMATION:
-        case CORRECTION: {
-            Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(
-                    projectListChoice.getModelObject().get(),
-                    userListChoice.getModelObject().get());
+        Map<SourceDocument, AnnotationDocument> docs = documentService.listAllDocuments(
+                aProject,
+                aUser);
 
-            for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+        for (Entry<SourceDocument, AnnotationDocument> e : docs.entrySet()) {
+            DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
+            if (e.getValue() != null) {
+                AnnotationDocument adoc = e.getValue();
+                AnnotationDocumentState docState = adoc.getState();
+                dsd.setColor(docState.getColor());
                 
-                DecoratedObject<SourceDocument> dsd = DecoratedObject.of(e.getKey());
-                if (e.getValue() != null) {
-                    AnnotationDocument adoc = e.getValue();
-                    AnnotationDocumentState docState = adoc.getState();
-                    dsd.setColor(docState.getColor());
-                    
-                    boolean userIsSelected = userListChoice.getModelObject().get()
-                            .equals(userRepository.getCurrentUser());
-                    // if current user is opening her own docs, don't let her see locked ones
-                    if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
-                        continue;
-                    }
+                boolean userIsSelected = aUser.equals(userRepository.getCurrentUser());
+                // if current user is opening her own docs, don't let her see locked ones
+                if (userIsSelected && docState.equals(AnnotationDocumentState.IGNORE)) {
+                    continue;
                 }
-                allSourceDocuments.add(dsd);
             }
-            break;
-        }
-        case CURATION: {
-            List<SourceDocument> sdocs = curationDocumentService
-                    .listCuratableSourceDocuments(projectListChoice.getModelObject().get());
-            
-            for (SourceDocument sourceDocument : sdocs) {
-                DecoratedObject<SourceDocument> dsd = DecoratedObject.of(sourceDocument);
-                dsd.setLabel("%s (%s)", sourceDocument.getName(), sourceDocument.getState());
-                dsd.setColor(sourceDocument.getState().getColor());
-                allSourceDocuments.add(dsd);
-            }
-
-            break;
-        }
-        default:
-            break;
+            allSourceDocuments.add(dsd);
         }
         
         return allSourceDocuments;
     }
-
+    
     private class ButtonsForm
         extends Form<Void>
     {

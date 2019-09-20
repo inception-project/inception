@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 /**
  * Show closed/not closed images on annoataion/correction pages
  */
+@Deprecated
 public class FinishImage
     extends WebMarkupContainer
 {

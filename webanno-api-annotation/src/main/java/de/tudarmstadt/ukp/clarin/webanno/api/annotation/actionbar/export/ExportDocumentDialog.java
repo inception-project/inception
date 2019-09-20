@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export;
 
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
@@ -23,11 +23,9 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.StringResourceModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 /**
- * A panel used for {@link AnnotationPage} {@code CurationPage} and {@code CorrectionPage}
- * consisting of a link to export annotated data
+ * Dialog providing allowing the annotator to download the current document.
  */
 public class ExportDocumentDialog
     extends ModalWindow

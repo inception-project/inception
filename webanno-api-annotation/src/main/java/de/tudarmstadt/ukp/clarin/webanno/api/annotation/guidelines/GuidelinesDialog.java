@@ -15,18 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines;
 
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 /**
- * A panel used by {@link AnnotationPage} {@code CurationPage} and {@code CorrectionPage} consisting
- * of a link to open annotation guideline
+ * Dialog providing access to the annotation guidelines.
  */
 public class GuidelinesDialog
     extends ModalWindow

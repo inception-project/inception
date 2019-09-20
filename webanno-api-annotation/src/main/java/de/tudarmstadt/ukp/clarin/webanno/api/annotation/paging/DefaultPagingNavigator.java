@@ -29,7 +29,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 import wicket.contrib.input.events.EventType;
@@ -52,7 +52,7 @@ public class DefaultPagingNavigator extends Panel
         
         page = aPage;
         
-        Form<Void> gotoPageTextFieldForm = new Form<>("gotoPageTextFieldForm");
+        Form<Void> form = new Form<>("form");
         gotoPageTextField = new NumberTextField<>("gotoPageText", Model.of(1), Integer.class);
         // Using a LambdaModel here because the model object in the page may change and we want to
         // always get the right one
@@ -62,23 +62,23 @@ public class DefaultPagingNavigator extends Panel
         gotoPageTextField.setMinimum(1);
         //gotoPageTextField.setMaximum(LambdaModel.of(() -> aPage.getModelObject().getUnitCount()));
         gotoPageTextField.setOutputMarkupId(true); 
-        gotoPageTextFieldForm.add(gotoPageTextField);
+        form.add(gotoPageTextField);
         LambdaAjaxSubmitLink gotoPageLink = new LambdaAjaxSubmitLink("gotoPageLink",
-                gotoPageTextFieldForm, this::actionGotoPage);
-        gotoPageTextFieldForm.setDefaultButton(gotoPageLink);
-        gotoPageTextFieldForm.add(gotoPageLink);
-        add(gotoPageTextFieldForm);
+                form, this::actionGotoPage);
+        form.setDefaultButton(gotoPageLink);
+        form.add(gotoPageLink);
+        add(form);
         
-        add(new ActionBarLink("showNext", t -> actionShowNextPage(t))
+        form.add(new LambdaAjaxLink("showNext", t -> actionShowNextPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_down }, EventType.click)));
 
-        add(new ActionBarLink("showPrevious", t -> actionShowPreviousPage(t))
+        form.add(new LambdaAjaxLink("showPrevious", t -> actionShowPreviousPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Page_up }, EventType.click)));
 
-        add(new ActionBarLink("showFirst", t -> actionShowFirstPage(t))
+        form.add(new LambdaAjaxLink("showFirst", t -> actionShowFirstPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.Home }, EventType.click)));
 
-        add(new ActionBarLink("showLast", t -> actionShowLastPage(t))
+        form.add(new LambdaAjaxLink("showLast", t -> actionShowLastPage(t))
                 .add(new InputBehavior(new KeyType[] { KeyType.End }, EventType.click)));
     }
     
