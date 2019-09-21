@@ -19,6 +19,7 @@
 package de.tudarmstadt.ukp.inception.revieweditor;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
@@ -257,11 +258,12 @@ public class DocumentAnnotationPanel
                     new Label(CID_LINK_FEATURE_TITLE, featureState.feature.getUiName());
                 item.add(label);
                 
-                WebMarkupContainer linkFeaturesContainer =
+                WebMarkupContainer spansContainer =
                     new WebMarkupContainer(CID_SPANS_CONTAINER);
-                linkFeaturesContainer.setOutputMarkupId(true);
-                linkFeaturesContainer.add(createSpansList(annotations));
-                item.add(linkFeaturesContainer);
+                spansContainer.setOutputMarkupId(true);
+                spansContainer.add(createSpansList(annotations));
+                item.add(spansContainer);
+                item.add(visibleWhen(() -> annotations.size() > 0));
             }
         };
     }
