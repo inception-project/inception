@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature;
 
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,6 +30,8 @@ import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,17 +45,21 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFiel
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
+import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 
 @Component
 public class PrimitiveUimaFeatureSupport
     implements FeatureSupport<Void>, InitializingBean
 {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+    
     private final PrimitiveUimaFeatureSupportProperties properties;
     
     private final AnnotationSchemaService schemaService;
@@ -178,7 +185,7 @@ public class PrimitiveUimaFeatureSupport
                 editor = FeatureSupport.super.createTraitsEditor(aId, aFeatureModel);
                 break;
             case CAS.TYPE_NAME_STRING:
-                editor = new UimaStringTraitsEditor(aId, aFeatureModel);
+                editor = new UimaStringTraitsEditor(aId, this, aFeatureModel);
                 break;
             default:
                 throw unsupportedFeatureTypeException(feature);
@@ -273,6 +280,33 @@ public class PrimitiveUimaFeatureSupport
         }
         else {
             return FeatureSupport.super.renderFeatureValue(aFeature, aLabel);
+        }
+    }
+    
+    public UimaStringTraits readUimaStringTraits(AnnotationFeature aFeature)
+    {
+        UimaStringTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(UimaStringTraits.class, aFeature.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+        
+        if (traits == null) {
+            traits = new UimaStringTraits();
+        }
+        
+        return traits;
+    }
+    
+    public void writeUimaStringTraits(AnnotationFeature aFeature, UimaStringTraits aTraits)
+    {
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
         }
     }
 }
