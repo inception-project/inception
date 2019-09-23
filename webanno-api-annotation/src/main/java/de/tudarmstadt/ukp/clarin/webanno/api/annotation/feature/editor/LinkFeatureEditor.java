@@ -17,17 +17,22 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.wicket.Component;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxEventBehavior;
@@ -60,18 +65,23 @@ import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureSetEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.PossibleValue;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.StyledComboBox;
@@ -88,6 +98,7 @@ public class LinkFeatureEditor
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    private @SpringBean LayerSupportRegistry layerSupportRegistry;
 
     private WebMarkupContainer content;
 
@@ -150,7 +161,32 @@ public class LinkFeatureEditor
                 AnnotatorState state = stateModel.getObject();
 
                 aItem.setModel(new CompoundPropertyModel<>(aItem.getModelObject()));
-                Label role = new Label("role");
+                Label role;
+                if (!traits.isEnableRoleLabels() && aItem.getModelObject().targetAddr > -1) {
+                    try {
+                        CAS cas = actionHandler.getEditorCas();
+                        FeatureStructure fs =
+                                selectFsByAddr(cas, aItem.getModelObject().targetAddr);
+                        AnnotationLayer layer =
+                                annotationService.findLayer(state.getProject(),  fs);
+                        TypeAdapter adapter =
+                                annotationService.getAdapter(layer);
+                        Renderer renderer =
+                                layerSupportRegistry.getLayerSupport(layer).getRenderer(layer);
+                        List<AnnotationFeature> features =
+                                annotationService.listAnnotationFeature(layer);
+                        Map<String, String> renderedFeatures =
+                                renderer.getFeatures(adapter, fs, features);
+                        String labelText = TypeUtil.getUiLabelText(adapter, renderedFeatures);
+                        role = new Label("role", labelText);
+                    }
+                    catch (IOException e) {
+                        handleException(this, null, e);
+                        role = new Label("role");
+                    }
+                } else {
+                    role = new Label("role");
+                }
                 aItem.add(role);
 
                 final Label label;
@@ -501,8 +537,8 @@ public class LinkFeatureEditor
             error("Must set slot label before changing!");
             aTarget.addChildren(getPage(), IFeedback.class);
         } else {
-            @SuppressWarnings("unchecked") List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) LinkFeatureEditor.this
-                    .getModelObject().value;
+            @SuppressWarnings("unchecked") List<LinkWithRoleModel> links =
+                    (List<LinkWithRoleModel>) LinkFeatureEditor.this.getModelObject().value;
             AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
             FeatureState fs = state.getArmedFeature();
     
@@ -514,9 +550,9 @@ public class LinkFeatureEditor
             aTarget.add(content);
     
             // Send event - but only if we set the label on a slot which was already filled/saved.
-            // Unset slots only exist in the link editor and if we commit the change here, we trigger
-            // a reload of the feature editors from the CAS which makes the unfilled slots disappear
-            // and leaves behind an armed slot pointing to a removed slot.
+            // Unset slots only exist in the link editor and if we commit the change here, we
+            // trigger a reload of the feature editors from the CAS which makes the unfilled slots
+            // disappear and leaves behind an armed slot pointing to a removed slot.
             if (m.targetAddr != -1) {
                 send(this, Broadcast.BUBBLE, new LinkFeatureSetEvent(fs, aTarget, m));
             }
