@@ -356,22 +356,11 @@ public class LinkFeatureEditor
         });
 
         // Allows user to update slot
-        LambdaAjaxLink setBtn = new LambdaAjaxLink("set", this::actionSet)
-        {
-
-            private static final long serialVersionUID = 7923695373085126646L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-
-                AnnotatorState state = LinkFeatureEditor.this.stateModel.getObject();
-                setVisible(state.isSlotArmed() && LinkFeatureEditor.this.getModelObject().feature
-                        .equals(state.getArmedFeature().feature));
-            }
-        };
-        setBtn.add(visibleWhen(traits::isEnableRoleLabels));
+        LambdaAjaxLink setBtn = new LambdaAjaxLink("set", this::actionSet);
+        setBtn.add(visibleWhen(() -> traits.isEnableRoleLabels() 
+                && stateModel.getObject().isSlotArmed() 
+                && LinkFeatureEditor.this.getModelObject().feature
+                .equals(stateModel.getObject().getArmedFeature().feature)));
         content.add(setBtn);
 
         // Add a new empty slot with the specified role
