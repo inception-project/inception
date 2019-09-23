@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 public abstract class AnnotationEvent
@@ -27,17 +28,36 @@ public abstract class AnnotationEvent
 {
     private static final long serialVersionUID = -7460965556870957082L;
     
+    private final Project project;
     private final SourceDocument document;
     private final String user;
     private final AnnotationLayer layer;
 
+    public AnnotationEvent(Object aSource, Project aProject, String aUser,
+            AnnotationLayer aLayer)
+    {
+        this(aSource, aProject, null, aUser, aLayer);
+    }
+
     public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer)
     {
+        this(aSource, aDocument.getProject(), aDocument, aUser, aLayer);
+    }
+
+    private AnnotationEvent(Object aSource, Project aProject, SourceDocument aDocument,
+            String aUser, AnnotationLayer aLayer)
+    {
         super(aSource);
+        project = aProject;
         document = aDocument;
         user = aUser;
         layer = aLayer;
+    }
+    
+    public Project getProject()
+    {
+        return project;
     }
 
     public SourceDocument getDocument()
