@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -35,7 +36,7 @@ public interface CurationService
     public Optional<List<User>> listUsersSelectedForCuration(String aCurrentUser, long aProjectId);
     
     /**
-     * retrieves CAS associated with curation doc for the given user
+     * Retrieves CAS associated with curation doc for the given user
      */
     public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
         throws IOException;
@@ -53,9 +54,17 @@ public interface CurationService
             String aCurationName);
     
     /**
-     * Removed stored curation information after user session has ended
+     * Remove stored curation information on given user
      */
     public void removeCurrentUserInformation(String aCurrentUser, long aProjectId);
 
+    /**
+     * Remove information on users that were selected to be shown for curation by the given user 
+     */
     public void clearUsersSelectedForCuration(String aUsername, Long aId);
+
+    /**
+     * Retrieve cases for the given document for the given users
+     */
+    public Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc);
 }

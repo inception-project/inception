@@ -20,18 +20,24 @@ package de.tudarmstadt.ukp.inception.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckGroup;
+import org.apache.wicket.markup.html.form.ChoiceRenderer;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.RadioChoice;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -39,7 +45,10 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.value.AttributeMap;
+import org.apache.wicket.util.value.IValueMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +68,8 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
+import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 
 public class CurationSidebar
@@ -75,25 +86,33 @@ public class CurationSidebar
     private @SpringBean CurationService curationService;
     private @SpringBean DocumentService documentService;
     
+    private @SpringBean List<MergeStrategy> mergeStrategies;
+    private @SpringBean ManualMergeStrategy defaultMergeStrategy;
+    private MergeStrategy selectedMergeStrategy;
+    
     private CheckGroup<User> selectedUsers;
     private Form<List<User>> usersForm;
+    private Form<Void> settingsForm ;
+    private WebMarkupContainer mainContainer;
+    private DropDownChoice<MergeStrategy> mergeChoice;
 
     private final List<String> curationTargets = Arrays
-            .asList(new String[] { DEFAULT_CURATION_TARGET, "  curation document" });
+            .asList(new String[] { "  curation document", DEFAULT_CURATION_TARGET});
     private String selectedCurationTarget = DEFAULT_CURATION_TARGET;
     
     private AnnotatorState state;
     private AnnotationPage annoPage;
-
+    
     // TODO: only show to people who are curators
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
+        selectedMergeStrategy = defaultMergeStrategy;
         state = aModel.getObject();
         annoPage = aAnnotationPage;
-        WebMarkupContainer mainContainer = new WebMarkupContainer("mainContainer");
+        mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
         
@@ -102,18 +121,68 @@ public class CurationSidebar
         usersForm.setOutputMarkupId(true);
         mainContainer.add(usersForm);
         
-        // set up curation target radio button
-        Form<Void> targetForm = new Form<Void>("settingsForm");
-        LambdaAjaxButton<Void> applyButton = new LambdaAjaxButton<>("apply", this::updateCurator);
-        targetForm.add(applyButton);
-        RadioChoice<String> curationTargetBtn = new RadioChoice<String>("curationTargetRadioBtn",
-                new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets);
-        curationTargetBtn.setPrefix("<br/>");
-        targetForm.add(curationTargetBtn);
-        mainContainer.add(targetForm);
+        // set up settings form for curation target, merge op selection
+        Form<Void> settingsForm = createSettingsForm("settingsForm");
+        settingsForm.setOutputMarkupId(true);
+        settingsForm.setVisible(false);
+        mainContainer.add(settingsForm);
+    }
+
+    private Form<Void> createSettingsForm(String aId)
+    {
+        settingsForm = new Form<Void>(aId);
+        LambdaAjaxButton<Void> applyBtn = new LambdaAjaxButton<>("apply", this::merge);
+        settingsForm.add(applyBtn);
+        
+        // set up selection for merge strategy
+        mergeChoice = createMergeDropDownChoice("mergeChoice");
+        settingsForm.add(mergeChoice);
+        
+        // set up curation target selection as radio button
+        RadioChoice<String> curationTargetChoice = new RadioChoice<String>("curationTargetRadioBtn",
+                new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets)
+        {
+            private static final long serialVersionUID = 1513847274470368949L;
+
+            @Override
+            protected IValueMap getAdditionalAttributesForLabel(int aIndex, String aChoice)
+            {
+                // use normal font for choices
+                IValueMap attrValMap = super.getAdditionalAttributesForLabel(aIndex, aChoice);
+                if (attrValMap == null) {
+                    attrValMap = new AttributeMap();
+                }
+                attrValMap.put("style", "font-weight:normal");
+                return attrValMap;
+            }
+        };
+        curationTargetChoice.setPrefix("<br/>");
+        settingsForm.add(curationTargetChoice);
+        
+        // toggle visibility of settings form
+        usersForm.add(new AjaxButton("toggleOptionsVisibility") {
+            
+            private static final long serialVersionUID = -5535838955781542216L;
+
+            @Override
+            protected void onSubmit(AjaxRequestTarget aTarget)
+            {
+                settingsForm.setVisible(!settingsForm.isVisible());
+                aTarget.add(mainContainer);
+            }     
+        });
+        return settingsForm;
     }
     
-
+    private DropDownChoice<MergeStrategy> createMergeDropDownChoice(String aId)
+    {
+        DropDownChoice<MergeStrategy> mergeChoice = new DropDownChoice<MergeStrategy>(aId,
+                new PropertyModel<MergeStrategy>(this, "selectedMergeStrategy"), 
+                new ListModel<MergeStrategy>(mergeStrategies),
+                new ChoiceRenderer<MergeStrategy>("uiName"));
+        return mergeChoice;
+    }
+    
     @Override
     protected void onConfigure()
     {
@@ -122,8 +191,7 @@ public class CurationSidebar
                 .isAnnotationFinished(state.getDocument(), state.getUser()));
     }
 
-
-    private void updateCurator(AjaxRequestTarget aTarget, Form<Void> aForm)
+    private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
@@ -139,7 +207,27 @@ public class CurationSidebar
         
         state.setUser(curator);
         state.getSelection().clear();
-        updateUsers(aTarget, aForm);
+        // update selected users
+        Collection<User> users = selectedUsers.getModelObject();
+        curationService.updateUsersSelectedForCuration(
+                state.getUser().getUsername(), state.getProject().getId(), users);
+        // merge cases
+        try {
+            SourceDocument doc = state.getDocument();
+            Map<String, CAS> userCases = curationService.retrieveUserCases(users, doc);
+            Optional<CAS> targetCas = curationService.retrieveCurationCAS(curator.getUsername(), 
+                    state.getProject().getId(), doc);
+            if (targetCas.isPresent()) {
+                MergeStrategy mergeStrat = ((MergeStrategy) mergeChoice.getDefaultModelObject());
+                mergeStrat.merge(state, targetCas.get(), userCases);
+                log.info("{} merge done", mergeStrat.getUiName());  //TODO change to debug
+            }
+        }
+        catch (IOException e) {
+            log.error(String.format("Could not retrieve CAS for user %s and project %d",
+                        curator.getUsername(), state.getProject().getId()));
+            e.printStackTrace();
+        }
         //open curation doc
         annoPage.actionLoadDocument(aTarget);
     }
@@ -223,6 +311,27 @@ public class CurationSidebar
                 state.getUser().getUsername(), state.getProject().getId());
         aTarget.add(usersForm);
         annoPage.actionRefreshDocument(aTarget);
+    }
+
+    //getters, setters needed for property-models
+    public MergeStrategy getSelectedMergeStrategy()
+    {
+        return selectedMergeStrategy;
+    }
+
+    public void setSelectedMergeStrategy(MergeStrategy aSelectedMergeStrategy)
+    {
+        selectedMergeStrategy = aSelectedMergeStrategy;
+    }
+
+    public String getSelectedCurationTarget()
+    {
+        return selectedCurationTarget;
+    }
+
+    public void setSelectedCurationTarget(String aSelectedCurationTarget)
+    {
+        selectedCurationTarget = aSelectedCurationTarget;
     }
 
 }

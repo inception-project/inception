@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.curation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -28,6 +30,8 @@ import java.util.concurrent.ConcurrentMap;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.uima.cas.CAS;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.core.session.SessionDestroyedEvent;
@@ -45,6 +49,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 @Component
 public class CurationServiceImpl implements CurationService
 {
+    private Logger log = LoggerFactory.getLogger(getClass());
+    
     // stores info on which users are selected and which doc is the curation-doc
     private ConcurrentMap<CurationStateKey, CurationState> curationStates;
     
@@ -180,7 +186,6 @@ public class CurationServiceImpl implements CurationService
     public void onSessionDestroyed(SessionDestroyedEvent event)
     {
         SessionInformation info = sessionRegistry.getSessionInformation(event.getId());
-        // Could be an anonymous session without information.
         if (info != null) {
             String username = (String) info.getPrincipal();
             clearState(username);
@@ -192,11 +197,6 @@ public class CurationServiceImpl implements CurationService
         projectService.listAccessibleProjects(userRegistry.get(aUsername)).stream()
             .map(Project::getId)
             .forEach(pId -> removeCurrentUserInformation(aUsername, pId));
-//        User currentUser = userRegistry.get(aUsername);
-//        List<Project> projects = projectService.listAccessibleProjects(currentUser);
-//        for (Project project : projects) {
-//            removeCurrentUserInformation(aUsername, project.getId());
-//        }
     }
 
     @Override
@@ -207,6 +207,25 @@ public class CurationServiceImpl implements CurationService
             getCurationState(aUsername, aProjectId).setSelectedUsers(new ArrayList<>());
         }
         
+    }
+
+    @Override
+    public Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc)
+    {
+        Map<String, CAS> casses = new HashMap<>();
+        for (User user : aUsers) {
+            try {
+                String username = user.getUsername();
+                casses.put(username, documentService.readAnnotationCas(aDoc,
+                        username));
+            }
+            catch (IOException e) {
+                log.warn(String.format("Could not retrieve CAS for user %s and document %d",
+                        user.getUsername(), aDoc.getId()));
+                e.printStackTrace();
+            }
+        }
+        return casses;
     }
 
 }
