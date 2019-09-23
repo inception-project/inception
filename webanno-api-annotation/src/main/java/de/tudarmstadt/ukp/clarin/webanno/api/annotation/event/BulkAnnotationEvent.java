@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.event;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 
 /**
@@ -32,9 +33,17 @@ public class BulkAnnotationEvent
 {
     private static final long serialVersionUID = -1187536069360130349L;
 
+    public BulkAnnotationEvent(Object aSource, Project aProject, String aUser,
+            AnnotationLayer aLayer)
+    {
+        super(aSource, aProject, aUser, aLayer);
+    }
+
     public BulkAnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer)
     {
         super(aSource, aDocument, aUser, aLayer);
     }
+    
+    
 }
