@@ -7,10 +7,9 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
-@Component
+@Component("manualStrategy")
 public class ManualMergeStrategy implements MergeStrategy
 {
-    
     private String uiName = "Manual";
 
     @Override
@@ -19,6 +18,7 @@ public class ManualMergeStrategy implements MergeStrategy
         // Do nothing
     }
     
+    @Override
     public String getUiName()
     {
         return uiName;

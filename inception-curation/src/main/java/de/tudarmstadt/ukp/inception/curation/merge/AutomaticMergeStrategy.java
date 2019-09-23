@@ -7,11 +7,10 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
-@Component
+@Component("automaticStartegy")
 public class AutomaticMergeStrategy
     implements MergeStrategy
 {
-    
     private String uiName = "Automatic";
 
     @Override
@@ -23,6 +22,7 @@ public class AutomaticMergeStrategy
         // update timestamp
     }
 
+    @Override
     public String getUiName()
     {
         return uiName;

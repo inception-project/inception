@@ -44,7 +44,7 @@ import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.PropertyModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.curation.CurationService;
-import de.tudarmstadt.ukp.inception.curation.merge.ManualMergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 
@@ -76,7 +75,6 @@ public class CurationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -4195790451286055737L;
-    private static final String DEFAULT_CURATION_TARGET = "  my document";
     
     private Logger log = LoggerFactory.getLogger(getClass());
     
@@ -87,20 +85,13 @@ public class CurationSidebar
     private @SpringBean DocumentService documentService;
     
     private @SpringBean List<MergeStrategy> mergeStrategies;
-    private @SpringBean ManualMergeStrategy defaultMergeStrategy;
-    private MergeStrategy selectedMergeStrategy;
     
     private CheckGroup<User> selectedUsers;
     private Form<List<User>> usersForm;
-    private Form<Void> settingsForm ;
+    private RadioChoice<String> curationTargetChoice;
     private WebMarkupContainer mainContainer;
     private DropDownChoice<MergeStrategy> mergeChoice;
-
-    private final List<String> curationTargets = Arrays
-            .asList(new String[] { "  curation document", DEFAULT_CURATION_TARGET});
-    private String selectedCurationTarget = DEFAULT_CURATION_TARGET;
     
-    private AnnotatorState state;
     private AnnotationPage annoPage;
     
     // TODO: only show to people who are curators
@@ -109,8 +100,6 @@ public class CurationSidebar
             AnnotationPage aAnnotationPage)
     {
         super(aId, aModel, aActionHandler, aCasProvider, aAnnotationPage);
-        selectedMergeStrategy = defaultMergeStrategy;
-        state = aModel.getObject();
         annoPage = aAnnotationPage;
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -130,7 +119,7 @@ public class CurationSidebar
 
     private Form<Void> createSettingsForm(String aId)
     {
-        settingsForm = new Form<Void>(aId);
+        Form<Void> settingsForm = new Form<Void>(aId);
         LambdaAjaxButton<Void> applyBtn = new LambdaAjaxButton<>("apply", this::merge);
         settingsForm.add(applyBtn);
         
@@ -139,8 +128,28 @@ public class CurationSidebar
         settingsForm.add(mergeChoice);
         
         // set up curation target selection as radio button
-        RadioChoice<String> curationTargetChoice = new RadioChoice<String>("curationTargetRadioBtn",
-                new PropertyModel<String>(this, "selectedCurationTarget"), curationTargets)
+        List<String> curationTargets = Arrays.asList(
+                new String[] { CURATION_USER, userRepository.getCurrentUser().getUsername() });
+        ChoiceRenderer<String> choiceRenderer = new ChoiceRenderer<String>()
+        {
+            private static final long serialVersionUID = -8165699251116827372L;
+
+            @Override
+            public Object getDisplayValue(String aUsername)
+            {
+                if (aUsername.equals(CURATION_USER)) {
+                    return " curation document";
+                }
+                else {
+                    return " my document";
+                }
+            }
+        };
+        curationTargetChoice = new RadioChoice<String>("curationTargetRadioBtn",
+                Model.of(curationService.retrieveCurationTarget(
+                userRepository.getCurrentUser().getUsername(),
+                getModelObject().getProject().getId())),
+                curationTargets, choiceRenderer)
         {
             private static final long serialVersionUID = 1513847274470368949L;
 
@@ -177,7 +186,9 @@ public class CurationSidebar
     private DropDownChoice<MergeStrategy> createMergeDropDownChoice(String aId)
     {
         DropDownChoice<MergeStrategy> mergeChoice = new DropDownChoice<MergeStrategy>(aId,
-                new PropertyModel<MergeStrategy>(this, "selectedMergeStrategy"), 
+                LoadableDetachableModel.of(() -> curationService.retrieveMergeStrategy(
+                        userRepository.getCurrentUser().getUsername(), 
+                        getModelObject().getProject().getId())), 
                 new ListModel<MergeStrategy>(mergeStrategies),
                 new ChoiceRenderer<MergeStrategy>("uiName"));
         return mergeChoice;
@@ -187,16 +198,19 @@ public class CurationSidebar
     protected void onConfigure()
     {
         super.onConfigure();
+        AnnotatorState state = getModelObject();
         setEnabled(!documentService
                 .isAnnotationFinished(state.getDocument(), state.getUser()));
     }
 
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
+        AnnotatorState state = getModelObject();
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
         String currentUsername = curator.getUsername();
-        if (selectedCurationTarget.equals(DEFAULT_CURATION_TARGET)) {
+        if (curationTargetChoice.getModelObject()
+                .equals(currentUsername)) {
             curationService.updateCurationName(currentUsername,
                     project, currentUsername);
         }
@@ -208,9 +222,14 @@ public class CurationSidebar
         state.setUser(curator);
         state.getSelection().clear();
         // update selected users
+        long projectId = state.getProject().getId();
+        currentUsername = state.getUser().getUsername();
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
-                state.getUser().getUsername(), state.getProject().getId(), users);
+                currentUsername, projectId, users);
+        // update selected merge strategy
+        MergeStrategy mergeStrat = ((MergeStrategy) mergeChoice.getDefaultModelObject());
+        curationService.updateMergeStrategy(currentUsername, projectId, mergeStrat);
         // merge cases
         try {
             SourceDocument doc = state.getDocument();
@@ -218,7 +237,6 @@ public class CurationSidebar
             Optional<CAS> targetCas = curationService.retrieveCurationCAS(curator.getUsername(), 
                     state.getProject().getId(), doc);
             if (targetCas.isPresent()) {
-                MergeStrategy mergeStrat = ((MergeStrategy) mergeChoice.getDefaultModelObject());
                 mergeStrat.merge(state, targetCas.get(), userCases);
                 log.info("{} merge done", mergeStrat.getUiName());  //TODO change to debug
             }
@@ -263,7 +281,8 @@ public class CurationSidebar
     private List<User> listSelectedUsers()
     {
         Optional<List<User>> users = curationService.listUsersSelectedForCuration(
-                userRepository.getCurrentUser().getUsername(), state.getProject().getId());
+                userRepository.getCurrentUser().getUsername(), getModelObject().getProject()
+                .getId());
         if (!users.isPresent()) {
             return new ArrayList<>();
         }
@@ -276,7 +295,8 @@ public class CurationSidebar
     private List<User> listUsers()
     {
         return projectService
-                .listProjectUsersWithPermissions(state.getProject(), PermissionLevel.ANNOTATOR)
+                .listProjectUsersWithPermissions(getModelObject().getProject(), 
+                        PermissionLevel.ANNOTATOR)
                 .stream().filter(user -> !user.equals(userRepository.getCurrentUser()) 
                         && hasFinishedDoc(user))
                 .collect(Collectors.toList());
@@ -284,7 +304,7 @@ public class CurationSidebar
 
     private boolean hasFinishedDoc(User aUser)
     {
-        SourceDocument doc = state.getDocument();
+        SourceDocument doc = getModelObject().getDocument();
         String username = aUser.getUsername();
         if (documentService.existsAnnotationDocument(doc, username) && 
                 documentService.getAnnotationDocument(doc, username).getState()
@@ -298,6 +318,7 @@ public class CurationSidebar
 
     private void updateUsers(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
+        AnnotatorState state = getModelObject();
         Collection<User> users = selectedUsers.getModelObject();
         curationService.updateUsersSelectedForCuration(
                 state.getUser().getUsername(), state.getProject().getId(), users);
@@ -305,33 +326,14 @@ public class CurationSidebar
         annoPage.actionRefreshDocument(aTarget);
     }
     
-    private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm) {
+    private void clearUsers(AjaxRequestTarget aTarget, Form<Void> aForm) 
+    {
+        AnnotatorState state = getModelObject();
         selectedUsers.setModelObject(new ArrayList<>());
         curationService.clearUsersSelectedForCuration(
                 state.getUser().getUsername(), state.getProject().getId());
         aTarget.add(usersForm);
         annoPage.actionRefreshDocument(aTarget);
-    }
-
-    //getters, setters needed for property-models
-    public MergeStrategy getSelectedMergeStrategy()
-    {
-        return selectedMergeStrategy;
-    }
-
-    public void setSelectedMergeStrategy(MergeStrategy aSelectedMergeStrategy)
-    {
-        selectedMergeStrategy = aSelectedMergeStrategy;
-    }
-
-    public String getSelectedCurationTarget()
-    {
-        return selectedCurationTarget;
-    }
-
-    public void setSelectedCurationTarget(String aSelectedCurationTarget)
-    {
-        selectedCurationTarget = aSelectedCurationTarget;
     }
 
 }

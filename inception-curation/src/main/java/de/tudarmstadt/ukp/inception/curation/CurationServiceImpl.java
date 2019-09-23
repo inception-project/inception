@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 @Component
 public class CurationServiceImpl implements CurationService
@@ -108,6 +109,7 @@ public class CurationServiceImpl implements CurationService
         // to find source document of the curated document
         // the curationdoc can be retrieved from user (CURATION or current) and projectId
         private String curationUser;
+        private MergeStrategy selectedStrategy;
                 
         public CurationState(String aUser)
         {
@@ -132,6 +134,16 @@ public class CurationServiceImpl implements CurationService
         public void setCurationName(String aCurationName)
         {
             curationUser = aCurationName;
+        }
+
+        public void setMergeStrategy(MergeStrategy aStrategy)
+        {
+            selectedStrategy = aStrategy;
+        }
+
+        public MergeStrategy getMergeStrategy()
+        {
+            return selectedStrategy;
         }
     }
 
@@ -170,6 +182,15 @@ public class CurationServiceImpl implements CurationService
         synchronized (curationStates)
         {
             getCurationState(aCurrentUser, aProjectId).setCurationName(aUserName);;
+        }
+    }
+    
+    @Override
+    public void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy)
+    {
+        synchronized (curationStates)
+        {
+            getCurationState(aCurrentUser, aProjectId).setMergeStrategy(aStrategy);;
         }
     }
 
@@ -226,6 +247,24 @@ public class CurationServiceImpl implements CurationService
             }
         }
         return casses;
+    }
+
+    @Override
+    public String retrieveCurationTarget(String aUser, long aProjectId)
+    {
+        String curationUser = getCurationState(aUser, aProjectId).getCurationName();
+        if (curationUser == null) {
+            // default to user as curation target
+            return aUser;
+        }
+        return curationUser;
+    }
+
+    @Override
+    public MergeStrategy retrieveMergeStrategy(String aUsername,
+            long aProjectId)
+    {
+        return getCurationState(aUsername, aProjectId).getMergeStrategy();
     }
 
 }

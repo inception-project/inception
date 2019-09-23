@@ -27,6 +27,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
 
 public interface CurationService
 {
@@ -67,4 +68,20 @@ public interface CurationService
      * Retrieve cases for the given document for the given users
      */
     public Map<String, CAS> retrieveUserCases(Collection<User> aUsers, SourceDocument aDoc);
+
+    /**
+     * Returns the user corresponding to the CAS used as curation (target) CAS
+     */
+    public String retrieveCurationTarget(String aUser, long aProjectId);
+
+    /**
+     * Returns the merge strategy that the user previously selected or the manual one as default
+     */
+    public MergeStrategy retrieveMergeStrategy(String aUsername,
+            long aProjectId);
+
+    /**
+     * Store the selected merge-strategy for the given user and project
+     */
+    void updateMergeStrategy(String aCurrentUser, long aProjectId, MergeStrategy aStrategy);
 }

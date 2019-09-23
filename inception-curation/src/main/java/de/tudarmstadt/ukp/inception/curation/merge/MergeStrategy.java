@@ -6,7 +6,7 @@ import org.apache.uima.cas.CAS;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 
-public interface MergeStrategy
+public interface MergeStrategy 
 {
 
     void merge(AnnotatorState aState, CAS aCas, Map<String, CAS> aUserCases);
