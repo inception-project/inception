@@ -64,8 +64,9 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS).contains(
-                aLayer.getAnchoringMode()) && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS, AnchoringMode.SENTENCES)
+                .contains(aLayer.getAnchoringMode()) &&
+                WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
