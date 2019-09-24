@@ -42,7 +42,7 @@ public abstract class AnnotationEvent
     public AnnotationEvent(Object aSource, SourceDocument aDocument, String aUser,
             AnnotationLayer aLayer)
     {
-        this(aSource, aDocument.getProject(), aDocument, aUser, aLayer);
+        this(aSource, aDocument != null ? aDocument.getProject() : null, aDocument, aUser, aLayer);
     }
 
     private AnnotationEvent(Object aSource, Project aProject, SourceDocument aDocument,
