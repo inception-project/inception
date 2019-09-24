@@ -27,10 +27,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -50,6 +52,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
@@ -67,7 +70,7 @@ public class OpenDocumentDialogPanel
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
 
-    private final ButtonsForm buttonsForm;
+    private final WebMarkupContainer buttonsContainer;
 
     private OverviewListChoice<DecoratedObject<Project>> projectListChoice;
     private IModel<List<DecoratedObject<Project>>> projects;
@@ -99,12 +102,24 @@ public class OpenDocumentDialogPanel
         userListChoice = createUserListChoice();
         docListChoice = createDocListChoice();
         
-        buttonsForm = new ButtonsForm("buttonsForm", aModalWindow);
+        Form<Void> form = new Form<>("form");
        
-        add(buttonsForm);
-        add(projectListChoice);
-        add(docListChoice);
-        add(userListChoice);
+        form.add(projectListChoice);
+        form.add(docListChoice);
+        form.add(userListChoice);
+        
+        buttonsContainer = new WebMarkupContainer("buttons");
+        buttonsContainer.setOutputMarkupId(true);
+        LambdaAjaxButton<Void> openButton = new LambdaAjaxButton<>("openButton",
+                OpenDocumentDialogPanel.this::actionOpenDocument);
+        openButton.add(enabledWhen(() -> docListChoice.getModelObject() != null));
+        buttonsContainer.add(openButton);
+        buttonsContainer.add(
+                new LambdaAjaxLink("cancelButton", OpenDocumentDialogPanel.this::actionCancel));
+        form.add(buttonsContainer);
+        form.setDefaultButton(openButton);
+        
+        add(form);
     }
 
     private OverviewListChoice<DecoratedObject<SourceDocument>> createDocListChoice()
@@ -129,11 +144,14 @@ public class OpenDocumentDialogPanel
             @Override
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
-                aTarget.add(buttonsForm);
-                aTarget.add(docListChoice);
+                aTarget.add(buttonsContainer);
             }
-        }).add(AjaxEventBehavior.onEvent("dblclick",
-                OpenDocumentDialogPanel.this::actionOpenDocument));;
+        }).add(AjaxEventBehavior.onEvent("dblclick", _target -> actionOpenDocument(_target, null)));
+
+//        if (!docListChoice.getChoices().isEmpty()) {
+//            docListChoice.setModelObject(docListChoice.getChoices().get(0));
+//        }
+        
         return docListChoice;
     }
 
@@ -175,7 +193,7 @@ public class OpenDocumentDialogPanel
                 
                 docListChoice.setChoices(listDocuments());
                 docListChoice.setDefaultModel(Model.of());
-                aTarget.add(buttonsForm);
+                aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
         });
@@ -183,6 +201,10 @@ public class OpenDocumentDialogPanel
         if (aBModel.isProjectLocked()) {
             projectListChoice.setVisible(false);
         }
+        
+//        if (projectListChoice.isVisible() && !projectListChoice.getChoices().isEmpty()) {
+//            projectListChoice.setModelObject(projectListChoice.getChoices().get(0));
+//        }
         
         return projectListChoice;
     }
@@ -217,12 +239,17 @@ public class OpenDocumentDialogPanel
             {
                 docListChoice.setChoices(listDocuments());
                 docListChoice.setDefaultModel(Model.of());
-                aTarget.add(buttonsForm);
+                aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
         }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
                 && isManagerForListedProjects()));
 
+        
+//        if (userListChoice.isVisible() && !userListChoice.getChoices().isEmpty()) {
+//            userListChoice.setModelObject(userListChoice.getChoices().get(0));
+//        }
+        
         return userListChoice;
     }
 
@@ -318,23 +345,7 @@ public class OpenDocumentDialogPanel
         return allSourceDocuments;
     }
     
-    private class ButtonsForm
-        extends Form<Void>
-    {
-        private static final long serialVersionUID = -1879323194964417564L;
-
-        public ButtonsForm(String id, final ModalWindow modalWindow)
-        {
-            super(id);
-            
-            add(new LambdaAjaxLink("openButton", OpenDocumentDialogPanel.this::actionOpenDocument)
-                    .add(enabledWhen(() -> docListChoice.getModelObject() != null)));
-
-            add(new LambdaAjaxLink("cancelButton", OpenDocumentDialogPanel.this::actionCancel));
-        }
-    }
-
-    private void actionOpenDocument(AjaxRequestTarget aTarget)
+    private void actionOpenDocument(AjaxRequestTarget aTarget, Form<Void> aForm)
     {
         if (projectListChoice.getModelObject() != null && docListChoice.getModelObject()  != null) {
             state.setProject(projectListChoice.getModelObject().get());
@@ -360,5 +371,14 @@ public class OpenDocumentDialogPanel
 
     protected void onCancel(AjaxRequestTarget aTarget)
     {
+    }
+
+    public Component getFocusComponent()
+    {
+        if (projectListChoice.isVisible()) {
+            return projectListChoice;
+        }
+        
+        return docListChoice;
     }
 }
