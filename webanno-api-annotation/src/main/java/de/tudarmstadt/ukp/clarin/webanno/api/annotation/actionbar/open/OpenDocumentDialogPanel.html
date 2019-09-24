@@ -19,40 +19,40 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="w_flex_container">
-    <div class="w_flex_content">
-      <div class="fluid-container">
-        <div class="row">
-          <div class="col-sm-12" style="display: flex;">
-            <div style="flex: 1; margin-right: 15px;" wicket:enclosure="project">
-              <label>
-                <wicket:message key="projects"/>
-              </label>
-              <select wicket:id="project" size="18" class="form-control" style="overflow: auto"></select>
-            </div>
-            <div style="flex: 1;" wicket:enclosure="user">
-              <label>
-                <wicket:message key="users"/>
-              </label>
-              <select wicket:id="user" size="18" class="form-control" style="overflow: auto"></select>
-            </div>
-            <div style="flex: 1;" wicket:enclosure="document">
-              <label>
-                <wicket:message key="docs"/>
-              </label>
-              <select wicket:id="document" size="18" class="form-control" style="overflow: auto"></select>
+    <form wicket:id="form">
+      <div class="w_flex_content">
+        <div class="fluid-container">
+          <div class="row">
+            <div class="col-sm-12" style="display: flex;">
+              <div style="flex: 1; margin-right: 15px;" wicket:enclosure="project">
+                <label>
+                  <wicket:message key="projects"/>
+                </label>
+                <select wicket:id="project" size="18" class="form-control" style="overflow: auto"></select>
+              </div>
+              <div style="flex: 1;" wicket:enclosure="user">
+                <label>
+                  <wicket:message key="users"/>
+                </label>
+                <select wicket:id="user" size="18" class="form-control" style="overflow: auto"></select>
+              </div>
+              <div style="flex: 1;" wicket:enclosure="document">
+                <label>
+                  <wicket:message key="docs"/>
+                </label>
+                <select wicket:id="document" size="18" class="form-control" style="overflow: auto"></select>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div class="w_flex_footer panel-footer">
-      <form wicket:id="buttonsForm">
-        <div class="form-group pull-right">
+      <div class="w_flex_footer panel-footer">
+        <div wicket:id="buttons" class="form-group pull-right">
           <button wicket:id="openButton" class="btn btn-primary">Open</button>
           <button wicket:id="cancelButton" class="btn btn-default">Cancel</button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 </wicket:panel>
 </html>
