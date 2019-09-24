@@ -19,28 +19,31 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <fieldset>
-      <legend>Page</legend>
-      <ul class="horizontal">
-        <li wicket:id="showFirst" />
-        <li wicket:id="showPrevious" />
-
-        <li>
-          <form wicket:id="gotoPageTextFieldForm">
-            <div style="height: 32px;">
-              <input type="number" wicket:id="gotoPageText"
-                style="width: 4em; text-align: right;" title="press Enter" />
-            </div>
-            <div>
-              <a wicket:id="gotoPageLink">Go to</a>
-            </div>
-          </form>
-        </li>
-
-        <li wicket:id="showNext" />
-        <li wicket:id="showLast" />
-      </ul>
-    </fieldset>
+    <form wicket:id="form" class="action-bar-group">
+<!--       <div class="action-bar-group-title">Row</div> -->
+      <div class="input-group" style="max-width: 14em;">
+        <span class="input-group-btn">
+          <button wicket:id="showFirst" class="btn btn-default" type="button" wicket:message="title:firstPage">
+            <i class="fas fa-fast-backward" aria-hidden="true"></i>
+          </button>
+          <button wicket:id="showPrevious" class="btn btn-default" type="button" wicket:message="title:previousPage">
+            <i class="fas fa-step-backward"></i>
+          </button>
+        </span>
+        <input type="number" wicket:id="gotoPageText" class="form-control text-center"/>
+        <span class="input-group-btn">
+          <button wicket:id="gotoPageLink" class="btn btn-default" type="button" wicket:message="title:focusRow">
+            <i class="fas fa-eye" aria-hidden="true"></i>
+          </button>
+          <button wicket:id="showNext" class="btn btn-default" type="button" wicket:message="title:nextPage">
+            <i class="fas fa-step-forward" aria-hidden="true"></i>
+          </button>
+          <button wicket:id="showLast" class="btn btn-default" type="button" wicket:message="title:lastPage">
+            <i class="fas fa-fast-forward" aria-hidden="true"></i>
+          </button>
+        </span>
+      </div>
+    </form>
   </wicket:panel>
 </body>
 </html>

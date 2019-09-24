@@ -31,8 +31,6 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.LoggerFactory;
@@ -49,8 +47,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.ValidationMode;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ChallengeResponseDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.logging.LogMessage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
@@ -64,9 +60,6 @@ public abstract class AnnotationPageBase
     private @SpringBean UserPreferencesService userPreferenceService;
     private @SpringBean UserDao userRepository;
     
-    private ChallengeResponseDialog resetDocumentDialog;
-    private ActionBarLink resetDocumentLink;
-
     public AnnotationPageBase()
     {
         super();
@@ -98,38 +91,10 @@ public abstract class AnnotationPageBase
         return (AnnotatorState) getDefaultModelObject();
     }
     
-    protected ChallengeResponseDialog createOrGetResetDocumentDialog()
-    {
-        if (resetDocumentDialog == null) {
-            IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-            resetDocumentDialog = new ChallengeResponseDialog("resetDocumentDialog",
-                    new StringResourceModel("ResetDocumentDialog.title", this),
-                    new StringResourceModel("ResetDocumentDialog.text", this).setModel(getModel())
-                            .setParameters(documentNameModel),
-                    documentNameModel);
-            resetDocumentDialog.setConfirmAction(this::actionResetDocument);
-        }
-        return resetDocumentDialog;
-    }
-
-    protected ActionBarLink createOrGetResetDocumentLink()
-    {
-        if (resetDocumentLink == null) {
-            resetDocumentLink = new ActionBarLink("showResetDocumentDialog", t -> 
-                resetDocumentDialog.show(t));
-            resetDocumentLink.onConfigure(_this -> {
-                AnnotatorState state = AnnotationPageBase.this.getModelObject();
-                _this.setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser())
-                                && state.getUser().equals(userRepository.getCurrentUser()));
-            });
-        }
-        return resetDocumentLink;
-    }
-
     /**
      * Show the previous document, if exist
      */
+    @Deprecated
     protected void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToPreviousDocument(getListOfDocs());
@@ -142,14 +107,6 @@ public abstract class AnnotationPageBase
     protected void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         getModelObject().moveToNextDocument(getListOfDocs());
-        actionLoadDocument(aTarget);
-    }
-
-    protected void actionResetDocument(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        documentService.resetAnnotationCas(state.getDocument(), state.getUser());
         actionLoadDocument(aTarget);
     }
 
@@ -202,7 +159,7 @@ public abstract class AnnotationPageBase
         }
     }
 
-    protected abstract List<SourceDocument> getListOfDocs();
+    public abstract List<SourceDocument> getListOfDocs();
 
     public abstract CAS getEditorCas() throws IOException;
     
@@ -212,7 +169,7 @@ public abstract class AnnotationPageBase
      * Open a document or to a different document. This method should be used only the first time
      * that a document is accessed. It reset the annotator state and upgrades the CAS.
      */
-    protected abstract void actionLoadDocument(AjaxRequestTarget aTarget);
+    public abstract void actionLoadDocument(AjaxRequestTarget aTarget);
 
     /**
      * Re-render the document and update all related UI elements.
@@ -262,7 +219,7 @@ public abstract class AnnotationPageBase
         }
     }
     
-    protected void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
+    public void actionValidateDocument(AjaxRequestTarget aTarget, CAS aCas)
     {
         AnnotatorState state = getModelObject();
         for (AnnotationLayer layer : annotationService.listAnnotationLayer(state.getProject())) {

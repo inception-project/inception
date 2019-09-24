@@ -41,7 +41,6 @@ import org.apache.uima.fit.descriptor.TypeCapability;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
-import org.dkpro.core.api.io.JCasFileWriter_ImplBase.NamedOutputStream;
 import org.dkpro.core.api.parameter.ComponentParameters;
 
 import de.tudarmstadt.ukp.dkpro.core.api.coref.type.CoreferenceChain;

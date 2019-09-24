@@ -24,7 +24,6 @@ import static org.apache.uima.fit.util.JCasUtil.selectCovered;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +38,7 @@ import org.apache.uima.jcas.JCas;
 import org.dkpro.core.api.io.JCasFileWriter_ImplBase;
 import org.dkpro.core.api.parameter.ComponentParameters;
 import org.dkpro.core.api.parameter.MimeTypes;
+import org.dkpro.core.io.conll.ConllUReader;
 
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
@@ -46,6 +46,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.SurfaceForm;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.DependencyFlavor;
+import eu.openminted.share.annotations.api.DocumentationResource;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 
@@ -55,6 +56,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  * @see <a href="http://universaldependencies.github.io/docs/format.html">CoNLL-U Format</a>
  */
 @ResourceMetaData(name = "CoNLL-U Writer")
+@DocumentationResource("${docbase}/format-reference.html#format-${command}")
 @MimeTypeCapability({MimeTypes.TEXT_X_CONLL_U})
 @TypeCapability(
         inputs = {
@@ -152,7 +154,7 @@ public class ConllUWriter
 
     private void convert(JCas aJCas, PrintWriter aOut)
     {
-        Map<SurfaceForm, Collection<Token>> surfaceIdx = indexCovered(aJCas, SurfaceForm.class,
+        Map<SurfaceForm, List<Token>> surfaceIdx = indexCovered(aJCas, SurfaceForm.class,
                 Token.class);
         Int2ObjectMap<SurfaceForm> surfaceBeginIdx = new Int2ObjectOpenHashMap<>();
         for (SurfaceForm sf : select(aJCas, SurfaceForm.class)) {

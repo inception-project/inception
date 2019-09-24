@@ -35,6 +35,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -51,16 +53,12 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.Feature;
-import org.apache.uima.cas.FeatureStructure;
-import org.apache.uima.cas.impl.CASImpl;
-import org.apache.uima.cas.impl.FeatureImpl;
-import org.apache.uima.cas.impl.TypeImpl;
-import org.apache.uima.cas.impl.TypeSystemImpl;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.Sofa;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1025,10 +1023,7 @@ public class AeroRemoteApiController
         // make sure we copy over the proper text from the initial CAS
         // NOT AT HOME THIS YOU SHOULD TRY
         // SETTING THE SOFA STRING FORCEFULLY FOLLOWING THE DARK SIDE IS!
-        forceSetFeatureValue(annotationCas.getSofa(), CAS.FEATURE_BASE_NAME_SOFASTRING,
-                initialCas.getDocumentText());
-        FSUtil.setFeature(annotationCas.getDocumentAnnotation(), CAS.FEATURE_BASE_NAME_END,
-                initialCas.getDocumentText().length());
+        forceOverwriteSofa(annotationCas, initialCas.getDocumentText());
         
         Collection<AnnotationFS> annotationSentences = selectSentences(annotationCas);
         Collection<AnnotationFS> initialSentences = selectSentences(initialCas);
@@ -1074,21 +1069,27 @@ public class AeroRemoteApiController
         }
     }
     
-    private static void forceSetFeatureValue(FeatureStructure aFS, String aFeatureName,
-            String aValue)
+    private static void forceOverwriteSofa(CAS aCas, String aValue)
     {
-        CASImpl casImpl = (CASImpl) aFS.getCAS().getLowLevelCAS();
-        TypeSystemImpl ts = (TypeSystemImpl) aFS.getCAS().getTypeSystem();
-        Feature feat = aFS.getType().getFeatureByBaseName(aFeatureName);
-        int featCode = ((FeatureImpl) feat).getCode();
-        int thisType = ((TypeImpl) aFS.getType()).getCode();
-        if (!ts.isApprop(thisType, featCode)) {
-            throw new IllegalArgumentException("Feature structure does not have that feature");
+        try {
+            Sofa sofa = (Sofa) aCas.getSofa();
+            MethodHandle _FH_sofaString = (MethodHandle) FieldUtils.readField(sofa,
+                    "_FH_sofaString", true);
+            Method method = MethodUtils.getMatchingMethod(Sofa.class, "wrapGetIntCatchException",
+                    MethodHandle.class);
+            int adjOffset;
+            try {
+                method.setAccessible(true);
+                adjOffset = (int) method.invoke(null, _FH_sofaString);
+            }
+            finally {
+                method.setAccessible(false);
+            }
+            sofa._setStringValueNcWj(adjOffset, aValue);
         }
-        if (!ts.subsumes(ts.getType(CAS.TYPE_NAME_STRING), feat.getRange())) {
-            throw new IllegalArgumentException("Not a string feature!");
+        catch (Exception e) {
+            throw new IllegalStateException("Cannot force-update SofA string", e);
         }
-        casImpl.ll_setStringValue(casImpl.ll_getFSRef(aFS), featCode, aValue);
     }
     
     public static SourceDocumentState parseSourceDocumentState(String aState)

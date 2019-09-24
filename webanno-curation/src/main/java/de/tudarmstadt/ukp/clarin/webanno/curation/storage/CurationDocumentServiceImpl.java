@@ -121,6 +121,7 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
+    @Transactional
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -146,6 +147,7 @@ public class CurationDocumentServiceImpl
     }
     
     @Override
+    @Transactional
     public List<SourceDocument> listCuratedDocuments(Project aProject)
     {
         Validate.notNull(aProject, "Project must be specified");
@@ -160,5 +162,23 @@ public class CurationDocumentServiceImpl
                 .setParameter("project", aProject)
                 .setParameter("state", SourceDocumentState.CURATION_FINISHED)
                 .getResultList();
+    }
+    
+    @Override
+    @Transactional
+    public boolean isCurationFinished(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        
+        String query = String.join("\n",
+                "FROM SourceDocument WHERE",
+                "  id = :id");
+        
+        SourceDocument d = entityManager
+                .createQuery(query, SourceDocument.class)
+                .setParameter("id", aDocument.getId())
+                .getSingleResult();
+        
+        return SourceDocumentState.CURATION_FINISHED.equals(d.getState());
     }
 }

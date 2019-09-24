@@ -76,18 +76,42 @@ var Util = (function(window, undefined) {
     }
 
     var escapeHTML = function(str) {
+// WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
+      if (str === null) {
+        return null;
+      }
+// WEBANNO EXTENSION END - No issue - More robust escaping 
+      
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     var escapeHTMLandQuotes = function(str) {
+// WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
+      if (str === null) {
+        return null;
+      }
+// WEBANNO EXTENSION END - No issue - More robust escaping 
+      
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
     }
 
     var escapeHTMLwithNewlines = function(str) {
+// WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
+      if (str === null) {
+        return null;
+      }
+// WEBANNO EXTENSION END - No issue - More robust escaping 
+      
       return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br/>');
     }
 
     var escapeQuotes = function(str) {
+// WEBANNO EXTENSION BEGIN - No issue - More robust escaping 
+      if (str === null) {
+        return null;
+      }
+// WEBANNO EXTENSION END - No issue - More robust escaping 
+      
       // we only use double quotes for HTML attributes
       return str.replace(/\"/g,'&quot;');
     }
