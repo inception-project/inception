@@ -21,15 +21,20 @@ import java.io.IOException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
 import de.tudarmstadt.ukp.inception.log.model.AnnotationDetails;
 import de.tudarmstadt.ukp.inception.log.model.FeatureChangeDetails;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommendationRejectedEventAdapter}.
+ * </p>
+ */
 public class RecommendationRejectedEventAdapter
     implements EventLoggingAdapter<RecommendationRejectedEvent>
 {

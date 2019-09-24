@@ -44,7 +44,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderCo
  */
 public interface RecommendationService
 {
-    String SERVICE_NAME = "recommendationService";
     String FEATURE_NAME_IS_PREDICTION = "inception_internal_predicted";
     String FEATURE_NAME_SCORE_SUFFIX = "_score";
     String FEATURE_NAME_SCORE_EXPLANATION_SUFFIX = "_score_explanation";

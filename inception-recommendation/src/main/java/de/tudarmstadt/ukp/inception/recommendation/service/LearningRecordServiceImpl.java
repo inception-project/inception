@@ -20,11 +20,9 @@ package de.tudarmstadt.ukp.inception.recommendation.service;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 
 import org.springframework.context.event.EventListener;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
@@ -37,14 +35,24 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestio
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecord;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
-@Component(LearningRecordService.SERVICE_NAME)
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#learningRecordService}.
+ * </p>
+ */
 public class LearningRecordServiceImpl
     implements LearningRecordService
 {
-    @PersistenceContext
-    private EntityManager entityManager;
+    private final EntityManager entityManager;
 
+    public LearningRecordServiceImpl(EntityManager aEntityManager)
+    {
+        entityManager = aEntityManager;
+    }
+    
     @Transactional
     @EventListener
     public void afterDocumentReset(AfterDocumentResetEvent aEvent) {

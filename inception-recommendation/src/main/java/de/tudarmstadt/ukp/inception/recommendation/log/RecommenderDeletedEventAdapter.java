@@ -18,12 +18,16 @@
 
 package de.tudarmstadt.ukp.inception.recommendation.log;
 
-import org.springframework.stereotype.Component;
-
 import de.tudarmstadt.ukp.inception.log.adapter.EventLoggingAdapter;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
-@Component
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link RecommenderServiceAutoConfiguration#recommenderDeletedEventAdapter}.
+ * </p>
+ */
 public class RecommenderDeletedEventAdapter
     implements EventLoggingAdapter<RecommenderDeletedEvent>
 {
