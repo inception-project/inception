@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.Serializable;
@@ -79,29 +78,26 @@ public class UimaStringTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
+                if (traits.getObject().isMultipleRows()) {
+                    feature.getObject().setTagset(null);
+                }
                 writeTraits();
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> traits.getObject().isMultipleRows()
-                && feature.getObject().getTagset() == null));
         add(form);
     
         NumberTextField collapsedRows = new NumberTextField<>("collapsedRows", Integer.class);
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
+        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(collapsedRows);
         
         NumberTextField expandedRows = new NumberTextField<>("expandedRows", Integer.class);
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
+        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
         form.add(expandedRows);
-    
-        CheckBox multipleRows = new CheckBox("multipleRows");
-        multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
-        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
-            target -> target.add(form)));
-        add(multipleRows);
         
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
@@ -111,12 +107,15 @@ public class UimaStringTraitsEditor
         tagset.setModel(PropertyModel.of(aFeature, "tagset"));
         tagset.setChoices(LoadableDetachableModel.of(() -> annotationService
                 .listTagSets(aFeature.getObject().getProject())));
-        tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-            target -> {
-                target.add(multipleRows);
-                target.add(form);
-            }));
-        add(tagset);
+        tagset.add(visibleWhen(() -> !traits.getObject().isMultipleRows()));
+        form.add(tagset);
+    
+        CheckBox multipleRows = new CheckBox("multipleRows");
+        multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
+        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+            target -> target.add(form)
+        ));
+        form.add(multipleRows);
     }
     
     private PrimitiveUimaFeatureSupport getFeatureSupport()
