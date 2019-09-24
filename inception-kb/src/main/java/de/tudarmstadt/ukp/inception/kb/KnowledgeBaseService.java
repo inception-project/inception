@@ -45,13 +45,11 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public interface KnowledgeBaseService
 {
-    String SERVICE_NAME = "knowledgeBaseService";
-    
     /**
-     * Reads knowledgebase profiles from a YAML file and stores them in a HashMap with the key that
+     * Reads knowledge base profiles from a YAML file and stores them in a HashMap with the key that
      * is defined in the file and a corresponding {@link KnowledgeBaseProfile} object as value
      * 
-     * @return a HashMap with the knowledgebase profiles
+     * @return a HashMap with the knowledge base profiles
      * @throws IOException
      *             if an error occurs when reading the file
      */
@@ -61,7 +59,7 @@ public interface KnowledgeBaseService
 
     /**
      * Writes the contents of a knowledge base of type {@link RepositoryType#LOCAL} to a given
-     * {@link OutputStream} in a specificable format.<br>
+     * {@link OutputStream} in a specifiable format.<br>
      * No action will be taken if the given knowledge base is not of type
      * {@link RepositoryType#LOCAL} (nothing will be written to the output stream).
      *

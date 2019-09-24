@@ -38,7 +38,6 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
@@ -50,12 +49,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
  * To create feature support for subject and object of the fact layer
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link KnowledgeBaseServiceUIAutoConfiguration#subjectObjectFeatureSupport}.
+ * </p>
  */
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Component
 public class SubjectObjectFeatureSupport
     implements FeatureSupport<Void>
 {

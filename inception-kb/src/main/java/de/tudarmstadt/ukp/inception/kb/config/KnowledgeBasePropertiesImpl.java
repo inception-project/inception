@@ -18,11 +18,10 @@
 package de.tudarmstadt.ukp.inception.kb.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("inception.knowledge-base")
-public class KnowledgeBasePropertiesImpl implements KnowledgeBaseProperties
+@ConfigurationProperties("knowledge-base")
+public class KnowledgeBasePropertiesImpl
+    implements KnowledgeBaseProperties
 {
     public static final int HARD_MIN_RESULTS = 10;
     

@@ -18,11 +18,16 @@
 package de.tudarmstadt.ukp.inception.conceptlinking.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
-@Component
-@ConfigurationProperties("inception.entity-linking")
-public class EntityLinkingPropertiesImpl implements EntityLinkingProperties
+/**
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link EntityLinkingServiceAutoConfiguration#entityLinkingProperties}.
+ * </p>
+ */
+@ConfigurationProperties("knowledge-base.entity-linking")
+public class EntityLinkingPropertiesImpl
+    implements EntityLinkingProperties
 {
     private int cacheSize = 1024;
 
