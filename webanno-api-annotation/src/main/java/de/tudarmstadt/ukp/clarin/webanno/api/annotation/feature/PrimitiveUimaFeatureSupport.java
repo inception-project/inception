@@ -45,6 +45,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFiel
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
@@ -223,9 +224,15 @@ public class PrimitiveUimaFeatureSupport
                 break;
             }
             case CAS.TYPE_NAME_STRING: {
+                UimaStringTraits traits = readUimaStringTraits(feature);
                 if (feature.getTagset() == null) {
-                    // If there is no tagset, use a simple input field
-                    editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    if (traits.isMultipleRows()) {
+                        // If multiple rows are set use a textarea
+                        editor = new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    } else {
+                        // Otherwise use a simple input field
+                        editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    }
                 }
                 else if (aFeatureStateModel.getObject().tagset.size() < properties
                         .getAutoCompleteThreshold()) {

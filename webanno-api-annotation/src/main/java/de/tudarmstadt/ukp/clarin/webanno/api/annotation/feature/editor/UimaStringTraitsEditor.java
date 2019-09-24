@@ -100,8 +100,8 @@ public class UimaStringTraitsEditor
         CheckBox multipleRows = new CheckBox("multipleRows");
         multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
         multipleRows.add(enabledWhen(() -> feature.getObject().getTagset() == null));
-        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                target -> target.add(form)));
+        multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
+            target -> target.add(form)));
         add(multipleRows);
         
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
@@ -113,10 +113,10 @@ public class UimaStringTraitsEditor
         tagset.setChoices(LoadableDetachableModel.of(() -> annotationService
                 .listTagSets(aFeature.getObject().getProject())));
         tagset.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                target -> {
-                    target.add(multipleRows);
-                    target.add(form);
-                }));
+            target -> {
+                target.add(multipleRows);
+                target.add(form);
+            }));
         add(tagset);
     }
     
