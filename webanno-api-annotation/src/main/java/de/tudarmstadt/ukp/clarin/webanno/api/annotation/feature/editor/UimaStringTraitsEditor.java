@@ -99,7 +99,6 @@ public class UimaStringTraitsEditor
     
         CheckBox multipleRows = new CheckBox("multipleRows");
         multipleRows.setModel(PropertyModel.of(traits, "multipleRows"));
-        multipleRows.add(enabledWhen(() -> feature.getObject().getTagset() == null));
         multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
             target -> target.add(form)));
         add(multipleRows);
