@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeStrategy;
@@ -41,6 +42,11 @@ public interface CurationService
      */
     public Optional<CAS> retrieveCurationCAS(String aUser, long aProjectId, SourceDocument aDoc)
         throws IOException;
+    
+    /**
+     * Write to CAS associated with curation doc for the given user and update timestamp
+     */
+    public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId);
     
     /**
      * Store the users that were selected to be shown for curation by the given user

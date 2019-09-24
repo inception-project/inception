@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.curation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,9 +40,13 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -59,6 +65,7 @@ public class CurationServiceImpl implements CurationService
     private @Autowired SessionRegistry sessionRegistry;
     private @Autowired ProjectService projectService;
     private @Autowired UserDao userRegistry;
+    private @Autowired CasStorageService casStorageService;
 
     public CurationServiceImpl()
     {
@@ -164,6 +171,31 @@ public class CurationServiceImpl implements CurationService
         
         return Optional.of(documentService
                 .readAnnotationCas(aDoc, curationUser));
+    }
+    
+    @Override
+    @Transactional
+    public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId) {
+        SourceDocument doc = aState.getDocument();
+        String curatorName = getCurationState(aState.getUser().getUsername(), aProjectId)
+                .getCurationName();
+        try {
+            User curator;
+            if (curatorName.equals(CURATION_USER)) {
+                curator = new User(CURATION_USER);
+            }
+            else {
+                curator = userRegistry.get(curatorName);
+            }
+            documentService.writeAnnotationCas(aTargetCas, doc, curator, true);
+            AnnotatorStateUtils.updateDocumentTimestampAfterWrite(aState,
+                    casStorageService.getCasTimestamp(doc, curatorName));
+        }
+        catch (IOException e) {
+            log.warn(String.format("Could not write CAS for user %s and document %d",
+                    curatorName, doc.getId()));
+            e.printStackTrace();
+        }
     }
 
     @Override

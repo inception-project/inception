@@ -209,6 +209,7 @@ public class CurationSidebar
         long project = state.getProject().getId();
         User curator = userRepository.getCurrentUser();
         String currentUsername = curator.getUsername();
+        // update curation target
         if (curationTargetChoice.getModelObject()
                 .equals(currentUsername)) {
             curationService.updateCurationName(currentUsername,
