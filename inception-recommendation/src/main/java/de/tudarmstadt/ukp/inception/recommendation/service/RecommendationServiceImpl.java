@@ -435,8 +435,7 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
         
-        dirties.add(
-                new RecommendationStateKey(aEvent.getUser(), aEvent.getDocument().getProject()));
+        dirties.add(new RecommendationStateKey(aEvent.getUser(), aEvent.getProject()));
     }
     
     /*

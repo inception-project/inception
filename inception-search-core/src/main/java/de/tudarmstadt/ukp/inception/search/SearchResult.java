@@ -25,9 +25,6 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class SearchResult
     implements Serializable
 {
-    /**
-     * 
-     */
     private static final long serialVersionUID = 2698492628701213714L;
 
     private int tokenStart = -1;
@@ -39,10 +36,16 @@ public class SearchResult
     private String rightContext;
     private long documentId;
     private String documentTitle;
+    private boolean readOnly;
 
     // only used in the ui to simplify the selection of search results for annotation
     private boolean isSelectedForAnnotation = true;
 
+    public SearchResult()
+    {
+        // Nothing to do here
+    }
+    
     public int getTokenStart()
     {
         return tokenStart;
@@ -141,6 +144,20 @@ public class SearchResult
     public void setSelectedForAnnotation(boolean selectedForAnnotation)
     {
         isSelectedForAnnotation = selectedForAnnotation;
+    }
+    
+    /**
+     * Indicates whether the document to which this result applies cannot be modified by the user
+     * who issued the query.
+     */
+    public boolean isReadOnly()
+    {
+        return readOnly;
+    }
+
+    public void setReadOnly(boolean aReadOnly)
+    {
+        readOnly = aReadOnly;
     }
 
     @Override
