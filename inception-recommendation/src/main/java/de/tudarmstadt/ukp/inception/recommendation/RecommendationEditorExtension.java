@@ -251,7 +251,7 @@ public class RecommendationEditorExtension
                        int aWindowBeginOffset, int aWindowEndOffset)
     {
         // do not show predictions during curation or when viewing others' work
-        if (aState.getMode().equals(Mode.CURATION) || 
+        if (!aState.getMode().equals(Mode.ANNOTATION) || 
                 !aState.getUser().equals(userRegistry.getCurrentUser())) {
             return;
         }

@@ -41,7 +41,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionH
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
@@ -117,15 +116,9 @@ public class RecommendationSidebar
         // using onConfigure as last state in lifecycle to configure visibility
         super.onConfigure();
         configureMismatched();
-        AnnotatorState state = getModelObject();
-        if (state.getMode().equals(Mode.CURATION) 
-                || !state.getUser().equals(userRepository.getCurrentUser())) {
-            form.setEnabled(false);
-            recommenderInfos.setEnabled(false);
-            return;
-        }
-        form.setEnabled(true);
-        recommenderInfos.setEnabled(true);
+        boolean enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
+        form.setEnabled(enabled);
+        recommenderInfos.setEnabled(enabled);
     }
 
     protected void configureMismatched()
