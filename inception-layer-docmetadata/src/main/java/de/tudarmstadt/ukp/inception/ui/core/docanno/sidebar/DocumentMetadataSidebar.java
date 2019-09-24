@@ -46,6 +46,6 @@ public class DocumentMetadataSidebar
                 .of(() -> aModel.getObject().getUser().getUsername());
         
         add(new DocumentMetadataAnnotationSelectionPanel("annotations", project, sourceDocument,
-                username, aCasProvider, aAnnotationPage, aActionHandler));
+                username, aCasProvider, aAnnotationPage, aActionHandler, getModelObject()));
     }
 }

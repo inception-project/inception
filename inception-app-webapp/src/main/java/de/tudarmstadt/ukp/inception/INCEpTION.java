@@ -87,6 +87,7 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
                 AnnotationPageMenuItem.class,
                 MonitoringPageMenuItem.class,
                 AgreementPageMenuItem.class,
+
                 // INCEpTION uses its recommenders, not the WebAnno automation code
                 AutomationService.class, 
                 AutomationMiraTemplateExporter.class,

@@ -33,6 +33,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.text.Text;
+import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.RandomScoreFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.ScoreFunctionBuilders;
@@ -76,32 +77,29 @@ public class ElasticSearchProvider
         
         try (RestHighLevelClient client = new RestHighLevelClient(
                 RestClient.builder(new HttpHost(hostUrl, 9200, "http")))) {
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-            HighlightBuilder.Field highlightField =
-                    new HighlightBuilder.Field(aTraits.getDefaultField());
-            highlightField.highlighterType("unified");
-            highlightBuilder.field(highlightField);
+            HighlightBuilder highlightBuilder = new HighlightBuilder()
+                    .field(new HighlightBuilder.Field(aTraits.getDefaultField())
+                            .highlighterType("unified"));
     
-            SearchRequest searchRequest = new SearchRequest(indexName);
             SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
-                    .fetchSource(null, ELASTIC_HIT_DOC_KEY);
-            RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
-            randomFunc.seed(aTraits.getSeed());
+                    .fetchSource(null, ELASTIC_HIT_DOC_KEY)
+                    .highlighter(highlightBuilder)
+                    .size(aTraits.getResultSize());
+            
+            QueryBuilder qb = QueryBuilders.simpleQueryStringQuery(aQuery)
+                    .field(aTraits.getDefaultField());
+            
             if (aTraits.isRandomOrder()) {
+                RandomScoreFunctionBuilder randomFunc = ScoreFunctionBuilders.randomFunction();
+                randomFunc.seed(aTraits.getSeed());
                 searchSourceBuilder.query(QueryBuilders.functionScoreQuery(
-                        QueryBuilders.constantScoreQuery(
-                            QueryBuilders.termQuery(aTraits.getDefaultField(), aQuery)
-                        ).boost(1.0f),
-                        randomFunc));
+                        QueryBuilders.constantScoreQuery(qb).boost(1.0f), randomFunc));
             }
             else {
-                searchSourceBuilder.query(QueryBuilders.termQuery(
-                        aTraits.getDefaultField(), aQuery));
+                searchSourceBuilder.query(qb);
             }
-            searchSourceBuilder.highlighter(highlightBuilder);
-            searchSourceBuilder.size(aTraits.getResultSize());
-            searchRequest.source(searchSourceBuilder);
             
+            SearchRequest searchRequest = new SearchRequest(indexName).source(searchSourceBuilder);
             SearchResponse response = client.search(searchRequest);
     
             for (SearchHit hit: response.getHits().getHits()) {

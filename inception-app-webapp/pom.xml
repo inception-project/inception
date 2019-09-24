@@ -687,7 +687,6 @@
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-image</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-layer-docmetadata</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-concept-linking</usedDependency>
-              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-external</usedDependency>
               <usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-lapps</usedDependency>
               <!-- usedDependency>de.tudarmstadt.ukp.inception.app:inception-imls-mira</usedDependency -->
@@ -758,6 +757,7 @@
               <usedDependency>org.springframework:spring-expression</usedDependency>
               <!-- Spring Web MVC data conversion -->
               <usedDependency>commons-fileupload:commons-fileupload</usedDependency>
+              <usedDependency>de.tudarmstadt.ukp.inception.app:inception-recommendation</usedDependency>	
               <!-- Spring AOP
                 <usedDependency>org.springframework:spring-aop</usedDependency>
                 <usedDependency>org.springframework:spring-aspects</usedDependency>
@@ -872,7 +872,6 @@
             <version>${spring.boot.version}</version>
             <configuration>
               <executable>true</executable>
-              <layout>ZIP</layout> <!-- To use the PropertiesLauncher -->
             </configuration>
             <executions>
               <execution>
