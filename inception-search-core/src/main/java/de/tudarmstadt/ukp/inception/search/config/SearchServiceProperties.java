@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,25 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package de.tudarmstadt.ukp.inception.search.config;
 
-package de.tudarmstadt.ukp.inception.externalsearch.config;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
-@Component
-@ConfigurationProperties("external-search")
-public class ExternalSearchProperties
+public interface SearchServiceProperties
 {
-    private boolean enabled = false;
-
-    public boolean isEnabled()
-    {
-        return enabled;
-    }
-
-    public void setEnabled(boolean aEnabled)
-    {
-        enabled = aEnabled;
-    }
+    boolean isEnabled();
 }

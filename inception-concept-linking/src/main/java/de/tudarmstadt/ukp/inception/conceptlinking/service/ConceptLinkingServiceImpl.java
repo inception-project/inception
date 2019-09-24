@@ -56,6 +56,7 @@ import org.springframework.stereotype.Component;
 import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
+import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingPropertiesImpl;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.ranking.BaselineRankingStrategy;
@@ -85,7 +86,7 @@ public class ConceptLinkingServiceImpl
 
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
-            EntityLinkingProperties aProperties,
+            EntityLinkingPropertiesImpl aProperties,
             RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
                     aFeatureGenerators)

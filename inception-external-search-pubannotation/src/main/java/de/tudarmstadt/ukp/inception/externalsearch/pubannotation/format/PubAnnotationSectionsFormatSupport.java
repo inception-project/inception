@@ -21,11 +21,17 @@ import static org.apache.uima.fit.factory.CollectionReaderFactory.createReaderDe
 
 import org.apache.uima.collection.CollectionReaderDescription;
 import org.apache.uima.resource.ResourceInitializationException;
-import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
+import de.tudarmstadt.ukp.inception.externalsearch.pubannotation.config.PubAnnotationDocumentRepositoryAutoConfiguration;
 
-@Component
+/**
+ * Support for PubAnnotation JSON format.
+ * <p>
+ * This class is exposed as a Spring Component via
+ * {@link PubAnnotationDocumentRepositoryAutoConfiguration#pubAnnotationSectionsFormatSupport}.
+ * </p>
+ */
 public class PubAnnotationSectionsFormatSupport
     implements FormatSupport
 {

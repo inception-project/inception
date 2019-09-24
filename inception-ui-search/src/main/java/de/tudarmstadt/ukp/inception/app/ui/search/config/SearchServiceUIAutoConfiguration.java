@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -15,31 +15,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.externalsearch.elastic.config;
+package de.tudarmstadt.ukp.inception.app.ui.search.config;
 
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
-import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
-import de.tudarmstadt.ukp.inception.externalsearch.elastic.ElasticSearchProviderFactory;
+import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.SearchAnnotationSidebarFactory;
+import de.tudarmstadt.ukp.inception.search.SearchService;
+import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
-/**
- * Provides support for ElasticSearch-based document repositories.
- */
 @Configuration
-@AutoConfigureAfter(ExternalSearchAutoConfiguration.class)
-@ConditionalOnProperty(prefix = "external-search.elastic-search", name = "enabled", 
-        havingValue = "true", matchIfMissing = true)
-@ConditionalOnBean(ExternalSearchService.class)
-public class ElasticSearchDocumentRepositoryAutoConfiguration
+@AutoConfigureAfter(SearchServiceAutoConfiguration.class)
+@ConditionalOnBean(SearchService.class)
+public class SearchServiceUIAutoConfiguration
 {
     @Bean
-    public ElasticSearchProviderFactory elasticSearchProviderFactory()
+    public SearchAnnotationSidebarFactory searchAnnotationSidebarFactory()
     {
-        return new ElasticSearchProviderFactory();
+        return new SearchAnnotationSidebarFactory();
     }
 }
