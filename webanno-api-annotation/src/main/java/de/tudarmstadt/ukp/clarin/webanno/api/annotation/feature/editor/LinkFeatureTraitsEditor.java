@@ -84,6 +84,10 @@ public class LinkFeatureTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
+                // when saving reset the selected tagset if role labels are not enabled
+                if (!traits.getObject().isEnableRoleLabels()) {
+                    feature.getObject().setTagset(null);
+                }
                 writeTraits();
             }
         };
@@ -104,11 +108,15 @@ public class LinkFeatureTraitsEditor
         };
         defaultSlots.setChoices(LambdaModel.of(this::listTags));
         defaultSlots.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        defaultSlots.add(visibleWhen(() -> feature.getObject().getTagset() != null));
+        defaultSlots.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()
+                && feature.getObject().getTagset() != null));
         form.add(defaultSlots);
     
         CheckBox enableRoleLabels = new CheckBox("enableRoleLabels");
         enableRoleLabels.setModel(PropertyModel.of(traits, "enableRoleLabels"));
+        enableRoleLabels.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
+            target -> target.add(form)
+        ));
         form.add(enableRoleLabels);
         
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
@@ -123,6 +131,7 @@ public class LinkFeatureTraitsEditor
             traits.getObject().setDefaultSlots(new ArrayList<>());
             target.add(form);
         }));
+        tagset.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()));
         form.add(tagset);
     }
     
@@ -164,11 +173,16 @@ public class LinkFeatureTraitsEditor
     {
         LinkFeatureTraits t = new LinkFeatureTraits();
         
-        traits.getObject().getDefaultSlots().stream()
-                .map(tag -> tag.getId())
-                .forEach(t.getDefaultSlots()::add);
+        boolean enableRoleLabels = traits.getObject().isEnableRoleLabels();
+    
+        t.setEnableRoleLabels(enableRoleLabels);
         
-        t.setEnableRoleLabels(traits.getObject().isEnableRoleLabels());
+        if (enableRoleLabels) {
+            // only set default slot values for tagsets if the role labels are enabled
+            traits.getObject().getDefaultSlots().stream()
+                    .map(tag -> tag.getId())
+                    .forEach(t.getDefaultSlots()::add);
+        }
         
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
