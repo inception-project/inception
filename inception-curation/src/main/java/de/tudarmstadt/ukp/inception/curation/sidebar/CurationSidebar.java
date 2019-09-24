@@ -239,7 +239,7 @@ public class CurationSidebar
                     state.getProject().getId(), doc);
             if (targetCas.isPresent()) {
                 mergeStrat.merge(state, targetCas.get(), userCases);
-                log.info("{} merge done", mergeStrat.getUiName());  //TODO change to debug
+                log.debug("{} merge done", mergeStrat.getUiName()); 
             }
         }
         catch (IOException e) {

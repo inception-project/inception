@@ -1,0 +1,17 @@
+== Curation
+
+Curation i.e. the process of combining finished annotated documents into a final curated document,
+can be done via the *Curation Page* in INCEpTION (see <<curation.adoc>>) 
+but also via the *Curation Sidebar* on the *Annotation Page*.
+
+image::curation-sidebar.png[Curation Sidebar]
+
+The sidebar allows the user to select the users whose annotations she wants to inspect 
+and merge into the final document. Annotations from other users are shown in gray above the user's annotations. 
+The user can decide to *manually* or *automatically* merge their 
+annotations into either her own document or a separate _Curation User Document_ as the final document.
+
+The *automatic* merge will copy all annotations that all selected users agree on into the curation document.
+For *manual* merge, no annotations will be automatically copied.
+However, the user can always copy annotations from other users into the curation document by clicking on them.
+
