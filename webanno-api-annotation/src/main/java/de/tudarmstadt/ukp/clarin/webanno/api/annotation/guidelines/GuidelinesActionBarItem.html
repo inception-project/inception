@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-#Copyright 2017
+#Copyright 2019
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -19,7 +19,12 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <body>
   <wicket:panel>
-    <a wicket:id="link"><img wicket:id="image"></img><br><wicket:container wicket:id="label"/></a>
+    <div wicket:id="guidelinesDialog"></div>
+    <div class="btn-group">
+      <button wicket:id="showGuidelinesDialog" class="btn btn-default" type="button">
+        <i class="fa fa-book" aria-hidden="true"></i>
+      </button>
+    </div>
   </wicket:panel>
 </body>
 </html>

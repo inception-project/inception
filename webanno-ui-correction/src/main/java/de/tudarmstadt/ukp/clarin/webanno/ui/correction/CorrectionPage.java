@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.correction;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils.verifyAndUpdateDocumentTimestamp;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.api.dao.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,15 +35,11 @@ import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.markup.head.OnLoadHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -58,15 +55,20 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectType;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigator;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.script.ScriptDirectionActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.guidelines.GuidelinesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.BratProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.PreferencesActionBarItem;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.event.AfterDocumentResetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratAnnotationEditor;
 import de.tudarmstadt.ukp.clarin.webanno.brat.util.BratAnnotatorUtility;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -81,28 +83,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.dialog.ConfirmationDialog;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.ActionBarLink;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
+import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotatorWorkflowActionBarItemGroup;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.FinishImage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.AnnotationPreferencesDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.ExportDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.GuidelinesDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.SuggestionViewPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationSelection;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.CurationContainer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SourceListView;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.SuggestionBuilder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.UserAnnotationSegment;
-import wicket.contrib.input.events.EventType;
-import wicket.contrib.input.events.InputBehavior;
-import wicket.contrib.input.events.key.KeyType;
 
 /**
  * This is the main class for the correction page. Displays in the lower panel the Automatically
@@ -128,21 +121,12 @@ public class CorrectionPage
     private @SpringBean BratProperties defaultPreferences;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean ApplicationEventPublisherHolder applicationEventPublisherHolder;
 
     private long currentprojectId;
 
-    // Open the dialog window on first load
-    private boolean firstLoad = true;
-
-    private ModalWindow openDocumentsModal;
-    private AnnotationPreferencesDialog preferencesModal;
-    private ExportDocumentDialog exportDialog;
-    private GuidelinesDialog guidelinesDialog;
-
-    private FinishImage finishDocumentIcon;
-    private ConfirmationDialog finishDocumentDialog;
-    private LambdaAjaxLink finishDocumentLink;
-
+    private WebMarkupContainer centerArea;
+    private WebMarkupContainer actionBar;
     private AnnotationEditorBase annotationEditor;
     private AnnotationDetailEditorPanel detailEditor;    
     private SuggestionViewPanel suggestionView;
@@ -165,9 +149,55 @@ public class CorrectionPage
         
         setModel(Model.of(new AnnotatorStateImpl(Mode.CORRECTION)));
         
+        centerArea = new WebMarkupContainer("centerArea");
+        centerArea.add(visibleWhen(() -> getModelObject().getDocument() != null));
+        centerArea.setOutputMarkupPlaceholderTag(true);
+        centerArea.add(createDocumentInfoLabel());
+        
+        actionBar = new WebMarkupContainer("actionBar");
+        actionBar.add(new DocumentNavigator("documentNavigator", this, getAllowedProjects()));
+        actionBar.add(new GuidelinesActionBarItem("guidelinesDialog", this));
+        actionBar.add(new PreferencesActionBarItem("preferencesDialog", this));
+        actionBar.add(new ScriptDirectionActionBarItem("toggleScriptDirection", this));
+        actionBar.add(new AnnotatorWorkflowActionBarItemGroup("workflowActions", this) {
+            private static final long serialVersionUID = 6295432722700148964L;
+
+            /*
+             * This is overwritten because in addition to the reset logic, we also need to strip
+             * the annotations from the CAS.
+             */
+            @Override
+            protected void actionResetDocument(AjaxRequestTarget aTarget) throws Exception
+            {
+                AnnotatorState state = getModelObject();
+                SourceDocument document = state.getDocument();
+                User user = state.getUser();
+                AnnotationDocument adoc = documentService.getAnnotationDocument(document, user);
+                CAS cas = documentService.createOrReadInitialCas(document);
+                cas = BratAnnotatorUtility.clearAnnotations(cas);
+                
+                // Add/update the CAS metadata
+                File casFile = documentService.getCasFile(document, user.getUsername());
+                if (casFile.exists()) {
+                    addOrUpdateCasMetadata(cas, casFile, document, user.getUsername());
+                }
+                documentService.writeAnnotationCas(cas, document, user, false);
+                applicationEventPublisherHolder.get()
+                        .publishEvent(new AfterDocumentResetEvent(this, adoc, cas));
+                actionLoadDocument(aTarget);
+            }
+        });
+        centerArea.add(actionBar);
+        
+        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
+                this::getEditorCas);
+        centerArea.add(annotationEditor);
+        add(centerArea);
+
         getModelObject().setPagingStrategy(new SentenceOrientedPagingStrategy());
-        add(getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
-        add(getModelObject().getPagingStrategy()
+        actionBar.add(
+                getModelObject().getPagingStrategy().createPageNavigator("pageNavigator", this));
+        centerArea.add(getModelObject().getPagingStrategy()
                 .createPositionLabel(MID_NUMBER_OF_PAGES, getModel())
                 .add(visibleWhen(() -> getModelObject().getDocument() != null))
                 .add(LambdaBehavior.onEvent(RenderAnnotationsEvent.class,
@@ -179,7 +209,7 @@ public class CorrectionPage
                 .format("flex-basis: %d%%;", getModelObject().getPreferences().getSidebarSize()))));
         rightSidebar.setOutputMarkupId(true);
         add(rightSidebar);
-
+        
         List<UserAnnotationSegment> segments = new LinkedList<>();
         UserAnnotationSegment userAnnotationSegment = new UserAnnotationSegment();
         if (getModelObject().getDocument() != null) {
@@ -222,102 +252,12 @@ public class CorrectionPage
                 }
             }
         };
-
-        suggestionView.setOutputMarkupId(true);
-        add(suggestionView);
+        centerArea.add(suggestionView);
 
         rightSidebar.add(detailEditor = createDetailEditor());
         
-        annotationEditor = new BratAnnotationEditor("mergeView", getModel(), detailEditor,
-            this::getEditorCas);
-        add(annotationEditor);
-
         curationContainer = new CurationContainer();
         curationContainer.setState(getModelObject());
-
-        add(createDocumentInfoLabel());
-
-        add(openDocumentsModal = new OpenDocumentDialog("openDocumentsModal", getModel(),
-                getAllowedProjects())
-        {
-            private static final long serialVersionUID = 5474030848589262638L;
-
-            @Override
-            public void onDocumentSelected(AjaxRequestTarget aTarget)
-            {
-                // Reload the page using AJAX. This does not add the project/document ID to the URL,
-                // but being AJAX it flickers less.
-                actionLoadDocument(aTarget);
-            }
-        });
-
-        add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog", getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
-
-        add(exportDialog = new ExportDocumentDialog("exportDialog", getModel()));
-
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", getModel()));
-
-        add(new LambdaAjaxLink("showOpenDocumentModal", this::actionShowOpenDocumentDialog));
-        
-        add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-        
-        add(new ActionBarLink("showGuidelinesDialog", guidelinesDialog::show));
-
-        add(new LambdaAjaxLink("showExportDialog", exportDialog::show) {
-            private static final long serialVersionUID = -708400631769656072L;
-
-            {
-                setOutputMarkupId(true);
-                setOutputMarkupPlaceholderTag(true);
-            }
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                setVisible(state.getProject() != null
-                        && (projectService.isAdmin(state.getProject(), state.getUser())
-                                || !state.getProject().isDisableExport()));
-            }
-        });
-
-        add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_up },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(new InputBehavior(new KeyType[] { KeyType.Shift, KeyType.Page_down },
-                        EventType.click)));
-
-        add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
-        
-        add(createOrGetResetDocumentDialog());
-        add(createOrGetResetDocumentLink());
-        
-        add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
-                new StringResourceModel("FinishDocumentDialog.title", this, null),
-                new StringResourceModel("FinishDocumentDialog.text", this, null)));
-        add(finishDocumentLink = new LambdaAjaxLink("showFinishDocumentDialog",
-                this::actionFinishDocument)
-        {
-            private static final long serialVersionUID = 874573384012299998L;
-
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                AnnotatorState state = CorrectionPage.this.getModelObject();
-                setEnabled(state.getDocument() != null && !documentService
-                        .isAnnotationFinished(state.getDocument(), state.getUser()));
-            }
-        });
-        finishDocumentIcon = new FinishImage("finishImage", getModel());
-        finishDocumentIcon.setOutputMarkupId(true);
-        finishDocumentLink.add(finishDocumentIcon);
     }
     
     private IModel<List<DecoratedObject<Project>>> getAllowedProjects()
@@ -394,26 +334,11 @@ public class CorrectionPage
     }
 
     @Override
-    protected List<SourceDocument> getListOfDocs()
+    public List<SourceDocument> getListOfDocs()
     {
         AnnotatorState state = getModelObject();
         return new ArrayList<>(documentService
                 .listAnnotatableDocuments(state.getProject(), state.getUser()).keySet());
-    }
-
-    /**
-     * for the first time the page is accessed, open the <b>open document dialog</b>
-     */
-    @Override
-    public void renderHead(IHeaderResponse response)
-    {
-        super.renderHead(response);
-
-        if (firstLoad) {
-            response.render(OnLoadHeaderItem
-                    .forScript("jQuery('#showOpenDocumentModal').trigger('click');"));
-            firstLoad = false;
-        }
     }
 
     @Override
@@ -461,94 +386,6 @@ public class CorrectionPage
     {
         suggestionView.updatePanel(target, curationContainer,
                 annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        openDocumentsModal.show(aTarget);
-    }
-
-    private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)
-    {
-        getModelObject().getSelection().clear();
-        preferencesModal.show(aTarget);
-    }
-    
-    private void actionToggleScriptDirection(AjaxRequestTarget aTarget)
-            throws Exception
-    {
-        getModelObject().toggleScriptDirection();
-        annotationEditor.requestRender(aTarget);
-
-        curationContainer.setState(getModelObject());
-        suggestionView.updatePanel(aTarget, curationContainer,
-                annotationSelectionByUsernameAndAddress, curationSegment);
-    }
-    
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        try {
-            AnnotatorState state = getModelObject();
-
-            CAS editorCas = getEditorCas();
-
-            // The number of visible sentences may have changed - let the state recalculate 
-            // the visible sentences 
-            state.getPagingStrategy().recalculatePage(state, editorCas);
-
-            SuggestionBuilder builder = new SuggestionBuilder(casStorageService, documentService,
-                    correctionDocumentService, curationDocumentService, annotationService,
-                    userRepository);
-            curationContainer = builder.buildCurationContainer(state);
-            setCurationSegmentBeginEnd(editorCas);
-            curationContainer.setState(state);
-            
-            update(aTarget);
-            aTarget.appendJavaScript(
-                    "Wicket.Window.unloadConfirmation = false;window.location.reload()");
-            
-            // Re-render the whole page because the width of the sidebar may have changed
-            aTarget.add(this);
-        }
-        catch (Exception e) {
-            handleException(aTarget, e);
-        }
-    }
-
-    /**
-     * Reset the document by removing all annotations form the initial CAS and using the result as
-     * the editor CAS.
-     */
-    @Override
-    protected void actionResetDocument(AjaxRequestTarget aTarget)
-        throws Exception
-    {
-        AnnotatorState state = getModelObject();
-        CAS editorCas = documentService.createOrReadInitialCas(state.getDocument());
-        editorCas = BratAnnotatorUtility.clearAnnotations(editorCas);
-        documentService.writeAnnotationCas(editorCas, state.getDocument(), state.getUser(), false);
-        actionLoadDocument(aTarget);
-    }
-    
-    private void actionFinishDocument(AjaxRequestTarget aTarget)
-    {
-        finishDocumentDialog.setConfirmAction((aCallbackTarget) -> {
-            actionValidateDocument(aCallbackTarget, getEditorCas());
-            
-            AnnotatorState state = getModelObject();
-            AnnotationDocument annotationDocument = documentService.getAnnotationDocument(
-                    state.getDocument(), state.getUser());
-
-            documentService.transitionAnnotationDocumentState(annotationDocument,
-                    ANNOTATION_IN_PROGRESS_TO_ANNOTATION_FINISHED);
-
-            aCallbackTarget.add(finishDocumentIcon);
-            aCallbackTarget.add(finishDocumentLink);
-            aCallbackTarget.add(detailEditor);
-            aCallbackTarget.add(createOrGetResetDocumentLink());
-        });
-        finishDocumentDialog.show(aTarget);
     }
     
     @Override
@@ -671,7 +508,7 @@ public class CorrectionPage
             curationContainer.setState(state);
             update(aTarget);
             annotationEditor.requestRender(aTarget);
-            aTarget.add(get(MID_NUMBER_OF_PAGES));
+            aTarget.add(centerArea.get(MID_NUMBER_OF_PAGES));
         }
         catch (Exception e) {
             handleException(aTarget, e);

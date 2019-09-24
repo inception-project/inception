@@ -15,21 +15,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotationPreference;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.AjaxCallback;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 
 /**
- * A panel used by {@link AnnotationPage} {@code CurationPage} and {code CorrectionPage} consisting
- * of a link to open {@link ModalWindow} to set {@link AnnotationPreference}
+ * Dialog providing access to the per-user annotation preferences.
  */
 public class AnnotationPreferencesDialog
     extends ModalWindow

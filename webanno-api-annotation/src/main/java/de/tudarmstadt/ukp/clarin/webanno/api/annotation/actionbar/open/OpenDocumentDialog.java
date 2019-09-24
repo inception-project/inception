@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.dialog;
+package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.open;
 
 import java.util.List;
 
@@ -23,9 +23,12 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalWindow;
 import org.apache.wicket.model.IModel;
+import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 
 public abstract class OpenDocumentDialog
@@ -36,13 +39,18 @@ public abstract class OpenDocumentDialog
     private boolean closeButtonClicked;
 
     private IModel<List<DecoratedObject<Project>>> projects;
+    private SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
+            docListProvider;
     
     public OpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
-            IModel<List<DecoratedObject<Project>>> aProjects)
+            IModel<List<DecoratedObject<Project>>> aProjects,
+            SerializableBiFunction<Project, User, List<DecoratedObject<SourceDocument>>> 
+                aDocListProvider)
     {
         super(aId, aModel);
         
         projects = aProjects;
+        docListProvider = aDocListProvider;
 
         setOutputMarkupId(true);
         setInitialWidth(620);
@@ -68,7 +76,8 @@ public abstract class OpenDocumentDialog
     {
         closeButtonClicked = false;
         
-        setContent(new OpenDocumentDialogPanel(getContentId(), getModelObject(), this, projects)
+        setContent(new OpenDocumentDialogPanel(getContentId(), getModelObject(), this, projects,
+                docListProvider)
         {
             private static final long serialVersionUID = -3434069761864809703L;
 

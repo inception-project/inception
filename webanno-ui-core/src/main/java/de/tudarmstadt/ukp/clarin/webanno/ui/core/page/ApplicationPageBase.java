@@ -18,20 +18,25 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.core.page;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.reflect.ConstructorUtils;
 import org.apache.wicket.Component;
 import org.apache.wicket.MetaDataKey;
 import org.apache.wicket.RuntimeConfigurationType;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.feedback.IFeedbackMessageFilter;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.FeedbackPanel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.caching.NoOpResourceCachingStrategy;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -60,9 +65,12 @@ public abstract class ApplicationPageBase
     };
     
     private FeedbackPanel feedbackPanel;
+    private WebMarkupContainer footer;
 
     private @SpringBean GlobalInterceptorsRegistry interceptorsRegistry;
     private @SpringBean FooterItemRegistry footerItemRegistry;
+    
+    private IModel<List<Component>> footerItems;
 
     protected ApplicationPageBase()
     {
@@ -81,17 +89,28 @@ public abstract class ApplicationPageBase
             interceptor.intercept(this);
         }
 
-        List<Component> footerItems = footerItemRegistry.getFooterItems().stream()
-                .map(c -> c.create("item"))
-                .collect(Collectors.toList());
+        footerItems = new ListModel<>(new ArrayList<>());
         
-        add(new ListView<Component>("footerItems", footerItems)
+        footerItemRegistry.getFooterItems().stream()
+                .map(c -> c.create("item"))
+                .forEach(c -> footerItems.getObject().add(c));
+        
+        footer = new WebMarkupContainer("footer");
+        footer.setOutputMarkupId(true);
+        add(footer);
+        
+        footer.add(new ListView<Component>("footerItems", footerItems)
         {
             private static final long serialVersionUID = 5912513189482015963L;
+            
+            {
+                setReuseItems(true);
+            }
 
             @Override
             protected void populateItem(ListItem<Component> aItem)
             {
+                aItem.setOutputMarkupPlaceholderTag(true);
                 aItem.add(aItem.getModelObject());
             }
         });
@@ -165,5 +184,34 @@ public abstract class ApplicationPageBase
     public FeedbackPanel getFeedbackPanel()
     {
         return feedbackPanel;
+    }
+    
+    public IModel<List<Component>> getFooterItems()
+    {
+        return footerItems;
+    }
+    
+    public void addToFooter(Component aComponent)
+    {
+        List<Component> items = footerItems.getObject();
+        
+        if (!items.contains(aComponent)) {
+            items.add(aComponent);
+        }
+        
+        RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
+            handler.add(footer);
+        }); 
+    }
+
+    public void removeFromFooter(Component aComponent)
+    {
+        List<Component> items = footerItems.getObject();
+        
+        items.remove(aComponent);
+        
+        RequestCycle.get().find(IPartialPageRequestHandler.class).ifPresent(handler -> {
+            handler.add(footer);
+        }); 
     }
 }
