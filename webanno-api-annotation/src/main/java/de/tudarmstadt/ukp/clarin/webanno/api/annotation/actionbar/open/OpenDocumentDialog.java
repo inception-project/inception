@@ -76,8 +76,8 @@ public abstract class OpenDocumentDialog
     {
         closeButtonClicked = false;
         
-        setContent(new OpenDocumentDialogPanel(getContentId(), getModelObject(), this, projects,
-                docListProvider)
+        OpenDocumentDialogPanel panel = new OpenDocumentDialogPanel(getContentId(),
+                getModelObject(), this, projects, docListProvider)
         {
             private static final long serialVersionUID = -3434069761864809703L;
 
@@ -86,7 +86,9 @@ public abstract class OpenDocumentDialog
             {
                 closeButtonClicked = true;
             }
-        });
+        };
+        
+        setContent(panel);
         
         setWindowClosedCallback(new ModalWindow.WindowClosedCallback()
         {
@@ -113,6 +115,14 @@ public abstract class OpenDocumentDialog
         });
         
         super.show(aTarget);
+        
+        // Normally, using focusComponent should work, but it doesn't. Therefore, we manually add
+        // a JavaScript snippet with a timeout that gives the modal window the opportunity to draw
+        // itself before setting the focus. This seems to help.
+        // (cf. https://issues.apache.org/jira/browse/WICKET-5858)
+//      aTarget.focusComponent(panel.getFocusComponent());
+        aTarget.appendJavaScript("setTimeout(function() { document.getElementById('"
+                + panel.getFocusComponent().getMarkupId() + "').focus(); }, 100);");
     }
     
     public abstract void onDocumentSelected(AjaxRequestTarget aTarget);
