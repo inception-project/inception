@@ -102,6 +102,26 @@ public class NumberFeatureTraitsEditor
         maximum.setModel(PropertyModel.of(traits, "maximum"));
         form.add(maximum);
     
+        minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+            target -> {
+                double min = traits.getObject().getMinimum().doubleValue();
+                double max = traits.getObject().getMaximum().doubleValue();
+                if (min > max) {
+                    traits.getObject().setMaximum(min);
+                }
+                target.add(form);
+            }));
+    
+        maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+            target -> {
+                double min = traits.getObject().getMinimum().doubleValue();
+                double max = traits.getObject().getMaximum().doubleValue();
+                if (min > max) {
+                    traits.getObject().setMinimum(max);
+                }
+                target.add(form);
+            }));
+    
         CheckBox multipleRows = new CheckBox("limited");
         multipleRows.setModel(PropertyModel.of(traits, "limited"));
         multipleRows.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
