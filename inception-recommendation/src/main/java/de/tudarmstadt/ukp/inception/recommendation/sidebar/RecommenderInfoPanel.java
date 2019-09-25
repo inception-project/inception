@@ -144,13 +144,11 @@ public class RecommenderInfoPanel
                     // update list of evaluated recommenders with their results and re-render
                     recommenderEvals.getObject().put(recommender.getId(),
                             resultEvent.getEvaluatedRecommender());
-                    // FIXME: sometimes cannot add resultContainer because of rendering cycle ???
                     aHandler.add(mainContainer);
                 }
             }
         });
     }
-
     
     @Override
     protected void onDetach()
@@ -160,7 +158,6 @@ public class RecommenderInfoPanel
             recommenderEvals.detach();
         }
     }
-
 
     private List<EvaluatedRecommender> getEvaluationResults()
     {
