@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -38,9 +39,13 @@ import de.tudarmstadt.ukp.inception.conceptlinking.recommender.NamedEntityLinker
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingService;
 import de.tudarmstadt.ukp.inception.conceptlinking.service.ConceptLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
+import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 
 @Configuration
+@AutoConfigureAfter({ KnowledgeBaseServiceAutoConfiguration.class,
+        RecommenderServiceAutoConfiguration.class })
 @ConditionalOnBean(KnowledgeBaseService.class)
 @ConditionalOnProperty(prefix = "knowledge-base.entity-linking", name = "enabled", 
         havingValue = "true", matchIfMissing = true)
