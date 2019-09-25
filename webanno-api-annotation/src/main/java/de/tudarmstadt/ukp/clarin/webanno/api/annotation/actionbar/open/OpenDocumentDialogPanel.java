@@ -52,8 +52,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.DecoratedObject;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 
@@ -103,6 +103,7 @@ public class OpenDocumentDialogPanel
         docListChoice = createDocListChoice();
         
         Form<Void> form = new Form<>("form");
+        form.setOutputMarkupId(true);
        
         form.add(projectListChoice);
         form.add(docListChoice);
@@ -110,7 +111,7 @@ public class OpenDocumentDialogPanel
         
         buttonsContainer = new WebMarkupContainer("buttons");
         buttonsContainer.setOutputMarkupId(true);
-        LambdaAjaxButton<Void> openButton = new LambdaAjaxButton<>("openButton",
+        LambdaAjaxSubmitLink openButton = new LambdaAjaxSubmitLink("openButton",
                 OpenDocumentDialogPanel.this::actionOpenDocument);
         openButton.add(enabledWhen(() -> docListChoice.getModelObject() != null));
         buttonsContainer.add(openButton);
@@ -124,10 +125,9 @@ public class OpenDocumentDialogPanel
 
     private OverviewListChoice<DecoratedObject<SourceDocument>> createDocListChoice()
     {
-        docListChoice = new OverviewListChoice<>("document", Model.of(), listDocuments());
+        docListChoice = new OverviewListChoice<>("documents", Model.of(), listDocuments());
         docListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<SourceDocument>>()
         {
-
             private static final long serialVersionUID = 1L;
 
             @Override
@@ -148,9 +148,9 @@ public class OpenDocumentDialogPanel
             }
         }).add(AjaxEventBehavior.onEvent("dblclick", _target -> actionOpenDocument(_target, null)));
 
-//        if (!docListChoice.getChoices().isEmpty()) {
-//            docListChoice.setModelObject(docListChoice.getChoices().get(0));
-//        }
+        if (!docListChoice.getChoices().isEmpty()) {
+            docListChoice.setModelObject(docListChoice.getChoices().get(0));
+        }
         
         return docListChoice;
     }
@@ -188,11 +188,29 @@ public class OpenDocumentDialogPanel
             {
                 if (userListChoice.isVisible()) {
                     userListChoice.setChoices(listUsers());
+
+                    DecoratedObject<User> currentUser = DecoratedObject
+                            .of(userRepository.getCurrentUser());
+                    if (userListChoice.getChoices().contains(currentUser)) {
+                        userListChoice.setModelObject(currentUser);
+                    }
+                    else if (!userListChoice.getChoices().isEmpty()) {
+                        userListChoice.setModelObject(userListChoice.getChoices().get(0));
+                    }
+                    else {
+                        userListChoice.setModelObject(null);
+                    }
+
                     aTarget.add(userListChoice);
                 }
                 
                 docListChoice.setChoices(listDocuments());
                 docListChoice.setDefaultModel(Model.of());
+                
+                if (!docListChoice.getChoices().isEmpty()) {
+                    docListChoice.setModelObject(docListChoice.getChoices().get(0));
+                }
+                
                 aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
@@ -201,18 +219,14 @@ public class OpenDocumentDialogPanel
         if (aBModel.isProjectLocked()) {
             projectListChoice.setVisible(false);
         }
-        
-//        if (projectListChoice.isVisible() && !projectListChoice.getChoices().isEmpty()) {
-//            projectListChoice.setModelObject(projectListChoice.getChoices().get(0));
-//        }
-        
+                
         return projectListChoice;
     }
     
     private OverviewListChoice<DecoratedObject<User>> createUserListChoice()
     {
         DecoratedObject<User> currentUser = DecoratedObject.of(userRepository.getCurrentUser());
-        userListChoice = new OverviewListChoice<>("user", Model.of(currentUser), listUsers());
+        userListChoice = new OverviewListChoice<>("user", Model.of(), listUsers());
         userListChoice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
         {
 
@@ -238,17 +252,30 @@ public class OpenDocumentDialogPanel
             protected void onUpdate(AjaxRequestTarget aTarget)
             {
                 docListChoice.setChoices(listDocuments());
-                docListChoice.setDefaultModel(Model.of());
+                
+                if (!docListChoice.getChoices().isEmpty()) {
+                    docListChoice.setModelObject(docListChoice.getChoices().get(0));
+                }
+                else {
+                    docListChoice.setModelObject(null);
+                }
+                
                 aTarget.add(buttonsContainer);
                 aTarget.add(docListChoice);
             }
         }).add(visibleWhen(() -> state.getMode().equals(Mode.ANNOTATION)
                 && isManagerForListedProjects()));
 
+        if (userListChoice.getChoices().contains(currentUser)) {
+            userListChoice.setModelObject(currentUser);
+        }
+        else if (!userListChoice.getChoices().isEmpty()) {
+            userListChoice.setModelObject(userListChoice.getChoices().get(0));
+        }
+        else {
+            userListChoice.setModelObject(null);
+        }
         
-//        if (userListChoice.isVisible() && !userListChoice.getChoices().isEmpty()) {
-//            userListChoice.setModelObject(userListChoice.getChoices().get(0));
-//        }
         
         return userListChoice;
     }
@@ -345,7 +372,7 @@ public class OpenDocumentDialogPanel
         return allSourceDocuments;
     }
     
-    private void actionOpenDocument(AjaxRequestTarget aTarget, Form<Void> aForm)
+    private void actionOpenDocument(AjaxRequestTarget aTarget, Form<?> aForm)
     {
         if (projectListChoice.getModelObject() != null && docListChoice.getModelObject()  != null) {
             state.setProject(projectListChoice.getModelObject().get());
