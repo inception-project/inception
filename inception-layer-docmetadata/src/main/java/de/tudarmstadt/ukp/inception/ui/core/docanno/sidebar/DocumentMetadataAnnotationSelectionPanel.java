@@ -50,10 +50,12 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
@@ -94,11 +96,14 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
     private final IModel<String> username;
     private final IModel<AnnotationLayer> selectedLayer;
     private final WebMarkupContainer annotationsContainer;
+    private final AnnotationActionHandler actionHandler;
     private List<DocumentMetadataAnnotationDetailPanel> detailPanels;
+    private final AnnotatorState state;
     
     public DocumentMetadataAnnotationSelectionPanel(String aId, IModel<Project> aProject,
             IModel<SourceDocument> aDocument, IModel<String> aUsername,
-            CasProvider aCasProvider, AnnotationPage aAnnotationPage)
+            CasProvider aCasProvider, AnnotationPage aAnnotationPage,
+            AnnotationActionHandler aActionHandler, AnnotatorState aState)
     {
         super(aId, aProject);
 
@@ -110,7 +115,9 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         jcasProvider = aCasProvider;
         project = aProject;
         selectedLayer = Model.of();
+        actionHandler = aActionHandler;
         detailPanels = new ArrayList<>();
+        state = aState;
 
         annotationsContainer = new WebMarkupContainer(CID_ANNOTATIONS_CONTAINER);
         annotationsContainer.setOutputMarkupId(true);
@@ -205,7 +212,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
                 } else {
                     detailPanel = new DocumentMetadataAnnotationDetailPanel(
                         CID_ANNOTATION_DETAILS, Model.of(vid), sourceDocument, username,
-                        jcasProvider, project, annotationPage, selectionPanel);
+                        jcasProvider, project, annotationPage, selectionPanel, actionHandler,
+                        state);
                     detailPanel.setVisible(renderVisible);
                     detailPanels.add(detailPanel);
                 }

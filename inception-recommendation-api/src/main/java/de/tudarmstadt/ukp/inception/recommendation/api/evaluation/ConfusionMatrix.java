@@ -30,6 +30,10 @@ public class ConfusionMatrix implements Serializable
     private static final long serialVersionUID = -5181354025073954428L;
     
     /**
+     * 
+     */
+    private static final long serialVersionUID = -5181354025073954428L;
+    /**
      * Stores number of predicted labels for each gold label
      */
     private Object2IntOpenHashMap<ConfMatrixKey> confusionMatrix;

@@ -32,6 +32,7 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+
 import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseAccess;
 import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseInfo;

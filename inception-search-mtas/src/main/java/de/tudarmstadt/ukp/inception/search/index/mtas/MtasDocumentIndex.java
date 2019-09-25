@@ -18,8 +18,11 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
+import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -70,12 +73,11 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.TypeSystem;
-import org.apache.uima.cas.impl.XmiCasSerializer;
+import org.apache.uima.util.CasIOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
-import org.xml.sax.SAXException;
 
 import com.github.openjson.JSONObject;
 
@@ -276,16 +278,6 @@ public class MtasDocumentIndex
         return result;
     }
 
-    private Map<Long, Long> listAnnotatableDocuments(Project aProject, User aUser)
-    {
-        Map<Long, Long> annotateableDocuments =  new HashMap<>();
-        documentService.listAnnotatableDocuments(aProject, aUser).entrySet()
-            .stream()
-            .filter(e -> e.getValue() != null) // only include entries where the annodoc is not null
-            .forEach(e -> annotateableDocuments.put(e.getKey().getId(), e.getValue().getId()));
-        return annotateableDocuments;
-    }
-
     private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader,
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
@@ -297,8 +289,11 @@ public class MtasDocumentIndex
 
         IndexSearcher searcher = new IndexSearcher(aIndexReader);
 
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
-            aRequest.getUser());
+        Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
+                .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
+        Map<Long, SourceDocument> sourceDocumentIndex = new HashMap<>();
+        sourceAnnotationDocPairs.entrySet().stream()
+                .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
@@ -330,8 +325,28 @@ public class MtasDocumentIndex
                                 continue;
 
                             }
+                            
                             long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                             long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
+                            boolean matchInSourceDocument = annotationDocumentId == -1;
+                            
+                            SourceDocument sourceDocument = sourceDocumentIndex
+                                    .get(sourceDocumentId);
+                            
+                            if (sourceDocument == null) {
+                                // Document is not annotatable by this user, so we skip this result
+                                continue;
+                            }
+                            
+                            AnnotationDocument annotationDocument = sourceAnnotationDocPairs
+                                    .get(sourceDocument);
+                            
+                            if (annotationDocument != null
+                                    && IGNORE != annotationDocument.getState()) {
+                                // Skip if the document is ignored for this user
+                                log.trace("Skipping results from ignored document {}",
+                                        sourceDocumentId);
+                            }
                             
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
@@ -345,11 +360,10 @@ public class MtasDocumentIndex
                                 continue;
                             }
 
-                            if (annotatableDocuments.containsKey(sourceDocumentId)
-                                && annotationDocumentId == -1) {
+                            if (matchInSourceDocument && annotationDocument != null) {
                                 // Exclude result if the retrieved document is a sourcedocument
-                                // (that is, has annotationDocument = -1) AND it has a
-                                // corresponding annotation document for this user
+                                // AND it has a corresponding annotation document for this user
+                                // AND the document is not ignored for this user
                                 log.trace("Skipping results from indexed source document {} in"
                                         + "favor of results from the corresponding annotation "
                                         + "document", sourceDocumentId);
@@ -410,6 +424,9 @@ public class MtasDocumentIndex
                                         .getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
+                                result.setReadOnly(annotationDocument != null
+                                        && FINISHED.equals(annotationDocument.getState()));
+                                result.setSelectedForAnnotation(!result.isReadOnly());
                                 
                                 MtasTokenString prevToken = null;
                                 for (MtasTokenString token : tokens) {
@@ -464,8 +481,6 @@ public class MtasDocumentIndex
                                     // if no annotation feature is specified group by document title
                                     addToResults(results, result.getDocumentTitle(), result);
                                 }
-
-
                             }
                         }
                     }
@@ -565,9 +580,12 @@ public class MtasDocumentIndex
                         aAnnotationDocumentId, aUser);
                 
                 // Prepare bytearray with document content to be indexed
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                XmiCasSerializer.serialize(aCas, null, bos, true, null);
-                bos.close();
+                String encodedCAS; 
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                    //XmiCasSerializer.serialize(aCas, null, bos, true, null);
+                    CasIOUtils.save(aCas, bos, SERIALIZED_TSI);
+                    encodedCAS = new String(MtasUtils.bytesToChars(bos.toByteArray()));
+                }
 
                 // Calculate timestamp that will be indexed
                 String timestamp = DateTools.dateToString(new Date(),
@@ -586,8 +604,7 @@ public class MtasDocumentIndex
                 doc.add(new StringField(FIELD_TITLE, aDocumentTitle, Field.Store.YES));
                 doc.add(new StringField(FIELD_USER, aUser, Field.Store.YES));
                 doc.add(new StringField(FIELD_TIMESTAMP, timestamp, Field.Store.YES));
-                doc.add(new TextField(FIELD_CONTENT, new String(bos.toByteArray(), "UTF-8"),
-                        Field.Store.NO));
+                doc.add(new TextField(FIELD_CONTENT, encodedCAS, Field.Store.NO));
     
                 // Add document to the Lucene index
                 indexWriter.addDocument(doc);
@@ -601,7 +618,7 @@ public class MtasDocumentIndex
                         project.getName(), project.getId(), aSourceDocumentId,
                         aAnnotationDocumentId, aUser, timestamp);
             }
-            catch (SAXException e) {
+            catch (Exception e) {
                 log.error("Unable to index document", e);
             }
         }
@@ -887,7 +904,7 @@ public class MtasDocumentIndex
                 log.info("Indexing all documents in the project [{}]({})", project.getName(),
                         project.getId());
                 indexAllDocuments();
-                log.debug("All documents have been indexed in the project [{}]({})",
+                log.info("All documents have been indexed in the project [{}]({})",
                         project.getName(), project.getId());
             } else {
                 log.debug("Index has not been opened. No documents have been indexed.");

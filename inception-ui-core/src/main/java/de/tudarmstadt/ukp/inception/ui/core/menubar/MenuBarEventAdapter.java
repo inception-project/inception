@@ -33,8 +33,8 @@ public class MenuBarEventAdapter
     @EventListener
     public void onProjectDeleted(BeforeProjectRemovedEvent aEvent)
     {
-        Session session = Session.get();
-        if (session != null) {
+        if (Session.exists()) {
+            Session session = Session.get();
             // If the currently selected project is deleted, clear it from the session.
             Project project = session.getMetaData(SessionMetaData.CURRENT_PROJECT);
             if (project != null && Objects.equals(aEvent.getProject().getId(), project.getId())) {

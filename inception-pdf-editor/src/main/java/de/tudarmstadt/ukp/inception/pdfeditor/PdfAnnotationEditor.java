@@ -80,6 +80,8 @@ public class PdfAnnotationEditor
     private static final String SELECT_RELATION = "selectRelation";
     private static final String DELETE_RECOMMENDATION = "deleteRecommendation";
     private static final String GET_ANNOTATIONS = "getAnnotations";
+    
+    private static final String VIS = "vis";
 
     private PdfExtractFile pdfExtractFile;
     private DocumentModel documentModel;
@@ -95,8 +97,12 @@ public class PdfAnnotationEditor
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
     {
         super(aId, aModel, aActionHandler, aCasProvider);
-
-        add(new PdfAnnoPanel("vis", aModel, this));
+        String format = aModel.getObject().getDocument().getFormat(); 
+        if (format.equals(PdfFormatSupport.ID)) {
+            add(new PdfAnnoPanel(VIS, aModel, this));
+        } else {
+            add(new WrongFileFormatPanel(VIS, format));
+        }
     }
 
     @Override

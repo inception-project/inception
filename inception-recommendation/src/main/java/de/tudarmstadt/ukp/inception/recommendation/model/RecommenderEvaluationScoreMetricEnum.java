@@ -15,38 +15,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.formats.perseus.internal.model;
+package de.tudarmstadt.ukp.inception.recommendation.model;
 
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlID;
-
-public class PerseusWord
+public enum RecommenderEvaluationScoreMetricEnum
 {
-    @XmlID 
-    @XmlAttribute
-    public String id;
-
-    @XmlAttribute
-    public String form;
-    
-    @XmlAttribute
-    public String lemma;
-
-    @XmlAttribute
-    public String postag;
-
-    @XmlAttribute
-    public String relation;
-
-    @XmlAttribute
-    public String cite;
-
-    @XmlAttribute
-    public int head;
-    
-    @XmlAttribute(name = "insertion_id")
-    public String insertionId;
-    
-    @XmlAttribute
-    public String artificial;
+    Accuracy, Precision, F1, Recall
 }
