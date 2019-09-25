@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingService;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.FactLinkingServiceImpl;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.PropertyFeatureSupport;
@@ -41,13 +40,6 @@ import de.tudarmstadt.ukp.inception.ui.kb.initializers.FactLayerInitializer;
         havingValue = "true", matchIfMissing = false)
 public class FactLinkingAutoConfiguration
 {
-    @Bean
-    @Autowired
-    public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService)
-    {
-        return new ConceptFeatureSupport(aKbService);
-    }
-    
     @Bean
     @Autowired
     public PropertyFeatureSupport propertyFeatureSupport(KnowledgeBaseService aKbService)

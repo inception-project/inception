@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.config.KnowledgeBaseServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.kb.KnowledgeBasePageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.initializers.NamedEntityIdentifierFeatureInitializer;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.ui.kb.search.ConceptFeatureIndexingSupport;
@@ -69,6 +70,13 @@ public class KnowledgeBaseServiceUIAutoConfiguration
     public KnowledgeBaseProjectSettingsPanelFactory knowledgeBaseProjectSettingsPanelFactory()
     {
         return new KnowledgeBaseProjectSettingsPanelFactory();
+    }
+    
+    @Bean
+    @Autowired
+    public ConceptFeatureSupport conceptFeatureSupport(KnowledgeBaseService aKbService)
+    {
+        return new ConceptFeatureSupport(aKbService);
     }
     
     @Bean
