@@ -27,6 +27,7 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReferenc
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.app.css.InceptionCssReference;
+import de.tudarmstadt.ukp.inception.app.css.HintJavascriptReference;
 
 public class InceptionResourcesBehavior
     extends Behavior
@@ -50,6 +51,8 @@ public class InceptionResourcesBehavior
         aResponse.render(CssHeaderItem.forReference(new WebjarsCssResourceReference("enjoyhint/current/jquery.enjoyhint.css")));
         aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("jquery.scrollTo/current/jquery.scrollTo.js")));
         aResponse.render(JavaScriptHeaderItem.forReference(new WebjarsJavaScriptResourceReference("kinetic/current/kinetic.min.js")));
+
+        aResponse.render(JavaScriptHeaderItem.forReference(HintJavascriptReference.get()));
     }
     
     public static InceptionResourcesBehavior get()
