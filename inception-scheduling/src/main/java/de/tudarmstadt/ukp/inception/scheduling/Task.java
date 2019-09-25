@@ -78,7 +78,7 @@ public abstract class Task
         sb.append('{');
         sb.append("user=").append(user.getUsername());
         sb.append(", project=").append(project.getName());
-        sb.append(", trigger=").append(trigger);
+        sb.append(", trigger=\"").append(trigger);
         sb.append("\"}");
         return sb.toString();
     }
