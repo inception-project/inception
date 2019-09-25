@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -104,20 +105,20 @@ public class NumberFeatureTraitsEditor
     
         minimum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
             target -> {
-                double min = traits.getObject().getMinimum().doubleValue();
-                double max = traits.getObject().getMaximum().doubleValue();
-                if (min > max) {
-                    traits.getObject().setMaximum(min);
+                BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
+                BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+                if (min.compareTo(max) > 0) {
+                    traits.getObject().setMaximum(traits.getObject().getMinimum());
                 }
                 target.add(form);
             }));
     
         maximum.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
             target -> {
-                double min = traits.getObject().getMinimum().doubleValue();
-                double max = traits.getObject().getMaximum().doubleValue();
-                if (min > max) {
-                    traits.getObject().setMinimum(max);
+                BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
+                BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+                if (min.compareTo(max) > 0) {
+                    traits.getObject().setMinimum(traits.getObject().getMaximum());
                 }
                 target.add(form);
             }));

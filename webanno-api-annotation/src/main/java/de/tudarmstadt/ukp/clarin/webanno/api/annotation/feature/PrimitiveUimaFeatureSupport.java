@@ -214,11 +214,13 @@ public class PrimitiveUimaFeatureSupport
         case NONE:
             switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
-                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel);
+                NumberFeatureTraits traits = readNumberFeatureTraits(feature);
+                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
                 break;
             }
             case CAS.TYPE_NAME_FLOAT: {
-                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel);
+                NumberFeatureTraits traits = readNumberFeatureTraits(feature);
+                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
                 break;
             }
             case CAS.TYPE_NAME_BOOLEAN: {

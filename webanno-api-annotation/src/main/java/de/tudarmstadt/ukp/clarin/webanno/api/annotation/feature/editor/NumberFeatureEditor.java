@@ -21,29 +21,44 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
+
 
 public class NumberFeatureEditor<T extends Number>
     extends FeatureEditor
 {
     private static final long serialVersionUID = -2426303638953208057L;
+    
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
+    
     @SuppressWarnings("rawtypes")
     private final NumberTextField field;
 
-    public NumberFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel)
+    public NumberFeatureEditor(String aId, MarkupContainer aItem, IModel<FeatureState> aModel,
+            NumberFeatureTraits aTraits)
     {
         super(aId, aItem, new CompoundPropertyModel<>(aModel));
-
+        
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             field = new NumberTextField<>("value", Integer.class);
+            if (aTraits.isLimited()) {
+                field.setMinimum(aTraits.getMinimum());
+                field.setMaximum(aTraits.getMaximum());
+            }
             break;
         }
         case CAS.TYPE_NAME_FLOAT: {
             field = new NumberTextField<>("value", Float.class);
+            if (aTraits.isLimited()) {
+                field.setMinimum(aTraits.getMinimum().floatValue());
+                field.setMaximum(aTraits.getMaximum().floatValue());
+            }
             break;
         }
         default:
