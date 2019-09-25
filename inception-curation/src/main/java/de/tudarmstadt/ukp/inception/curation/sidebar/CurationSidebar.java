@@ -199,8 +199,12 @@ public class CurationSidebar
     {
         super.onConfigure();
         AnnotatorState state = getModelObject();
-        setEnabled(!documentService
-                .isAnnotationFinished(state.getDocument(), state.getUser()));
+        // check that document is not already finished 
+        // and user is curating not just viewing doc as admin
+        User user = state.getUser();
+        setEnabled((user.equals(userRepository.getCurrentUser()) || 
+                user.getUsername().equals(CURATION_USER)) &&
+                !documentService.isAnnotationFinished(state.getDocument(), user));
     }
 
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)

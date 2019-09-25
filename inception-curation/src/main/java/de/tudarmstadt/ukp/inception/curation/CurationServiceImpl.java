@@ -40,13 +40,13 @@ import org.springframework.security.core.session.SessionDestroyedEvent;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorStateUtils;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -174,8 +174,9 @@ public class CurationServiceImpl implements CurationService
     }
     
     @Override
-    @Transactional
-    public void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId) {
+    public synchronized void writeCurationCas(CAS aTargetCas, AnnotatorState aState,
+            long aProjectId)
+    {
         SourceDocument doc = aState.getDocument();
         String curatorName = getCurationState(aState.getUser().getUsername(), aProjectId)
                 .getCurationName();
@@ -187,13 +188,15 @@ public class CurationServiceImpl implements CurationService
             else {
                 curator = userRegistry.get(curatorName);
             }
-            documentService.writeAnnotationCas(aTargetCas, doc, curator, true);
+            AnnotationDocument annoDoc = documentService.createOrGetAnnotationDocument(doc,
+                    curator);
+            documentService.writeAnnotationCas(aTargetCas, annoDoc, true);
             AnnotatorStateUtils.updateDocumentTimestampAfterWrite(aState,
                     casStorageService.getCasTimestamp(doc, curatorName));
         }
         catch (IOException e) {
-            log.warn(String.format("Could not write CAS for user %s and document %d",
-                    curatorName, doc.getId()));
+            log.warn(String.format("Could not write CAS for user %s and document %d", curatorName,
+                    doc.getId()));
             e.printStackTrace();
         }
     }

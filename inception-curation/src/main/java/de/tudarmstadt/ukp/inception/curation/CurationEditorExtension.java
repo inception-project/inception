@@ -58,6 +58,7 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMerge;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casmerge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
@@ -199,6 +200,10 @@ public class CurationEditorExtension
     public void render(CAS aCas, AnnotatorState aState, VDocument aVdoc, int aWindowBeginOffset,
             int aWindowEndOffset)
     {
+        if (!aState.getMode().equals(Mode.ANNOTATION)) {
+            return;
+        }
+        
         String currentUser = aState.getUser().getUsername();
         long projectId = aState.getProject().getId();
         Optional<List<User>> selectedUsers = curationService
