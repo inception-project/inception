@@ -88,6 +88,11 @@ public class OpenNlpPosRecommender
         throws RecommendationException
     {
         List<POSSample> posSamples = extractPosSamples(aCasses);
+        
+        if (posSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", posSamples.size());
+            return;
+        }
 
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
@@ -202,7 +207,7 @@ public class OpenNlpPosRecommender
         
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
 
