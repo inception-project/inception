@@ -176,8 +176,9 @@ public class PdfAnnoRendererTest
         PdfAnnoModel annoFile = PdfAnnoRenderer.render(state, vdoc,
             cas.getDocumentText(), schemaService, pdfExtractFile, 0);
 
-        assertThat(annoFile.getAnnoFileContent()).isEqualToNormalizingNewlines(
-                contentOf(new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
+        assertThat(annoFile.getAnnoFileContent())
+            .isEqualToNormalizingNewlines(contentOf(
+                    new File("src/test/resources/rendererTestAnnoFile.anno"), UTF_8));
     }
 
     /**

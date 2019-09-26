@@ -37,11 +37,3 @@ can be selected from the left pane, edited and then saved. Recommenders can be d
 *Delete*. This also removes all predictions by this recommender.
 
 image::recommender_settings.png[align="center"]
-
-= Evaluation Simulation
-
-The evaluation simulation panel provides a visualization of the performance of the selected recommender with the help of a learning curve diagram. On the bottom right of the panel, the start button performs evaluation on the selected recommender using the annotated documents in the project and plots the evaluation scores against the training data size on the graph. The evaluation might take a long time.
-
-For the evaluation, the training and test data is used from all the imported documents of the project. Moreover, the data is split into *80% training data* and *20% test data*. The training data is *incremented by 250* per evaluation.
-
-image::evaluation_simulation_panel.png[500,350,align="center"]

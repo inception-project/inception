@@ -52,7 +52,7 @@ import org.springframework.context.event.EventListener;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;

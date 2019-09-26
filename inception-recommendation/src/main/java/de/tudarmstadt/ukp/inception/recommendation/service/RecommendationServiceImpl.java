@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
@@ -26,6 +25,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -435,8 +435,7 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
         
-        dirties.add(
-                new RecommendationStateKey(aEvent.getUser(), aEvent.getDocument().getProject()));
+        dirties.add(new RecommendationStateKey(aEvent.getUser(), aEvent.getProject()));
     }
     
     /*
@@ -622,7 +621,8 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleFsAt(aCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
+        
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation

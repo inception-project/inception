@@ -77,6 +77,8 @@ include::{include-dir}annotation_create-annotations_link-features.adoc[leveloffs
 
 include::{include-dir}annotation_create-annotations_image-features.adoc[leveloffset=+3]
 
+include::{include-dir}annotation_create-annotations_concept-features.adoc[leveloffset=+3]
+
 include::{include-dir}annotation_settings.adoc[leveloffset=+2]
 
 include::{include-dir}annotation_export.adoc[leveloffset=+2]
@@ -106,6 +108,9 @@ include::{include-dir}monitoring.adoc[leveloffset=+1]
 <<<
 
 include::{include-dir}agreement.adoc[leveloffset=+1]
+
+<<<
+include::{include-dir}evaluation.adoc[leveloffset=+1]
 
 <<<
 

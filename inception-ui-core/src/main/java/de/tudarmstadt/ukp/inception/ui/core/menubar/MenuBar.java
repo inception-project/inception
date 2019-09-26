@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 import javax.servlet.http.Cookie;
 
 import org.apache.wicket.Session;
+import org.apache.wicket.markup.html.link.BookmarkablePageLink;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.http.WebRequest;
 import org.apache.wicket.request.http.WebResponse;
@@ -47,26 +48,23 @@ public class MenuBar
     {
         super(aId);
         
-        add(new LambdaStatelessLink("homeLink", () -> 
-                setResponsePage(getApplication().getHomePage())));
+        add(new BookmarkablePageLink<>("homeLink", getApplication().getHomePage()));
 
-        add(new LambdaStatelessLink("dashboardLink", () -> 
-                setResponsePage(ProjectDashboardPage.class))
+        add(new BookmarkablePageLink<>("dashboardLink", ProjectDashboardPage.class)
                 .add(visibleWhen(() -> 
                         Session.get().getMetaData(SessionMetaData.CURRENT_PROJECT) != null)));
 
-        add(new LambdaStatelessLink("projectsLink", () -> 
-                setResponsePage(ProjectsOverviewPage.class))
+        add(new BookmarkablePageLink<>("projectsLink", ProjectsOverviewPage.class)
                 .add(visibleWhen(() -> userRepository.getCurrentUser() != null)));
 
-        add(new LambdaStatelessLink("adminLink", () -> 
-                setResponsePage(AdminDashboardPage.class))
+        add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
                 .add(visibleWhen(this::adminAreaAccessRequired)));
 
-        add(new LambdaStatelessLink("hintLink", () ->
-                showHint())
-                .add(visibleWhen(this::adminAreaAccessRequired)));
-    }
+	 add(new LambdaStatelessLink("hintLink", () ->
+		        showHint())
+		        .add(visibleWhen(this::adminAreaAccessRequired)));
+	     
+}
     
     private Object showHint()
     {
