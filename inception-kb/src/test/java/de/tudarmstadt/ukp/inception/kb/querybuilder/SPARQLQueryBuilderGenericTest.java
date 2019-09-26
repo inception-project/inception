@@ -179,7 +179,7 @@ public class SPARQLQueryBuilderGenericTest
                         SPARQLQueryBuilder
                                 .forClasses(kb)
                                 .parentsOf(_child)
-                                .limit(3)
+                                .limit(5)
                                 .asHandles(conn, true)
                                 .stream()
                                 .map(KBHandle::getIdentifier)
