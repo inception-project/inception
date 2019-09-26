@@ -27,7 +27,6 @@ import de.agilecoders.wicket.webjars.request.resource.WebjarsCssResourceReferenc
 import de.agilecoders.wicket.webjars.request.resource.WebjarsJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.WebAnnoJavascriptReference;
 import de.tudarmstadt.ukp.inception.app.css.InceptionCssReference;
-import de.tudarmstadt.ukp.inception.app.css.HintJavascriptReference;
 
 public class InceptionResourcesBehavior
     extends Behavior
