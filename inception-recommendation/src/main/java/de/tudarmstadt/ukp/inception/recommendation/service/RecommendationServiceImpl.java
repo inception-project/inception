@@ -223,6 +223,15 @@ public class RecommendationServiceImpl
     }
     
     @Override
+    public boolean hasActiveRecommenders(String aUser, Project aProject)
+    {
+        RecommendationState state = getState(aUser, aProject);
+        synchronized (state) {
+            return !state.getActiveRecommenders().isEmpty();
+        }
+    }
+    
+    @Override
     public void setActiveRecommenders(User aUser, AnnotationLayer aLayer,
             List<EvaluatedRecommender> aRecommenders)
     {
@@ -498,10 +507,16 @@ public class RecommendationServiceImpl
             new RecommendationStateKey(user.getUsername(), aProject),
             _key -> new AtomicInteger(0));
 
-        // If it is time for a selection task, we just start a selection task.
-        // The selection task then will start the training once its finished,
-        // i.e. we do not start it here.
+        // If there is no active recommender at all then let's try hard to make one active by 
+        // re-setting the count and thus force-scheduling a SelectionTask
+        if (!hasActiveRecommenders(aUser, aProject)) {
+            count.set(0);
+        }
+        
         if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+            // If it is time for a selection task, we just start a selection task.
+            // The selection task then will start the training once its finished,
+            // i.e. we do not start it here.
             Task task = new SelectionTask(aProject, user, aEventName);
             schedulingService.enqueue(task);
         } else {

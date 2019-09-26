@@ -94,6 +94,9 @@ public class TrainingTask
             }
         };
         
+        boolean seenSuccessfulTraining = false;
+        boolean seenNonTrainingRecommender = false;
+        
         for (AnnotationLayer layer : annoService.listAnnotationLayer(project)) {
             if (!layer.isEnabled()) {
                 continue;
@@ -103,7 +106,7 @@ public class TrainingTask
                     .getActiveRecommenders(user, layer);
     
             if (recommenders.isEmpty()) {
-                log.debug("[{}][{}][{}]: No active recommenders, skipping training.",
+                log.trace("[{}][{}][{}]: No active recommenders, skipping training.",
                         getId(), user.getUsername(), layer.getUiName());
                 continue;
             }
@@ -116,7 +119,7 @@ public class TrainingTask
                     recommender = recommendationService.getRecommender(r.getRecommender().getId());
                 }
                 catch (NoResultException e) {
-                    log.info("[{}][{}][{}]: Recommender no longer available... skipping",
+                    log.debug("[{}][{}][{}]: Recommender no longer available... skipping",
                             getId(), user.getUsername(), r.getRecommender().getName());
                     continue;
                 }
@@ -134,7 +137,7 @@ public class TrainingTask
                             .getRecommenderFactory(recommender);
 
                     if (!factory.accepts(recommender.getLayer(), recommender.getFeature())) {
-                        log.info("[{}][{}][{}]: Recommender configured with invalid layer or feature "
+                        log.debug("[{}][{}][{}]: Recommender configured with invalid layer or feature "
                                         + "- skipping recommender",
                                 getId(), user.getUsername(), r.getRecommender().getName());
                         continue;
@@ -152,7 +155,8 @@ public class TrainingTask
                     
                     // If engine does not support training, mark engine ready and skip to prediction
                     if (capability == TRAINING_NOT_SUPPORTED) {
-                        log.info("[{}][{}][{}]: Engine does not support training",
+                        seenNonTrainingRecommender = true;
+                        log.debug("[{}][{}][{}]: Engine does not support training",
                                 getId(), user.getUsername(), recommender.getName());
                         ctx.close();
                         recommendationService.putContext(user, recommender, ctx);
@@ -170,34 +174,52 @@ public class TrainingTask
                     // If no data for training is available, but the engine requires training, 
                     // do not mark as ready
                     if (cassesForTraining.isEmpty() && capability == TRAINING_REQUIRED) {
-                        log.info("[{}][{}][{}]: There are no annotations available to train on",
+                        log.debug("[{}][{}][{}]: There are no annotations available to train on",
                                 getId(), user.getUsername(), recommender.getName());
                         continue;
                     }
                     
-                    log.info("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...",
+                    log.debug("[{}][{}][{}]: Training model on [{}] out of [{}] documents ...",
                             getId(), user.getUsername(), recommender.getName(),
                             cassesForTraining.size(), casses.get().size());
                     
                     recommendationEngine.train(ctx, cassesForTraining);
                     
-                    log.info("[{}][{}][{}]: Training complete ({} ms)", getId(),
-                            user.getUsername(), recommender.getName(),
-                            (System.currentTimeMillis() - startTime));
+                    if (recommendationEngine.isReadyForPrediction(ctx)) {
+                        log.debug(
+                                "[{}][{}][{}]: Training successful on [{}] out of [{}] documents ({} ms)",
+                                getId(), user.getUsername(), recommender.getName(),
+                                cassesForTraining.size(), casses.get().size(),
+                                (System.currentTimeMillis() - startTime));
+                        seenSuccessfulTraining = true;
+                    }
+                    else {
+                        log.debug(
+                                "[{}][{}][{}]: Training unsuccessful on [{}] out of [{}] documents ({} ms)",
+                                getId(), user.getUsername(), recommender.getName(),
+                                cassesForTraining.size(), casses.get().size(),
+                                (System.currentTimeMillis() - startTime));
+                    }
                     
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
                 }
                 catch (Throwable e) {
-                    log.info("[{}][{}][{}]: Training failed ({} ms)", getId(),
+                    log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                             user.getUsername(), recommender.getName(),
                             (System.currentTimeMillis() - startTime), e);
                 }
             }
         }
 
+        if (!seenSuccessfulTraining && !seenNonTrainingRecommender) {
+            log.debug("[{}][{}]: No recommenders trained successfully and no non-training "
+                    + "recommenders, skipping prediction.", getId(), user.getUsername());
+            return;
+        }
+        
         schedulingService.enqueue(new PredictionTask(user, getProject(),
-                        String.format("TrainingTask %s complete", getId())));
+                String.format("TrainingTask %s complete", getId())));
     }
 
     private List<TrainingDocument> readCasses(Project aProject, User aUser)
