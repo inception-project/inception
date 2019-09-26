@@ -33,6 +33,10 @@ public interface ExternalSearchService
     List<ExternalSearchResult> query(User aUser, DocumentRepository aRepository, String aQuery)
         throws IOException;
 
+    ExternalSearchResult getDocumentResult(DocumentRepository aRepository, String aCollectionId,
+            String aDocumentId)
+        throws IOException;
+
     /**
      * Obtains only the text from the document.
      */
