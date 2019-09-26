@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.codehaus.plexus.util.StringUtils.isNotBlank;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import java.io.IOException;
 import java.io.InputStream;
