@@ -60,11 +60,9 @@ public class MenuBar
         add(new BookmarkablePageLink<>("adminLink", AdminDashboardPage.class)
                 .add(visibleWhen(this::adminAreaAccessRequired)));
 
-	 add(new LambdaStatelessLink("hintLink", () ->
-		        showHint())
-		        .add(visibleWhen(this::adminAreaAccessRequired)));
-	     
-}
+        add(new LambdaStatelessLink("hintLink", () -> showHint())
+                .add(visibleWhen(this::adminAreaAccessRequired)));
+    }
     
     private Object showHint()
     {
