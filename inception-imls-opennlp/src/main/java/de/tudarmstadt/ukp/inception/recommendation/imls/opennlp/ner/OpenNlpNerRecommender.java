@@ -90,6 +90,11 @@ public class OpenNlpNerRecommender
     {
         List<NameSample> nameSamples = extractNameSamples(aCasses);
         
+        if (nameSamples.size() < 2) {
+            LOG.info("Not enough training data: [{}] items", nameSamples.size());
+            return;
+        }
+        
         // The beam size controls how many results are returned at most. But even if the user
         // requests only few results, we always use at least the default bean size recommended by
         // OpenNLP
@@ -183,7 +188,7 @@ public class OpenNlpNerRecommender
 
         if (trainingSetSize < 2 || testSetSize < 2) {
             String info = String.format(
-                    "Not enough training data: training set [%s] items, test set [%s] of total [%s]",
+                    "Not enough evaluation data: training set [%s] items, test set [%s] of total [%s]",
                     trainingSetSize, testSetSize, data.size());
             LOG.info(info);
             
@@ -288,9 +293,9 @@ public class OpenNlpNerRecommender
             Type sentenceType = getType(cas, Sentence.class);
             Type tokenType = getType(cas, Token.class);
 
-            Map<AnnotationFS, Collection<AnnotationFS>> sentences = indexCovered(
+            Map<AnnotationFS, List<AnnotationFS>> sentences = indexCovered(
                     cas, sentenceType, tokenType);
-            for (Entry<AnnotationFS, Collection<AnnotationFS>> e : sentences.entrySet()) {
+            for (Entry<AnnotationFS, List<AnnotationFS>> e : sentences.entrySet()) {
                 if (nameSamples.size() >= traits.getTrainingSetSizeLimit()) {
                     break casses;
                 }

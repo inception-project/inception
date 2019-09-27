@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.
 import static de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity.KEY_QUERY;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 
 import java.io.File;
@@ -48,13 +47,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.feature.EntityRankingFeatureGenerator;
@@ -77,9 +76,8 @@ public class ConceptLinkingServiceImpl
 
     private final KnowledgeBaseService kbService;
     private final EntityLinkingProperties properties;
+    private final RepositoryProperties repoProperties;
 
-    @Value(value = "${repository.path}/resources/stopwords-en.txt")
-    private File stopwordsFile;
     private Set<String> stopwords;
 
     private final List<EntityRankingFeatureGenerator> featureGeneratorsProxy;
@@ -88,6 +86,7 @@ public class ConceptLinkingServiceImpl
     @Autowired
     public ConceptLinkingServiceImpl(KnowledgeBaseService aKbService,
             EntityLinkingProperties aProperties,
+            RepositoryProperties aRepoProperties,
             @Lazy @Autowired(required = false) List<EntityRankingFeatureGenerator> 
                     aFeatureGenerators)
     {
@@ -97,17 +96,14 @@ public class ConceptLinkingServiceImpl
         kbService = aKbService;
         properties = aProperties;
         featureGeneratorsProxy = aFeatureGenerators;
+        repoProperties = aRepoProperties;
     }
 
     @Override
     public void afterPropertiesSet() throws Exception
     {
-        if (stopwordsFile != null) {
-            stopwords = FileUtils.loadStopwordFile(stopwordsFile);
-        }
-        else {
-            stopwords = emptySet();
-        }
+        File stopwordsFile = new File(repoProperties.getPath(), "resources/stopwords-en.txt");
+        stopwords = FileUtils.loadStopwordFile(stopwordsFile);
     }
     
     @EventListener
@@ -176,7 +172,7 @@ public class ConceptLinkingServiceImpl
                             .withIdentifier(aQuery);
                     
                     if (aConceptScope != null) {
-                        iriMatchBuilder.childrenOf(aConceptScope);
+                        iriMatchBuilder.descendantsOf(aConceptScope);
                     }
                     
                     List<KBHandle> exactMatches = iriMatchBuilder
@@ -191,6 +187,13 @@ public class ConceptLinkingServiceImpl
                 }
             }
             
+            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB);
+            
+            if (aConceptScope != null) {
+                // Scope-limiting must always happen before label matching!
+                exactBuilder.descendantsOf(aConceptScope);
+            }
+            
             // Collect exact matches - although exact matches are theoretically contained in the
             // set of containing matches, due to the ranking performed by the KB/FTS, we might
             // not actually see the exact matches within the first N results. So we query for
@@ -200,12 +203,7 @@ public class ConceptLinkingServiceImpl
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            SPARQLQueryPrimaryConditions exactBuilder = newQueryBuilder(aValueType, aKB)
-                    .withLabelMatchingExactlyAnyOf(exactLabels);
-                        
-            if (aConceptScope != null) {
-                exactBuilder.childrenOf(aConceptScope);
-            }
+            exactBuilder.withLabelMatchingExactlyAnyOf(exactLabels);
             
             List<KBHandle> exactMatches = exactBuilder
                     .retrieveLabel()
@@ -218,14 +216,16 @@ public class ConceptLinkingServiceImpl
             result.addAll(exactMatches);
 
             if (aQuery != null && aQuery.length() > threshold) {
-                // Collect matches starting with the query - this is the main driver for the
-                // auto-complete functionality
-                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB)
-                        .withLabelStartingWith(aQuery);
+                SPARQLQueryPrimaryConditions startingWithBuilder = newQueryBuilder(aValueType, aKB);
                 
                 if (aConceptScope != null) {
-                    startingWithBuilder.childrenOf(aConceptScope);
+                    // Scope-limiting must always happen before label matching!
+                    startingWithBuilder.descendantsOf(aConceptScope);
                 }
+                
+                // Collect matches starting with the query - this is the main driver for the
+                // auto-complete functionality
+                startingWithBuilder.withLabelStartingWith(aQuery);
                 
                 List<KBHandle> startingWithMatches = startingWithBuilder
                         .retrieveLabel()
@@ -240,17 +240,19 @@ public class ConceptLinkingServiceImpl
             
             
             // Collect containing matches
+            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB);
+
+            if (aConceptScope != null) {
+                // Scope-limiting must always happen before label matching!
+                containingBuilder.descendantsOf(aConceptScope);
+            }
+            
             String[] containingLabels = asList(
                     (aQuery != null && aQuery.length() > threshold) ? aQuery : null, aMention)
                     .stream()
                     .filter(Objects::nonNull)
                     .toArray(String[]::new);
-            SPARQLQueryPrimaryConditions containingBuilder = newQueryBuilder(aValueType, aKB)
-                    .withLabelContainingAnyOf(containingLabels);
-            
-            if (aConceptScope != null) {
-                containingBuilder.childrenOf(aConceptScope);
-            }
+            containingBuilder.withLabelContainingAnyOf(containingLabels);
             
             List<KBHandle> containingMatches = containingBuilder
                     .retrieveLabel()

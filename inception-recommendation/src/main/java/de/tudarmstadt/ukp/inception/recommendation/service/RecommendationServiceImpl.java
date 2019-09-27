@@ -25,7 +25,7 @@ import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectSingleAt;
+import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -219,6 +219,15 @@ public class RecommendationServiceImpl
         RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             state.setIncomingPredictions(aPredictions);
+        }
+    }
+    
+    @Override
+    public boolean hasActiveRecommenders(String aUser, Project aProject)
+    {
+        RecommendationState state = getState(aUser, aProject);
+        synchronized (state) {
+            return !state.getActiveRecommenders().isEmpty();
         }
     }
     
@@ -435,8 +444,7 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
         
-        dirties.add(
-                new RecommendationStateKey(aEvent.getUser(), aEvent.getDocument().getProject()));
+        dirties.add(new RecommendationStateKey(aEvent.getUser(), aEvent.getProject()));
     }
     
     /*
@@ -493,16 +501,27 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
+        
+        // do not trigger training during when viewing others' work
+        if (!user.equals(userRepository.getCurrentUser())) {
+            return;
+        }
 
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
             new RecommendationStateKey(user.getUsername(), aProject),
             _key -> new AtomicInteger(0));
 
-        // If it is time for a selection task, we just start a selection task.
-        // The selection task then will start the training once its finished,
-        // i.e. we do not start it here.
+        // If there is no active recommender at all then let's try hard to make one active by 
+        // re-setting the count and thus force-scheduling a SelectionTask
+        if (!hasActiveRecommenders(aUser, aProject)) {
+            count.set(0);
+        }
+        
         if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
+            // If it is time for a selection task, we just start a selection task.
+            // The selection task then will start the training once its finished,
+            // i.e. we do not start it here.
             Task task = new SelectionTask(aProject, user, aEventName);
             schedulingService.enqueue(task);
         } else {
@@ -622,7 +641,8 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectSingleAt(aCas, type, aBegin, aEnd);
+        AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
+        
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation

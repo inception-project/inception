@@ -15,9 +15,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.sidebar;
+package de.tudarmstadt.ukp.inception.recommendation.imls.dl4j.pos;
 
-public enum RecommenderEvaluationScoreMetric
+import static java.util.Collections.singleton;
+
+import java.util.Set;
+
+import org.pf4j.PluginWrapper;
+
+import de.tudarmstadt.ukp.clarin.webanno.plugin.api.Plugin;
+
+public class DL4JSequenceRecommenderPlugin
+    extends Plugin
 {
-    ACCURACY, PRECISION, F1, RECALL
+    public DL4JSequenceRecommenderPlugin(PluginWrapper aWrapper)
+    {
+        super(aWrapper);
+    }
+    
+    @Override
+    public Set<Class<?>> getSources()
+    {
+        return singleton(DL4JSequenceRecommenderFactory.class);
+    }
 }
