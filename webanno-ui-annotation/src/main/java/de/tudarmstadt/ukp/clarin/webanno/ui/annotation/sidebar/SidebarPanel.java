@@ -83,7 +83,7 @@ public class SidebarPanel
         List<SidebarTab> tabs = new ArrayList<>();
         for (AnnotationSidebarFactory factory : sidebarRegistry.getSidebarFactories()) {
             
-            if (!factory.applies((AnnotatorState) getDefaultModelObject())) {
+            if (!factory.applies(stateModel.getObject())) {
                 continue;
             }
             

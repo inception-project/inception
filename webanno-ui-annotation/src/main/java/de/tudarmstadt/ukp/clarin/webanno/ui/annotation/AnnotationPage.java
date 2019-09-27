@@ -137,7 +137,10 @@ public class AnnotationPage
     {
         super();
         LOG.debug("Setting up annotation page without parameters");
-        commonInit();
+        
+        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
         
         Map<String, StringValue> fragmentParameters = Session.get()
                 .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
@@ -149,7 +152,8 @@ public class AnnotationPage
             StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
             StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
             
-            handleParameters(null, project, document, focus, false);
+            handleParameters(project, document, focus, false);
+            commonInit(focus);
         }
     }
 
@@ -157,22 +161,31 @@ public class AnnotationPage
     {
         super(aPageParameters);
         LOG.debug("Setting up annotation page with parameters: {}", aPageParameters);
-        
-        commonInit();
 
+        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
+        // Ensure that a user is set
+        getModelObject().setUser(userRepository.getCurrentUser());
+        
         StringValue project = aPageParameters.get(PAGE_PARAM_PROJECT_ID);
         StringValue document = aPageParameters.get(PAGE_PARAM_DOCUMENT_ID);
         StringValue focus = aPageParameters.get(PAGE_PARAM_FOCUS);
         
-        handleParameters(null, project, document, focus, true);
+        handleParameters(project, document, focus, true);
+        commonInit(focus);
+    }
+
+    protected void commonInit(StringValue focus)
+    {
+        createChildComponents();
+        SourceDocument doc = getModelObject().getDocument();
+        
+        if (doc != null) {
+            updateDocumentView(null, doc, focus);
+        }
     }
     
-    private void commonInit()
+    private void createChildComponents()
     {
-        setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
-        // Ensure that a user is set
-        getModelObject().setUser(userRepository.getCurrentUser());
-
         add(createUrlFragmentBehavior());      
         
         centerArea = new WebMarkupContainer("centerArea");
@@ -522,7 +535,12 @@ public class AnnotationPage
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
 
-                handleParameters(aTarget, project, document, focus, false);
+                handleParameters(project, document, focus, false);
+                SourceDocument doc = getModelObject().getDocument();
+                User user = getModelObject().getUser();
+                if (doc != null) {
+                    updateDocumentView(aTarget, doc, focus);
+                }
             }
         };
     }
@@ -555,7 +573,7 @@ public class AnnotationPage
         }
     }
 
-    private void handleParameters(AjaxRequestTarget aTarget, StringValue aProjectParameter,
+    private void handleParameters(StringValue aProjectParameter,
             StringValue aDocumentParameter, StringValue aFocusParameter, boolean aLockIfPreset)
     {
         // Get current project from parameters
@@ -579,20 +597,15 @@ public class AnnotationPage
                         + project.getId() + "]");
             }
         }
-        
-        // Get current focus unit from parameters
-        int focus = 0;
-        if (aFocusParameter != null) {
-            focus = aFocusParameter.toInt(0);
-        }        
-        
+                
         // If there is no change in the current document, then there is nothing to do. Mind
         // that document IDs are globally unique and a change in project does not happen unless
         // there is also a document change.
         if (
                 document != null &&
                 document.equals(getModelObject().getDocument()) && 
-                focus == getModelObject().getFocusUnitIndex()
+                aFocusParameter != null &&
+                aFocusParameter.toInt(0) == getModelObject().getFocusUnitIndex()
         ) {
             return;
         }
@@ -630,23 +643,36 @@ public class AnnotationPage
             }
         }
         
-        if (document != null) {
-            // If we arrive here and the document is not null, then we have a change of document
-            // or a change of focus (or both)
-            if (!document.equals(getModelObject().getDocument())) {
-                getModelObject().setDocument(document, getListOfDocs());
-                actionLoadDocument(aTarget, focus);
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        if (document != null && !document.equals(getModelObject().getDocument())) {
+            getModelObject().setDocument(document, getListOfDocs());
+        }
+    }
+
+    protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument document,
+            StringValue aFocusParameter)
+    {
+        // Get current focus unit from parameters
+        int focus = 0;
+        if (aFocusParameter != null) {
+            focus = aFocusParameter.toInt(0);
+        }
+
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        if (!document.equals(getModelObject().getDocument())) {
+            actionLoadDocument(aTarget, focus);
+        }
+        else {
+            try {
+                getModelObject().moveToUnit(getEditorCas(), focus, TOP);
+                actionRefreshDocument(aTarget);
             }
-            else {
-                try {
-                    getModelObject().moveToUnit(getEditorCas(), focus, TOP);
-                    actionRefreshDocument(aTarget);
-                }
-                catch (Exception e) {
-                    aTarget.addChildren(getPage(), IFeedback.class);
-                    LOG.info("Error reading CAS " + e.getMessage());
-                    error("Error reading CAS " + e.getMessage());
-                }
+            catch (Exception e) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+                LOG.info("Error reading CAS " + e.getMessage());
+                error("Error reading CAS " + e.getMessage());
             }
         }
     }
@@ -664,6 +690,4 @@ public class AnnotationPage
             super.loadPreferences();
         }
     }
-    
-    
 }
