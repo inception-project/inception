@@ -23,6 +23,7 @@ import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
@@ -46,7 +47,9 @@ public class NumberFeatureEditor<T extends Number>
         
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
-            field = new NumberTextField<>("value", Integer.class);
+            Options options = new Options();
+            options.set("format", "n0");
+            field = new NumberTextField<>("value", Integer.class, options);
             if (aTraits.isLimited()) {
                 field.setMinimum(aTraits.getMinimum());
                 field.setMaximum(aTraits.getMaximum());

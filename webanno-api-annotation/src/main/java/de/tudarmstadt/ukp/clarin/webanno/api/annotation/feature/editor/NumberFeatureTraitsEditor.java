@@ -32,6 +32,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
@@ -83,10 +84,12 @@ public class NumberFeatureTraitsEditor
         add(form);
     
         Class clazz = Integer.class;
+        Options options = new Options();
         
         switch (feature.getObject().getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             clazz = Integer.class;
+            options.set("format", "n0");
             break;
         }
         case CAS.TYPE_NAME_FLOAT: {
@@ -95,11 +98,11 @@ public class NumberFeatureTraitsEditor
         }
         }
     
-        NumberTextField minimum = new NumberTextField<>("minimum", clazz);
+        NumberTextField minimum = new NumberTextField<>("minimum", clazz, options);
         minimum.setModel(PropertyModel.of(traits, "minimum"));
         form.add(minimum);
     
-        NumberTextField maximum = new NumberTextField<>("maximum", clazz);
+        NumberTextField maximum = new NumberTextField<>("maximum", clazz, options);
         maximum.setModel(PropertyModel.of(traits, "maximum"));
         form.add(maximum);
     
