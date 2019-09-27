@@ -205,7 +205,7 @@ public class Predictions
      * @param aBegin the offset character begin
      * @param aEnd the offset character end
      * @param aFeature the given annotation feature name
-     * @return
+     * @return the annotation suggestions
      */
     public List<AnnotationSuggestion> getPredictionsByTokenAndFeature(String aDocumentName,
         AnnotationLayer aLayer, int aBegin, int aEnd, String aFeature)
@@ -218,6 +218,13 @@ public class Predictions
             .filter(f -> f.getValue().getFeature().equals(aFeature))
             .map(Map.Entry::getValue)
             .collect(Collectors.toList());
+    }
 
+    public List<AnnotationSuggestion> getPredictionsByRecommender(Recommender aRecommender)
+    {
+        return predictions.entrySet().stream()
+                .filter(f -> f.getKey().getRecommenderId() == (long) aRecommender.getId())
+                .map(Map.Entry::getValue)
+                .collect(Collectors.toList());
     }
 }

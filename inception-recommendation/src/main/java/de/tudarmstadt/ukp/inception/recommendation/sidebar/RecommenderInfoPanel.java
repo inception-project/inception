@@ -95,7 +95,10 @@ public class RecommenderInfoPanel
                         actionAcceptAll(_target, recommender)));
                 
                 WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
-                resultsContainer.setVisible(evalResult.isPresent());
+                // Show results only if the evaluation was not skipped (and of course only if the
+                // result is actually present).
+                resultsContainer.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
+                        .orElse(evalResult.isPresent()));
                 resultsContainer.add(new Label("f1Score",
                         evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
                 resultsContainer.add(new Label("accuracy",

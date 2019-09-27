@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
+import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -40,7 +41,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -492,7 +492,7 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void onDocumentCreated(BeforeDocumentRemovedEvent aEvent)
+    public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
     {
         clearState(aEvent.getDocument().getProject());
     }
@@ -933,21 +933,44 @@ public class RecommendationServiceImpl
                         
                         cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
-                        // Perform the actual prediction
-                        recommendationEngine.predict(ctx, predictionCas);
-
-                        // Extract the suggestions from the data which the recommender has written 
-                        // into the CAS
-                        List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,
-                                predictionCas,
-                                document, recommender);
+                        List<AnnotationSuggestion> suggestions;
                         
-                        // Calculate the visibility of the suggestions. This happens via the 
-                        // original CAS which contains only the manually created annotations and 
-                        // *not* the suggestions.
-                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
-                        calculateVisibility(originalCas.get(), username, layer,
-                                groups, 0, originalCas.get().getDocumentText().length());
+                        // If the recommender is not trainable and not sensitive to annotations, 
+                        // we can actually re-use the predictions.
+                        Predictions activePredictions = getPredictions(aUser, aProject);
+                        if (TRAINING_NOT_SUPPORTED
+                                .equals(recommendationEngine.getTrainingCapability())
+                                && activePredictions != null) {
+                            
+                            // We do not need to perform another initial visibility calculation.
+                            // The updates to visibility done as part of the annotation process
+                            // should be enough here.
+                            suggestions = activePredictions
+                                    .getPredictionsByRecommender(recommender);
+                            
+                            log.debug("[{}]({}) for user [{}] on document "
+                                    + "[{}]({}) in project [{}]({}) inherited {} predictions.",
+                                    recommender.getName(), recommender.getId(), aUser.getUsername(),
+                                    document.getName(), document.getId(),
+                                    recommender.getProject().getName(),
+                                    recommender.getProject().getId(), suggestions.size());
+                        }
+                        else {
+                            // Perform the actual prediction
+                            recommendationEngine.predict(ctx, predictionCas);
+
+                            // Extract the suggestions from the data which the recommender has 
+                            // written into the CAS
+                            suggestions = extractSuggestions(aUser, predictionCas, document,
+                                    recommender);
+                            
+                            // Calculate the visibility of the suggestions. This happens via the 
+                            // original CAS which contains only the manually created annotations  
+                            // and *not* the suggestions.
+                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                            calculateVisibility(originalCas.get(), username, layer,
+                                    groups, 0, originalCas.get().getDocumentText().length());
+                        }
 
                         predictions.putPredictions(layer.getId(), suggestions);
                     }
