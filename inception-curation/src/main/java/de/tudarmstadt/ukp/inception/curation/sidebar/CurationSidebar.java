@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.markup.html.form.AjaxButton;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -234,6 +235,11 @@ public class CurationSidebar
                 currentUsername, projectId, users);
         // update selected merge strategy
         MergeStrategy mergeStrat = ((MergeStrategy) mergeChoice.getDefaultModelObject());
+        if (mergeStrat == null) {
+            aTarget.addChildren(getPage(), IFeedback.class);
+            error("Please choose a strategy for merging.");
+            return;
+        }
         curationService.updateMergeStrategy(currentUsername, projectId, mergeStrat);
         // merge cases
         try {
@@ -251,6 +257,8 @@ public class CurationSidebar
                         curator.getUsername(), state.getProject().getId()));
             e.printStackTrace();
         }
+        
+        aTarget.add(mainContainer);
         //open curation doc
         annoPage.actionLoadDocument(aTarget);
     }

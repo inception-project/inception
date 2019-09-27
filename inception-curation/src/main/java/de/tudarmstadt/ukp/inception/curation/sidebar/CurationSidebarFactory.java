@@ -27,8 +27,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -67,10 +65,6 @@ public class CurationSidebarFactory
     @Override
     public boolean applies(AnnotatorState aState)
     {
-        // FIXME at this point project is null, because it is set in annopage.handleparams 
-        // which is executed after commoninit which creates the sidebar panel
-        Project project = aState.getProject();
-        User user = aState.getUser();
         boolean isCurator = projectService.isCurator(aState.getProject(), aState.getUser()); 
         return isCurator;
     }
