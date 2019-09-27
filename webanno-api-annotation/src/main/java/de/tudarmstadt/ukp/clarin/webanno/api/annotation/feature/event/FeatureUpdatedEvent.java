@@ -1,6 +1,6 @@
 /*
  * Copyright 2019
- * Ubiquitous Knowledge Processing (UKP) Lab
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
  * Technische Universität Darmstadt
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,22 +20,13 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
-public abstract class LinkFeatureEvent
+public class FeatureUpdatedEvent
     extends FeatureEvent
 {
-    private final LinkWithRoleModel linkWithRoleModel;
     
-    public LinkFeatureEvent(FeatureState aFs, AjaxRequestTarget aTarget,
-            LinkWithRoleModel aLinkWithRoleModel)
+    public FeatureUpdatedEvent(FeatureState aFs, AjaxRequestTarget aTarget)
     {
         super(aFs, aTarget);
-        linkWithRoleModel = aLinkWithRoleModel;
-    }
-    
-    public LinkWithRoleModel getLinkWithRoleModel()
-    {
-        return linkWithRoleModel;
     }
 }

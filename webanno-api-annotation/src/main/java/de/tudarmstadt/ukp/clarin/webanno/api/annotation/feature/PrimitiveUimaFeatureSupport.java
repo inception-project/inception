@@ -23,6 +23,8 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -47,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComb
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraitsEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.RatingFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -215,7 +218,17 @@ public class PrimitiveUimaFeatureSupport
             switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
                 NumberFeatureTraits traits = readNumberFeatureTraits(feature);
-                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
+                int min = (int) traits.getMinimum();
+                int max = (int) traits.getMaximum();
+                // difference must be at max 11 because we want to allow like 0-10
+                if (traits.isLimited() && max - min <= 11) {
+                    List<Integer> range =
+                        IntStream.range(min, max + 1).boxed().collect(Collectors.toList());
+                    editor =
+                        new RatingFeatureEditor(aId, aOwner, aFeatureStateModel, range);
+                } else {
+                    editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
+                }
                 break;
             }
             case CAS.TYPE_NAME_FLOAT: {
