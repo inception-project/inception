@@ -94,7 +94,7 @@ public class CurationSidebar
     
     private AnnotationPage annoPage;
     
-    // TODO: only show to people who are curators
+    
     public CurationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
             AnnotationPage aAnnotationPage)
