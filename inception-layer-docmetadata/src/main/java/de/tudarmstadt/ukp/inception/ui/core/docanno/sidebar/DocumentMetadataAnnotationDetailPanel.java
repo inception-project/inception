@@ -59,7 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -435,7 +435,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     }
     
     @OnEvent(stop = true)
-    public void onFeatureUpdatedEvent(FeatureUpdatedEvent aEvent)
+    public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent)
     {
         actionAnnotate(aEvent.getTarget());
     }
