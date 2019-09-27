@@ -15,20 +15,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.recommendation.project;
+package de.tudarmstadt.ukp.inception.recommendation.evaluation;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.MarkupContainer;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.ajax.form.AjaxFormComponentUpdatingBehavior;
+import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
+import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +56,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
+import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
 
-public class EvaluationSimulationPanel
+public class SimulationLearningCurvePanel
     extends Panel
 {
     private static final long serialVersionUID = 4306746527837380863L;
@@ -57,12 +66,16 @@ public class EvaluationSimulationPanel
     private static final String MID_CHART_CONTAINER = "chart-container";
     private static final String MID_SIMULATION_START_BUTTON = "simulation-start-button";
     private static final String MID_FORM = "form";
+    private static final String OUTPUT_MID_CHART_CONTAINER = "html-chart-container";
     
     private static final double TRAIN_PERCENTAGE = 0.8;
     private static final int INCREMENT = 250;
     private static final int LOW_SAMPLE_THRESHOLD = 10;
 
-    private static final Logger LOG = LoggerFactory.getLogger(EvaluationSimulationPanel.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimulationLearningCurvePanel.class);
+    
+    private static final List<RecommenderEvaluationScoreMetricEnum> DROPDOWN_VALUES = Arrays
+            .asList(RecommenderEvaluationScoreMetricEnum.values());
     
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userDao;
@@ -72,18 +85,51 @@ public class EvaluationSimulationPanel
     private final Project project;
     private final IModel<Recommender> selectedRecommenderPanel;
 
-    public EvaluationSimulationPanel(String aId, Project aProject,
+    private ChartPanel chartPanel ;
+    private RecommenderEvaluationScoreMetricEnum selectedValue;
+    List<EvaluationResult> evaluationResults;
+    private boolean evaluate;
+
+    public SimulationLearningCurvePanel(String aId, Project aProject,
             IModel<Recommender> aSelectedRecommenderPanel)
     {
         super(aId);
         project = aProject;
         selectedRecommenderPanel = aSelectedRecommenderPanel;
-                
+        evaluate = true;
+
         Form<Recommender> form = new Form<>(MID_FORM);
         add(form);
         
+        final DropDownChoice<RecommenderEvaluationScoreMetricEnum> dropdown = 
+                new DropDownChoice<RecommenderEvaluationScoreMetricEnum>(
+                "select", new Model<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES.get(0)),
+                new ListModel<RecommenderEvaluationScoreMetricEnum>(DROPDOWN_VALUES));
+        dropdown.setRequired(true);
+        dropdown.setOutputMarkupId(true);
+        selectedValue = RecommenderEvaluationScoreMetricEnum.Accuracy;
+
+        dropdown.add(new AjaxFormComponentUpdatingBehavior("change")
+        {
+            private static final long serialVersionUID = -6744838136235652577L;
+
+            protected void onUpdate(AjaxRequestTarget _target)
+            {
+                selectedValue = dropdown.getModelObject();
+
+                if (chartPanel == null) {
+                    return;
+                }
+                
+                startEvaluation(_target, form);
+            }
+        });
+
+        form.add(dropdown);
+        
         emptyPanel  = new EmptyPanel(MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupPlaceholderTag(true);
+        emptyPanel.setMarkupId(OUTPUT_MID_CHART_CONTAINER);
         emptyPanel.setOutputMarkupId(true);
         form.add(emptyPanel);
         
@@ -92,24 +138,30 @@ public class EvaluationSimulationPanel
         @SuppressWarnings({ "unchecked", "rawtypes" })
         LambdaAjaxButton startButton = new LambdaAjaxButton(MID_SIMULATION_START_BUTTON,
             (_target, _form) -> {
-                // replace the empty panel with chart panel on click event so the chard renders
-                // with the loadable detachable model.
-                ChartPanel chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
-                        LoadableDetachableModel.of(this::renderChart));
-                chartPanel.setOutputMarkupPlaceholderTag(true);
-                chartPanel.setOutputMarkupId(true);
-                
-                form.addOrReplace(chartPanel);
-                _target.add(chartPanel);                
+                startEvaluation(_target, _form );
             });
         
         form.add(startButton);
+    }
+
+    private void startEvaluation(IPartialPageRequestHandler aTarget, MarkupContainer aForm )
+    {
+        // replace the empty panel with chart panel on click event so the chard renders
+        // with the loadable detachable model.
+        chartPanel = new ChartPanel(MID_CHART_CONTAINER, 
+                LoadableDetachableModel.of(this::renderChart));
+        chartPanel.setOutputMarkupPlaceholderTag(true);
+        chartPanel.setOutputMarkupId(true);
+        
+        aForm.addOrReplace(chartPanel);
+        aTarget.add(chartPanel);
     }
     
     private LearningCurve renderChart()
     {
         String[] scoresAndTrainingSizes = evaluate();
 
+        
         if (scoresAndTrainingSizes == null) {
             // no warning message here because it has already been shown in the method
             // evaluate(_target). There are different scenarios when the score is returned
@@ -131,6 +183,8 @@ public class EvaluationSimulationPanel
         LearningCurve learningCurve = new LearningCurve();
         learningCurve.setCurveData(curveData);
         learningCurve.setXaxis(trainingSizes);
+        
+        evaluate = false;
 
         return learningCurve;
     }
@@ -181,16 +235,17 @@ public class EvaluationSimulationPanel
             return null;
         }
         
-        StringBuilder sbScore = new StringBuilder();
-        StringBuilder sbTrainingSize = new StringBuilder();
+        if (!evaluate) {
+            return getEvaluationScore(evaluationResults);
+        }
 
+        evaluationResults = new ArrayList<EvaluationResult>();
+        
         // create a list of comma separated string of scores from every iteration of
         // evaluation.
         while (splitStrategy.hasNext()) {
             splitStrategy.next();
 
-            double trainingSize;
-            double score;
             try {
                 EvaluationResult evaluationResult = recommender.evaluate(casList, splitStrategy);
                 
@@ -199,18 +254,63 @@ public class EvaluationSimulationPanel
                     continue;
                 }
 
-                score = evaluationResult.computeF1Score();
-                trainingSize = evaluationResult.getTrainDataRatio();
+                evaluationResults.add(evaluationResult);
             }
             catch (RecommendationException e) {
                 LOG.error(e.toString(),e);
                 continue;
             }
+        }
+
+        return getEvaluationScore(evaluationResults);
+    }
+
+    private String[] getEvaluationScore(List<EvaluationResult> aEvaluationResults)
+    {
+        StringBuilder sbScore = new StringBuilder();
+        StringBuilder sbTrainingSize = new StringBuilder();
+
+        // create a list of comma separated string of scores from every iteration of
+        // evaluation.
+        for (EvaluationResult evaluationResult : aEvaluationResults) {
+
+            double trainingSize;
+            double score;
+
+            if (evaluationResult.isEvaluationSkipped()) {
+                LOG.warn("Evaluation skipped. Chart cannot to be shown");
+                continue;
+            }
+
+            switch (selectedValue) {
+            case Accuracy:
+                score = evaluationResult.computeAccuracyScore();
+                break;
+            case Precision:
+                score = evaluationResult.computePrecisionScore();
+                break;
+            case Recall:
+                score = evaluationResult.computeRecallScore();
+                break;
+            case F1:
+                score = evaluationResult.computeF1Score();
+                break;
+            default:
+                score = evaluationResult.computeAccuracyScore();
+            }
+
+            trainingSize = evaluationResult.getTrainDataRatio();
 
             sbScore.append(score).append(",");
             sbTrainingSize.append(trainingSize).append(",");
         }
 
-        return new String[] {sbScore.toString(), sbTrainingSize.toString() };
+        return new String[] { sbScore.toString(), sbTrainingSize.toString() };
+    }
+
+    public void recommenderChanged()
+    {
+        evaluate = true;
+        
     }
 }

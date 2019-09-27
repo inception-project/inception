@@ -37,7 +37,11 @@ public interface ExternalSearchProvider<T extends Object>
             String aDocumentId)
         throws IOException;
 
-    String getDocumentFormat(DocumentRepository aRepository, Object aTraits, String aCollectionId,
+    String getDocumentFormat(DocumentRepository aRepository, T aTraits, String aCollectionId,
             String aDocumentId)
+        throws IOException;
+
+    ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
+            T aTraits, String aCollectionId, String aDocumentId)
         throws IOException;
 }
