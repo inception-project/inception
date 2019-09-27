@@ -82,6 +82,11 @@ public class SidebarPanel
     {
         List<SidebarTab> tabs = new ArrayList<>();
         for (AnnotationSidebarFactory factory : sidebarRegistry.getSidebarFactories()) {
+            
+            if (!factory.applies((AnnotatorState) getDefaultModelObject())) {
+                continue;
+            }
+            
             String factoryId = factory.getBeanName();
             SidebarTab tab = new SidebarTab(Model.of(factory.getDisplayName()), factory.getIcon())
             {
