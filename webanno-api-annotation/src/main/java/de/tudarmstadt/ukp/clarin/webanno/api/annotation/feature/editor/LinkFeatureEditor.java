@@ -62,7 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationDeletedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -509,7 +509,7 @@ public class LinkFeatureEditor
         // a reload of the feature editors from the CAS which makes the unfilled slots disappear
         // and leaves behind an armed slot pointing to a removed slot.
         if (m.targetAddr != -1) {
-            send(this, Broadcast.BUBBLE, new FeatureUpdatedEvent(fs, aTarget));
+            send(this, Broadcast.BUBBLE, new FeatureEditorValueChangedEvent(fs, aTarget));
         }
     }
 

@@ -21,13 +21,13 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
-public abstract class FeatureEvent
+public abstract class FeatureEditorEvent
 {
     private final FeatureState fs;
     
     private final AjaxRequestTarget target;
     
-    public FeatureEvent(FeatureState aFs, AjaxRequestTarget aTarget)
+    public FeatureEditorEvent(FeatureState aFs, AjaxRequestTarget aTarget)
     {
         fs = aFs;
         target = aTarget;

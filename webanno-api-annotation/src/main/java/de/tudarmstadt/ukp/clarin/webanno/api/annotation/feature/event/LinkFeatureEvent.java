@@ -23,7 +23,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
 public abstract class LinkFeatureEvent
-    extends FeatureEvent
+    extends FeatureEditorEvent
 {
     private final LinkWithRoleModel linkWithRoleModel;
     

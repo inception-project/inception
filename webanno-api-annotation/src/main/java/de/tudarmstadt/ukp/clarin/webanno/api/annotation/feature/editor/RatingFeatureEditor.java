@@ -32,7 +32,7 @@ import org.apache.wicket.model.PropertyModel;
 
 import com.googlecode.wicket.kendo.ui.form.Radio;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureUpdatedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 
 public class RatingFeatureEditor
@@ -89,7 +89,7 @@ public class RatingFeatureEditor
     
     private void update(AjaxRequestTarget aTarget) {
         send(this, Broadcast.BUBBLE,
-                new FeatureUpdatedEvent(model.getObject(), aTarget));
+                new FeatureEditorValueChangedEvent(model.getObject(), aTarget));
     }
     
 }
