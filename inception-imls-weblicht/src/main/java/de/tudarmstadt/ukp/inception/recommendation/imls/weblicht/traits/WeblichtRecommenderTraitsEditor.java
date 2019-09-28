@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.PLAIN_TEXT;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.TCF;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -30,6 +32,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.DropDownChoice;
+import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
@@ -43,9 +47,14 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
+
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.DateTextField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInput;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
+import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommenderFactory;
@@ -74,6 +83,8 @@ public class WeblichtRecommenderTraitsEditor
     private final TextField<String> urlField;
     private final TextField<String> apiKeyField;
     private final DateTextField lastKeyUpdateField;
+    private final DropDownChoice<WeblichtFormat> formatField;
+    private final ComboBox<String> languageField;
     private final WebMarkupContainer saveToAddChainAlert;
     private final WebMarkupContainer missingChainAlert;
     private final Label chainField;
@@ -165,6 +176,26 @@ public class WeblichtRecommenderTraitsEditor
         missingChainAlert.setOutputMarkupPlaceholderTag(true);
         missingChainAlert.add(visibleWhen(this::isChainMissing));
         add(missingChainAlert);
+        
+        languageField = new ComboBox<>("chainInputLanguage", asList("unknown", "de", "en"));
+        languageField
+                .add(LambdaBehavior.visibleWhen(() -> TCF.equals(traits.getChainInputFormat())));
+        languageField.setOutputMarkupPlaceholderTag(true);
+        languageField.setRequired(true);
+        form.add(languageField);
+        if (languageField.getModelObject() == null) {
+            languageField.setModelObject("unknown");
+        }
+        
+        formatField = new BootstrapSelect<WeblichtFormat>("chainInputFormat",
+                asList(WeblichtFormat.values()), new EnumChoiceRenderer<>(this));
+        formatField.setRequired(true);
+        formatField.add(new LambdaAjaxFormComponentUpdatingBehavior("change",_target -> 
+                _target.add(languageField)));
+        form.add(formatField);
+        if (formatField.getModelObject() == null) {
+            formatField.setModelObject(PLAIN_TEXT);
+        }
     }
 
     public Recommender getModelObject()

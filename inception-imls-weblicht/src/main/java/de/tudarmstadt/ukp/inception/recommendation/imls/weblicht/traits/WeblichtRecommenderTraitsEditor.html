@@ -1,5 +1,5 @@
 <!--
-#Copyright 2018
+#Copyright 2019
 #Ubiquitous Knowledge Processing (UKP) Lab
 #Technische Universität Darmstadt
 #
@@ -53,6 +53,22 @@
           Obtain an API key <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey">here</a>.
           A key is valid for three months. If the recommender does not work anymore, your key might have expired.
         </div>
+        <div class="form-group" wicket:enclosure="chainInputFormat">
+          <label class="control-label col-sm-3">
+            <wicket:message key="chainInputFormat"/>
+          </label>
+          <div class="col-sm-9">
+            <select wicket:id="chainInputFormat" data-size="5"></select>
+          </div>
+        </div>
+        <div class="form-group"  wicket:enclosure="chainInputLanguage">
+          <label class="control-label col-sm-3">
+            <wicket:message key="chainInputLanguage"/>
+          </label>
+          <div class="col-sm-9">
+            <input type="text" wicket:id="chainInputLanguage" class="form-control"/>
+          </div>
+        </div>
       </div>
     </div>
   </form>
@@ -64,30 +80,32 @@
     </div>
   </div>
   <div class="form-horizontal">
-    <div class="col-sm-12">
-      <div class="form-group" wicket:enclosure="upload">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="uploadChain"/>
-        </label>
-        <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="flex-h-container">
-            <input type="file" wicket:id="upload"/>
+    <div class="form-group">
+      <div class="col-sm-12">
+        <div class="form-group" wicket:enclosure="upload">
+          <label class="col-sm-3 control-label">
+            <wicket:message key="uploadChain"/>
+          </label>
+          <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container">
+              <input type="file" wicket:id="upload"/>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="form-group" wicket:enclosure="chain">
-        <label class="col-sm-3 control-label">
-          <wicket:message key="chain"/>
-        </label>
-        <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
-          <div class="flex-h-container">
-            <span class="form-control" wicket:id="chain"/>
+        <div class="form-group" wicket:enclosure="chain">
+          <label class="col-sm-3 control-label">
+            <wicket:message key="chain"/>
+          </label>
+          <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container">
+              <span class="form-control" wicket:id="chain"/>
+            </div>
           </div>
         </div>
-      </div>
-      <div wicket:id="missingChainAlert" class="form-group">
-        <div class="col-sm-offset-3 col-sm-9 alert alert-danger" role="alert">
-          Please upload a chain definition to enable the recommender.
+        <div wicket:id="missingChainAlert" class="form-group">
+          <div class="col-sm-offset-3 col-sm-9 alert alert-danger" role="alert">
+            Please upload a chain definition to enable the recommender.
+          </div>
         </div>
       </div>
     </div>

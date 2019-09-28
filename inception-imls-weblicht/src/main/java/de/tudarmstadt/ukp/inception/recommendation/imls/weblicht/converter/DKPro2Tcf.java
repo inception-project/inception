@@ -215,7 +215,7 @@ public class DKPro2Tcf
 
     }
     
-    private void writeSentence(JCas aJCas, TextCorpus aTextCorpus,
+    public void writeSentence(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         // if not TCF file, add sentence layer (Sentence is required for BRAT)

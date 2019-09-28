@@ -24,6 +24,9 @@ import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
+import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
+import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
@@ -74,9 +77,30 @@ public class WeblichtRecommenderFactoryImpl
     @Override
     public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
     {
-        return true;
-    }
+        if (Lemma.class.getName().equals(aLayer.getName())) {
+            if ("value".equals(aFeature.getName())) {
+                return true;
+            }
+        }
 
+        if (POS.class.getName().equals(aLayer.getName())) {
+            if ("PosValue".equals(aFeature.getName())) {
+                return true;
+            }
+            if ("coarseValue".equals(aFeature.getName())) {
+                return true;
+            }
+        }
+
+        if (NamedEntity.class.getName().equals(aLayer.getName())) {
+            if ("value".equals(aFeature.getName())) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     @Override
     public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {

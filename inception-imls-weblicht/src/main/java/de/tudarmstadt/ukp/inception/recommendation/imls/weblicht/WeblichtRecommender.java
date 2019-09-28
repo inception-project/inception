@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -106,37 +107,56 @@ public class WeblichtRecommender
             String documentText = aCas.getDocumentText();
             String documentLanguage = aCas.getDocumentLanguage();
             
-            // create TextCorpus object, specifying its language from the aJcas Object
-            TextCorpusStored textCorpus = new TextCorpusStored(aCas.getDocumentLanguage());
-
-            // create text annotation layer and add the string of the text into the layer
-            textCorpus.createTextLayer().addText(aCas.getDocumentText());
-
-            // Actually, we send only the text. The reason for this is that the WebLicht pipeline
-            // builder does not allow us to start with higher-level processing steps - we basically
-            // have to start out with a plain text... 
-            //new DKPro2Tcf().convert(aCas.getJCas(), textCorpus);
-            new DKPro2Tcf().writeTokens(aCas.getJCas(), textCorpus);
-
-            // write the annotated data object into the output stream
-            byte[] bodyData;
-            try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                WLData wldata = new WLData(textCorpus);
-                WLDObjector.write(wldata, os);
-                bodyData = os.toByteArray();
-            }
+            HttpUrl url = HttpUrl.parse(traits.getUrl()).newBuilder().build();
             
-            HttpUrl url = HttpUrl.parse(traits.getUrl())
-                    .newBuilder()
-                    .build();
-            RequestBody body = new MultipartBody.Builder()
+            MultipartBody.Builder builder = new MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart("apikey", traits.getApiKey())
                     .addFormDataPart("chains", "chains.xml",
-                            RequestBody.create(XML, getChainFile()))
-                    .addFormDataPart("content", "content.tcf", 
-                            RequestBody.create(TEXT, aCas.getDocumentText()))
-                    .build();
+                            RequestBody.create(XML, getChainFile()));
+            
+            TextCorpusStored textCorpus;
+            switch (traits.getChainInputFormat()) {
+            case PLAIN_TEXT: {
+                // Create TextCorpus object, specifying the language set in the recommender,
+                // although it doesn't really matter here because we only send plain text to 
+                // WebLicht, so it won't ever see the language.
+                textCorpus = new TextCorpusStored(traits.getChainInputLanguage());
+                // Create text annotation layer and add the string of the text into the layer
+                textCorpus.createTextLayer().addText(aCas.getDocumentText());
+                builder.addFormDataPart("content", "content.txt", 
+                        RequestBody.create(TEXT, aCas.getDocumentText()));
+                // Copy the tokens because we will clear the CAS later but then we want to restore
+                // the original tokens...
+                new DKPro2Tcf().writeTokens(aCas.getJCas(), textCorpus);
+                break;
+            }
+            case TCF:
+                // Create TextCorpus object, specifying the language set in the recommender
+                textCorpus = new TextCorpusStored(traits.getChainInputLanguage());
+                // Create text annotation layer and add the string of the text into the layer
+                textCorpus.createTextLayer().addText(aCas.getDocumentText());
+                // Convert tokens and sentences and leave the rest to the chain
+                DKPro2Tcf dkpro2tcf = new DKPro2Tcf();
+                Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap;
+                tokensBeginPositionMap = dkpro2tcf.writeTokens(aCas.getJCas(), textCorpus);
+                dkpro2tcf.writeSentence(aCas.getJCas(), textCorpus, tokensBeginPositionMap);
+                // write the annotated data object into the output stream
+                byte[] bodyData;
+                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+                    WLData wldata = new WLData(textCorpus);
+                    WLDObjector.write(wldata, os);
+                    bodyData = os.toByteArray();
+                }
+                builder.addFormDataPart("content", "content.tcf",
+                        RequestBody.create(TCF, bodyData));
+                break;
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown format [" + traits.getChainInputFormat() + "]");
+            }
+                    
+            RequestBody body = builder.build();
                     
             Request request = new Request.Builder()
                     .url(url)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2018
+ * Copyright 2019
  * Ubiquitous Knowledge Processing (UKP) Lab
  * Technische Universität Darmstadt
  *
@@ -30,6 +30,10 @@ public class WeblichtRecommenderTraits
     private String apiKey;
     
     private Date lastKeyUpdate;
+    
+    private WeblichtFormat chainInputFormat;
+
+    private String chainInputLanguage;
 
     public String getUrl()
     {
@@ -59,5 +63,25 @@ public class WeblichtRecommenderTraits
     public void setLastKeyUpdate(Date aLastKeyUpdate)
     {
         lastKeyUpdate = aLastKeyUpdate;
+    }
+
+    public WeblichtFormat getChainInputFormat()
+    {
+        return chainInputFormat;
+    }
+
+    public void setChainInputFormat(WeblichtFormat aChainInputFormat)
+    {
+        chainInputFormat = aChainInputFormat;
+    }
+
+    public String getChainInputLanguage()
+    {
+        return chainInputLanguage;
+    }
+
+    public void setChainInputLanguage(String aChainInputLanguage)
+    {
+        chainInputLanguage = aChainInputLanguage;
     }
 }

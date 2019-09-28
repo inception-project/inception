@@ -92,7 +92,7 @@ public class ChainExporter
                 targetFolder.mkdirs();
                 
                 Files.copy(chainService.getChainFile(chain).toPath(),
-                        new File(targetFolder, chain.getId() + ".txt").toPath());
+                        new File(targetFolder, chain.getId() + ".xml").toPath());
             }
         }
         
@@ -120,7 +120,7 @@ public class ChainExporter
             chainService.createOrUpdateChain(chain);
             
             ZipEntry entry = aZip
-                    .getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".txt");
+                    .getEntry(CHAINS_FOLDER + "/" + exportedChain.getId() + ".xml");
             try (InputStream is = aZip.getInputStream(entry)) {
                 chainService.importChainFile(chain, is);
             }
