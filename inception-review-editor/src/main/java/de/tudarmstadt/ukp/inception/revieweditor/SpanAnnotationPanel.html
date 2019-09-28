@@ -19,8 +19,13 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
     <div wicket:id="featuresContainer">
-        <div class="row">
-            <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+        <div class="row" style="padding-bottom: 5px;">
+            <div wicket:id="features" class="col-sm-6">
+                <span wicket:id="feature"></span>
+            </div>
+        </div>
+        <div class="row" style="padding-bottom: 5px">
+            <div class="col-sm-6">
                 <div class="form-group">
                     <label class="col-sm-3 control-label">Text</label>
                     <div class="col-sm-9">
@@ -30,9 +35,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div wicket:id="features" class="row" style="padding-bottom: 5px;">
-            <div wicket:id="feature" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter"></div>
+            <div wicket:id="textFeatures" class="col-sm-6">
+                <span wicket:id="feature"></span>
+            </div>
         </div>
         <hr style="margin-top: 5px; margin-bottom: 5px;"/>
     </div>
