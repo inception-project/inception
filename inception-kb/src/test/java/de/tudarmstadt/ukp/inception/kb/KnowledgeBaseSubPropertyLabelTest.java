@@ -123,7 +123,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
         String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
         long duration = System.currentTimeMillis();
@@ -147,7 +147,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
         String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(gndAccessURL, 5000);
+        testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
         String instanceId = "http://d-nb.info/gnd/7509336-4";
