@@ -118,7 +118,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
-        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl, 5000);
+        testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
     }
