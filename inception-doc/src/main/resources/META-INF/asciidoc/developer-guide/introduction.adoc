@@ -1,0 +1,24 @@
+= Introduction
+
+This document describes how INCEpTION internally works and how it can be extended
+to fit your use case or project. It is targeted to software developers. At first,
+we will give a brief overview of the used technology in INCEpTION, then describe
+how to setup the working environment including version control, IDE and software
+requirements. Then, the architecture itself with core services and extension points
+is presented.
+
+== Core technology
+
+INCEpTION is written as a Java application and heavily relies on Spring Boot. Its
+user interface is a web application that is powered by https://wicket.apache.org[Apache Wicket].
+The Natural Language Processing components are mostly based on
+https://dkpro.github.io/dkpro-core/[DKPro Core]. This includes the
+tokenization, import and export to many different standard formats, as well as
+recommenders i.e. machine learning tools that provide annotation support. The internal
+data format heavily relies on https://uima.apache.org/[UIMA] and its
+https://uima.apache.org/d/uimaj-current/references.html#ugr.ref.cas[CAS] format.
+
+
+
+
+
