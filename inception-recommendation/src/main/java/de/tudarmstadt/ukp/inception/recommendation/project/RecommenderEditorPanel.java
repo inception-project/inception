@@ -77,7 +77,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommenderFactoryRegistry;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
 
 public class RecommenderEditorPanel
     extends Panel
@@ -488,9 +487,6 @@ public class RecommenderEditorPanel
 
     private void actionDelete(AjaxRequestTarget aTarget) {
         recommendationService.deleteRecommender(recommenderModel.getObject());
-        appEventPublisherHolder.get().publishEvent(
-            new RecommenderDeletedEvent(this, recommenderModel.getObject(),
-                userDao.getCurrentUser().getUsername(), projectModel.getObject()));
         actionCancel(aTarget);
     }
     

@@ -89,7 +89,7 @@ public class Tcf2DKPro
      * @param aCorpusData
      *            the TCF document.
      */
-    private void convertText(JCas aJCas, TextCorpus aCorpusData)
+    public void convertText(JCas aJCas, TextCorpus aCorpusData)
     {
         if (aJCas.getDocumentText() == null) {
             StringBuilder text = new StringBuilder();
@@ -116,9 +116,7 @@ public class Tcf2DKPro
             aJCas.setDocumentText(text.toString());
         }
         
-        if (aJCas.getDocumentLanguage() == null) {
-            aJCas.setDocumentLanguage(aCorpusData.getLanguage());
-        }
+        aJCas.setDocumentLanguage(aCorpusData.getLanguage());
     }
 
     /**
@@ -159,8 +157,11 @@ public class Tcf2DKPro
                 tokenEndPosition = text.indexOf(token.getString(), tokenBeginPosition)
                         + token.getString().length();
             }
-
+            
             outToken = new Token(aJCas, tokenBeginPosition, tokenEndPosition);
+            if (token.getID() != null) {
+                outToken.setId(token.getID());
+            }
             outToken.addToIndexes();
 
             tokens.put(token.getID(), outToken);
@@ -169,7 +170,7 @@ public class Tcf2DKPro
         return tokens;
     }
 
-    private void convertPos(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
+    public void convertPos(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getPosTagsLayer() == null) {
             return;
@@ -192,7 +193,7 @@ public class Tcf2DKPro
         }
     }
 
-    private void convertLemma(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
+    public void convertLemma(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getLemmasLayer() == null) {
             return;
@@ -215,7 +216,7 @@ public class Tcf2DKPro
 
     }
 
-    private void convertOrthoGraphy(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
+    public void convertOrthoGraphy(JCas aJCas, TextCorpus aCorpusData, Map<String, Token> aTokens)
     {
         if (aCorpusData.getOrthographyLayer() == null) {
             return;
@@ -259,7 +260,7 @@ public class Tcf2DKPro
         }
     }
 
-    private void convertDependencies(JCas aJCas, TextCorpus aCorpusData,
+    public void convertDependencies(JCas aJCas, TextCorpus aCorpusData,
             Map<String, Token> aTokens)
     {
         DependencyParsingLayer depLayer = aCorpusData.getDependencyParsingLayer();
@@ -342,7 +343,7 @@ public class Tcf2DKPro
         }
     }
 
-    private void convertNamedEntities(JCas aJCas, TextCorpus aCorpusData,
+    public void convertNamedEntities(JCas aJCas, TextCorpus aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getNamedEntitiesLayer() == null) {
@@ -389,7 +390,7 @@ public class Tcf2DKPro
      * @param aTokens
      *            id/token map.
      */
-    private void convertCoreference(JCas aJCas, TextCorpus aCorpusData,
+    public void convertCoreference(JCas aJCas, TextCorpus aCorpusData,
             Map<String, Token> aTokens)
     {
         if (aCorpusData.getReferencesLayer() == null) {
@@ -424,7 +425,7 @@ public class Tcf2DKPro
         }
     }
 
-    private void storeReferencesAndTargetsInMap(Map<Integer, CoreferenceLink> aReferencesMap,
+    public void storeReferencesAndTargetsInMap(Map<Integer, CoreferenceLink> aReferencesMap,
             eu.clarin.weblicht.wlfxb.tc.api.ReferencedEntity entity, TextCorpus aCorpusData,
             Map<String, Token> aTokens, JCas aJcas)
     {
@@ -461,7 +462,7 @@ public class Tcf2DKPro
      *            all available tokens in the file
      * @return the offsets.
      */
-    private int[] getOffsets(eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
+    public int[] getOffsets(eu.clarin.weblicht.wlfxb.tc.api.Token[] aSpanTokens,
             Map<String, Token> aAllTokens)
     {
         List<Integer> beginPositions = new ArrayList<>();
@@ -482,7 +483,7 @@ public class Tcf2DKPro
      *            all available tokens in the file
      * @return the offsets.
      */
-    private int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens)
+    public int[] getOffsets(String[] aSpanTokens, Map<String, Token> aAllTokens)
     {
         List<Integer> beginPositions = new ArrayList<>();
         List<Integer> endPositions = new ArrayList<>();

@@ -22,14 +22,14 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
-public class RecommenderDeletedEvent
+public class RecommenderUpdatedEvent
     extends ApplicationEvent
 {
     private static final long serialVersionUID = 4618078923202025558L;
 
     private final Recommender recommender;
 
-    public RecommenderDeletedEvent(Object aSource, Recommender aRecommender)
+    public RecommenderUpdatedEvent(Object aSource, Recommender aRecommender)
     {
         super(aSource);
 
@@ -41,11 +41,10 @@ public class RecommenderDeletedEvent
         return recommender;
     }
 
-    @Override
-    public String toString()
+    @Override public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("RecommenderDeletedEvent [recommender=");
+        builder.append("RecommenderUpdatedEvent [recommender=");
         builder.append(recommender);
         builder.append("]");
         return builder.toString();

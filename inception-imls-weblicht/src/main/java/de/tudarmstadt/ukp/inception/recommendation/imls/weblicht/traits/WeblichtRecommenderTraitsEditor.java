@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommenderFactoryImpl.DEFAULT_WEBLICHT_URL;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.PLAIN_TEXT;
 import static de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.traits.WeblichtFormat.TCF;
 import static java.util.Arrays.asList;
@@ -80,7 +81,7 @@ public class WeblichtRecommenderTraitsEditor
     private final WeblichtRecommenderTraits traits;
     private final IModel<WeblichtRecommenderTraits> traitsModel;
 
-    private final TextField<String> urlField;
+    private final ComboBox<String> urlField;
     private final TextField<String> apiKeyField;
     private final DateTextField lastKeyUpdateField;
     private final DropDownChoice<WeblichtFormat> formatField;
@@ -123,7 +124,7 @@ public class WeblichtRecommenderTraitsEditor
         };
         add(form);
 
-        urlField = new TextField<>(MID_URL);
+        urlField = new ComboBox<>(MID_URL, asList(DEFAULT_WEBLICHT_URL));
         urlField.setRequired(true);
         urlField.add(new UrlValidator());
         urlField.setOutputMarkupId(true);

@@ -64,13 +64,10 @@ public class DKPro2Tcf
     
     public void convert(JCas aJCas, TextCorpus textCorpus)
     {
-        // create text annotation layer and add the string of the text into the layer
-        textCorpus.createTextLayer().addText(aJCas.getDocumentText());
-
         write(aJCas, textCorpus);
     }
     
-    private void write(JCas aJCas, TextCorpus aTextCorpus)
+    public void write(JCas aJCas, TextCorpus aTextCorpus)
     {
         Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> tokensBeginPositionMap;
         tokensBeginPositionMap = writeTokens(aJCas, aTextCorpus);
@@ -106,7 +103,15 @@ public class DKPro2Tcf
         int j = 0;
         for (Token token : select(aJCas, Token.class)) {
             if (tokensLayerCreated) {
-                tokensLayer.addToken(token.getCoveredText(), token.getBegin(), token.getEnd());
+                if (token.getId() != null) {
+                    // Assuming all of the tokens have IDs ...
+                    tokensLayer.addToken(token.getCoveredText(), token.getBegin(), token.getEnd(),
+                            token.getId());
+                }
+                else {
+                    // Assuming none of the tokens have IDs ...
+                    tokensLayer.addToken(token.getCoveredText(), token.getBegin(), token.getEnd());
+                }
             }
 
             tokensBeginPositionMap.put(token.getBegin(), tokensLayer.getToken(j));
@@ -116,7 +121,7 @@ public class DKPro2Tcf
         return tokensBeginPositionMap;
     }
 
-    private void writePosTags(JCas aJCas, TextCorpus aTextCorpus,
+    public void writePosTags(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         if (!JCasUtil.exists(aJCas, POS.class)) {
@@ -154,7 +159,7 @@ public class DKPro2Tcf
         }
     }
     
-    private void writeLemmas(JCas aJCas, TextCorpus aTextCorpus,
+    public void writeLemmas(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         if (!JCasUtil.exists(aJCas, Lemma.class)) {
@@ -183,7 +188,7 @@ public class DKPro2Tcf
         
     }
     
-    private void writeOrthograph(JCas aJCas, TextCorpus aTextCorpus) {
+    public void writeOrthograph(JCas aJCas, TextCorpus aTextCorpus) {
         if (!JCasUtil.exists(aJCas, SofaChangeAnnotation.class)) {
             // Do nothing if there are no SofaChangeAnnotation layer
             // (Which is equivalent to Orthography layer in TCF) in the CAS
@@ -238,7 +243,7 @@ public class DKPro2Tcf
         }
     }
 
-    private void writeDependency(JCas aJCas, TextCorpus aTextCorpus,
+    public void writeDependency(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         if (!JCasUtil.exists(aJCas, Dependency.class)) {
@@ -282,7 +287,7 @@ public class DKPro2Tcf
         }
     }
 
-    private void writeNamedEntity(JCas aJCas, TextCorpus aTextCorpus,
+    public void writeNamedEntity(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         if (!JCasUtil.exists(aJCas, NamedEntity.class)) {
@@ -314,7 +319,7 @@ public class DKPro2Tcf
         }
     }
 
-    private void writeCoreference(JCas aJCas, TextCorpus aTextCorpus,
+    public void writeCoreference(JCas aJCas, TextCorpus aTextCorpus,
             Map<Integer, eu.clarin.weblicht.wlfxb.tc.api.Token> aTokensBeginPositionMap)
     {
         if (!JCasUtil.exists(aJCas, CoreferenceChain.class)) {

@@ -41,6 +41,7 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -69,6 +70,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -112,6 +114,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -139,6 +142,7 @@ public class RecommendationServiceImpl
     private final DocumentService documentService;
     private final LearningRecordService learningRecordService;
     private final ProjectService projectService;
+    private final ApplicationEventPublisher applicationEventPublisher;
     
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -165,7 +169,7 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
@@ -175,6 +179,7 @@ public class RecommendationServiceImpl
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
         projectService = aProjectService;
+        applicationEventPublisher = aApplicationEventPublisher;
         
         trainingTaskCounter = new ConcurrentHashMap<>();
         states = new ConcurrentHashMap<>();
@@ -187,14 +192,15 @@ public class RecommendationServiceImpl
             EntityManager aEntityManager)
     {
         this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
-                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null);
+                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null,
+                null);
         
         entityManager = aEntityManager;
     }
 
     public RecommendationServiceImpl(EntityManager aEntityManager)
     {
-        this(null, null, null, null, null, null, null, (ProjectService) null);
+        this(null, null, null, null, null, null, null, (ProjectService) null, null);
 
         entityManager = aEntityManager;
     }
@@ -265,6 +271,10 @@ public class RecommendationServiceImpl
         else {
             entityManager.merge(aRecommender);
         }
+        
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(new RecommenderUpdatedEvent(this, aRecommender));
+        }
     }
 
     @Override
@@ -278,6 +288,10 @@ public class RecommendationServiceImpl
         }
 
         entityManager.remove(settings);
+        
+        if (applicationEventPublisher != null) {
+            applicationEventPublisher.publishEvent(new RecommenderDeletedEvent(this, aRecommender));
+        }
     }
 
     @Override
@@ -472,6 +486,12 @@ public class RecommendationServiceImpl
         
         requestCycle.getListeners().add(triggerTrainingTaskListener());
     }
+    
+    @EventListener
+    public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
+    {
+        clearState(aEvent.getRecommender().getProject());
+    }
 
     @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
@@ -479,10 +499,7 @@ public class RecommendationServiceImpl
         // When removing a recommender, it is sufficient to delete its predictions from the current
         // state. Since (so far) recommenders do not depend on each other, we wouldn't need to 
         // trigger a training rung.
-        RecommendationState state = getState(aEvent.getUser(), aEvent.getProject());
-        synchronized (state) {
-            state.removePredictions(aEvent.getRecommender());
-        }
+        removePredictions(aEvent.getRecommender());
     }
 
     @EventListener
@@ -600,6 +617,18 @@ public class RecommendationServiceImpl
             states.keySet().removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
             trainingTaskCounter.keySet()
                     .removeIf(key -> Objects.equals(aProject.getId(), key.getProjectId()));
+        }
+    }
+
+    private void removePredictions(Recommender aRecommender)
+    {
+        Validate.notNull(aRecommender, "Recommender must be specified");
+        
+        synchronized (states) {
+            states.entrySet().stream()
+                    .filter(entry -> Objects.equals(
+                            aRecommender.getProject().getId(), entry.getKey().getProjectId()))
+                    .forEach(entry -> entry.getValue().removePredictions(aRecommender));
         }
     }
 
