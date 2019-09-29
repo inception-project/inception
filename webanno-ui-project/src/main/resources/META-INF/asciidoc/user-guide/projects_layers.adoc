@@ -284,4 +284,19 @@ _(Span layers)_
 | Link feature that can point only to the selected span layer.
 |====
 
+.Number feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Limited
+| If enabled a minimum and maximum value can be set for the number feature. 
+
+| Minimum
+| Only visible if `Limited` is enabled. Determines the minimum value of the limited number feature.
+
+| Maximum
+| Only visible if `Limited` is enabled. Determines the maximum value of the limited number feature.
+|====
+
 NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.
