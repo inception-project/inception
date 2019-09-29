@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
@@ -971,11 +972,16 @@ public class RecommendationServiceImpl
                                 .equals(recommendationEngine.getTrainingCapability())
                                 && activePredictions != null) {
                             
-                            // We do not need to perform another initial visibility calculation.
-                            // The updates to visibility done as part of the annotation process
-                            // should be enough here.
                             suggestions = activePredictions
                                     .getPredictionsByRecommender(recommender);
+                            
+                            // Calculate the visibility of the suggestions. This happens via the 
+                            // original CAS which contains only the manually created annotations  
+                            // and *not* the suggestions.
+                            suggestions.forEach(s -> s.show(FLAG_ALL));
+                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                            calculateVisibility(originalCas.get(), username, layer,
+                                    groups, 0, originalCas.get().getDocumentText().length());
                             
                             log.debug("[{}]({}) for user [{}] on document "
                                     + "[{}]({}) in project [{}]({}) inherited {} predictions.",
