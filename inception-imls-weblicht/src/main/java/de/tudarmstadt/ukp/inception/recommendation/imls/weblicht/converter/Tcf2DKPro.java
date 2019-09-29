@@ -372,12 +372,12 @@ public class Tcf2DKPro
     /**
      * Correferences in CAS should be represented {@link CoreferenceChain} and
      * {@link CoreferenceLink}. The TCF representation Uses <b> rel </b> and <b>target </b> to build
-     * chains. Example: </br>
+     * chains. Example: <br>
      * <i> {@literal  <entity><reference ID="rc_0" tokenIDs="t_0" mintokIDs="t_0" type="nam"/> }
-     * </br>
+     * <br>
      * {@literal <reference ID="rc_1" tokenIDs="t_6" mintokIDs="t_6" type="pro.per3" rel=
      * "anaphoric" target="rc_0"/></entity>
-     * }</i> </br>
+     * }</i> <br>
      * The first phase of conversion is getting all <b>references</b> and <b>targets</b> alongside
      * the <b>type</b> and <b>relations in different maps</b> <br>
      * Second, an iteration is made through all the maps and the {@link CoreferenceChain} and
