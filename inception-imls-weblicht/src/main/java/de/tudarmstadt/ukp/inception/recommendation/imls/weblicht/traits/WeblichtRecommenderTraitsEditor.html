@@ -26,7 +26,7 @@
             <wicket:message key="url"/>
           </label>
           <div class="col-sm-9">
-            <input wicket:id="url" type="text" class="form-control"></input>
+            <input wicket:id="url"></input>
           </div>
         </div>
       </div>
@@ -48,10 +48,12 @@
           <div class="col-sm-9">
             <input wicket:id="lastKeyUpdate" class="form-control"/>
           </div>
-        </div>
-        <div class="col-sm-offset-3 col-sm-9">
-          Obtain an API key <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey">here</a>.
-          A key is valid for three months. If the recommender does not work anymore, your key might have expired.
+          <div class="col-sm-offset-3 col-sm-9">
+            <div>
+              Obtain an API key <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey"><i class="fas fa-external-link-alt"></i> here</a>.
+              A key is valid for three months. If the recommender does not work anymore, your key might have expired.
+            </div>
+          </div>
         </div>
         <div class="form-group" wicket:enclosure="chainInputFormat">
           <label class="control-label col-sm-3">
@@ -66,7 +68,7 @@
             <wicket:message key="chainInputLanguage"/>
           </label>
           <div class="col-sm-9">
-            <input type="text" wicket:id="chainInputLanguage" class="form-control"/>
+            <input wicket:id="chainInputLanguage"/>
           </div>
         </div>
       </div>
@@ -89,6 +91,12 @@
           <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
             <div class="flex-h-container">
               <input type="file" wicket:id="upload"/>
+            </div>
+          </div>
+          <div class="col-sm-offset-3 col-sm-9">
+            <div>
+              Build your chain using <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/weblicht/"><i class="fas fa-external-link-alt"></i> WebLicht</a>
+              then download it and upload it here again.
             </div>
           </div>
         </div>

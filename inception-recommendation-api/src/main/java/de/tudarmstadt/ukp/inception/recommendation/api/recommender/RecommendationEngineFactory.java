@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.recommendation.api.recommender;
 
-import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -52,7 +51,7 @@ public interface RecommendationEngineFactory<T>
 
     T createTraits();
 
-    Component createTraitsEditor(String aId, IModel<Recommender> aModel);
+    AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel);
 
     T readTraits(Recommender aRecommender);
 

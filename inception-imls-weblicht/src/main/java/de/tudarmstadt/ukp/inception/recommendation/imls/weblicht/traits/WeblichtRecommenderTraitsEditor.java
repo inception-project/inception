@@ -38,7 +38,6 @@ import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
 import org.apache.wicket.markup.html.form.upload.FileUpload;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -57,13 +56,14 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelec
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.WeblichtRecommenderFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.chains.WeblichtChainService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.weblicht.model.WeblichtChain;
 
 public class WeblichtRecommenderTraitsEditor
-    extends Panel
+    extends AbstractTraitsEditor
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
@@ -199,6 +199,7 @@ public class WeblichtRecommenderTraitsEditor
         }
     }
 
+    @Override
     public Recommender getModelObject()
     {
         return (Recommender) getDefaultModelObject();

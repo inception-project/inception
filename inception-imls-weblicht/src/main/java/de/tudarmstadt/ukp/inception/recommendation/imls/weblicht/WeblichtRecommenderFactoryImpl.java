@@ -102,7 +102,8 @@ public class WeblichtRecommenderFactoryImpl
     }
     
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public WeblichtRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
     {
         return new WeblichtRecommenderTraitsEditor(aId, aModel);
     }

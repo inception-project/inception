@@ -70,7 +70,8 @@ public class ExternalRecommenderFactory
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public ExternalRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
     {
         return new ExternalRecommenderTraitsEditor(aId, aModel);
     }
