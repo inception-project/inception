@@ -16,60 +16,140 @@
 #limitations under the License.
 */
 
-$(document).ready(function(){        
+$(document).ready(
+		function() {
 
-	var enjoyhint_instance = new EnjoyHint({
-		onSkip:function(){
-//		    reset all the cookies
-		  }
-	  
+			var enjoyhint_instance = new EnjoyHint({
+				onSkip : function() {
+					// reset all the cookies
+				}
+			});
+
+			var enjoyhint_script_steps;
+			var currentPage = window.location.pathname;
+			var projectId = getUrlParameter('p');
+			var cName = createCookieName(currentPage);
+			var ps = getCookie(cName);
+
+			if (currentPage == "/projects.html") {
+				ps = getCookie(cName);
+				if (ps == 'true') {
+				} else if (ps == "") {
+					enjoyhint_instance = new EnjoyHint({
+						onEnd : function() {
+							setCookie(cName, 'projectCreated');
+						},
+						onSkip : function() {
+							setCookie(cName, true);
+						}
+					});
+
+					enjoyhint_script_steps = createFirstPageRoutine();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+				} else if (ps == "projectCreated") {
+					enjoyhint_instance = new EnjoyHint({
+						onEnd : function() {
+							setCookie(cName, true);
+						},
+						onSkip : function() {
+							setCookie(cName, true);
+						}
+					});
+					enjoyhint_script_steps = createFirstPageRoutinePart2();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+
+				}
+			} else if (currentPage == "/projectsetting.html"
+					&& projectId == 'NEW' && ps != "redirect") {
+
+				enjoyhint_instance = new EnjoyHint({
+					onEnd : function() {
+						// reset all the cookies
+						setCookie(cName, 'redirect');
+					},
+					onSkip : function() {
+						setCookie(cName, true);
+					}
+
+				});
+
+				ps = getCookie(cName);
+				if (ps == 'true') {
+				} else {
+					ps = 'redirect';
+					if (ps != "" && ps != null) {
+						setCookie(cName, ps, 365);
+					}
+
+					enjoyhint_script_steps = createNewProjectRoutine();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+				}
+			} else if (currentPage == "/projectsetting.html"
+					&& projectId == 'NEW' && ps == "redirect") {
+				enjoyhint_instance = new EnjoyHint({});
+
+				ps = true;
+				if (ps != "" && ps != null) {
+					setCookie(cName, ps, 365);
+				}
+				enjoyhint_script_steps = createRedirectRoutine();
+				enjoyhint_instance.set(enjoyhint_script_steps);
+				enjoyhint_instance.runScript();
+
+			} else if (currentPage == "/project.html") {
+				var ps = getCookie(cName);
+				if (ps != "") {
+				} else {
+					ps = true;
+					if (ps != "" && ps != null) {
+						setCookie(cName, ps, 365);
+					}
+
+					enjoyhint_script_steps = createDashboardRoutine();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+				}
+			} else if (currentPage == "/projectsetting.html") {
+				var ps = getCookie(cName);
+				
+				debugger;
+
+				if (ps == 'true') {
+					// alert("PS Visited? " + ps);
+				} 
+				else if (ps == "recommenderSaved") {
+					ps = true;
+					if (ps != "" && ps != null) {
+						setCookie(cName, ps, 365);
+					}
+					enjoyhint_script_steps = createAnnotationRoutine();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+				}
+				else {
+					enjoyhint_instance = new EnjoyHint({
+						onEnd : function() {
+							ps = "recommenderSaved";
+							if (ps != "" && ps != null) {
+								setCookie(cName, ps, 365);
+							}
+						},
+						onSkip : function() {
+							setCookie(cName, true);
+						}
+
+					});
+
+					enjoyhint_script_steps = createSettingsRoutine();
+					enjoyhint_instance.set(enjoyhint_script_steps);
+					enjoyhint_instance.runScript();
+				}
+			}
+
 		});
-	
-	var enjoyhint_script_steps ;
-var currentPage = window.location.pathname;
-var cName = createCookieName(currentPage);
-  
-if (currentPage == "/projects.html") {
-
-	 var ps = getCookie(cName);
-	  if (ps != "") {
-	  } else {
-	    ps = true;
-	    if (ps != "" && ps != null) {
-	      setCookie(cName, ps, 365);
-	    }
-	    
-	    enjoyhint_script_steps = createNewProjectRoutine();
-	  }
-} else if (currentPage == "/project.html") {
-	 var ps = getCookie(cName);
-	  if (ps != "") {
-	  } else {
-	    ps = true;
-	    if (ps != "" && ps != null) {
-	      setCookie(cName, ps, 365);
-	    }
-	    
-	    enjoyhint_script_steps = createDashboardRoutine();
-	  }
-} else if (currentPage == "/projectsetting.html") {
-	 var ps = getCookie(cName);
-	  if (ps != "") {
-	    //alert("PS Visited? " + ps);
-	  } else {
-	    ps = true;
-	    if (ps != "" && ps != null) {
-	      setCookie(cName, ps, 365);
-	    }
-	    enjoyhint_script_steps = createSettingsRoutine();
-	  }
-}
-	
-	
-enjoyhint_instance.set(enjoyhint_script_steps);
-enjoyhint_instance.runScript();
-        
-});
 
 function setCookie(cname, cvalue, exdays) {
 	var d = new Date();
@@ -94,6 +174,25 @@ function getCookie(cname) {
 }
 
 function createNewProjectRoutine() {
+	var a = [ {
+		'change [name=\'p::name\']' : 'Enter the name of the project and click next',
+		'nextButton' : {
+			className : "myNext",
+			text : "Next"
+		},
+		'skipButton' : {
+			className : "mySkip",
+			text : "Nope!"
+		}
+	}, {
+		'click [type=submit]' : 'Click save'
+	}
+
+	];
+	return a;
+}
+
+function createFirstPageRoutine() {
 	var a = [
 			{
 				'next .navbar-brand' : 'Welcome to INCEpTION! Let me guide you through its features.',
@@ -107,8 +206,14 @@ function createNewProjectRoutine() {
 				}
 			},
 			{
-				'next .btn btn-primary' : "Here is the button to create a new project",
-			},
+				'click .btn btn-primary' : "Click here to create a new project",
+			} ];
+	return a;
+}
+
+function createFirstPageRoutinePart2() {
+	var a = [
+
 			{
 				'next .file-input-new' : "The projects can also be imported",
 			},
@@ -143,25 +248,56 @@ function createDashboardRoutine() {
 
 function createSettingsRoutine() {
 	var a = [
-		{
-			'click .tab1' : 'Click here to add a the document to the project',
-		},
-		{
-			'next [class=flex-h-container]' : "Upload a file and import. Then click Next.",
-		},
-		{
-			'click .tab5' : "Now, lets add a recommender. Click here!",
-		},
-		{
-			'click [value=Create]' : "Click to create a new recommender",
-		},
-		{
-			'next form:last' : "Fill in the details and save",
-		}];
-	
+			{
+				'click .tab2' : 'Click here to add a the document to the project',
+			},
+			{
+				'next [class=flex-h-container]' : "Upload a file and import. Then click Next.",
+			}, {
+				'click .tab5' : "Now, lets add a recommender. Click here!",
+			}, {
+				'click [value=Create]' : "Click to create a new recommender",
+			}, {
+				'next form:last' : "Fill in the details and click next",
+			}, {
+				'click [name=save]' : "Click to save",
+			} ];
+
 	return a;
 }
 
-function createCookieName(currentPage) {  
+function createRedirectRoutine() {
+	debugger;
+	var a = [ {
+		'click .navbar-link' : 'Click here to go back to the projects page'
+	} ];
+
+	return a;
+}
+
+function createAnnotationRoutine() {
+	var a = [
+			{
+				'click [href=\'./project.html\']:last' : 'Now, lets go to go to the Dashboard',
+			} ];
+
+	return a;
+}
+
+function createCookieName(currentPage) {
 	return currentPage.substr(1);
 }
+
+function getUrlParameter(sParam) {
+	var sPageURL = window.location.search.substring(1), sURLVariables = sPageURL
+			.split('&'), sParameterName, i;
+
+	for (i = 0; i < sURLVariables.length; i++) {
+		sParameterName = sURLVariables[i].split('=');
+
+		if (sParameterName[0] === sParam) {
+			return sParameterName[1] === undefined ? true
+					: decodeURIComponent(sParameterName[1]);
+		}
+	}
+};
