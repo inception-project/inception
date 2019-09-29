@@ -284,4 +284,13 @@ _(Span layers)_
 | Link feature that can point only to the selected span layer.
 |====
 
+.Link feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Enable Role Labels
+| Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default. 
+|====
+
 NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.
