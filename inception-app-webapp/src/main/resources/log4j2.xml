@@ -40,7 +40,9 @@
   <Loggers>
     <Logger name="de.tudarmstadt" level="INFO"/>
     <Logger name="de.tudarmstadt.ukp.inception" level="INFO"/>
+    <Logger name="liquibase" level="ERROR"/>
     <Logger name="org.apache.uima" level="ERROR"/>
+    <Logger name="ch.rasc.piwik.tracking.PiwikTracker" level="FATAL"/>
     <Logger name="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer" level="ERROR"/>
     <Logger name="org.springframework.beans.factory.config.PropertiesFactoryBean" level="ERROR"/>
     <!-- Avoid warning on cookies with an invalid expiration date - cf. issue #739 -->
