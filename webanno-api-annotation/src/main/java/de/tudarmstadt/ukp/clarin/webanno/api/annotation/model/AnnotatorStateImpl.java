@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
@@ -36,6 +35,7 @@ import org.apache.wicket.core.request.handler.IPartialPageRequestHandler;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.request.cycle.RequestCycle;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.Unit;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderSlotsEvent;
@@ -351,17 +351,10 @@ public class AnnotatorStateImpl
         
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
-            if (!annotationLayers.isEmpty()) {
-                // Make sure that the selected layer is a span layer
-                for (AnnotationLayer layer : annotationLayers) {
-                    if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
-                        selectedAnnotationLayer = layer;
-                        break;
-                    }
-                }
-            } else {
-                selectedAnnotationLayer = null;
-            }
+            selectedAnnotationLayer = annotationLayers.stream()
+                .filter(layer -> layer.getType().equals(WebAnnoConst.SPAN_TYPE))
+                .findFirst()
+                .orElse(null);
             defaultAnnotationLayer = selectedAnnotationLayer;
         }
     }
