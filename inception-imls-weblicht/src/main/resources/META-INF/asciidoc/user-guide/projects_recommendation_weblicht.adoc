@@ -1,0 +1,79 @@
+// Copyright 2019
+// Ubiquitous Knowledge Processing (UKP) Lab
+// Technische Universität Darmstadt
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+== WebLicht
+
+The WebLicht recommender allows you to use CLARIN WebLicht services to generate annotation
+recommendations. In order to do so, first need to obtain an API key link:https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey[here].
+
+After making the basic settings and entering the API key, **Save** the recommender. Doing so allows
+you to attach a processing chain definition file. With out such a file, the recommender will not
+work. We will provide some example settings here to go along with the example processing chain that
+we will be building below:
+
+* **Layer**: Named entity
+* **Feature**: value
+* **Tool**: WebLicht recommender
+* **URL**: Do not change the default value unless you really know what you are doing (e.g. 
+  developing custom WebLicht services).
+* **Input format:** Plain text
+
+Next, log in to link:https://weblicht.sfs.uni-tuebingen.de/[WebLicht] to build a processing chain.
+
+The simplest way to build a chain is this:
+
+* **Choose a sample input.** Make sure the language of the input matches the language of the documents
+  in your {product-name} project. WebLicht will only allow you to add NLP services to the chain
+  which are compatible with that language. For our example, we will choose `[en] Example Food`. Press **OK**.
+* **Choose easy mode.** This allows you to conveniently select a few common types of annotations to
+  generate.
+* **Choose Named Entities.** For our example, we choose to generate named entity annotations, so
+  we select this from the list on the left.
+* **Download chain**. Click this button to download the chain definition. Once downloaded, it is a
+  good idea to rename the file to something less cryptic than the default auto-generated ID, e.g.
+  we might rename the file to `WebLicht_Named_Entities_English.xml`.
+
+image::weblicht_chain_builder.png[align="center"]
+
+Back in the recommender settings, click **Browse** in the **Upload chain** field and select the processing chain definition file you have just generated. Then click the **Upload** button that appears in the field.
+
+For good measure, **Save** the whole settings once more. When you now open a document in the 
+annotation page, you should be able to see recommendations.
+
+.Supported annotations
+The WebLicht recommender can currently be used with the following built-in annotation layers:
+
+* Part of speech
+* Lemma
+* Named entities (only the `value` feature)
+
+.Using the TCF format
+By default, the recommender sends data as plain text to WebLicht. This means that the processing
+chain needs to run a tokenizer and sentence splitter. Since these might generate boundaries different
+from the one you have in {product-name}, some of the recommendations might look odd or may not be
+displayed at all. This can be avoided by sending data in the WebLicht TCF format. If you select this
+format, the tokens and sentence boundaries will be sent to WebLicht along with the text. You will then
+also need to specify the language of the documents that you are going to be sending. Note that even
+when selecting the TCF format, only text, language, tokens and sentences are sent along - no other
+annotations. Also, only the target layer and feature will be extracted from the processing chain's
+results - no other annotations.
+
+However, building a processing chain that takes TCF as input is a bit more difficult. When building
+the chain, you need to upload some TCF file containing tokens, sentences, and the proper language
+in the **Input selection** dialog of WebLicht. One way to get such a file is to open one of your
+documents in the annotation page, export it in the TCF format, then opening the exported file in a
+text editor an manually fixing the `lang` attribute on the `tc:TextCorpus` XML element. We know that
+this is a bit inconvenient and try to come up with a better solution.

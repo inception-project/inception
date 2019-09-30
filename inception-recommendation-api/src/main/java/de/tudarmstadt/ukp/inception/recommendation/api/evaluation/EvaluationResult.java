@@ -238,7 +238,9 @@ public class EvaluationResult implements Serializable
     }
 
     /**
-     * Determine if evaluation was skipped.
+     * Indicates that an evaluation was not performed, either because it was not necessary (e.g.
+     * because the recommender is always active or cannot be evaluated) or because it was not
+     * possible to perform an evaluation, e.g. because there was not enough data to perform it.
      * 
      * @return true if evaluation was skipped
      */

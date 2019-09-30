@@ -241,6 +241,11 @@ public class SearchAnnotationSidebar
         annotationForm.setDefaultButton(annotateButton);
         annotationForm.add(visibleWhen(() -> !groupedSearchResults.getObject().isEmpty()));
 
+        
+        LambdaAjaxButton<Void> clearButton = new LambdaAjaxButton<>("clearButton",
+                this::actionClearResults);
+        annotationForm.add(clearButton);
+        
         mainContainer.add(annotationForm);
     }
 
@@ -306,6 +311,14 @@ public class SearchAnnotationSidebar
         groupedSearchResults.detach();
         aTarget.add(mainContainer);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+    
+    private void actionClearResults(AjaxRequestTarget aTarget, Form<Void> aForm)
+    {
+        targetQuery.setObject("");
+        selectedResult = null;
+        groupedSearchResults.detach();
+        aTarget.add(mainContainer);
     }
     
     private Map<String, ResultsGroup> getSearchResultsGrouped()
