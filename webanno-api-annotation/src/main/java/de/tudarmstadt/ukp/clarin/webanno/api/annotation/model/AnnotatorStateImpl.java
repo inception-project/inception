@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.Page;
@@ -350,7 +351,17 @@ public class AnnotatorStateImpl
         
         // Make sure the currently selected layer is actually visible/exists
         if (!annotationLayers.contains(selectedAnnotationLayer)) {
-            selectedAnnotationLayer = !annotationLayers.isEmpty() ? annotationLayers.get(0) : null;
+            if (!annotationLayers.isEmpty()) {
+                // Make sure that the selected layer is a span layer
+                for (AnnotationLayer layer : annotationLayers) {
+                    if (layer.getType().equals(WebAnnoConst.SPAN_TYPE)) {
+                        selectedAnnotationLayer = layer;
+                        break;
+                    }
+                }
+            } else {
+                selectedAnnotationLayer = null;
+            }
             defaultAnnotationLayer = selectedAnnotationLayer;
         }
     }
