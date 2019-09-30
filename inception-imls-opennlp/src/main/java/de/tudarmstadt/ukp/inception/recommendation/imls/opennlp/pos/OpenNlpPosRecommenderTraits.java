@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.pos;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
@@ -29,8 +31,8 @@ public class OpenNlpPosRecommenderTraits
 
     private int trainingSetSizeLimit = Integer.MAX_VALUE;
     private int predictionLimit = Integer.MAX_VALUE;
-    
     private int numThreads = 1;
+    private double taggedTokensThreshold = 75.0;
 
     public int getNumThreads()
     {
@@ -61,7 +63,26 @@ public class OpenNlpPosRecommenderTraits
     {
         predictionLimit = aPredictionLimit;
     }
+    
+    public double getTaggedTokensThreshold()
+    {
+        if (taggedTokensThreshold < 0.0) {
+            return 0.0;
+        }
+        
+        if (taggedTokensThreshold > 100.0) {
+            return 100.0;
+        }
+        
+        return taggedTokensThreshold;
+    }
 
+    public void setTaggedTokensThreshold(double aTaggedTokensThreshold)
+    {
+        taggedTokensThreshold = aTaggedTokensThreshold;
+    }
+
+    @JsonIgnore
     public TrainingParameters getParameters()
     {
         TrainingParameters parameters = TrainingParameters.defaultParams();
