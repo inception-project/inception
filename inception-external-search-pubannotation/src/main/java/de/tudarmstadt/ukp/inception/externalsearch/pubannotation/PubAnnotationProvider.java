@@ -86,6 +86,16 @@ public class PubAnnotationProvider
         
         return results;
     }
+    
+    @Override
+    public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
+            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
+        throws IOException
+    {
+        ExternalSearchResult result = new ExternalSearchResult(aRepository, aCollectionId,
+                aDocumentId);
+        return result;
+    }
 
     @Override
     public String getDocumentText(DocumentRepository aDocumentRepository,
@@ -136,8 +146,8 @@ public class PubAnnotationProvider
     }
     
     @Override
-    public String getDocumentFormat(DocumentRepository aRepository, Object aTraits,
-            String aCollectionId, String aDocumentId)
+    public String getDocumentFormat(DocumentRepository aRepository,
+            PubAnnotationProviderTraits aTraits, String aCollectionId, String aDocumentId)
         throws IOException
     {
         return PubAnnotationSectionsFormatSupport.ID;

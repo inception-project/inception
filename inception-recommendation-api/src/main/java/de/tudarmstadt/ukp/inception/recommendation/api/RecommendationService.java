@@ -77,6 +77,8 @@ public interface RecommendationService
 
     RecommendationEngineFactory getRecommenderFactory(Recommender aRecommender);
 
+    boolean hasActiveRecommenders(String aUser, Project aProject);
+    
     void setActiveRecommenders(User aUser, AnnotationLayer layer,
             List<EvaluatedRecommender> selectedClassificationTools);
     
