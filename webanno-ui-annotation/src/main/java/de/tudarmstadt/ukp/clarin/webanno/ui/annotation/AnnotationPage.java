@@ -393,8 +393,6 @@ public class AnnotationPage
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
         
         AnnotatorState state = getModelObject();
-        
-        
         if (state.getUser() == null) {
             state.setUser(userRepository.getCurrentUser());
         }
@@ -537,7 +535,6 @@ public class AnnotationPage
 
                 handleParameters(project, document, focus, false);
                 SourceDocument doc = getModelObject().getDocument();
-                User user = getModelObject().getUser();
                 if (doc != null) {
                     updateDocumentView(aTarget, doc, focus);
                 }
@@ -610,10 +607,12 @@ public class AnnotationPage
             return;
         }
         
-        // Check access to project for annotator or current user if admin is viewing
+        // Check access to project for annotator or current user if admin is viewing.
+        // Default curation user should have access to all projects.
         if (project != null
                 && !projectService.isAnnotator(project, getModelObject().getUser())
-                && !projectService.isManager(project, userRepository.getCurrentUser())) {
+                && !projectService.isManager(project, userRepository.getCurrentUser())
+                && !getModelObject().getUser().getUsername().equals(CURATION_USER)) {
             error("You have no permission to access project [" + project.getId() + "]");
             return;
         }
