@@ -69,11 +69,11 @@ public class RecommenderServiceAutoConfiguration
             UserDao aUserRepository, RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService)
+            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new RecommendationServiceImpl(aSessionRegistry, aUserRepository,
                 aRecommenderFactoryRegistry, aSchedulingService, aAnnoService, aDocumentService,
-                aLearningRecordService, aProjectService, entityManager);
+                aLearningRecordService, aProjectService, entityManager, aApplicationEventPublisher);
     }
     
     @Bean
@@ -139,10 +139,12 @@ public class RecommenderServiceAutoConfiguration
             RecommendationService aRecommendationService,
             LearningRecordService aLearningRecordService,
             ApplicationEventPublisher aApplicationEventPublisher,
-            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService)
+            FeatureSupportRegistry aFsRegistry, DocumentService aDocumentService,
+            UserDao aUserService)
     {
         return new RecommendationEditorExtension(aAnnotationService, aRecommendationService,
-                aLearningRecordService, aApplicationEventPublisher, aFsRegistry, aDocumentService);
+                aLearningRecordService, aApplicationEventPublisher, aFsRegistry, aDocumentService,
+                aUserService);
     }
     
     @Bean

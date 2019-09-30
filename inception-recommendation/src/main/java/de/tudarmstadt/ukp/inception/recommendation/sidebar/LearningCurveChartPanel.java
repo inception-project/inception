@@ -83,6 +83,7 @@ public class LearningCurveChartPanel
         //initially the chart is empty. passing empty model
         chartPanel = new ChartPanel(MID_CHART_CONTAINER,
                 LoadableDetachableModel.of(this::renderChart));
+        // chartPanel.add(visibleWhen(() -> chartPanel.getModelObject() != null));
         
         chartPanel.setOutputMarkupId(true);
         add(chartPanel);
@@ -131,7 +132,7 @@ public class LearningCurveChartPanel
         MultiValuedMap<String, Double> recommenderScoreMap = getLatestScores();
 
         if (CollectionUtils.isEmpty(recommenderScoreMap.keys())) {
-            LOG.error("Cannot plot the learning curve. Project: {}",
+            LOG.debug("Cannot plot the learning curve because there are no scores. Project: {}",
                     model.getObject().getProject());
             return null;
         }

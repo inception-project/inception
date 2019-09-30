@@ -114,7 +114,7 @@ public class IndexScheduler
             }
             else {
                 queue.offer(aRunnable);
-                log.info("Enqueued new project indexing task: {}", aRunnable);
+                log.debug("Enqueued new project indexing task: {}", aRunnable);
             }
         }
         // Source document indexing task
@@ -126,7 +126,7 @@ public class IndexScheduler
             }
             else {
                 queue.offer(aRunnable);
-                log.info("Enqueued new source document indexing task: {}", aRunnable);
+                log.debug("Enqueued new source document indexing task: {}", aRunnable);
             }
         }
         // Annotation document indexing task
@@ -143,7 +143,7 @@ public class IndexScheduler
             }
             else {
                 queue.offer(aRunnable);
-                log.info("Enqueued new annotation document indexing task: {}", aRunnable);
+                log.debug("Enqueued new annotation document indexing task: {}", aRunnable);
             }
         }
     }

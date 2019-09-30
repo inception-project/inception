@@ -21,6 +21,7 @@ import java.io.IOException;
 
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
@@ -30,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchResult;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 
@@ -37,6 +39,8 @@ import de.tudarmstadt.ukp.inception.externalsearch.model.DocumentRepository;
 public class DocumentDetailsPage
     extends ApplicationPageBase
 {
+    private static final long serialVersionUID = -645134257384090420L;
+    
     public static final String REPOSITORY_ID = "repo";
     public static final String COLLECTION_ID = "col";
     public static final String DOCUMENT_ID = "doc";
@@ -45,6 +49,10 @@ public class DocumentDetailsPage
     private @SpringBean ProjectService projectService;
     private @SpringBean UserDao userRepository;
 
+    private DocumentRepository repo;
+    private String collectionId;
+    private String documentId;
+    
     public DocumentDetailsPage(PageParameters aParameters)
     {
         StringValue repositoryIdStringValue = aParameters.get(REPOSITORY_ID);
@@ -58,31 +66,39 @@ public class DocumentDetailsPage
         ) {
             abort();
         }
-        else {
-            DocumentRepository repo = externalSearchService
-                    .getRepository(repositoryIdStringValue.toLong());
-            
-            // Check access to project
-            User currentUser = userRepository.getCurrentUser();
-            if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
-                error("You have no permission to access project [" + repo.getProject().getId()
-                        + "]");
-                return;
-            }
-            
-            String documentText;
-            try {
-                documentText = externalSearchService.getDocumentText(repo,
-                        collectionIdStringValue.toString(), documentIdStringValue.toString());
-            }
-            catch (IOException e) {
-                documentText = e.getMessage();
-            }
+        
+        repo = externalSearchService.getRepository(repositoryIdStringValue.toLong());
+        collectionId = collectionIdStringValue.toString();
+        documentId = documentIdStringValue.toString();        
+        
+        // Check access to project
+        User currentUser = userRepository.getCurrentUser();
+        if (!projectService.isAnnotator(repo.getProject(), currentUser)) {
+            abort();
+        }
+        
+        add(new Label("title", LoadableDetachableModel.of(this::getDocumentResult).map(
+            r -> r.getDocumentTitle() != null ? r.getDocumentTitle() : r.getDocumentId())));
+        add(new Label("text", LoadableDetachableModel.of(this::getDocumentText)));
+    }
+    
+    private String getDocumentText()
+    {
+        try {
+            return externalSearchService.getDocumentText(repo, collectionId, documentId);
+        }
+        catch (IOException e) {
+            return "ERROR: " + e.getMessage();
+        }
+    }
 
-            // FIXME: Instead of showing the document ID, we should fetch the document metadata
-            // and show the title.
-            add(new Label("title", documentIdStringValue.toString()));
-            add(new Label("text", documentText));
+    private ExternalSearchResult getDocumentResult()
+    {
+        try {
+            return externalSearchService.getDocumentResult(repo, collectionId, documentId);
+        }
+        catch (IOException e) {
+            return new ExternalSearchResult(repo, collectionId, documentId);
         }
     }
 
