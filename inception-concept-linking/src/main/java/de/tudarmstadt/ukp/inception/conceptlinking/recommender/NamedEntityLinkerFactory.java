@@ -90,7 +90,7 @@ public class NamedEntityLinkerFactory
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public NamedEntityLinkerTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
         return new NamedEntityLinkerTraitsEditor(aId, aModel);
     }

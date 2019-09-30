@@ -21,11 +21,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactoryImplBase;
 
@@ -67,6 +69,12 @@ public class OpenNlpPosRecommenderFactory
                 && (CAS.TYPE_NAME_STRING.equals(aFeature.getType()) || aFeature.isVirtualFeature());
     }
 
+    @Override
+    public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
+    {
+        return new OpenNlpPosRecommenderTraitsEditor(aId, aModel);
+    }
+    
     @Override
     public OpenNlpPosRecommenderTraits createTraits()
     {

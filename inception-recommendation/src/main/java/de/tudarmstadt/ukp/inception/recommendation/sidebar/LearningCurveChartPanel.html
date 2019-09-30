@@ -24,9 +24,9 @@
         <wicket:message key="learningCurve" />
       </h3>
     </div>
-    <div class="panel-body">
-      <div class="panel" wicket:id="dropdownPanel"></div>
-      <div wicket:id="chart-container"></div>
+    <div class="panel-body" style="position: relative;">
+      <div style="position: absolute; z-index: 1000;" wicket:id="dropdownPanel"></div>
+      <div style="height: 200px;" wicket:id="chart-container"></div>
     </div>
   </div>
 </wicket:panel>

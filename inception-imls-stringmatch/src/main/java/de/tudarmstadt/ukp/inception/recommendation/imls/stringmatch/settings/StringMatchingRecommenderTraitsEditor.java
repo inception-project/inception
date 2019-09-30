@@ -37,7 +37,6 @@ import org.apache.wicket.markup.html.form.upload.FileUpload;
 import org.apache.wicket.markup.html.link.DownloadLink;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
-import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.util.ListModel;
@@ -49,11 +48,12 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.Boo
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.DefaultTrainableRecommenderTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.gazeteer.GazeteerService;
 import de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.model.Gazeteer;
 
 public class StringMatchingRecommenderTraitsEditor
-    extends Panel
+    extends DefaultTrainableRecommenderTraitsEditor
 {
     private static final Logger LOG = LoggerFactory
             .getLogger(StringMatchingRecommenderTraitsEditor.class);
@@ -135,6 +135,7 @@ public class StringMatchingRecommenderTraitsEditor
         }
     }
     
+    @Override
     public Recommender getModelObject()
     {
         return (Recommender) getDefaultModelObject();
