@@ -501,13 +501,8 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
-        
         // do not trigger training during when viewing others' work
-        if (!user.equals(userRepository.getCurrentUser())) {
-            return;
-        }
-
-        if (user == null) {
+        if (user == null || !user.equals(userRepository.getCurrentUser())) {
             return;
         }
         

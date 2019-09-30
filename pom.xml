@@ -54,7 +54,6 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>4.0.0-beta-1</webanno.version>
     <uima.version>3.1.0</uima.version>
     <dkpro.version>2.0.0</dkpro.version>
     <spring.version>5.1.10.RELEASE</spring.version>
@@ -73,6 +72,7 @@
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
+    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
   </properties>
   <modules>
     <!-- Build infrastructure modules -->
