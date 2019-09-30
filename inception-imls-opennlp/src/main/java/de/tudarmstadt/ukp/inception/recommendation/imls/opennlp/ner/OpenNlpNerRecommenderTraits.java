@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.opennlp.ner;
 
 import java.io.Serializable;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import opennlp.tools.ml.AbstractTrainer;
 import opennlp.tools.util.TrainingParameters;
 
@@ -62,6 +64,7 @@ public class OpenNlpNerRecommenderTraits
         predictionLimit = aPredictionLimit;
     }
 
+    @JsonIgnore
     public TrainingParameters getParameters()
     {
         TrainingParameters parameters = TrainingParameters.defaultParams();

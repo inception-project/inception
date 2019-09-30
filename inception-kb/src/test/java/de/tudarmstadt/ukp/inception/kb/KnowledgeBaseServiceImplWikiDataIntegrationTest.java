@@ -202,7 +202,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         String[] expectedInstances = { "http://www.wikidata.org/entity/Q22663448",
                 "http://www.wikidata.org/entity/Q22663448",
                 "http://www.wikidata.org/entity/Q30059050" };
-        assertThat(instances).as("Check that instances have been found").hasSize(17)
+        assertThat(instances).as("Check that instances have been found")
                 .contains(expectedInstances);
 
     }
