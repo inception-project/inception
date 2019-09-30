@@ -43,6 +43,8 @@ public class ProjectRecommendersPanel
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
         super(aId, aProject);
+        
+        setOutputMarkupId(true);
 
         selectedRecommenderModel = Model.of();
         projectModel = aProject;

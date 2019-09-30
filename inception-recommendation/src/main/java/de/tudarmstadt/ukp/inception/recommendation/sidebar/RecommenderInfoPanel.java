@@ -193,21 +193,24 @@ public class RecommenderInfoPanel
         return evals;
     }
 
-    private WebMarkupContainer createResultsContainer(
-            Optional<EvaluationResult> evalResult)
+    private WebMarkupContainer createResultsContainer(Optional<EvaluationResult> evalResult)
     {
-        WebMarkupContainer resultsContainer = new WebMarkupContainer("resultsContainer");
-        resultsContainer.setVisible(evalResult.isPresent());
-        resultsContainer.add(new Label("f1Score",
+        WebMarkupContainer container = new WebMarkupContainer("resultsContainer");
+        
+        // Show results only if the evaluation was not skipped (and of course only if the
+        // result is actually present).
+        container.setVisible(evalResult.map(r -> !r.isEvaluationSkipped())
+                .orElse(evalResult.isPresent()));
+        container.add(new Label("f1Score",
                 evalResult.map(EvaluationResult::computeF1Score).orElse(0.0d)));
-        resultsContainer.add(new Label("accuracy",
+        container.add(new Label("accuracy",
                 evalResult.map(EvaluationResult::computeAccuracyScore).orElse(0.0d)));
-        resultsContainer.add(new Label("precision",
+        container.add(new Label("precision",
                 evalResult.map(EvaluationResult::computePrecisionScore).orElse(0.0d)));
-        resultsContainer.add(new Label("recall",
+        container.add(new Label("recall",
                 evalResult.map(EvaluationResult::computeRecallScore).orElse(0.0d)));
         
-        return resultsContainer;
+        return container;
     }
     
     public AnnotatorState getModelObject()

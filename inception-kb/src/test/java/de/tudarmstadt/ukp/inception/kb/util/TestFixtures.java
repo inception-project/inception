@@ -17,11 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.kb.util;
 
-import static org.junit.Assume.assumeTrue;
+import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
+import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 
+import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
 
 import org.eclipse.rdf4j.model.ValueFactory;
@@ -29,6 +30,11 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.TupleQuery;
+import org.eclipse.rdf4j.query.TupleQueryResult;
+import org.eclipse.rdf4j.repository.RepositoryConnection;
+import org.eclipse.rdf4j.repository.sparql.SPARQLRepository;
+import org.junit.Assume;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
@@ -154,27 +160,50 @@ public class TestFixtures
         return qualifier;
     }
 
-    /**
-     * Tries to connect to the given endpoint url and assumes that the connection is successful
-     * with {@link org.junit.Assume#assumeTrue(String, boolean)}
-     * @param aEndpointURL the url to check
-     * @param aTimeout a timeout
-     */
-    public void assumeEndpointIsAvailable(String aEndpointURL, int aTimeout) {
-        boolean isAvailable;
-        String errorMsg = aEndpointURL
-            + " is not available. Expected no exception to be thrown when trying to connect"
-            + " to the endpoint, but got:\n%s";
+    public static boolean isReachable(String aUrl)
+    {
         try {
-            URLConnection connection = new URL(aEndpointURL).openConnection();
-            connection.setConnectTimeout(aTimeout);
-            connection.connect();
-            isAvailable = true;
+            URL url = new URL(aUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(2500);
+            con.setReadTimeout(2500);
+            con.setRequestProperty("Content-Type", "application/sparql-query");
+            int status = con.getResponseCode();
+            
+            if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
+                String location = con.getHeaderField("Location");
+                return isReachable(location);
+            }
         }
         catch (Exception e) {
-            isAvailable = false;
-            errorMsg = String.format(errorMsg, e.toString());
+            return false;
         }
-        assumeTrue(errorMsg, isAvailable);
+        
+        SPARQLRepository r = new SPARQLRepository(aUrl);
+        r.init();
+        try (RepositoryConnection conn = r.getConnection()) {
+            TupleQuery query = conn.prepareTupleQuery("SELECT ?v WHERE { BIND (true AS ?v)}");
+            query.setMaxExecutionTime(5);
+            try (TupleQueryResult result = query.evaluate()) {
+                return true;
+            }
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
+    
+    /**
+     * Tries to connect to the given endpoint url and assumes that the connection is successful with
+     * {@link org.junit.Assume#assumeTrue(String, boolean)}
+     * 
+     * @param aEndpointURL
+     *            the url to check
+     */
+    public void assumeEndpointIsAvailable(String aEndpointURL)
+    {
+        Assume.assumeTrue("Remote repository at [" + aEndpointURL + "] is not reachable",
+                isReachable(aEndpointURL));
     }
 }

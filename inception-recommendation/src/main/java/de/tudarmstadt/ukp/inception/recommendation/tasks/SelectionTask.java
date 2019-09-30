@@ -92,6 +92,7 @@ public class SelectionTask
             }
         };
 
+        boolean seenRecommender = false;
         for (AnnotationLayer layer : annoService.listAnnotationLayer(getProject())) {
             if (!layer.isEnabled()) {
                 continue;
@@ -99,10 +100,12 @@ public class SelectionTask
             
             List<Recommender> recommenders = recommendationService.listRecommenders(layer);
             if (recommenders == null || recommenders.isEmpty()) {
-                log.debug("[{}][{}]: No recommenders, skipping selection.", userName,
+                log.trace("[{}][{}]: No recommenders, skipping selection.", userName,
                         layer.getUiName());
                 continue;
             }
+            
+            seenRecommender = true;
     
             List<EvaluatedRecommender> activeRecommenders = new ArrayList<>();
             
@@ -163,6 +166,14 @@ public class SelectionTask
 
                     DataSplitter splitter = new PercentageBasedSplitter(0.8, 10);
                     EvaluationResult result = recommendationEngine.evaluate(casses.get(), splitter);
+                    
+                    if (result.isEvaluationSkipped()) {
+                        log.info("[{}][{}]: Evaluation could not be performed: {}",
+                                user.getUsername(), recommenderName,
+                                result.getErrorMsg().orElse("unknown reason"));
+                        continue;
+                    }
+                    
                     double score = result.computeF1Score();
 
                     Double threshold = recommender.getThreshold();
@@ -193,11 +204,20 @@ public class SelectionTask
             }
             recommendationService.setActiveRecommenders(user, layer, activeRecommenders);
         }
+        
+        if (!seenRecommender) {
+            log.trace("[{}]: No recommenders configured, skipping training.", userName);
+            return;
+        }
 
-     
+        if (!recommendationService.hasActiveRecommenders(user.getUsername(), project)) {
+            log.debug("[{}]: No recommenders active, skipping training.", userName);
+            return;
+        }
         
         schedulingService.enqueue(new TrainingTask(user, getProject(),
                 "SelectionTask after activating recommenders"));
+        
     }
 
     private void handleEvaluationSkipped(String userName, int aRecommenderSize,
