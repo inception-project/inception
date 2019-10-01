@@ -24,9 +24,8 @@ import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.ajax.AjaxPreventSubmitBehavior;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.form.AbstractTextComponent;
+import org.apache.wicket.markup.html.form.TextArea;
 import org.apache.wicket.model.IModel;
-
-import com.googlecode.wicket.kendo.ui.form.TextArea;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil;
