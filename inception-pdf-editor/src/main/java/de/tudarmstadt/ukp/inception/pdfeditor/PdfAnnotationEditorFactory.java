@@ -45,4 +45,10 @@ public class PdfAnnotationEditorFactory
     {
         return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider);
     }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new NoPagingStrategy());
+    }
 }

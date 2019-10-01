@@ -281,7 +281,7 @@ public class OpenNlpPosRecommender
         String[] tokens = new String[numberOfTokens];
         String[] tags = new String[numberOfTokens];
 
-        boolean hasAnnotations = false;
+        int withTagCount = 0;
 
         int i = 0;
         for (AnnotationFS token : aTokens) {
@@ -292,13 +292,21 @@ public class OpenNlpPosRecommender
             // If the tag is neither PAD nor null, then there is at
             // least one annotation the trainer can work with.
             if (tag != null & !PAD.equals(tag)) {
-                hasAnnotations = true;
+                withTagCount++;
             }
 
             i++;
         }
-
-        return hasAnnotations ? Optional.of(new POSSample(tokens, tags)) : Optional.empty();
+        
+        // Require at least X percent of the sentence to have tags to avoid class imbalance on PAD
+        // tag.
+        double coverage = ((double) withTagCount * 100) / (double) numberOfTokens;
+        if (coverage > traits.getTaggedTokensThreshold()) {
+            return Optional.of(new POSSample(tokens, tags));
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
     private String getFeatureValueCovering(CAS aCas, AnnotationFS aToken, Type aType,

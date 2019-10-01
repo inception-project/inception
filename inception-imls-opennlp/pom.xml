@@ -20,7 +20,7 @@
   <parent>
     <groupId>de.tudarmstadt.ukp.inception.app</groupId>
     <artifactId>inception-app</artifactId>
-    <version>0.12.0-SNAPSHOT</version>
+    <version>0.13.0-SNAPSHOT</version>
   </parent>
   <artifactId>inception-imls-opennlp</artifactId>
   <name>INCEpTION - ML - OpenNLP (v ${opennlp.version})</name>
@@ -95,6 +95,11 @@
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
       <artifactId>jsr305</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-annotations</artifactId>
     </dependency>
 
     <!-- LOGGING DEPENDENCIES - SLF4J -->

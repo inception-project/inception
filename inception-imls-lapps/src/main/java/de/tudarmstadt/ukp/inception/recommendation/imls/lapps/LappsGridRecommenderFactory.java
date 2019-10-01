@@ -84,7 +84,8 @@ public class LappsGridRecommenderFactory
     }
 
     @Override
-    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public LappsGridRecommenderTraitsEditor createTraitsEditor(String aId,
+            IModel<Recommender> aModel)
     {
         return new LappsGridRecommenderTraitsEditor(aId, aModel);
     }

@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.recommendation.event;
 
 import org.springframework.context.ApplicationEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 
 public class RecommenderDeletedEvent
@@ -29,27 +28,12 @@ public class RecommenderDeletedEvent
     private static final long serialVersionUID = 4618078923202025558L;
 
     private final Recommender recommender;
-    private final String user;
-    private final Project project;
 
-    public RecommenderDeletedEvent(Object aSource, Recommender aRecommender, String aUser,
-        Project aProject)
+    public RecommenderDeletedEvent(Object aSource, Recommender aRecommender)
     {
         super(aSource);
 
         recommender = aRecommender;
-        user = aUser;
-        project = aProject;
-    }
-
-    public Project getProject()
-    {
-        return project;
-    }
-
-    public String getUser()
-    {
-        return user;
     }
 
     public Recommender getRecommender()
@@ -57,13 +41,12 @@ public class RecommenderDeletedEvent
         return recommender;
     }
 
-    @Override public String toString()
+    @Override
+    public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("RecommenderEvaluationResultEvent [recommender=");
+        builder.append("RecommenderDeletedEvent [recommender=");
         builder.append(recommender);
-        builder.append(", user=");
-        builder.append(user);
         builder.append("]");
         return builder.toString();
     }

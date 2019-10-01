@@ -1,0 +1,122 @@
+<!--
+#Copyright 2019
+#Ubiquitous Knowledge Processing (UKP) Lab
+#Technische Universität Darmstadt
+#
+#Licensed under the Apache License, Version 2.0 (the "License");
+#you may not use this file except in compliance with the License.
+#You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+#Unless required by applicable law or agreed to in writing, software
+#distributed under the License is distributed on an "AS IS" BASIS,
+#WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#See the License for the specific language governing permissions and
+#limitations under the License.
+-->
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:wicket="http://wicket.apache.org/dtds.data/wicket-xhtml1.4-strict.dtd">
+<wicket:panel>
+  <form wicket:id="form" class="form-horizontal">
+    <div class="form-group">
+      <div class="col-sm-12">
+        <div class="form-group" wicket:enclosure="url">
+          <label class="col-sm-3 control-label" wicket:for="url">
+            <wicket:message key="url"/>
+          </label>
+          <div class="col-sm-9">
+            <input wicket:id="url"></input>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-12">
+        <div class="form-group" wicket:enclosure="apiKey">
+          <label class="col-sm-3 control-label" wicket:for="apiKey">
+            <wicket:message key="apiKey"/>
+          </label>
+          <div class="col-sm-9">
+            <input wicket:id="apiKey" type="text" class="form-control"/>
+          </div>
+        </div>
+        <div class="form-group" wicket:enclosure="lastKeyUpdate">
+          <label class="col-sm-3 control-label">
+            <wicket:message key="lastKeyUpdate"/>
+          </label>
+          <div class="col-sm-9">
+            <input wicket:id="lastKeyUpdate" class="form-control"/>
+          </div>
+          <div class="col-sm-offset-3 col-sm-9">
+            <div>
+              Obtain an API key <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/WaaS/apikey"><i class="fas fa-external-link-alt"></i> here</a>.
+              A key is valid for three months. If the recommender does not work anymore, your key might have expired.
+            </div>
+          </div>
+        </div>
+        <div class="form-group" wicket:enclosure="chainInputFormat">
+          <label class="control-label col-sm-3">
+            <wicket:message key="chainInputFormat"/>
+          </label>
+          <div class="col-sm-9">
+            <select wicket:id="chainInputFormat" data-size="5"></select>
+          </div>
+        </div>
+        <div class="form-group"  wicket:enclosure="chainInputLanguage">
+          <label class="control-label col-sm-3">
+            <wicket:message key="chainInputLanguage"/>
+          </label>
+          <div class="col-sm-9">
+            <input wicket:id="chainInputLanguage"/>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+  <div wicket:id="saveToAddChainAlert" class="form-group">
+    <div class="col-sm-12">
+      <div class="col-sm-offset-3 col-sm-9 alert alert-danger" role="alert">
+        Please save the recommender to allow uploading a WebLicht chain definition file.
+      </div>
+    </div>
+  </div>
+  <div class="form-horizontal">
+    <div class="form-group">
+      <div class="col-sm-12">
+        <div class="form-group" wicket:enclosure="upload">
+          <label class="col-sm-3 control-label">
+            <wicket:message key="uploadChain"/>
+          </label>
+          <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container">
+              <input type="file" wicket:id="upload"/>
+            </div>
+          </div>
+          <div class="col-sm-offset-3 col-sm-9">
+            <div>
+              Build your chain using <a target="_blank" href="https://weblicht.sfs.uni-tuebingen.de/weblicht/"><i class="fas fa-external-link-alt"></i> WebLicht</a>
+              then download it and upload it here again.
+            </div>
+          </div>
+        </div>
+        <div class="form-group" wicket:enclosure="chain">
+          <label class="col-sm-3 control-label">
+            <wicket:message key="chain"/>
+          </label>
+          <div class="col-sm-9 flex-v-container flex-gutter flex-only-internal-gutter">
+            <div class="flex-h-container">
+              <span class="form-control" wicket:id="chain"/>
+            </div>
+          </div>
+        </div>
+        <div wicket:id="missingChainAlert" class="form-group">
+          <div class="col-sm-offset-3 col-sm-9 alert alert-danger" role="alert">
+            Please upload a chain definition to enable the recommender.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>
