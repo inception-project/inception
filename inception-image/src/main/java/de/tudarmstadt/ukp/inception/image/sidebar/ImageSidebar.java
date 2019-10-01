@@ -17,12 +17,15 @@
  */
 package de.tudarmstadt.ukp.inception.image.sidebar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.RELATION_TYPE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,6 +34,9 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.util.FSUtil;
+import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
@@ -51,11 +57,16 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
@@ -84,15 +95,18 @@ public class ImageSidebar
         mainContainer.setOutputMarkupId(true);
         add(mainContainer);
 
-        ListView<String> images = new ListView<String>("images")
+        ListView<ImageHandle> images = new ListView<ImageHandle>("images")
         {
             private static final long serialVersionUID = -1203277069357712752L;
 
             @Override
-            protected void populateItem(ListItem<String> item)
+            protected void populateItem(ListItem<ImageHandle> item)
             {
-                item.add(new ExternalImage("image", item.getModelObject()));
-                item.add(new ExternalLink("open", item.getModelObject()));
+                item.add(new ExternalLink("open", item.getModelObject().getUrl()));
+                LambdaAjaxLink jumpToLink = new LambdaAjaxLink("jumpTo",
+                    _target -> actionJumpTo(_target, item.getModelObject()));
+                item.add(jumpToLink);
+                jumpToLink.add(new ExternalImage("image", item.getModelObject().getUrl()));
             }
         };
         images.setModel(LoadableDetachableModel.of(this::listImageUrls));
@@ -185,7 +199,7 @@ public class ImageSidebar
                 "  (new Date().getTime() - startTime) + 'ms');");
     }
     
-    private List<String> listImageUrls()
+    private List<ImageHandle> listImageUrls()
     {
         AnnotatorState state = getModelObject();
         Project project = state.getProject();
@@ -212,7 +226,7 @@ public class ImageSidebar
         }
 
         // Extract the URLs
-        List<String> urls = new ArrayList<>();
+        List<ImageHandle> images = new ArrayList<>();
         TypeSystem ts = cas.getTypeSystem();
         for (AnnotationFeature feat : imageFeatures) {
             Type t = getType(cas, feat.getLayer().getName());
@@ -231,12 +245,13 @@ public class ImageSidebar
                 String url = anno.getFeatureValueAsString(f);
                 
                 if (isNotBlank(url)) {
-                    urls.add(url);
+                    images.add(new ImageHandle(url, state.getDocument(), new VID(anno),
+                            anno.getBegin(), anno.getEnd()));
                 }
             }
         }
         
-        return urls;
+        return images;
     }
     
     @OnEvent
@@ -244,5 +259,89 @@ public class ImageSidebar
     {
         aEvent.getRequestHandler().add(mainContainer);
         aEvent.getRequestHandler().appendJavaScript(colorScript());
+    }
+    
+    public void actionJumpTo(AjaxRequestTarget aTarget, ImageHandle aHandle)
+    {
+        try {
+            AnnotatorState state = getModelObject();
+            
+            // Get the CAS
+            CAS cas = getCasProvider().get();
+            
+            AnnotationFS fs = WebAnnoCasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
+
+            AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+            if (SPAN_TYPE.equals(layer.getType())) {
+                state.getSelection().selectSpan(aHandle.getVid(), cas, aHandle.getBegin(),
+                        aHandle.getEnd());
+            }
+            else if (RELATION_TYPE.equals(layer.getType())) {
+                RelationAdapter adapter = (RelationAdapter) annotationService.getAdapter(layer);
+                AnnotationFS originFS = FSUtil.getFeature(fs, adapter.getSourceFeatureName(),
+                        AnnotationFS.class);
+                AnnotationFS targetFS = FSUtil.getFeature(fs, adapter.getTargetFeatureName(),
+                        AnnotationFS.class);
+                state.getSelection().selectArc(aHandle.getVid(), originFS, targetFS);
+            }
+            else {
+                return;
+            }
+            
+            actionShowSelectedDocument(aTarget, aHandle.getDocument(), aHandle.getBegin(),
+                    aHandle.getEnd());
+            aTarget.add((Component) getActionHandler());
+        }
+        catch (IOException e) {
+            error("Unable to select annotation: " + e.getMessage());
+            LOG.error("Unable to select annotation", e);
+        }
+    }
+    
+    private static class ImageHandle
+        implements Serializable
+    {
+        private static final long serialVersionUID = 9032602311793328638L;
+        
+        private final String url;
+        private final SourceDocument document;
+        private final VID vid;
+        private final int begin;
+        private final int end;
+        
+        public ImageHandle(String aUrl, SourceDocument aDocument, VID aVid, int aBegin, int aEnd)
+        {
+            super();
+            url = aUrl;
+            document = aDocument;
+            vid = aVid;
+            begin = aBegin;
+            end = aEnd;
+        }
+
+        public String getUrl()
+        {
+            return url;
+        }
+
+        public SourceDocument getDocument()
+        {
+            return document;
+        }
+        
+        public VID getVid()
+        {
+            return vid;
+        }
+
+        public int getBegin()
+        {
+            return begin;
+        }
+
+        public int getEnd()
+        {
+            return end;
+        }
     }
 }

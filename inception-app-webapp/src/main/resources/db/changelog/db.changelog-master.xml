@@ -32,4 +32,5 @@
   <include file="de/tudarmstadt/ukp/inception/search/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/externalsearch/model/db-changelog.xml"/>
   <include file="de/tudarmstadt/ukp/inception/recommendation/imls/stringmatch/model/db-changelog.xml"/>
+  <include file="de/tudarmstadt/ukp/inception/recommendation/imls/weblicht/model/db-changelog.xml"/>
 </databaseChangeLog>
