@@ -137,24 +137,25 @@ public class AnnotationPage
     {
         super();
         LOG.debug("Setting up annotation page without parameters");
-        
+
         setModel(Model.of(new AnnotatorStateImpl(Mode.ANNOTATION)));
         // Ensure that a user is set
         getModelObject().setUser(userRepository.getCurrentUser());
-        
+
         Map<String, StringValue> fragmentParameters = Session.get()
                 .getMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS);
+        StringValue focus = StringValue.valueOf(0);
         if (fragmentParameters != null) {
             // Clear the URL fragment parameters - we only use them once!
             Session.get().setMetaData(SessionMetaData.LOGIN_URL_FRAGMENT_PARAMS, null);
-            
+
             StringValue project = fragmentParameters.get(PAGE_PARAM_PROJECT_ID);
             StringValue document = fragmentParameters.get(PAGE_PARAM_DOCUMENT_ID);
-            StringValue focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
-            
+            focus = fragmentParameters.get(PAGE_PARAM_FOCUS);
+
             handleParameters(project, document, focus, false);
-            commonInit(focus);
         }
+        commonInit(focus);
     }
 
     public AnnotationPage(final PageParameters aPageParameters)
@@ -179,9 +180,7 @@ public class AnnotationPage
         createChildComponents();
         SourceDocument doc = getModelObject().getDocument();
         
-        if (doc != null) {
-            updateDocumentView(null, doc, focus);
-        }
+        updateDocumentView(null, doc, focus);
     }
     
     private void createChildComponents()
@@ -533,11 +532,10 @@ public class AnnotationPage
                 StringValue document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT_ID);
                 StringValue focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
 
+                SourceDocument previousDoc = getModelObject().getDocument();
                 handleParameters(project, document, focus, false);
-                SourceDocument doc = getModelObject().getDocument();
-                if (doc != null) {
-                    updateDocumentView(aTarget, doc, focus);
-                }
+                
+                updateDocumentView(aTarget, previousDoc, focus);
             }
         };
     }
@@ -649,18 +647,25 @@ public class AnnotationPage
         }
     }
 
-    protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument document,
+    protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
             StringValue aFocusParameter)
     {
+        SourceDocument currentDocument = getModelObject().getDocument();
+        if (currentDocument == null) {
+            return;
+        }
+        
+        // If we arrive here and the document is not null, then we have a change of document
+        // or a change of focus (or both)
+        
         // Get current focus unit from parameters
         int focus = 0;
         if (aFocusParameter != null) {
             focus = aFocusParameter.toInt(0);
         }
-
-        // If we arrive here and the document is not null, then we have a change of document
-        // or a change of focus (or both)
-        if (!document.equals(getModelObject().getDocument())) {
+        // never had set a document or is a new one
+        if (aPreviousDocument == null ||
+                !aPreviousDocument.equals(currentDocument)) { 
             actionLoadDocument(aTarget, focus);
         }
         else {
