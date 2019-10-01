@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.inception.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -46,6 +45,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.value.AttributeMap;
@@ -92,6 +92,8 @@ public class CurationSidebar
     private RadioChoice<String> curationTargetChoice;
     private WebMarkupContainer mainContainer;
     private DropDownChoice<MergeStrategy> mergeChoice;
+    private ListView<User> users;
+    private Label noDocsLabel;
     
     private AnnotationPage annoPage;
     
@@ -116,8 +118,12 @@ public class CurationSidebar
         settingsForm.setOutputMarkupId(true);
         settingsForm.setVisible(false);
         mainContainer.add(settingsForm);
+        
+        // Add empty space message
+        noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
+        mainContainer.add(noDocsLabel);
     }
-
+    
     private Form<Void> createSettingsForm(String aId)
     {
         Form<Void> settingsForm = new Form<Void>(aId);
@@ -206,6 +212,19 @@ public class CurationSidebar
         setEnabled((user.equals(userRepository.getCurrentUser()) || 
                 user.getUsername().equals(CURATION_USER)) &&
                 !documentService.isAnnotationFinished(state.getDocument(), user));
+        configureVisibility();
+    }
+
+    protected void configureVisibility()
+    {
+        if (users.getModelObject().isEmpty()) {
+            usersForm.setVisible(false);
+            noDocsLabel.setVisible(true);
+        }
+        else {
+            usersForm.setVisible(true);
+            noDocsLabel.setVisible(false);
+        }
     }
 
     private void merge(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -272,7 +291,7 @@ public class CurationSidebar
         usersForm.add(clearButton);
         usersForm.add(showButton);
         selectedUsers = new CheckGroup<User>("selectedUsers", usersForm.getModelObject());
-        ListView<User> users = new ListView<User>("users",
+        users = new ListView<User>("users",
                 LoadableDetachableModel.of(this::listUsers))
         {
             private static final long serialVersionUID = 1L;
@@ -287,7 +306,7 @@ public class CurationSidebar
         };
         selectedUsers.add(users);
         usersForm.add(selectedUsers);
-        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
+//        usersForm.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
         return usersForm;
     }
     
