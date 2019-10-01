@@ -39,18 +39,20 @@ import org.apache.wicket.event.IEvent;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.protocol.ws.api.WebSocketBehavior;
+import org.apache.wicket.protocol.ws.api.WebSocketRequestHandler;
+import org.apache.wicket.protocol.ws.api.message.ConnectedMessage;
+import org.apache.wicket.protocol.ws.api.message.IWebSocketPushMessage;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wicketstuff.event.annotation.OnEvent;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.chart.ChartPanel;
+import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderEvaluationResultEvent;
 import de.tudarmstadt.ukp.inception.recommendation.log.RecommenderEvaluationResultEventAdapter.Details;
 import de.tudarmstadt.ukp.inception.recommendation.model.LearningCurve;
 import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
@@ -93,6 +95,28 @@ public class LearningCurveChartPanel
         add(dropDownPanel);
         
         selectedMetric = RecommenderEvaluationScoreMetricEnum.Accuracy;
+        
+        add(new WebSocketBehavior() {
+
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected void onConnect(ConnectedMessage aMessage)
+            {
+                super.onConnect(aMessage);
+                LOG.debug("User with sessionID {} connected.",
+                        aMessage.getSessionId());
+            }
+
+            @Override
+            protected void onPush(WebSocketRequestHandler aHandler, IWebSocketPushMessage aMessage)
+            {
+                if (aMessage instanceof RecommenderEvaluationResultEvent) {
+                    LOG.debug("Received event: {}", aMessage.toString());
+                    aHandler.add(LearningCurveChartPanel.this);
+                }
+            }
+        });
     }
     
 
@@ -115,14 +139,6 @@ public class LearningCurveChartPanel
         }
     }
 
-    @OnEvent
-    public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
-    {
-        LOG.trace("rendered annotation event");
-
-        aEvent.getRequestHandler().add(this);
-    }
-    
     /**
      * Returns chart data wrapped in LearningCurve
      */
