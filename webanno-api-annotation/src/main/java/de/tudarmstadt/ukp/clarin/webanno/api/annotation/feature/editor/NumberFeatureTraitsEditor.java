@@ -89,7 +89,7 @@ public class NumberFeatureTraitsEditor
         switch (feature.getObject().getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             clazz = Integer.class;
-            options.set("format", "n0");
+            options.set("format", "'n0'");
             break;
         }
         case CAS.TYPE_NAME_FLOAT: {
