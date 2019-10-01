@@ -16,12 +16,12 @@
 | database.driver
 | Database driver
 | org.hsqldb.jdbc.JDBCDriver
-| com.mysql.jdbc.Driver
+| com.mysql.cj.jdbc.Driver
 
 | database.url
 | JDBC connection string
 | _location in application home_
-| jdbc:mysql://localhost:3306/weblab?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC
+| jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
 
 | database.username
 | Database username
@@ -74,12 +74,12 @@ The following environment variables can be used:
 | `WEBANNO_DB_DRIVER`
 | Database driver
 | org.hsqldb.jdbc.JDBCDriver
-| com.mysql.jdbc.Driver
+| com.mysql.cj.jdbc.Driver
 
 | `WEBANNO_DB_URL`
 | JDBC connection string
 | _location in application home_
-| jdbc:mysql://localhost:3306/webanno?useUnicode=true&characterEncoding=UTF-8
+| jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
 
 | `WEBANNO_DB_USERNAME`
 | Database username
