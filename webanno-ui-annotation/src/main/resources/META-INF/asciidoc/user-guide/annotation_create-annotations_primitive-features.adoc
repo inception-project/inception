@@ -21,4 +21,5 @@
 Supported primitive features types are string, boolean, integer, and float.
 Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
 float features are displayed using a number field. String features are displayed using a text field
-or - in case they have a tagset - using a combobox.
+or a text area with multiple rows. The text area can be expanded if focused and collapses again if
+focus is lost. In case the string feature has a tagset it will instead use a combobox. 
