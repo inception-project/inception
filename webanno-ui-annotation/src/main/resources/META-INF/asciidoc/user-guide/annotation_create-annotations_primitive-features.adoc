@@ -21,6 +21,6 @@
 Supported primitive features types are string, boolean, integer, and float.
 Boolean features are displayed as a checkbox that can either be marked or unmarked. Integer and 
 float features are displayed using a number field. However if an integer feature is limited and the 
-difference between the maximum and minimum is lower than 12 it will be displayed with a radio button
-group instead. String features are displayed using a text field
+difference between the maximum and minimum is lower than 12 it can also be displayed with a radio
+button group instead. String features are displayed using a text field
 or - in case they have a tagset - using a combobox.

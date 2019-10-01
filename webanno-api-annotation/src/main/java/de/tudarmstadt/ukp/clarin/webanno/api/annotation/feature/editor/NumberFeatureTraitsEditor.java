@@ -21,9 +21,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.vi
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
@@ -35,6 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
@@ -47,6 +50,7 @@ public class NumberFeatureTraitsEditor
     private static final long serialVersionUID = -2830709472810678708L;
     
     private static final String MID_FORM = "form";
+    private static final String CID_EDITOR_TYPE = "editorType";
 
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
@@ -98,6 +102,14 @@ public class NumberFeatureTraitsEditor
         }
         }
     
+        DropDownChoice<NumberFeatureTraits.EDITOR_TYPE> editorType =
+                new BootstrapSelect<>(CID_EDITOR_TYPE);
+        editorType.setModel(PropertyModel.of(traits, "editorType"));
+        editorType.setChoices(Arrays.asList(NumberFeatureTraits.EDITOR_TYPE.values()));
+        editorType.add(new LambdaAjaxFormComponentUpdatingBehavior("change"));
+        editorType.add(visibleWhen(() -> isEditorTypeSelectionPossible()));
+        form.add(editorType);
+    
         NumberTextField minimum = new NumberTextField<>("minimum", clazz, options);
         minimum.setModel(PropertyModel.of(traits, "minimum"));
         form.add(minimum);
@@ -133,6 +145,19 @@ public class NumberFeatureTraitsEditor
         add(multipleRows);
     }
     
+    /**
+     * Checks if current settings for number feature allow for a selection of editor type.
+     * Radio button editor can be used if the difference between maximum and minimum is 
+     * smaller than 12 and the number feature is of type integer.
+     */
+    private boolean isEditorTypeSelectionPossible()
+    {
+        BigDecimal min = new BigDecimal(traits.getObject().getMinimum().toString());
+        BigDecimal max = new BigDecimal(traits.getObject().getMaximum().toString());
+        return max.subtract(min).compareTo(new BigDecimal(12)) < 0
+                && feature.getObject().getType().equals(CAS.TYPE_NAME_INTEGER);
+    }
+    
     private PrimitiveUimaFeatureSupport getFeatureSupport()
     {
         return featureSupportRegistry.getFeatureSupport(featureSupportId);
@@ -151,6 +176,7 @@ public class NumberFeatureTraitsEditor
         result.setLimited(t.isLimited());
         result.setMinimum(t.getMinimum());
         result.setMaximum(t.getMaximum());
+        result.setEditorType(t.getEditorType());
         
         return result;
     }
@@ -166,6 +192,9 @@ public class NumberFeatureTraitsEditor
         t.setLimited(traits.getObject().isLimited());
         t.setMinimum(traits.getObject().getMinimum());
         t.setMaximum(traits.getObject().getMaximum());
+        t.setEditorType(isEditorTypeSelectionPossible()
+                ? traits.getObject().getEditorType() 
+                : NumberFeatureTraits.EDITOR_TYPE.SPINNER);
         
         getFeatureSupport().writeNumberFeatureTraits(feature.getObject(), t);
     }
@@ -182,6 +211,7 @@ public class NumberFeatureTraitsEditor
         private boolean limited;
         private Number minimum;
         private Number maximum;
+        private NumberFeatureTraits.EDITOR_TYPE editorType;
     
         public boolean isLimited()
         {
@@ -211,6 +241,16 @@ public class NumberFeatureTraitsEditor
         public void setMaximum(Number maximum)
         {
             this.maximum = maximum;
+        }
+    
+        public NumberFeatureTraits.EDITOR_TYPE getEditorType()
+        {
+            return editorType;
+        }
+    
+        public void setEditorType(NumberFeatureTraits.EDITOR_TYPE editorType)
+        {
+            this.editorType = editorType;
         }
     }
 }

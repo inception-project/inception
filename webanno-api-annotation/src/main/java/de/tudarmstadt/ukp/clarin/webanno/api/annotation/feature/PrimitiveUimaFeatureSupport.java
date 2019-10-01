@@ -218,10 +218,9 @@ public class PrimitiveUimaFeatureSupport
             switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
                 NumberFeatureTraits traits = readNumberFeatureTraits(feature);
-                int min = (int) traits.getMinimum();
-                int max = (int) traits.getMaximum();
-                // difference must be at max 11 because we want to allow like 0-10
-                if (traits.isLimited() && max - min <= 11) {
+                if (traits.getEditorType().equals(NumberFeatureTraits.EDITOR_TYPE.RADIO_BUTTONS)) {
+                    int min = (int) traits.getMinimum();
+                    int max = (int) traits.getMaximum();
                     List<Integer> range =
                         IntStream.range(min, max + 1).boxed().collect(Collectors.toList());
                     editor =

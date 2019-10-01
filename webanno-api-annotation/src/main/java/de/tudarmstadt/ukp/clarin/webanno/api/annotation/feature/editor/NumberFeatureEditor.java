@@ -48,7 +48,7 @@ public class NumberFeatureEditor<T extends Number>
         switch (getModelObject().feature.getType()) {
         case CAS.TYPE_NAME_INTEGER: {
             Options options = new Options();
-            options.set("format", "n0");
+            options.set("format", "'n0'");
             field = new NumberTextField<>("value", Integer.class, options);
             if (aTraits.isLimited()) {
                 field.setMinimum(aTraits.getMinimum());

@@ -27,9 +27,27 @@ public class NumberFeatureTraits
 {
     private static final long serialVersionUID = -2395185084802071593L;
     
+    public enum EDITOR_TYPE
+    {
+        SPINNER("Spinner"),
+        RADIO_BUTTONS("Radio Buttons");
+        
+        private final String name;
+        
+        EDITOR_TYPE(String name) {
+            this.name = name;
+        }
+        
+        @Override
+        public String toString() {
+            return name;
+        }
+    }
+    
     private boolean limited = false;
     private Number minimum = 0;
     private Number maximum = 0;
+    private EDITOR_TYPE editorType = EDITOR_TYPE.SPINNER;
     
     public NumberFeatureTraits()
     {
@@ -64,5 +82,15 @@ public class NumberFeatureTraits
     public void setMaximum(Number maximum)
     {
         this.maximum = maximum;
+    }
+    
+    public EDITOR_TYPE getEditorType()
+    {
+        return editorType;
+    }
+    
+    public void setEditorType(EDITOR_TYPE editorType)
+    {
+        this.editorType = editorType;
     }
 }
