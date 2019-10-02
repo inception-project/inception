@@ -196,10 +196,6 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-perseus-asl</artifactId>
     </dependency>
-    <dependency>
-      <groupId>org.dkpro.core</groupId>
-      <artifactId>dkpro-core-io-xml-asl</artifactId>
-    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
