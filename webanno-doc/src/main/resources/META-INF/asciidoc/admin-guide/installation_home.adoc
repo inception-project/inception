@@ -40,7 +40,7 @@ $ mkdir /srv/webanno
 [source,text]
 ----
 database.dialect=org.hibernate.dialect.MySQL5InnoDBDialect
-database.driver=com.mysql.jdbc.Driver
+database.driver=com.mysql.cj.jdbc.Driver
 database.url=jdbc:mysql://localhost:3306/webanno?useSSL=false&serverTimezone=UTC
 database.username=webanno
 database.password=t0t4llYSecreT

@@ -119,7 +119,7 @@ of accessing it directly. This assumes that you already have the following packa
 [source,text]
 ----
 tomcat.ajp.port=18009
-server.contextPath=/webanno
+server.servlet.context-path=/webanno
 server.use-forward-headers=true
 ----
 +
