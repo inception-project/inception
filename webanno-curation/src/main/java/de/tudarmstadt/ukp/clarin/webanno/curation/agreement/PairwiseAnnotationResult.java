@@ -23,8 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
-
 public class PairwiseAnnotationResult
     implements Serializable
 {

@@ -39,8 +39,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;

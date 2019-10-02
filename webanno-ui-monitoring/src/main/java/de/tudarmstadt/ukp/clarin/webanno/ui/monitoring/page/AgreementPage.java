@@ -18,6 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.monitoring.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJECT_ID;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -36,10 +40,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
-import org.apache.wicket.ajax.markup.html.form.AjaxButton;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
@@ -51,7 +52,6 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -74,27 +74,26 @@ import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementReportExportFormat;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementReportExportFormat;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.ConcreteAgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -196,8 +195,7 @@ public class AgreementPage
 
         Project project = projectSelectionForm.getModelObject().project;
 
-        List<User> users = projectService.listProjectUsersWithPermissions(project,
-                PermissionLevel.ANNOTATOR);
+        List<User> users = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
 
         List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
 
@@ -212,7 +210,7 @@ public class AgreementPage
                 if (documentService.existsAnnotationDocument(document, user)) {
                     AnnotationDocument annotationDocument = documentService
                             .getAnnotationDocument(document, user);
-                    if (annotationDocument.getState().equals(AnnotationDocumentState.FINISHED)) {
+                    if (annotationDocument.getState().equals(FINISHED)) {
                         try {
                             cas = documentService.readAnnotationCas(annotationDocument);
                             annotationService.upgradeCasIfRequired(cas, annotationDocument);
@@ -258,7 +256,7 @@ public class AgreementPage
 
         private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
 
-        private AjaxButton exportAll;
+        private AjaxDownloadLink exportAll;
 
         private CheckBox excludeIncomplete;
 
@@ -272,20 +270,12 @@ public class AgreementPage
             add(new Label("name",
                     PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
             
-            WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults") {
-                private static final long serialVersionUID = -2465552557800612807L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    
-                    setVisible(featureList.getModelObject() != null);
-                }
-            };
+            WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults");
+            agreementResults.add(visibleWhen(() -> featureList.getModelObject() != null));
             add(agreementResults);
             
-            PopoverConfig config = new PopoverConfig().withPlacement(Placement.left)
+            PopoverConfig config = new PopoverConfig()
+                    .withPlacement(Placement.left)
                     .withHtml(true);
             WebMarkupContainer legend = new WebMarkupContainer("legend");
             legend.add(new PopoverBehavior(new ResourceModel("legend"), 
@@ -295,50 +285,34 @@ public class AgreementPage
             add(measureDropDown = new BootstrapSelect<>("measure",
                     asList(ConcreteAgreementMeasure.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this)));
-            addUpdateAgreementTableBehavior(measureDropDown);
+            measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::updateAgreementTable));
 
-            add(linkCompareBehaviorDropDown = new BootstrapSelect<LinkCompareBehavior>(
-                    "linkCompareBehavior", asList(LinkCompareBehavior.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this))
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    AgreementFormModel model = AgreementForm.this.getModelObject();
-                    if (model != null && model.feature != null) {
-                        setVisible(!LinkMode.NONE.equals(model.feature.getLinkMode()));
-                    }
-                    else {
-                        setVisible(false);
-                    }
+            add(linkCompareBehaviorDropDown = new BootstrapSelect<>("linkCompareBehavior",
+                    asList(LinkCompareBehavior.values()),
+                    new EnumChoiceRenderer<>(AgreementPage.this)));
+            linkCompareBehaviorDropDown.add(visibleWhen(() -> {
+                AgreementFormModel model = AgreementForm.this.getModelObject();
+                if (model != null && model.feature != null) {
+                    return !LinkMode.NONE.equals(model.feature.getLinkMode());
                 }
-            });
-            linkCompareBehaviorDropDown.setOutputMarkupId(true);
+                return false;
+            }));
             linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
-            addUpdateAgreementTableBehavior(linkCompareBehaviorDropDown);
+            linkCompareBehaviorDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::updateAgreementTable));
 
             agreementResults.add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
                     asList(AgreementReportExportFormat.values()),
                     new EnumChoiceRenderer<>(AgreementPage.this))
                             .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
 
-            add(excludeIncomplete = new CheckBox("excludeIncomplete")
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-                    
-                    setEnabled(AgreementForm.this.getModelObject().measure.isNullValueSupported());
-                }
-            });
-            addUpdateAgreementTableBehavior(excludeIncomplete);
+            excludeIncomplete = new CheckBox("excludeIncomplete");
+            excludeIncomplete.add(enabledWhen(() -> 
+                    AgreementForm.this.getModelObject().measure.isNullValueSupported()));
+            excludeIncomplete.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::updateAgreementTable));
+            add(excludeIncomplete);
 
             add(featureList = new ListChoice<AnnotationFeature>("feature")
             {
@@ -347,28 +321,7 @@ public class AgreementPage
                 {
                     setOutputMarkupId(true);
 
-                    setChoices(new LoadableDetachableModel<List<AnnotationFeature>>()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected List<AnnotationFeature> load()
-                        {
-                            List<AnnotationFeature> features = annotationService
-                                    .listAnnotationFeature(
-                                            (projectSelectionForm.getModelObject().project));
-                            List<AnnotationFeature> unusedFeatures = new ArrayList<>();
-                            for (AnnotationFeature feature : features) {
-                                if (feature.getLayer().getName().equals(Token.class.getName())
-                                        || feature.getLayer().getName()
-                                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
-                                    unusedFeatures.add(feature);
-                                }
-                            }
-                            features.removeAll(unusedFeatures);
-                            return features;
-                        }
-                    });
+                    setChoices(LoadableDetachableModel.of(AgreementForm.this::getEligibleFeatures));
                     setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
                     {
                         private static final long serialVersionUID = -3370671999669664776L;
@@ -388,125 +341,112 @@ public class AgreementPage
                     return "";
                 }
             });
-            addUpdateAgreementTableBehavior(featureList);
+            featureList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+                    this::updateAgreementTable));
 
             agreementResults.add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
-                    new LoadableDetachableModel<PairwiseAnnotationResult>()
-                    {
-                        private static final long serialVersionUID = 1L;
+                    LoadableDetachableModel.of(this::getAgreementResult)));
 
-                        @Override
-                        protected PairwiseAnnotationResult load()
-                        {
-                            AnnotationFeature feature = featureList.getModelObject();
-
-                            // Do not do any agreement if no feature has been selected yet.
-                            if (feature == null) {
-                                return null;
-                            }
-
-                            Map<String, List<CAS>> casMap = getCases();
-
-                            Project project = projectSelectionForm.getModelObject().project;
-                            List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService,
-                                    project);
-
-                            AgreementFormModel pref = AgreementForm.this.getModelObject();
-
-                            DiffResult diff = CasDiff.doDiff(asList(feature.getLayer().getName()),
-                                    adapters, pref.linkCompareBehavior, casMap);
-                            return AgreementUtils.getPairwiseAgreement(
-                                    AgreementForm.this.getModelObject().measure,
-                                    pref.excludeIncomplete, diff, feature.getLayer().getName(),
-                                    feature.getName(), casMap);
-                        }
-                    }));
-
-            exportAll = new AjaxButton("exportAll")
-            {
-                private static final long serialVersionUID = 3908727116180563330L;
-
-                private AJAXDownload download;
-
-                {
-                    download = new AJAXDownload()
-                    {
-                        private static final long serialVersionUID = 1L;
-
-                        @Override
-                        protected IResourceStream getResourceStream()
-                        {
-                            return new AbstractResourceStream()
-                            {
-                                private static final long serialVersionUID = 1L;
-
-                                @Override
-                                public InputStream getInputStream()
-                                    throws ResourceStreamNotFoundException
-                                {
-                                    AnnotationFeature feature = featureList.getModelObject();
-
-                                    // Do not do any agreement if no feature has been selected yet.
-                                    if (feature == null) {
-                                        return null;
-                                    }
-
-                                    Map<String, List<CAS>> casMap = getCases();
-
-                                    Project project = projectSelectionForm.getModelObject().project;
-                                    List<DiffAdapter> adapters = CasDiff
-                                            .getAdapters(annotationService, project);
-
-                                    AgreementFormModel pref = AgreementForm.this.getModelObject();
-
-                                    DiffResult diff = CasDiff.doDiff(
-                                            asList(feature.getLayer().getName()), adapters,
-                                            pref.linkCompareBehavior, casMap);
-
-                                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
-                                            feature.getLayer().getName(), feature.getName(),
-                                            pref.excludeIncomplete, casMap);
-                                    try {
-                                        return AgreementUtils.generateCsvReport(agreementResult);
-                                    }
-                                    catch (Exception e) {
-                                        // FIXME Is there some better error handling here?
-                                        LOG.error("Unable to generate report", e);
-                                        throw new ResourceStreamNotFoundException(e);
-                                    }
-                                }
-
-                                @Override
-                                public void close()
-                                    throws IOException
-                                {
-                                    // Nothing to do
-                                }
-                            };
-                        }
-                    };
-                    add(download);
-                    setOutputMarkupId(true);
-                    setOutputMarkupPlaceholderTag(true);
-                }
-
-                @Override
-                protected void onConfigure()
-                {
-                    super.onConfigure();
-
-                    setVisible(featureList.getModelObject() != null);
-                }
-
-                @Override
-                protected void onSubmit(AjaxRequestTarget aTarget)
-                {
-                    download.initiate(aTarget, "agreement"
-                            + AgreementForm.this.getModelObject().exportFormat.getExtension());
-                }
-            };
+            exportAll = new AjaxDownloadLink("exportAll", () -> "agreement"
+                    + AgreementForm.this.getModelObject().exportFormat.getExtension(),
+                    this::exportAllAgreements);
+            exportAll.add(LambdaBehavior.visibleWhen(() -> featureList.getModelObject() != null));
             agreementResults.add(exportAll);
         }
+        
+        private IResourceStream exportAllAgreements()
+        {
+            return new AbstractResourceStream()
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                public InputStream getInputStream()
+                    throws ResourceStreamNotFoundException
+                {
+                    AnnotationFeature feature = featureList.getModelObject();
+
+                    // Do not do any agreement if no feature has been selected yet.
+                    if (feature == null) {
+                        return null;
+                    }
+
+                    Map<String, List<CAS>> casMap = getCases();
+
+                    Project project = projectSelectionForm.getModelObject().project;
+                    List<DiffAdapter> adapters = CasDiff
+                            .getAdapters(annotationService, project);
+
+                    AgreementFormModel pref = AgreementForm.this.getModelObject();
+
+                    DiffResult diff = CasDiff.doDiff(
+                            asList(feature.getLayer().getName()), adapters,
+                            pref.linkCompareBehavior, casMap);
+
+                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
+                            feature.getLayer().getName(), feature.getName(),
+                            pref.excludeIncomplete, casMap);
+                    try {
+                        return AgreementUtils.generateCsvReport(agreementResult);
+                    }
+                    catch (Exception e) {
+                        // FIXME Is there some better error handling here?
+                        LOG.error("Unable to generate report", e);
+                        throw new ResourceStreamNotFoundException(e);
+                    }
+                }
+
+                @Override
+                public void close()
+                    throws IOException
+                {
+                    // Nothing to do
+                }
+            };
+        }
+
+        
+        private List<AnnotationFeature> getEligibleFeatures()
+        {
+            List<AnnotationFeature> features = annotationService
+                    .listAnnotationFeature(
+                            (projectSelectionForm.getModelObject().project));
+            List<AnnotationFeature> unusedFeatures = new ArrayList<>();
+            for (AnnotationFeature feature : features) {
+                if (feature.getLayer().getName().equals(Token.class.getName())
+                        || feature.getLayer().getName()
+                                .equals(WebAnnoConst.COREFERENCE_LAYER)) {
+                    unusedFeatures.add(feature);
+                }
+            }
+            features.removeAll(unusedFeatures);
+            return features;
+        }
+        
+        private PairwiseAnnotationResult getAgreementResult()
+        {
+            AnnotationFeature feature = featureList.getModelObject();
+
+            // Do not do any agreement if no feature has been selected yet.
+            if (feature == null) {
+                return null;
+            }
+
+            Map<String, List<CAS>> casMap = getCases();
+
+            Project project = projectSelectionForm.getModelObject().project;
+            List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService,
+                    project);
+
+            AgreementFormModel pref = AgreementForm.this.getModelObject();
+
+            DiffResult diff = CasDiff.doDiff(asList(feature.getLayer().getName()),
+                    adapters, pref.linkCompareBehavior, casMap);
+            return AgreementUtils.getPairwiseAgreement(
+                    AgreementForm.this.getModelObject().measure,
+                    pref.excludeIncomplete, diff, feature.getLayer().getName(),
+                    feature.getName(), casMap);
+        }        
 
         @Override
         protected void onConfigure()
@@ -517,33 +457,24 @@ public class AgreementPage
             setVisible(model != null && model.project != null);
         }
 
-        private void addUpdateAgreementTableBehavior(Component aComponent)
+        private void updateAgreementTable(AjaxRequestTarget aTarget)
         {
-            aComponent.add(new OnChangeAjaxBehavior()
-            {
-                private static final long serialVersionUID = 1L;
+            // We may get errors when loading the CASes but at that time we can no longer
+            // add the feedback panel to the cycle, so let's do it here.
+            aTarget.add(getFeedbackPanel());
 
-                @Override
-                protected void onUpdate(AjaxRequestTarget aTarget)
-                {
-                    // We may get errors when loading the CASes but at that time we can no longer
-                    // add the feedback panel to the cycle, so let's do it here.
-                    aTarget.add(getFeedbackPanel());
+            AgreementPage.this.updateAgreementTable(aTarget, false);
+            // // Adding this as well because when choosing a different measure, it may
+            // affect
+            // // the ability to exclude incomplete configurations.
+            // aTarget.add(excludeIncomplete);
+            // aTarget.add(linkCompareBehaviorDropDown);
 
-                    updateAgreementTable(aTarget, false);
-                    // // Adding this as well because when choosing a different measure, it may
-                    // affect
-                    // // the ability to exclude incomplete configurations.
-                    // aTarget.add(excludeIncomplete);
-                    // aTarget.add(linkCompareBehaviorDropDown);
-
-                    // #1791 - for some reason the updateAgreementTableBehavior does not work
-                    // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
-                    // control its visibility in onConfigure()
-                    // as a workaround, we currently just re-render the whole form
-                    aTarget.add(agreementForm);
-                }
-            });
+            // #1791 - for some reason the updateAgreementTableBehavior does not work
+            // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
+            // control its visibility in onConfigure()
+            // as a workaround, we currently just re-render the whole form
+            aTarget.add(agreementForm);
         }
     }
 
@@ -644,17 +575,6 @@ public class AgreementPage
                     true);
         }
     }
-
-    Model<Project> projectModel = new Model<Project>()
-    {
-        private static final long serialVersionUID = -6394439155356911110L;
-
-        @Override
-        public Project getObject()
-        {
-            return projectSelectionForm.getModelObject().project;
-        }
-    };
 
     static public class ProjectSelectionModel
         implements Serializable

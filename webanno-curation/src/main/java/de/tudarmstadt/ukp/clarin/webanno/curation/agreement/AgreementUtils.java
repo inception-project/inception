@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
@@ -55,71 +56,10 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosit
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.FleissKappaAgreement;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 public class AgreementUtils
 {
-    public enum AgreementReportExportFormat {
-        CSV(".csv"),
-        DEBUG(".txt");
-        
-        private final String extension;
-        
-        AgreementReportExportFormat(String aExtension)
-        {
-            extension = aExtension;
-        }
-
-        public String getExtension()
-        {
-            return extension;
-        }
-    }
-    
-    public enum ConcreteAgreementMeasure {
-        COHEN_KAPPA_AGREEMENT(false),
-        FLEISS_KAPPA_AGREEMENT(false),
-        KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT(true);
-        
-        private final boolean nullValueSupported;
-        
-        ConcreteAgreementMeasure(boolean aNullValueSupported)
-        {
-            nullValueSupported = aNullValueSupported;
-        }
-        
-        public IAgreementMeasure make(ICodingAnnotationStudy aStudy)
-        {
-            switch (this) {
-            case COHEN_KAPPA_AGREEMENT:
-                return new CohenKappaAgreement(aStudy);
-            case FLEISS_KAPPA_AGREEMENT:
-                return new FleissKappaAgreement(aStudy);
-            case KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT:
-                return new KrippendorffAlphaAgreement(aStudy, new NominalDistanceFunction());
-            default:   
-                throw new IllegalArgumentException();
-            }
-        }
-        
-        public boolean isNullValueSupported()
-        {
-            return nullValueSupported;
-        }
-    }
-    
-    public static PairwiseAnnotationResult getPairwiseCohenKappaAgreement(DiffResult aDiff,
-            String aType, String aFeature, Map<String, List<CAS>> aCasMap)
-    {
-        return getPairwiseAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff,
-                aType, aFeature, aCasMap);
-    }
-
     public static PairwiseAnnotationResult getPairwiseAgreement(
             ConcreteAgreementMeasure aMeasure, boolean aExcludeIncomplete,
             DiffResult aDiff, String aType, String aFeature, Map<String, List<CAS>> aCasMap)
@@ -145,8 +85,7 @@ public class AgreementUtils
     public static AgreementResult getCohenKappaAgreement(DiffResult aDiff, String aType,
             String aFeature, Map<String, List<CAS>> aCasMap)
     {
-        return getAgreement(ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT, true, aDiff, aType,
-                aFeature, aCasMap);
+        return getAgreement(COHEN_KAPPA_AGREEMENT, true, aDiff, aType, aFeature, aCasMap);
     }
 
     public static AgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
@@ -157,8 +96,8 @@ public class AgreementUtils
             throw new IllegalArgumentException("CAS map must contain exactly two CASes");
         }
         
-        AgreementResult agreementResult = AgreementUtils.makeStudy(aDiff, aType, aFeature,
-                aExcludeIncomplete, aCasMap);
+        AgreementResult agreementResult = makeStudy(aDiff, aType, aFeature, aExcludeIncomplete,
+                aCasMap);
         try {
             IAgreementMeasure agreement = aMeasure.make(agreementResult.study);
             
@@ -173,7 +112,7 @@ public class AgreementUtils
         }
         catch (RuntimeException e) {
             // FIXME
-            AgreementUtils.dumpAgreementStudy(System.out, agreementResult);
+            dumpAgreementStudy(System.out, agreementResult);
             throw e;
         }
     }
@@ -428,7 +367,7 @@ public class AgreementUtils
                 incompleteSetsByLabel, pluralitySets, aExcludeIncomplete);
     }
     
-    public static void toCSV(CSVPrinter aOut, AgreementResult aAgreement) throws IOException
+    private static void toCSV(CSVPrinter aOut, AgreementResult aAgreement) throws IOException
     {
         try {
             aOut.printComment(String.format("Category count: %d%n", aAgreement.getStudy()
@@ -559,233 +498,13 @@ public class AgreementUtils
         }
     }
 
-    public static void dumpStudy(PrintStream aOut, ICodingAnnotationStudy aStudy)
-    {
-        try {
-            aOut.printf("Category count: %d%n", aStudy.getCategoryCount());
-        }
-        catch (Throwable e) {
-            aOut.printf("Category count: %s%n", ExceptionUtils.getRootCauseMessage(e));
-        }
-        try {
-            aOut.printf("Item count: %d%n", aStudy.getItemCount());
-        }
-        catch (Throwable e) {
-            aOut.printf("Item count: %s%n", ExceptionUtils.getRootCauseMessage(e));
-        }
-        
-        for (ICodingAnnotationItem item : aStudy.getItems()) {
-            StringBuilder sb = new StringBuilder();
-            for (IAnnotationUnit unit : item.getUnits()) {
-                if (sb.length() > 0) {
-                    sb.append(" \t");
-                }
-                sb.append(unit.getCategory());
-            }
-            aOut.println(sb);
-        }
-    }
-
-    public static class AgreementResult
-    {
-        private final String type;
-        private final String feature;
-        private final DiffResult diff;
-        private final ICodingAnnotationStudy study;
-        private final List<ConfigurationSet> setsWithDifferences;
-        private final List<ConfigurationSet> completeSets;
-        private final List<ConfigurationSet> irrelevantSets;
-        private final List<ConfigurationSet> incompleteSetsByPosition;
-        private final List<ConfigurationSet> incompleteSetsByLabel;
-        private final List<ConfigurationSet> pluralitySets;
-        private double agreement;
-        private List<String> casGroupIds;
-        private final boolean excludeIncomplete;
-
-        public AgreementResult(String aType, String aFeature)
-        {
-            type = aType;
-            feature = aFeature;
-            diff = null;
-            study = null;
-            setsWithDifferences = null;
-            completeSets = null;
-            irrelevantSets = null;
-            incompleteSetsByPosition = null;
-            incompleteSetsByLabel = null;
-            pluralitySets = null;
-            excludeIncomplete = false;
-        }
-
-        public AgreementResult(String aType, String aFeature, DiffResult aDiff,
-                ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
-                List<ConfigurationSet> aComplete,
-                List<ConfigurationSet> aIrrelevantSets,
-                List<ConfigurationSet> aSetsWithDifferences,
-                List<ConfigurationSet> aIncompleteByPosition,
-                List<ConfigurationSet> aIncompleteByLabel,
-                List<ConfigurationSet> aPluralitySets,
-                boolean aExcludeIncomplete)
-        {
-            type = aType;
-            feature = aFeature;
-            diff = aDiff;
-            study = aStudy;
-            setsWithDifferences = aSetsWithDifferences;
-            completeSets = Collections.unmodifiableList(new ArrayList<>(aComplete));
-            irrelevantSets = aIrrelevantSets;
-            incompleteSetsByPosition = Collections.unmodifiableList(new ArrayList<>(
-                    aIncompleteByPosition));
-            incompleteSetsByLabel = Collections
-                    .unmodifiableList(new ArrayList<>(aIncompleteByLabel));
-            pluralitySets = Collections
-                    .unmodifiableList(new ArrayList<>(aPluralitySets));
-            casGroupIds = Collections.unmodifiableList(new ArrayList<>(aCasGroupIds));
-            excludeIncomplete = aExcludeIncomplete;
-        }
-        
-        public List<String> getCasGroupIds()
-        {
-            return casGroupIds;
-        }
-        
-        public boolean isAllNull(String aCasGroupId)
-        {
-            for (ICodingAnnotationItem item : study.getItems()) {
-                if (item.getUnit(casGroupIds.indexOf(aCasGroupId)).getCategory() != null) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        
-        public int getNonNullCount(String aCasGroupId)
-        {
-            int i = 0;
-            for (ICodingAnnotationItem item : study.getItems()) {
-                if (item.getUnit(casGroupIds.indexOf(aCasGroupId)).getCategory() != null) {
-                    i++;
-                }
-            }
-            return i;
-        }
-
-        private void setAgreement(double aAgreement)
-        {
-            agreement = aAgreement;
-        }
-        
-        /**
-         * Positions that were not seen in all CAS groups.
-         */
-        public List<ConfigurationSet> getIncompleteSetsByPosition()
-        {
-            return incompleteSetsByPosition;
-        }
-
-        /**
-         * Positions that were seen in all CAS groups, but labels are unset (null).
-         */
-        public List<ConfigurationSet> getIncompleteSetsByLabel()
-        {
-            return incompleteSetsByLabel;
-        }
-
-        public List<ConfigurationSet> getPluralitySets()
-        {
-            return pluralitySets;
-        }
-        
-        /**
-         * @return sets differing with respect to the type and feature used to calculate agreement.
-         */
-        public List<ConfigurationSet> getSetsWithDifferences()
-        {
-            return setsWithDifferences;
-        }
-        
-        public List<ConfigurationSet> getCompleteSets()
-        {
-            return completeSets;
-        }
-        
-        public List<ConfigurationSet> getIrrelevantSets()
-        {
-            return irrelevantSets;
-        }
-        
-        public int getDiffSetCount()
-        {
-            return setsWithDifferences.size();
-        }
-        
-        public int getUnusableSetCount()
-        {
-            return incompleteSetsByPosition.size() + incompleteSetsByLabel.size()
-                    + pluralitySets.size();
-        }
-        
-        public Object getCompleteSetCount()
-        {
-            return completeSets.size();
-        }
-
-        public int getTotalSetCount()
-        {
-            return diff.getPositions().size();
-        }
-        
-        public int getRelevantSetCount()
-        {
-            return diff.getPositions().size() - irrelevantSets.size();
-        }
-        
-        public double getAgreement()
-        {
-            return agreement;
-        }
-        
-        public ICodingAnnotationStudy getStudy()
-        {
-            return study;
-        }
-        
-        public DiffResult getDiff()
-        {
-            return diff;
-        }
-        
-        public String getType()
-        {
-            return type;
-        }
-        
-        public String getFeature()
-        {
-            return feature;
-        }
-        
-        public boolean isExcludeIncomplete()
-        {
-            return excludeIncomplete;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "AgreementResult [type=" + type + ", feature=" + feature + ", diffs="
-                    + getDiffSetCount() + ", unusableSets=" + getUnusableSetCount()
-                    + ", agreement=" + agreement + "]";
-        }
-    }
-    
     public static InputStream generateCsvReport(AgreementResult aResult)
         throws IOException
     {
         ByteArrayOutputStream buf = new ByteArrayOutputStream();
         try (CSVPrinter printer = new CSVPrinter(new OutputStreamWriter(buf, "UTF-8"),
                 CSVFormat.RFC4180)) {
-            AgreementUtils.toCSV(printer, aResult);
+            toCSV(printer, aResult);
         }
 
         return new ByteArrayInputStream(buf.toByteArray());

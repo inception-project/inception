@@ -44,8 +44,8 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.support.AJAXDownload;
 import de.tudarmstadt.ukp.clarin.webanno.support.DefaultRefreshingView;
