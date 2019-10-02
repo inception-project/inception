@@ -122,7 +122,7 @@ of accessing it directly. This assumes that you already have the following packa
 [source,text]
 ----
 tomcat.ajp.port=18009
-server.contextPath=/inception
+server.servlet.context-path=/inception
 server.use-forward-headers=true
 ----
 +
