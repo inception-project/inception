@@ -284,13 +284,28 @@ _(Span layers)_
 | Link feature that can point only to the selected span layer.
 |====
 
+.String feature properties
+[cols="1v,2", options="header"]
+|====
+| Property | Description
+
+| Multiple Rows
+| If enabled the textfield will be replaced by a textarea which expands on focus. This also enables options to set the size of the textarea and disables tagsets.
+
+| Collapsed Rows
+| Set the number of rows for the textarea when it is collapsed and not focused.
+
+| Expanded Rows
+| Set the number of rows for the textarea when it is expanded and not focused.
+|====
+
 .Link feature properties
 [cols="1v,2", options="header"]
 |====
 | Property | Description
 
 | Enable Role Labels
-| Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default. 
+| Allows users to add a role label to each slot when linking anntations. If disabled the UI labels of annotations will be displayed instead of role labels. This property is enabled by default.
 |====
 
 NOTE: Please take care that when working with non-custom layers, they have to be ex- and imported, if you want to use the resulting files in e.g. correction projects.
