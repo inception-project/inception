@@ -23,4 +23,5 @@ Boolean features are displayed as a checkbox that can either be marked or unmark
 float features are displayed using a number field. However if an integer feature is limited and the 
 difference between the maximum and minimum is lower than 12 it can also be displayed with a radio
 button group instead. String features are displayed using a text field
-or - in case they have a tagset - using a combobox.
+or a text area with multiple rows. The text area can be expanded if focused and collapses again if
+focus is lost. In case the string feature has a tagset it will instead use a combobox.

@@ -50,6 +50,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFea
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.RatingFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextAreaFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
@@ -191,7 +193,7 @@ public class PrimitiveUimaFeatureSupport
                 editor = FeatureSupport.super.createTraitsEditor(aId, aFeatureModel);
                 break;
             case CAS.TYPE_NAME_STRING:
-                editor = new UimaStringTraitsEditor(aId, aFeatureModel);
+                editor = new UimaStringTraitsEditor(aId, this, aFeatureModel);
                 break;
             default:
                 throw unsupportedFeatureTypeException(feature);
@@ -240,9 +242,15 @@ public class PrimitiveUimaFeatureSupport
                 break;
             }
             case CAS.TYPE_NAME_STRING: {
+                UimaStringTraits traits = readUimaStringTraits(feature);
                 if (feature.getTagset() == null) {
-                    // If there is no tagset, use a simple input field
-                    editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    if (traits.isMultipleRows()) {
+                        // If multiple rows are set use a textarea
+                        editor = new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    } else {
+                        // Otherwise use a simple input field
+                        editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);
+                    }
                 }
                 else if (aFeatureStateModel.getObject().tagset.size() < properties
                         .getAutoCompleteThreshold()) {
@@ -318,7 +326,34 @@ public class PrimitiveUimaFeatureSupport
         return traits;
     }
     
+    public UimaStringTraits readUimaStringTraits(AnnotationFeature aFeature)
+    {
+        UimaStringTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(UimaStringTraits.class, aFeature.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+    
+        if (traits == null) {
+            traits = new UimaStringTraits();
+        }
+    
+        return traits;
+    }
+    
     public void writeNumberFeatureTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
+    {
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
+        }
+    }
+    
+    public void writeUimaStringTraits(AnnotationFeature aFeature, UimaStringTraits aTraits)
     {
         try {
             aFeature.setTraits(JSONUtil.toJsonString(aTraits));
