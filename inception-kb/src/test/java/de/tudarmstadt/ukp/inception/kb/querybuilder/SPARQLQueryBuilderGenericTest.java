@@ -93,8 +93,7 @@ public class SPARQLQueryBuilderGenericTest
     }
     
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws IOException {
         // Force POST request instead of GET request
         // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
         
