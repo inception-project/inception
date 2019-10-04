@@ -88,7 +88,7 @@ public class VisibilityCalculationTests
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
         List<AnnotationFeature> featureList = new ArrayList<AnnotationFeature>();
-        featureList.add(new AnnotationFeature("value", "uima.cas.String"));
+        featureList.add(new AnnotationFeature(FEATURE, "uima.cas.String"));
         when(annoService.listAnnotationFeature(layer)).thenReturn(featureList);
         
         sut = new RecommendationServiceImpl(null, null, null, null, annoService, null,
