@@ -87,7 +87,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException //throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException
     {
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadDevelopmentData();
@@ -117,7 +117,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
