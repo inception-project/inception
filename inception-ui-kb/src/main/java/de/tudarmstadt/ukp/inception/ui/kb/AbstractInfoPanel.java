@@ -171,7 +171,7 @@ public abstract class AbstractInfoPanel<T extends KBObject> extends Panel {
             Label identifier = new Label("idtext"); 
             TooltipBehavior tip = new TooltipBehavior();
             tip.setOption("autoHide", false);
-            tip.setOption("content",
+            tip.setOption(CONTENT_MARKUP_ID,
                     Options.asString((compoundModel.bind("identifier").getObject())));
             tip.setOption("showOn", Options.asString("click"));
             identifier.add(tip);
