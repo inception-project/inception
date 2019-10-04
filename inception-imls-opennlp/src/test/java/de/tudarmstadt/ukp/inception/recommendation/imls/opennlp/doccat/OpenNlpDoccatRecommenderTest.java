@@ -95,8 +95,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
-    {
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
         
@@ -107,7 +106,12 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
