@@ -496,8 +496,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
