@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -153,9 +154,7 @@ public class MtasDocumentIndexTest
     }
 
     @SafeVarargs
-    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
-        throws Exception
-    {
+    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws IOException {
         Project project = null;
         for (Pair<SourceDocument, String> doc : aDocuments) {
             project = doc.getLeft().getProject();
@@ -163,6 +162,8 @@ public class MtasDocumentIndexTest
             try (InputStream fileStream = new ByteArrayInputStream(
                     doc.getRight().getBytes(UTF_8))) {
                 documentService.uploadSourceDocument(fileStream, doc.getLeft());
+            } catch (UIMAException e) {
+                e.printStackTrace();
             }
         }
         
