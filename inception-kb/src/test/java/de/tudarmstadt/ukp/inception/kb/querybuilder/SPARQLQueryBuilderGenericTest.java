@@ -67,8 +67,7 @@ public class SPARQLQueryBuilderGenericTest
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago");
     
     @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
-    {
+    public static List<Object[]> data() throws IOException {
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         
         List<Object[]> dataList = new ArrayList<>();
