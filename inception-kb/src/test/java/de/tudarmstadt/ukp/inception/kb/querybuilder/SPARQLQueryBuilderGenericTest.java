@@ -87,8 +87,7 @@ public class SPARQLQueryBuilderGenericTest
     private KnowledgeBase kb;
     private Repository repo;
     
-    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile) throws Exception
-    {
+    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile) {
         profileName = aProfileName;
         profile = aProfile;
     }
