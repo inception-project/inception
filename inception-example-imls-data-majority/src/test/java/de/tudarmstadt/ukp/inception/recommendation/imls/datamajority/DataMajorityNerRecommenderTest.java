@@ -87,7 +87,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException //throws Exception
     {
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadDevelopmentData();
@@ -99,7 +99,12 @@ public class DataMajorityNerRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        Collection<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
