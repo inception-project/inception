@@ -138,7 +138,7 @@ public class RecommenderEditorPanel
         form.add(nameField);
         
         autoGenerateNameCheckBox = new CheckBox(MID_AUTO_GENERATED_NAME,
-                PropertyModel.of(this, "autoGenerateName"));
+                PropertyModel.of(this, MID_AUTO_GENERATED_NAME));
         autoGenerateNameCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior("change", t -> {
             autoUpdateName(t, nameField, recommenderModel.getObject());
             t.add(autoGenerateNameCheckBox);
