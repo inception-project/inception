@@ -115,7 +115,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, RecommendationException //throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
