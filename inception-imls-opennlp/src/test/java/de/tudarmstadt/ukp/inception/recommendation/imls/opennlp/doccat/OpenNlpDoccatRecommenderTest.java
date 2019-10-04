@@ -83,8 +83,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
-    {
+    public void thatTrainingWorks() throws IOException, UIMAException, RecommendationException {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
 
