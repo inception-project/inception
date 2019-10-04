@@ -211,7 +211,7 @@ public class MtasUimaParserTest
 
     
     @Test
-    public void testDependencyRelation() throws Exception
+    public void testDependencyRelation() throws MtasParserException
     {
         // Set up document with a dummy dependency relation
         jcas.setDocumentText("a b");
