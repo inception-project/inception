@@ -91,7 +91,7 @@ public class RecommendationServiceImplIntegrationTest
     private AnnotationFeature feature;
 
     @Before
-    public void setUp() throws Exception
+    public void setUp()
     {
         sut = new RecommendationServiceImpl(sessionRegistry, userRepository,
                 recommenderFactoryRegistry, schedulingService, annoService, documentService,
