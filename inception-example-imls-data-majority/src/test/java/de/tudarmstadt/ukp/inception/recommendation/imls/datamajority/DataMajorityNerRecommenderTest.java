@@ -196,7 +196,7 @@ public class DataMajorityNerRecommenderTest
         return cas;
     }
     @Test
-    public void thatIncrementalNerEvaluationWorks() throws Exception
+    public void thatIncrementalNerEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
