@@ -97,9 +97,7 @@ public class RemoteStringMatchingNerRecommender
         }
     }
 
-    public String predict(String aPredictionRequestJson)
-        throws Exception
-    {
+    public String predict(String aPredictionRequestJson) throws IOException, UIMAException, SAXException, RecommendationException {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 
