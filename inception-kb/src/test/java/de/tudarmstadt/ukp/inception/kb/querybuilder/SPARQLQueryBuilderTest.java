@@ -299,7 +299,7 @@ public class SPARQLQueryBuilderTest
      * returning the description without any language.
      */
     @Test
-    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws Exception
+    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws IOException
     {
         // The dataset contains only labels for French but no descriptions
         kb.setDefaultLanguage("fr");
