@@ -1492,7 +1492,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
+    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws IOException
     {
         importDataFromFile("src/test/resources/data/wordnet-ontolex-ontology.owl");
         
