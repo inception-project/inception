@@ -169,7 +169,7 @@ public class MtasDocumentIndexTest
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
-        throws Exception
+        throws IOException, UIMAException, SAXException, RecommendationException
     {
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
