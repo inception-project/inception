@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
@@ -87,7 +88,7 @@ public class OpenNlpNerRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException,CASException
     {
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
