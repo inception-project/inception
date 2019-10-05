@@ -71,7 +71,7 @@ public class VisibilityCalculationTests
     private final static String COVERED_TEXT = "TestText";
 
     @Before
-    public void setUp() throws Exception
+    public void setUp()
     {
         initMocks(this);
 
