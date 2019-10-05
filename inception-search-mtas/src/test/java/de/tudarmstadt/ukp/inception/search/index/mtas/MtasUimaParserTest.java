@@ -130,7 +130,7 @@ public class MtasUimaParserTest
     }
     
     @Test
-    public void testNamedEnity() throws Exception
+    public void testNamedEnity() throws MtasParserException
     {
         JCasBuilder builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);
