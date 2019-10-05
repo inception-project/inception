@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
@@ -158,7 +159,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception {
+    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         String resourceName = "turtle/mismatching_literal_statement.ttl";
         String fileName = classLoader.getResource(resourceName).getFile();
@@ -186,7 +187,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception {
+    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws IOException {
         KBConcept concept = new KBConcept();
         concept.setName("TestConcept");
         KBProperty property = new KBProperty();
@@ -223,7 +224,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
+    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws IOException {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
@@ -250,7 +251,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
