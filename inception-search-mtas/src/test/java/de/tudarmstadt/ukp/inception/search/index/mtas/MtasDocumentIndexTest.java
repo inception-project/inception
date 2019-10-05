@@ -29,12 +29,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.search.*;
+import jdk.internal.org.xml.sax.SAXException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.uima.UIMAException;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -140,7 +145,7 @@ public class MtasDocumentIndexTest
         }
     }
 
-    private void createProject(Project aProject) throws IOException, UIMAException, SAXException, RecommendationException
+    private void createProject(Project aProject) throws IOException, UIMAException, SAXException
     {
         projectService.createProject(aProject);
         annotationSchemaService.initializeProject(aProject);
@@ -169,7 +174,7 @@ public class MtasDocumentIndexTest
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
-        throws IOException, UIMAException, SAXException, RecommendationException
+        throws Exception, IOException, ResourceInitializationException, CASException
     {
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
@@ -377,7 +382,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testSimplifiedTokenTextQuery() throws Exception
+    public void testSimplifiedTokenTextQuery() throws Exception, IOException, UIMAException, SAXException
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");

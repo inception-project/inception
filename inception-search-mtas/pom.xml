@@ -235,7 +235,12 @@
       <artifactId>awaitility</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Testing END -->
+      <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-recommendation-api</artifactId>
+          <scope>test</scope>
+      </dependency>
+      <!-- Testing END -->
   </dependencies>  
   <build>
     <pluginManagement>
