@@ -34,6 +34,8 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.rio.RDFParseException;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -386,7 +388,7 @@ public class KnowledgeBaseServiceRemoteTest
     
     // Helper
 
-    private void importKnowledgeBase(String resourceName) throws Exception
+    private void importKnowledgeBase(String resourceName) throws RDFParseException, RepositoryException, IOException
     {
         ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
