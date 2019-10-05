@@ -84,7 +84,7 @@ public class OpenNlpPosRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException
     {
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
@@ -96,7 +96,12 @@ public class OpenNlpPosRecommenderTest
 
         sut.predict(context, cas);
 
-        List<POS> predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
+        List<POS> predictions = null;
+        try {
+            predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
