@@ -84,7 +84,7 @@ public class ExternalRecommenderIntegrationTest
     private List<String> requestBodies;
 
     @Before
-    public void setUp() throws Exception
+    public void setUp() throws IOException, UIMAException, SAXException, RecommendationException
     {
         recommender = buildRecommender();
         context = new RecommenderContext();
