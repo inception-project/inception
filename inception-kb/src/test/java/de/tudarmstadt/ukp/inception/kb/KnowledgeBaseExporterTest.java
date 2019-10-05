@@ -41,6 +41,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -135,7 +137,7 @@ public class KnowledgeBaseExporterTest
     }
 
     @Test
-    public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
+    public void thatRemappingConceptFeaturesOnImportWorks() throws Exception, IOException, RepositoryException, RepositoryConfigException
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
