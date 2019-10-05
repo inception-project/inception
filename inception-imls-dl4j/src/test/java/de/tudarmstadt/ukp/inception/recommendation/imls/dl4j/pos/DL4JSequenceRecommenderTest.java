@@ -369,7 +369,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatNerEvaluationWorks() throws Exception
+    public void thatNerEvaluationWorks() throws IOException, UIMAException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
