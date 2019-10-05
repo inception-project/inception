@@ -141,7 +141,7 @@ public class KnowledgeBaseServiceRemoteTest
         sut.destroy();
     }
 
-    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
+    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig)
     {
         sutConfig = aConfig;
         
