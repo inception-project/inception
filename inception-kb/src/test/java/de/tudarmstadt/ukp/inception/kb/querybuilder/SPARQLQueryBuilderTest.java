@@ -1512,7 +1512,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatLineBreaksAreSanitized() throws Exception
+    public void thatLineBreaksAreSanitized() throws IOException
     {
         assertThat(sanitizeQueryStringForFTS("Green\n\rGoblin"))
                 .isEqualTo("Green Goblin");
