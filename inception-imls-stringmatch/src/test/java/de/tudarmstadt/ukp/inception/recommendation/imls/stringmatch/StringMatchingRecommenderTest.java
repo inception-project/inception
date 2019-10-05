@@ -90,7 +90,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, SAXException, RecommendationException
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
