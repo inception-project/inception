@@ -103,7 +103,7 @@ public class OpenNlpPosRecommenderTest
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
