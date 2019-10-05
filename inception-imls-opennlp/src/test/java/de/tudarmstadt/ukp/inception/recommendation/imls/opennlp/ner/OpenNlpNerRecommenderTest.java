@@ -74,7 +74,7 @@ public class OpenNlpNerRecommenderTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
+    public void thatTrainingWorks() throws IOException, UIMAException,RecommendationException
     {
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
