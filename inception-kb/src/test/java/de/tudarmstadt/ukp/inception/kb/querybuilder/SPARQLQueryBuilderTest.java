@@ -889,7 +889,7 @@ public class SPARQLQueryBuilderTest
     }
 
     public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
