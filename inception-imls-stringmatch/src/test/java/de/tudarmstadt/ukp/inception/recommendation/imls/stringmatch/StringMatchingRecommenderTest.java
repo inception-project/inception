@@ -280,7 +280,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatIncrementalNerEvaluationWorks() throws Exception
+    public void thatIncrementalNerEvaluationWorks() throws IOException, UIMAException, SAXException, RecommendationException
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
