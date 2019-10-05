@@ -410,7 +410,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatAllPropertiesCanBeRetrieved() throws Exception
+    public void thatAllPropertiesCanBeRetrieved() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
