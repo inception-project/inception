@@ -145,7 +145,7 @@ public class MtasDocumentIndexTest
         }
     }
 
-    private void createProject(Project aProject) throws IOException, UIMAException, SAXException
+    private void createProject(Project aProject) throws IOException
     {
         projectService.createProject(aProject);
         annotationSchemaService.initializeProject(aProject);
@@ -153,7 +153,7 @@ public class MtasDocumentIndexTest
 
     @SafeVarargs
     private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
-        throws Exception
+        throws UIMAException, IOException
     {
         Project project = null;
         for (Pair<SourceDocument, String> doc : aDocuments) {
@@ -264,7 +264,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void thatLastTokenInDocumentCanBeFound() throws Exception
+    public void thatLastTokenInDocumentCanBeFound() throws IOException, UIMAException, ExecutionException
     {
         Project project = new Project();
         project.setName("LastTokenInDocumentCanBeFound");
