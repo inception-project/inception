@@ -140,7 +140,7 @@ public class MtasDocumentIndexTest
         }
     }
 
-    private void createProject(Project aProject) throws Exception
+    private void createProject(Project aProject) throws IOException, UIMAException, SAXException, RecommendationException
     {
         projectService.createProject(aProject);
         annotationSchemaService.initializeProject(aProject);
