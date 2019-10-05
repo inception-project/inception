@@ -183,7 +183,7 @@ public class StringMatchingRecommenderTest
 
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, SAXException, RecommendationException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
