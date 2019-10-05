@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
@@ -80,7 +81,7 @@ public class NamedEntityLinkerTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
+    public void thatTrainingWorks() throws IOException, UIMAException
     {
         NamedEntityLinker sut = new NamedEntityLinker(recommender, new NamedEntityLinkerTraits(),
                 mock(KnowledgeBaseService.class), mock(ConceptLinkingServiceImpl.class),
@@ -95,7 +96,8 @@ public class NamedEntityLinkerTest
             .isNotNull();
     }
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks()
+        throws Exception, IOException, UIMAException, RecommendationException
     {
         List<KBHandle> mockResult = asList(
             new KBHandle("https://www.wikidata.org/wiki/Q76", "Barack Obama",
