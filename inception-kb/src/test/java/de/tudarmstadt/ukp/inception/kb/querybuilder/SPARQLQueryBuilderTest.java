@@ -628,7 +628,7 @@ public class SPARQLQueryBuilderTest
      * universe.
      */
     @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws IOException
     {
         assertIsReachable(wikidata);
         
