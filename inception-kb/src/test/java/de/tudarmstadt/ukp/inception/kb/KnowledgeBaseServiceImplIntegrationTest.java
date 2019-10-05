@@ -1631,7 +1631,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
