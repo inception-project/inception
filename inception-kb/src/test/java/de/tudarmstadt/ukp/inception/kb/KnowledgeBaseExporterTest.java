@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -198,7 +199,7 @@ public class KnowledgeBaseExporterTest
         return Arrays.asList(kb1, kb2, kb3);
     }
 
-    private List<AnnotationFeature> features(Project aProject) throws Exception
+    private List<AnnotationFeature> features(Project aProject) throws NullPointerException, IOException
     {
         AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
             aProject, false, TOKENS, NO_OVERLAP);
