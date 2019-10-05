@@ -374,7 +374,7 @@ public class SPARQLQueryBuilderTest
      * identifier.
      */
     @Test
-    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
+    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
