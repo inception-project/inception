@@ -441,7 +441,7 @@ public class SPARQLQueryBuilderTest
 
     @Test
     public void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
