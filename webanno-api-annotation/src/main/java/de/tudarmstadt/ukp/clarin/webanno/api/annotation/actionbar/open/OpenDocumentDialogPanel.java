@@ -294,8 +294,7 @@ public class OpenDocumentDialogPanel
 
     private List<DecoratedObject<User>> listUsers()
     {
-        if (projectListChoice.getModelObject() == null
-                || !state.getMode().equals(Mode.ANNOTATION)) {
+        if (projectListChoice.getModelObject() == null) {
             return new ArrayList<>();
         }
 
@@ -303,7 +302,9 @@ public class OpenDocumentDialogPanel
         
         Project selectedProject = projectListChoice.getModelObject().get();
         User currentUser = userRepository.getCurrentUser();
-        if (!projectService.isManager(selectedProject, currentUser)) {
+        // cannot select other user than themselves if curating or not admin
+        if (state.getMode().equals(Mode.CURATION) || 
+                !projectService.isManager(selectedProject, currentUser)) {
             DecoratedObject<User> du = DecoratedObject.of(currentUser);
             du.setLabel(currentUser.getUsername());
             users.add(du);
