@@ -420,7 +420,7 @@ public class MtasDocumentIndexTest
     }
     
     @Test
-    public void testAnnotationQuery() throws Exception
+    public void testAnnotationQuery() throws IOException,Exception
     {
         Project project = new Project();
         project.setName("TestAnnotationQuery");
