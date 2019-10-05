@@ -328,7 +328,7 @@ public class SPARQLQueryBuilderTest
      * {@link #DATA_CLASS_RDFS_HIERARCHY} which does not exist.
      */
     @Test
-    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
+    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
