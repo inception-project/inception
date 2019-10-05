@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -152,7 +153,7 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
+    public static List<Object[]> data() throws IOException
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
