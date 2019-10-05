@@ -33,10 +33,12 @@ import java.util.List;
 
 import mtas.analysis.util.MtasParserException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -69,7 +71,7 @@ public class MtasUimaParserTest
     private JCas jcas;
     
     @Before
-    public void setup() throws Exception
+    public void setup() throws ResourceInitializationException, CASException,CASAdminException
     {
         initMocks(this);
         
