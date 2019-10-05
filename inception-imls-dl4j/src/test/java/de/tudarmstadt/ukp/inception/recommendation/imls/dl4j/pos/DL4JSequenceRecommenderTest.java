@@ -321,7 +321,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatNerTrainingWorks() throws Exception
+    public void thatNerTrainingWorks() throws IOException, UIMAException
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
