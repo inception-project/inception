@@ -776,7 +776,7 @@ public class SPARQLQueryBuilderTest
     }
     
     public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
