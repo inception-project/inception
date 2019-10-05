@@ -29,6 +29,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
@@ -66,7 +67,7 @@ public class LoggedEventExporterTest
     private LoggedEventExporter sut;
 
     @Before
-    public void setUp() throws Exception
+    public void setUp() throws IOException
     {
         initMocks(this);
 

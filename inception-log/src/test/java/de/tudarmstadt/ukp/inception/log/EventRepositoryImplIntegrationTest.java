@@ -64,7 +64,7 @@ public class EventRepositoryImplIntegrationTest  {
     private LoggedEvent le;
 
     @Before
-    public void setUp() throws Exception
+    public void setUp()
     {
         sut = new EventRepositoryImpl(testEntityManager.getEntityManager());
         project = createProject(PROJECT_NAME);
@@ -72,7 +72,7 @@ public class EventRepositoryImplIntegrationTest  {
     }
 
     @After
-    public void tearDown() throws Exception
+    public void tearDown()
     {
         testEntityManager.clear();
     }

@@ -267,7 +267,7 @@ public class StringMatchingRecommenderTest
     }
     
     @Test
-    public void thatEvaluationSkippingWorks() throws Exception
+    public void thatEvaluationSkippingWorks()
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);

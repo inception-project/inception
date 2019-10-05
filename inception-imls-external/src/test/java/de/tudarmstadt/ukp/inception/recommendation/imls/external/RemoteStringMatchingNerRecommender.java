@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.uima.UIMAException;
 import org.apache.uima.UIMAFramework;
@@ -72,7 +73,7 @@ public class RemoteStringMatchingNerRecommender
         featureName = aRecommender.getFeature().getName();
     }
 
-    public void train(String aTrainingRequestJson) throws Exception
+    public void train(String aTrainingRequestJson) throws UIMAException, SAXException, IOException, RecommendationException
 
     {
         TrainingRequest request = deserializeTrainingRequest(aTrainingRequestJson);
@@ -96,9 +97,7 @@ public class RemoteStringMatchingNerRecommender
         }
     }
 
-    public String predict(String aPredictionRequestJson)
-        throws Exception
-    {
+    public String predict(String aPredictionRequestJson) throws IOException, UIMAException, SAXException, RecommendationException {
         PredictionRequest request = deserializePredictionRequest(aPredictionRequestJson);
         CAS cas = deserializeCas(request.getDocument().getXmi(), request.getTypeSystem());
 

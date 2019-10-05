@@ -185,7 +185,7 @@ public class ExternalRecommenderIntegrationTest
             .hasFieldOrPropertyWithValue("documentId", 0L);
     }
 
-    private List<CAS> loadDevelopmentData() throws Exception
+    private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de", CONTINUE);
         List<CAS> data = loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());

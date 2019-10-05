@@ -31,6 +31,7 @@ import static org.mockito.MockitoAnnotations.initMocks;
 import java.util.ArrayList;
 import java.util.List;
 
+import mtas.analysis.util.MtasParserException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
@@ -174,7 +175,7 @@ public class MtasUimaParserTest
     }
     
     @Test
-    public void testZeroWidthSpanNotIndexed() throws Exception
+    public void testZeroWidthSpanNotIndexed() throws MtasParserException
     {
         TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
@@ -210,7 +211,7 @@ public class MtasUimaParserTest
 
     
     @Test
-    public void testDependencyRelation() throws Exception
+    public void testDependencyRelation() throws MtasParserException
     {
         // Set up document with a dummy dependency relation
         jcas.setDocumentText("a b");

@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -73,7 +74,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
+    public void thatTrainingWorks() throws IOException, UIMAException, RecommendationException
     {
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadDevelopmentData();
@@ -86,7 +87,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException
     {
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
         List<CAS> casList = loadDevelopmentData();
@@ -98,7 +99,12 @@ public class DataMajorityNerRecommenderTest
 
         sut.predict(context, cas);
 
-        Collection<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        Collection<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -111,7 +117,7 @@ public class DataMajorityNerRecommenderTest
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
@@ -190,7 +196,7 @@ public class DataMajorityNerRecommenderTest
         return cas;
     }
     @Test
-    public void thatIncrementalNerEvaluationWorks() throws Exception
+    public void thatIncrementalNerEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
         DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);

@@ -21,6 +21,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.nio.file.Files.readAllBytes;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.nio.file.Paths;
 
 import org.junit.Before;
@@ -29,13 +30,16 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.inception.pdfeditor.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.Offset;
 import de.tudarmstadt.ukp.inception.pdfeditor.pdfanno.model.PdfExtractFile;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 
 public class PdfExtractFileTest
 {
     private PdfExtractFile pdfExtractFile;
 
     @Before
-    public void setup() throws Exception
+    public void setup() throws IOException, ParserConfigurationException, SAXException
     {
         String pdftxt = new String(readAllBytes(Paths.get("src/test/resources/pdfextract.txt")),
                 UTF_8);

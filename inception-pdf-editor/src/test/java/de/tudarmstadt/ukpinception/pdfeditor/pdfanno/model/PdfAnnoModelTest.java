@@ -45,7 +45,7 @@ public class PdfAnnoModelTest
     }
 
     @Test
-    public void testgetAnnoFileContent() throws Exception
+    public void testgetAnnoFileContent()
     {
         String annoFileString = pdfAnnoModel.getAnnoFileContent();
         assertThat(linesOf(new File("src/test/resources/annoFile.anno"),
