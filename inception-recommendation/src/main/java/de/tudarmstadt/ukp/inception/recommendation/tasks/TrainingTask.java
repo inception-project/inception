@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.*;
+import org.apache.commons.lang3.concurrent.ConcurrentException;
 import org.apache.commons.lang3.concurrent.LazyInitializer;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -47,10 +49,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.EvaluatedRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngine;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 
@@ -204,7 +202,7 @@ public class TrainingTask
                     ctx.close();
                     recommendationService.putContext(user, recommender, ctx);
                 }
-                catch (Throwable e) {
+                catch (RecommendationException | ConcurrentException e) {
                     log.error("[{}][{}][{}]: Training failed ({} ms)", getId(),
                             user.getUsername(), recommender.getName(),
                             (System.currentTimeMillis() - startTime), e);
