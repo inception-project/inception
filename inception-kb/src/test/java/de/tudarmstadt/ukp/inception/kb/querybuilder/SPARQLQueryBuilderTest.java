@@ -255,7 +255,7 @@ public class SPARQLQueryBuilderTest
      * which contains a number of classes.
      */
     @Test
-    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
+    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
