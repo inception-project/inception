@@ -358,7 +358,7 @@ public class SPARQLQueryBuilderTest
      * Checks that an implicitly defined class can be retrieved using its identifier.
      */
     @Test
-    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
