@@ -389,7 +389,7 @@ public class SPARQLQueryBuilderTest
      * Checks that item information can be obtained for a given subject.
      */
     @Test
-    public void thatCanRetrieveItemInfoForIdentifier() throws Exception
+    public void thatCanRetrieveItemInfoForIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
