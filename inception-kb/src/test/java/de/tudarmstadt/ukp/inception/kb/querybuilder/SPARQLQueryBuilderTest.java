@@ -270,7 +270,7 @@ public class SPARQLQueryBuilderTest
      * at all should be returned.
      */
     @Test
-    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws Exception
+    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws IOException
     {
         kb.setDefaultLanguage(null);
         
