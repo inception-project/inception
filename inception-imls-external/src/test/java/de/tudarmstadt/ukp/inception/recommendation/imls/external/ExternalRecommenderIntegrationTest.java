@@ -105,7 +105,7 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @After
-    public void tearDown() throws Exception
+    public void tearDown() throws IOException, UIMAException, SAXException, RecommendationException
     {
         server.shutdown();
     }
