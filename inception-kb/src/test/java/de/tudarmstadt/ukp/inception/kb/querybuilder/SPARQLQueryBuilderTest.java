@@ -930,7 +930,7 @@ public class SPARQLQueryBuilderTest
     }
     
     public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
         
