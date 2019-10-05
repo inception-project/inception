@@ -47,6 +47,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.commons.collections4.MapIterator;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.ArrayListValuedHashMap;
@@ -1009,7 +1010,7 @@ public class RecommendationServiceImpl
 
                         predictions.putPredictions(layer.getId(), suggestions);
                     }
-                    catch (Throwable e) {
+                    catch (RecommendationException | UIMAException | IOException e) {
                         log.error(
                                 "Error applying recommender [{}]({}) for user [{}] to document "
                                         + "[{}]({}) in project [{}]({}) - skipping recommender",
