@@ -105,7 +105,7 @@ public class ConceptFeatureIndexingSupportTest
     }
     
     @Test
-    public void testConceptFeature() throws Exception
+    public void testConceptFeature() throws QueryEvaluationException, MtasParserException
     {
         JCasBuilder builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);
