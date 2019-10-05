@@ -681,7 +681,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
+    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
