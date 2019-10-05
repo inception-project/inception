@@ -216,13 +216,18 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testRawTextQuery() throws Exception
+    public void testRawTextQuery() throws IOException, ExecutionException
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        try {
+			createProject(project);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -232,7 +237,12 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        try {
+			uploadDocument(Pair.of(sourceDocument, fileContent));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         User user = userRepository.get("admin");
 
