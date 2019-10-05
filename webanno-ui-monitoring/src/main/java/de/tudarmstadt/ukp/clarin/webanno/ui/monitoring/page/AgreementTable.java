@@ -29,7 +29,6 @@ import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.ComponentTag;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -308,13 +307,6 @@ public class AgreementTable
         return new ByteArrayInputStream(buf.toByteArray());
     }
     
-    @Override
-    protected void onComponentTag(ComponentTag tag)
-    {
-        checkComponentTag(tag, "table");
-        super.onComponentTag(tag);
-    }
-
     public PairwiseAnnotationResult getModelObject()
     {
         return (PairwiseAnnotationResult) getDefaultModelObject();

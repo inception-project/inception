@@ -47,12 +47,17 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.ConfigurationSet;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.Position;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationPosition;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAnnotationUnit;
 import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
@@ -60,9 +65,8 @@ import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationIte
 
 public class AgreementUtils
 {
-    public static PairwiseAnnotationResult getPairwiseAgreement(
-            ConcreteAgreementMeasure aMeasure, boolean aExcludeIncomplete,
-            DiffResult aDiff, String aType, String aFeature, Map<String, List<CAS>> aCasMap)
+    public static PairwiseAnnotationResult getPairwiseAgreement(AggreementMeasure aMeasure,
+            Map<String, List<CAS>> aCasMap)
     {
         PairwiseAnnotationResult result = new PairwiseAnnotationResult();
         List<Entry<String, List<CAS>>> entryList = new ArrayList<>(aCasMap.entrySet());
@@ -73,8 +77,32 @@ public class AgreementUtils
                     Map<String, List<CAS>> pairwiseCasMap = new LinkedHashMap<>();
                     pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
                     pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
-                    AgreementResult res = getAgreement(aMeasure, aExcludeIncomplete, aDiff, aType,
-                            aFeature, pairwiseCasMap);
+                    AgreementResult res = aMeasure.getAgreement(pairwiseCasMap);
+                    result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
+                }
+            }
+        }
+        return result;
+    }
+
+    public static PairwiseAnnotationResult getPairwiseAgreement(ConcreteAgreementMeasure aMeasure,
+            boolean aExcludeIncomplete, AnnotationFeature aFeature, Map<String, List<CAS>> aCasMap,
+            List<DiffAdapter> aAdapters, LinkCompareBehavior aLinkCompareBehavior)
+    {
+        DiffResult diff = CasDiff.doDiff(asList(aFeature.getLayer().getName()), aAdapters,
+                aLinkCompareBehavior, aCasMap);
+
+        PairwiseAnnotationResult result = new PairwiseAnnotationResult();
+        List<Entry<String, List<CAS>>> entryList = new ArrayList<>(aCasMap.entrySet());
+        for (int m = 0; m < entryList.size(); m++) {
+            for (int n = 0; n < entryList.size(); n++) {
+                // Triangle matrix mirrored
+                if (n < m) {
+                    Map<String, List<CAS>> pairwiseCasMap = new LinkedHashMap<>();
+                    pairwiseCasMap.put(entryList.get(m).getKey(), entryList.get(m).getValue());
+                    pairwiseCasMap.put(entryList.get(n).getKey(), entryList.get(n).getValue());
+                    AgreementResult res = getAgreement(aMeasure, aExcludeIncomplete, diff,
+                            aFeature.getLayer().getName(), aFeature.getName(), pairwiseCasMap);
                     result.add(entryList.get(m).getKey(), entryList.get(n).getKey(), res);
                 }
             }

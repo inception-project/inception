@@ -110,7 +110,7 @@ public class AgreementResult
         return i;
     }
 
-    void setAgreement(double aAgreement)
+    public void setAgreement(double aAgreement)
     {
         agreement = aAgreement;
     }

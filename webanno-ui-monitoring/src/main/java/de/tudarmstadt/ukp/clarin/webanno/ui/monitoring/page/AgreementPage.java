@@ -28,30 +28,35 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.model.StringResourceModel;
@@ -77,22 +82,25 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementReportExportFormat;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
@@ -106,10 +114,14 @@ public class AgreementPage
 
     private static final Logger LOG = LoggerFactory.getLogger(AgreementPage.class);
 
+    private static final String MID_TRAITS_CONTAINER = "traitsContainer";
+    private static final String MID_TRAITS = "traits";
+    
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean AggreementMeasureSupportRegistry agreementRegistry;
 
     private ProjectSelectionForm projectSelectionForm;
     private AgreementForm agreementForm;
@@ -163,9 +175,9 @@ public class AgreementPage
             if (aClearCache) {
                 cachedCASes = null;
             }
-            agreementForm.agreementTable2.getDefaultModel().detach();
-            if (aTarget != null && agreementForm.agreementTable2.isVisibleInHierarchy()) {
-                aTarget.add(agreementForm.agreementTable2);
+            agreementForm.agreementTable.getDefaultModel().detach();
+            if (aTarget != null && agreementForm.agreementTable.isVisibleInHierarchy()) {
+                aTarget.add(agreementForm.agreementTable);
             }
         }
         catch (Throwable e) {
@@ -248,31 +260,92 @@ public class AgreementPage
     {
         private static final long serialVersionUID = -1L;
 
-        private ListChoice<AnnotationFeature> featureList;
+        private final DropDownChoice<AnnotationFeature> featureList;
 
-        private AgreementTable agreementTable2;
+        private final AgreementTable agreementTable;
 
-        private DropDownChoice<ConcreteAgreementMeasure> measureDropDown;
+        private final DropDownChoice<Pair<String, String>> measureDropDown;
 
-        private DropDownChoice<LinkCompareBehavior> linkCompareBehaviorDropDown;
-
-        private AjaxDownloadLink exportAll;
-
-        private CheckBox excludeIncomplete;
+        private final AjaxDownloadLink exportAllButton;
+        
+        private final LambdaAjaxButton<Void> runCalculationsButton;
+        
+        private WebMarkupContainer traitsContainer;
 
         public AgreementForm(String id)
         {
             super(id, new CompoundPropertyModel<>(new AgreementFormModel()));
 
-            setOutputMarkupId(true);
             setOutputMarkupPlaceholderTag(true);
 
+            add(traitsContainer = new WebMarkupContainer(MID_TRAITS_CONTAINER));
+            traitsContainer.setOutputMarkupPlaceholderTag(true);
+            traitsContainer.add(new EmptyPanel(MID_TRAITS));
+            
             add(new Label("name",
                     PropertyModel.of(projectSelectionForm.getModel(), "project.name")));
             
+            add(featureList = new BootstrapSelect<AnnotationFeature>("feature"));
+            featureList.setOutputMarkupId(true);
+            featureList.setChoices(LoadableDetachableModel.of(this::getEligibleFeatures));
+            featureList.setChoiceRenderer(new LambdaChoiceRenderer<AnnotationFeature>(feature -> 
+                    feature.getLayer().getUiName() + " : " + feature.getUiName()));
+            featureList.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
+                    this::actionSelectFeature));
+
+            runCalculationsButton = new LambdaAjaxButton<>("run", this::actionRunCalculations);
+            runCalculationsButton.triggerAfterSubmit();
+            add(runCalculationsButton);
+
+            add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
+                    asList(AgreementReportExportFormat.values()),
+                    new EnumChoiceRenderer<>(AgreementPage.this))
+                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
+
+            exportAllButton = new AjaxDownloadLink("exportAll", () -> "agreement"
+                    + AgreementForm.this.getModelObject().exportFormat.getExtension(),
+                    this::exportAllAgreements);
+            exportAllButton.add(enabledWhen(() -> featureList.getModelObject() != null));
+            add(exportAllButton);
+            
+            add(measureDropDown = new BootstrapSelect<Pair<String, String>>("measure", 
+                    this::listMeasures) {
+                private static final long serialVersionUID = -2666048788050249581L;
+
+                @Override
+                protected void onModelChanged()
+                {
+                    super.onModelChanged();
+                    
+                    // If the feature type has changed, we need to set up a new traits editor
+                    Component newTraits;
+                    if (getModelObject() != null) {
+                        AggreementMeasureSupport ams = agreementRegistry.getAgreementMeasureSupport(
+                                getModelObject().getKey());
+                        newTraits = ams.createTraitsEditor(MID_TRAITS, featureList.getModel(),
+                                Model.of(ams.createTraits()));
+                    }
+                    else {
+                        newTraits = new EmptyPanel(MID_TRAITS);
+                    }
+
+                    traitsContainer.addOrReplace(newTraits);
+                }
+            });
+            measureDropDown.setChoiceRenderer(new ChoiceRenderer<>("value"));
+            measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
+                    _target.add(runCalculationsButton, traitsContainer, exportAllButton)));
+            
+            exportAllButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+            runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+
             WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults");
-            agreementResults.add(visibleWhen(() -> featureList.getModelObject() != null));
             add(agreementResults);
+
+            agreementResults.add(
+                    agreementTable = new AgreementTable("agreementTable", getModel(), Model.of()));
+            
+            agreementResults.add(visibleWhen(() -> agreementTable.getModelObject() != null));
             
             PopoverConfig config = new PopoverConfig()
                     .withPlacement(Placement.left)
@@ -281,77 +354,54 @@ public class AgreementPage
             legend.add(new PopoverBehavior(new ResourceModel("legend"), 
                     new StringResourceModel("legend.content", legend), config));
             agreementResults.add(legend);
+        }
+
+        private void actionSelectFeature(AjaxRequestTarget aTarget)
+        {
+            // If the currently selected measure is not compatible with the selected feature, then
+            // we clear the measure selection.
+            boolean measureCompatibleWithFeature = measureDropDown.getModel()
+                    .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey()))
+                    .map(s -> s.accepts(featureList.getModelObject()))
+                    .orElse(false).getObject();
+            if (!measureCompatibleWithFeature) {
+                measureDropDown.setModelObject(null);
+            }
             
-            add(measureDropDown = new BootstrapSelect<>("measure",
-                    asList(ConcreteAgreementMeasure.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this)));
-            measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    this::updateAgreementTable));
+            aTarget.add(measureDropDown, runCalculationsButton, exportAllButton);
+        }
 
-            add(linkCompareBehaviorDropDown = new BootstrapSelect<>("linkCompareBehavior",
-                    asList(LinkCompareBehavior.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this)));
-            linkCompareBehaviorDropDown.add(visibleWhen(() -> {
-                AgreementFormModel model = AgreementForm.this.getModelObject();
-                if (model != null && model.feature != null) {
-                    return !LinkMode.NONE.equals(model.feature.getLinkMode());
-                }
-                return false;
-            }));
-            linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
-            linkCompareBehaviorDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    this::updateAgreementTable));
+        private void actionRunCalculations(AjaxRequestTarget aTarget, Form<?> aForm)
+        {
+            agreementTable.setModelObject(getAgreementResult());
+            
+            // We may get errors when loading the CASes but at that time we can no longer
+            // add the feedback panel to the cycle, so let's do it here.
+            aTarget.add(getFeedbackPanel());
 
-            agreementResults.add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
-                    asList(AgreementReportExportFormat.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this))
-                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
+            AgreementPage.this.updateAgreementTable(aTarget, false);
+            // // Adding this as well because when choosing a different measure, it may
+            // affect
+            // // the ability to exclude incomplete configurations.
+            // aTarget.add(excludeIncomplete);
+            // aTarget.add(linkCompareBehaviorDropDown);
 
-            excludeIncomplete = new CheckBox("excludeIncomplete");
-            excludeIncomplete.add(enabledWhen(() -> 
-                    AgreementForm.this.getModelObject().measure.isNullValueSupported()));
-            excludeIncomplete.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    this::updateAgreementTable));
-            add(excludeIncomplete);
-
-            add(featureList = new ListChoice<AnnotationFeature>("feature")
-            {
-                private static final long serialVersionUID = 1L;
-
-                {
-                    setOutputMarkupId(true);
-
-                    setChoices(LoadableDetachableModel.of(AgreementForm.this::getEligibleFeatures));
-                    setChoiceRenderer(new ChoiceRenderer<AnnotationFeature>()
-                    {
-                        private static final long serialVersionUID = -3370671999669664776L;
-
-                        @Override
-                        public Object getDisplayValue(AnnotationFeature aObject)
-                        {
-                            return aObject.getLayer().getUiName() + " : " + aObject.getUiName();
-                        }
-                    });
-                    setNullValid(false);
-                }
-
-                @Override
-                protected CharSequence getDefaultChoice(String aSelectedValue)
-                {
-                    return "";
-                }
-            });
-            featureList.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
-                    this::updateAgreementTable));
-
-            agreementResults.add(agreementTable2 = new AgreementTable("agreementTable", getModel(),
-                    LoadableDetachableModel.of(this::getAgreementResult)));
-
-            exportAll = new AjaxDownloadLink("exportAll", () -> "agreement"
-                    + AgreementForm.this.getModelObject().exportFormat.getExtension(),
-                    this::exportAllAgreements);
-            exportAll.add(LambdaBehavior.visibleWhen(() -> featureList.getModelObject() != null));
-            agreementResults.add(exportAll);
+            // #1791 - for some reason the updateAgreementTableBehavior does not work
+            // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
+            // control its visibility in onConfigure()
+            // as a workaround, we currently just re-render the whole form
+            aTarget.add(agreementForm);
+        }
+        
+        List<Pair<String, String>> listMeasures()
+        {
+            if (getModelObject().feature == null) {
+                return Collections.emptyList();
+            }
+            
+            return agreementRegistry.getAgreementMeasureSupports(getModelObject().feature).stream()
+                    .map(s -> Pair.of(s.getId(), s.getName()))
+                    .collect(Collectors.toList());
         }
         
         private IResourceStream exportAllAgreements()
@@ -377,15 +427,21 @@ public class AgreementPage
                     List<DiffAdapter> adapters = CasDiff
                             .getAdapters(annotationService, project);
 
-                    AgreementFormModel pref = AgreementForm.this.getModelObject();
-
+//                    AgreementFormModel pref = AgreementForm.this.getModelObject();
                     DiffResult diff = CasDiff.doDiff(
                             asList(feature.getLayer().getName()), adapters,
-                            pref.linkCompareBehavior, casMap);
+//                            pref.linkCompareBehavior, casMap);
+                            LinkCompareBehavior.LINK_TARGET_AS_LABEL, casMap);
 
+//                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
+//                            feature.getLayer().getName(), feature.getName(),
+//                            pref.excludeIncomplete, casMap);
+                    // TODO: for the moment, we always include incomplete annotations during this
+                    // export.
                     AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
                             feature.getLayer().getName(), feature.getName(),
-                            pref.excludeIncomplete, casMap);
+                            false, casMap);
+                    
                     try {
                         return AgreementUtils.generateCsvReport(agreementResult);
                     }
@@ -426,26 +482,23 @@ public class AgreementPage
         private PairwiseAnnotationResult getAgreementResult()
         {
             AnnotationFeature feature = featureList.getModelObject();
+            Pair<String, String> measureHandle = measureDropDown.getModelObject();
 
-            // Do not do any agreement if no feature has been selected yet.
-            if (feature == null) {
+            // Do not do any agreement if no feature or measure has been selected yet.
+            if (feature == null || measureHandle == null) {
                 return null;
             }
 
+            AggreementMeasureSupport support = agreementRegistry
+                    .getAgreementMeasureSupport(measureHandle.getKey());
+            
+            AggreementMeasure measure = support.createMeasure(feature,
+                    (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
+                            .getDefaultModelObject());
+            
             Map<String, List<CAS>> casMap = getCases();
-
-            Project project = projectSelectionForm.getModelObject().project;
-            List<DiffAdapter> adapters = CasDiff.getAdapters(annotationService,
-                    project);
-
-            AgreementFormModel pref = AgreementForm.this.getModelObject();
-
-            DiffResult diff = CasDiff.doDiff(asList(feature.getLayer().getName()),
-                    adapters, pref.linkCompareBehavior, casMap);
-            return AgreementUtils.getPairwiseAgreement(
-                    AgreementForm.this.getModelObject().measure,
-                    pref.excludeIncomplete, diff, feature.getLayer().getName(),
-                    feature.getName(), casMap);
+            
+            return AgreementUtils.getPairwiseAgreement(measure, casMap);
         }        
 
         @Override
@@ -456,74 +509,18 @@ public class AgreementPage
             ProjectSelectionModel model = projectSelectionForm.getModelObject();
             setVisible(model != null && model.project != null);
         }
-
-        private void updateAgreementTable(AjaxRequestTarget aTarget)
-        {
-            // We may get errors when loading the CASes but at that time we can no longer
-            // add the feedback panel to the cycle, so let's do it here.
-            aTarget.add(getFeedbackPanel());
-
-            AgreementPage.this.updateAgreementTable(aTarget, false);
-            // // Adding this as well because when choosing a different measure, it may
-            // affect
-            // // the ability to exclude incomplete configurations.
-            // aTarget.add(excludeIncomplete);
-            // aTarget.add(linkCompareBehaviorDropDown);
-
-            // #1791 - for some reason the updateAgreementTableBehavior does not work
-            // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
-            // control its visibility in onConfigure()
-            // as a workaround, we currently just re-render the whole form
-            aTarget.add(agreementForm);
-        }
     }
 
-    static public class AgreementFormModel
+    static class AgreementFormModel
         implements Serializable
     {
         private static final long serialVersionUID = -1L;
 
-        public AnnotationFeature feature;
+        AnnotationFeature feature;
 
-        public LinkCompareBehavior linkCompareBehavior = LinkCompareBehavior.LINK_TARGET_AS_LABEL;
+        Pair<String, String> measure;
 
-        public boolean excludeIncomplete = false;
-
-        public ConcreteAgreementMeasure measure = 
-                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
-
-        private boolean savedExcludeIncomplete = excludeIncomplete;
-        private boolean savedNullSupported = measure.isNullValueSupported();
-
-        public AgreementReportExportFormat exportFormat = AgreementReportExportFormat.CSV;
-
-        public void setMeasure(ConcreteAgreementMeasure aMeasure)
-        {
-            measure = aMeasure;
-
-            // Did the null-support status change?
-            if (savedNullSupported != measure.isNullValueSupported()) {
-                savedNullSupported = measure.isNullValueSupported();
-
-                // If it changed, is null support locked or not?
-                if (!measure.isNullValueSupported()) {
-                    // Is locked, so save what we had before and lock it
-                    savedExcludeIncomplete = excludeIncomplete;
-                    excludeIncomplete = true;
-                }
-                else {
-                    // Is not locked, so restore what we had before
-                    excludeIncomplete = savedExcludeIncomplete;
-                }
-            }
-        }
-
-        // This method must be here so Wicket sets the "measure" value through the setter instead
-        // of using field injection
-        public ConcreteAgreementMeasure getMeasure()
-        {
-            return measure;
-        }
+        AgreementReportExportFormat exportFormat = AgreementReportExportFormat.CSV;
     }
 
     private class ProjectSelectionForm

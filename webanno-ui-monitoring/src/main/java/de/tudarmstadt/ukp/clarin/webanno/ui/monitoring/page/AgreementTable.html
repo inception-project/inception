@@ -17,15 +17,17 @@
 #limitations under the License.
 -->
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
-  <tr wicket:id="rows">
-    <td wicket:id="cells">
-      <div wicket:id="cell"></div>
-    </td>
-  </tr>
-	<wicket:fragment wicket:id="th">
+  <table style="width: 100%;">
+    <tr wicket:id="rows">
+      <td wicket:id="cells">
+        <div wicket:id="cell"></div>
+      </td>
+    </tr>
+  </table>
+  <wicket:fragment wicket:id="th">
     <th class="headers"><div wicket:id="label"></div></th>
-	</wicket:fragment>
-	<wicket:fragment wicket:id="td">
+  </wicket:fragment>
+  <wicket:fragment wicket:id="td">
     <td class="text-center"><div wicket:id="label"></div></td>
-	</wicket:fragment>
+  </wicket:fragment>
 </wicket:panel>
