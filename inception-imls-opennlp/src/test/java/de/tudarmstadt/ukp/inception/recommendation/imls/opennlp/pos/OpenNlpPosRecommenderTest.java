@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
@@ -127,7 +128,7 @@ public class OpenNlpPosRecommenderTest
     }
 
     @Test
-    public void thatIncrementalPosEvaluationWorks() throws Exception
+    public void thatIncrementalPosEvaluationWorks() throws IOException, UIMAException, RecommendationException
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
         OpenNlpPosRecommender sut = new OpenNlpPosRecommender(recommender, traits);
