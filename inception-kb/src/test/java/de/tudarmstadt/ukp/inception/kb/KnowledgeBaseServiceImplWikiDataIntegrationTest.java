@@ -108,7 +108,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
 
     @Before
-    public void setUp() throws Exception
+    public void setUp() throws IOException
     {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
