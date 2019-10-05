@@ -295,7 +295,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatPosEvaluationWorks() throws Exception
+    public void thatPosEvaluationWorks() throws IOException, UIMAException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
