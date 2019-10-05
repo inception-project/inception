@@ -34,6 +34,7 @@ import java.util.List;
 import mtas.analysis.util.MtasParserException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.admin.CASAdminException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
@@ -98,7 +99,7 @@ public class MtasUimaParserTest
     }
     
     @Test
-    public void testSentencesAndTokens() throws Exception
+    public void testSentencesAndTokens() throws IllegalArgumentException, MtasParserException
     {
         TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
