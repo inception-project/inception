@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -83,7 +84,7 @@ public class RecommenderTestHelper
     }
 
     public static <T extends Annotation> List<T> getPredictions(CAS aCas, Class<T> aClass)
-            throws Exception
+            throws IOException,CASException
     {
         Type type = CasUtil.getType(aCas, aClass);
         Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);
