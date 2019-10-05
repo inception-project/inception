@@ -61,7 +61,7 @@ public class ConceptFeatureSupportTest
     }
     
     @Test
-    public void testWrapUnwrap() throws Exception
+    public void testWrapUnwrap() throws IllegalArgumentException
     {
         ConceptFeatureSupport sut = new ConceptFeatureSupport(kbService);
         
