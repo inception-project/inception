@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper;
 
@@ -105,7 +106,7 @@ public class OpenNlpNerRecommenderTest
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException,UIMAException, RecommendationException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpNerRecommender sut = new OpenNlpNerRecommender(recommender, traits);
