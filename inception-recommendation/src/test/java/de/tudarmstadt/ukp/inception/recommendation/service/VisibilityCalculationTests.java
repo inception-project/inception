@@ -29,8 +29,10 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityManager;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -71,7 +73,7 @@ public class VisibilityCalculationTests
     private final static String COVERED_TEXT = "TestText";
 
     @Before
-    public void setUp() throws Exception
+    public void setUp()
     {
         initMocks(this);
 
@@ -189,7 +191,7 @@ public class VisibilityCalculationTests
         return SuggestionGroup.group(suggestions);
     }
 
-    private CAS getTestCas() throws Exception
+    private CAS getTestCas() throws CASException, ResourceInitializationException
     {
         String documentText = "Dies ist ein Testtext, ach ist der schoen, der schoenste von allen"
                 + " Testtexten.";

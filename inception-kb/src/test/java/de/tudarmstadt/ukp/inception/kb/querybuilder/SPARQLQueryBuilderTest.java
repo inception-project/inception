@@ -255,7 +255,7 @@ public class SPARQLQueryBuilderTest
      * which contains a number of classes.
      */
     @Test
-    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws Exception
+    public void thatExistsReturnsTrueWhenDataQueriedForExists() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -270,7 +270,7 @@ public class SPARQLQueryBuilderTest
      * at all should be returned.
      */
     @Test
-    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws Exception
+    public void thatOnlyLabelsAndDescriptionsWithNoLanguageAreRetrieved() throws IOException
     {
         kb.setDefaultLanguage(null);
         
@@ -299,7 +299,7 @@ public class SPARQLQueryBuilderTest
      * returning the description without any language.
      */
     @Test
-    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws Exception
+    public void thatLabelsAndDescriptionsWithLanguageArePreferred() throws IOException
     {
         // The dataset contains only labels for French but no descriptions
         kb.setDefaultLanguage("fr");
@@ -328,7 +328,7 @@ public class SPARQLQueryBuilderTest
      * {@link #DATA_CLASS_RDFS_HIERARCHY} which does not exist.
      */
     @Test
-    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws Exception
+    public void thatExistsReturnsFalseWhenDataQueriedForDoesNotExist() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -343,7 +343,7 @@ public class SPARQLQueryBuilderTest
      * Checks that an explicitly defined class can be retrieved using its identifier.
      */
     @Test
-    public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    public void thatExplicitClassCanBeRetrievedByItsIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -358,7 +358,7 @@ public class SPARQLQueryBuilderTest
      * Checks that an implicitly defined class can be retrieved using its identifier.
      */
     @Test
-    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws Exception
+    public void thatImplicitClassCanBeRetrievedByItsIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -374,7 +374,7 @@ public class SPARQLQueryBuilderTest
      * identifier.
      */
     @Test
-    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws Exception
+    public void thatNonClassCannotBeRetrievedByItsIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
@@ -389,7 +389,7 @@ public class SPARQLQueryBuilderTest
      * Checks that item information can be obtained for a given subject.
      */
     @Test
-    public void thatCanRetrieveItemInfoForIdentifier() throws Exception
+    public void thatCanRetrieveItemInfoForIdentifier() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
@@ -410,7 +410,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatAllPropertiesCanBeRetrieved() throws Exception
+    public void thatAllPropertiesCanBeRetrieved() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
@@ -441,7 +441,7 @@ public class SPARQLQueryBuilderTest
 
     @Test
     public void thatPropertyQueryLimitedToDescendantsDoesNotReturnOutOfScopeResults()
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
@@ -776,7 +776,7 @@ public class SPARQLQueryBuilderTest
     }
     
     public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
@@ -889,7 +889,7 @@ public class SPARQLQueryBuilderTest
     }
 
     public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
@@ -930,7 +930,7 @@ public class SPARQLQueryBuilderTest
     }
     
     public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(Repository aRepository)
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
         

@@ -135,7 +135,7 @@ public class StringMatchingRecommenderTest
                 .containsOnlyNulls();
     }
 
-    private CAS getTestCasNoLabelLabels() throws Exception
+    private CAS getTestCasNoLabelLabels() throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de", CONTINUE);
         CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);

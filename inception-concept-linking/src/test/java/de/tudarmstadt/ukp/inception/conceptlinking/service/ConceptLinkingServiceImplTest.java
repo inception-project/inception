@@ -21,6 +21,7 @@ package de.tudarmstadt.ukp.inception.conceptlinking.service;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -117,7 +118,7 @@ public class ConceptLinkingServiceImplTest
             .contains("manatee");
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
