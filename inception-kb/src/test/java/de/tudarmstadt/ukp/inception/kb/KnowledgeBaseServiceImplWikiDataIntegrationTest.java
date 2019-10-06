@@ -84,7 +84,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
-    private Reification reification;
+    private static Reification reification;
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
@@ -244,7 +244,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
+    private static KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
