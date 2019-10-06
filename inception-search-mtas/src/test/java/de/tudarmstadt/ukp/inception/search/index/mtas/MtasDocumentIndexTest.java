@@ -468,7 +468,7 @@ public class MtasDocumentIndexTest
         @Autowired
         ApplicationEventPublisher applicationEventPublisher;
 
-        private final String temporaryFolderPath = "target/MtasDocumentIndexTest";
+        private static final String temporaryFolderPath = "target/MtasDocumentIndexTest";
         private final File temporaryFolder;
 
         @Rule TemporaryFolder folder;

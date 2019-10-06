@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class KnowledgeBaseProfileDeserializationTest
 {
-    private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
+    private static final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
 
     @Test
     public void checkThatDeserializationWorks() throws IOException
