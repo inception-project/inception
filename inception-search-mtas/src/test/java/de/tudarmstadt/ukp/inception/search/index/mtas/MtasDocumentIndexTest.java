@@ -29,16 +29,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.search.*;
-import jdk.internal.org.xml.sax.SAXException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
-import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -144,15 +141,15 @@ public class MtasDocumentIndexTest
         }
     }
 
-    private void createProject(Project aProject) throws IOException
+    private void createProject(Project aProject) throws Exception
     {
         projectService.createProject(aProject);
         annotationSchemaService.initializeProject(aProject);
     }
 
     @SafeVarargs
-    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments)
-        throws UIMAException, IOException
+    private final void uploadDocument(Pair<SourceDocument, String>... aDocuments) throws IOException, UIMAException
+    //throws Exception
     {
         Project project = null;
         for (Pair<SourceDocument, String> doc : aDocuments) {
@@ -161,8 +158,6 @@ public class MtasDocumentIndexTest
             try (InputStream fileStream = new ByteArrayInputStream(
                     doc.getRight().getBytes(UTF_8))) {
                 documentService.uploadSourceDocument(fileStream, doc.getLeft());
-            } catch (UIMAException e) {
-                e.printStackTrace();
             }
         }
         
@@ -175,7 +170,7 @@ public class MtasDocumentIndexTest
     }
 
     private void annotateDocument(Project aProject, User aUser, SourceDocument aSourceDocument)
-        throws Exception, IOException, ResourceInitializationException, CASException
+        throws Exception
     {
         // Manually build annotated CAS
         JCas jCas = JCasFactory.createJCas();
@@ -222,18 +217,13 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testRawTextQuery() throws IOException, ExecutionException
+    public void testRawTextQuery() throws Exception
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        try {
-			createProject(project);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        createProject(project);
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -243,12 +233,7 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        try {
-			uploadDocument(Pair.of(sourceDocument, fileContent));
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        uploadDocument(Pair.of(sourceDocument, fileContent));
 
         User user = userRepository.get("admin");
 
@@ -275,7 +260,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void thatLastTokenInDocumentCanBeFound() throws IOException, UIMAException, ExecutionException
+    public void thatLastTokenInDocumentCanBeFound() throws Exception
     {
         Project project = new Project();
         project.setName("LastTokenInDocumentCanBeFound");
@@ -393,7 +378,7 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testSimplifiedTokenTextQuery() throws Exception, IOException, UIMAException, SAXException
+    public void testSimplifiedTokenTextQuery() throws Exception
     {
         Project project = new Project();
         project.setName("SimplifiedTokenTextQuery");
@@ -436,7 +421,7 @@ public class MtasDocumentIndexTest
     }
     
     @Test
-    public void testAnnotationQuery() throws IOException,Exception
+    public void testAnnotationQuery() throws Exception
     {
         Project project = new Project();
         project.setName("TestAnnotationQuery");
