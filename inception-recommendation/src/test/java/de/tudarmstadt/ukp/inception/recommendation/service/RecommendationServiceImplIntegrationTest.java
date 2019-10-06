@@ -27,15 +27,19 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.TypeSystemUtil;
 import org.junit.After;
@@ -166,7 +170,8 @@ public class RecommendationServiceImplIntegrationTest
     }
 
     @Test
-    public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws Exception
+    public void monkeyPatchTypeSystem_WithNer_CreatesScoreFeatures() throws IOException,CASException,
+    ResourceInitializationException,UIMAException
     {
         JCas jCas = JCasFactory.createText("I am text CAS", "de");
         when(annoService.getFullProjectTypeSystem(project))

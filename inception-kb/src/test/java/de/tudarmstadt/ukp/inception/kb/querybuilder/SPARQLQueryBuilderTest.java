@@ -628,7 +628,7 @@ public class SPARQLQueryBuilderTest
      * universe.
      */
     @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws IOException
     {
         assertIsReachable(wikidata);
         
@@ -1492,7 +1492,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
+    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws IOException
     {
         importDataFromFile("src/test/resources/data/wordnet-ontolex-ontology.owl");
         
@@ -1512,7 +1512,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatLineBreaksAreSanitized() throws Exception
+    public void thatLineBreaksAreSanitized() throws IOException
     {
         assertThat(sanitizeQueryStringForFTS("Green\n\rGoblin"))
                 .isEqualTo("Green Goblin");

@@ -19,6 +19,8 @@ package de.tudarmstadt.ukp.inception.websocket;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+
 import org.apache.wicket.protocol.ws.util.tester.WebSocketTester;
 import org.apache.wicket.util.tester.WicketTester;
 import org.junit.After;
@@ -56,7 +58,7 @@ public class WebSocketTest
     }
 
     @Test
-    public void thatTextMessagesWork() throws Exception
+    public void thatTextMessagesWork() throws IOException
     {
         String expectedMessage = "Hello from the WebSocket";
         testVars.setTestMessage(expectedMessage);
