@@ -496,8 +496,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatQueryLimitedToRootClassesDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -511,8 +510,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatQueryWithExplicitRootClassDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -529,8 +527,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatNonRootClassCanBeUsedAsExplicitRootClass() throws Exception
-    {
+    public void thatNonRootClassCanBeUsedAsExplicitRootClass() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         ValueFactory vf = SimpleValueFactory.getInstance();
@@ -548,8 +545,7 @@ public class SPARQLQueryBuilderTest
                 .containsExactlyInAnyOrder("implicitRoot", "subclass2");
     }
     @Test
-    public void thatQueryLimitedToClassesDoesNotReturnInstances() throws Exception
-    {
+    public void thatQueryLimitedToClassesDoesNotReturnInstances() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forClasses(kb));
@@ -561,8 +557,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatQueryLimitedToInstancesDoesNotReturnClasses() throws Exception
-    {
+    public void thatQueryLimitedToInstancesDoesNotReturnClasses() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
 
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder.forInstances(kb));
@@ -574,8 +569,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatClassQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -590,8 +584,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatClassQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder
@@ -605,8 +598,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws Exception
-    {
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults() throws IOException {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
         List<KBHandle> results = asHandles(rdf4jLocalRepo, SPARQLQueryBuilder

@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.uima.UIMAException;
@@ -82,8 +83,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
-    {
+    public void thatTrainingWorks() throws IOException, UIMAException, RecommendationException {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
 
@@ -95,8 +95,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
-    {
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException {
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
         List<CAS> casList = loadArxivData();
         
@@ -107,14 +106,19 @@ public class OpenNlpDoccatRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
     }
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException, RecommendationException //throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
@@ -139,7 +143,7 @@ public class OpenNlpDoccatRecommenderTest
     }
 
     @Test
-    public void thatIncrementalNerEvaluationWorks() throws Exception
+    public void thatIncrementalNerEvaluationWorks() throws IOException, UIMAException, RecommendationException //throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 250, 10);
         OpenNlpDoccatRecommender sut = new OpenNlpDoccatRecommender(recommender, traits);
