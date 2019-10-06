@@ -76,7 +76,7 @@ public class RecommendationAcceptedEvent extends ApplicationEvent
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("RecommendationAcceptedEvent [");
+        builder.append("FeatureValueUpdatedEvent [");
         if (document != null) {
             builder.append("docID=");
             builder.append(document.getId());

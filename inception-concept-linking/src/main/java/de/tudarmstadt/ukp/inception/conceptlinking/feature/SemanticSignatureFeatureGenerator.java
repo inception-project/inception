@@ -52,7 +52,7 @@ import org.springframework.context.event.EventListener;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.RepositoryProperties;
+import de.tudarmstadt.ukp.clarin.webanno.api.dao.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.config.EntityLinkingProperties;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.CandidateEntity;
 import de.tudarmstadt.ukp.inception.conceptlinking.model.Property;
@@ -187,9 +187,7 @@ public class SemanticSignatureFeatureGenerator
                                 && typeBlacklist.contains(property.getType()))));
                         boolean isUnfrequent = property != null
                             && property.getFreq() < frequencyThreshold;
-                        if (isBlacklisted || isUnfrequent) {
-                            continue;
-                        }
+                        
                     }
                     relatedEntities.add(labelString);
                     relatedRelations.add(propertyString);
@@ -197,15 +195,13 @@ public class SemanticSignatureFeatureGenerator
             }
             catch (Exception e) {
                 if (StringUtils.contains(e.getMessage(), "UTF-8 sequence")
-                        && !log.isDebugEnabled()) {
+                        && log.isDebugEnabled()) {
                     // This is a comparatively common message - no need to always log the entire
                     // stack trace during production, but might still be reasonable to log a
                     // warning.
-                    log.warn("Could not get semantic signature: {}", e.getMessage());
+                     log.error("Could not get semantic signature", e);
                 }
-                else {
-                    log.error("Could not get semantic signature", e);
-                }
+                
             }
         }
 

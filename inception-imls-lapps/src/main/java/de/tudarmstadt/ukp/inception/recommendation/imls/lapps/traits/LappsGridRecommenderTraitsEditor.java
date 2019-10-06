@@ -29,6 +29,7 @@ import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -45,12 +46,11 @@ import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentU
 import de.tudarmstadt.ukp.dkpro.core.api.lexmorph.type.pos.POS;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
-import de.tudarmstadt.ukp.inception.recommendation.api.recommender.AbstractTraitsEditor;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommender;
 import de.tudarmstadt.ukp.inception.recommendation.imls.lapps.LappsGridRecommenderFactory;
 
 public class LappsGridRecommenderTraitsEditor
-    extends AbstractTraitsEditor
+    extends Panel
 {
     private static final long serialVersionUID = 1677442652521110324L;
 
@@ -67,6 +67,7 @@ public class LappsGridRecommenderTraitsEditor
 
     private @SpringBean LappsGridRecommenderFactory toolFactory;
 
+    private final Recommender recommender;
     private final LappsGridRecommenderTraits traits;
     private final IModel<LappsGridRecommenderTraits> traitsModel;
 
@@ -77,6 +78,7 @@ public class LappsGridRecommenderTraitsEditor
     {
         super(aId, aRecommender);
 
+        recommender = aRecommender.getObject();
         traits = toolFactory.readTraits(aRecommender.getObject());
         traitsModel = CompoundPropertyModel.of(traits);
         Form<LappsGridRecommenderTraits> form =
@@ -118,8 +120,8 @@ public class LappsGridRecommenderTraitsEditor
     {
         Map<String, List<LappsGridService>> predefinedServices = loadPredefinedServicesData();
 
-        String layer = getModelObject().getLayer().getName();
-        String feature = getModelObject().getFeature().getName();
+        String layer = recommender.getLayer().getName();
+        String feature = recommender.getFeature().getName();
 
         if (NER_LAYER.equals(layer) && NER_FEATURE.equals(feature)) {
             return predefinedServices.get("ner");

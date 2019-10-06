@@ -299,12 +299,9 @@ public class PDFExtractor
 
         float glyphHeight = bbox.getHeight() / 2.0F;
         PDFontDescriptor fontDescriptor = font.getFontDescriptor();
-        float height;
-        if (fontDescriptor != null) {
-            height = fontDescriptor.getCapHeight();
-            if (height != 0.0F && (height < glyphHeight || glyphHeight == 0.0F)) {
-                glyphHeight = height;
-            }
+        float height=fontDescriptor != null ? fontDescriptor.getCapHeight() : 0.0f;
+        if (height != 0.0F && (height < glyphHeight || glyphHeight == 0.0F)) {
+            glyphHeight = height;
         }
 
         height = glyphHeight / 1000.0F;

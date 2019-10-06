@@ -20,11 +20,9 @@ package de.tudarmstadt.ukp.inception.image.feature;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -196,13 +194,7 @@ public class ImageFeatureSupport
     @Override
     public List<VLazyDetailQuery> getLazyDetails(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        String label = renderFeatureValue(aFeature, aFs);
-                
-        if (StringUtils.isEmpty(label)) {
-            return Collections.emptyList();
-        }
-        
-        return asList(new VLazyDetailQuery(aFeature.getName(), label));
+        return asList(new VLazyDetailQuery(aFeature.getName(), renderFeatureValue(aFeature, aFs)));
     }
     
     @Override

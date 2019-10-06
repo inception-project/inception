@@ -47,11 +47,6 @@ public abstract class RecommendationEngine
         featureName = aRecommender.getFeature().getName();
         maxRecommendations = aRecommender.getMaxRecommendations();
     }
-    
-    public Recommender getRecommender()
-    {
-        return recommender;
-    }
 
 // tag::methodDefinition[]
     /**

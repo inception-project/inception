@@ -17,18 +17,11 @@
  */
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport.SPECIAL_SEP;
-import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.charsToBytes;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.encodeFSAddress;
-import static org.apache.commons.io.IOUtils.toCharArray;
-import static org.apache.uima.fit.util.CasUtil.getType;
-import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectAll;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,14 +33,16 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.impl.XmiCasDeserializer;
 import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.FSUtil;
-import org.apache.uima.resource.metadata.TypeSystemDescription;
-import org.apache.uima.util.CasCreationUtils;
-import org.apache.uima.util.CasIOUtils;
+import org.apache.uima.fit.util.JCasUtil;
+import org.apache.uima.jcas.JCas;
+import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.RelationAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -107,8 +103,8 @@ public class MtasUimaParser
     private Map<String, AnnotationLayer> layers;
     private Map<String, List<AnnotationFeature>> layerFeatures;
 
-    private NavigableMap<Integer, Pair<AnnotationFS, Integer>> tokenBeginIndex;
-    private NavigableMap<Integer, Pair<AnnotationFS, Integer>> tokenEndIndex;
+    private NavigableMap<Integer, Pair<Token, Integer>> tokenBeginIndex;
+    private NavigableMap<Integer, Pair<Token, Integer>> tokenEndIndex;
 
     public MtasUimaParser(MtasConfiguration config)
     {
@@ -170,9 +166,9 @@ public class MtasUimaParser
         long start = System.currentTimeMillis();
         log.debug("Starting creation of token collection");
 
-        CAS cas;
+        JCas jcas;
         try {
-            cas = readCas(aReader);
+            jcas = readCas(aReader);
         }
         catch (Exception e) {
             log.error("Unable to decode CAS", e);
@@ -180,7 +176,7 @@ public class MtasUimaParser
         }
 
         try {
-            createTokenCollection(cas);
+            createTokenCollection(jcas);
             log.debug("Created token collection in {} ms", (System.currentTimeMillis() - start));
             return tokenCollection;
         }
@@ -190,18 +186,20 @@ public class MtasUimaParser
         }
     }
     
-    private CAS readCas(Reader aReader) throws UIMAException, IOException, SAXException
+    private JCas readCas(Reader reader) throws UIMAException, IOException, SAXException
     {
-        CAS cas = CasCreationUtils.createCas((TypeSystemDescription) null, null, null);
+        JCas jcas = JCasFactory
+                .createJCas(annotationSchemaService.getFullProjectTypeSystem(project));
 
-        try (InputStream in = new ByteArrayInputStream(charsToBytes(toCharArray(aReader)))) {
-            CasIOUtils.load(in, cas);
-        }
-        
-        return cas;
+        String xmi = IOUtils.toString(reader);
+
+        // Get the annotations from the XMI are back in the CAS.
+        XmiCasDeserializer.deserialize(new ByteArrayInputStream(xmi.getBytes()), jcas.getCas());
+
+        return jcas;
     }
 
-    public MtasTokenCollection createTokenCollection(CAS aJCas)
+    public MtasTokenCollection createTokenCollection(JCas aJCas)
     {
         // Initialize state
         tokenCollection = new MtasTokenCollection();
@@ -212,14 +210,14 @@ public class MtasUimaParser
         // tokens based on their offsets.
         tokenBeginIndex = new TreeMap<>();
         tokenEndIndex = new TreeMap<>();
-        for (AnnotationFS token : select(aJCas, getType(aJCas, Token.class))) {
+        for (Token token : JCasUtil.select(aJCas, Token.class)) {
             tokenBeginIndex.put(token.getBegin(), Pair.of(token, tokenNum));
             tokenEndIndex.put(token.getEnd(), Pair.of(token, tokenNum));
             tokenNum++;
         }
         
         // Loop over the annotations
-        for (AnnotationFS annotation : selectAll(aJCas)) {
+        for (Annotation annotation : JCasUtil.select(aJCas, Annotation.class)) {
             // MTAS cannot index zero-width annotations, so we skip them here.
             if (annotation.getBegin() == annotation.getEnd()) {
                 continue;
@@ -236,7 +234,7 @@ public class MtasUimaParser
         // 1) if the first token starts after the first char. For example, when there's
         // a space or line break in the beginning of the document.
         // 2) if the last token ends before the last char. Same as above.
-        Pair<AnnotationFS, Integer> beginToken;
+        Pair<Token, Integer> beginToken;
         if (tokenBeginIndex.floorEntry(aAnnotation.getBegin()) == null) {
             beginToken = tokenBeginIndex.firstEntry().getValue();
         }
@@ -244,12 +242,12 @@ public class MtasUimaParser
             beginToken = tokenBeginIndex.floorEntry(aAnnotation.getBegin()).getValue();
         }
         
-        Pair<AnnotationFS, Integer> endToken;
-        if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd()) == null) {
+        Pair<Token, Integer> endToken;
+        if (tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1) == null) {
             endToken = tokenEndIndex.lastEntry().getValue();
         }
         else {
-            endToken = tokenEndIndex.ceilingEntry(aAnnotation.getEnd()).getValue();
+            endToken = tokenEndIndex.ceilingEntry(aAnnotation.getEnd() - 1).getValue();
         }
         return new Range(beginToken.getValue(), endToken.getValue(), beginToken.getKey().getBegin(),
                 endToken.getKey().getEnd());
@@ -259,7 +257,7 @@ public class MtasUimaParser
             int aMtasId)
     {
         int mtasId = aMtasId;
-        int fsAddress = getAddr(aAnnotation);
+        int fsAddress = WebAnnoCasUtil.getAddr(aAnnotation);
         if (aAnnotation.getEnd() - aAnnotation.getBegin() > OVERSIZED_ANNOTATION_LIMIT) {
             log.trace("Skipping indexing of very long annotation: {} {} characters at [{}-{}]",
                     aAnnotation.getType().getName(), aAnnotation.getEnd() - aAnnotation.getBegin(),

@@ -18,16 +18,14 @@
 package de.tudarmstadt.ukp.inception.recommendation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getAddr;
-import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_ALL;
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSingleFsAt;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_OVERLAP;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_REJECTED;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion.FLAG_SKIPPED;
-import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineCapability.TRAINING_NOT_SUPPORTED;
 import static java.util.Comparator.comparingInt;
 import static java.util.stream.Collectors.toList;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
-import static org.apache.uima.fit.util.CasUtil.selectAt;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -71,7 +69,6 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -115,7 +112,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.recommender.Recommendatio
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderDeletedEvent;
-import de.tudarmstadt.ukp.inception.recommendation.event.RecommenderUpdatedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.recommendation.util.OverlapIterator;
@@ -143,7 +139,6 @@ public class RecommendationServiceImpl
     private final DocumentService documentService;
     private final LearningRecordService learningRecordService;
     private final ProjectService projectService;
-    private final ApplicationEventPublisher applicationEventPublisher;
     
     private final ConcurrentMap<RecommendationStateKey, AtomicInteger> trainingTaskCounter;
     private final ConcurrentMap<RecommendationStateKey, RecommendationState> states;
@@ -170,7 +165,7 @@ public class RecommendationServiceImpl
             RecommenderFactoryRegistry aRecommenderFactoryRegistry,
             SchedulingService aSchedulingService, AnnotationSchemaService aAnnoService,
             DocumentService aDocumentService, LearningRecordService aLearningRecordService,
-            ProjectService aProjectService, ApplicationEventPublisher aApplicationEventPublisher)
+            ProjectService aProjectService)
     {
         sessionRegistry = aSessionRegistry;
         userRepository = aUserRepository;
@@ -180,7 +175,6 @@ public class RecommendationServiceImpl
         documentService = aDocumentService;
         learningRecordService = aLearningRecordService;
         projectService = aProjectService;
-        applicationEventPublisher = aApplicationEventPublisher;
         
         trainingTaskCounter = new ConcurrentHashMap<>();
         states = new ConcurrentHashMap<>();
@@ -193,15 +187,14 @@ public class RecommendationServiceImpl
             EntityManager aEntityManager)
     {
         this(aSessionRegistry, aUserRepository, aRecommenderFactoryRegistry, aSchedulingService,
-                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null,
-                null);
+                aAnnoService, aDocumentService, aLearningRecordService, (ProjectService) null);
         
         entityManager = aEntityManager;
     }
 
     public RecommendationServiceImpl(EntityManager aEntityManager)
     {
-        this(null, null, null, null, null, null, null, (ProjectService) null, null);
+        this(null, null, null, null, null, null, null, (ProjectService) null);
 
         entityManager = aEntityManager;
     }
@@ -226,15 +219,6 @@ public class RecommendationServiceImpl
         RecommendationState state = getState(aUser.getUsername(), aProject);
         synchronized (state) {
             state.setIncomingPredictions(aPredictions);
-        }
-    }
-    
-    @Override
-    public boolean hasActiveRecommenders(String aUser, Project aProject)
-    {
-        RecommendationState state = getState(aUser, aProject);
-        synchronized (state) {
-            return !state.getActiveRecommenders().isEmpty();
         }
     }
     
@@ -272,10 +256,6 @@ public class RecommendationServiceImpl
         else {
             entityManager.merge(aRecommender);
         }
-        
-        if (applicationEventPublisher != null) {
-            applicationEventPublisher.publishEvent(new RecommenderUpdatedEvent(this, aRecommender));
-        }
     }
 
     @Override
@@ -289,10 +269,6 @@ public class RecommendationServiceImpl
         }
 
         entityManager.remove(settings);
-        
-        if (applicationEventPublisher != null) {
-            applicationEventPublisher.publishEvent(new RecommenderDeletedEvent(this, aRecommender));
-        }
     }
 
     @Override
@@ -459,7 +435,8 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(DIRTIES, dirties);
         }
         
-        dirties.add(new RecommendationStateKey(aEvent.getUser(), aEvent.getProject()));
+        dirties.add(
+                new RecommendationStateKey(aEvent.getUser(), aEvent.getDocument().getProject()));
     }
     
     /*
@@ -487,12 +464,6 @@ public class RecommendationServiceImpl
         
         requestCycle.getListeners().add(triggerTrainingTaskListener());
     }
-    
-    @EventListener
-    public void onRecommenderUpdated(RecommenderUpdatedEvent aEvent)
-    {
-        clearState(aEvent.getRecommender().getProject());
-    }
 
     @EventListener
     public void onRecommenderDelete(RecommenderDeletedEvent aEvent)
@@ -500,7 +471,10 @@ public class RecommendationServiceImpl
         // When removing a recommender, it is sufficient to delete its predictions from the current
         // state. Since (so far) recommenders do not depend on each other, we wouldn't need to 
         // trigger a training rung.
-        removePredictions(aEvent.getRecommender());
+        RecommendationState state = getState(aEvent.getUser(), aEvent.getProject());
+        synchronized (state) {
+            state.removePredictions(aEvent.getRecommender());
+        }
     }
 
     @EventListener
@@ -510,7 +484,7 @@ public class RecommendationServiceImpl
     }
 
     @EventListener
-    public void onDocumentRemoval(BeforeDocumentRemovedEvent aEvent)
+    public void onDocumentCreated(BeforeDocumentRemovedEvent aEvent)
     {
         clearState(aEvent.getDocument().getProject());
     }
@@ -519,27 +493,16 @@ public class RecommendationServiceImpl
     public void triggerTrainingAndClassification(String aUser, Project aProject, String aEventName)
     {
         User user = userRepository.get(aUser);
-        
-        // do not trigger training during when viewing others' work
-        if (!user.equals(userRepository.getCurrentUser())) {
-            return;
-        }
 
         // Update the task count
         AtomicInteger count = trainingTaskCounter.computeIfAbsent(
             new RecommendationStateKey(user.getUsername(), aProject),
             _key -> new AtomicInteger(0));
 
-        // If there is no active recommender at all then let's try hard to make one active by 
-        // re-setting the count and thus force-scheduling a SelectionTask
-        if (!hasActiveRecommenders(aUser, aProject)) {
-            count.set(0);
-        }
-        
+        // If it is time for a selection task, we just start a selection task.
+        // The selection task then will start the training once its finished,
+        // i.e. we do not start it here.
         if (count.getAndIncrement() % TRAININGS_PER_SELECTION == 0) {
-            // If it is time for a selection task, we just start a selection task.
-            // The selection task then will start the training once its finished,
-            // i.e. we do not start it here.
             Task task = new SelectionTask(aProject, user, aEventName);
             schedulingService.enqueue(task);
         } else {
@@ -621,18 +584,6 @@ public class RecommendationServiceImpl
         }
     }
 
-    private void removePredictions(Recommender aRecommender)
-    {
-        Validate.notNull(aRecommender, "Recommender must be specified");
-        
-        synchronized (states) {
-            states.entrySet().stream()
-                    .filter(entry -> Objects.equals(
-                            aRecommender.getProject().getId(), entry.getKey().getProjectId()))
-                    .forEach(entry -> entry.getValue().removePredictions(aRecommender));
-        }
-    }
-
     @Override
     public boolean switchPredictions(User aUser, Project aProject)
     {
@@ -671,8 +622,7 @@ public class RecommendationServiceImpl
         
         // Check if there is already an annotation of the target type at the given location
         Type type = CasUtil.getType(aCas, adapter.getAnnotationTypeName());
-        AnnotationFS annoFS = selectAt(aCas, type, aBegin, aEnd).stream().findFirst().orElse(null);
-        
+        AnnotationFS annoFS = selectSingleFsAt(aCas, type, aBegin, aEnd);
         int address;
         if (annoFS != null) {
             // ... if yes, then we update the feature on the existing annotation
@@ -963,49 +913,21 @@ public class RecommendationServiceImpl
                         
                         cloneAndMonkeyPatchCAS(aProject, originalCas.get(), predictionCas);
 
-                        List<AnnotationSuggestion> suggestions;
-                        
-                        // If the recommender is not trainable and not sensitive to annotations, 
-                        // we can actually re-use the predictions.
-                        Predictions activePredictions = getPredictions(aUser, aProject);
-                        if (TRAINING_NOT_SUPPORTED
-                                .equals(recommendationEngine.getTrainingCapability())
-                                && activePredictions != null) {
-                            
-                            suggestions = activePredictions
-                                    .getPredictionsByRecommender(recommender);
-                            
-                            // Calculate the visibility of the suggestions. This happens via the 
-                            // original CAS which contains only the manually created annotations  
-                            // and *not* the suggestions.
-                            suggestions.forEach(s -> s.show(FLAG_ALL));
-                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
-                            calculateVisibility(originalCas.get(), username, layer,
-                                    groups, 0, originalCas.get().getDocumentText().length());
-                            
-                            log.debug("[{}]({}) for user [{}] on document "
-                                    + "[{}]({}) in project [{}]({}) inherited {} predictions.",
-                                    recommender.getName(), recommender.getId(), aUser.getUsername(),
-                                    document.getName(), document.getId(),
-                                    recommender.getProject().getName(),
-                                    recommender.getProject().getId(), suggestions.size());
-                        }
-                        else {
-                            // Perform the actual prediction
-                            recommendationEngine.predict(ctx, predictionCas);
+                        // Perform the actual prediction
+                        recommendationEngine.predict(ctx, predictionCas);
 
-                            // Extract the suggestions from the data which the recommender has 
-                            // written into the CAS
-                            suggestions = extractSuggestions(aUser, predictionCas, document,
-                                    recommender);
-                            
-                            // Calculate the visibility of the suggestions. This happens via the 
-                            // original CAS which contains only the manually created annotations  
-                            // and *not* the suggestions.
-                            Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
-                            calculateVisibility(originalCas.get(), username, layer,
-                                    groups, 0, originalCas.get().getDocumentText().length());
-                        }
+                        // Extract the suggestions from the data which the recommender has written 
+                        // into the CAS
+                        List<AnnotationSuggestion> suggestions = extractSuggestions(aUser,
+                                predictionCas,
+                                document, recommender);
+                        
+                        // Calculate the visibility of the suggestions. This happens via the 
+                        // original CAS which contains only the manually created annotations and 
+                        // *not* the suggestions.
+                        Collection<SuggestionGroup> groups = SuggestionGroup.group(suggestions);
+                        calculateVisibility(originalCas.get(), username, layer,
+                                groups, 0, originalCas.get().getDocumentText().length());
 
                         predictions.putPredictions(layer.getId(), suggestions);
                     }
@@ -1275,17 +1197,10 @@ public class RecommendationServiceImpl
                     }
 
                     for (RecommendationStateKey committedKey : committed) {
-                        if (!dirties.contains(committedKey)) {
-                            // Committed but not dirty, so nothing to do.
-                            continue;
-                        }
+    
                         
                         Project project = projectService.getProject(committedKey.getProjectId());
-                        if (project == null) {
-                            // Concurrent action has deleted project, so we can ignore this
-                            continue;
-                        }
-                        
+
                         triggerTrainingAndClassification(
                                 committedKey.getUser(), project, 
                                 "Committed dirty CAS at end of request");

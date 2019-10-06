@@ -82,8 +82,7 @@ public class StringMatchingRecommenderFactory
     }
     
     @Override
-    public StringMatchingRecommenderTraitsEditor createTraitsEditor(String aId,
-            IModel<Recommender> aModel)
+    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
         return new StringMatchingRecommenderTraitsEditor(aId, aModel);
     }

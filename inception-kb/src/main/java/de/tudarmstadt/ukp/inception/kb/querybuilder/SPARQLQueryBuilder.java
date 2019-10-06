@@ -189,8 +189,6 @@ public class SPARQLQueryBuilder
     
     private boolean includeInferred = true;
     
-    private boolean forceDisableFTS = false;
-    
     /**
      * This flag controls whether we attempt to drop duplicate labels and descriptions on the
      * side of the SPARQL server (true) or whether we try retrieving all labels and descriptions
@@ -605,8 +603,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions withIdentifier(String... aIdentifiers)
     {
-        forceDisableFTS = true;
-        
         addPattern(PRIMARY, new ValuesPattern(VAR_SUBJECT,
                 Arrays.stream(aIdentifiers).map(Rdf::iri).toArray(RdfValue[]::new)));
         
@@ -616,8 +612,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions matchingDomain(String aIdentifier)
     {
-        forceDisableFTS = true;
-        
         // The original code considered owl:unionOf in the domain defintion... we do not do this
         // at the moment, but to see how it was before and potentially restore that behavior, we
         // keep a copy of the old query here.
@@ -660,7 +654,7 @@ public class SPARQLQueryBuilder
             return this;
         }
         
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
@@ -816,7 +810,7 @@ public class SPARQLQueryBuilder
             return this;
         }
         
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
@@ -969,7 +963,7 @@ public class SPARQLQueryBuilder
         }
         
         
-        IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
+        IRI ftsMode = kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
             addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
@@ -1256,8 +1250,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions roots()
     {
-        forceDisableFTS = true;
-        
         addPattern(PRIMARY, mode.rootsPattern(kb));
         
         return this;
@@ -1266,8 +1258,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions ancestorsOf(String aItemIri)
     {
-        forceDisableFTS = true;
-        
         Iri contextIri = iri(aItemIri);
         
         addPattern(PRIMARY, mode.ancestorsPattern(kb, contextIri));
@@ -1278,8 +1268,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions descendantsOf(String aClassIri)
     {
-        forceDisableFTS = true;
-        
         Iri contextIri = iri(aClassIri);
         
         addPattern(PRIMARY, mode.descendentsPattern(kb, contextIri));
@@ -1290,8 +1278,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions childrenOf(String aClassIri)
     {
-        forceDisableFTS = true;
-        
         Iri contextIri = iri(aClassIri);
         
         addPattern(PRIMARY, mode.childrenPattern(kb, contextIri));
@@ -1302,8 +1288,6 @@ public class SPARQLQueryBuilder
     @Override
     public SPARQLQueryPrimaryConditions parentsOf(String aClassIri)
     {
-        forceDisableFTS = true;
-        
         Iri contextIri = iri(aClassIri);
         
         addPattern(PRIMARY, mode.parentsPattern(kb, contextIri));

@@ -19,19 +19,17 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.inception.recommendation.model.RecommenderEvaluationScoreMetricEnum;
-
 public class DropDownEvent
 {
-    public RecommenderEvaluationScoreMetricEnum selectedValue;
+    public RecommenderEvaluationScoreMetric selectedValue;
     public AjaxRequestTarget target;
 
-    public RecommenderEvaluationScoreMetricEnum getSelectedValue()
+    public RecommenderEvaluationScoreMetric getSelectedValue()
     {
         return selectedValue;
     }
 
-    public void setSelectedValue(RecommenderEvaluationScoreMetricEnum selectedValue)
+    public void setSelectedValue(RecommenderEvaluationScoreMetric selectedValue)
     {
         this.selectedValue = selectedValue;
     }

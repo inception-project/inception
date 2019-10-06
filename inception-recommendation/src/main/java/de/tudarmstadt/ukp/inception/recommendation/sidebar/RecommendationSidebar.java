@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.event.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModelAdapter;
@@ -62,12 +61,9 @@ public class RecommendationSidebar
     
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean AnnotationSchemaService annoService;
-    private @SpringBean UserDao userRepository;
 
     private WebMarkupContainer warning;
     private StringResourceModel tipModel;
-    private Form<Preferences> form;
-    private RecommenderInfoPanel recommenderInfos;
     
     public RecommendationSidebar(String aId, IModel<AnnotatorState> aModel,
             AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
@@ -88,7 +84,7 @@ public class RecommendationSidebar
         tip.setOption("width", Options.asString("300px"));
         warning.add(tip);
         
-        form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
+        Form<Preferences> form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
 
         form.add(new NumberTextField<Integer>("maxPredictions", Integer.class)
                 .setMinimum(1)
@@ -106,8 +102,7 @@ public class RecommendationSidebar
 
         add(new LearningCurveChartPanel(LEARNING_CURVE, aModel));
         
-        recommenderInfos = new RecommenderInfoPanel("recommenders", aModel);
-        add(recommenderInfos);
+        add(new RecommenderInfoPanel("recommenders", aModel));
     }
 
     @Override
@@ -115,14 +110,6 @@ public class RecommendationSidebar
     {
         // using onConfigure as last state in lifecycle to configure visibility
         super.onConfigure();
-        configureMismatched();
-        boolean enabled = getModelObject().getUser().equals(userRepository.getCurrentUser());
-        form.setEnabled(enabled);
-        recommenderInfos.setEnabled(enabled);
-    }
-
-    protected void configureMismatched()
-    {
         List<String> mismatchedRecommenders = findMismatchedRecommenders();
         
         if (mismatchedRecommenders.isEmpty()) {

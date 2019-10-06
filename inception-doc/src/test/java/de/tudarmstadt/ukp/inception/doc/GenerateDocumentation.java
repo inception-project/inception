@@ -65,7 +65,7 @@ public class GenerateDocumentation
                 .attribute("product-name", "INCEpTION")
                 .attribute("product-website-url", "https://inception-project.github.io")
                 .attribute("icons", "font")
-                .attribute("toc", "left")
+                .attribute("toc", "preamble")
                 .attribute("sourceHighlighter", "coderay")
                 .get();
         OptionsBuilder options = OptionsBuilder.options()

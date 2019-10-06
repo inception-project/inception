@@ -88,7 +88,7 @@ public class RecommendationRejectedEvent extends ApplicationEvent
     public String toString()
     {
         StringBuilder builder = new StringBuilder();
-        builder.append("RecommendationRejectedEvent [");
+        builder.append("FeatureValueUpdatedEvent [");
         if (document != null) {
             builder.append("docID=");
             builder.append(document.getId());

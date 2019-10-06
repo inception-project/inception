@@ -31,34 +31,28 @@ public class ProjectRecommendersPanel
 {
     private static final long serialVersionUID = 3042218455285633439L;
     
-    private static final String MID_RECOMMENDERS = "recommenders";
-    private static final String MID_CREATE_BUTTON = "create";
-    private static final String MID_RECOMMENDER_EDITOR = "recommenderEditor";
+    private static final String EVALUATION_SIMULATION_CONTAINER = "evaluation-simulation-container";
 
     private IModel<Project> projectModel;
     private IModel<Recommender> selectedRecommenderModel;
     
-    private final RecommenderEditorPanel recommenderEditorPanel;
-
     public ProjectRecommendersPanel(String aId, IModel<Project> aProject)
     {
         super(aId, aProject);
-        
-        setOutputMarkupId(true);
 
         selectedRecommenderModel = Model.of();
         projectModel = aProject;
 
-        recommenderEditorPanel = new RecommenderEditorPanel(
-                MID_RECOMMENDER_EDITOR, projectModel, selectedRecommenderModel);
+        RecommenderEditorPanel recommenderEditorPanel = new RecommenderEditorPanel(
+                "recommenderEditor", projectModel, selectedRecommenderModel);
         add(recommenderEditorPanel);
 
-        RecommenderListPanel recommenderListPanel = new RecommenderListPanel(MID_RECOMMENDERS,
-                projectModel, selectedRecommenderModel, true);
+        RecommenderListPanel recommenderListPanel = new RecommenderListPanel("recommenders",
+                projectModel, selectedRecommenderModel);
         recommenderListPanel.setCreateAction(_target -> {
-            Recommender recommender = new Recommender();    
-            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT); 
-            selectedRecommenderModel.setObject(recommender);    
+            Recommender recommender = new Recommender();
+            recommender.setMaxRecommendations(MAX_RECOMMENDATIONS_DEFAULT);
+            selectedRecommenderModel.setObject(recommender);
             recommenderEditorPanel.modelChanged();
         });
         recommenderListPanel.setChangeAction(_target -> {
@@ -66,6 +60,12 @@ public class ProjectRecommendersPanel
             _target.add(recommenderEditorPanel);
         });
         add(recommenderListPanel);
+        
+        EvaluationSimulationPanel evaluationSimulationPanel = new EvaluationSimulationPanel(
+                EVALUATION_SIMULATION_CONTAINER, projectModel.getObject(),
+                selectedRecommenderModel);
+        evaluationSimulationPanel.setOutputMarkupId(true);
+        add(evaluationSimulationPanel);
     }
 
     @Override

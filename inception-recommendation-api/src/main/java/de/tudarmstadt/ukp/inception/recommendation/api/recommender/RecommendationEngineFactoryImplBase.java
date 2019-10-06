@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.toJsonString;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 
+import org.apache.wicket.Component;
+import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +37,9 @@ public abstract class RecommendationEngineFactoryImplBase<T>
     private Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     
     @Override
-    public AbstractTraitsEditor createTraitsEditor(String aId, IModel<Recommender> aModel)
+    public Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
-        return new DefaultTrainableRecommenderTraitsEditor(aId, aModel);
+        return new EmptyPanel(aId);
     }
 
     @Override

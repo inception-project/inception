@@ -32,4 +32,10 @@ public class RecommenderDeletedEventAdapter
     {
         return aEvent instanceof RecommenderDeletedEvent;
     }
+
+    @Override
+    public String getUser(RecommenderDeletedEvent aEvent)
+    {
+        return aEvent.getUser();
+    }
 }

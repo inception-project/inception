@@ -73,7 +73,8 @@ public class DisabledKBWarning
         TooltipBehavior tip = new TooltipBehavior();
         warning.add(tip);
         tip.setOption("content", Options.asString(new StringResourceModel("disabledKbWarning", this)
-            .setParameters(kbName, feature.getLayer().getUiName(), feature.getUiName())));
+            .setParameters(kbName, feature.getLayer().getUiName(), feature.getUiName())
+            .getString()));
         tip.setOption("width", Options.asString("300px"));
     }
 

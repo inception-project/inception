@@ -129,21 +129,6 @@ public class ExternalSearchServiceImpl
     }
 
     @Override
-    public ExternalSearchResult getDocumentResult(DocumentRepository aRepository,
-            String aCollectionId, String aDocumentId)
-        throws IOException
-    {
-        ExternalSearchProviderFactory factory = externalSearchProviderRegistry
-                .getExternalSearchProviderFactory(aRepository.getType());
-
-        ExternalSearchProvider provider = factory.getNewExternalSearchProvider();
-
-        Object traits = factory.readTraits(aRepository);
-
-        return provider.getDocumentResult(aRepository, traits, aCollectionId, aDocumentId);
-    }
-    
-    @Override
     public String getDocumentText(DocumentRepository aRepository, String aCollectionId,
             String aDocumentId)
         throws IOException

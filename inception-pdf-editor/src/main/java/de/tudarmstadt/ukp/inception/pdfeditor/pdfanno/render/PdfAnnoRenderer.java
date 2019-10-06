@@ -76,30 +76,22 @@ public class PdfAnnoRenderer
             for (VSpan vspan : aVDoc.spans(layer.getId())) {
                 String labelText = TypeUtil.getUiLabelText(typeAdapter, vspan.getFeatures());
                 String color;
-                if (vspan.getColorHint() == null) {
-                    color = getColor(vspan, coloringStrategy, labelText);
-                } else {
-                    color = vspan.getColorHint();
-                }
+
+                color = vspan.getColorHint() == null ? getColor(vspan, coloringStrategy, labelText) 
+                    : vspan.getColorHint() ;
+                
                 spans.add(new RenderSpan(vspan,
                     new Span(vspan.getVid().toString(), labelText, color), aPageBeginOffset));
             }
 
             for (VArc varc : aVDoc.arcs(layer.getId())) {
                 String labelText;
-                if (varc.getLabelHint() == null) {
-                    labelText = TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures());
-                }
-                else {
-                    labelText = varc.getLabelHint();
-                }
 
-                String color;
-                if (varc.getColorHint() == null) {
-                    color = getColor(varc, coloringStrategy, labelText);
-                } else {
-                    color = varc.getColorHint();
-                }
+                labelText = varc.getLabelHint() == null ? TypeUtil.getUiLabelText(typeAdapter, varc.getFeatures()) 
+                    : varc.getLabelHint();
+                
+                String color = varc.getColorHint() == null ? getColor(varc, coloringStrategy, labelText) 
+                : varc.getColorHint() ;
 
                 pdfAnnoModel.addRelation(new Relation(varc.getVid().toString(),
                     varc.getSource().toString(), varc.getTarget().toString(), labelText, color));

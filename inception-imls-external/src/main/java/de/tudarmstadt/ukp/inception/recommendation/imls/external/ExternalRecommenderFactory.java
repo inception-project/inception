@@ -64,14 +64,12 @@ public class ExternalRecommenderFactory
             return false;
         }
 
-        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS, AnchoringMode.SENTENCES)
-                .contains(aLayer.getAnchoringMode()) &&
-                WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
+        return asList(AnchoringMode.SINGLE_TOKEN, AnchoringMode.TOKENS).contains(
+                aLayer.getAnchoringMode()) && WebAnnoConst.SPAN_TYPE.equals(aLayer.getType());
     }
 
     @Override
-    public ExternalRecommenderTraitsEditor createTraitsEditor(String aId,
-            IModel<Recommender> aModel)
+    public org.apache.wicket.Component createTraitsEditor(String aId, IModel<Recommender> aModel)
     {
         return new ExternalRecommenderTraitsEditor(aId, aModel);
     }
