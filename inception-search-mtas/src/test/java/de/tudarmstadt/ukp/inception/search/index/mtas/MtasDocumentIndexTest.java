@@ -311,7 +311,7 @@ public class MtasDocumentIndexTest
         try {
             createProject(project);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         SourceDocument sourceDocument1 = new SourceDocument();
@@ -331,7 +331,7 @@ public class MtasDocumentIndexTest
                     Pair.of(sourceDocument1, fileContent1),
                     Pair.of(sourceDocument2, fileContent2));
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         User user = userRepository.get("admin");
@@ -482,7 +482,7 @@ public class MtasDocumentIndexTest
                 FileUtils.deleteDirectory(new File(temporaryFolderPath));
             }
             catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
             temporaryFolder = new File(temporaryFolderPath);
         }

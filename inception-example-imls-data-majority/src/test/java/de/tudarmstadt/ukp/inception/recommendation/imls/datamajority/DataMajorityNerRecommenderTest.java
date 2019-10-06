@@ -103,7 +103,7 @@ public class DataMajorityNerRecommenderTest
         try {
             predictions = getPredictions(cas, NamedEntity.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         assertThat(predictions).as("Predictions have been written to CAS")
@@ -214,7 +214,7 @@ public class DataMajorityNerRecommenderTest
             try {
             	 assertThat(score).isStrictlyBetween(0.0, 1.0);
             } catch (Exception e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
             }
             i++;

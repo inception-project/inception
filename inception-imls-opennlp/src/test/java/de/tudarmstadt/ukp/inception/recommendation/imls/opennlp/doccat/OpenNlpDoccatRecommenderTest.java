@@ -110,7 +110,7 @@ public class OpenNlpDoccatRecommenderTest
         try {
             predictions = getPredictions(cas, NamedEntity.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         assertThat(predictions).as("Predictions have been written to CAS")

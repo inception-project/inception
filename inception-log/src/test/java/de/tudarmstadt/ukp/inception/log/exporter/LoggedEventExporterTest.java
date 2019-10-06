@@ -193,7 +193,7 @@ public class LoggedEventExporterTest
         try {
             sut.exportData(exportRequest, exportedProject, workFolder);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         // Import the project again
@@ -204,7 +204,7 @@ public class LoggedEventExporterTest
         try {
             sut.importData(importRequest, project, exportedProject, aZipFile);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         return captor;

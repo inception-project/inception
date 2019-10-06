@@ -93,7 +93,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException, CASException
+    public void thatPredictionWorks() throws CASException, IOException, UIMAException, RecommendationException
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
@@ -173,7 +173,7 @@ public class StringMatchingRecommenderTest
         try {
             predictions = getPredictions(cas, NamedEntity.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         assertThat(predictions).as("Predictions have been written to CAS")

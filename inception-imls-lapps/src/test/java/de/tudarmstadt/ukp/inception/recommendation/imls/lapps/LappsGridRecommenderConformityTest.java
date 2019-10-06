@@ -74,7 +74,7 @@ public class LappsGridRecommenderConformityTest
         try {
             predict(aService.getUrl(), cas);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         SoftAssertions softly = new SoftAssertions();
@@ -96,7 +96,7 @@ public class LappsGridRecommenderConformityTest
         try {
             predict(aService.getUrl(), cas);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         SoftAssertions softly = new SoftAssertions();

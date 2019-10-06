@@ -353,7 +353,7 @@ public class DL4JSequenceRecommenderTest
 			predictions = getPredictions(cas, NamedEntity.class);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+            throw new RuntimeException(e);
 		}
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();

@@ -100,7 +100,7 @@ public class OpenNlpPosRecommenderTest
         try {
             predictions = RecommenderTestHelper.getPredictions(cas, POS.class);
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
 
         assertThat(predictions).as("Predictions have been written to CAS")
