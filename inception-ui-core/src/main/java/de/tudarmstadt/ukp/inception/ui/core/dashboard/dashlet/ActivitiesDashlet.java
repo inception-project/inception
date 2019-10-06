@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.inception.log.EventRepository;
 import de.tudarmstadt.ukp.inception.log.model.LoggedEvent;
 import de.tudarmstadt.ukp.inception.support.ui.LinkProvider;
 
-public class ActivitiesDashlet extends Dashlet_ImplBase
+public class ActivitiesDashlet extends DashLet_ImplBase
 {
     // annotation events
     public static final String SPAN_CREATED_EVENT = "SpanCreatedEvent";

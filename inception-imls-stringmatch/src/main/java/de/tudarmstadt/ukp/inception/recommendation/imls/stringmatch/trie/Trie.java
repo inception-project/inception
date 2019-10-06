@@ -36,7 +36,7 @@ import java.util.TreeMap;
 public class Trie<V>
 // implements Map<CharSequence, V>
 {
-    private int _size = 0;
+    private int s_size = 0;
     private KeySanitizerFactory sanitizerFactory;
 
     public class Node
@@ -54,7 +54,7 @@ public class Trie<V>
         }
     }
 
-    private Node _root;
+    private Node n_root;
 
     /**
      * Create an empty Trie.
@@ -78,8 +78,8 @@ public class Trie<V>
      */
     public void clear()
     {
-        _root = new Node(0);
-        _size = 0;
+        n_root = new Node(0);
+        s_size = 0;
     }
 
     /**
@@ -108,7 +108,7 @@ public class Trie<V>
         // return oldval;
         // }
 
-        Node last = _root;
+        Node last = n_root;
         int level = 1;
         for (int i = 0; i < key.length(); i++) {
             final char k = key.charAt(i);
@@ -122,7 +122,7 @@ public class Trie<V>
         }
 
         if (!last.set) {
-            _size++;
+            s_size++;
         }
 
         final V oldval = last.value;
@@ -149,14 +149,14 @@ public class Trie<V>
         }
 
         if (key.length() == 0) {
-            return _root;
+            return n_root;
         }
 
         KeySanitizer sanitizer = null;
         if (sanitizerFactory != null) {
             sanitizer = sanitizerFactory.create();
         }
-        Node last = _root;
+        Node last = n_root;
         Node match = null;
         for (int i = offset; i < key.length(); i++) {
             char k = key.charAt(i);
@@ -218,14 +218,14 @@ public class Trie<V>
         }
 
         if (key.length() == 0) {
-            return _root;
+            return n_root;
         }
 
         KeySanitizer sanitizer = null;
         if (sanitizerFactory != null) {
             sanitizer = sanitizerFactory.create();
         }
-        Node last = _root;
+        Node last = n_root;
         Node match = null;
         for (int i = offset; i < offset + length; i++) {
             char k = key.charAt(i);
@@ -333,7 +333,7 @@ public class Trie<V>
 
     public boolean isEmpty()
     {
-        return _size == 0;
+        return s_size == 0;
     }
 
     /*
@@ -350,13 +350,13 @@ public class Trie<V>
 
     public int size()
     {
-        return _size;
+        return s_size;
     }
 
     public Collection<V> values()
     {
-        final List<V> vals = new ArrayList<V>(_size);
-        values(_root, vals);
+        final List<V> vals = new ArrayList<V>(s_size);
+        values(n_root, vals);
         return vals;
     }
 
@@ -377,12 +377,12 @@ public class Trie<V>
 
     public Set<String> keys()
     {
-        final Set<String> vals = new HashSet<String>(_size);
+        final Set<String> vals = new HashSet<String>(s_size);
         final StringBuilder b = new StringBuilder();
 
-        for (final Character c : _root.children.keySet()) {
+        for (final Character c : n_root.children.keySet()) {
             b.setLength(0);
-            keys(c, _root.children.get(c), b, vals);
+            keys(c, n_root.children.get(c), b, vals);
         }
         return vals;
     }
@@ -427,37 +427,37 @@ public class Trie<V>
 
         private class Frame
         {
-            private final Character _c;
-            private final Node _n;
-            private final Iterator<Character> _i;
-            private boolean _nodeDone;
+            private final Character c_c;
+            private final Node n_n;
+            private final Iterator<Character> i_i;
+            private boolean n_nodeDone;
 
             public Frame(final Character c, final Node n)
             {
-                _c = c;
-                _n = n;
-                _i = n.children.keySet().iterator();
-                _nodeDone = _c == null || !_n.set;
+                c_c = c;
+                n_n = n;
+                i_i = n.children.keySet().iterator();
+                n_nodeDone = c_c == null || !n_n.set;
             }
 
             boolean hasNext()
             {
-                return _i.hasNext() || !_nodeDone;
+                return i_i.hasNext() || !n_nodeDone;
             }
 
             void step()
             {
-                sb.append(_c);
-                sb.setLength(_n.level);
+                sb.append(c_c);
+                sb.setLength(n_n.level);
 
-                if (!_nodeDone) {
+                if (!n_nodeDone) {
                     // Render the node self once
-                    _nodeDone = true;
+                    n_nodeDone = true;
                 }
                 else {
                     // Render the children
-                    final Character c = _i.next();
-                    final Frame f = new Frame(c, _n.children.get(c));
+                    final Character c = i_i.next();
+                    final Frame f = new Frame(c, n_n.children.get(c));
                     stack.add(f);
                     f.step();
                 }
@@ -467,7 +467,7 @@ public class Trie<V>
         {
             sb = new StringBuilder();
             stack = new Stack<Frame>();
-            stack.push(new Frame(null, _root));
+            stack.push(new Frame(null, n_root));
             step();
         }
 

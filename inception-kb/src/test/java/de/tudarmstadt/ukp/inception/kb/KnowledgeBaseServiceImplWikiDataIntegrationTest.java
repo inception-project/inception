@@ -87,7 +87,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     private Reification reification;
 
     private TestFixtures testFixtures;
-    private static Map<String, KnowledgeBaseProfile> PROFILES;
+    private static Map<String, KnowledgeBaseProfile> profiles;
 
     public KnowledgeBaseServiceImplWikiDataIntegrationTest(Reification aReification)
     {
@@ -117,7 +117,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
         sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
         project = createProject(PROJECT_NAME);
         kb = buildKnowledgeBase(project, KB_NAME);
-        String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
+        String wikidataAccessUrl = profiles.get("wikidata").getAccess().getAccessUrl();
         testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
 
@@ -246,13 +246,13 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
     private KnowledgeBase buildKnowledgeBase(Project project, String name) throws IOException
     {
-        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+        profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
         kb_wikidata_direct.setProject(project);
         kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
-        kb_wikidata_direct.setType(PROFILES.get("wikidata").getType());
-        kb_wikidata_direct.applyMapping(PROFILES.get("wikidata").getMapping());
-        kb_wikidata_direct.applyRootConcepts(PROFILES.get("wikidata"));
+        kb_wikidata_direct.setType(profiles.get("wikidata").getType());
+        kb_wikidata_direct.applyMapping(profiles.get("wikidata").getMapping());
+        kb_wikidata_direct.applyRootConcepts(profiles.get("wikidata"));
         kb_wikidata_direct.setReification(reification);
         kb_wikidata_direct.setDefaultLanguage("en");
         kb_wikidata_direct.setMaxResults(1000);

@@ -27,7 +27,7 @@ import org.junit.Test;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext.Key;
 
 public class RecommenderContextTest {
-    private final Key<String> KEY = new Key<>("Test");
+    private final Key<String> key = new Key<>("Test");
 
     private RecommenderContext sut;
 
@@ -42,9 +42,9 @@ public class RecommenderContextTest {
     {
         String value = "INCEpTION";
 
-        sut.put(KEY, value);
+        sut.put(key, value);
 
-        Optional<String> result = sut.get(KEY);
+        Optional<String> result = sut.get(key);
         assertThat(result.isPresent()).isTrue();
         assertThat(result.get()).as("Correct value is returned")
             .isEqualTo(value);
@@ -55,10 +55,10 @@ public class RecommenderContextTest {
     {
         String value = "INCEpTION";
 
-        sut.put(KEY, "Dummy");
-        sut.put(KEY, value);
+        sut.put(key, "Dummy");
+        sut.put(key, value);
 
-        Optional<String> result = sut.get(KEY);
+        Optional<String> result = sut.get(key);
         assertThat(result.isPresent()).isTrue();
         assertThat(result.get()).as("Correct value is returned")
             .isEqualTo(value);
@@ -67,7 +67,7 @@ public class RecommenderContextTest {
     @Test
     public void thatGettingNonexistantKeyThrows()
     {
-        Optional<String> result = sut.get(KEY);
+        Optional<String> result = sut.get(key);
         assertThat(result.isPresent()).isFalse();
     }
     

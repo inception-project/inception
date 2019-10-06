@@ -44,7 +44,7 @@ public class PubAnnotationSectionsReader
                 CompressionUtils.getInputStream(res.getLocation(), res.getInputStream()))) {
             
             List<PubAnnotationDocumentSection> sections = JSONUtil.getObjectMapper().readValue(is,
-                    PubAnnotationDocumentSection.JACKSON_LIST_TYPE_REF);
+                    PubAnnotationDocumentSection.jackson_list_type_ref);
             
             StringBuilder sb = new StringBuilder();
             for (PubAnnotationDocumentSection section : sections) {

@@ -84,7 +84,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     private Reification reification;
 
     private TestFixtures testFixtures;
-    private static Map<String, KnowledgeBaseProfile> PROFILES;
+    private static Map<String, KnowledgeBaseProfile> profiles;
     
     public KnowledgeBaseSubPropertyLabelTest(Reification aReification) {
         reification = aReification;
@@ -122,7 +122,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     public void thatChildConceptsLabel() throws IOException
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
-        String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
+        String gndAccessURL = profiles.get("zbw-gnd").getAccess().getAccessUrl();
         testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
@@ -146,7 +146,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     public void readInstance_ShouldReturnInstanceWithSubPropertyLabel() throws IOException
     {
         kb = buildRemoteKnowledgeBase(project, "GND");
-        String gndAccessURL = PROFILES.get("zbw-gnd").getAccess().getAccessUrl();
+        String gndAccessURL = profiles.get("zbw-gnd").getAccess().getAccessUrl();
         testFixtures.assumeEndpointIsAvailable(gndAccessURL);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(gndAccessURL));
 
@@ -193,13 +193,13 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private KnowledgeBase buildRemoteKnowledgeBase(Project project, String name) throws IOException
     {
-        PROFILES = readKnowledgeBaseProfiles();
+        profiles = readKnowledgeBaseProfiles();
         KnowledgeBase gnd = new KnowledgeBase();
         gnd.setProject(project);
         gnd.setName(name);
         gnd.setType(RepositoryType.REMOTE);
-        gnd.applyMapping(PROFILES.get("zbw-gnd").getMapping());
-        gnd.applyRootConcepts(PROFILES.get("zbw-gnd"));
+        gnd.applyMapping(profiles.get("zbw-gnd").getMapping());
+        gnd.applyRootConcepts(profiles.get("zbw-gnd"));
         gnd.setReification(reification);
         gnd.setDefaultLanguage("en");
         gnd.setMaxResults(1000);
@@ -209,13 +209,13 @@ public class KnowledgeBaseSubPropertyLabelTest
 
     private KnowledgeBase buildLocalKnowledgeBase(Project project, String name) throws IOException
     {
-        PROFILES = readKnowledgeBaseProfiles();
+        profiles = readKnowledgeBaseProfiles();
         KnowledgeBase wine = new KnowledgeBase();
         wine.setProject(project);
         wine.setName(name);
         wine.setType(RepositoryType.LOCAL);
-        wine.applyMapping(PROFILES.get("wine_ontology").getMapping());
-        wine.applyRootConcepts(PROFILES.get("wine_ontology"));
+        wine.applyMapping(profiles.get("wine_ontology").getMapping());
+        wine.applyRootConcepts(profiles.get("wine_ontology"));
         wine.setReification(reification);
         wine.setDefaultLanguage("en");
         wine.setMaxResults(1000);

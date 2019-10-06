@@ -56,10 +56,10 @@ public class LappsGridRecommenderTraitsEditor
 
     private static final Logger LOG = LoggerFactory.getLogger(LappsGridRecommender.class);
 
-    public static String NER_LAYER = NamedEntity.class.getName();
-    public static String NER_FEATURE = "value";
-    public static String POS_LAYER = POS.class.getName();
-    public static String POS_FEATURE = "PosValue";
+    public static String Ner_Layer = NamedEntity.class.getName();
+    public static String Ner_Feature = "value";
+    public static String Pos_Layer = POS.class.getName();
+    public static String Pos_Feature = "PosValue";
 
     private static final String MID_FORM = "form";
     private static final String MID_SERVICES = "service";
@@ -121,9 +121,9 @@ public class LappsGridRecommenderTraitsEditor
         String layer = getModelObject().getLayer().getName();
         String feature = getModelObject().getFeature().getName();
 
-        if (NER_LAYER.equals(layer) && NER_FEATURE.equals(feature)) {
+        if (Ner_Layer.equals(layer) && Ner_Feature.equals(feature)) {
             return predefinedServices.get("ner");
-        } else if (POS_LAYER.equals(layer) && POS_FEATURE.equals(feature)) {
+        } else if (Pos_Layer.equals(layer) && Pos_Feature.equals(feature)) {
             return predefinedServices.get("pos");
         } else {
             LOG.error("Wrong layer/feature configuration for LappsGridRecommender: [{}] - [{}]",

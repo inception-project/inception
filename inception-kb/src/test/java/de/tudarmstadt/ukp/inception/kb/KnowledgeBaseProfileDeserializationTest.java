@@ -41,7 +41,7 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 
 public class KnowledgeBaseProfileDeserializationTest
 {
-    private final String KNOWLEDGEBASE_TEST_PROFILES_YAML = "kb_test_profiles.yaml";
+    private final String Knowledgebase_Test_Profiles_Yaml = "kb_test_profiles.yaml";
 
     @Test
     public void checkThatDeserializationWorks() throws IOException
@@ -66,7 +66,7 @@ public class KnowledgeBaseProfileDeserializationTest
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         Map<String, KnowledgeBaseProfile> profiles;
         try (Reader r = new InputStreamReader(
-                resolver.getResource(KNOWLEDGEBASE_TEST_PROFILES_YAML).getInputStream())) {
+                resolver.getResource(Knowledgebase_Test_Profiles_Yaml).getInputStream())) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             profiles = mapper.readValue(r,
                     new TypeReference<HashMap<String, KnowledgeBaseProfile>>()

@@ -27,7 +27,7 @@ import com.github.rjeschke.txtmark.Processor;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class CurrentProjectDashlet
-    extends Dashlet_ImplBase
+    extends DashLet_ImplBase
 {
     private static final long serialVersionUID = 7732921923832675326L;
     

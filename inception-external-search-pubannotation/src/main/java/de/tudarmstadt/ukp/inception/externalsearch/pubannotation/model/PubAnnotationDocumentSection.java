@@ -109,13 +109,13 @@ public class PubAnnotationDocumentSection
         sourceUrl = aSourceUrl;
     }
 
-    public static TypeReference<List<PubAnnotationDocumentSection>> JACKSON_LIST_TYPE_REF = 
+    public static TypeReference<List<PubAnnotationDocumentSection>> jackson_list_type_ref = 
             new TypeReference<List<PubAnnotationDocumentSection>>()
     {
     };
 
     public static ParameterizedTypeReference<List<PubAnnotationDocumentSection>> 
-            SPRING_LIST_TYPE_REF = 
+            spring_list_type_ref = 
             new ParameterizedTypeReference<List<PubAnnotationDocumentSection>>()
     {
     };

@@ -31,7 +31,7 @@ import org.assertj.core.api.ListAssert;
 public class CasAssert
     extends AbstractAssert<CasAssert, CAS>
 {
-    private static String TYPE_NE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static String type_me = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
 
     public CasAssert(CAS cas)
     {
@@ -42,7 +42,7 @@ public class CasAssert
     {
         isNotNull();
 
-        Type type = CasUtil.getType(actual, TYPE_NE);
+        Type type = CasUtil.getType(actual, type_me);
         for (AnnotationFS annotation : CasUtil.select(actual, type)) {
             if (annotation.getCoveredText().equals(text) &&
                 FSUtil.getFeature(annotation, "value", String.class).equals(value)) {
@@ -78,7 +78,7 @@ public class CasAssert
     {
         isNotNull();
 
-        Type type = CasUtil.getType(actual, TYPE_NE);
+        Type type = CasUtil.getType(actual, type_me);
         List<AnnotationFS> result = new ArrayList<>(CasUtil.select(actual, type));
         return new ListAssert<>(result);
     }

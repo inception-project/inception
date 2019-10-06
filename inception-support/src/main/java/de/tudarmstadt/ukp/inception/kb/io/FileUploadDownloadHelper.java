@@ -41,7 +41,7 @@ public class FileUploadDownloadHelper
 
     private final IFileCleaner fileTracker;
 
-    private final String INCEPTION_TMP_FILE_PREFIX = "inception_file";
+    private final String Inception_Tmp_File_Prefix = "inception_file";
 
     public FileUploadDownloadHelper(Application application)
     {
@@ -61,7 +61,7 @@ public class FileUploadDownloadHelper
         throws Exception
     {
         String fileName = fileUpload.getClientFileName();
-        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        File tmpFile = File.createTempFile(Inception_Tmp_File_Prefix, fileName);
         log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         fileTracker.track(tmpFile, marker);
         try (InputStream is = fileUpload.getInputStream()) {
@@ -75,7 +75,7 @@ public class FileUploadDownloadHelper
     {
         Path pathName = Paths.get(downloadUrl);
         String fileName = pathName.getFileName().toString();
-        File tmpFile = File.createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+        File tmpFile = File.createTempFile(Inception_Tmp_File_Prefix, fileName);
         log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         fileTracker.track(tmpFile, marker);
         FileUtils.copyURLToFile(new URL(downloadUrl), tmpFile);
@@ -88,7 +88,7 @@ public class FileUploadDownloadHelper
         String fileName = getNameFromClassPathResource(aLocation);
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
         File tmpFile = File
-            .createTempFile(INCEPTION_TMP_FILE_PREFIX, fileName);
+            .createTempFile(Inception_Tmp_File_Prefix, fileName);
         fileTracker.track(tmpFile, marker);
         log.debug("Creating temporary file for [{}] in [{}]", fileName, tmpFile.getAbsolutePath());
         try (InputStream is = resolver.getResource(aLocation).getInputStream();

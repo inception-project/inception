@@ -66,9 +66,9 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceRemoteTest
 {
-    private final String PROJECT_NAME = "Test project";
+    private final String project_name = "Test project";
 
-    private static Map<String, KnowledgeBaseProfile> PROFILES;
+    private static Map<String, KnowledgeBaseProfile> profiles;
     
     private final TestConfiguration sutConfig;
 
@@ -116,7 +116,7 @@ public class KnowledgeBaseServiceRemoteTest
         EntityManager entityManager = testEntityManager.getEntityManager();
         testFixtures = new TestFixtures(testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        project = testFixtures.createProject(PROJECT_NAME);
+        project = testFixtures.createProject(project_name);
         kb.setProject(project);
         if (kb.getType() == RepositoryType.LOCAL) {
             sut.registerKnowledgeBase(kb, sut.getNativeConfig());
@@ -154,7 +154,7 @@ public class KnowledgeBaseServiceRemoteTest
     @Parameterized.Parameters(name = "KB = {0}")
     public static List<Object[]> data() throws Exception
     {
-        PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
+        profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
 
         Set<String> rootConcepts;
@@ -162,7 +162,7 @@ public class KnowledgeBaseServiceRemoteTest
         List<TestConfiguration> kbList = new ArrayList<>();
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("wine_ontology");
+            KnowledgeBaseProfile profile = profiles.get("wine_ontology");
             KnowledgeBase kb_wine = new KnowledgeBase();
             kb_wine.setName("Wine ontology (OWL)");
             kb_wine.setType(profile.getType());
@@ -213,7 +213,7 @@ public class KnowledgeBaseServiceRemoteTest
 //        }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("wikidata");
+            KnowledgeBaseProfile profile = profiles.get("wikidata");
             KnowledgeBase kb_wikidata_direct = new KnowledgeBase();
             kb_wikidata_direct.setName("Wikidata (official/direct mapping)");
             kb_wikidata_direct.setType(profile.getType());
@@ -247,7 +247,7 @@ public class KnowledgeBaseServiceRemoteTest
         // }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("db_pedia");
+            KnowledgeBaseProfile profile = profiles.get("db_pedia");
             KnowledgeBase kb_dbpedia = new KnowledgeBase();
             kb_dbpedia.setName(profile.getName());
             kb_dbpedia.setType(profile.getType());
@@ -268,7 +268,7 @@ public class KnowledgeBaseServiceRemoteTest
         }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("yago");
+            KnowledgeBaseProfile profile = profiles.get("yago");
             KnowledgeBase kb_yago = new KnowledgeBase();
             kb_yago.setName(profile.getName());
             kb_yago.setType(profile.getType());
@@ -289,7 +289,7 @@ public class KnowledgeBaseServiceRemoteTest
         }
 
         {
-            KnowledgeBaseProfile profile = PROFILES.get("zbw-stw-economics");
+            KnowledgeBaseProfile profile = profiles.get("zbw-stw-economics");
             KnowledgeBase kb_zbw_stw_economics = new KnowledgeBase();
             kb_zbw_stw_economics.setName(profile.getName());
             kb_zbw_stw_economics.setType(profile.getType());

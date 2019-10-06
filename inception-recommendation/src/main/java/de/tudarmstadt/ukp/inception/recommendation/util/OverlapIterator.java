@@ -30,197 +30,197 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Offset;
 
 public class OverlapIterator
 {
-    private final Logger _log = LoggerFactory.getLogger(getClass());
+    private final Logger l_log = LoggerFactory.getLogger(getClass());
 
     /** The A/B lists */
-    private final List<Offset> _la;
-    private final List<Offset> _lb;
+    private final List<Offset> l_la;
+    private final List<Offset> l_lb;
 
     /** A values we do not want to see again (after a rewind). */
-    private final boolean[] _ignorea;
+    private final boolean[] i_ignorea;
 
     /** List iterators for the A/B lists */
-    private final ListIterator<Offset> _ia;
-    private final ListIterator<Offset> _ib;
+    private final ListIterator<Offset> l_ia;
+    private final ListIterator<Offset> l_ib;
 
     /** Indices of _cura/_curb within the lists */
-    private int _na;
-    private int _nb;
+    private int n_na;
+    private int n_nb;
 
     /** Maximum A/B index within the lists */
-    private final int _maxa;
-    private final int _maxb;
+    private final int m_maxa;
+    private final int m_maxb;
 
     /** Current A/B item */
-    private Offset _cura;
-    private Offset _curb;
+    private Offset c_cura;
+    private Offset c_curb;
 
-    private int _last_b_step_na;
-    private boolean _done;
+    private int l_last_b_step_na;
+    private boolean d_done;
 
-    private int _stepCount;
+    private int s_stepCount;
 
     public OverlapIterator(final List<Offset> la, final List<Offset> lb)
     {
-        _done = !((la.size() > 0) && (lb.size() > 0));
+        d_done = !((la.size() > 0) && (lb.size() > 0));
 
         // Intialize A
-        _la = la;
-        _maxa = _la.size() - 1; // Up until here and no further
-        _ia = _la.listIterator(); // Where we are now
-        _na = _ia.nextIndex(); // Index of _cura within _la
-        _cura = _ia.next(); // The current object.
-        _ignorea = new boolean[_la.size()];
+        l_la = la;
+        m_maxa = l_la.size() - 1; // Up until here and no further
+        l_ia = l_la.listIterator(); // Where we are now
+        n_na = l_ia.nextIndex(); // Index of _cura within _la
+        c_cura = l_ia.next(); // The current object.
+        i_ignorea = new boolean[l_la.size()];
 
         // Initialize B
-        _lb = lb;
-        _maxb = _lb.size() - 1;
-        _ib = _lb.listIterator();
-        _nb = _ib.nextIndex();
-        _curb = _ib.next();
+        l_lb = lb;
+        m_maxb = l_lb.size() - 1;
+        l_ib = l_lb.listIterator();
+        n_nb = l_ib.nextIndex();
+        c_curb = l_ib.next();
 
-        _last_b_step_na = _na;
+        l_last_b_step_na = n_na;
     }
 
     public int getStepCount()
     {
-        return _stepCount;
+        return s_stepCount;
     }
 
     public Offset getA()
     {
-        return _cura;
+        return c_cura;
     }
 
     public Offset getB()
     {
-        return _curb;
+        return c_curb;
     }
 
     public void ignoraA()
     {
-        _ignorea[_na] = true;
+        i_ignorea[n_na] = true;
     }
 
     public boolean hasNext()
     {
-        return !_done;
+        return !d_done;
     }
 
     public void step()
     {
-        if (_done) {
+        if (d_done) {
             throw new NoSuchElementException();
         }
 
         // Peek ahead in the A list.
         Offset nexta = null;
-        if (_na < _maxa) {
-            nexta = _ia.next();
-            _ia.previous();
+        if (n_na < m_maxa) {
+            nexta = l_ia.next();
+            l_ia.previous();
         }
 
         final boolean nexta_starts_before_curb_ends = (nexta != null)
-                && (nexta.getBeginCharacter() <= _curb.getEndCharacter());
-        final boolean cura_ends_before_or_with_curb = _cura.getEndCharacter() <= _curb
+                && (nexta.getBeginCharacter() <= c_curb.getEndCharacter());
+        final boolean cura_ends_before_or_with_curb = c_cura.getEndCharacter() <= c_curb
                 .getEndCharacter();
 
-        if (_log.isTraceEnabled()) {
-            _log.trace("---");
-            _log.trace("   A                            : " + _na + "/" + _maxa + " " + _cura
+        if (l_log.isTraceEnabled()) {
+            l_log.trace("---");
+            l_log.trace("   A                            : " + n_na + "/" + m_maxa + " " + c_cura
                     + " peek: " + nexta);
-            _log.trace("   B                            : " + _nb + "/" + _maxb + " " + _curb);
-            _log.trace("   nexta starts before curb ends: " + nexta_starts_before_curb_ends);
-            _log.trace("   cura ends before or with curb: " + cura_ends_before_or_with_curb);
+            l_log.trace("   B                            : " + n_nb + "/" + m_maxb + " " + c_curb);
+            l_log.trace("   nexta starts before curb ends: " + nexta_starts_before_curb_ends);
+            l_log.trace("   cura ends before or with curb: " + cura_ends_before_or_with_curb);
         }
 
         // Which one to step up A or B?
         if (nexta_starts_before_curb_ends || cura_ends_before_or_with_curb) {
             // Can A be stepped up any more?
-            if (_na < _maxa) {
+            if (n_na < m_maxa) {
                 stepA();
                 // if not, try stepping up B
             }
-            else if (_nb < _maxb) {
+            else if (n_nb < m_maxb) {
                 stepB();
                 // if both are at the end, bail out
             }
             else {
-                _done = true;
+                d_done = true;
             }
         }
         else {
             // Can B be stepped up any more?
-            if (_nb < _maxb) {
+            if (n_nb < m_maxb) {
                 stepB();
                 // if not, try stepping up A
             }
-            else if (_na < _maxa) {
+            else if (n_na < m_maxa) {
                 stepA();
                 // if both are at the end, bail out
             }
             else {
-                _done = true;
+                d_done = true;
             }
         }
 
-        if (_log.isTraceEnabled() && _done) {
-            _log.trace("   -> Both lists at the end.");
+        if (l_log.isTraceEnabled() && d_done) {
+            l_log.trace("   -> Both lists at the end.");
         }
     }
 
     private void stepA()
     {
-        _stepCount++;
-        _na = _ia.nextIndex();
-        _cura = _ia.next();
+        s_stepCount++;
+        n_na = l_ia.nextIndex();
+        c_cura = l_ia.next();
 
-        if (_log.isTraceEnabled()) {
-            _log.trace("   -> A: " + _na + "/" + _maxa + " " + _cura);
+        if (l_log.isTraceEnabled()) {
+            l_log.trace("   -> A: " + n_na + "/" + m_maxa + " " + c_cura);
         }
     }
 
     private void stepBackA()
     {
-        _na = _ia.previousIndex();
-        _cura = _ia.previous();
+        n_na = l_ia.previousIndex();
+        c_cura = l_ia.previous();
 
-        if (_log.isTraceEnabled()) {
-            _log.trace("   <- A: " + _na + "/" + _maxa + " " + _cura);
+        if (l_log.isTraceEnabled()) {
+            l_log.trace("   <- A: " + n_na + "/" + m_maxa + " " + c_cura);
         }
     }
 
     private void stepB()
     {
-        _stepCount++;
-        _nb = _ib.nextIndex();
-        _curb = _ib.next();
+        s_stepCount++;
+        n_nb = l_ib.nextIndex();
+        c_curb = l_ib.next();
 
-        if (_log.isTraceEnabled()) {
-            _log.trace("   -> B: " + _nb + "/" + _maxb + " " + _curb);
+        if (l_log.isTraceEnabled()) {
+            l_log.trace("   -> B: " + n_nb + "/" + m_maxb + " " + c_curb);
         }
 
-        if (_curb.getBeginCharacter() < _cura.getEndCharacter()) {
+        if (c_curb.getBeginCharacter() < c_cura.getEndCharacter()) {
             // Rewind A to the point where it was when we last stepped
             // up B.
             rewindA();
         }
         else {
-            _last_b_step_na = _na;
+            l_last_b_step_na = n_na;
         }
     }
 
     private void rewindA()
     {
         final String method = "rewindA";
-        if (_log.isTraceEnabled()) {
-            _log.trace("   <- rewinding A");
+        if (l_log.isTraceEnabled()) {
+            l_log.trace("   <- rewinding A");
         }
 
         // Seek back to the first segment that does not overlap
         // with curb and at most until the last b step we made.
         boolean steppedBack = false;
-        while ((_na > _last_b_step_na) && (_cura.getEndCharacter() > _curb.getBeginCharacter())) {
+        while ((n_na > l_last_b_step_na) && (c_cura.getEndCharacter() > c_curb.getBeginCharacter())) {
             stepBackA();
             steppedBack = true;
         }
@@ -228,18 +228,18 @@ public class OverlapIterator
         // Correct pointer
         if (steppedBack) {
             // Make sure the next peek really peeks ahead.
-            _na = _ia.nextIndex();
-            _cura = _ia.next();
+            n_na = l_ia.nextIndex();
+            c_cura = l_ia.next();
         }
 
         // Skip over the A's we do not want to see again.
-        while (_ignorea[_na] && (_na < _maxa)) {
+        while (i_ignorea[n_na] && (n_na < m_maxa)) {
             stepA();
         }
 
         // If we skipped some As those we skip will always be skipped, so we
         // can as well update the _last_b_step_na so we don't have to skip them
         // every time.
-        _last_b_step_na = _na;
+        l_last_b_step_na = n_na;
     }
 }

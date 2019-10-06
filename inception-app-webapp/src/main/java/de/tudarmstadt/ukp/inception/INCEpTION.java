@@ -72,138 +72,120 @@ import de.tudarmstadt.ukp.inception.app.config.InceptionBanner;
  */
 @SpringBootApplication
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-@ComponentScan(
-        basePackages = { 
-                "de.tudarmstadt.ukp.inception",  
-                "de.tudarmstadt.ukp.clarin.webanno" },
-        excludeFilters = {
-            @Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
-            @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
-            @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
-            @Filter(type = FilterType.ASSIGNABLE_TYPE, classes = { 
-                // The INCEpTION dashboard uses a per-project view while WebAnno uses a global
-                // activation strategies for menu items. Thus, we need to re-implement the menu
-                // items for INCEpTION.
-                AnnotationPageMenuItem.class,
-                CurationPageMenuItem.class,
-                MonitoringPageMenuItem.class,
-                AgreementPageMenuItem.class,
+@ComponentScan(basePackages = { "de.tudarmstadt.ukp.inception",
+		"de.tudarmstadt.ukp.clarin.webanno" }, excludeFilters = {
+				@Filter(type = FilterType.REGEX, pattern = ".*AutoConfiguration"),
+				@Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+				@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class),
+				@Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+						// The INCEpTION dashboard uses a per-project view while WebAnno uses a global
+						// activation strategies for menu items. Thus, we need to re-implement the menu
+						// items for INCEpTION.
+						AnnotationPageMenuItem.class, CurationPageMenuItem.class, MonitoringPageMenuItem.class,
+						AgreementPageMenuItem.class,
 
-                // INCEpTION uses its recommenders, not the WebAnno automation code
-                AutomationService.class, 
-                AutomationMiraTemplateExporter.class,
-                AutomationTrainingDocumentExporter.class
-        })})
+						// INCEpTION uses its recommenders, not the WebAnno automation code
+						AutomationService.class, AutomationMiraTemplateExporter.class,
+						AutomationTrainingDocumentExporter.class }) })
 @EntityScan(basePackages = {
-        // Include WebAnno entity packages separately so we can skip the automation entities!
-        "de.tudarmstadt.ukp.clarin.webanno.model",
-        "de.tudarmstadt.ukp.clarin.webanno.security",
-        "de.tudarmstadt.ukp.clarin.webanno.telemetry",
-        "de.tudarmstadt.ukp.inception" })
+		// Include WebAnno entity packages separately so we can skip the automation
+		// entities!
+		"de.tudarmstadt.ukp.clarin.webanno.model", "de.tudarmstadt.ukp.clarin.webanno.security",
+		"de.tudarmstadt.ukp.clarin.webanno.telemetry", "de.tudarmstadt.ukp.inception" })
 @EnableAsync
-public class INCEpTION
-    extends SpringBootServletInitializer
-{
-    private static final String PROTOCOL = "AJP/1.3";
-    
-    @Value("${tomcat.ajp.port:-1}")
-    private int ajpPort;
-    
-    @Bean
-    @Primary
-    public Validator validator()
-    {
-        return new LocalValidatorFactoryBean();
-    }
-    
-    @Bean
-    public PluginManager pluginManager()
-    {
-        PluginManagerImpl pluginManager = new PluginManagerImpl(
-                SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
-        return pluginManager;
-    }
-    
-    // The WebAnno User model class picks this bean up by name!
-    @Bean
-    public PasswordEncoder passwordEncoder()
-    {
-        // Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
-        // StandardPasswordEncoder but encodes passwords using the modern BCryptPasswordEncoder 
-        String encoderForEncoding = "bcrypt";
-        Map<String, PasswordEncoder> encoders = new HashMap<>();
-        encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
-        DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(
-                encoderForEncoding, encoders);
-        // Decode legacy passwords without encoder ID using the StandardPasswordEncoder
-        delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
-        return delegatingEncoder;
-    }
-    
-    @Bean
-    public TomcatServletWebServerFactory servletContainer()
-    {
-        TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
-        if (ajpPort > 0) {
-            Connector ajpConnector = new Connector(PROTOCOL);
-            ajpConnector.setPort(ajpPort);
-            tomcat.addAdditionalTomcatConnectors(ajpConnector);
-        }
-        return tomcat;
-    }
+public class INCEpTION extends SpringBootServletInitializer {
+	private static final String PROTOCOL = "AJP/1.3";
 
-    @Override
-    protected SpringApplicationBuilder createSpringApplicationBuilder()
-    {
-        SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
-        builder.properties("running.from.commandline=false");
-        // add this property in the case of .war deployment
-        builder.properties( 
-                WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED 
-                + "=false" );
-        init(builder);
-        return builder;
-    }
-    
-    private static void init(SpringApplicationBuilder aBuilder)
-    {
-        // WebAnno relies on FS IDs being stable, so we need to enable this
-        System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
-        
-        aBuilder.banner(new InceptionBanner());
-        aBuilder.initializers(new InceptionApplicationContextInitializer());
-        aBuilder.headless(false);
-        
-        SettingsUtil.customizeApplication("inception.home", ".inception");
-        
-        // Traditionally, the INCEpTION configuration file is called settings.properties and is
-        // either located in inception.home or under the user's home directory. Make sure we pick
-        // it up from there in addition to reading the built-in application.properties file.
-        aBuilder.properties("spring.config.additional-location="
-                + "${inception.home:${user.home}/.inception}/settings.properties");
-    }
-    
-    public static void main(String[] args) throws Exception
-    {
-        Optional<JWindow> splash = LoadingSplashScreen
-                .setupScreen(INCEpTION.class.getResource("splash.png"));
-        
-        SpringApplicationBuilder builder = new SpringApplicationBuilder();
-        // Add the main application as the root Spring context
-        builder.sources(INCEpTION.class).web(SERVLET);
-        
-        // Signal that we may need the shutdown dialog
-        builder.properties("running.from.commandline=true");
-        init(builder);
-        
-        builder.listeners(event -> {
-            if (event instanceof ApplicationReadyEvent
-                    || event instanceof ShutdownDialogAvailableEvent) {
-                splash.ifPresent(it -> it.dispose());
-            }
-        });
-        
-        builder.run(args);
-    }
+	@Value("${tomcat.ajp.port:-1}")
+	private int ajpPort;
+
+	@Bean
+	@Primary
+	public Validator validator() {
+		return new LocalValidatorFactoryBean();
+	}
+
+	@Bean
+	public PluginManager pluginManager() {
+		PluginManagerImpl pluginManager = new PluginManagerImpl(
+				SettingsUtil.getApplicationHome().toPath().resolve("plugins"));
+		Runtime.getRuntime().addShutdownHook(new Thread(() -> pluginManager.stopPlugins()));
+		return pluginManager;
+	}
+
+	// The WebAnno User model class picks this bean up by name!
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		// Set up a DelegatingPasswordEncoder which decodes legacy passwords using the
+		// StandardPasswordEncoder but encodes passwords using the modern
+		// BCryptPasswordEncoder
+		String encoderForEncoding = "bcrypt";
+		Map<String, PasswordEncoder> encoders = new HashMap<>();
+		encoders.put(encoderForEncoding, new BCryptPasswordEncoder());
+		DelegatingPasswordEncoder delegatingEncoder = new DelegatingPasswordEncoder(encoderForEncoding, encoders);
+		// Decode legacy passwords without encoder ID using the StandardPasswordEncoder
+		delegatingEncoder.setDefaultPasswordEncoderForMatches(new StandardPasswordEncoder());
+		return delegatingEncoder;
+	}
+
+	@Bean
+	public TomcatServletWebServerFactory servletContainer() {
+		TomcatServletWebServerFactory tomcat = new TomcatServletWebServerFactory();
+		if (ajpPort > 0) {
+			Connector ajpConnector = new Connector(PROTOCOL);
+			ajpConnector.setPort(ajpPort);
+			tomcat.addAdditionalTomcatConnectors(ajpConnector);
+		}
+		return tomcat;
+	}
+
+	@Override
+	protected SpringApplicationBuilder createSpringApplicationBuilder() {
+		SpringApplicationBuilder builder = super.createSpringApplicationBuilder();
+		builder.properties("running.from.commandline=false");
+		// add this property in the case of .war deployment
+		builder.properties(WebSocketWicketWebInitializerAutoConfiguration.REGISTER_SERVER_ENDPOINT_ENABLED + "=false");
+		init(builder);
+		return builder;
+	}
+
+	private static void init(SpringApplicationBuilder aBuilder) {
+		// WebAnno relies on FS IDs being stable, so we need to enable this
+		System.setProperty(CASImpl.ALWAYS_HOLD_ONTO_FSS, "true");
+
+		aBuilder.banner(new InceptionBanner());
+		aBuilder.initializers(new InceptionApplicationContextInitializer());
+		aBuilder.headless(false);
+
+		SettingsUtil.customizeApplication("inception.home", ".inception");
+
+		// Traditionally, the INCEpTION configuration file is called settings.properties
+		// and is
+		// either located in inception.home or under the user's home directory. Make
+		// sure we pick
+		// it up from there in addition to reading the built-in application.properties
+		// file.
+		aBuilder.properties(
+				"spring.config.additional-location=" + "${inception.home:${user.home}/.inception}/settings.properties");
+	}
+
+	public static void main(String[] args) throws Exception {
+		Optional<JWindow> splash = LoadingSplashScreen.setupScreen(INCEpTION.class.getResource("splash.png"));
+
+		SpringApplicationBuilder builder = new SpringApplicationBuilder();
+		// Add the main application as the root Spring context
+		builder.sources(INCEpTION.class).web(SERVLET);
+
+		// Signal that we may need the shutdown dialog
+		builder.properties("running.from.commandline=true");
+		init(builder);
+
+		builder.listeners(event -> {
+			if (event instanceof ApplicationReadyEvent || event instanceof ShutdownDialogAvailableEvent) {
+				splash.ifPresent(it -> it.dispose());
+			}
+		});
+
+		builder.run(args);
+	}
 }

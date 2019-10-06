@@ -130,7 +130,7 @@ public class PubAnnotationProvider
             // If the document has multiple sections, a list is returned...
             ResponseEntity<List<PubAnnotationDocumentSection>> response = restTemplate.exchange(
                     aTraits.getUrl() + "/docs/sourcedb/{collectionId}/sourceid/{documentId}",
-                    HttpMethod.GET, null, PubAnnotationDocumentSection.SPRING_LIST_TYPE_REF,
+                    HttpMethod.GET, null, PubAnnotationDocumentSection.spring_list_type_ref,
                     variables);
            
             return response.getBody();

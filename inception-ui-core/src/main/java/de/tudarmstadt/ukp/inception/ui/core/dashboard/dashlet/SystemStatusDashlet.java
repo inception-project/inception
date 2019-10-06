@@ -25,7 +25,7 @@ import org.springframework.security.core.session.SessionRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 
 public class SystemStatusDashlet
-    extends Dashlet_ImplBase
+    extends DashLet_ImplBase
 {
     private static final long serialVersionUID = 1276835215161570732L;
 

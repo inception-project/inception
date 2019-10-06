@@ -37,7 +37,7 @@ import org.apache.pdfbox.rendering.PDFRenderer;
 public class RegionExtractor
 {
 
-    static int POINTS_IN_INCH = 72;
+    static int Points_In_Inch = 72;
 
     PDFRenderer renderer;
     int dpi;
@@ -52,7 +52,7 @@ public class RegionExtractor
     {
         Rectangle2D rect = new Rectangle2D.Float(x, y, w, h);
 
-        double scale = dpi / POINTS_IN_INCH;
+        double scale = dpi / Points_In_Inch;
         double bitmapWidth = rect.getWidth() * scale;
         double bitmapHeight = rect.getHeight() * scale;
         BufferedImage image = new BufferedImage((int) bitmapWidth, (int) bitmapHeight,

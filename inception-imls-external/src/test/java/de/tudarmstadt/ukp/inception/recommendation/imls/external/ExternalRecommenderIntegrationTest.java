@@ -66,7 +66,7 @@ import okhttp3.mockwebserver.RecordedRequest;
 
 public class ExternalRecommenderIntegrationTest
 {
-    private static String TYPE = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
+    private static String type = "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
     private static File cache = DkproTestContext.getCacheFolder();
     private static DatasetFactory loader = new DatasetFactory(cache);
 
@@ -223,7 +223,7 @@ public class ExternalRecommenderIntegrationTest
     private static Recommender buildRecommender()
     {
         AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(TYPE);
+        layer.setName(type);
         layer.setCrossSentence(CROSS_SENTENCE);
         layer.setAnchoringMode(ANCHORING_MODE);
 

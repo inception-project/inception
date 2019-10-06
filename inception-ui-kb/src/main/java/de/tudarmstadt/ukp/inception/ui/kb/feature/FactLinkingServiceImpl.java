@@ -54,7 +54,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
     @Autowired private AnnotationSchemaService annotationService;
     @Autowired private FeatureSupportRegistry featureSupportRegistry;
 
-    private final Logger LOG = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Override
     public List<KBProperty> listProperties(Project aProject, ConceptFeatureTraits traits)
@@ -88,7 +88,7 @@ public class FactLinkingServiceImpl implements FactLinkingService
                 traits);
         }
         catch (Exception e) {
-            LOG.error("Error: " + e.getMessage(), e);
+            log.error("Error: " + e.getMessage(), e);
         }
         return kbHandle;
     }

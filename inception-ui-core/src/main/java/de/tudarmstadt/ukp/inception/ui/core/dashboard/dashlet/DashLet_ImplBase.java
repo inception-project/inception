@@ -19,12 +19,12 @@ package de.tudarmstadt.ukp.inception.ui.core.dashboard.dashlet;
 
 import org.apache.wicket.markup.html.panel.Panel;
 
-public abstract class Dashlet_ImplBase
+public abstract class DashLet_ImplBase
     extends Panel
 {
     private static final long serialVersionUID = 8674972646207242184L;
 
-    public Dashlet_ImplBase(String aId)
+    public DashLet_ImplBase(String aId)
     {
         super(aId);
     }
