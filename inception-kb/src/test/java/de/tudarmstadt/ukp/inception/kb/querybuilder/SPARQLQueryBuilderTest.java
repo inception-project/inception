@@ -855,7 +855,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOfclassesHUCITFTS() throws Exception
+    public void testWithLabelContainingAnyOfclassesHUCITFTS11() throws Exception
     {
         assertIsReachable(hucit);
         
