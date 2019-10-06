@@ -48,9 +48,9 @@ public interface RecommendationTypeRenderer
      * @param aColoringStrategy
      *            the coloring strategy to render this layer
      */
-    void render(CAS aCas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
-        ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
-        RecommendationService aRecService, LearningRecordService aLearningRecordService,
-        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
-        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
+	void render(CAS aCas, VDocument aVdoc, AnnotatorState aBratAnnotatorModel,
+	        ColoringStrategy aColoringStrategy, AnnotationLayer aLayer,
+	        RecommendationService aRecService, LearningRecordService aLearningRecordService,
+	        AnnotationSchemaService aAnnotationService, FeatureSupportRegistry aFsRegistry,
+	        DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset);
 }

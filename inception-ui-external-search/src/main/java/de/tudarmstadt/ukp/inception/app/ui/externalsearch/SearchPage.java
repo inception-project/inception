@@ -127,18 +127,6 @@ public class SearchPage extends ApplicationPageBase
         dataTableContainer.add(new DefaultDataTable<>("resultsTable", columns, dataProvider, 10));
     }
 
-    private void actionImportDocument(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
-    {
-        try {
-            documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
-                    project, aResult.getCollectionId(), aResult.getDocumentId(),
-                    aResult.getRepository());
-            aTarget.add(dataTableContainer);
-        } catch (IOException e) {
-            LOG.error(e.getMessage(), e);
-            error(e.getMessage() + " - " + ExceptionUtils.getRootCauseMessage(e));
-        }
-    }
 
     private class SearchFormModel implements Serializable
     {
@@ -250,7 +238,11 @@ public class SearchPage extends ApplicationPageBase
             add(new Label("score", result.getScore()));
             add(new Label("importStatus", () ->
                     existsSourceDocument ? "imported" : "not imported"));
-            add(new LambdaAjaxLink("importLink", _target -> actionImportDocument(_target, result))
+            add(new LambdaAjaxLink("importLink", _target -> documentImporter.importDocumentFromDocumentRepository(userRepository.getCurrentUser(),
+                    project, result.getCollectionId(), result.getDocumentId(),
+                    result.getRepository()))
+                    .add(visibleWhen(() -> !existsSourceDocument)));
+            add(new LambdaAjaxLink("importLink", _target -> _target.add(dataTableContainer))
                     .add(visibleWhen(() -> !existsSourceDocument)));
             
             add(LinkProvider

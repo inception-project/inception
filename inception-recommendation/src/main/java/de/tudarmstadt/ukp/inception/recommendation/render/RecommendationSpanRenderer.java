@@ -81,7 +81,6 @@ public class RecommendationSpanRenderer
      * @param aColoringStrategy
      *            the coloring strategy to render this layer
      */
-    @Override
     public void render(CAS aCas, VDocument vdoc, AnnotatorState aState,
         ColoringStrategy aColoringStrategy, AnnotationLayer layer,
         RecommendationService recommendationService, LearningRecordService learningRecordService,
@@ -292,4 +291,7 @@ public class RecommendationSpanRenderer
         }
 
     }
+
+
+	
 }

@@ -95,14 +95,6 @@ public class StringMatchingRecommenderTraitsEditor
                 && aRecommender.getObject().getId() != null));
         add(uploadField);
     }
-
-    private void actionDeleteGazeteer(AjaxRequestTarget aTarget, Gazeteer aGazeteer)
-        throws IOException
-    {
-        gazeteerService.deleteGazeteers(aGazeteer);
-        
-        aTarget.add(gazeteers);
-    }
     
     private void actionUploadGazeteer(AjaxRequestTarget aTarget)
     {
@@ -176,7 +168,10 @@ public class StringMatchingRecommenderTraitsEditor
                     aItem.add(new Label("name", aItem.getModelObject().getName()));
 
                     aItem.add(new LambdaAjaxLink("delete",
-                        _target -> actionDeleteGazeteer(_target, gazeteer)));
+                        _target -> gazeteerService.deleteGazeteers(gazeteer)));
+                    
+                    aItem.add(new LambdaAjaxLink("delete",
+                            _target ->  _target.add(gazeteers)));
 
                     aItem.add(new DownloadLink("download",
                             LoadableDetachableModel.of(() -> getGazeteerFile(gazeteer)),

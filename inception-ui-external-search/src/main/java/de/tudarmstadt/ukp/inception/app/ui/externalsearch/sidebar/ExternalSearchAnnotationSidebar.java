@@ -284,7 +284,7 @@ public class ExternalSearchAnnotationSidebar
         }
     }
 
-    private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
+    /*private void actionOpen(AjaxRequestTarget aTarget, ExternalSearchResult aResult)
     {
         try {
             searchStateModel.getObject().setSelectedResult(aResult);
@@ -297,7 +297,7 @@ public class ExternalSearchAnnotationSidebar
                     + ExceptionUtils.getRootCauseMessage(e));
             aTarget.addChildren(getPage(), IFeedback.class);
         }
-    }
+    }*/
 
     private class DocumentRepositorySelectionForm
         extends Form<DocumentRepository>
@@ -390,7 +390,8 @@ public class ExternalSearchAnnotationSidebar
             }
             else {
                 // open action
-                link = new LambdaAjaxLink("docLink", t -> actionOpen(t, result));
+                link = new LambdaAjaxLink("docLink", t -> getAnnotationPage().actionShowSelectedDocument(t,
+                        documentService.getSourceDocument(project, result.getDocumentId())));
             }
 
             String title = defaultIfBlank(result.getDocumentTitle(),

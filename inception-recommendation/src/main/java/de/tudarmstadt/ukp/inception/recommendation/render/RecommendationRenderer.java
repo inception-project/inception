@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.recommendation.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.CHAIN_TYPE;
+import de.tudarmstadt.ukp.inception.recommendation.render.renderBean;
 
 import org.apache.uima.cas.CAS;
 
@@ -38,7 +39,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 
 public class RecommendationRenderer
 {
-    /**
+	/**
      * wrap JSON responses to BRAT visualizer
      *
      * @param aVdoc
@@ -50,11 +51,17 @@ public class RecommendationRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
-    public static void render(VDocument aVdoc, AnnotatorState aState, CAS aCas,
-            AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
-            LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry,
-            DocumentService aDocumentService, int aWindowBeginOffset, int aWindowEndOffset)
+	renderBean bean = new renderBean();
+    public static void render( int aWindowBeginOffset, int aWindowEndOffset)
     {
+    	VDocument aVdoc = renderBean.aVdoc; 
+    	AnnotatorState aState = renderBean.aState;
+    	CAS aCas = renderBean.aCas;
+        AnnotationSchemaService aAnnotationService = renderBean.aAnnotationService;
+        RecommendationService aRecService = renderBean.aRecService;
+        LearningRecordService aLearningRecordService = renderBean.aLearningRecordService;
+        FeatureSupportRegistry aFsRegistry = renderBean.aFsRegistry;
+        DocumentService aDocumentService = renderBean.aDocumentService;
         if (aCas == null) {
             return;
         }

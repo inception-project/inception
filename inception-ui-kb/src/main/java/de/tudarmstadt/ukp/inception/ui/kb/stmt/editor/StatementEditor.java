@@ -136,19 +136,6 @@ public class StatementEditor extends Panel
         aTarget.add(this);
     }
 
-    private void actionCancelExistingStatement(AjaxRequestTarget aTarget)
-    {
-        content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
-        aTarget.add(this);
-    }
-
-    private void actionCancelNewStatement(AjaxRequestTarget aTarget)
-    {
-        // send a delete event to trigger the deletion in the UI
-        AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(aTarget,
-                statement.getObject(), this, true);
-        send(getPage(), Broadcast.BREADTH, deleteEvent);
-    }
 
     private void actionSave(AjaxRequestTarget aTarget, Form<KBStatement> aForm)
     {
@@ -166,7 +153,8 @@ public class StatementEditor extends Panel
             kbService.upsertStatement(kbModel.getObject(), modifiedStatement);
             statement.setObject(modifiedStatement);
             // switch back to ViewMode and send notification to listeners
-            actionCancelExistingStatement(aTarget);
+            content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
+            aTarget.add(this);
             send(getPage(), Broadcast.BREADTH,
                     new AjaxStatementChangedEvent(aTarget, statement.getObject(), oldStatement));
         }
@@ -393,10 +381,14 @@ public class StatementEditor extends Panel
             form.add(new LambdaAjaxButton<>("save", StatementEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewStatement) {
-                    StatementEditor.this.actionCancelNewStatement(t);
+                	// send a delete event to trigger the deletion in the UI
+                    AjaxStatementChangedEvent deleteEvent = new AjaxStatementChangedEvent(t,
+                            statement.getObject(), this, true);
+                    send(getPage(), Broadcast.BREADTH, deleteEvent);
                 }
                 else {
-                    StatementEditor.this.actionCancelExistingStatement(t);
+                	content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, statement));
+                    t.add(this);
                 }
             }));
             form.add(new LambdaAjaxLink("delete", StatementEditor.this::actionDelete)

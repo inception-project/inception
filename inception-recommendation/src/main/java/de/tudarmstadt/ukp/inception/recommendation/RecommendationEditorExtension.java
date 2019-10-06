@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.inception.recommendation.event.PredictionsSwitchedEven
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationAcceptedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendationRejectedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.render.RecommendationRenderer;
+import de.tudarmstadt.ukp.inception.recommendation.render.renderBean;
 
 /**
  * This component hooks into the annotation editor in order to:
@@ -271,10 +272,10 @@ public class RecommendationEditorExtension
                             Broadcast.BREADTH,
                             new PredictionsSwitchedEvent(_target, aCas, aState, aVDoc)));
         }
+        
 
         // Add the suggestions to the visual document
-        RecommendationRenderer.render(aVDoc, aState, aCas, annotationService,
-                recommendationService, learningRecordService, fsRegistry, documentService,
+        RecommendationRenderer.render(
                 aWindowBeginOffset, aWindowEndOffset);
     }
 }

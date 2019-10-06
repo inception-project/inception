@@ -72,7 +72,7 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryPrimaryConditions
 public class ConceptLinkingServiceImpl
     implements InitializingBean, ConceptLinkingService
 {
-    private final Logger log = LoggerFactory.getLogger(getClass());
+	private final Logger log = LoggerFactory.getLogger(getClass());
 
     private final KnowledgeBaseService kbService;
     private final EntityLinkingProperties properties;

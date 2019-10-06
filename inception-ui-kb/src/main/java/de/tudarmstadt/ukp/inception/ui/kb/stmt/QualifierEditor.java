@@ -134,9 +134,13 @@ public class QualifierEditor
             form.add(new LambdaAjaxButton<>("create", QualifierEditor.this::actionSave));
             form.add(new LambdaAjaxLink("cancel", t -> {
                 if (isNewQualifier) {
-                    QualifierEditor.this.actionCancelNewQualifier(t);
+                	// send a delete event to trigger the deletion in the UI
+                    AjaxQualifierChangedEvent deleteEvent = new AjaxQualifierChangedEvent(t,
+                        qualifier.getObject(), this, true);
+                    send(getPage(), Broadcast.BREADTH, deleteEvent);
                 } else {
-                    QualifierEditor.this.actionCancelExistingQualifier(t);
+                	content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, qualifier));
+                    t.add(this);
                 }
             }));
             form.add(new LambdaAjaxLink("delete", QualifierEditor.this::actionDelete)
@@ -217,17 +221,6 @@ public class QualifierEditor
         kbService.upsertQualifier(kbModel.getObject(), modifiedQualifier);
         qualifier.setObject(modifiedQualifier);
 
-        actionCancelExistingQualifier(aTarget);
-    }
-
-    private void actionCancelNewQualifier(AjaxRequestTarget aTarget) {
-        // send a delete event to trigger the deletion in the UI
-        AjaxQualifierChangedEvent deleteEvent = new AjaxQualifierChangedEvent(aTarget,
-            qualifier.getObject(), this, true);
-        send(getPage(), Broadcast.BREADTH, deleteEvent);
-    }
-
-    private void actionCancelExistingQualifier(AjaxRequestTarget aTarget) {
         content = content.replaceWith(new ViewMode(CONTENT_MARKUP_ID, qualifier));
         aTarget.add(this);
     }

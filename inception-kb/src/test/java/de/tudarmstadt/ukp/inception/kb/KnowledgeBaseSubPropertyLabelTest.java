@@ -81,7 +81,7 @@ public class KnowledgeBaseSubPropertyLabelTest
     private KnowledgeBaseServiceImpl sut;
     private Project project;
     private KnowledgeBase kb;
-    private Reification reification;
+    private static Reification reification;
 
     private TestFixtures testFixtures;
     private static Map<String, KnowledgeBaseProfile> PROFILES;
@@ -191,7 +191,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         return testFixtures.createProject(name);
     }
 
-    private KnowledgeBase buildRemoteKnowledgeBase(Project project, String name) throws IOException
+    private static KnowledgeBase buildRemoteKnowledgeBase(Project project, String name) throws IOException
     {
         PROFILES = readKnowledgeBaseProfiles();
         KnowledgeBase gnd = new KnowledgeBase();
@@ -207,7 +207,7 @@ public class KnowledgeBaseSubPropertyLabelTest
         return gnd;
     }
 
-    private KnowledgeBase buildLocalKnowledgeBase(Project project, String name) throws IOException
+    private static KnowledgeBase buildLocalKnowledgeBase(Project project, String name) throws IOException
     {
         PROFILES = readKnowledgeBaseProfiles();
         KnowledgeBase wine = new KnowledgeBase();

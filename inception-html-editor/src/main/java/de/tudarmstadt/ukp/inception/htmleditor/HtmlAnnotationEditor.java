@@ -173,17 +173,6 @@ public class HtmlAnnotationEditor
         return;
     }
 
-    private String toJson(Object result)
-    {
-        String json = "[]";
-        try {
-            json = JSONUtil.toInterpretableJsonString(result);
-        }
-        catch (IOException e) {
-            error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
-        }
-        return json;
-    }
 
     private static void initAnnotatorJs(IHeaderResponse aResponse, WebComponent aContainer,
             StoreAdapter aAdapter)
@@ -276,11 +265,17 @@ public class HtmlAnnotationEditor
                 return;
             }
 
-            String json = toJson(anno);
-            // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
-            // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
-            // up from there and then pass it on to AnnotatorJS to do the rendering.
-            aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            try {
+            	String json = JSONUtil.toInterpretableJsonString(anno);
+            	// Since we cannot pass the JSON directly to Brat, we attach it to the HTML
+                // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
+                // up from there and then pass it on to AnnotatorJS to do the rendering.
+                aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            }
+            catch (IOException e) {
+                error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            }
+            
         }
 
         private void delete(AjaxRequestTarget aTarget, String aPayload)
@@ -328,11 +323,17 @@ public class HtmlAnnotationEditor
                 }
             }
 
-            String json = toJson(annotations);
-            // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
-            // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
-            // up from there and then pass it on to AnnotatorJS to do the rendering.
-            aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            try {
+            	String json = JSONUtil.toInterpretableJsonString(annotations);
+                // Since we cannot pass the JSON directly to Brat, we attach it to the HTML
+                // element into which AnnotatorJS governs. In our modified annotator-full.js, we pick it
+                // up from there and then pass it on to AnnotatorJS to do the rendering.
+                aTarget.prependJavaScript("Wicket.$('" + vis.getMarkupId() + "').temp = " + json + ";");
+            }
+            catch (IOException e) {
+                error("Unable to produce JSON response " + ":" + ExceptionUtils.getRootCauseMessage(e));
+            }
+            
         }
 
         private List<Range> toRanges(List<VRange> aRanges)
