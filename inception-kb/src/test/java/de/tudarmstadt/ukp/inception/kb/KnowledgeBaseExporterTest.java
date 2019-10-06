@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -40,6 +41,8 @@ import org.eclipse.rdf4j.model.impl.SimpleValueFactory;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.repository.config.RepositoryConfigException;
 import org.eclipse.rdf4j.repository.sparql.config.SPARQLRepositoryConfig;
 import org.junit.Before;
 import org.junit.Rule;
@@ -134,7 +137,7 @@ public class KnowledgeBaseExporterTest
     }
 
     @Test
-    public void thatRemappingConceptFeaturesOnImportWorks() throws Exception
+    public void thatRemappingConceptFeaturesOnImportWorks() throws Exception, IOException, RepositoryException, RepositoryConfigException
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
@@ -198,7 +201,7 @@ public class KnowledgeBaseExporterTest
         return Arrays.asList(kb1, kb2, kb3);
     }
 
-    private List<AnnotationFeature> features(Project aProject) throws Exception
+    private List<AnnotationFeature> features(Project aProject) throws NullPointerException, IOException
     {
         AnnotationLayer layer1 = new AnnotationLayer("layer", "layer", WebAnnoConst.SPAN_TYPE,
             aProject, false, TOKENS, NO_OVERLAP);

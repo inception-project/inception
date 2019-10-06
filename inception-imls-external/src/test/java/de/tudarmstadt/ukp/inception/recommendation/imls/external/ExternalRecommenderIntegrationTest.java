@@ -84,7 +84,7 @@ public class ExternalRecommenderIntegrationTest
     private List<String> requestBodies;
 
     @Before
-    public void setUp() throws Exception
+    public void setUp() throws IOException
     {
         recommender = buildRecommender();
         context = new RecommenderContext();
@@ -105,7 +105,7 @@ public class ExternalRecommenderIntegrationTest
     }
 
     @After
-    public void tearDown() throws Exception
+    public void tearDown() throws IOException
     {
         server.shutdown();
     }

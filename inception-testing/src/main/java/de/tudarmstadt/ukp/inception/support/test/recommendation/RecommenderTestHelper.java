@@ -84,7 +84,7 @@ public class RecommenderTestHelper
     }
 
     public static <T extends Annotation> List<T> getPredictions(CAS aCas, Class<T> aClass)
-            throws IOException,CASException
+            throws CASException
     {
         Type type = CasUtil.getType(aCas, aClass);
         Feature feature = type.getFeatureByBaseName(FEATURE_NAME_IS_PREDICTION);

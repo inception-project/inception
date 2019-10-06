@@ -80,7 +80,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatTrainingWorks() throws Exception
+    public void thatTrainingWorks() throws IOException, UIMAException, RecommendationException
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
@@ -93,7 +93,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatPredictionWorks() throws Exception
+    public void thatPredictionWorks() throws IOException, UIMAException, RecommendationException, CASException
     {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
@@ -190,7 +190,7 @@ public class StringMatchingRecommenderTest
 
 
     @Test
-    public void thatEvaluationWorks() throws Exception
+    public void thatEvaluationWorks() throws IOException, UIMAException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
@@ -287,7 +287,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatIncrementalNerEvaluationWorks() throws Exception
+    public void thatIncrementalNerEvaluationWorks() throws IOException, UIMAException
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
