@@ -50,6 +50,7 @@ public class RecommendationRenderer
      * @param aAnnotationService
      *            the annotation service.s
      */
+	
     public static void render(VDocument aVdoc, AnnotatorState aState, CAS aCas,
             AnnotationSchemaService aAnnotationService, RecommendationService aRecService,
             LearningRecordService aLearningRecordService, FeatureSupportRegistry aFsRegistry,
