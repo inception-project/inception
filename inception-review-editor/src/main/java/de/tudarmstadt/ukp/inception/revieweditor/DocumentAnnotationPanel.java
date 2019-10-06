@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
@@ -51,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 
 public class DocumentAnnotationPanel 
     extends Panel
@@ -80,15 +80,16 @@ public class DocumentAnnotationPanel
     private final WebMarkupContainer featuresContainer;
     private final WebMarkupContainer linkFeaturesContainer;
     private final IModel<VID> model;
-    private final Project project;
+    private final AnnotatorState state;
 
     public DocumentAnnotationPanel(String id, IModel<VID> aModel, CasProvider aCasProvider,
-                                   Project aProject, String aTitle) {
+        AnnotatorState aState, String aTitle)
+    {
         super(id, aModel);
 
         casProvider = aCasProvider;
         model = aModel;
-        project = aProject;
+        state = aState;
 
         // Allow AJAX updates.
         setOutputMarkupId(true);
@@ -124,7 +125,7 @@ public class DocumentAnnotationPanel
     {
         VID vid = model.getObject();
         
-        if (project == null || vid == null || vid.isNotSet()) {
+        if (state.getProject() == null || vid == null || vid.isNotSet()) {
             return emptyList();
         }
         
@@ -145,7 +146,7 @@ public class DocumentAnnotationPanel
             LOG.error("Unable to locate annotation with ID {}", vid);
             return emptyList();
         }
-        AnnotationLayer layer = annotationService.findLayer(project, fs);
+        AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
         TypeAdapter adapter = annotationService.getAdapter(layer);
         
         // Populate from feature structure
@@ -232,9 +233,8 @@ public class DocumentAnnotationPanel
     
             @Override protected void populateItem(ListItem<LinkWithRoleModel> item)
             {
-                SpanAnnotationPanel panel =
-                    new SpanAnnotationPanel(CID_SPAN, item.getModel(), casProvider,
-                                            project);
+                SpanAnnotationPanel panel = new SpanAnnotationPanel(CID_SPAN,
+                    item.getModel(), casProvider, state);
                 item.add(panel);
             }
         };

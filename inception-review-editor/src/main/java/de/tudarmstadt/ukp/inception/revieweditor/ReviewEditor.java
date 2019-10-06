@@ -17,18 +17,24 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
+import java.io.IOException;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.model.IModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.AnnotationEditorBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
+
 
 public class ReviewEditor
     extends AnnotationEditorBase
@@ -65,6 +71,23 @@ public class ReviewEditor
     {
         error(aMessage);
         aTarget.addChildren(getPage(), IFeedback.class);
+    }
+    
+    @OnEvent(stop = true)
+    public void onLinkFeatureSetEvent(SelectAnnotationEvent aEvent)
+    {
+        try {
+            CAS cas = getCasProvider().get();
+            getModelObject().getSelection().selectSpan(
+                aEvent.getVid(), cas, aEvent.getBegin(), aEvent.getEnd());
+            getActionHandler().actionSelect(aEvent.getTarget(), cas);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load CAS", e);
+        }
+        catch (AnnotationException e) {
+            LOG.error("Unable to select annotation", e);
+        }
     }
 
 }

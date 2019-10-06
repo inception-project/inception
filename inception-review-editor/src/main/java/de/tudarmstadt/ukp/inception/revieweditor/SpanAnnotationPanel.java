@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.revieweditor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectFsByAddr;
 
 import java.io.IOException;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
+import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -41,12 +44,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxLink;
 
 public class SpanAnnotationPanel 
     extends Panel
@@ -64,18 +68,16 @@ public class SpanAnnotationPanel
     private static final String CID_FEATURES = "features";
     private static final String CID_FEATURE = "feature";
     
-    private final IModel<LinkWithRoleModel> model;
     private final CasProvider casProvider;
-    private final Project project;
+    private final AnnotatorState state;
     private WebMarkupContainer featuresContainer;
     
     public SpanAnnotationPanel(String aId, IModel<LinkWithRoleModel> aModel,
-        CasProvider aCasProvider, Project aProject)
+        CasProvider aCasProvider, AnnotatorState aState)
     {
         super(aId, aModel);
-        model = aModel;
         casProvider = aCasProvider;
-        project = aProject;
+        state = aState;
     
         LinkWithRoleModel link = aModel.getObject();
     
@@ -83,7 +85,10 @@ public class SpanAnnotationPanel
             CAS cas = casProvider.get();
             FeatureStructure fs = selectFsByAddr(cas, link.targetAddr);
             VID vid = new VID(fs);
-            AnnotationLayer layer = annotationService.findLayer(project, fs);
+            AnnotationLayer layer = annotationService.findLayer(state.getProject(), fs);
+            AnnotationFS aFS = selectAnnotationByAddr(cas, link.targetAddr);
+            int begin = aFS.getBegin();
+            int end = aFS.getEnd();
             
             List<FeatureState> features = listFeatures(fs, layer, vid);
             List<FeatureState> textFeatures = features.stream()
@@ -92,12 +97,18 @@ public class SpanAnnotationPanel
                 .collect(Collectors.toList());
             features.removeAll(textFeatures);
     
+            LambdaAjaxLink button = new LambdaAjaxLink("open", _target -> {
+                send(this, Broadcast.BUBBLE,
+                    new SelectAnnotationEvent(vid, begin, end, _target));
+            });
+    
             featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
             featuresContainer.setOutputMarkupId(true);
             featuresContainer.add(createTextFeaturesList(textFeatures));
             featuresContainer.add(createFeaturesList(features));
             // TODO: there are probably better ways to get the text of an annotation?
             featuresContainer.add(new Label(CID_TEXT, link.label));
+            featuresContainer.add(button);
             
             add(featuresContainer);
         }
