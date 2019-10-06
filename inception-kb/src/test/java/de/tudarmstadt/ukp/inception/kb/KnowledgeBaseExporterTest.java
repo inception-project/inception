@@ -214,7 +214,7 @@ public class KnowledgeBaseExporterTest
         return asList(feat1);
     }
 
-    private KnowledgeBase buildKnowledgeBase(String name) throws Exception
+    private KnowledgeBase buildKnowledgeBase(String name)
     {
         KnowledgeBase kb = new KnowledgeBase();
         kb.setRepositoryId("id-" + name);

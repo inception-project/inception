@@ -33,10 +33,13 @@ import java.util.List;
 
 import mtas.analysis.util.MtasParserException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.admin.CASAdminException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.testing.factory.TokenBuilder;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -69,7 +72,7 @@ public class MtasUimaParserTest
     private JCas jcas;
     
     @Before
-    public void setup() throws Exception
+    public void setup() throws ResourceInitializationException, CASException,CASAdminException
     {
         initMocks(this);
         
@@ -96,7 +99,7 @@ public class MtasUimaParserTest
     }
     
     @Test
-    public void testSentencesAndTokens() throws Exception
+    public void testSentencesAndTokens() throws IllegalArgumentException, MtasParserException
     {
         TokenBuilder<Token, Sentence> builder = TokenBuilder.create(Token.class, Sentence.class);
         builder.buildTokens(jcas, "This is a test . \n This is sentence two .");
@@ -127,7 +130,7 @@ public class MtasUimaParserTest
     }
     
     @Test
-    public void testNamedEnity() throws Exception
+    public void testNamedEnity() throws MtasParserException
     {
         JCasBuilder builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);

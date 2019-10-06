@@ -67,8 +67,7 @@ public class SPARQLQueryBuilderGenericTest
     private static final List<String> SKIPPED_PROFILES = asList("babel_net", "yago");
     
     @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
-    {
+    public static List<Object[]> data() throws IOException {
         Map<String, KnowledgeBaseProfile> profiles = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         
         List<Object[]> dataList = new ArrayList<>();
@@ -88,15 +87,13 @@ public class SPARQLQueryBuilderGenericTest
     private KnowledgeBase kb;
     private Repository repo;
     
-    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile) throws Exception
-    {
+    public SPARQLQueryBuilderGenericTest(String aProfileName, KnowledgeBaseProfile aProfile) {
         profileName = aProfileName;
         profile = aProfile;
     }
     
     @Before
-    public void setup() throws Exception
-    {
+    public void setup() throws IOException {
         // Force POST request instead of GET request
         // System.setProperty(SPARQLProtocolSession.MAXIMUM_URL_LENGTH_PARAM, "100");
         

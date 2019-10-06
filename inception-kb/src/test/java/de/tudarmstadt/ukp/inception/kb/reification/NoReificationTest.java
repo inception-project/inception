@@ -102,7 +102,7 @@ public class NoReificationTest
     }
     
     @Test
-    public void thatItemCanBeObtainedAsStatements() throws Exception
+    public void thatItemCanBeObtainedAsStatements() throws IOException,Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
@@ -117,7 +117,7 @@ public class NoReificationTest
     }
     
     public List<KBStatement> listStatements(Repository aRepo, KBHandle aItem)
-        throws Exception
+        throws IOException
     {
         try (RepositoryConnection conn = aRepo.getConnection()) {
             long startTime = System.currentTimeMillis();

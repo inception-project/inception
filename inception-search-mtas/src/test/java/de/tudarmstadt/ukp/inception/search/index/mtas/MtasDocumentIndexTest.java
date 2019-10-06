@@ -35,7 +35,6 @@ import jdk.internal.org.xml.sax.SAXException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
@@ -162,6 +161,8 @@ public class MtasDocumentIndexTest
             try (InputStream fileStream = new ByteArrayInputStream(
                     doc.getRight().getBytes(UTF_8))) {
                 documentService.uploadSourceDocument(fileStream, doc.getLeft());
+            } catch (UIMAException e) {
+                e.printStackTrace();
             }
         }
         
@@ -221,13 +222,18 @@ public class MtasDocumentIndexTest
     }
 
     @Test
-    public void testRawTextQuery() throws Exception
+    public void testRawTextQuery() throws IOException, ExecutionException
     {
         Project project = new Project();
         project.setName("TestRawTextQuery");
         project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        try {
+			createProject(project);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         SourceDocument sourceDocument = new SourceDocument();
 
@@ -237,7 +243,12 @@ public class MtasDocumentIndexTest
 
         String fileContent = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        try {
+			uploadDocument(Pair.of(sourceDocument, fileContent));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
         User user = userRepository.get("admin");
 
@@ -425,7 +436,7 @@ public class MtasDocumentIndexTest
     }
     
     @Test
-    public void testAnnotationQuery() throws Exception
+    public void testAnnotationQuery() throws IOException,Exception
     {
         Project project = new Project();
         project.setName("TestAnnotationQuery");

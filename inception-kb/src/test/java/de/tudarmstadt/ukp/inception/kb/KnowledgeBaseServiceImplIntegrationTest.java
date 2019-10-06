@@ -124,7 +124,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException {
         RepositoryProperties repoProps = new RepositoryProperties();
         repoProps.setPath(temporaryFolder.getRoot());
         EntityManager entityManager = testEntityManager.getEntityManager();
@@ -1631,7 +1631,7 @@ public class KnowledgeBaseServiceImplIntegrationTest  {
                 .anyMatch(ns -> handle.getIdentifier().startsWith(ns));
     }
 
-    private void importKnowledgeBase(String resourceName) throws Exception {
+    private void importKnowledgeBase(String resourceName) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {

@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.kb;
 import static de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderTest.isReachable;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,6 +34,8 @@ import javax.persistence.EntityManager;
 import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
+import org.eclipse.rdf4j.repository.RepositoryException;
+import org.eclipse.rdf4j.rio.RDFParseException;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
@@ -141,7 +144,7 @@ public class KnowledgeBaseServiceRemoteTest
         sut.destroy();
     }
 
-    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig) throws Exception
+    public KnowledgeBaseServiceRemoteTest(TestConfiguration aConfig)
     {
         sutConfig = aConfig;
         
@@ -152,7 +155,7 @@ public class KnowledgeBaseServiceRemoteTest
     }
 
     @Parameterized.Parameters(name = "KB = {0}")
-    public static List<Object[]> data() throws Exception
+    public static List<Object[]> data() throws IOException
     {
         PROFILES = KnowledgeBaseProfile.readKnowledgeBaseProfiles();
         int maxResults = 1000;
@@ -385,7 +388,7 @@ public class KnowledgeBaseServiceRemoteTest
     
     // Helper
 
-    private void importKnowledgeBase(String resourceName) throws Exception
+    private void importKnowledgeBase(String resourceName) throws RDFParseException, RepositoryException, IOException
     {
         ClassLoader classLoader = KnowledgeBaseServiceRemoteTest.class.getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();

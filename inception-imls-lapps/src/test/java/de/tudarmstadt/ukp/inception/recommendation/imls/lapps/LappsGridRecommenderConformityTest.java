@@ -34,8 +34,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.collection.CollectionReader;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.JCasUtil;
@@ -66,11 +68,14 @@ public class LappsGridRecommenderConformityTest
 {
     @Test
     @Parameters(method = "getNerServices")
-    public void testNerConformity(LappsGridService aService) throws Exception
-    {
+    public void testNerConformity(LappsGridService aService) throws IOException, UIMAException {
         CAS cas = loadData();
 
-        predict(aService.getUrl(), cas);
+        try {
+            predict(aService.getUrl(), cas);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
@@ -85,11 +90,14 @@ public class LappsGridRecommenderConformityTest
 
     @Test
     @Parameters(method = "getPosServices")
-    public void testPosConformity(LappsGridService aService) throws Exception
-    {
+    public void testPosConformity(LappsGridService aService) throws IOException, UIMAException {
         CAS cas = loadData();
 
-        predict(aService.getUrl(), cas);
+        try {
+            predict(aService.getUrl(), cas);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         SoftAssertions softly = new SoftAssertions();
         softly.assertThat(JCasUtil.select(cas.getJCas(), Token.class))
@@ -102,8 +110,7 @@ public class LappsGridRecommenderConformityTest
         softly.assertAll();
     }
 
-    private void predict(String aUrl, CAS aCas) throws Exception
-    {
+    private void predict(String aUrl, CAS aCas) throws RecommendationException {
         assumeTrue(isReachable(aUrl));
         
         LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
@@ -148,9 +155,7 @@ public class LappsGridRecommenderConformityTest
         return services.get("pos");
     }
 
-    private static Map<String, List<LappsGridService>> loadPredefinedServicesData()
-            throws Exception
-    {
+    private static Map<String, List<LappsGridService>> loadPredefinedServicesData() throws IOException {
         try (InputStream is = LappsGridRecommenderTraitsEditor
                 .class.getResourceAsStream("services.json")) {
             TypeReference<Map<String, List<LappsGridService>>> typeRef =

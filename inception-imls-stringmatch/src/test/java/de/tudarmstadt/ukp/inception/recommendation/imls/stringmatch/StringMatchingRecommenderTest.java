@@ -41,6 +41,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
@@ -137,7 +138,7 @@ public class StringMatchingRecommenderTest
                 .containsOnlyNulls();
     }
 
-    private CAS getTestCasNoLabelLabels() throws Exception
+    private CAS getTestCasNoLabelLabels() throws IOException, UIMAException
     {
         Dataset ds = loader.load("germeval2014-de", CONTINUE);
         CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
@@ -150,8 +151,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatPredictionWithPretrainigWorks() throws Exception
-    {
+    public void thatPredictionWithPretrainigWorks() throws RecommendationException, IOException, UIMAException {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
@@ -169,7 +169,12 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
              .isNotEmpty();
@@ -242,7 +247,7 @@ public class StringMatchingRecommenderTest
     
     private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aNEIndices,
             int[][] aSentIndices, int[][] aTokenIndices)
-        throws Exception
+        throws CASException, ResourceInitializationException
     {
         JCas jcas = JCasFactory.createText(aText, "de");
 

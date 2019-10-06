@@ -183,21 +183,29 @@ public class LoggedEventExporterTest
     }
 
     private ArgumentCaptor<LoggedEvent> runExportImportAndFetchEvents(ZipFile aZipFile)
-        throws Exception
+
     {
         // Export the project
         ProjectExportRequest exportRequest = new ProjectExportRequest();
         exportRequest.setProject(project);
         ExportedProject exportedProject = new ExportedProject();
 
-        sut.exportData(exportRequest, exportedProject, workFolder);
+        try {
+            sut.exportData(exportRequest, exportedProject, workFolder);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         // Import the project again
         ArgumentCaptor<LoggedEvent> captor = ArgumentCaptor.forClass(LoggedEvent.class);
         doNothing().when(eventRepository).create(captor.capture());
 
         ProjectImportRequest importRequest = new ProjectImportRequest(true);
-        sut.importData(importRequest, project, exportedProject, aZipFile);
+        try {
+            sut.importData(importRequest, project, exportedProject, aZipFile);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return captor;
     }

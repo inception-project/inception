@@ -31,9 +31,12 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.fit.factory.JCasBuilder;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
+import org.eclipse.rdf4j.query.QueryEvaluationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -58,6 +61,7 @@ import de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import mtas.analysis.token.MtasToken;
 import mtas.analysis.token.MtasTokenCollection;
+import mtas.analysis.util.MtasParserException;
 
 public class ConceptFeatureIndexingSupportTest
 {
@@ -70,7 +74,7 @@ public class ConceptFeatureIndexingSupportTest
     private JCas jcas;
     
     @Before
-    public void setup() throws Exception
+    public void setup() throws ResourceInitializationException,CASException
     {
         initMocks(this);
         
@@ -101,7 +105,7 @@ public class ConceptFeatureIndexingSupportTest
     }
     
     @Test
-    public void testConceptFeature() throws Exception
+    public void testConceptFeature() throws QueryEvaluationException, MtasParserException
     {
         JCasBuilder builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);
