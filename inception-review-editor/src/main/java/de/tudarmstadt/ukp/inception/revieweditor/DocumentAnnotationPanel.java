@@ -29,8 +29,6 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.FeatureStructure;
-import org.apache.wicket.Component;
-import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
@@ -44,9 +42,7 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -56,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.support.DescriptionTooltipBehavior;
 
 public class DocumentAnnotationPanel 
     extends Panel
@@ -185,54 +180,15 @@ public class DocumentAnnotationPanel
                 // Feature editors that allow multiple values may want to update themselves,
                 // e.g. to add another slot.
                 item.setOutputMarkupId(true);
-
+    
+    
                 final FeatureState featureState = item.getModelObject();
-                final FeatureEditor editor;
-                FeatureSupport<Object> featureSupport = featureSupportRegistry
-                    .getFeatureSupport(featureState.feature);
-                editor = featureSupport.createEditor(CID_FEATURE,
-                    DocumentAnnotationPanel.this, null, null, item.getModel());
-                editor.setEnabled(false);
-
-                if (!featureState.feature.getLayer().isReadonly()) {
-                    // Whenever it is updating an annotation, it updates automatically when a
-                    // component for the feature lost focus - but updating is for every component
-                    // edited LinkFeatureEditors must be excluded because the auto-update will break
-                    // the ability to add slots. Adding a slot is NOT an annotation action.
-//                    addAnnotateActionBehavior(editor);
-
-                    // Add tooltip on label
-                    StringBuilder tooltipTitle = new StringBuilder();
-                    tooltipTitle.append(featureState.feature.getUiName());
-                    if (featureState.feature.getTagset() != null) {
-                        tooltipTitle.append(" (");
-                        tooltipTitle.append(featureState.feature.getTagset().getName());
-                        tooltipTitle.append(')');
-                    }
-
-                    Component labelComponent = editor.getLabelComponent();
-                    labelComponent.add(new AttributeAppender("style", "cursor: help", ";"));
-                    labelComponent.add(new DescriptionTooltipBehavior(tooltipTitle.toString(),
-                        featureState.feature.getDescription()));
-                }
-                else {
-                    editor.getFocusComponent().setEnabled(false);
-                }
-
-                // We need to enable the markup ID here because we use it during the AJAX behavior
-                // that automatically saves feature editors on change/blur.
-                // Check addAnnotateActionBehavior.
-                editor.setOutputMarkupId(true);
-                editor.setOutputMarkupPlaceholderTag(true);
-
-                // Ensure that markup IDs of feature editor focus components remain constant
-                // across refreshes of the feature editor panel. This is required to restore the
-                // focus.
-                editor.getFocusComponent().setOutputMarkupId(true);
-                editor.getFocusComponent().setMarkupId(
-                    "" + editor.getModelObject().feature.getId());
-
-                item.add(editor);
+    
+                Label label = new Label("label", featureState.feature.getUiName() + ": ");
+                Label value = new Label("value", featureState.value);
+    
+                item.add(label);
+                item.add(value);
             }
         };
     }

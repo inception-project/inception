@@ -19,31 +19,33 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
     <div wicket:id="featuresContainer">
-        <div class="row">
-            <div class="col-sm-12">
-                <div class="form-group">
-                    <label class="col-sm-3 control-label">Text</label>
-                    <div class="col-sm-9">
-                        <span style="word-wrap: break-word;">
-                            <wicket:container wicket:id="text"/>
-                        </span>
+        <div class="row" style="margin-top: 12px;">
+            <div class="col-sm-1 text-center">
+                <button class="btn btn-secondary">Select</button>
+            </div>
+            <div class="col-sm-11">
+                <div class="row">
+                    <div wicket:id="features" class="col-sm-1">
+                        <label wicket:id="label"></label>
+<!--                        <div class="col-sm-1">-->
+                            <span wicket:id="value"></span>
+<!--                        </div>-->
+                    </div>
+                </div>
+                <div class="row">
+                    <label class="col-sm-1">Text:</label>
+                    <div class="col-sm-11">
+                        <span wicket:id="text" style="word-wrap: break-word;"></span>
+                    </div>
+                </div>
+                <div wicket:id="textFeatures" class="row">
+                    <label wicket:id="label" class="col-sm-1"></label>
+                    <div class="col-sm-11">
+                        <span wicket:id="value" style="word-wrap: break-word;"></span>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-sm-9 col-sm-offset-3">
-                <div class="row" style="margin-bottom: 3px;">
-                    <div wicket:id="features" class="col-sm-6">
-                        <span wicket:id="feature"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div wicket:id="textFeatures" class="row">
-            <div wicket:id="feature" class="col-sm-12"></div>
-        </div>
-        <hr/>
     </div>
 </wicket:panel>
 </html>
