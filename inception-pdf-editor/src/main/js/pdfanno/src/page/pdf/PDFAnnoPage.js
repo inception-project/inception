@@ -456,10 +456,10 @@ export default class PDFAnnoPage {
         pageNumber = annotation.page
         y = annotation.rectangles[0].y
       } else {
-        let _y = annotation.y || annotation.y1
+        let _ya = annotation.ya || annotation.y1
         let d = convertToExportY(_y)
         pageNumber = d.pageNumber
-        y = d.y
+        ya = d.ya
       }
       let pageHeight = window.annoPage.getViewerViewport().height
       let scale = window.annoPage.getViewerViewport().scale

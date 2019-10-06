@@ -1,7 +1,7 @@
 /**
  * Enable Text input enable.
  */
-export function enable ({ uuid, text, disable = false, autoFocus = false, blurListener = null }) {
+export function enable ({ uuid, text, disable1 = false, autoFocus = false, blurListener = null }) {
   var event = document.createEvent('CustomEvent')
   event.initCustomEvent('enableTextInput', true, true, ...arguments)
   window.dispatchEvent(event)

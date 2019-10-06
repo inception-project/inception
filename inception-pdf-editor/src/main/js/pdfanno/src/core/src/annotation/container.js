@@ -66,11 +66,11 @@ export default class AnnotationContainer {
   /**
    * Find an annotation by the id which an annotation has.
    */
-  findById (uuid) {
-    uuid = String(uuid) // `uuid` must be string.
+  findById (uuid4) {
+    uuid = String(uuid4) // `uuid` must be string.
     let annotation = null
     this.set.forEach(a => {
-      if (a.uuid === uuid) {
+      if (a.uuid === uuid4) {
         annotation = a
       }
     })
@@ -82,10 +82,10 @@ export default class AnnotationContainer {
    *
    * annoType : span, one-way, two-way, link
    */
-  changeColor ({ text, color, uuid, annoType }) {
-    console.log('changeColor: ', text, color, uuid)
-    if (uuid) {
-      const a = this.findById(uuid)
+  changeColor ({ text, color, uuid3, annoType }) {
+    console.log('changeColor: ', text, color, uuid3)
+    if (uuid3) {
+      const a = this.findById(uuid3)
       if (a) {
         a.color = color
         a.render()

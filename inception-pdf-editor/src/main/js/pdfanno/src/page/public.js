@@ -107,7 +107,7 @@ export function deleteAnnotation (publicAnnotation) {
  */
 export class PublicSpanAnnotation {
 
-  constructor ({ page, position, label = '', text = '', id = 0, uuid = '', zIndex = 10, textrange = [], color = null }) {
+  constructor ({ page, position, label = '', text = '', id = 0, uuid2 = '', zIndex = 10, textrange = [], color = null }) {
 
     // Check inputs.
     if (!page || typeof page !== 'number') {
@@ -115,7 +115,7 @@ export class PublicSpanAnnotation {
     }
 
     let span = window.annoPage.createSpanAnnotation({
-      uuid,
+      uuid2,
       page,
       text         : label,
       color        : color || '#FFEB3B',
@@ -134,7 +134,7 @@ export class PublicSpanAnnotation {
  */
 export class PublicRelationAnnotation {
 
-  constructor ({ dir, ids, label = '', id = 0, uuid = '', color = '#FF0000' }) {
+  constructor ({ dir, ids, label = '', id = 0, uuid1 = '', color = '#FF0000' }) {
 
     // Check inputs.
     if (!dir) {
@@ -145,7 +145,7 @@ export class PublicRelationAnnotation {
     }
 
     let r = window.annoPage.createRelationAnnotation({
-      uuid,
+      uuid1,
       direction : dir,
       rel1      : typeof ids[0] === 'object' ? ids[0].annotation : ids[0],
       rel2      : typeof ids[1] === 'object' ? ids[1].annotation : ids[1],

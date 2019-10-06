@@ -283,11 +283,11 @@ function getVisibleElements(scrollEl, views, sortByVisibility) {
   var top = scrollEl.scrollTop, bottom = top + scrollEl.clientHeight;
   var left = scrollEl.scrollLeft, right = left + scrollEl.clientWidth;
 
-  function isElementBottomBelowViewTop(view) {
-    var element = view.div;
-    var elementBottom =
-      element.offsetTop + element.clientTop + element.clientHeight;
-    return elementBottom > top;
+  function isElementBottomBelowViewTop(view1) {
+    var element1 = view1.div;
+    var element1Bottom =
+      element1.offsetTop + element1.clientTop + element1.clientHeight;
+    return element1Bottom > top;
   }
 
   var visible = [], view, element;
@@ -1254,8 +1254,8 @@ var PDFFindController = (function PDFFindControllerClosure() {
             var textItems = textContent.items;
             var str = [];
 
-            for (var i = 0, len = textItems.length; i < len; i++) {
-              str.push(textItems[i].str);
+            for (var i2 = 0, len = textItems.length; i2 < len; i2++) {
+              str.push(textItems[i2].str);
             }
 
             // Store the pageContent as a string.
@@ -4253,10 +4253,10 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
         offset: undefined
       };
 
-      function beginText(begin, className) {
-        var divIdx = begin.divIdx;
+      function beginText(begin1, className) {
+        var divIdx = begin1.divIdx;
         textDivs[divIdx].textContent = '';
-        appendTextToDiv(divIdx, 0, begin.offset, className);
+        appendTextToDiv(divIdx, 0, begin1.offset, className);
       }
 
       function appendTextToDiv(divIdx, fromOffset, toOffset, className) {
@@ -4796,18 +4796,18 @@ var PDFViewer = (function pdfViewer() {
         onePageRendered.then(function () {
           if (!PDFJS.disableAutoFetch) {
             var getPagesLeft = pagesCount;
-            for (var pageNum = 1; pageNum <= pagesCount; ++pageNum) {
-              pdfDocument.getPage(pageNum).then(function (pageNum, pdfPage) {
-                var pageView = self._pages[pageNum - 1];
-                if (!pageView.pdfPage) {
-                  pageView.setPdfPage(pdfPage);
+            for (var pageNum1 = 1; pageNum1 <= pagesCount; ++pageNum1) {
+              pdfDocument.getPage(pageNum1).then(function (pageNum2, pdfPage1) {
+                var pageView = self._pages[pageNum3 - 1];
+                if (!pageView.pdfPage1) {
+                  pageView.setPdfPage(pdfPage1);
                 }
-                linkService.cachePageRef(pageNum, pdfPage.ref);
+                linkService.cachePageRef(pageNum2, pdfPage1.ref);
                 getPagesLeft--;
                 if (!getPagesLeft) {
                   resolvePagesPromise();
                 }
-              }.bind(null, pageNum));
+              }.bind(null, pageNum1));
             }
           } else {
             // XXX: Printing is semi-broken with auto fetch disabled.

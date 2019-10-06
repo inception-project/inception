@@ -45,7 +45,7 @@ var pdfjsBuild = 'b15f335';
   {
     factory((root.pdfjsSharedGlobal = {}));
   }
-}(this, function (exports) {
+}(this, function (exportsl) {
 
   var globalScope = (typeof window !== 'undefined') ? window :
                     (typeof global !== 'undefined') ? global :
@@ -69,9 +69,9 @@ var pdfjsBuild = 'b15f335';
 
   globalScope.PDFJS.pdfBug = false;
 
-  exports.globalScope = globalScope;
-  exports.isWorker = isWorker;
-  exports.PDFJS = globalScope.PDFJS;
+  exportsl.globalScope = globalScope;
+  exportsl.isWorker = isWorker;
+  exportsl.PDFJS = globalScope.PDFJS;
 }));
 
 
@@ -79,7 +79,7 @@ var pdfjsBuild = 'b15f335';
   {
     factory((root.pdfjsDisplayDOMUtils = {}), root.pdfjsSharedGlobal);
   }
-}(this, function (exports, sharedGlobal) {
+}(this, function (exportsk, sharedGlobal) {
 
 var PDFJS = sharedGlobal.PDFJS;
 
@@ -139,7 +139,7 @@ var CustomStyle = (function CustomStyleClosure() {
 
 PDFJS.CustomStyle = CustomStyle;
 
-exports.CustomStyle = CustomStyle;
+exportsk.CustomStyle = CustomStyle;
 }));
 
 
@@ -147,7 +147,7 @@ exports.CustomStyle = CustomStyle;
   {
     factory((root.pdfjsSharedUtil = {}), root.pdfjsSharedGlobal);
   }
-}(this, function (exports, sharedGlobal) {
+}(this, function (exportsj, sharedGlobal) {
 
 var PDFJS = sharedGlobal.PDFJS;
 var globalScope = sharedGlobal.globalScope;
@@ -760,7 +760,7 @@ var Uint32ArrayView = (function Uint32ArrayViewClosure() {
   return Uint32ArrayView;
 })();
 
-exports.Uint32ArrayView = Uint32ArrayView;
+exportsj.Uint32ArrayView = Uint32ArrayView;
 
 var IDENTITY_MATRIX = [1, 0, 0, 1, 0, 0];
 
@@ -1432,9 +1432,9 @@ PDFJS.createPromiseCapability = createPromiseCapability;
    */
   Promise.all = function Promise_all(promises) {
     var resolveAll, rejectAll;
-    var deferred = new Promise(function (resolve, reject) {
-      resolveAll = resolve;
-      rejectAll = reject;
+    var deferred = new Promise(function (resolve2, reject2) {
+      resolveAll = resolve2;
+      rejectAll = reject2;
     });
     var unresolved = promises.length;
     var results = [];
@@ -1451,12 +1451,12 @@ PDFJS.createPromiseCapability = createPromiseCapability;
     }
     for (var i = 0, ii = promises.length; i < ii; ++i) {
       var promise = promises[i];
-      var resolve = (function(i) {
+      var resolve = (function(i3) {
         return function(value) {
           if (deferred._status === STATUS_REJECTED) {
             return;
           }
-          results[i] = value;
+          results[i3] = value;
           unresolved--;
           if (unresolved === 0) {
             resolveAll(results);
@@ -1685,14 +1685,14 @@ function MessageHandler(sourceName, targetName, comObj) {
     } else if (data.action in ah) {
       var action = ah[data.action];
       if (data.callbackId) {
-        var sourceName = this.sourceName;
-        var targetName = data.sourceName;
+        var sourceName2 = this.sourceName;
+        var targetName2 = data.sourceName;
         Promise.resolve().then(function () {
           return action[0].call(action[1], data.data);
         }).then(function (result) {
           comObj.postMessage({
-            sourceName: sourceName,
-            targetName: targetName,
+            sourceName2: sourceName,
+            targetName2: targetName,
             isReply: true,
             callbackId: data.callbackId,
             data: result
@@ -1703,7 +1703,7 @@ function MessageHandler(sourceName, targetName, comObj) {
             reason = reason + '';
           }
           comObj.postMessage({
-            sourceName: sourceName,
+            sourceName2: sourceName,
             targetName: targetName,
             isReply: true,
             callbackId: data.callbackId,
@@ -2420,61 +2420,61 @@ function loadJpegStream(id, imageUrl, objs) {
   /* jshint ignore:end */
 })(globalScope);
 
-exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
-exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
-exports.OPS = OPS;
-exports.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
-exports.AnnotationBorderStyleType = AnnotationBorderStyleType;
-exports.AnnotationFlag = AnnotationFlag;
-exports.AnnotationType = AnnotationType;
-exports.FontType = FontType;
-exports.ImageKind = ImageKind;
-exports.InvalidPDFException = InvalidPDFException;
-exports.LinkTarget = LinkTarget;
-exports.LinkTargetStringMap = LinkTargetStringMap;
-exports.MessageHandler = MessageHandler;
-exports.MissingDataException = MissingDataException;
-exports.MissingPDFException = MissingPDFException;
-exports.NotImplementedException = NotImplementedException;
-exports.PasswordException = PasswordException;
-exports.PasswordResponses = PasswordResponses;
-exports.StatTimer = StatTimer;
-exports.StreamType = StreamType;
-exports.TextRenderingMode = TextRenderingMode;
-exports.UnexpectedResponseException = UnexpectedResponseException;
-exports.UnknownErrorException = UnknownErrorException;
-exports.Util = Util;
-exports.XRefParseException = XRefParseException;
-exports.assert = assert;
-exports.bytesToString = bytesToString;
-exports.combineUrl = combineUrl;
-exports.createPromiseCapability = createPromiseCapability;
-exports.deprecated = deprecated;
-exports.error = error;
-exports.info = info;
-exports.isArray = isArray;
-exports.isArrayBuffer = isArrayBuffer;
-exports.isBool = isBool;
-exports.isEmptyObj = isEmptyObj;
-exports.isExternalLinkTargetSet = isExternalLinkTargetSet;
-exports.isInt = isInt;
-exports.isNum = isNum;
-exports.isString = isString;
-exports.isValidUrl = isValidUrl;
-exports.addLinkAttributes = addLinkAttributes;
-exports.loadJpegStream = loadJpegStream;
-exports.log2 = log2;
-exports.readInt8 = readInt8;
-exports.readUint16 = readUint16;
-exports.readUint32 = readUint32;
-exports.removeNullCharacters = removeNullCharacters;
-exports.shadow = shadow;
-exports.string32 = string32;
-exports.stringToBytes = stringToBytes;
-exports.stringToPDFString = stringToPDFString;
-exports.stringToUTF8String = stringToUTF8String;
-exports.utf8StringToString = utf8StringToString;
-exports.warn = warn;
+exportsj.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
+exportsj.IDENTITY_MATRIX = IDENTITY_MATRIX;
+exportsj.OPS = OPS;
+exportsj.UNSUPPORTED_FEATURES = UNSUPPORTED_FEATURES;
+exportsj.AnnotationBorderStyleType = AnnotationBorderStyleType;
+exportsj.AnnotationFlag = AnnotationFlag;
+exportsj.AnnotationType = AnnotationType;
+exportsj.FontType = FontType;
+exportsj.ImageKind = ImageKind;
+exportsj.InvalidPDFException = InvalidPDFException;
+exportsj.LinkTarget = LinkTarget;
+exportsj.LinkTargetStringMap = LinkTargetStringMap;
+exportsj.MessageHandler = MessageHandler;
+exportsj.MissingDataException = MissingDataException;
+exportsj.MissingPDFException = MissingPDFException;
+exportsj.NotImplementedException = NotImplementedException;
+exportsj.PasswordException = PasswordException;
+exportsj.PasswordResponses = PasswordResponses;
+exportsj.StatTimer = StatTimer;
+exportsj.StreamType = StreamType;
+exportsj.TextRenderingMode = TextRenderingMode;
+exportsj.UnexpectedResponseException = UnexpectedResponseException;
+exportsj.UnknownErrorException = UnknownErrorException;
+exportsj.Util = Util;
+exportsj.XRefParseException = XRefParseException;
+exportsj.assert = assert;
+exportsj.bytesToString = bytesToString;
+exportsj.combineUrl = combineUrl;
+exportsj.createPromiseCapability = createPromiseCapability;
+exportsj.deprecated = deprecated;
+exportsj.error = error;
+exportsj.info = info;
+exportsj.isArray = isArray;
+exportsj.isArrayBuffer = isArrayBuffer;
+exportsj.isBool = isBool;
+exportsj.isEmptyObj = isEmptyObj;
+exportsj.isExternalLinkTargetSet = isExternalLinkTargetSet;
+exportsj.isInt = isInt;
+exportsj.isNum = isNum;
+exportsj.isString = isString;
+exportsj.isValidUrl = isValidUrl;
+exportsj.addLinkAttributes = addLinkAttributes;
+exportsj.loadJpegStream = loadJpegStream;
+exportsj.log2 = log2;
+exportsj.readInt8 = readInt8;
+exportsj.readUint16 = readUint16;
+exportsj.readUint32 = readUint32;
+exportsj.removeNullCharacters = removeNullCharacters;
+exportsj.shadow = shadow;
+exportsj.string32 = string32;
+exportsj.stringToBytes = stringToBytes;
+exportsj.stringToPDFString = stringToPDFString;
+exportsj.stringToUTF8String = stringToUTF8String;
+exportsj.utf8StringToString = utf8StringToString;
+exportsj.warn = warn;
 }));
 
 
@@ -2483,7 +2483,7 @@ exports.warn = warn;
     factory((root.pdfjsDisplayAnnotationLayer = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayDOMUtils);
   }
-}(this, function (exports, sharedUtil, displayDOMUtils) {
+}(this, function (exportsi, sharedUtil, displayDOMUtils) {
 
 var AnnotationBorderStyleType = sharedUtil.AnnotationBorderStyleType;
 var AnnotationType = sharedUtil.AnnotationType;
@@ -3233,7 +3233,7 @@ var AnnotationLayer = (function AnnotationLayerClosure() {
 
 PDFJS.AnnotationLayer = AnnotationLayer;
 
-exports.AnnotationLayer = AnnotationLayer;
+exportsi.AnnotationLayer = AnnotationLayer;
 }));
 
 
@@ -3242,7 +3242,7 @@ exports.AnnotationLayer = AnnotationLayer;
     factory((root.pdfjsDisplayFontLoader = {}), root.pdfjsSharedUtil,
       root.pdfjsSharedGlobal);
   }
-}(this, function (exports, sharedUtil, sharedGlobal) {
+}(this, function (exportsh, sharedUtil, sharedGlobal) {
 
 var assert = sharedUtil.assert;
 var bytesToString = sharedUtil.bytesToString;
@@ -3329,11 +3329,11 @@ FontLoader.prototype = {
     var rules = [];
     var fontsToLoad = [];
     var fontLoadPromises = [];
-    var getNativeFontPromise = function(nativeFontFace) {
+    var getNativeFontPromise = function(nativeFontFace1) {
       // Return a promise that is always fulfilled, even when the font fails to
       // load.
-      return nativeFontFace.loaded.catch(function(e) {
-        warn('Failed to load font "' + nativeFontFace.family + '": ' + e);
+      return nativeFontFace1.loaded.catch(function(e) {
+        warn('Failed to load font "' + nativeFontFace1.family + '": ' + e);
       });
     };
     for (var i = 0, ii = fonts.length; i < ii; i++) {
@@ -3408,11 +3408,11 @@ FontLoader.prototype = {
       // font after the desired fonts and then test for the loading of that
       // test font.
 
-      function int32(data, offset) {
-        return (data.charCodeAt(offset) << 24) |
-               (data.charCodeAt(offset + 1) << 16) |
-               (data.charCodeAt(offset + 2) << 8) |
-               (data.charCodeAt(offset + 3) & 0xff);
+      function int32(data1, offset) {
+        return (data1.charCodeAt(offset) << 24) |
+               (data1.charCodeAt(offset + 1) << 16) |
+               (data1.charCodeAt(offset + 2) << 8) |
+               (data1.charCodeAt(offset + 3) & 0xff);
       }
 
       function spliceString(s, offset, remove, insert) {
@@ -3637,8 +3637,8 @@ var FontFaceObject = (function FontFaceObjectClosure() {
   return FontFaceObject;
 })();
 
-exports.FontFaceObject = FontFaceObject;
-exports.FontLoader = FontLoader;
+exportsh.FontFaceObject = FontFaceObject;
+exportsh.FontLoader = FontLoader;
 }));
 
 
@@ -3646,7 +3646,7 @@ exports.FontLoader = FontLoader;
   {
     factory((root.pdfjsDisplayMetadata = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil) {
+}(this, function (exportsg, sharedUtil) {
 
 var error = sharedUtil.error;
 
@@ -3654,15 +3654,15 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   function fixMetadata(meta) {
     return meta.replace(/>\\376\\377([^<]+)/g, function(all, codes) {
       var bytes = codes.replace(/\\([0-3])([0-7])([0-7])/g,
-                                function(code, d1, d2, d3) {
+                                function(codeQ, d1, d2, d3) {
         return String.fromCharCode(d1 * 64 + d2 * 8 + d3 * 1);
       });
       var chars = '';
       for (var i = 0; i < bytes.length; i += 2) {
-        var code = bytes.charCodeAt(i) * 256 + bytes.charCodeAt(i + 1);
-        chars += code >= 32 && code < 127 && code !== 60 && code !== 62 &&
-          code !== 38 && false ? String.fromCharCode(code) :
-          '&#x' + (0x10000 + code).toString(16).substring(1) + ';';
+        var codeQ = bytes.charCodeAt(i) * 256 + bytes.charCodeAt(i + 1);
+        chars += codeQ >= 32 && codeQ < 127 && codeQ !== 60 && codeQ !== 62 &&
+          codeQ !== 38 && false ? String.fromCharCode(codeQ) :
+          '&#x' + (0x10000 + codeQ).toString(16).substring(1) + ';';
       }
       return '>' + chars;
     });
@@ -3730,7 +3730,7 @@ var Metadata = PDFJS.Metadata = (function MetadataClosure() {
   return Metadata;
 })();
 
-exports.Metadata = Metadata;
+exportsg.Metadata = Metadata;
 }));
 
 
@@ -3738,7 +3738,7 @@ exports.Metadata = Metadata;
   {
     factory((root.pdfjsDisplaySVG = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil) {
+}(this, function (exportsf, sharedUtil) {
 
 var FONT_IDENTITY_MATRIX = sharedUtil.FONT_IDENTITY_MATRIX;
 var IDENTITY_MATRIX = sharedUtil.IDENTITY_MATRIX;
@@ -3776,7 +3776,7 @@ var convertImgDataToPng = (function convertImgDataToPngClosure() {
 
   function crc32(data, start, end) {
     var crc = -1;
-    for (var i = start; i < end; i++) {
+    for (var i_3 = start; ii_3 < end; ii_3++) {
       var a = (crc ^ data[i]) & 0xff;
       var b = crcTable[a];
       crc = (crc >>> 8) ^ b;
@@ -3814,7 +3814,7 @@ var convertImgDataToPng = (function convertImgDataToPngClosure() {
   function adler32(data, start, end) {
     var a = 1;
     var b = 0;
-    for (var i = start; i < end; ++i) {
+    for (var i_2 = start; i_2 < end; ++i_2) {
       a = (a + (data[i] & 0xff)) % 65521;
       b = (b + a) % 65521;
     }
@@ -3850,7 +3850,7 @@ var convertImgDataToPng = (function convertImgDataToPngClosure() {
     // prefix every row with predictor 0
     var literals = new Uint8Array((1 + lineSize) * height);
     var offsetLiterals = 0, offsetBytes = 0;
-    var y, i;
+    var y, i_1;
     for (y = 0; y < height; ++y) {
       literals[offsetLiterals++] = 0; // no prediction
       literals.set(bytes.subarray(offsetBytes, offsetBytes + lineSize),
@@ -3864,7 +3864,7 @@ var convertImgDataToPng = (function convertImgDataToPngClosure() {
       offsetLiterals = 0;
       for (y = 0; y < height; y++) {
         offsetLiterals++; // skipping predictor
-        for (i = 0; i < lineSize; i++) {
+        for (i_1 = 0; i_1 < lineSize; i_1++) {
           literals[offsetLiterals++] ^= 0xFF;
         }
       }
@@ -4008,8 +4008,8 @@ var SVGExtraState = (function SVGExtraStateClosure() {
 
 var SVGGraphics = (function SVGGraphicsClosure() {
   function createScratchSVG(width, height) {
-    var NS = 'http://www.w3.org/2000/svg';
-    var svg = document.createElementNS(NS, 'svg:svg');
+    var NS1 = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(NS1, 'svg:svg');
     svg.setAttributeNS(null, 'version', '1.1');
     svg.setAttributeNS(null, 'width', width + 'px');
     svg.setAttributeNS(null, 'height', height + 'px');
@@ -4921,7 +4921,7 @@ var SVGGraphics = (function SVGGraphicsClosure() {
 
 PDFJS.SVGGraphics = SVGGraphics;
 
-exports.SVGGraphics = SVGGraphics;
+exportsf.SVGGraphics = SVGGraphics;
 }));
 
 
@@ -4930,7 +4930,7 @@ exports.SVGGraphics = SVGGraphics;
     factory((root.pdfjsDisplayTextLayer = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayDOMUtils, root.pdfjsSharedGlobal);
   }
-}(this, function (exports, sharedUtil, displayDOMUtils, sharedGlobal) {
+}(this, function (exportse, sharedUtil, displayDOMUtils, sharedGlobal) {
 
 var Util = sharedUtil.Util;
 var createPromiseCapability = sharedUtil.createPromiseCapability;
@@ -5155,7 +5155,7 @@ var renderTextLayer = (function renderTextLayerClosure() {
 
 PDFJS.renderTextLayer = renderTextLayer;
 
-exports.renderTextLayer = renderTextLayer;
+exportse.renderTextLayer = renderTextLayer;
 }));
 
 
@@ -5163,7 +5163,7 @@ exports.renderTextLayer = renderTextLayer;
   {
     factory((root.pdfjsDisplayWebGL = {}), root.pdfjsSharedUtil);
   }
-}(this, function (exports, sharedUtil) {
+}(this, function (exportsd, sharedUtil) {
 
 var shadow = sharedUtil.shadow;
 
@@ -5584,7 +5584,7 @@ var WebGLUtils = (function WebGLUtilsClosure() {
   };
 })();
 
-exports.WebGLUtils = WebGLUtils;
+exportsd.WebGLUtils = WebGLUtils;
 }));
 
 
@@ -5593,7 +5593,7 @@ exports.WebGLUtils = WebGLUtils;
     factory((root.pdfjsDisplayPatternHelper = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayWebGL);
   }
-}(this, function (exports, sharedUtil, displayWebGL) {
+}(this, function (exportsc, sharedUtil, displayWebGL) {
 
 var Util = sharedUtil.Util;
 var info = sharedUtil.info;
@@ -6006,8 +6006,8 @@ var TilingPattern = (function TilingPatternClosure() {
   return TilingPattern;
 })();
 
-exports.getShadingPatternFromIR = getShadingPatternFromIR;
-exports.TilingPattern = TilingPattern;
+exportsc.getShadingPatternFromIR = getShadingPatternFromIR;
+exportsc.TilingPattern = TilingPattern;
 }));
 
 
@@ -6016,7 +6016,7 @@ exports.TilingPattern = TilingPattern;
     factory((root.pdfjsDisplayCanvas = {}), root.pdfjsSharedUtil,
       root.pdfjsDisplayPatternHelper, root.pdfjsDisplayWebGL);
   }
-}(this, function (exports, sharedUtil, displayPatternHelper, displayWebGL) {
+}(this, function (exportsb, sharedUtil, displayPatternHelper, displayWebGL) {
 
 var FONT_IDENTITY_MATRIX = sharedUtil.FONT_IDENTITY_MATRIX;
 var IDENTITY_MATRIX = sharedUtil.IDENTITY_MATRIX;
@@ -6359,11 +6359,11 @@ function compileType3Glyph(imgData) {
     c.scale(1 / width, -1 / height);
     c.translate(0, -height);
     c.beginPath();
-    for (var i = 0, ii = outlines.length; i < ii; i++) {
-      var o = outlines[i];
+    for (var i_4 = 0, ii3 = outlines.length; i_4 < iie; i_4++) {
+      var o = outlines[i_4];
       c.moveTo(o[0], o[1]);
-      for (var j = 2, jj = o.length; j < jj; j += 2) {
-        c.lineTo(o[j], o[j+1]);
+      for (var j1 = 2, jj = o.length; j1 < jj; j1 += 2) {
+        c.lineTo(o[j1], o[j1+1]);
       }
     }
     c.fill();
@@ -8215,8 +8215,8 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
   return CanvasGraphics;
 })();
 
-exports.CanvasGraphics = CanvasGraphics;
-exports.createScratchCanvas = createScratchCanvas;
+exportsb.CanvasGraphics = CanvasGraphics;
+exportsb.createScratchCanvas = createScratchCanvas;
 }));
 
 
@@ -8226,7 +8226,7 @@ exports.createScratchCanvas = createScratchCanvas;
       root.pdfjsDisplayFontLoader, root.pdfjsDisplayCanvas,
       root.pdfjsDisplayMetadata, root.pdfjsSharedGlobal);
   }
-}(this, function (exports, sharedUtil, displayFontLoader, displayCanvas,
+}(this, function (exportsa, sharedUtil, displayFontLoader, displayCanvas,
                   displayMetadata, sharedGlobal, amdRequire) {
 
 var InvalidPDFException = sharedUtil.InvalidPDFException;
@@ -9220,7 +9220,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         }
       );
 
-      function complete(error) {
+      function complete(error5) {
         var i = intentState.renderTasks.indexOf(internalRenderTask);
         if (i >= 0) {
           intentState.renderTasks.splice(i, 1);
@@ -9231,7 +9231,7 @@ var PDFPageProxy = (function PDFPageProxyClosure() {
         }
         self._tryCleanup();
 
-        if (error) {
+        if (error5) {
           internalRenderTask.capability.reject(error);
         } else {
           internalRenderTask.capability.resolve();
@@ -9807,9 +9807,9 @@ var WorkerTransport = (function WorkerTransportClosure() {
 
             var font;
             if ('error' in exportedData) {
-              var error = exportedData.error;
-              warn('Error during font loading: ' + error);
-              this.commonObjs.resolve(id, error);
+              var error4 = exportedData.error;
+              warn('Error during font loading: ' + error4);
+              this.commonObjs.resolve(id, error4);
               break;
             } else {
               font = new FontFaceObject(exportedData);
@@ -9929,21 +9929,21 @@ var WorkerTransport = (function WorkerTransportClosure() {
             var tmpCanvas = createScratchCanvas(width, height);
             var tmpCtx = tmpCanvas.getContext('2d');
             tmpCtx.drawImage(img, 0, 0);
-            var data = tmpCtx.getImageData(0, 0, width, height).data;
+            var data2 = tmpCtx.getImageData(0, 0, width, height).data2;
             var i, j;
 
             if (components === 3) {
               for (i = 0, j = 0; i < rgbaLength; i += 4, j += 3) {
                 buf[j] = data[i];
-                buf[j + 1] = data[i + 1];
-                buf[j + 2] = data[i + 2];
+                buf[j + 1] = data2[i + 1];
+                buf[j + 2] = data2[i + 2];
               }
             } else if (components === 1) {
               for (i = 0, j = 0; i < rgbaLength; i += 4, j++) {
-                buf[j] = data[i];
+                buf[j] = data2[i];
               }
             }
-            resolve({ data: buf, width: width, height: height});
+            resolve({ data2: buf, width: width, height: height});
           };
           img.onerror = function () {
             reject(new Error('JpegDecode failed to load image'));
@@ -10347,28 +10347,28 @@ PDFJS.UnsupportedManager = (function UnsupportedManagerClosure() {
   };
 })();
 
-exports.getDocument = PDFJS.getDocument;
-exports.PDFDataRangeTransport = PDFDataRangeTransport;
-exports.PDFDocumentProxy = PDFDocumentProxy;
-exports.PDFPageProxy = PDFPageProxy;
+exportsa.getDocument = PDFJS.getDocument;
+exportsa.PDFDataRangeTransport = PDFDataRangeTransport;
+exportsa.PDFDocumentProxy = PDFDocumentProxy;
+exportsa.PDFPageProxy = PDFPageProxy;
 }));
 
 
   }).call(pdfjsLibs);
 
-  exports.PDFJS = pdfjsLibs.pdfjsSharedGlobal.PDFJS;
+  exportsa.PDFJS = pdfjsLibs.pdfjsSharedGlobal.PDFJS;
 
-  exports.getDocument = pdfjsLibs.pdfjsDisplayAPI.getDocument;
-  exports.PDFDataRangeTransport =
+  exportsa.getDocument = pdfjsLibs.pdfjsDisplayAPI.getDocument;
+  exportsa.PDFDataRangeTransport =
     pdfjsLibs.pdfjsDisplayAPI.PDFDataRangeTransport;
-  exports.renderTextLayer = pdfjsLibs.pdfjsDisplayTextLayer.renderTextLayer;
-  exports.AnnotationLayer =
+  exportsa.renderTextLayer = pdfjsLibs.pdfjsDisplayTextLayer.renderTextLayer;
+  exportsa.AnnotationLayer =
     pdfjsLibs.pdfjsDisplayAnnotationLayer.AnnotationLayer;
-  exports.CustomStyle = pdfjsLibs.pdfjsDisplayDOMUtils.CustomStyle;
-  exports.PasswordResponses = pdfjsLibs.pdfjsSharedUtil.PasswordResponses;
-  exports.InvalidPDFException = pdfjsLibs.pdfjsSharedUtil.InvalidPDFException;
-  exports.MissingPDFException = pdfjsLibs.pdfjsSharedUtil.MissingPDFException;
-  exports.UnexpectedResponseException =
+  exportsa.CustomStyle = pdfjsLibs.pdfjsDisplayDOMUtils.CustomStyle;
+  exportsa.PasswordResponses = pdfjsLibs.pdfjsSharedUtil.PasswordResponses;
+  exportsa.InvalidPDFException = pdfjsLibs.pdfjsSharedUtil.InvalidPDFException;
+  exportsa.MissingPDFException = pdfjsLibs.pdfjsSharedUtil.MissingPDFException;
+  exportsa.UnexpectedResponseException =
     pdfjsLibs.pdfjsSharedUtil.UnexpectedResponseException;
 }));
 

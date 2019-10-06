@@ -97,7 +97,7 @@ var FontInspector = (function FontInspectorClosure() {
     // FontInspector specific functions.
     fontAdded: function fontAdded(fontObj, url) {
       function properties(obj, list) {
-        var moreInfo = document.createElement('table');
+        var moreInfo1 = document.createElement('table');
         for (var i = 0; i < list.length; i++) {
           var tr = document.createElement('tr');
           var td1 = document.createElement('td');
@@ -106,9 +106,9 @@ var FontInspector = (function FontInspectorClosure() {
           var td2 = document.createElement('td');
           td2.textContent = obj[list[i]].toString();
           tr.appendChild(td2);
-          moreInfo.appendChild(tr);
+          moreInfo1.appendChild(tr);
         }
-        return moreInfo;
+        return moreInfo1;
       }
       var moreInfo = properties(fontObj, ['name', 'type']);
       var fontName = fontObj.loadedName;
@@ -136,9 +136,9 @@ var FontInspector = (function FontInspectorClosure() {
       var select = document.createElement('input');
       select.setAttribute('type', 'checkbox');
       select.dataset.fontName = fontName;
-      select.addEventListener('click', (function(select, fontName) {
+      select.addEventListener('click', (function(select1, fontNamea) {
         return (function() {
-           selectFont(fontName, select.checked);
+           selectFont(fontNamea, select1.checked);
         });
       })(select, fontName));
       font.appendChild(select);
@@ -486,7 +486,7 @@ var Stats = (function Stats() {
       wrapper.appendChild(title);
       wrapper.appendChild(statsDiv);
       stats.push({ pageNumber: pageNumber, div: wrapper });
-      stats.sort(function(a, b) { return a.pageNumber - b.pageNumber; });
+      stats.sort(function(a, b1) { return a.pageNumber - b.pageNumber; });
       clear(this.panel);
       for (var i = 0, ii = stats.length; i < ii; ++i) {
         this.panel.appendChild(stats[i].div);

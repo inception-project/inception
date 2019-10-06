@@ -18,7 +18,7 @@ export function loadFiles (files) {
 
     // Load pdfs.
     let p = pdfNames.map(file => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve3, reject4) => {
 
         let fileReader = new FileReader()
 
@@ -37,7 +37,7 @@ export function loadFiles (files) {
 
     // Load annos.
     p = annoNames.map(file => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve3, reject3) => {
 
         let fileReader = new FileReader()
 

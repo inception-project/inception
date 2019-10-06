@@ -347,14 +347,14 @@ document.webL10n = (function(window, document, undefined) {
       var href = link.href;
       // Note: If |gAsyncResourceLoading| is false, then the following callbacks
       // are synchronously called.
-      this.load = function(lang, callback) {
-        parseResource(href, lang, callback, function() {
+      this.load = function(lang1, callback1) {
+        parseResource(href, lang1, callback1, function() {
           console.warn(href + ' not found.');
           // lang not found, used default resource instead
-          console.warn('"' + lang + '" resource not found');
+          console.warn('"' + lang1 + '" resource not found');
           gLanguage = '';
           // Resource not loaded, but we still need to call the callback.
-          callback();
+          callback1();
         });
       };
     }

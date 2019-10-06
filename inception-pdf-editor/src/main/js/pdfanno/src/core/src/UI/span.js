@@ -108,23 +108,23 @@ export function saveSpan ({
   }
 
   // Save.
-  let spanAnnotation = SpanAnnotation.newInstance(annotation)
+  let spanAnnotation1 = SpanAnnotation.newInstance(annotation)
   if (save) {
-    spanAnnotation.save()
+    spanAnnotation1.save()
   }
 
   // Render.
-  spanAnnotation.render()
+  spanAnnotation1.render()
 
   // Select.
-  spanAnnotation.select()
+  spanAnnotation1.select()
 
   // Enable label input.
   if (focusToLabel) {
-    textInput.enable({ uuid : spanAnnotation.uuid, autoFocus : true, text })
+    textInput.enable({ uuid : spanAnnotation1.uuid, autoFocus : true, text })
   }
 
-  return spanAnnotation
+  return spanAnnotation1
 }
 window.saveSpan = saveSpan
 
