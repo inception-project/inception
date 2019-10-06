@@ -261,27 +261,20 @@ public class SPARQLQueryBuilder
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
                         
             switch (this) {
+                /**264
+                 *
+                 */
             case ITEM: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
-                classPatterns.add(VAR_SUBJECT
-                        .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
+                List<GraphPattern> classPatterns = getGraphPatterns(aContext, typeOfProperty, subClassProperty);
+                getGraphPatterns111(aKB, aContext, classPatterns);
+
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
+            /**277
+             *
+             */
             case CLASS: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
+                List<GraphPattern> classPatterns = getGraphPatterns(aKB, aContext, subClassProperty);
 
                 return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
@@ -293,6 +286,29 @@ public class SPARQLQueryBuilder
             default:
                 throw new IllegalStateException("Unsupported mode: " + this);
             }            
+        }
+
+        private void getGraphPatterns111(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+            getGraphPatterns(aKB, aContext, classPatterns);
+        }
+
+        private void getGraphPatterns(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+            line357(aKB, aContext, classPatterns);
+        }
+
+        private List<GraphPattern> getGraphPatterns(Iri aContext, Iri typeOfProperty, Iri subClassProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
+            classPatterns.add(VAR_SUBJECT
+                    .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), aContext));
+            return classPatterns;
+        }
+
+        private List<GraphPattern> getGraphPatterns(KnowledgeBase aKB, Iri aContext, Iri subClassProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(VAR_SUBJECT.has(Path.of(oneOrMore(subClassProperty)), aContext));
+            getGraphPatterns111(aKB, aContext, classPatterns);
+            return classPatterns;
         }
 
         /**
@@ -307,18 +323,13 @@ public class SPARQLQueryBuilder
             switch (this) {
             case ITEM:
             case CLASS:
+                /**310
+                 *
+                 */
             case INSTANCE: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
-                classPatterns.add(aContext
-                        .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), VAR_SUBJECT));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
-                }
-                
+                List<GraphPattern> classPatterns = getGraphPatterns310(aContext, typeOfProperty, subClassProperty);
+                getGraphPatterns311(aKB, aContext, classPatterns);
+
                 return union(classPatterns.stream().toArray(GraphPattern[]::new));
             }
             case PROPERTY:
@@ -327,7 +338,24 @@ public class SPARQLQueryBuilder
                 throw new IllegalStateException("Unsupported mode: " + this);
             }            
         }
-        
+
+        private void getGraphPatterns311(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+            if (OWL.CLASS.equals(aKB.getClassIri())) {
+                classPatterns.add(aContext.has(
+                    Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                    VAR_SUBJECT));
+            }
+        }
+
+        private List<GraphPattern> getGraphPatterns310(Iri aContext, Iri typeOfProperty, Iri subClassProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(
+                    aContext.has(Path.of(oneOrMore(subClassProperty)), VAR_SUBJECT));
+            classPatterns.add(aContext
+                    .has(Path.of(typeOfProperty, zeroOrMore(subClassProperty)), VAR_SUBJECT));
+            return classPatterns;
+        }
+
         /**
          * @see SPARQLQueryPrimaryConditions#childrenOf(String)
          */
@@ -338,34 +366,25 @@ public class SPARQLQueryBuilder
             Iri typeOfProperty = iri(aKB.getTypeIri());
                         
             switch (this) {
+/**341
+ *
+ */
             case ITEM: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(
-                        VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
-                classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
-                return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return getGraphPattern341(aKB, aContext, subClassProperty, typeOfProperty);
             }
+            /**354
+             *
+             */
             case INSTANCE: {
-                return VAR_SUBJECT.has(typeOfProperty, aContext);
+                return getGraphPattern354(aContext, typeOfProperty);
             }
+            /**357
+             *
+             */
             case CLASS: {
                 // Follow the subclass property and also take into account owl:intersectionOf if
                 // using OWL classes
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(VAR_SUBJECT.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            aContext));
-                }
-                
-                return union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return getGraphPattern357(aKB, aContext, subClassProperty);
             }
             case PROPERTY:
                 return VAR_SUBJECT.has(subPropertyProperty, aContext);
@@ -373,7 +392,37 @@ public class SPARQLQueryBuilder
                 throw new IllegalStateException("Can only request children of classes");
             }            
         }
-        
+
+        private GraphPattern getGraphPattern354(Iri aContext, Iri typeOfProperty) {
+            return VAR_SUBJECT.has(typeOfProperty, aContext);
+        }
+
+        private GraphPattern getGraphPattern357(KnowledgeBase aKB, Iri aContext, Iri subClassProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(VAR_SUBJECT.has(subClassProperty, aContext));
+            getGraphPatterns111(aKB, aContext, classPatterns);
+
+            return union(classPatterns.stream().toArray(GraphPattern[]::new));
+        }
+
+        private GraphPattern getGraphPattern341(KnowledgeBase aKB, Iri aContext, Iri subClassProperty, Iri typeOfProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(
+                    VAR_SUBJECT.has(() -> subClassProperty.getQueryString(), aContext));
+            classPatterns.add(VAR_SUBJECT.has(typeOfProperty, aContext));
+            getGraphPatterns111(aKB, aContext, classPatterns);
+
+            return GraphPatterns.union(classPatterns.stream().toArray(GraphPattern[]::new));
+        }
+
+        private void line357(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+            if (OWL.CLASS.equals(aKB.getClassIri())) {
+                classPatterns.add(VAR_SUBJECT.has(
+                    Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                    aContext));
+            }
+        }
+
         /**
          * @see SPARQLQueryPrimaryConditions#parentsOf(String)
          */
@@ -382,25 +431,35 @@ public class SPARQLQueryBuilder
             Iri subClassProperty = iri(aKB.getSubclassIri());
             Iri subPropertyProperty = iri(aKB.getSubPropertyIri());
             Iri typeOfProperty = iri(aKB.getTypeIri());
-             
+            /**387
+             *
+             */
             switch (this) {
             case CLASS: {
-                List<GraphPattern> classPatterns = new ArrayList<>();
-                classPatterns.add(aContext.has(subClassProperty, VAR_SUBJECT));
-                classPatterns.add(aContext.has(typeOfProperty, VAR_SUBJECT));
-                if (OWL.CLASS.equals(aKB.getClassIri())) {
-                    classPatterns.add(aContext.has(
-                            Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
-                            VAR_SUBJECT));
-                }
-                
-                return union(classPatterns.stream().toArray(GraphPattern[]::new));
+                return getGraphPattern387(aKB, aContext, subClassProperty, typeOfProperty);
             }
             case PROPERTY:
                 return aContext.has(Path.of(oneOrMore(subPropertyProperty)), VAR_SUBJECT);
             default:
                 throw new IllegalStateException("Can only request classes or properties as parents");
             }            
+        }
+
+        private GraphPattern getGraphPattern387(KnowledgeBase aKB, Iri aContext, Iri subClassProperty, Iri typeOfProperty) {
+            List<GraphPattern> classPatterns = new ArrayList<>();
+            classPatterns.add(aContext.has(subClassProperty, VAR_SUBJECT));
+            classPatterns.add(aContext.has(typeOfProperty, VAR_SUBJECT));
+            line387(aKB, aContext, classPatterns);
+
+            return union(classPatterns.stream().toArray(GraphPattern[]::new));
+        }
+
+        private void line387(KnowledgeBase aKB, Iri aContext, List<GraphPattern> classPatterns) {
+            if (OWL.CLASS.equals(aKB.getClassIri())) {
+                classPatterns.add(aContext.has(
+                    Path.of(OWL_INTERSECTIONOF, zeroOrMore(RDF_REST), RDF_FIRST),
+                    VAR_SUBJECT));
+            }
         }
 
         /**
@@ -412,42 +471,53 @@ public class SPARQLQueryBuilder
             Iri subClassProperty = iri(aKb.getSubclassIri());
             Iri typeOfProperty = iri(aKb.getTypeIri());
             Variable otherSubclass = var("otherSubclass");
+            /**417
+             *
+             */
             
             switch (this) {
             case CLASS: {
-                List<GraphPattern> rootPatterns = new ArrayList<>();
-
-                List<IRI> rootConcepts = aKb.getRootConcepts();
-                if (rootConcepts != null && !rootConcepts.isEmpty()) {
-                    rootPatterns.add(new ValuesPattern(VAR_SUBJECT, rootConcepts.stream()
-                            .map(iri -> iri(iri.stringValue())).collect(Collectors.toList())));
-                }
-                else {
-                    List<GraphPattern> classPatterns = new ArrayList<>();
-                    classPatterns.add(VAR_SUBJECT.has(subClassProperty, otherSubclass)
-                                            .filter(notEquals(VAR_SUBJECT, otherSubclass)));
-                    if (OWL.CLASS.equals(aKb.getClassIri())) {
-                        classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF, bNode()));
-                    }
-                    
-                    rootPatterns.add(union(
-                            // ... it is explicitly defined as being a class
-                            VAR_SUBJECT.has(typeOfProperty, classIri),
-                            // ... it is used as the type of some instance
-                            // This can be a very slow condition - so we have to skip it
-                            // bNode().has(typeOfProperty, VAR_SUBJECT),
-                            // ... it has any subclass
-                            bNode().has(subClassProperty, VAR_SUBJECT) )
-                        .filterNotExists(
-                            union(classPatterns.stream().toArray(GraphPattern[]::new))));
-                }
-                
-                return GraphPatterns
-                        .and(rootPatterns.toArray(new GraphPattern[rootPatterns.size()]));
+                return getGraphPattern417(aKb, classIri, subClassProperty, typeOfProperty, otherSubclass);
             }
             default:
                 throw new IllegalStateException("Can only query for root classes");
             }            
+        }
+
+        private GraphPattern getGraphPattern417(KnowledgeBase aKb, Iri classIri, Iri subClassProperty, Iri typeOfProperty, Variable otherSubclass) {
+            List<GraphPattern> rootPatterns = new ArrayList<>();
+
+            List<IRI> rootConcepts = aKb.getRootConcepts();
+            line417(aKb, classIri, subClassProperty, typeOfProperty, otherSubclass, rootPatterns, rootConcepts);
+
+            return GraphPatterns
+                    .and(rootPatterns.toArray(new GraphPattern[rootPatterns.size()]));
+        }
+
+        private void line417(KnowledgeBase aKb, Iri classIri, Iri subClassProperty, Iri typeOfProperty, Variable otherSubclass, List<GraphPattern> rootPatterns, List<IRI> rootConcepts) {
+            if (rootConcepts != null && !rootConcepts.isEmpty()) {
+                rootPatterns.add(new ValuesPattern(VAR_SUBJECT, rootConcepts.stream()
+                        .map(iri -> iri(iri.stringValue())).collect(Collectors.toList())));
+            }
+            else {
+                List<GraphPattern> classPatterns = new ArrayList<>();
+                classPatterns.add(VAR_SUBJECT.has(subClassProperty, otherSubclass)
+                                        .filter(notEquals(VAR_SUBJECT, otherSubclass)));
+                if (OWL.CLASS.equals(aKb.getClassIri())) {
+                    classPatterns.add(VAR_SUBJECT.has(OWL_INTERSECTIONOF, bNode()));
+                }
+
+                rootPatterns.add(union(
+                        // ... it is explicitly defined as being a class
+                        VAR_SUBJECT.has(typeOfProperty, classIri),
+                        // ... it is used as the type of some instance
+                        // This can be a very slow condition - so we have to skip it
+                        // bNode().has(typeOfProperty, VAR_SUBJECT),
+                        // ... it has any subclass
+                        bNode().has(subClassProperty, VAR_SUBJECT) )
+                    .filterNotExists(
+                        union(classPatterns.stream().toArray(GraphPattern[]::new))));
+            }
         }
     }
     
