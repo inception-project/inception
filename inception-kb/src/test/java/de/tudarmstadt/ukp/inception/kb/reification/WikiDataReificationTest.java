@@ -112,7 +112,7 @@ public class WikiDataReificationTest
     }
     
     @Test
-    public void thatAllStatementsCanBeRetrieved() throws Exception
+    public void thatAllStatementsCanBeRetrieved() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_MONA_LISA);
 

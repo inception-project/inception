@@ -55,6 +55,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.EvaluationResu
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.IncrementalSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.evaluation.PercentageBasedSplitter;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommenderContext;
 
 public class DL4JSequenceRecommenderTest
@@ -295,7 +296,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatPosEvaluationWorks() throws Exception
+    public void thatPosEvaluationWorks() throws IOException, UIMAException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildPosRecommender(), traits,
@@ -321,7 +322,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatNerTrainingWorks() throws Exception
+    public void thatNerTrainingWorks() throws IOException, UIMAException
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
@@ -335,7 +336,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatNerPredictionWorks() throws Exception
+    public void thatNerPredictionWorks() throws IOException, UIMAException, RecommendationException
     {
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
@@ -347,7 +348,13 @@ public class DL4JSequenceRecommenderTest
         addScoreFeature(cas, NamedEntity.class, "value");
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = null;
+		try {
+			predictions = getPredictions(cas, NamedEntity.class);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
         
@@ -362,7 +369,7 @@ public class DL4JSequenceRecommenderTest
     }
 
     @Test
-    public void thatNerEvaluationWorks() throws Exception
+    public void thatNerEvaluationWorks() throws IOException, UIMAException
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,

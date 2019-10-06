@@ -47,6 +47,7 @@ import org.eclipse.rdf4j.model.vocabulary.OWL;
 import org.eclipse.rdf4j.model.vocabulary.RDF;
 import org.eclipse.rdf4j.model.vocabulary.RDFS;
 import org.eclipse.rdf4j.model.vocabulary.SKOS;
+import org.eclipse.rdf4j.query.MalformedQueryException;
 import org.eclipse.rdf4j.query.TupleQuery;
 import org.eclipse.rdf4j.query.TupleQueryResult;
 import org.eclipse.rdf4j.repository.Repository;
@@ -458,7 +459,7 @@ public class SPARQLQueryBuilderTest
 
     @Test
     public void thatPropertyQueryLimitedToChildrenDoesNotReturnOutOfScopeResults()
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
@@ -474,7 +475,7 @@ public class SPARQLQueryBuilderTest
 
     @Test
     public void thatPropertyQueryLimitedToDomainDoesNotReturnOutOfScopeResults()
-        throws Exception
+        throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_PROPERTIES);
         
@@ -657,7 +658,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws Exception
+    public void thatInstanceQueryLimitedToParentsDoesNotReturnOutOfScopeResults() throws IOException,MalformedQueryException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     
@@ -672,7 +673,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws Exception
+    public void thatInstanceQueryLimitedToAnchestorsDoesNotReturnOutOfScopeResults() throws IOException
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_CLASS_RDFS_HIERARCHY);
     

@@ -32,6 +32,7 @@ import java.util.List;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
 import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -40,6 +41,7 @@ import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.JCasUtil;
 import org.apache.uima.jcas.JCas;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.dkpro.core.api.datasets.Dataset;
 import org.dkpro.core.api.datasets.DatasetFactory;
 import org.dkpro.core.io.conll.Conll2002Reader;
@@ -245,7 +247,7 @@ public class StringMatchingRecommenderTest
     
     private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aNEIndices,
             int[][] aSentIndices, int[][] aTokenIndices)
-        throws Exception
+        throws CASException, ResourceInitializationException
     {
         JCas jcas = JCasFactory.createText(aText, "de");
 

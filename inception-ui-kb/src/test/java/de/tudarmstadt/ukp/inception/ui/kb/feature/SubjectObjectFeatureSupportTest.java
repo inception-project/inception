@@ -25,11 +25,14 @@ import java.util.List;
 
 import org.apache.uima.cas.ArrayFS;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.CASException;
+import org.apache.uima.cas.CASRuntimeException;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.Type;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.resource.ResourceInitializationException;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -58,7 +61,7 @@ public class SubjectObjectFeatureSupportTest
     }
     
     @Test
-    public void testWrapUnwrap() throws Exception
+    public void testWrapUnwrap() throws CASException, ResourceInitializationException,CASRuntimeException
     {
         CAS cas = JCasFactory.createJCasFromPath("src/test/resources/desc/type/webannoTestTypes.xml")
                 .getCas();
