@@ -131,7 +131,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
 
     @Test
-    public void readConcept_WithNonexistentConcept_ShouldReturnEmptyResult()
+    public void readConceptWithNonexistentConceptShouldReturnEmptyResult()
     {
         Optional<KBConcept> savedConcept = sut.readConcept(kb,
                 "https://nonexistent.identifier.test", true);
@@ -139,7 +139,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
     
     @Test
-    public void readConcept_WithExistentConcept_ShouldReturnResult()
+    public void readConceptWithExistentConceptShouldReturnResult()
     {
         Optional<KBConcept> concept = sut.readConcept(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
@@ -148,7 +148,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
     
     @Test
-    public void listChildConcept_WithExistentConcept_ShouldReturnResult()
+    public void listChildConceptWithExistentConceptShouldReturnResult()
     {
         List<KBHandle> concept = sut.listChildConcepts(kb, "http://www.wikidata.org/entity/Q171644",
                 true);
@@ -183,7 +183,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     }
     
     @Test
-    public void readInstance_WithNonexistentInstance_ShouldReturnEmptyResult()
+    public void readInstanceWithNonexistentInstanceShouldReturnEmptyResult()
     {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 

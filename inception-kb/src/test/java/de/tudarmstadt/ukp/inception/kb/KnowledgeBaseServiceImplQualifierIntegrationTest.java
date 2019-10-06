@@ -121,7 +121,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void addQualifier_WithUnsavedQualifier_shouldCreateQualifier()
+    public void addQualifierWithUnsavedQualifierShouldCreateQualifier()
     {
         sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
@@ -137,7 +137,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void addQualifier_WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    public void addQualifierWithReadOnlyKnowledgeBaseShouldDoNothing()
     {
         kb.setReadOnly(true);
         
@@ -157,7 +157,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void upsertQualifier_withUnsavedQualifier_shouldCreateQualifier()
+    public void upsertQualifierwithUnsavedQualifierShouldCreateQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
@@ -188,7 +188,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void upsertQualifier_withExistingQualifier_shouldUpdateQualifier()
+    public void upsertQualifierwithExistingQualifierShouldUpdateQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
@@ -216,7 +216,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void upsertQualifier_withReadOnlyKnowledgeBase_shouldDoNothing()
+    public void upsertQualifierwithReadOnlyKnowledgeBaseShouldDoNothing()
     {
         kb.setReadOnly(true);
         
@@ -236,7 +236,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void deleteQualifier_WithExistingQualifier_ShouldDeleteQualifier()
+    public void deleteQualifierWithExistingQualifierShouldDeleteQualifier()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
@@ -256,7 +256,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void deleteQualifier_WithNonExistentQualifier_ShouldDoNothing()
+    public void deleteQualifierWithNonExistentQualifierShouldDoNothing()
     {
         assertThatCode(() -> {
             sut.deleteQualifier(kb,
@@ -265,7 +265,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void deleteQualifier__WithReadOnlyKnowledgeBase_ShouldDoNothing()
+    public void deleteQualifierWithReadOnlyKnowledgeBaseShouldDoNothing()
     {
         KBQualifier qualifier = testFixtures.buildQualifier(statement, property, "Test qualifier");
         
@@ -284,7 +284,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void deleteStatement_WithExistingStatementAndQualifier_ShouldDeleteAll()
+    public void deleteStatementWithExistingStatementAndQualifierShouldDeleteAll()
     {
         sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
@@ -301,7 +301,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void listQualifiers_WithExistentQualifier_ShouldReturnOnlyThisQualifier()
+    public void listQualifiersWithExistentQualifierShouldReturnOnlyThisQualifier()
     {
         sut.addQualifier(kb, testFixtures.buildQualifier(statement, property, "Test qualifier"));
 
@@ -314,7 +314,7 @@ public class KnowledgeBaseServiceImplQualifierIntegrationTest {
     }
 
     @Test
-    public void listQualifiers_WithNonExistentQualifier_ShouldReturnNothing()
+    public void listQualifiersWithNonExistentQualifierShouldReturnNothing()
     {
         List<KBQualifier> qualifiers = sut.listQualifiers(kb, statement);
 

@@ -525,7 +525,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public NamedEntityLayerInitializer NamedEntityLayerInitializer(
+        public NamedEntityLayerInitializer namedEntityLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationService)
         {
             return new NamedEntityLayerInitializer(aAnnotationService);
@@ -533,7 +533,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public PartOfSpeechLayerInitializer PartOfSpeechLayerInitializer(
+        public PartOfSpeechLayerInitializer partOfSpeechLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new PartOfSpeechLayerInitializer(aAnnotationSchemaService);
@@ -541,7 +541,7 @@ public class MtasDocumentIndexTest
 
         @Lazy
         @Bean
-        public TokenLayerInitializer TokenLayerInitializer(
+        public TokenLayerInitializer tokenLayerInitializer(
                 @Lazy @Autowired AnnotationSchemaService aAnnotationSchemaService)
         {
             return new TokenLayerInitializer(aAnnotationSchemaService);

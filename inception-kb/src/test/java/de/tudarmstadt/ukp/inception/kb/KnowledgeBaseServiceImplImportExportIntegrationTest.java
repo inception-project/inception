@@ -106,7 +106,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void importData_WithExistingTtl_ShouldImportTriples() throws Exception {
+    public void importDataWithExistingTtlShouldImportTriples() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
 
         importKnowledgeBase("data/pets.ttl");
@@ -122,7 +122,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void importData_WithReadOnlyKb_ShouldDoNothing() throws Exception {
+    public void importDataWithReadOnlyKbShouldDoNothing() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         kb.setReadOnly(true);
 
@@ -139,7 +139,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception {
+    public void importDataWithTwoFilesAndOneKnowledgeBaseShouldImportAllTriples() throws Exception {
         sut.registerKnowledgeBase(kb, sut.getNativeConfig());
         String[] resourceNames = {"data/pets.ttl", "data/more_pets.ttl"};
         for (String resourceName : resourceNames) {
@@ -158,7 +158,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void importData_WithMisTypedStatements_ShouldImportWithoutError() throws Exception {
+    public void importDataWithMisTypedStatementsShouldImportWithoutError() throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         String resourceName = "turtle/mismatching_literal_statement.ttl";
         String fileName = classLoader.getResource(resourceName).getFile();
@@ -186,7 +186,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void exportData_WithLocalKnowledgeBase_ShouldExportKnowledgeBase() throws Exception {
+    public void exportDataWithLocalKnowledgeBaseShouldExportKnowledgeBase() throws Exception {
         KBConcept concept = new KBConcept();
         concept.setName("TestConcept");
         KBProperty property = new KBProperty();
@@ -223,7 +223,7 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
     }
 
     @Test
-    public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
+    public void exportDataWithRemoteKnowledgeBaseShouldDoNothing() throws Exception {
         File outputFile = temporaryFolder.newFile();
         kb.setType(RepositoryType.REMOTE);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));

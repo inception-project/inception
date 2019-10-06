@@ -628,7 +628,7 @@ public class SPARQLQueryBuilderTest
      * universe.
      */
     @Test
-    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResults_Wikidata() throws Exception
+    public void thatClassQueryLimitedToChildrenDoesNotReturnOutOfScopeResultsWikidata() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -760,22 +760,22 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOf_RDF4J_withLanguage_noFTS() throws Exception
+    public void testWithLabelContainingAnyOfRDF4JwithLanguagenoFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelContainingAnyOfwithLanguage(rdf4jLocalRepo);
     }
     
     @Test
-    public void testWithLabelContainingAnyOf_RDF4J_withLanguage_FTS() throws Exception
+    public void testWithLabelContainingAnyOfRDF4JwithLanguageFTS() throws Exception
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
-        __testWithLabelContainingAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelContainingAnyOfwithLanguage(rdf4jLocalRepo);
     }
     
-    public void __testWithLabelContainingAnyOf_withLanguage(Repository aRepository)
+    public void testWithLabelContainingAnyOfwithLanguage(Repository aRepository)
         throws Exception
     {
         importDataFromString(TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
@@ -797,7 +797,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelContainingAnyOf_Virtuoso_withLanguage_FTS() throws Exception
+    public void testWithLabelContainingAnyOfVirtuosowithLanguageFTS() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -815,7 +815,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOf_Wikidata_FTS() throws Exception
+    public void testWithLabelContainingAnyOfWikidataFTS() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -834,7 +834,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOf_Fuseki_FTS() throws Exception
+    public void testWithLabelContainingAnyOfFusekiFTS() throws Exception
     {
         assertIsReachable(zbwGnd);
         
@@ -855,7 +855,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOf_classes_HUCIT_FTS() throws Exception
+    public void testWithLabelContainingAnyOfclassesHUCITFTS() throws Exception
     {
         assertIsReachable(hucit);
         
@@ -873,22 +873,22 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_noFTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfRDF4JwithLanguagenoFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelMatchingExactlyAnyOfwithLanguage(rdf4jLocalRepo);
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_withLanguage_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfRDF4JwithLanguageFTS() throws Exception
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
-        __testWithLabelMatchingExactlyAnyOf_withLanguage(rdf4jLocalRepo);
+        testWithLabelMatchingExactlyAnyOfwithLanguage(rdf4jLocalRepo);
     }
 
-    public void __testWithLabelMatchingExactlyAnyOf_withLanguage(Repository aRepository)
+    public void testWithLabelMatchingExactlyAnyOfwithLanguage(Repository aRepository)
         throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
@@ -910,26 +910,26 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_noFTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfRDF4JsubpropertynoFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
+        testWithLabelMatchingExactlyAnyOfRDF4Jsubproperty(rdf4jLocalRepo);
     }
     
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfRDF4JsubpropertyFTS() throws Exception
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
         kb.setLabelIri(RDFS.LABEL);
         
-        __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(rdf4jLocalRepo);
+        testWithLabelMatchingExactlyAnyOfRDF4Jsubproperty(rdf4jLocalRepo);
     }
     
-    public void __testWithLabelMatchingExactlyAnyOf_RDF4J_subproperty(Repository aRepository)
+    public void testWithLabelMatchingExactlyAnyOfRDF4Jsubproperty(Repository aRepository)
         throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, LABEL_SUBPROPERTY);
@@ -950,22 +950,22 @@ public class SPARQLQueryBuilderTest
     }    
         
     @Test
-    public void testWithLabelStartingWith_RDF4J_withoutLanguage_noFTS() throws Exception
+    public void testWithLabelStartingWithRDF4JwithoutLanguagenoFTS() throws Exception
     {
         kb.setFullTextSearchIri(null);
         
-        __testWithLabelStartingWith_RDF4J_withoutLanguage();
+        testWithLabelStartingWithRDF4JwithoutLanguage();
     }
 
     @Test
-    public void testWithLabelStartingWith_RDF4J_withoutLanguage_FTS() throws Exception
+    public void testWithLabelStartingWithRDF4JwithoutLanguageFTS() throws Exception
     {
         kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         
-        __testWithLabelStartingWith_RDF4J_withoutLanguage();
+        testWithLabelStartingWithRDF4JwithoutLanguage();
     }
 
-    public void __testWithLabelStartingWith_RDF4J_withoutLanguage() throws Exception
+    public void testWithLabelStartingWithRDF4JwithoutLanguage() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_WITHOUT_LANGUAGE);
     
@@ -984,7 +984,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_noFTS() throws Exception
+    public void testWithLabelStartingWithRDF4JwithLanguagenoFTS() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
@@ -1006,7 +1006,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_1() throws Exception
+    public void testWithLabelStartingWithRDF4JwithLanguageFTS1() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
@@ -1030,7 +1030,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_2() throws Exception
+    public void testWithLabelStartingWithRDF4JwithLanguageFTS2() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX, DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
 
@@ -1054,7 +1054,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelStartingWith_RDF4J_withLanguage_FTS_3() throws Exception
+    public void testWithLabelStartingWithRDF4JwithLanguageFTS3() throws Exception
     {
         importDataFromString(RDFFormat.TURTLE, TURTLE_PREFIX,
                 DATA_LABELS_AND_DESCRIPTIONS_WITH_LANGUAGE);
@@ -1072,7 +1072,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_1() throws Exception
+    public void testWithLabelStartingWithVirtuosowithLanguageFTS1() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -1092,7 +1092,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_2() throws Exception
+    public void testWithLabelStartingWithVirtuosowithLanguageFTS2() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -1113,7 +1113,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_3() throws Exception
+    public void testWithLabelStartingWithVirtuosowithLanguageFTS3() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -1134,7 +1134,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_Virtuoso_withLanguage_FTS_4() throws Exception
+    public void testWithLabelStartingWithVirtuosowithLanguageFTS4() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -1154,7 +1154,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_Wikidata_FTS() throws Exception
+    public void testWithLabelStartingWithWikidataFTS() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -1173,7 +1173,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_Fuseki_FTS() throws Exception
+    public void testWithLabelStartingWithFusekiFTS() throws Exception
     {
         assertIsReachable(zbwGnd);
         
@@ -1193,7 +1193,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Fuseki_noFTS_STW() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfFusekinoFTSSTW() throws Exception
     {
         assertIsReachable(zbwStw);
         
@@ -1211,7 +1211,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Fuseki_FTS_GND() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfFusekiFTSGND() throws Exception
     {
         assertIsReachable(zbwGnd);
         
@@ -1233,7 +1233,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfWikidatanoFTS() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -1252,7 +1252,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Wikidata_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfWikidataFTS() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -1271,7 +1271,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_multiple_Wikidata_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfmultipleWikidataFTS() throws Exception
     {
         assertIsReachable(wikidata);
         
@@ -1290,7 +1290,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Virtuoso_withLanguage_FTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOfVirtuosowithLanguageFTS() throws Exception
     {
         assertIsReachable(ukpVirtuosoRepo);
         
@@ -1308,7 +1308,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_HUCIT_noFTS() throws Exception
+    public void testWithLabelStartingWithHUCITnoFTS() throws Exception
     {
         assertIsReachable(hucit);
         
@@ -1326,7 +1326,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_onlyDescendants_HUCIT_noFTS() throws Exception
+    public void testWithLabelStartingWithonlyDescendantsHUCITnoFTS() throws Exception
     {
         assertIsReachable(hucit);
         
@@ -1345,7 +1345,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelStartingWith_OLIA_FTS() throws Exception
+    public void testWithLabelStartingWithOLIAFTS() throws Exception
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
         
@@ -1366,7 +1366,7 @@ public class SPARQLQueryBuilderTest
     
 
     @Test
-    public void thatRootsCanBeRetrieved_BritishMuseum()
+    public void thatRootsCanBeRetrievedBritishMuseum()
     {
         assertIsReachable(britishMuseum);
         
@@ -1378,7 +1378,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatChildrenCanBeRetrieved_BritishMuseum()
+    public void thatChildrenCanBeRetrievedBritishMuseum()
     {
         assertIsReachable(britishMuseum);
         
@@ -1392,7 +1392,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatChildrenOfExplicitRootCanBeRetrieved_DBPedia()
+    public void thatChildrenOfExplicitRootCanBeRetrievedDBPedia()
     {
         assertIsReachable(dbpedia);
         
@@ -1403,7 +1403,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatChildrenOfExplicitRootCanBeRetrieved_YAGO()
+    public void thatChildrenOfExplicitRootCanBeRetrievedYAGO()
     {
         assertIsReachable(yago);
         
@@ -1414,7 +1414,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void thatParentsCanBeRetrieved_Wikidata()
+    public void thatParentsCanBeRetrievedWikidata()
     {
         assertIsReachable(wikidata);
         
@@ -1434,7 +1434,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatRootsCanBeRetrieved_DBPedia()
+    public void thatRootsCanBeRetrievedDBPedia()
     {
         assertIsReachable(dbpedia);
         
@@ -1454,7 +1454,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatParentsCanBeRetrieved_DBPedia()
+    public void thatParentsCanBeRetrievedDBPedia()
     {
         assertIsReachable(dbpedia);
         
@@ -1473,7 +1473,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelContainingAnyOf_RDF4J_pets_ttl() throws Exception
+    public void testWithLabelContainingAnyOfRDF4Jpetsttl() throws Exception
     {
         importDataFromFile("src/test/resources/data/pets.ttl");
 
@@ -1492,7 +1492,7 @@ public class SPARQLQueryBuilderTest
     }
     
     @Test
-    public void thatRootsCanBeRetrieved_RDF4J_ontolex() throws Exception
+    public void thatRootsCanBeRetrievedRDF4JOntolex() throws Exception
     {
         importDataFromFile("src/test/resources/data/wordnet-ontolex-ontology.owl");
         

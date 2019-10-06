@@ -663,19 +663,19 @@ public class SPARQLQueryBuilder
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOfRDF4JFTS(aValues));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Fuseki_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOfFusekiFTS(aValues));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOfVirtuosoFTS(aValues));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_Wikidata_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOfWikidataFTS(aValues));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelMatchingExactlyAnyOf_No_FTS(aValues));
+            addPattern(PRIMARY, withLabelMatchingExactlyAnyOfNoFTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -690,7 +690,7 @@ public class SPARQLQueryBuilder
         return this;
     }
     
-    private GraphPattern withLabelMatchingExactlyAnyOf_No_FTS(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOfNoFTS(String[] aValues)
     {
         List<RdfValue> values = new ArrayList<>();
         String language =  kb.getDefaultLanguage();
@@ -713,7 +713,7 @@ public class SPARQLQueryBuilder
                 VAR_SUBJECT.has(VAR_LABEL_PROPERTY, VAR_LABEL_CANDIDATE));
     }
     
-    private GraphPattern withLabelMatchingExactlyAnyOf_RDF4J_FTS(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOfRDF4JFTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
@@ -739,7 +739,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelMatchingExactlyAnyOf_Fuseki_FTS(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOfFusekiFTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
         
@@ -762,7 +762,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
     
-    private GraphPattern withLabelMatchingExactlyAnyOf_Virtuoso_FTS(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOfVirtuosoFTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
@@ -784,7 +784,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelMatchingExactlyAnyOf_Wikidata_FTS(String[] aValues)
+    private GraphPattern withLabelMatchingExactlyAnyOfWikidataFTS(String[] aValues)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
@@ -819,19 +819,19 @@ public class SPARQLQueryBuilder
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_RDF4J_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOfRDF4JFTS(aValues));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Fuseki_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOfFusekiFTS(aValues));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Virtuoso_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOfVirtuosoFTS(aValues));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_Wikidata_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOfWikidataFTS(aValues));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelContainingAnyOf_No_FTS(aValues));
+            addPattern(PRIMARY, withLabelContainingAnyOfNoFTS(aValues));
         }
         else {
             throw new IllegalStateException(
@@ -846,7 +846,7 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private GraphPattern withLabelContainingAnyOf_No_FTS(String... aValues)
+    private GraphPattern withLabelContainingAnyOfNoFTS(String... aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
@@ -864,7 +864,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
     
-    private GraphPattern withLabelContainingAnyOf_RDF4J_FTS(String[] aValues)
+    private GraphPattern withLabelContainingAnyOfRDF4JFTS(String[] aValues)
     {
         prefixes.add(PREFIX_LUCENE_SEARCH);
         
@@ -889,7 +889,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelContainingAnyOf_Fuseki_FTS(String[] aValues)
+    private GraphPattern withLabelContainingAnyOfFusekiFTS(String[] aValues)
     {
         prefixes.add(PREFIX_FUSEKI_SEARCH);
         
@@ -914,7 +914,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelContainingAnyOf_Virtuoso_FTS(String[] aValues)
+    private GraphPattern withLabelContainingAnyOfVirtuosoFTS(String[] aValues)
     {
         List<GraphPattern> valuePatterns = new ArrayList<>();
         for (String value : aValues) {
@@ -936,7 +936,7 @@ public class SPARQLQueryBuilder
                 union(valuePatterns.toArray(new GraphPattern[valuePatterns.size()])));
     }
 
-    private GraphPattern withLabelContainingAnyOf_Wikidata_FTS(String[] aValues)
+    private GraphPattern withLabelContainingAnyOfWikidataFTS(String[] aValues)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
@@ -972,19 +972,19 @@ public class SPARQLQueryBuilder
         IRI ftsMode = forceDisableFTS ? FTS_NONE : kb.getFullTextSearchIri();
         
         if (FTS_LUCENE.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_RDF4J_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWithRDF4JFTS(aPrefixQuery));
         }
         else if (FTS_FUSEKI.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Fuseki_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWithFusekiFTS(aPrefixQuery));
         }
         else if (FTS_VIRTUOSO.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Virtuoso_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWithVirtuosoFTS(aPrefixQuery));
         }
         else if (FTS_WIKIDATA.equals(ftsMode)) {
-            addPattern(PRIMARY, withLabelStartingWith_Wikidata_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWithWikidataFTS(aPrefixQuery));
         }
         else if (FTS_NONE.equals(ftsMode) || ftsMode == null) {
-            addPattern(PRIMARY, withLabelStartingWith_No_FTS(aPrefixQuery));
+            addPattern(PRIMARY, withLabelStartingWithNoFTS(aPrefixQuery));
         }
         else {
             throw new IllegalStateException(
@@ -999,7 +999,7 @@ public class SPARQLQueryBuilder
         return this;
     }
 
-    private GraphPattern withLabelStartingWith_No_FTS(String aPrefixQuery)
+    private GraphPattern withLabelStartingWithNoFTS(String aPrefixQuery)
     {
         if (aPrefixQuery.isEmpty()) {
             returnEmptyResult = true;
@@ -1011,7 +1011,7 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
-    private GraphPattern withLabelStartingWith_Wikidata_FTS(String aPrefix)
+    private GraphPattern withLabelStartingWithWikidataFTS(String aPrefix)
     {
         // In our KB settings, the language can be unset, but the Wikidata entity search
         // requires a preferred language. So we use English as the default.
@@ -1030,7 +1030,7 @@ public class SPARQLQueryBuilder
                                 .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefix))));
     }
 
-    private GraphPattern withLabelStartingWith_Virtuoso_FTS(String aPrefixQuery)
+    private GraphPattern withLabelStartingWithVirtuosoFTS(String aPrefixQuery)
     {
         StringBuilder ftsQueryString = new StringBuilder();
         ftsQueryString.append("\"");
@@ -1085,7 +1085,7 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
 
-    private GraphPattern withLabelStartingWith_RDF4J_FTS(String aPrefixQuery)
+    private GraphPattern withLabelStartingWithRDF4JFTS(String aPrefixQuery)
     {
         // REC: Haven't been able to get this to work with server-side reduction, so implicitly
         // turning it off here.
@@ -1119,7 +1119,7 @@ public class SPARQLQueryBuilder
                         .filter(startsWithPattern(VAR_LABEL_CANDIDATE, aPrefixQuery)));
     }
     
-    private GraphPattern withLabelStartingWith_Fuseki_FTS(String aPrefixQuery)
+    private GraphPattern withLabelStartingWithFusekiFTS(String aPrefixQuery)
     {
         // REC: Haven't been able to get this to work with server-side reduction, so implicitly
         // turning it off here.
