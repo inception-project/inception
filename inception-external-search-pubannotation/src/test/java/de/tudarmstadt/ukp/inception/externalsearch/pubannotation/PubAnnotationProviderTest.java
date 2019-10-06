@@ -46,7 +46,7 @@ public class PubAnnotationProviderTest
     }
 
     @Test
-    public void thatQueryWorks() throws Exception
+    public void thatQueryWorks()
     {
         List<PubAnnotationDocumentHandle> results = sut.query(traits, "binding");
         
@@ -66,7 +66,7 @@ public class PubAnnotationProviderTest
     }
     
     @Test
-    public void thatDocumentTextCanBeRetrieved() throws Exception
+    public void thatDocumentTextCanBeRetrieved()
     {
         String text = sut.getDocumentText(repo, traits, "PMC", "1064873");
         

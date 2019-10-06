@@ -153,7 +153,7 @@ public class GazeteerExporterTest
                 .containsExactlyInAnyOrderElementsOf(gazeteers());
     }
 
-    private List<Gazeteer> gazeteers() throws Exception
+    private List<Gazeteer> gazeteers()
     {
         Gazeteer gaz1 = new Gazeteer("gaz1", sourceRecommender);
         gaz1.setId(1l);

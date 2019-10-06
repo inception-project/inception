@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Feature;
@@ -148,8 +149,7 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
-    public void thatPredictionWithPretrainigWorks() throws Exception
-    {
+    public void thatPredictionWithPretrainigWorks() throws RecommendationException, IOException, UIMAException {
         StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
         List<CAS> casList = loadDevelopmentData();
 
@@ -167,7 +167,12 @@ public class StringMatchingRecommenderTest
 
         sut.predict(context, cas);
 
-        List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        List<NamedEntity> predictions = null;
+        try {
+            predictions = getPredictions(cas, NamedEntity.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         assertThat(predictions).as("Predictions have been written to CAS")
              .isNotEmpty();

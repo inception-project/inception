@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationException;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.collection.CollectionReader;
@@ -76,15 +77,14 @@ public class LappsRecommenderIntegrationTest
     }
 
     @After
-    public void tearDown() throws Exception
+    public void tearDown() throws IOException
     {
         server.shutdown();
     }
 
     @Test
     @Ignore
-    public void thatPredictingPosWorks() throws Exception
-    {
+    public void thatPredictingPosWorks() throws IOException, UIMAException, RecommendationException {
         RecommenderContext context = new RecommenderContext();
         CAS cas = loadData();
 
