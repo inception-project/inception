@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.externalsearch.elastic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.junit.Before;
@@ -51,7 +52,7 @@ public class ElasticSearchProviderTest
     }
     
     @Test
-    public void thatQueryWorks() throws Exception
+    public void thatQueryWorks() throws IOException
     {
         List<ExternalSearchResult> results = sut.executeQuery(repo, traits, "shiny");
         
@@ -61,7 +62,7 @@ public class ElasticSearchProviderTest
     }
     
     @Test
-    public void thatDocumentTextCanBeRetrieved() throws Exception
+    public void thatDocumentTextCanBeRetrieved() throws IOException
     {
         String documentText = sut.getDocumentText(repo, traits,
                 "common-crawl-en", "TcBhiGABg9im2MD5uAjq");

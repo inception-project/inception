@@ -1233,7 +1233,7 @@ public class SPARQLQueryBuilderTest
     }
 
     @Test
-    public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS() throws Exception
+    public void testWithLabelMatchingExactlyAnyOf_Wikidata_noFTS()
     {
         assertIsReachable(wikidata);
         
