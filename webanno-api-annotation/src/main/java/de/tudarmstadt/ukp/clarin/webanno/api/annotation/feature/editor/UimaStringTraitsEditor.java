@@ -35,12 +35,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import com.googlecode.wicket.kendo.ui.form.NumberTextField;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.PrimitiveUimaFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 
 public class UimaStringTraitsEditor
