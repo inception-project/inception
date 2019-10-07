@@ -75,7 +75,7 @@
     <uima.version>3.1.0</uima.version>
     <uimafit.version>3.0.0</uimafit.version>
     <slf4j.version>1.7.28</slf4j.version>
-    <log4j.version>2.7</log4j.version>
+    <log4j.version>2.12.1</log4j.version>
     <jboss.logging.version>3.3.1.Final</jboss.logging.version>
     <hibernate.version>5.3.10.Final</hibernate.version>
     <springfox.version>2.9.2</springfox.version>
