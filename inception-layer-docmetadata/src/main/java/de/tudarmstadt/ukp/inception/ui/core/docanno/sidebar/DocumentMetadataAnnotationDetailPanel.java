@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatur
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
@@ -318,6 +319,8 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             
             // persist changes
             annotationPage.writeEditorCas(cas);
+    
+            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
         }
         catch (Exception e) {
             handleException(DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
@@ -427,6 +430,9 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
             state.getSelection().selectSpan(fs);
             if (state.getSelection().getAnnotation().isSet()) {
                 actionHandler.actionDelete(target);
+                
+                findParent(AnnotationPageBase.class)
+                    .actionRefreshDocument(aEvent.getTarget());
             }
         }
         catch (IOException | AnnotationException e) {
@@ -438,5 +444,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     public void onLinkFeatureSetEvent(LinkFeatureSetEvent aEvent)
     {
         actionAnnotate(aEvent.getTarget());
+        
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getTarget());
     }
 }

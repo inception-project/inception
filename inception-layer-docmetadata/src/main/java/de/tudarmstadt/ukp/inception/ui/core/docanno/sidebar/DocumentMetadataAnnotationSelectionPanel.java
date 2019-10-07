@@ -57,6 +57,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.VID;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.Renderer;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.TypeUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
@@ -152,6 +153,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         detailPanels.forEach(d -> d.setVisible(false));
         
         aTarget.add(this);
+        
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
     }
     
     private void actionSelect(
@@ -173,6 +176,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         detailPanels.remove(detailPanel);
         remove(detailPanel);
         aTarget.add(this);
+        
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
     }
     
     private ListView<AnnotationListItem> createAnnotationList()
@@ -281,6 +286,8 @@ public class DocumentMetadataAnnotationSelectionPanel extends Panel
         // If a feature value is updated refresh the annotation list since it might mean that
         // a label has changed
         aEvent.getRequestTarget().add(annotationsContainer);
+        
+        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getRequestTarget());
     }
     
     private class AnnotationListItem
