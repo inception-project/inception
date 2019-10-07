@@ -68,13 +68,14 @@ public class DocumentAnnotationPanel
     private static final String CID_ANNOTATION_TITLE = "annotationTitle";
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_FEATURES = "features";
-    private static final String CID_FEATURE = "feature";
     private static final String CID_LINK_FEATURES_CONTAINER = "linkFeaturesContainer";
     private static final String CID_LINK_FEATURES = "linkFeatures";
     private static final String CID_LINK_FEATURE_TITLE = "linkFeatureTitle";
     private static final String CID_SPANS_CONTAINER = "spansContainer";
     private static final String CID_SPANS = "spans";
     private static final String CID_SPAN = "span";
+    private static final String CID_LABEL = "label";
+    private static final String CID_VALUE = "value";
 
     private final CasProvider casProvider;
     private final WebMarkupContainer featuresContainer;
@@ -185,8 +186,8 @@ public class DocumentAnnotationPanel
     
                 final FeatureState featureState = item.getModelObject();
     
-                Label label = new Label("label", featureState.feature.getUiName() + ": ");
-                Label value = new Label("value", featureState.value);
+                Label label = new Label(CID_LABEL, featureState.feature.getUiName() + ": ");
+                Label value = new Label(CID_VALUE, featureState.value);
     
                 item.add(label);
                 item.add(value);

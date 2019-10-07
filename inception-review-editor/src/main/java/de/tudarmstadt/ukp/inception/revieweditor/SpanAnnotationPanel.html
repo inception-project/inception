@@ -27,15 +27,15 @@
                 <div class="row">
                     <div wicket:id="features" class="col-sm-1">
                         <label wicket:id="label"></label>
-<!--                        <div class="col-sm-1">-->
-                            <span wicket:id="value"></span>
-<!--                        </div>-->
+                        <span wicket:id="value"></span>
                     </div>
                 </div>
                 <div class="row">
                     <label class="col-sm-1">Text:</label>
                     <div class="col-sm-11">
-                        <span wicket:id="text" style="word-wrap: break-word;"></span>
+                        <span style="word-wrap: break-word;">
+                            <span wicket:id="preContext"></span><span wicket:id="text" style="color: #B90F22"></span><span wicket:id="postContext"></span>
+                        </span>
                     </div>
                 </div>
                 <div wicket:id="textFeatures" class="row">

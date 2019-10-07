@@ -66,7 +66,11 @@ public class SpanAnnotationPanel
     private static final String CID_FEATURES_CONTAINER = "featuresContainer";
     private static final String CID_TEXT_FEATURES = "textFeatures";
     private static final String CID_FEATURES = "features";
-    private static final String CID_FEATURE = "feature";
+    private static final String CID_OPEN = "open";
+    private static final String CID_LABEL = "label";
+    private static final String CID_VALUE = "value";
+    private static final String CID_PRE_CONTEXT = "preContext";
+    private static final String CID_POST_CONTEXT = "postContext";
     
     private final CasProvider casProvider;
     private final AnnotatorState state;
@@ -97,17 +101,27 @@ public class SpanAnnotationPanel
                 .collect(Collectors.toList());
             features.removeAll(textFeatures);
     
-            LambdaAjaxLink button = new LambdaAjaxLink("open", _target -> {
+            LambdaAjaxLink button = new LambdaAjaxLink(CID_OPEN, _target -> {
                 send(this, Broadcast.BUBBLE,
                     new SelectAnnotationEvent(vid, begin, end, _target));
             });
+    
+            String text = cas.getDocumentText();
+            int windowSize = 50;
+            int contextBegin = aFS.getBegin() < windowSize
+                ? 0 : aFS.getBegin() - windowSize;
+            int contextEnd = aFS.getEnd() + windowSize > text.length()
+                ? text.length() : aFS.getEnd() + windowSize;
+            String preContext = text.substring(contextBegin, aFS.getBegin());
+            String postContext = text.substring(aFS.getEnd(), contextEnd);
     
             featuresContainer = new WebMarkupContainer(CID_FEATURES_CONTAINER);
             featuresContainer.setOutputMarkupId(true);
             featuresContainer.add(createTextFeaturesList(textFeatures));
             featuresContainer.add(createFeaturesList(features));
-            // TODO: there are probably better ways to get the text of an annotation?
+            featuresContainer.add(new Label(CID_PRE_CONTEXT, preContext));
             featuresContainer.add(new Label(CID_TEXT, link.label));
+            featuresContainer.add(new Label(CID_POST_CONTEXT, postContext));
             featuresContainer.add(button);
             
             add(featuresContainer);
@@ -178,8 +192,8 @@ public class SpanAnnotationPanel
     
         final FeatureState featureState = item.getModelObject();
     
-        Label label = new Label("label", featureState.feature.getUiName() + ": ");
-        Label value = new Label("value", featureState.value);
+        Label label = new Label(CID_LABEL, featureState.feature.getUiName() + ": ");
+        Label value = new Label(CID_VALUE, featureState.value);
     
         item.add(label);
         item.add(value);
