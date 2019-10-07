@@ -59,6 +59,7 @@ public class ReviewEditor
     @Override
     public void render(AjaxRequestTarget aTarget)
     {
+        aTarget.add(this);
     }
 
     private void handleError(String aMessage, Throwable aCause, AjaxRequestTarget aTarget)
