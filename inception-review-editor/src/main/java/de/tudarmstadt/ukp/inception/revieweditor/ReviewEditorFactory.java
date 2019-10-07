@@ -45,4 +45,10 @@ public class ReviewEditorFactory
     {
         return new ReviewEditor(aId, aModel, aActionHandler, aCasProvider);
     }
+    
+    @Override
+    public void initState(AnnotatorState aModelObject)
+    {
+        aModelObject.setPagingStrategy(new NoPagingStrategy());
+    }
 }
