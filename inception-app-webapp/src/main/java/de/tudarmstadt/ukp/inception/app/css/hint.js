@@ -28,10 +28,13 @@ $(document).ready(
 			var enjoyhint_script_steps;
 			var currentPage = window.location.pathname;
 			var projectId = getUrlParameter('p');
-			var cName = createCookieName(currentPage);
-			var ps = getCookie(cName);
+			
+			var cName = document.location.pathname.match(/[^\/]+$/)[0];
+			//createCookieName(currentPage);
+			var ps = getCookie(cName); 
+			debugger;
 
-			if (currentPage == "/projects.html") {
+			if (currentPage.includes("projects.html")) {
 				ps = getCookie(cName);
 				if (ps == 'true') {
 				} else if (ps == "") {
@@ -61,7 +64,7 @@ $(document).ready(
 					enjoyhint_instance.runScript();
 
 				}
-			} else if (currentPage == "/projectsetting.html"
+			} else if (currentPage.includes("projectsetting.html") 
 					&& projectId == 'NEW' && ps != "redirect") {
 
 				enjoyhint_instance = new EnjoyHint({
@@ -87,7 +90,7 @@ $(document).ready(
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
 				}
-			} else if (currentPage == "/projectsetting.html"
+			} else if (currentPage.includes("projectsetting.html")
 					&& projectId == 'NEW' && ps == "redirect") {
 				enjoyhint_instance = new EnjoyHint({});
 
@@ -99,7 +102,7 @@ $(document).ready(
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
 
-			} else if (currentPage == "/project.html") {
+			} else if (currentPage.includes("project.html")) {
 				var ps = getCookie(cName);
 				if (ps != "") {
 				} else {
@@ -112,7 +115,7 @@ $(document).ready(
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
 				}
-			} else if (currentPage == "/projectsetting.html") {
+			} else if (currentPage.includes("projectsetting.html")) {
 				var ps = getCookie(cName);
 				
 				debugger;
