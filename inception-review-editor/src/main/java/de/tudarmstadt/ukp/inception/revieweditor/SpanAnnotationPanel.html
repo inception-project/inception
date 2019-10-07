@@ -18,30 +18,33 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-    <div wicket:id="featuresContainer">
-        <div class="row" style="margin-top: 12px;">
-            <div class="col-sm-1 text-center">
-                <button wicket:id="open" class="btn btn-secondary">Open</button>
-            </div>
-            <div class="col-sm-11">
-                <div class="row">
-                    <div wicket:id="features" class="col-sm-1">
-                        <label wicket:id="label"></label>
-                        <span wicket:id="value"></span>
-                    </div>
+    <div></div>
+    <div wicket:id="featuresContainer" class="panel panel-default">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-sm-1 text-center">
+                    <button wicket:id="open" class="btn btn-secondary">Open</button>
                 </div>
-                <div class="row">
-                    <label class="col-sm-1">Text:</label>
-                    <div class="col-sm-11">
-                        <span style="word-wrap: break-word;">
-                            <span wicket:id="preContext"></span><span wicket:id="text" style="color: #B90F22"></span><span wicket:id="postContext"></span>
-                        </span>
+                <div class="col-sm-11">
+                    <div class="row">
+                        <div wicket:id="features" class="col-sm-2">
+                            <label wicket:id="label"></label>
+                            <span wicket:id="value"></span>
+                        </div>
                     </div>
-                </div>
-                <div wicket:id="textFeatures" class="row">
-                    <label wicket:id="label" class="col-sm-1"></label>
-                    <div class="col-sm-11">
-                        <span wicket:id="value" style="word-wrap: break-word;"></span>
+                    <div class="row">
+                        <label class="col-sm-2">Text:</label>
+                        <div class="col-sm-10">
+                            <span style="word-wrap: break-word;">
+                                <span wicket:id="preContext"></span><b wicket:id="text" style="color: #B90F22"></b><span wicket:id="postContext"></span>
+                            </span>
+                        </div>
+                    </div>
+                    <div wicket:id="textFeatures" class="row" style="margin-top: 5px;">
+                        <label wicket:id="label" class="col-sm-2"></label>
+                        <div class="col-sm-10">
+                            <span wicket:id="value" style="word-wrap: break-word;"></span>
+                        </div>
                     </div>
                 </div>
             </div>
