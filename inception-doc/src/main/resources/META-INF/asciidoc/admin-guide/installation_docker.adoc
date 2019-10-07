@@ -81,7 +81,7 @@ When you run {product-name} via Docker, you then mount this folder into the cont
 
 [source,shell,subs="+attributes"]
 ----
-$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inception/inception:{revnumber}
+$ docker run -it --name inception -v /srv/inception:/export -p8080:8080 inceptionproject/inception:{revnumber}
 ----
 
 == Settings file
