@@ -31,64 +31,49 @@
         </div>
       </form>
       
-      <form wicket:id="agreementForm" class="scrolling flex-content flex-v-container flex-gutter">
-        <div class="page-header">
-          <h1><wicket:container wicket:id="name"/></h1>
-        </div>
-        <div class="panel panel-default panel-flex">
-          <div class="panel-heading">
-            <h3 class="panel-title"><wicket:message key="settings" />
-            <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
-                <wicket:message key="help" /></a></span></h3>
+      <div class="flex-content flex-v-container">
+        <form wicket:id="agreementForm" class="flex-v-container flex-gutter">
+          <div class="page-header">
+            <h1><wicket:container wicket:id="name"/></h1>
           </div>
-          <div class="panel-body flex-h-container form-horizontal">
-            <div class="flex-content">
-              <div class="form-group" wicket:enclosure="feature">
-                <label wicket:for="feature" class="col-sm-4 control-label">
-                <wicket:label key="feature"/></label>
-                <div class="col-sm-8">
-                  <select wicket:id="feature" class="form-control" data-container="body"></select>
+          <div class="panel panel-default panel-flex">
+            <div class="panel-heading">
+              <h3 class="panel-title"><wicket:message key="settings" />
+              <span class="pull-right"><a target="_blank" wicket:message="href:agreement.help.link">
+                  <wicket:message key="help" /></a></span></h3>
+            </div>
+            <div class="panel-body flex-h-container form-horizontal">
+              <div class="flex-content">
+                <div class="form-group" wicket:enclosure="feature">
+                  <label wicket:for="feature" class="col-sm-4 control-label">
+                  <wicket:label key="feature"/></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="feature" class="form-control" data-container="body"></select>
+                  </div>
+                </div>
+                <div class="form-group" wicket:enclosure="measure">
+                  <label wicket:for="measure" class="col-sm-4 control-label">
+                  <wicket:label key="measure"/></label>
+                  <div class="col-sm-8">
+                    <select wicket:id="measure" class="form-control" data-container="body"></select>
+                  </div>
                 </div>
               </div>
-              <div class="form-group" wicket:enclosure="measure">
-                <label wicket:for="measure" class="col-sm-4 control-label">
-                <wicket:label key="measure"/></label>
-                <div class="col-sm-8">
-                  <select wicket:id="measure" class="form-control" data-container="body"></select>
-                </div>
+              <div wicket:id="traitsContainer" class="flex-content">
+                <div wicket:id="traits"></div>
               </div>
             </div>
-            <div wicket:id="traitsContainer" class="flex-content">
-              <div wicket:id="traits"></div>
+            <div class="panel-footer flex-h-container">
+              <div class="flex-content text-right">
+                <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
+              </div>
             </div>
           </div>
-          <div class="panel-footer flex-h-container">
-            <div class="flex-content form-horizontal flex-h-container flex-gutter flex-only-internal-gutter">
-              <label wicket:for="exportFormat" class="control-label text-nowrap" style="margin-right: 10px;">
-                  <wicket:label key="exportFormat"/></label>
-              <select wicket:id="exportFormat" class="form-control" data-container="body"></select>
-              <input wicket:id="exportAll" type="submit" class="btn btn-default" wicket:message="value:exportAll"/>
-            </div>
-            <div class="flex-content text-right">
-              <input type="submit" wicket:id="run" class="btn btn-primary" wicket:message="value:run"></input>
-            </div>
-          </div>
-        </div>
-          
-        <div class="flex-content panel panel-default panel-flex" wicket:id="agreementResults">
-          <div class="panel-heading">
-            <h3 class="panel-title">
-              <wicket:message key="agreement" />
-              <span class="pull-right">
-                <a wicket:id="legend"><wicket:message key="legend"/></a> 
-              </span>
-            </h3>
-          </div>
-          <div class="scrolling panel-body fit-child-snug">
-            <div wicket:id="agreementTable"/>
-          </div>
-        </div>
-      </form>
+        </form>
+        <div wicket:id="resultsContainer" class="flex-content flex-h-container">
+          <div class="flex-content flex-h-container" wicket:id="results"></div>
+        </div>  
+      </div>
     </div>
   </wicket:extend>
 </body>

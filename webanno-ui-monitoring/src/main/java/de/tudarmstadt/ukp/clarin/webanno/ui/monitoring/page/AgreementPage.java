@@ -21,11 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.PAGE_PARAM_PROJ
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.enabledWhen;
-import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
-import static java.util.Arrays.asList;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,52 +41,34 @@ import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
-import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.CompoundPropertyModel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
-import org.apache.wicket.model.ResourceModel;
-import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.AbstractResourceStream;
-import org.apache.wicket.util.resource.IResourceStream;
-import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverBehavior;
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.PopoverConfig;
-import de.agilecoders.wicket.core.markup.html.bootstrap.components.TooltipConfig.Placement;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.DocumentService;
 import de.tudarmstadt.ukp.clarin.webanno.api.ProjectService;
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementReportExportFormat;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -101,7 +79,6 @@ import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelec
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaChoiceRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.clarin.webanno.support.wicket.OverviewListChoice;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -116,6 +93,7 @@ public class AgreementPage
 
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
+    private static final String MID_RESULTS = "results";
     
     private @SpringBean DocumentService documentService;
     private @SpringBean ProjectService projectService;
@@ -125,6 +103,7 @@ public class AgreementPage
 
     private ProjectSelectionForm projectSelectionForm;
     private AgreementForm agreementForm;
+    private WebMarkupContainer resultsContainer;
 
     public AgreementPage()
     {
@@ -148,14 +127,15 @@ public class AgreementPage
         Optional<Project> project = getProjectFromParameters(projectParameter);
         
         if (project.isPresent()) {
+            Project p = project.get();
+            
             // Check access to project
-            if (project != null && !(projectService.isCurator(project.get(), user)
-                    || projectService.isManager(project.get(), user))) {
-                error("You have no permission to access project [" + project.get().getId() + "]");
+            if (!(projectService.isCurator(p, user) || projectService.isManager(p, user))) {
+                error("You have no permission to access project [" + p.getId() + "]");
                 setResponsePage(getApplication().getHomePage());
             }
-            
-            projectSelectionForm.selectProject(project.get());
+
+            projectSelectionForm.getModelObject().project = p;
         }
         else {
             error("Project [" + projectParameter + "] does not exist");
@@ -166,95 +146,14 @@ public class AgreementPage
     private void commonInit()
     {
         add(projectSelectionForm = new ProjectSelectionForm("projectSelectionForm"));
-        add(agreementForm = new AgreementForm("agreementForm"));
+        
+        add(agreementForm = new AgreementForm("agreementForm", Model.of(new AgreementFormModel())));
+        
+        add(resultsContainer = new WebMarkupContainer("resultsContainer"));
+        resultsContainer.setOutputMarkupPlaceholderTag(true);
+        resultsContainer.add(new EmptyPanel(MID_RESULTS));
     }
     
-    private void updateAgreementTable(AjaxRequestTarget aTarget, boolean aClearCache)
-    {
-        try {
-            if (aClearCache) {
-                cachedCASes = null;
-            }
-            agreementForm.agreementTable.getDefaultModel().detach();
-            if (aTarget != null && agreementForm.agreementTable.isVisibleInHierarchy()) {
-                aTarget.add(agreementForm.agreementTable);
-            }
-        }
-        catch (Throwable e) {
-            LOG.error("Error updating agreement table", e);
-            error("Error updating agreement table: " + ExceptionUtils.getRootCauseMessage(e));
-            if (aTarget != null) {
-                aTarget.addChildren(getPage(), IFeedback.class);
-            }
-        }
-    }
-
-    // The CASes cannot be serialized, so we make them transient here. However, it does not matter
-    // as we do not access the field directly but via getCases() which will re-load them if
-    // necessary, e.g. if the transient field is empty after a session is restored from a
-    // persisted state.
-    private transient Map<String, List<CAS>> cachedCASes;
-
-    /**
-     * Get the finished CASes used to compute agreement.
-     */
-    private Map<String, List<CAS>> getCases()
-    {
-        // Avoid reloading the CASes when switching features.
-        if (cachedCASes != null) {
-            return cachedCASes;
-        }
-
-        Project project = projectSelectionForm.getModelObject().project;
-
-        List<User> users = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
-
-        List<SourceDocument> sourceDocuments = documentService.listSourceDocuments(project);
-
-        cachedCASes = new LinkedHashMap<>();
-        for (User user : users) {
-            List<CAS> cases = new ArrayList<>();
-
-            for (SourceDocument document : sourceDocuments) {
-                CAS cas = null;
-
-                // Load the CAS if there is a finished one.
-                if (documentService.existsAnnotationDocument(document, user)) {
-                    AnnotationDocument annotationDocument = documentService
-                            .getAnnotationDocument(document, user);
-                    if (annotationDocument.getState().equals(FINISHED)) {
-                        try {
-                            cas = documentService.readAnnotationCas(annotationDocument);
-                            annotationService.upgradeCasIfRequired(cas, annotationDocument);
-                            // REC: I think there is no need to write the CASes here. We would not
-                            // want to interfere with currently active annotator users
-
-                            // Set the CAS name in the DocumentMetaData so that we can pick it
-                            // up in the Diff position for the purpose of debugging / transparency.
-                            FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
-                            FSUtil.setFeature(dmd, "documentId",
-                                    annotationDocument.getDocument().getName());
-                            FSUtil.setFeature(dmd, "collectionId",
-                                    annotationDocument.getProject().getName());
-                        }
-                        catch (Exception e) {
-                            LOG.error("Unable to load data", e);
-                            error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
-                        }
-                    }
-                }
-
-                // The next line can enter null values into the list if a user didn't work on this
-                // source document yet.
-                cases.add(cas);
-            }
-
-            cachedCASes.put(user.getUsername(), cases);
-        }
-
-        return cachedCASes;
-    }
-
     private class AgreementForm
         extends Form<AgreementFormModel>
     {
@@ -262,19 +161,15 @@ public class AgreementPage
 
         private final DropDownChoice<AnnotationFeature> featureList;
 
-        private final AgreementTable agreementTable;
-
         private final DropDownChoice<Pair<String, String>> measureDropDown;
 
-        private final AjaxDownloadLink exportAllButton;
-        
         private final LambdaAjaxButton<Void> runCalculationsButton;
-        
-        private WebMarkupContainer traitsContainer;
 
-        public AgreementForm(String id)
+        private final WebMarkupContainer traitsContainer;
+
+        public AgreementForm(String id, IModel<AgreementFormModel> aModel)
         {
-            super(id, new CompoundPropertyModel<>(new AgreementFormModel()));
+            super(id, CompoundPropertyModel.of(aModel));
 
             setOutputMarkupPlaceholderTag(true);
 
@@ -297,17 +192,6 @@ public class AgreementPage
             runCalculationsButton.triggerAfterSubmit();
             add(runCalculationsButton);
 
-            add(new BootstrapSelect<AgreementReportExportFormat>("exportFormat",
-                    asList(AgreementReportExportFormat.values()),
-                    new EnumChoiceRenderer<>(AgreementPage.this))
-                            .add(new LambdaAjaxFormComponentUpdatingBehavior("change")));
-
-            exportAllButton = new AjaxDownloadLink("exportAll", () -> "agreement"
-                    + AgreementForm.this.getModelObject().exportFormat.getExtension(),
-                    this::exportAllAgreements);
-            exportAllButton.add(enabledWhen(() -> featureList.getModelObject() != null));
-            add(exportAllButton);
-            
             add(measureDropDown = new BootstrapSelect<Pair<String, String>>("measure", 
                     this::listMeasures) {
                 private static final long serialVersionUID = -2666048788050249581L;
@@ -334,26 +218,9 @@ public class AgreementPage
             });
             measureDropDown.setChoiceRenderer(new ChoiceRenderer<>("value"));
             measureDropDown.add(new LambdaAjaxFormComponentUpdatingBehavior("change", _target -> 
-                    _target.add(runCalculationsButton, traitsContainer, exportAllButton)));
+                    _target.add(runCalculationsButton, traitsContainer)));
             
-            exportAllButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
             runCalculationsButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
-
-            WebMarkupContainer agreementResults = new WebMarkupContainer("agreementResults");
-            add(agreementResults);
-
-            agreementResults.add(
-                    agreementTable = new AgreementTable("agreementTable", getModel(), Model.of()));
-            
-            agreementResults.add(visibleWhen(() -> agreementTable.getModelObject() != null));
-            
-            PopoverConfig config = new PopoverConfig()
-                    .withPlacement(Placement.left)
-                    .withHtml(true);
-            WebMarkupContainer legend = new WebMarkupContainer("legend");
-            legend.add(new PopoverBehavior(new ResourceModel("legend"), 
-                    new StringResourceModel("legend.content", legend), config));
-            agreementResults.add(legend);
         }
 
         private void actionSelectFeature(AjaxRequestTarget aTarget)
@@ -368,29 +235,33 @@ public class AgreementPage
                 measureDropDown.setModelObject(null);
             }
             
-            aTarget.add(measureDropDown, runCalculationsButton, exportAllButton);
+            aTarget.add(measureDropDown, runCalculationsButton);
         }
 
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         private void actionRunCalculations(AjaxRequestTarget aTarget, Form<?> aForm)
         {
-            agreementTable.setModelObject(getAgreementResult());
+            AnnotationFeature feature = featureList.getModelObject();
+            Pair<String, String> measureHandle = measureDropDown.getModelObject();
+
+            // Do not do any agreement if no feature or measure has been selected yet.
+            if (feature == null || measureHandle == null) {
+                return;
+            }
             
-            // We may get errors when loading the CASes but at that time we can no longer
-            // add the feedback panel to the cycle, so let's do it here.
-            aTarget.add(getFeedbackPanel());
-
-            AgreementPage.this.updateAgreementTable(aTarget, false);
-            // // Adding this as well because when choosing a different measure, it may
-            // affect
-            // // the ability to exclude incomplete configurations.
-            // aTarget.add(excludeIncomplete);
-            // aTarget.add(linkCompareBehaviorDropDown);
-
-            // #1791 - for some reason the updateAgreementTableBehavior does not work
-            // anymore on the linkCompareBehaviorDropDown if we add it explicitly here/
-            // control its visibility in onConfigure()
-            // as a workaround, we currently just re-render the whole form
-            aTarget.add(agreementForm);
+            AggreementMeasureSupport ams = agreementRegistry
+                    .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
+            
+            AggreementMeasure measure = ams.createMeasure(feature,
+                    (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
+                            .getDefaultModelObject());
+            
+            Serializable result = measure.getAgreement(getCasMap());
+            
+            resultsContainer.addOrReplace(ams.createResultsPanel(MID_RESULTS, Model.of(result),
+                    AgreementPage.this::getCasMap));
+            
+            aTarget.add(resultsContainer);
         }
         
         List<Pair<String, String>> listMeasures()
@@ -403,64 +274,6 @@ public class AgreementPage
                     .map(s -> Pair.of(s.getId(), s.getName()))
                     .collect(Collectors.toList());
         }
-        
-        private IResourceStream exportAllAgreements()
-        {
-            return new AbstractResourceStream()
-            {
-                private static final long serialVersionUID = 1L;
-
-                @Override
-                public InputStream getInputStream()
-                    throws ResourceStreamNotFoundException
-                {
-                    AnnotationFeature feature = featureList.getModelObject();
-
-                    // Do not do any agreement if no feature has been selected yet.
-                    if (feature == null) {
-                        return null;
-                    }
-
-                    Map<String, List<CAS>> casMap = getCases();
-
-                    Project project = projectSelectionForm.getModelObject().project;
-                    List<DiffAdapter> adapters = CasDiff
-                            .getAdapters(annotationService, project);
-
-//                    AgreementFormModel pref = AgreementForm.this.getModelObject();
-                    DiffResult diff = CasDiff.doDiff(
-                            asList(feature.getLayer().getName()), adapters,
-//                            pref.linkCompareBehavior, casMap);
-                            LinkCompareBehavior.LINK_TARGET_AS_LABEL, casMap);
-
-//                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
-//                            feature.getLayer().getName(), feature.getName(),
-//                            pref.excludeIncomplete, casMap);
-                    // TODO: for the moment, we always include incomplete annotations during this
-                    // export.
-                    AgreementResult agreementResult = AgreementUtils.makeStudy(diff,
-                            feature.getLayer().getName(), feature.getName(),
-                            false, casMap);
-                    
-                    try {
-                        return AgreementUtils.generateCsvReport(agreementResult);
-                    }
-                    catch (Exception e) {
-                        // FIXME Is there some better error handling here?
-                        LOG.error("Unable to generate report", e);
-                        throw new ResourceStreamNotFoundException(e);
-                    }
-                }
-
-                @Override
-                public void close()
-                    throws IOException
-                {
-                    // Nothing to do
-                }
-            };
-        }
-
         
         private List<AnnotationFeature> getEligibleFeatures()
         {
@@ -479,28 +292,6 @@ public class AgreementPage
             return features;
         }
         
-        private PairwiseAnnotationResult getAgreementResult()
-        {
-            AnnotationFeature feature = featureList.getModelObject();
-            Pair<String, String> measureHandle = measureDropDown.getModelObject();
-
-            // Do not do any agreement if no feature or measure has been selected yet.
-            if (feature == null || measureHandle == null) {
-                return null;
-            }
-
-            AggreementMeasureSupport support = agreementRegistry
-                    .getAgreementMeasureSupport(measureHandle.getKey());
-            
-            AggreementMeasure measure = support.createMeasure(feature,
-                    (DefaultAgreementTraits) traitsContainer.get(MID_TRAITS)
-                            .getDefaultModelObject());
-            
-            Map<String, List<CAS>> casMap = getCases();
-            
-            return AgreementUtils.getPairwiseAgreement(measure, casMap);
-        }        
-
         @Override
         protected void onConfigure()
         {
@@ -519,8 +310,6 @@ public class AgreementPage
         AnnotationFeature feature;
 
         Pair<String, String> measure;
-
-        AgreementReportExportFormat exportFormat = AgreementReportExportFormat.CSV;
     }
 
     private class ProjectSelectionForm
@@ -542,8 +331,9 @@ public class AgreementPage
         
         private void onSelectionChanged(AjaxRequestTarget aTarget)
         {
-            selectProject(getModelObject().project);
-            aTarget.add(agreementForm);
+            agreementForm.setModelObject(new AgreementFormModel());
+            resultsContainer.addOrReplace(new EmptyPanel(MID_RESULTS));
+            aTarget.add(resultsContainer, agreementForm);
         }
         
         private List<Project> listAllowedProjects()
@@ -560,16 +350,6 @@ public class AgreementPage
                 }
             }
             return allowedProject;
-        }
-        
-        private void selectProject(Project aProject)
-        {
-            getModelObject().project = aProject;
-            agreementForm.setModelObject(new AgreementFormModel());
-
-            // Clear the cached CASes. When we switch to another project, we'll have to reload them.
-            updateAgreementTable(RequestCycle.get().find(AjaxRequestTarget.class).orElse(null),
-                    true);
         }
     }
 
@@ -597,5 +377,94 @@ public class AgreementPage
         catch (NoResultException e) {
             return Optional.empty();
         }
+    }
+    
+    // The CASes cannot be serialized, so we make them transient here. However, it does not matter
+    // as we do not access the field directly but via getCases() which will re-load them if
+    // necessary, e.g. if the transient field is empty after a session is restored from a
+    // persisted state.
+    private transient Map<String, List<CAS>> cachedCASes;
+    private transient Project cachedProject;
+    private transient boolean cachedLimitToFinishedDocuments;
+
+    public Map<String, List<CAS>> getCasMap()
+    {
+        if (agreementForm.featureList.getModelObject() == null) {
+            return Collections.emptyMap();
+        }
+
+        Project project = agreementForm.featureList.getModelObject().getProject();
+
+        DefaultAgreementTraits traits = (DefaultAgreementTraits) agreementForm.traitsContainer
+                .get(MID_TRAITS).getDefaultModelObject();
+        
+        // Avoid reloading the CASes when switching features within the same project
+        if (
+                cachedCASes != null && 
+                project.equals(cachedProject) &&
+                cachedLimitToFinishedDocuments == traits.isLimitToFinishedDocuments()
+        ) {
+            return cachedCASes;
+        }
+        
+        List<User> users = projectService.listProjectUsersWithPermissions(project, ANNOTATOR);
+
+        List<SourceDocument> sourceDocuments = documentService
+                .listSourceDocuments(project);
+        
+        cachedCASes = new LinkedHashMap<>();
+        for (User user : users) {
+            List<CAS> cases = new ArrayList<>();
+
+            nextDocument: for (SourceDocument document : sourceDocuments) {
+                CAS cas = null;
+
+                try {
+                    if (documentService.existsAnnotationDocument(document, user)) {
+                        AnnotationDocument annotationDocument = documentService
+                                .getAnnotationDocument(document, user);
+                        
+                        if (traits.isLimitToFinishedDocuments()
+                                && !annotationDocument.getState().equals(FINISHED)) {
+                            continue nextDocument;
+                        }
+                        
+                        cas = documentService.readAnnotationCas(annotationDocument);
+                    }
+                    else if (!traits.isLimitToFinishedDocuments()) {
+                        // ... if we are not limited to finished documents and if there is no
+                        // annotation document, then we use the initial CAS for that user.
+                        cas = documentService.createOrReadInitialCas(document);
+                    }
+                    
+                    annotationService.upgradeCasIfRequired(cas, document, user.getUsername());
+                    // REC: I think there is no need to write the CASes here. We would not
+                    // want to interfere with currently active annotator users
+                }
+                catch (Exception e) {
+                    LOG.error("Unable to load data", e);
+                    error("Unable to load data: " + ExceptionUtils.getRootCauseMessage(e));
+                }
+                
+                if (cas != null) {
+                    // Set the CAS name in the DocumentMetaData so that we can pick it
+                    // up in the Diff position for the purpose of debugging / transparency.
+                    FeatureStructure dmd = WebAnnoCasUtil.getDocumentMetadata(cas);
+                    FSUtil.setFeature(dmd, "documentId", document.getName());
+                    FSUtil.setFeature(dmd, "collectionId", document.getProject().getName());
+                    
+                }
+
+                // The next line can enter null values into the list if a user didn't work on this
+                // source document yet.
+                cases.add(cas);
+            }
+
+            cachedCASes.put(user.getUsername(), cases);
+            cachedProject = project;
+            cachedLimitToFinishedDocuments = traits.isLimitToFinishedDocuments();
+        }
+
+        return cachedCASes;
     }
 }

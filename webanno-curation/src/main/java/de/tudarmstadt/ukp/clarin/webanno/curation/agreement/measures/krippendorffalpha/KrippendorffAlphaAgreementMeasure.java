@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.krippendorffalpha;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.makeStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getAdapters;
 import static java.util.Arrays.asList;
@@ -26,42 +26,44 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.dkpro.statistics.agreement.IAgreementMeasure;
+import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
+import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAggreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 public class KrippendorffAlphaAgreementMeasure
-    implements AggreementMeasure
+    extends CodingAggreementMeasure_ImplBase<KrippendorffAlphaAgreementTraits>
 {
-    private final AnnotationFeature feature;
-    private final KrippendorffAlphaAgreementTraits traits;
     private final AnnotationSchemaService annotationService;
-    
+
     public KrippendorffAlphaAgreementMeasure(AnnotationFeature aFeature,
             KrippendorffAlphaAgreementTraits aTraits, AnnotationSchemaService aAnnotationService)
     {
-        feature = aFeature;
-        traits = aTraits;
+        super(aFeature, aTraits);
         annotationService = aAnnotationService;
     }
 
     @Override
-    public AgreementResult getAgreement(Map<String, List<CAS>> aCasMap)
+    public CodingAgreementResult calculatePairAgreement(
+            Map<String, List<CAS>> aCasMap)
     {
+        AnnotationFeature feature = getFeature();
+        KrippendorffAlphaAgreementTraits traits = getTraits();
+        
         List<DiffAdapter> adapters = getAdapters(annotationService, feature.getProject());
 
-        DiffResult diff = doDiff(asList(feature.getLayer().getName()), adapters,
+        CasDiff diff = doDiff(asList(feature.getLayer().getName()), adapters,
                 traits.getLinkCompareBehavior(), aCasMap);
 
-        AgreementResult agreementResult = makeStudy(diff, feature.getLayer().getName(),
-                feature.getName(), traits.isExcludeIncomplete(), aCasMap);
+        CodingAgreementResult agreementResult = makeCodingStudy(diff,
+                feature.getLayer().getName(), feature.getName(), traits.isExcludeIncomplete(),
+                aCasMap);
 
         IAgreementMeasure agreement = new KrippendorffAlphaAgreement(agreementResult.getStudy(),
                 new NominalDistanceFunction());
@@ -72,7 +74,7 @@ public class KrippendorffAlphaAgreementMeasure
         else {
             agreementResult.setAgreement(Double.NaN);
         }
-        
+
         return agreementResult;
     }
 }

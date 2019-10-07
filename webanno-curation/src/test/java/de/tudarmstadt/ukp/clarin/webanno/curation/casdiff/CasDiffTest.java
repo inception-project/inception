@@ -24,8 +24,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.loadW
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.CurationTestUtils.makeLinkHostFS;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.getCohenKappaAgreement;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.span.SpanDiffAdapter.POS_DIFF_ADAPTER;
+import static java.lang.Double.NaN;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.JCasFactory.createJCas;
 import static org.apache.uima.fit.util.JCasUtil.select;
@@ -48,13 +52,13 @@ import org.apache.uima.jcas.JCas;
 import org.apache.uima.resource.metadata.TypeSystemDescription;
 import org.apache.uima.util.CasCreationUtils;
 import org.dkpro.core.testing.DkproTestContext;
+import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.junit.Rule;
 import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter;
@@ -65,7 +69,6 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Lemma;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.dkpro.core.api.syntax.type.dependency.Dependency;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 
 public class CasDiffTest
 {
@@ -80,7 +83,7 @@ public class CasDiffTest
         Map<String, List<CAS>> casByUser = new LinkedHashMap<>();
 
         DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
         
         result.print(System.out);
         
@@ -106,7 +109,7 @@ public class CasDiffTest
         List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Token.class.getName()));
 
         DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
         
         result.print(System.out);
         
@@ -134,8 +137,9 @@ public class CasDiffTest
 
         List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
         result.print(System.out);
         
@@ -143,8 +147,8 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "value", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "value", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -183,8 +187,9 @@ public class CasDiffTest
 
         List<SpanDiffAdapter> diffAdapters = asList(new SpanDiffAdapter(Lemma.class.getName()));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
         result.print(System.out);
         
@@ -192,8 +197,8 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "value", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "value", casByUser);
         assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -209,8 +214,9 @@ public class CasDiffTest
         
         List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
         result.print(System.out);
         
@@ -218,8 +224,8 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "PosValue", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -236,8 +242,9 @@ public class CasDiffTest
 
         List<? extends DiffAdapter> diffAdapters = asList(DEPENDENCY_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -245,8 +252,8 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "DependencyType", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "DependencyType", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -264,8 +271,9 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER,
                 DEPENDENCY_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -275,8 +283,8 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "PosValue", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "PosValue", casByUser);
         assertEquals(1.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -293,8 +301,9 @@ public class CasDiffTest
 
         List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -302,8 +311,8 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
 
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
-                "PosValue", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+                entryTypes.get(0), "PosValue", casByUser);
         assertEquals(0.0d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
@@ -333,16 +342,16 @@ public class CasDiffTest
 
         List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
 
-        result.print(System.out);
+        diff.toResult().print(System.out);
         
         casByUser.remove("user3");
         
-        AgreementResult agreement = AgreementUtils.getAgreement(
-                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
-                entryTypes.get(0), "PosValue", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getAgreement(
+                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
+                casByUser);
         
         assertEquals(1, agreement.getTotalSetCount());
         assertEquals(1, agreement.getIrrelevantSets().size());
@@ -371,18 +380,17 @@ public class CasDiffTest
         
         List<String> entryTypes = asList(POS.class.getName());
 
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
+        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
 
-        result.print(System.out);
-        
+        diff.toResult().print(System.out);
+
         casByUser.remove("user3");
-        
-        AgreementResult agreement = AgreementUtils.getAgreement(
-                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
-                entryTypes.get(0), "PosValue", casByUser);
+
+        CodingAgreementResult agreement = AgreementUtils.getAgreement(
+                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
+                casByUser);
         
         assertEquals(1, agreement.getTotalSetCount());
         assertEquals(1, agreement.getIrrelevantSets().size());
@@ -416,16 +424,16 @@ public class CasDiffTest
         
         List<String> entryTypes = asList(POS.class.getName());
 
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
+        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
-        AgreementResult agreement = AgreementUtils.getAgreement(
-                ConcreteAgreementMeasure.KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, result,
-                entryTypes.get(0), "PosValue", casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getAgreement(
+                KRIPPENDORFF_ALPHA_NOMINAL_AGREEMENT, false, diff, entryTypes.get(0), "PosValue",
+                casByUser);
         
         assertEquals(4, agreement.getTotalSetCount());
         assertEquals(0, agreement.getIrrelevantSets().size());
@@ -456,10 +464,10 @@ public class CasDiffTest
 
         List<String> entryTypes = asList(POS.class.getName());
 
-        List<SpanDiffAdapter> diffAdapters = asList(SpanDiffAdapter.POS_DIFF_ADAPTER);
+        List<SpanDiffAdapter> diffAdapters = asList(POS_DIFF_ADAPTER);
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -467,7 +475,7 @@ public class CasDiffTest
         assertEquals(4, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.836477987d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -486,8 +494,8 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(),
                 "PosValue"));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -495,9 +503,9 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
                 "PosValue", casByUser);
-        assertEquals(Double.NaN, agreement.getAgreement(), 0.000001d);
+        assertEquals(NaN, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
     }
 
@@ -514,8 +522,8 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
         result.print(System.out);
         
@@ -523,7 +531,7 @@ public class CasDiffTest
         assertEquals(0, result.getDifferingConfigurationSets().size());
         assertEquals(2, result.getIncompleteConfigurationSets().size());
         
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(1.0, agreement.getAgreement(), 0.000001d);
         assertEquals(2, agreement.getIncompleteSetsByPosition().size());
@@ -542,8 +550,8 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(new SpanDiffAdapter(POS.class.getName(),
                 "PosValue"));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
         result.print(System.out);
         
@@ -551,7 +559,7 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
                 "PosValue", casByUser);
         assertEquals(0.958730d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -574,8 +582,8 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(new RelationDiffAdapter(
                 Dependency.class.getName(), "Dependent", "Governor", "DependencyType"));
 
-        DiffResult result = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        CasDiff diff = doDiff(entryTypes, diffAdapters, LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
 
         result.print(System.out);
         
@@ -583,7 +591,7 @@ public class CasDiffTest
         assertEquals(1, result.getDifferingConfigurationSets().size());
         assertEquals(0, result.getIncompleteConfigurationSets().size());
         
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(result, entryTypes.get(0),
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, entryTypes.get(0),
                 "DependencyType", casByUser);
         assertEquals(0.958199d, agreement.getAgreement(), 0.000001d);
         assertEquals(0, agreement.getIncompleteSetsByPosition().size());
@@ -662,17 +670,18 @@ public class CasDiffTest
                 "webanno.custom.Relation", WebAnnoConst.FEAT_REL_TARGET,
                 WebAnnoConst.FEAT_REL_SOURCE, "value"));
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
-        diff.print(System.out);
+        result.print(System.out);
         
-        assertEquals(1, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(1, result.size());
+        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
                 "webanno.custom.Relation", "value", casByUser);
 
         // Asserts
@@ -704,17 +713,18 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
-        diff.print(System.out);
+        result.print(System.out);
         
-        assertEquals(4, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(4, result.size());
+        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -744,18 +754,19 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
-        diff.print(System.out);
+        result.print(System.out);
         
-        assertEquals(3, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
-        assertEquals(2, diff.getIncompleteConfigurationSets().size());
+        assertEquals(3, result.size());
+        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertEquals(2, result.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
-                casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
+                "links", casByUser);
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -784,18 +795,19 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_ROLE_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
-        diff.print(System.out);
+        result.print(System.out);
         
-        assertEquals(2, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(2, result.size());
+        assertEquals(1, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
         
         // Check against new impl
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE, "links",
-                casByUser);
+        CodingAgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, HOST_TYPE,
+                "links", casByUser);
 
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
@@ -824,17 +836,18 @@ public class CasDiffTest
         adapter.addLinkFeature("links", "role", "target");
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
-        DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
+        CasDiff diff = CasDiff.doDiff(entryTypes, diffAdapters,
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+        DiffResult result = diff.toResult();
         
-        diff.print(System.out);
+        result.print(System.out);
         
-        assertEquals(2, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(2, result.size());
+        assertEquals(1, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
 
         // Check against new impl
-        AgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff, HOST_TYPE, "links",
                 casByUser);
 
         // Asserts
@@ -868,7 +881,7 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
         DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
         
         diff.print(System.out);
         
@@ -911,7 +924,7 @@ public class CasDiffTest
         List<? extends DiffAdapter> diffAdapters = asList(adapter);
 
         DiffResult diff = CasDiff.doDiff(entryTypes, diffAdapters,
-                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser);
+                LinkCompareBehavior.LINK_TARGET_AS_LABEL, casByUser).toResult();
         
         diff.print(System.out);
         

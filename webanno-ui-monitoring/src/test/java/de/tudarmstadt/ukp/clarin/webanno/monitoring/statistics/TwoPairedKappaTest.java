@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.monitoring.statistics;
 
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.getCohenKappaAgreement;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior.LINK_TARGET_AS_LABEL;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.relation.RelationDiffAdapter.DEPENDENCY_DIFF_ADAPTER;
@@ -41,6 +42,7 @@ import org.junit.Test;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.LinkCompareBehavior;
@@ -119,20 +121,21 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff.doDiff(POS.class.getName(),
+        CasDiff diff = CasDiff.doDiff(POS.class.getName(),
                 new SpanDiffAdapter(POS.class.getName(), "PosValue"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        DiffResult result = diff.toResult();
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
-        diff.print(System.out);
+        result.print(System.out);
         
         assertEquals(1.0d, agreement.getAgreement(), 0.000001);
-        assertEquals(9, diff.size());
-        assertEquals(0, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(9, result.size());
+        assertEquals(0, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
     }
 
     private Map<String, List<CAS>> convert(Map<User, CAS> aMap) {
@@ -159,21 +162,22 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = CasDiff.doDiff(Dependency.class.getName(),
+        CasDiff diff = CasDiff.doDiff(Dependency.class.getName(),
                 new RelationDiffAdapter(Dependency.class.getName(), "Dependent", "Governor",
                         "DependencyType"),
                 LinkCompareBehavior.LINK_TARGET_AS_LABEL, convert(userCases));
+        DiffResult result = diff.toResult();
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
-        diff.print(System.out);
+        result.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
-        assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(9, result.size());
+        assertEquals(1, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
     }
 
     @Test
@@ -192,20 +196,21 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = doDiff(POS.class.getName(),
+        CasDiff diff = doDiff(POS.class.getName(),
                 new SpanDiffAdapter(POS.class.getName(), "PosValue"), LINK_TARGET_AS_LABEL,
                 convert(userCases));
+        DiffResult result = diff.toResult();
         AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff, POS.class.getName(),
                 "PosValue", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
-        diff.print(System.out);
+        result.print(System.out);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
-        assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(9, result.size());
+        assertEquals(1, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
     }
 
     @Test
@@ -224,22 +229,23 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
         
         // Check against new impl
-        DiffResult diff = doDiff(
+        CasDiff diff = doDiff(
                 Dependency.class.getName(), new RelationDiffAdapter(Dependency.class.getName(),
                         "Dependent", "Governor", "DependencyType"),
                 LINK_TARGET_AS_LABEL, convert(userCases));
-        AgreementResult agreement = AgreementUtils.getCohenKappaAgreement(diff,
+        DiffResult result = diff.toResult();
+        CodingAgreementResult agreement = getCohenKappaAgreement(diff,
                 Dependency.class.getName(), "DependencyType", convert(userCases));
         
         // Asserts
         System.out.printf("Agreement: %s%n", agreement.toString());
-        diff.print(System.out);
+        result.print(System.out);
         AgreementUtils.dumpAgreementStudy(System.out, agreement);
         
         assertEquals(0.86153d, agreement.getAgreement(), 0.00001d);
-        assertEquals(9, diff.size());
-        assertEquals(1, diff.getDifferingConfigurationSets().size());
-        assertEquals(0, diff.getIncompleteConfigurationSets().size());
+        assertEquals(9, result.size());
+        assertEquals(1, result.getDifferingConfigurationSets().size());
+        assertEquals(0, result.getIncompleteConfigurationSets().size());
     }
 
     @Test
@@ -260,10 +266,11 @@ public class TwoPairedKappaTest
         documentJCases.put(document, userCases);
 
         // Check against new impl
-        DiffResult diff = CasDiff.doDiff(
+        CasDiff diff = CasDiff.doDiff(
                 asList(POS.class.getName(), Dependency.class.getName()), 
                 asList(POS_DIFF_ADAPTER, DEPENDENCY_DIFF_ADAPTER), 
                 LINK_TARGET_AS_LABEL, convert(userCases));
+        DiffResult result = diff.toResult();
         
         Map<String, List<CAS>> user1and2 = convert(userCases);
         user1and2.remove("user3");
@@ -281,7 +288,7 @@ public class TwoPairedKappaTest
                 Dependency.class.getName(), "DependencyType", user1and3);
 
         // Asserts
-        diff.print(System.out);
+        result.print(System.out);
         
         System.out.printf("New agreement 1/2: %s%n", agreement12.toString());
         System.out.printf("New agreement 2/3: %s%n", agreement23.toString());

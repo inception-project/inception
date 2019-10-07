@@ -470,6 +470,8 @@ public interface AnnotationSchemaService
             throws UIMAException, IOException;
 
     /**
+     * The username and source document information is only used for logging.
+     * 
      * @see #upgradeCasIfRequired(CAS, SourceDocument, String)
      */
     void upgradeCasIfRequired(CAS aCas, SourceDocument aSourceDocument, String aUser)

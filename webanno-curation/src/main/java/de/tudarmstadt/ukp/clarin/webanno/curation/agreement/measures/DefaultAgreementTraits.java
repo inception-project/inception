@@ -28,6 +28,8 @@ public class DefaultAgreementTraits
 {
     private static final long serialVersionUID = -2554578512915184789L;
     
+    private boolean limitToFinishedDocuments = true;
+    
     private LinkCompareBehavior linkCompareBehavior = LINK_TARGET_AS_LABEL;
 
     public LinkCompareBehavior getLinkCompareBehavior()
@@ -38,5 +40,15 @@ public class DefaultAgreementTraits
     public void setLinkCompareBehavior(LinkCompareBehavior aLinkCompareBehavior)
     {
         linkCompareBehavior = aLinkCompareBehavior;
+    }
+
+    public boolean isLimitToFinishedDocuments()
+    {
+        return limitToFinishedDocuments;
+    }
+
+    public void setLimitToFinishedDocuments(boolean aLimitToFinishedDocuments)
+    {
+        limitToFinishedDocuments = aLimitToFinishedDocuments;
     }
 }

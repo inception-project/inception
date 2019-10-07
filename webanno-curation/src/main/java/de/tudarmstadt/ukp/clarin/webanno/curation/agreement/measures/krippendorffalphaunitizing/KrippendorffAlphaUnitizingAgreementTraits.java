@@ -15,21 +15,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures;
+package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.krippendorffalphaunitizing;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
 
-import org.apache.uima.cas.CAS;
-
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-
-public interface AggreementMeasure<R extends Serializable>
+public class KrippendorffAlphaUnitizingAgreementTraits
+    extends DefaultAgreementTraits
 {
-    R getAgreement(Map<String, List<CAS>> aCasMap);
-    
-    AnnotationFeature getFeature();
-    
-    DefaultAgreementTraits getTraits();
+    private static final long serialVersionUID = -3843837791046164173L;
+
+    private boolean excludeIncomplete;
+
+    public boolean isExcludeIncomplete()
+    {
+        return excludeIncomplete;
+    }
+
+    public void setExcludeIncomplete(boolean aExcludeIncomplete)
+    {
+        excludeIncomplete = aExcludeIncomplete;
+    }
 }

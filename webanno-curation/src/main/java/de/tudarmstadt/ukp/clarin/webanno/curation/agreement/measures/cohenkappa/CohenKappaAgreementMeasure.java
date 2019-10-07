@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.cohenkappa;
 
-import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.makeStudy;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementUtils.makeCodingStudy;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.getAdapters;
 import static java.util.Arrays.asList;
@@ -26,42 +26,43 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
+import org.dkpro.statistics.agreement.IAgreementMeasure;
+import org.dkpro.statistics.agreement.coding.CohenKappaAgreement;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.AgreementResult;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.DiffResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAggreementMeasure_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.api.DiffAdapter;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
 
 public class CohenKappaAgreementMeasure
-    implements AggreementMeasure
+    extends CodingAggreementMeasure_ImplBase<DefaultAgreementTraits>
 {
-    private final AnnotationFeature feature;
-    private final DefaultAgreementTraits traits;
     private final AnnotationSchemaService annotationService;
     
     public CohenKappaAgreementMeasure(AnnotationFeature aFeature, DefaultAgreementTraits aTraits,
             AnnotationSchemaService aAnnotationService)
     {
-        feature = aFeature;
-        traits = aTraits;
+        super(aFeature, aTraits);
         annotationService = aAnnotationService;
     }
-
+    
     @Override
-    public AgreementResult getAgreement(Map<String, List<CAS>> aCasMap)
+    public CodingAgreementResult calculatePairAgreement(
+            Map<String, List<CAS>> aCasMap)
     {
+        AnnotationFeature feature = getFeature();
+        DefaultAgreementTraits traits = getTraits();
+        
         List<DiffAdapter> adapters = getAdapters(annotationService, feature.getProject());
 
-        DiffResult diff = doDiff(asList(feature.getLayer().getName()), adapters,
+        CasDiff diff = doDiff(asList(feature.getLayer().getName()), adapters,
                 traits.getLinkCompareBehavior(), aCasMap);
 
-        AgreementResult agreementResult = makeStudy(diff, feature.getLayer().getName(),
-                feature.getName(), true, aCasMap);
+        CodingAgreementResult agreementResult = makeCodingStudy(diff,
+                feature.getLayer().getName(), feature.getName(), true, aCasMap);
 
         IAgreementMeasure agreement = new CohenKappaAgreement(agreementResult.getStudy());
 

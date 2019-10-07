@@ -20,6 +20,16 @@
 <wicket:panel>
   <form wicket:id="form" class="col-sm-12">
     <div class="form-row">
+      <div class="form-group" wicket:enclosure="limitToFinishedDocuments">
+        <div class="col-sm-offset-4 col-sm-8">
+          <div class="checkbox">
+            <label wicket:for="limitToFinishedDocuments">
+              <input wicket:id="limitToFinishedDocuments" type="checkbox"/>
+              <wicket:label key="limitToFinishedDocuments"/>
+            </label>
+          </div>
+        </div>
+      </div>
       <div class="form-group" wicket:enclosure="linkCompareBehavior">
         <label wicket:for="linkCompareBehavior" class="col-sm-4 control-label">
           <wicket:label key="linkCompareBehavior"/></label>

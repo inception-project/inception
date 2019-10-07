@@ -17,12 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement;
 
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.IAgreementMeasure;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.CohenKappaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.FleissKappaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
-import de.tudarmstadt.ukp.dkpro.statistics.agreement.distance.NominalDistanceFunction;
+import org.dkpro.statistics.agreement.IAgreementMeasure;
+import org.dkpro.statistics.agreement.coding.CohenKappaAgreement;
+import org.dkpro.statistics.agreement.coding.FleissKappaAgreement;
+import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
+import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
+import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
 public enum ConcreteAgreementMeasure
 {

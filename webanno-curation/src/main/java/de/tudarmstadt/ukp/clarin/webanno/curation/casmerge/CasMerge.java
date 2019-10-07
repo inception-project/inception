@@ -27,6 +27,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUt
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectSentences;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.selectTokens;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.setFeature;
+import static java.util.Arrays.asList;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.apache.uima.fit.util.CasUtil.getType;
@@ -35,6 +36,7 @@ import static org.apache.uima.fit.util.CasUtil.selectCovered;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -254,8 +256,10 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
+                            .getRepresentative(casMap);
                     CasMergeOpertationResult result = mergeSpanAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);
@@ -302,8 +306,10 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
+                            .getRepresentative(casMap);
                     AID sourceFsAid = cfgs.getConfigurations().get(0)
                             .getRepresentativeAID();
                     mergeSlotFeature(aTargetDocument, aTargetUsername,
@@ -342,8 +348,10 @@ public class CasMerge
                 }
                 
                 try {
+                    Map<String, List<CAS>> casMap = new LinkedHashMap<>();
+                    aCases.forEach((k, v) -> casMap.put(k, asList(v)));
                     AnnotationFS sourceFS = (AnnotationFS) cfgs.getConfigurations().get(0)
-                            .getRepresentative();
+                            .getRepresentative(casMap);
                     CasMergeOpertationResult result = mergeRelationAnnotation(aTargetDocument,
                             aTargetUsername, type2layer.get(position.getType()), aTargetCas,
                             sourceFS, false);

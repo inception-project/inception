@@ -17,23 +17,19 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.fleisskappa;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.WebAnnoConst.SPAN_TYPE;
-
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.PairwiseAnnotationResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AggreementMeasure;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.AgreementMeasureSupport_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
-import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraitsEditor;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 
 @Component
 public class FleissKappaAgreementMeasureSupport
-    extends AgreementMeasureSupport_ImplBase<DefaultAgreementTraits>
+    extends AbstractCodingAgreementMeasureSupport<DefaultAgreementTraits>
 {
     private final AnnotationSchemaService annotationService;
     
@@ -46,35 +42,13 @@ public class FleissKappaAgreementMeasureSupport
     @Override
     public String getName()
     {
-        return "Fleiss' Kappa";
+        return "Fleiss' Kappa (coding)";
     }
 
     @Override
-    public boolean accepts(AnnotationFeature aFeature)
-    {
-        AnnotationLayer layer = aFeature.getLayer();
-        
-        if (
-                SPAN_TYPE.equals(layer.getType()) && 
-                layer.getAttachFeature() != null
-        ) {
-            return true;
-        }
-        
-        return false;
-    }
-
-    @Override
-    public AggreementMeasure createMeasure(AnnotationFeature aFeature,
-            DefaultAgreementTraits aTraits)
+    public AggreementMeasure<PairwiseAnnotationResult<CodingAgreementResult>> createMeasure(
+            AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService);
-    }
-    
-    @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<DefaultAgreementTraits> aModel)
-    {
-        return new DefaultAgreementTraitsEditor<DefaultAgreementTraits>(aId, aFeature, aModel);
     }
 }

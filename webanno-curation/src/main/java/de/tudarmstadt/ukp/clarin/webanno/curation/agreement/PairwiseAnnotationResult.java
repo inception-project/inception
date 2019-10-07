@@ -23,31 +23,54 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class PairwiseAnnotationResult
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.DefaultAgreementTraits;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+
+public class PairwiseAnnotationResult<R extends Serializable>
     implements Serializable
 {
     private static final long serialVersionUID = -6943850667308982795L;
+
+    private final Set<String> raters = new TreeSet<>();
+    private final Map<String, R> results = new HashMap<>();
     
-    private Set<String> raters = new TreeSet<>();
-    private Map<String, AgreementResult> results = new HashMap<>();
+    private final AnnotationFeature feature;
+    private final DefaultAgreementTraits traits;
+
+    public PairwiseAnnotationResult(AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
+    {
+        super();
+        feature = aFeature;
+        traits = aTraits;
+    }
+    
+    public AnnotationFeature getFeature()
+    {
+        return feature;
+    }
+
+    public DefaultAgreementTraits getTraits()
+    {
+        return traits;
+    }
     
     public Set<String> getRaters()
     {
         return raters;
     }
 
-    public AgreementResult getStudy(String aKey1, String aKey2)
+    public R getStudy(String aKey1, String aKey2)
     {
         return results.get(makeKey(aKey1, aKey2));
     }
 
-    public void add(String aKey1, String aKey2, AgreementResult aRes)
+    public void add(String aKey1, String aKey2, R aRes)
     {
         raters.add(aKey1);
         raters.add(aKey2);
         results.put(makeKey(aKey1, aKey2), aRes);
     }
-    
+
     private String makeKey(String aKey1, String aKey2)
     {
         String key;

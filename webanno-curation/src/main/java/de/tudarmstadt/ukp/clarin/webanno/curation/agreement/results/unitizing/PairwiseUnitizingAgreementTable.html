@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!--
-#Copyright 2015
+#Copyright 2019
 #Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
 #Technische Universität Darmstadt
 #
@@ -17,15 +17,30 @@
 #limitations under the License.
 -->
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
-  <table style="width: 100%;">
-    <tr wicket:id="rows">
-      <td wicket:id="cells">
-        <div wicket:id="cell"></div>
-      </td>
-    </tr>
-  </table>
-  <wicket:fragment wicket:id="th">
-    <th class="headers"><div wicket:id="label"></div></th>
+  <div class="flex-content panel panel-default panel-flex">
+    <div class="panel-heading">
+      <h3 class="panel-title">
+        <wicket:message key="agreement" />
+        <span class="pull-right">
+          <a wicket:id="legend"><wicket:message key="legend"/></a> 
+        </span>
+      </h3>
+    </div>
+    <div class="scrolling panel-body fit-child-snug" style="padding: 0px;">
+      <table style="width: 100%;">
+        <tr wicket:id="rows">
+          <td wicket:id="cells">
+            <div wicket:id="cell"></div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  <wicket:fragment wicket:id="th-centered">
+    <th class="headers text-center"><div wicket:id="label"></div></th>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="th-right">
+    <th class="headers text-right"><div wicket:id="label"></div></th>
   </wicket:fragment>
   <wicket:fragment wicket:id="td">
     <td class="text-center"><div wicket:id="label"></div></td>

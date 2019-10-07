@@ -17,14 +17,24 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures;
 
+import java.io.Serializable;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
+import org.danekja.java.util.function.serializable.SerializableSupplier;
+import org.dkpro.statistics.agreement.IAnnotationStudy;
 import org.springframework.beans.factory.BeanNameAware;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public interface AggreementMeasureSupport<T extends DefaultAgreementTraits>
+public interface AggreementMeasureSupport<
+        T extends DefaultAgreementTraits,
+        R extends Serializable,
+        S extends IAnnotationStudy>
     extends BeanNameAware
 {
     String getId();
@@ -55,7 +65,10 @@ public interface AggreementMeasureSupport<T extends DefaultAgreementTraits>
         return new EmptyPanel(aId);
     }
 
-    AggreementMeasure createMeasure(AnnotationFeature aFeature, T aTraits);
+    AggreementMeasure<R> createMeasure(AnnotationFeature aFeature, T aTraits);
 
     T createTraits();
+    
+    Panel createResultsPanel(String aId, IModel<R> aResults,
+            SerializableSupplier<Map<String, List<CAS>>> aCasMapSupplier);
 }

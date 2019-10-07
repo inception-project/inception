@@ -19,43 +19,31 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures;
 
 import java.io.Serializable;
 
-import org.apache.wicket.markup.html.panel.Panel;
-import org.apache.wicket.model.IModel;
-import org.dkpro.statistics.agreement.IAnnotationStudy;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 
-public abstract class AgreementMeasureSupport_ImplBase<
-        T extends DefaultAgreementTraits, 
+public abstract class AggreementMeasure_ImplBase<
         R extends Serializable,
-        S extends IAnnotationStudy>
-    implements AggreementMeasureSupport<T, R, S>
+        T extends DefaultAgreementTraits>
+    implements AggreementMeasure<R>
 {
-    private String id;
+    private final AnnotationFeature feature;
+    private final T traits;
 
-    @Override
-    public void setBeanName(String aName)
+    public AggreementMeasure_ImplBase(AnnotationFeature aFeature, T aTraits)
     {
-        id = aName;
+        feature = aFeature;
+        traits = aTraits;
     }
 
     @Override
-    public String getId()
+    public AnnotationFeature getFeature()
     {
-        return id;
+        return feature;
     }
-
+    
     @Override
-    public Panel createTraitsEditor(String aId, IModel<AnnotationFeature> aFeature,
-            IModel<T> aModel)
+    public T getTraits()
     {
-        return new DefaultAgreementTraitsEditor<DefaultAgreementTraits>(aId, aFeature,
-                (IModel) aModel);
-    }
-
-    @Override
-    public T createTraits()
-    {
-        return (T) new DefaultAgreementTraits();
+        return traits;
     }
 }

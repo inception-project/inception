@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures;
 import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Arrays.asList;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.EnumChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
@@ -65,6 +66,8 @@ public class DefaultAgreementTraitsEditor<T extends DefaultAgreementTraits>
                 .orElse(false).getObject()));
         linkCompareBehaviorDropDown.setOutputMarkupPlaceholderTag(true);
         form.add(linkCompareBehaviorDropDown);
+
+        form.add(new CheckBox("limitToFinishedDocuments"));
         
         add(form);
     }
