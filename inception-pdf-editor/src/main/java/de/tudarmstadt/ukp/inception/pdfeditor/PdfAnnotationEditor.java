@@ -178,6 +178,13 @@ public class PdfAnnotationEditor
     public void createSpanAnnotation(
         AjaxRequestTarget aTarget, IRequestParameters aParams, CAS aCas)
     {
+        if (pdfExtractFile == null && documentModel == null) {
+            // in this case the user probably changed the document and accidentally
+            // marked text in the old document. so do not create any annotation here.
+            handleError("Unable to create span annotation: " 
+                + "Did you accidentally marked text when switching documents?", aTarget);
+            return;
+        }
         try
         {
             Offset offset = new Offset(aParams);
