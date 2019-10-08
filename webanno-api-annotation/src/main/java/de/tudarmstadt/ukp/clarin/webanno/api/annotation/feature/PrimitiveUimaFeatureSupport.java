@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.config.PrimitiveUimaFeatureSupportProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.BooleanFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.DynamicTextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.FeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFieldTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
@@ -228,7 +229,12 @@ public class PrimitiveUimaFeatureSupport
                 if (feature.getTagset() == null) {
                     if (traits.isMultipleRows()) {
                         // If multiple rows are set use a textarea
-                        editor = new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                        if (traits.isDynamicSize()) {
+                            editor =
+                                new DynamicTextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                        } else {
+                            editor = new TextAreaFeatureEditor(aId, aOwner, aFeatureStateModel);
+                        }
                     } else {
                         // Otherwise use a simple input field
                         editor = new InputFieldTextFeatureEditor(aId, aOwner, aFeatureStateModel);

@@ -80,6 +80,8 @@ public class UimaStringTraitsEditor
                 super.onSubmit();
                 if (traits.getObject().isMultipleRows()) {
                     feature.getObject().setTagset(null);
+                } else {
+                    traits.getObject().setDynamicSize(false);
                 }
                 writeTraits();
             }
@@ -90,13 +92,15 @@ public class UimaStringTraitsEditor
         NumberTextField collapsedRows = new NumberTextField<>("collapsedRows", Integer.class);
         collapsedRows.setModel(PropertyModel.of(traits, "collapsedRows"));
         collapsedRows.setMinimum(1);
-        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        collapsedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()
+                && !traits.getObject().isDynamicSize()));
         form.add(collapsedRows);
         
         NumberTextField expandedRows = new NumberTextField<>("expandedRows", Integer.class);
         expandedRows.setModel(PropertyModel.of(traits, "expandedRows"));
         expandedRows.setMinimum(1);
-        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        expandedRows.add(visibleWhen(() -> traits.getObject().isMultipleRows() 
+                && !traits.getObject().isDynamicSize()));
         form.add(expandedRows);
         
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
@@ -116,6 +120,14 @@ public class UimaStringTraitsEditor
             target -> target.add(form)
         ));
         form.add(multipleRows);
+    
+        CheckBox dynamicSize = new CheckBox("dynamicSize");
+        dynamicSize.setModel(PropertyModel.of(traits, "dynamicSize"));
+        dynamicSize.add(new LambdaAjaxFormComponentUpdatingBehavior("change",
+            target -> target.add(form)
+        ));
+        dynamicSize.add(visibleWhen(() -> traits.getObject().isMultipleRows()));
+        form.add(dynamicSize);
     }
     
     private PrimitiveUimaFeatureSupport getFeatureSupport()
@@ -134,6 +146,7 @@ public class UimaStringTraitsEditor
         UimaStringTraits t = getFeatureSupport().readUimaStringTraits(feature.getObject());
         
         result.setMultipleRows(t.isMultipleRows());
+        result.setDynamicSize(t.isDynamicSize());
         result.setCollapsedRows(t.getCollapsedRows());
         result.setExpandedRows(t.getExpandedRows());
                 
@@ -149,6 +162,7 @@ public class UimaStringTraitsEditor
         UimaStringTraits t = new UimaStringTraits();
         
         t.setMultipleRows(traits.getObject().isMultipleRows());
+        t.setDynamicSize(traits.getObject().isDynamicSize());
         t.setCollapsedRows(traits.getObject().getCollapsedRows());
         t.setExpandedRows(traits.getObject().getExpandedRows());
         
@@ -165,6 +179,7 @@ public class UimaStringTraitsEditor
         private static final long serialVersionUID = 350784828528183399L;
     
         private boolean multipleRows = false;
+        private boolean dynamicSize = false;
         private int collapsedRows = 1;
         private int expandedRows = 1;
     
@@ -176,6 +191,16 @@ public class UimaStringTraitsEditor
         public void setMultipleRows(boolean multipleRows)
         {
             this.multipleRows = multipleRows;
+        }
+    
+        public boolean isDynamicSize()
+        {
+            return dynamicSize;
+        }
+    
+        public void setDynamicSize(boolean dynamicSize)
+        {
+            this.dynamicSize = dynamicSize;
         }
     
         public int getCollapsedRows()
