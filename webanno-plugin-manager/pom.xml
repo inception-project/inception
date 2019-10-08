@@ -51,6 +51,12 @@
     <dependency>
       <groupId>org.pf4j</groupId>
       <artifactId>pf4j-spring</artifactId>
+      <exclusions>
+        <exclusion>
+          <groupId>log4j</groupId>
+          <artifactId>log4j</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
   </dependencies>
 </project>
