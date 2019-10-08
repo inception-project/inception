@@ -292,6 +292,9 @@ _(Span layers)_
 | Multiple Rows
 | If enabled the textfield will be replaced by a textarea which expands on focus. This also enables options to set the size of the textarea and disables tagsets.
 
+| Dynamic Size
+| If enabled the textfield will dynamically resize itself based on the content. This disables collapsed and expanded row settings. 
+
 | Collapsed Rows
 | Set the number of rows for the textarea when it is collapsed and not focused.
 
