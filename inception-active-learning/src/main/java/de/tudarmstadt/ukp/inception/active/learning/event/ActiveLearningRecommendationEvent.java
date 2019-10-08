@@ -16,17 +16,15 @@
  * limitations under the License.
  */
 package de.tudarmstadt.ukp.inception.active.learning.event;
-
 import java.util.List;
 
 import org.springframework.context.ApplicationEvent;
-
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.AnnotationSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordType;
 
-public class ActiveLearningRecommendationEvent
+public class ActiveLearningRecommendationEvent 
     extends ApplicationEvent
 {
     private static final long serialVersionUID = -2741267700429534514L;
@@ -54,27 +52,27 @@ public class ActiveLearningRecommendationEvent
         allRecommendations = aAllRecommendations;
     }
 
-    public SourceDocument getDocument()
+    public SourceDocument getDocument_1()
     {
         return document;
     }
 
-    public AnnotationSuggestion getCurrentRecommendation()
+    public AnnotationSuggestion getCurrentRecommendation_1()
     {
         return currentRecommendation;
     }
 
-    public String getUser()
+    public String getUser_1()
     {
         return user;
     }
 
-    public AnnotationLayer getLayer()
+    public AnnotationLayer getLayer_1()
     {
         return layer;
     }
 
-    public String getAnnotationFeature()
+    public String getAnnotationFeature_1()
     {
         return annotationFeature;
     }

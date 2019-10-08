@@ -27,12 +27,12 @@ public class OpenNlpDoccatRecommenderTraits
 {
     private static final long serialVersionUID = 220089332064652542L;
 
-    private int trainingSetSizeLimit = Integer.MAX_VALUE;
-    private int predictionLimit = Integer.MAX_VALUE;
+    private int doc_trainingSetSizeLimit = Integer.MAX_VALUE;
+    private int doc_predictionLimit = Integer.MAX_VALUE;
 
     private int iterations = 100;
     private int cutoff = 5;
-    private int numThreads = 1;
+    private int doc_numThreads = 1;
 
     public int getIterations()
     {
@@ -54,43 +54,43 @@ public class OpenNlpDoccatRecommenderTraits
         cutoff = aCutoff;
     }
     
-    public int getNumThreads()
+    public int doc_getNumThreads()
     {
-        return numThreads;
+        return doc_numThreads;
     }
 
-    public void setNumThreads(int aNumThreads)
+    public void doc_setNumThreads(int doc_aNumThreads)
     {
-        numThreads = aNumThreads;
+        doc_numThreads = doc_aNumThreads;
     }
 
     public int getTrainingSetSizeLimit()
     {
-        return trainingSetSizeLimit;
+        return doc_trainingSetSizeLimit;
     }
 
-    public void setTrainingSetSizeLimit(int aTrainingSetSizeLimit)
+    public void setTrainingSetSizeLimit(int doc_aTrainingSetSizeLimit)
     {
-        trainingSetSizeLimit = aTrainingSetSizeLimit;
+        doc_trainingSetSizeLimit = doc_aTrainingSetSizeLimit;
     }
 
-    public int getPredictionLimit()
+    public int doc_getPredictionLimit()
     {
-        return predictionLimit;
+        return doc_predictionLimit;
     }
 
-    public void setPredictionLimit(int aPredictionLimit)
+    public void doc_setPredictionLimit(int doc_aPredictionLimit)
     {
-        predictionLimit = aPredictionLimit;
+        doc_predictionLimit = doc_aPredictionLimit;
     }
 
-    public TrainingParameters getParameters()
+    public TrainingParameters doc_getParameters()
     {
-        TrainingParameters parameters = TrainingParameters.defaultParams();
-        parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
-        parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
-        parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
-        parameters.put(TrainingParameters.THREADS_PARAM, numThreads);
-        return parameters;
+        TrainingParameters doc_parameters = TrainingParameters.defaultParams();
+        doc_parameters.put(AbstractTrainer.VERBOSE_PARAM, false);
+        doc_parameters.put(TrainingParameters.ITERATIONS_PARAM, iterations);
+        doc_parameters.put(TrainingParameters.CUTOFF_PARAM, cutoff);
+        doc_parameters.put(TrainingParameters.THREADS_PARAM, doc_numThreads);
+        return doc_parameters;
     }
 }

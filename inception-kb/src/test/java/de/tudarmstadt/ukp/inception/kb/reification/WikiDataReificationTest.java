@@ -46,7 +46,7 @@ import de.tudarmstadt.ukp.inception.kb.model.KnowledgeBase;
 
 public class WikiDataReificationTest
 {
-    private KnowledgeBase kb;
+    private KnowledgeBase WDRT_kb;
     private Repository rdf4jLocalRepo;
     private WikiDataReification sut;
     
@@ -82,22 +82,22 @@ public class WikiDataReificationTest
     @Before
     public void setUp()
     {
-        kb = new KnowledgeBase();
-        kb.setDefaultLanguage("en");
-        kb.setType(RepositoryType.LOCAL);
-        kb.setFullTextSearchIri(null);
-        kb.setMaxResults(1000);
+        WDRT_kb = new KnowledgeBase();
+        WDRT_kb.setDefaultLanguage("en");
+        WDRT_kb.setType(RepositoryType.LOCAL);
+        WDRT_kb.setFullTextSearchIri(null);
+        WDRT_kb.setMaxResults(1000);
         
         ValueFactory vf = SimpleValueFactory.getInstance();
-        kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
-        kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
-        kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
-        kb.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyTypeIri(vf.createIRI("http://www.wikidata.org/entity/Q18616576"));
-        kb.setDescriptionIri(vf.createIRI("http://schema.org/description"));
-        kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
-        kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
-        kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
+        WDRT_kb.setClassIri(vf.createIRI("http://www.wikidata.org/entity/Q35120"));
+        WDRT_kb.setSubclassIri(vf.createIRI("http://www.wikidata.org/prop/direct/P279"));
+        WDRT_kb.setTypeIri(vf.createIRI("http://www.wikidata.org/prop/direct/P31"));
+        WDRT_kb.setLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        WDRT_kb.setPropertyTypeIri(vf.createIRI("http://www.wikidata.org/entity/Q18616576"));
+        WDRT_kb.setDescriptionIri(vf.createIRI("http://schema.org/description"));
+        WDRT_kb.setPropertyLabelIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#label"));
+        WDRT_kb.setPropertyDescriptionIri(vf.createIRI("http://www.w3.org/2000/01/rdf-schema#comment"));
+        WDRT_kb.setSubPropertyIri(vf.createIRI("http://www.wikidata.org/prop/direct/P1647"));
         
         // Local in-memory store - this should be used for most tests because we can
         // a) rely on its availability
@@ -139,7 +139,7 @@ public class WikiDataReificationTest
         
         List<KBStatement> result;
         try (RepositoryConnection conn = rdf4jLocalRepo.getConnection()) {
-            result = sut.listStatements(conn, kb, new KBHandle(MONA_LISA), true);
+            result = sut.listStatements(conn, WDRT_kb, new KBHandle(MONA_LISA), true);
         }
         
         KBStatement stmt1 = new KBStatement(STMT1, MONA_LISA, MATERIAL_USED, OIL_PAINT, "Q296955");
@@ -179,7 +179,7 @@ public class WikiDataReificationTest
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
-            String prefix = StringUtils.removeEnd(kb.getBasePrefix(), "#");
+            String prefix = StringUtils.removeEnd(WDRT_kb.getBasePrefix(), "#");
             conn.add(aIS, prefix, aFormat);
         }
     }

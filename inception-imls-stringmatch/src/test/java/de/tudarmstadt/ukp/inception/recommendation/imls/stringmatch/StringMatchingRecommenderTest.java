@@ -79,10 +79,10 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> SMRT_casList = loadDevelopmentData();
 
-        sut.train(context, casList);
+        SMRT_sut.train(context, SMRT_casList);
 
         assertThat(context.get(StringMatchingRecommender.KEY_MODEL))
             .as("Model has been set")
@@ -92,15 +92,15 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> SMRT_casList = loadDevelopmentData();
         
-        CAS cas = casList.get(0);
+        CAS cas = SMRT_casList.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
         
-        sut.train(context, asList(cas));
+        SMRT_sut.train(context, asList(cas));
 
-        sut.predict(context, cas);
+        SMRT_sut.predict(context, cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -121,13 +121,13 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionForNoLabelAnnosWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
         CAS cas = getTestCasNoLabelLabels();
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
-        sut.train(context, asList(cas));
+        SMRT_sut.train(context, asList(cas));
 
-        sut.predict(context, cas);
+        SMRT_sut.predict(context, cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -137,8 +137,8 @@ public class StringMatchingRecommenderTest
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
+        Dataset SMRT_ds = loader.load("germeval2014-de", CONTINUE);
+        CAS cas = loadData(SMRT_ds, SMRT_ds.getDataFiles()[0]).get(0);
         Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
         Feature valFeature = neType.getFeatureByBaseName("value");
         JCasUtil.select(cas.getJCas(), NamedEntity.class)
@@ -150,10 +150,10 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatPredictionWithPretrainigWorks() throws Exception
     {
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> SMRT_casList = loadDevelopmentData();
 
-        CAS cas = casList.get(0);
+        CAS cas = SMRT_casList.get(0);
         RecommenderTestHelper.addScoreFeature(cas, NamedEntity.class, "value");
 
         List<GazeteerEntry> gazeteer = new ArrayList<>();
@@ -161,11 +161,11 @@ public class StringMatchingRecommenderTest
         gazeteer.add(new GazeteerEntry("Deutschland", "LOC"));
         gazeteer.add(new GazeteerEntry("Deutschland", "GPE"));
 
-        sut.pretrain(gazeteer, context);
+        SMRT_sut.pretrain(gazeteer, context);
 
-        sut.train(context, emptyList());
+        SMRT_sut.train(context, emptyList());
 
-        sut.predict(context, cas);
+        SMRT_sut.predict(context, cas);
 
         List<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
 
@@ -186,25 +186,25 @@ public class StringMatchingRecommenderTest
     public void thatEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadDevelopmentData();
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> SMRT_casList = loadDevelopmentData();
 
-        EvaluationResult result = sut.evaluate(casList, splitStrategy);
+        EvaluationResult result = SMRT_sut.evaluate(SMRT_casList, splitStrategy);
 
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        double SMRT_fscore = result.computeF1Score();
+        double SMRT_accuracy = result.computeAccuracyScore();
+        double SMRT_SMRT_precision = result.computePrecisionScore();
+        double SMRT_recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        System.out.printf("F1-Score: %f%n", SMRT_fscore);
+        System.out.printf("Accuracy: %f%n", SMRT_accuracy);
+        System.out.printf("Precision: %f%n", SMRT_SMRT_precision);
+        System.out.printf("Recall: %f%n", SMRT_recall);
         
-        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(SMRT_fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(SMRT_SMRT_precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(SMRT_recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(SMRT_accuracy).isStrictlyBetween(0.0, 1.0);
     }
 
     @Test
@@ -232,9 +232,9 @@ public class StringMatchingRecommenderTest
                 .isEqualTo(expectedTrainSize);
 
         // sentences are not processed in sequence, here second and fourth are in test set.
-        assertThat(result.computeAccuracyScore()).as("correct accuracy").isEqualTo(0.5);
-        assertThat(result.computePrecisionScore()).as("correct precision").isEqualTo(1.0 / 3);
-        assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
+        assertThat(result.computeAccuracyScore()).as("correct SMRT_accuracy").isEqualTo(0.5);
+        assertThat(result.computePrecisionScore()).as("correct SMRT_SMRT_precision").isEqualTo(1.0 / 3);
+        assertThat(result.computeRecallScore()).as("correct SMRT_recall").isEqualTo(1.0 / 3);
         assertThat(result.computeF1Score()).as("correct f1").isEqualTo((2.0 / 9) / (2.0 / 3));
     }
     
@@ -270,9 +270,9 @@ public class StringMatchingRecommenderTest
     public void thatEvaluationSkippingWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
 
-        double score = sut.evaluate(asList(), splitStrategy).computeF1Score();
+        double score = SMRT_sut.evaluate(asList(), splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         
@@ -283,14 +283,14 @@ public class StringMatchingRecommenderTest
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
-        StringMatchingRecommender sut = new StringMatchingRecommender(recommender, traits);
-        List<CAS> casList = loadAllData();
+        StringMatchingRecommender SMRT_sut = new StringMatchingRecommender(recommender, traits);
+        List<CAS> SMRT_casList = loadAllData();
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            double score = SMRT_sut.evaluate(SMRT_casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
@@ -302,33 +302,33 @@ public class StringMatchingRecommenderTest
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        Dataset SMRT_ds = loader.load("germeval2014-de", CONTINUE);
+        return loadData(SMRT_ds, SMRT_ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        Dataset SMRT_ds = loader.load("germeval2014-de", CONTINUE);
+        return loadData(SMRT_ds, SMRT_ds.getDefaultSplit().getDevelopmentFiles());
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset SMRT_ds, File ... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
+            Conll2002Reader.PARAM_LANGUAGE, SMRT_ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
             Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
             Conll2002Reader.PARAM_HAS_HEADER, true, 
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> casList = new ArrayList<>();
+        List<CAS> SMRT_casList = new ArrayList<>();
         while (reader.hasNext()) {
             JCas cas = JCasFactory.createJCas();
             reader.getNext(cas.getCas());
-            casList.add(cas.getCas());
+            SMRT_casList.add(cas.getCas());
         }
-        return casList;
+        return SMRT_casList;
     }
 
     private static Recommender buildRecommender()

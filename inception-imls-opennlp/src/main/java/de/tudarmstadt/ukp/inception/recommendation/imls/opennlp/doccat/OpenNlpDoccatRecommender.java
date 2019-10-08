@@ -98,7 +98,7 @@ public class OpenNlpDoccatRecommender
         // OpenNLP
         int beamSize = Math.max(maxRecommendations, NameFinderME.DEFAULT_BEAM_SIZE);
 
-        TrainingParameters params = traits.getParameters();
+        TrainingParameters params = traits.doc_getParameters();
         params.put(BeamSearch.BEAM_SIZE_PARAMETER, Integer.toString(beamSize));
         
         DoccatModel model = train(docSamples, params);
@@ -129,7 +129,7 @@ public class OpenNlpDoccatRecommender
 
         int predictionCount = 0;
         for (AnnotationFS sentence : select(aCas, sentenceType)) {
-            if (predictionCount >= traits.getPredictionLimit()) {
+            if (predictionCount >= traits.doc_getPredictionLimit()) {
                 break;
             }
             predictionCount++;
@@ -195,7 +195,7 @@ public class OpenNlpDoccatRecommender
                 trainingSet.size(), testSet.size());
 
         // Train model
-        DoccatModel model = train(trainingSet, traits.getParameters());
+        DoccatModel model = train(trainingSet, traits.doc_getParameters());
         DocumentCategorizerME doccat = new DocumentCategorizerME(model);
 
         // Evaluate

@@ -76,9 +76,9 @@ public class OpenNlpDoccatRecommenderTest
         context = new RecommenderContext();
         recommender = buildRecommender();
         traits = new OpenNlpDoccatRecommenderTraits();
-        traits.setNumThreads(2);
+        traits.doc_setNumThreads(2);
         traits.setTrainingSetSizeLimit(250);
-        traits.setPredictionLimit(250);
+        traits.doc_setPredictionLimit(250);
     }
 
     @Test

@@ -38,38 +38,38 @@ public class IncrementalSplitterTest {
 
     @RunWith(Parameterized.class)
     public static class ParameterizedTests {
-        private final double k;
-        private final int trainingSetSize;
-        private final int testSetSize;
+        private final double k1;
+        private final int trainingSetSize1;
+        private final int testSetSize1;
 
         public ParameterizedTests(double aK, int aTrainingSetSize, int aTestSetSize) {
-            k = aK;
-            trainingSetSize = aTrainingSetSize;
-            testSetSize = aTestSetSize;
+            k1 = aK;
+            trainingSetSize1 = aTrainingSetSize;
+            testSetSize1 = aTestSetSize;
         }
 
         @Test
         public void thatSplittingWorks() {
             List<String> data = asList("0", "1", "2", "3", "4", "5", "6", "7", "8", "9");
-            IncrementalSplitter splitter = new IncrementalSplitter(k, 1, 4);
+            IncrementalSplitter splitter = new IncrementalSplitter(k1, 1, 4);
             
             int currentTrainingSetSize = 1;
             
-            List<String> trainingSet = new ArrayList<>();
-            List<String> testSet = new ArrayList<>();
+            List<String> trainingSet1 = new ArrayList<>();
+            List<String> testSet1 = new ArrayList<>();
             while (splitter.hasNext()) {
                 splitter.next();
                 
-                trainingSet.clear();
-                testSet.clear();
+                trainingSet1.clear();
+                testSet1.clear();
     
                 for (String s : data) {
                     switch (splitter.getTargetSet(s)) {
                     case TRAIN:
-                        trainingSet.add(s);
+                        trainingSet1.add(s);
                         break;
                     case TEST:
-                        testSet.add(s);
+                        testSet1.add(s);
                         break;
                     default:
                         // Do nothing
@@ -77,22 +77,22 @@ public class IncrementalSplitterTest {
                     }
                 }
     
-                assertThat(trainingSet)
+                assertThat(trainingSet1)
                     .as("Training set has correct size")
                     .hasSize(currentTrainingSetSize);
-                assertThat(testSet)
+                assertThat(testSet1)
                     .as("Test set has correct size")
-                    .hasSize(testSetSize);
+                    .hasSize(testSetSize1);
                 
                 currentTrainingSetSize++;
             }
             
-            assertThat(trainingSet)
+            assertThat(trainingSet1)
                 .as("Training set has correct size")
-                .hasSize(trainingSetSize);
-            assertThat(testSet)
+                .hasSize(trainingSetSize1);
+            assertThat(testSet1)
                 .as("Test set has correct size")
-                .hasSize(testSetSize);
+                .hasSize(testSetSize1);
         }
 
         @Parameterized.Parameters

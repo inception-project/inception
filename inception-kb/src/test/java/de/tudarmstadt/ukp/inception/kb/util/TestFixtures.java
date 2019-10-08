@@ -52,45 +52,45 @@ import de.tudarmstadt.ukp.inception.kb.reification.Reification;
 
 public class TestFixtures
 {
-    private TestEntityManager entityManager;
+    private TestEntityManager FT_entityManager;
 
     public TestFixtures(TestEntityManager aEntityManager)
     {
-        entityManager = aEntityManager;
+        FT_entityManager = aEntityManager;
     }
 
     public Project createProject(String name)
     {
-        Project project = new Project();
-        project.setName(name);
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        return entityManager.persist(project);
+        Project FT_project = new Project();
+        FT_project.setName(name);
+        FT_project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        return FT_entityManager.persist(FT_project);
     }
 
-    public KnowledgeBase buildKnowledgeBase(Project project, String name, Reification reification)
+    public KnowledgeBase buildKnowledgeBase(Project FT_project, String name, Reification reification)
     {
-        KnowledgeBase kb = new KnowledgeBase();
-        kb.setName(name);
-        kb.setProject(project);
-        kb.setType(RepositoryType.LOCAL);
-        kb.setClassIri(RDFS.CLASS);
-        kb.setSubclassIri(RDFS.SUBCLASSOF);
-        kb.setTypeIri(RDF.TYPE);
-        kb.setLabelIri(RDFS.LABEL);
-        kb.setPropertyTypeIri(RDF.PROPERTY);
-        kb.setDescriptionIri(RDFS.COMMENT);
-        kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
-        kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
+        KnowledgeBase FT_kb = new KnowledgeBase();
+        FT_kb.setName(name);
+        FT_kb.setProject(FT_project);
+        FT_kb.setType(RepositoryType.LOCAL);
+        FT_kb.setClassIri(RDFS.CLASS);
+        FT_kb.setSubclassIri(RDFS.SUBCLASSOF);
+        FT_kb.setTypeIri(RDF.TYPE);
+        FT_kb.setLabelIri(RDFS.LABEL);
+        FT_kb.setPropertyTypeIri(RDF.PROPERTY);
+        FT_kb.setDescriptionIri(RDFS.COMMENT);
+        FT_kb.setSubPropertyIri(RDFS.SUBPROPERTYOF);
+        FT_kb.setFullTextSearchIri(IriConstants.FTS_LUCENE);
         // Intentionally using different IRIs for label/description and property-label/description
         // to detect cases where we accidentally construct queries using the wrong mapping, e.g.
         // querying for properties with the class label.
-        kb.setPropertyLabelIri(SKOS.PREF_LABEL);
-        kb.setPropertyDescriptionIri(SKOS.DEFINITION);
-        kb.setRootConcepts(new ArrayList<>());
-        kb.setReification(reification);
-        kb.setMaxResults(1000);
-        kb.setDefaultLanguage("en");
-        return kb;
+        FT_kb.setPropertyLabelIri(SKOS.PREF_LABEL);
+        FT_kb.setPropertyDescriptionIri(SKOS.DEFINITION);
+        FT_kb.setRootConcepts(new ArrayList<>());
+        FT_kb.setReification(reification);
+        FT_kb.setMaxResults(1000);
+        FT_kb.setDefaultLanguage("en");
+        return FT_kb;
     }
 
     public KBConcept buildConcept()
@@ -151,11 +151,11 @@ public class TestFixtures
         return statement;
     }
 
-    public KBQualifier buildQualifier(KBStatement kbStatement, KBProperty propertyHandle,
+    public KBQualifier buildQualifier(KBStatement FT_kbStatement, KBProperty propertyHandle,
         String value)
     {
         ValueFactory vf = SimpleValueFactory.getInstance();
-        KBQualifier qualifier = new KBQualifier(kbStatement, propertyHandle,
+        KBQualifier qualifier = new KBQualifier(FT_kbStatement, propertyHandle,
             vf.createLiteral(value));
         return qualifier;
     }

@@ -271,15 +271,15 @@ public class WikiDataReification
                 "}",
                 "LIMIT 10");
         Resource id = vf.createBNode(aStatementId);
-        TupleQuery tupleQuery = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
-        tupleQuery.setBinding("id", id);
-        tupleQuery.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
+        TupleQuery tupleQuery1 = aConnection.prepareTupleQuery(QueryLanguage.SPARQL, QUERY);
+        tupleQuery1.setBinding("id", id);
+        tupleQuery1.setBinding("ps_ns", vf.createIRI(PREDICATE_NAMESPACE));
 
-        tupleQuery.setIncludeInferred(false);
-        TupleQueryResult result;
+        tupleQuery1.setIncludeInferred(false);
+        TupleQueryResult result1;
 
         try {
-            result = tupleQuery.evaluate();
+            result1 = tupleQuery1.evaluate();
         }
         catch (QueryEvaluationException e) {
             log.warn("No such statementId in knowledge base", e);
@@ -287,8 +287,8 @@ public class WikiDataReification
         }
 
         List<Statement> statements = new ArrayList<>();
-        while (result.hasNext()) {
-            BindingSet bindings = result.next();
+        while (result1.hasNext()) {
+            BindingSet bindings = result1.next();
             Binding s = bindings.getBinding("s");
             Binding p = bindings.getBinding("p");
             Binding o = bindings.getBinding("o");

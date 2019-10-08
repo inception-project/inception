@@ -75,10 +75,10 @@ public class DataMajorityNerRecommenderTest
     @Test
     public void thatTrainingWorks() throws Exception
     {
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> casList = loadDevelopmentData();
+        DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+        List<CAS> DMNR_casList = loadDevelopmentData();
 
-        sut.train(context, casList);
+        DMNR_sut.train(context, DMNR_casList);
 
         assertThat(context.get(DataMajorityNerRecommender.KEY_MODEL))
             .as("Model has been set")
@@ -88,17 +88,17 @@ public class DataMajorityNerRecommenderTest
     @Test
     public void thatPredictionWorks() throws Exception
     {
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> casList = loadDevelopmentData();
+        DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+        List<CAS> DMNR_casList = loadDevelopmentData();
         
-        CAS cas = casList.get(0);
-        addScoreFeature(cas, NamedEntity.class.getName(), "value");
+        CAS DMNR_cas = DMNR_casList.get(0);
+        addScoreFeature(DMNR_cas, NamedEntity.class.getName(), "value");
         
-        sut.train(context, asList(cas));
+        DMNR_sut.train(context, asList(DMNR_cas));
 
-        sut.predict(context, cas);
+        DMNR_sut.predict(context, DMNR_cas);
 
-        Collection<NamedEntity> predictions = getPredictions(cas, NamedEntity.class);
+        Collection<NamedEntity> predictions = getPredictions(DMNR_cas, NamedEntity.class);
 
         assertThat(predictions).as("Predictions have been written to CAS")
             .isNotEmpty();
@@ -114,24 +114,24 @@ public class DataMajorityNerRecommenderTest
     public void thatEvaluationWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> casList = loadDevelopmentData();
+        DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+        List<CAS> DMNR_casList = loadDevelopmentData();
 
-        EvaluationResult result = sut.evaluate(casList, splitStrategy);
-        double fscore = result.computeF1Score();
-        double accuracy = result.computeAccuracyScore();
-        double precision = result.computePrecisionScore();
-        double recall = result.computeRecallScore();
+        EvaluationResult result = DMNR_sut.evaluate(DMNR_casList, splitStrategy);
+        double DMNR_fscore = result.computeF1Score();
+        double DMNR_accuracy = result.computeAccuracyScore();
+        double DMNR_precision = result.computePrecisionScore();
+        double DMNR_recall = result.computeRecallScore();
 
-        System.out.printf("F1-Score: %f%n", fscore);
-        System.out.printf("Accuracy: %f%n", accuracy);
-        System.out.printf("Precision: %f%n", precision);
-        System.out.printf("Recall: %f%n", recall);
+        System.out.printf("F1-Score: %f%n", DMNR_fscore);
+        System.out.printf("Accuracy: %f%n", DMNR_accuracy);
+        System.out.printf("Precision: %f%n", DMNR_precision);
+        System.out.printf("Recall: %f%n", DMNR_recall);
         
-        assertThat(fscore).isStrictlyBetween(0.0, 1.0);
-        assertThat(precision).isStrictlyBetween(0.0, 1.0);
-        assertThat(recall).isStrictlyBetween(0.0, 1.0);
-        assertThat(accuracy).isStrictlyBetween(0.0, 1.0);
+        assertThat(DMNR_fscore).isStrictlyBetween(0.0, 1.0);
+        assertThat(DMNR_precision).isStrictlyBetween(0.0, 1.0);
+        assertThat(DMNR_recall).isStrictlyBetween(0.0, 1.0);
+        assertThat(DMNR_accuracy).isStrictlyBetween(0.0, 1.0);
     }
     
     @Test
@@ -157,9 +157,9 @@ public class DataMajorityNerRecommenderTest
         assertThat(result.getTrainingSetSize()).as("correct training size")
                 .isEqualTo(expectedTrainSize);
 
-        assertThat(result.computeAccuracyScore()).as("correct accuracy").isEqualTo(1.0 / 3);
-        assertThat(result.computePrecisionScore()).as("correct precision").isEqualTo(1.0 / 9);
-        assertThat(result.computeRecallScore()).as("correct recall").isEqualTo(1.0 / 3);
+        assertThat(result.computeAccuracyScore()).as("correct DMNR_accuracy").isEqualTo(1.0 / 3);
+        assertThat(result.computePrecisionScore()).as("correct DMNR_precision").isEqualTo(1.0 / 9);
+        assertThat(result.computeRecallScore()).as("correct DMNR_recall").isEqualTo(1.0 / 3);
         assertThat(result.computeF1Score()).as("correct f1").isEqualTo( (2.0 / 27) / (4.0 / 9));
     }
     
@@ -167,11 +167,11 @@ public class DataMajorityNerRecommenderTest
     public void thatEvaluationWithNoClassesWorks() throws Exception
     {
         DataSplitter splitStrategy = new PercentageBasedSplitter(0.8, 10);
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> casList = new ArrayList<>();
-        casList.add(getTestCasNoLabelLabels());
+        DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+        List<CAS> DMNR_casList = new ArrayList<>();
+        DMNR_casList.add(getTestCasNoLabelLabels());
 
-        double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+        double score = DMNR_sut.evaluate(DMNR_casList, splitStrategy).computeF1Score();
 
         System.out.printf("Score: %f%n", score);
         
@@ -180,27 +180,27 @@ public class DataMajorityNerRecommenderTest
 
     private CAS getTestCasNoLabelLabels() throws Exception
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        CAS cas = loadData(ds, ds.getDataFiles()[0]).get(0);
-        Type neType = CasUtil.getAnnotationType(cas, NamedEntity.class);
+        Dataset DMNR_ds = loader.load("germeval2014-de", CONTINUE);
+        CAS DMNR_cas = loadData(DMNR_ds, DMNR_ds.getDataFiles()[0]).get(0);
+        Type neType = CasUtil.getAnnotationType(DMNR_cas, NamedEntity.class);
         Feature valFeature = neType.getFeatureByBaseName("value");
-        JCasUtil.select(cas.getJCas(), NamedEntity.class)
+        JCasUtil.select(DMNR_cas.getJCas(), NamedEntity.class)
                 .forEach(ne -> ne.setFeatureValueFromString(valFeature, null));
 
-        return cas;
+        return DMNR_cas;
     }
     @Test
     public void thatIncrementalNerEvaluationWorks() throws Exception
     {
         IncrementalSplitter splitStrategy = new IncrementalSplitter(0.8, 5000, 10);
-        DataMajorityNerRecommender sut = new DataMajorityNerRecommender(recommender);
-        List<CAS> casList = loadAllData();
+        DataMajorityNerRecommender DMNR_sut = new DataMajorityNerRecommender(recommender);
+        List<CAS> DMNR_casList = loadAllData();
 
         int i = 0;
         while (splitStrategy.hasNext() && i < 3) {
             splitStrategy.next();
             
-            double score = sut.evaluate(casList, splitStrategy).computeF1Score();
+            double score = DMNR_sut.evaluate(DMNR_casList, splitStrategy).computeF1Score();
 
             System.out.printf("Score: %f%n", score);
 
@@ -212,62 +212,62 @@ public class DataMajorityNerRecommenderTest
 
     private List<CAS> getTestNECas(String aText, String[] aVals, int[][] aIndices) throws Exception
     {
-        JCas jcas = JCasFactory.createText(aText, "de");
+        JCas jDMNR_cas = JCasFactory.createText(aText, "de");
 
         for (int i = 0; i < aVals.length; i++) {
-            NamedEntity newNE = new NamedEntity(jcas, aIndices[i][0], aIndices[i][1]);
+            NamedEntity newNE = new NamedEntity(jDMNR_cas, aIndices[i][0], aIndices[i][1]);
             newNE.setValue(aVals[i]);
             newNE.addToIndexes();
         }
 
-        List<CAS> casses = new ArrayList<>();
-        casses.add(jcas.getCas());
+        List<CAS> DMNR_casses = new ArrayList<>();
+        DMNR_casses.add(jDMNR_cas.getCas());
 
-        return casses;
+        return DMNR_casses;
     }
 
     private List<CAS> loadAllData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDataFiles());
+        Dataset DMNR_ds = loader.load("germeval2014-de", CONTINUE);
+        return loadData(DMNR_ds, DMNR_ds.getDataFiles());
     }
 
     private List<CAS> loadDevelopmentData() throws IOException, UIMAException
     {
-        Dataset ds = loader.load("germeval2014-de", CONTINUE);
-        return loadData(ds, ds.getDefaultSplit().getDevelopmentFiles());
+        Dataset DMNR_ds = loader.load("germeval2014-de", CONTINUE);
+        return loadData(DMNR_ds, DMNR_ds.getDefaultSplit().getDevelopmentFiles());
     }
 
-    private List<CAS> loadData(Dataset ds, File ... files) throws UIMAException, IOException
+    private List<CAS> loadData(Dataset DMNR_ds, File ... files) throws UIMAException, IOException
     {
         CollectionReader reader = createReader(Conll2002Reader.class,
             Conll2002Reader.PARAM_PATTERNS, files, 
-            Conll2002Reader.PARAM_LANGUAGE, ds.getLanguage(), 
+            Conll2002Reader.PARAM_LANGUAGE, DMNR_ds.getLanguage(), 
             Conll2002Reader.PARAM_COLUMN_SEPARATOR, Conll2002Reader.ColumnSeparators.TAB.getName(),
             Conll2002Reader.PARAM_HAS_TOKEN_NUMBER, true, 
             Conll2002Reader.PARAM_HAS_HEADER, true, 
             Conll2002Reader.PARAM_HAS_EMBEDDED_NAMED_ENTITY, true);
 
-        List<CAS> casList = new ArrayList<>();
+        List<CAS> DMNR_casList = new ArrayList<>();
         while (reader.hasNext()) {
-            JCas cas = JCasFactory.createJCas();
-            reader.getNext(cas.getCas());
-            casList.add(cas.getCas());
+            JCas DMNR_cas = JCasFactory.createJCas();
+            reader.getNext(DMNR_cas.getCas());
+            DMNR_casList.add(DMNR_cas.getCas());
         }
-        return casList;
+        return DMNR_casList;
     }
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(NamedEntity.class.getName());
+        AnnotationLayer DMNR_layer = new AnnotationLayer();
+        DMNR_layer.setName(NamedEntity.class.getName());
 
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName("value");
+        AnnotationFeature DMNR_feature = new AnnotationFeature();
+        DMNR_feature.setName("value");
 
         Recommender recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
+        recommender.setLayer(DMNR_layer);
+        recommender.setFeature(DMNR_feature);
         recommender.setMaxRecommendations(3);
 
         return recommender;

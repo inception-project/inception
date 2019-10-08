@@ -64,6 +64,8 @@ public class DL4JSequenceRecommenderTest
 
     private RecommenderContext context;
     private DL4JSequenceRecommenderTraits traits;
+    private JCas jcas1;
+    private NamedEntity ne1;
 
     @Before
     public void setUp()
@@ -83,51 +85,56 @@ public class DL4JSequenceRecommenderTest
         traits.setPredictionLimit(250);
         traits.setBatchSize(50);
     }
+    private void jcas() throws Exception{
+    	jcas1 = JCasFactory.createJCas();
+        jcas1.setDocumentText("a b b c c c abbccc");
+        
+        new Token(jcas1,  0,  1).addToIndexes(); // a
+        new Token(jcas1,  2,  3).addToIndexes(); // b
+        new Token(jcas1,  4,  5).addToIndexes(); // b
+        new Token(jcas1,  6,  7).addToIndexes(); // c
+        new Token(jcas1,  8,  9).addToIndexes(); // c
+        new Token(jcas1, 10, 11).addToIndexes(); // c
+        new Token(jcas1, 12, 13).addToIndexes(); // a
+        new Token(jcas1, 13, 14).addToIndexes(); // b
+        new Token(jcas1, 14, 15).addToIndexes(); // b
+        new Token(jcas1, 15, 16).addToIndexes(); // c
+        new Token(jcas1, 16, 17).addToIndexes(); // c
+        new Token(jcas1, 17, 18).addToIndexes(); // c
+    }
+    private void ne() {
+    	 ne1 = new NamedEntity(jcas1,  0,  1); // a
+         ne1.setValue("A");
+         ne1.addToIndexes();
+         ne1 = new NamedEntity(jcas1,  2,  5); // b b
+         ne1.setValue("B");
+         ne1.addToIndexes();
+         ne1 = new NamedEntity(jcas1,  6, 11); // c c c
+         ne1.setValue("C");
+         ne1.addToIndexes();
+         ne1 = new NamedEntity(jcas1, 12, 13); // a
+         ne1.setValue("A");
+         ne1.addToIndexes();
+         ne1 = new NamedEntity(jcas1, 13, 15); // bb
+         ne1.setValue("B");
+         ne1.addToIndexes();
+         ne1 = new NamedEntity(jcas1, 15, 18); // ccc
+         ne1.setValue("C");
+         ne1.addToIndexes();
+    }
 
     @Test
     public void testExtractDenseLabels() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
-        jcas.setDocumentText("a b b c c c abbccc");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        new Token(jcas,  6,  7).addToIndexes(); // c
-        new Token(jcas,  8,  9).addToIndexes(); // c
-        new Token(jcas, 10, 11).addToIndexes(); // c
-        new Token(jcas, 12, 13).addToIndexes(); // a
-        new Token(jcas, 13, 14).addToIndexes(); // b
-        new Token(jcas, 14, 15).addToIndexes(); // b
-        new Token(jcas, 15, 16).addToIndexes(); // c
-        new Token(jcas, 16, 17).addToIndexes(); // c
-        new Token(jcas, 17, 18).addToIndexes(); // c
-        
+        jcas();
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  1); // a
-        ne.setValue("A");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas,  2,  5); // b b
-        ne.setValue("B");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas,  6, 11); // c c c
-        ne.setValue("C");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas, 12, 13); // a
-        ne.setValue("A");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas, 13, 15); // bb
-        ne.setValue("B");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas, 15, 18); // ccc
-        ne.setValue("C");
-        ne.addToIndexes();
+       
         
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
-                new ArrayList<>(select(jcas, NamedEntity.class)));
+                new ArrayList<>(select(jcas1, Token.class)), 
+                new ArrayList<>(select(jcas1, NamedEntity.class)));
         
         assertThat(labels).containsExactly("A", "B", "B", "C", "C", "C", "A", "B", "B", "C", "C",
                 "C");
@@ -136,44 +143,28 @@ public class DL4JSequenceRecommenderTest
     @Test
     public void testExtractSparseLabels() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
-        jcas.setDocumentText("a b b c c c abbccc");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        new Token(jcas,  6,  7).addToIndexes(); // c
-        new Token(jcas,  8,  9).addToIndexes(); // c
-        new Token(jcas, 10, 11).addToIndexes(); // c
-        new Token(jcas, 12, 13).addToIndexes(); // a
-        new Token(jcas, 13, 14).addToIndexes(); // b
-        new Token(jcas, 14, 15).addToIndexes(); // b
-        new Token(jcas, 15, 16).addToIndexes(); // c
-        new Token(jcas, 16, 17).addToIndexes(); // c
-        new Token(jcas, 17, 18).addToIndexes(); // c
+        jcas();
         
         NamedEntity ne;
-        ne = new NamedEntity(jcas,  6, 11); // c c c
+        ne = new NamedEntity(jcas1,  6, 11); // c c c
         ne.setValue("C");
         ne.addToIndexes();
-        ne = new NamedEntity(jcas, 13, 15); // bb
+        ne = new NamedEntity(jcas1, 13, 15); // bb
         ne.setValue("B");
         ne.addToIndexes();
         
         DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
                 cache);
         List<String> labels = sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
-                new ArrayList<>(select(jcas, NamedEntity.class)));
+                new ArrayList<>(select(jcas1, Token.class)), 
+                new ArrayList<>(select(jcas1, NamedEntity.class)));
         
         assertThat(labels).containsExactly(NO_LABEL, NO_LABEL, NO_LABEL, "C", "C", "C", NO_LABEL,
                 "B", "B", NO_LABEL, NO_LABEL, NO_LABEL);
-    }    
-    
-    @Test
-    public void testExtractLabelsWithBadBoundaries() throws Exception
-    {
-        JCas jcas = JCasFactory.createJCas();
+    }
+    private void testExtractOverlappingLabelsFails(String string) throws Exception{
+    	String error=string;
+    	JCas jcas = JCasFactory.createJCas();
         jcas.setDocumentText("a b b");
         
         new Token(jcas,  0,  1).addToIndexes(); // a
@@ -195,63 +186,25 @@ public class DL4JSequenceRecommenderTest
                 new ArrayList<>(select(jcas, Token.class)), 
                 new ArrayList<>(select(jcas, NamedEntity.class))))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("must start/end at token boundaries");
+            .hasMessageContaining(error);
+    }
+    
+    @Test
+    public void testExtractLabelsWithBadBoundaries() throws Exception
+    {
+    	testExtractOverlappingLabelsFails("must start/end at token boundaries");
     }
     
     @Test
     public void testExtractOverlappingLabelsFails1() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
-        jcas.setDocumentText("a b b");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        
-        NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  1); // a
-        ne.setValue("A");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas,  0,  5); // b b
-        ne.setValue("B");
-        ne.addToIndexes();
-        
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
-                cache);
-        
-        assertThatThrownBy(() -> sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
-                new ArrayList<>(select(jcas, NamedEntity.class))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping labels are not supported");
+    	testExtractOverlappingLabelsFails("Overlapping labels are not supported");
     }
 
     @Test
     public void testExtractOverlappingLabelsFails2() throws Exception
     {
-        JCas jcas = JCasFactory.createJCas();
-        jcas.setDocumentText("a b b");
-        
-        new Token(jcas,  0,  1).addToIndexes(); // a
-        new Token(jcas,  2,  3).addToIndexes(); // b
-        new Token(jcas,  4,  5).addToIndexes(); // b
-        
-        NamedEntity ne;
-        ne = new NamedEntity(jcas,  0,  3); // a b
-        ne.setValue("A");
-        ne.addToIndexes();
-        ne = new NamedEntity(jcas,  2,  5); // b b
-        ne.setValue("B");
-        ne.addToIndexes();
-        
-        DL4JSequenceRecommender sut = new DL4JSequenceRecommender(buildNerRecommender(), traits,
-                cache);
-        
-        assertThatThrownBy(() -> sut.extractTokenLabels(
-                new ArrayList<>(select(jcas, Token.class)), 
-                new ArrayList<>(select(jcas, NamedEntity.class))))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("Overlapping labels are not supported");
+    	testExtractOverlappingLabelsFails("Overlapping labels are not supported");
     }
 
     @Test

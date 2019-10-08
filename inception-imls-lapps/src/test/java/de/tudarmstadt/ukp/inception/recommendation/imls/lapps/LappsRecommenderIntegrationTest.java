@@ -99,15 +99,15 @@ public class LappsRecommenderIntegrationTest
 
     private static Recommender buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(POS.class.getName());
+        AnnotationLayer LRIT_layer = new AnnotationLayer();
+        LRIT_layer.setName(POS.class.getName());
 
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName("PosValue");
+        AnnotationFeature LRIT_feature = new AnnotationFeature();
+        LRIT_feature.setName("PosValue");
 
         Recommender recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
+        recommender.setLayer(LRIT_layer);
+        recommender.setFeature(LRIT_feature);
         recommender.setMaxRecommendations(3);
 
         return recommender;

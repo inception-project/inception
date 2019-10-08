@@ -84,19 +84,19 @@ public class SubjectObjectFeatureEditor
 
     private static final Logger LOG = LoggerFactory.getLogger(SubjectObjectFeatureEditor.class);
 
-    private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean ConceptLinkingService clService;
-    private @SpringBean FactLinkingService factService;
-    private @SpringBean FeatureSupportRegistry featureSupportRegistry;
-    private @SpringBean KnowledgeBaseService kbService;
+    private @SpringBean AnnotationSchemaService annotationService2;
+    private @SpringBean ConceptLinkingService clService2;
+    private @SpringBean FactLinkingService factService2;
+    private @SpringBean FeatureSupportRegistry featureSupportRegistry2;
+    private @SpringBean KnowledgeBaseService kbService2;
 
-    private WebMarkupContainer content;
-    private Component focusComponent;
-    private AnnotationActionHandler actionHandler;
-    private IModel<AnnotatorState> stateModel;
-    private Project project;
-    private LinkWithRoleModel roleModel;
-    private AnnotationFeature linkedAnnotationFeature;
+    private WebMarkupContainer content2;
+    private Component focusComponent2;
+    private AnnotationActionHandler actionHandler2;
+    private IModel<AnnotatorState> stateModel2;
+    private Project project2;
+    private LinkWithRoleModel roleModel2;
+    private AnnotationFeature linkedAnnotationFeature2;
 
     public SubjectObjectFeatureEditor(String aId, MarkupContainer aOwner,
         AnnotationActionHandler aHandler, final IModel<AnnotatorState> aStateModel,
@@ -104,28 +104,28 @@ public class SubjectObjectFeatureEditor
     {
         super(aId, aOwner, CompoundPropertyModel.of(aFeatureStateModel));
 
-        stateModel = aStateModel;
-        actionHandler = aHandler;
-        project = this.getModelObject().feature.getProject();
+        stateModel2 = aStateModel;
+        actionHandler2 = aHandler;
+        project2 = this.getModelObject().feature.getProject();
 
         add(createDisabledKbWarningLabel());
 
-        content = new WebMarkupContainer("content");
-        content.setOutputMarkupId(true);
-        add(content);
+        content2 = new WebMarkupContainer("content2");
+        content2.setOutputMarkupId(true);
+        add(content2);
 
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) SubjectObjectFeatureEditor.this
             .getModelObject().value;
 
-        roleModel = new LinkWithRoleModel();
-        roleModel.role = role;
+        roleModel2 = new LinkWithRoleModel();
+        roleModel2.role = role;
         if (links.size() == 1) {
-            roleModel = links.get(0);
+            roleModel2 = links.get(0);
         }
 
-        content.add(createSubjectObjectLabel());
-        content.add(createRemoveLabelIcon());
-        content.add(focusComponent = createAutoCompleteTextField());
+        content2.add(createSubjectObjectLabel());
+        content2.add(createRemoveLabelIcon());
+        content2.add(focusComponent2 = createAutoCompleteTextField());
     }
     
     @Override
@@ -165,7 +165,7 @@ public class SubjectObjectFeatureEditor
             }
         }));
         if (!roleLabelSlotIsSelected()) {
-            label.setDefaultModelObject(roleModel.label);
+            label.setDefaultModelObject(roleModel2.label);
         }
         return label;
     }
@@ -178,20 +178,20 @@ public class SubjectObjectFeatureEditor
     private void removeSelectedLabel(AjaxRequestTarget aTarget)
     {
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
-        AnnotatorState state = this.stateModel.getObject();
+        AnnotatorState state = this.stateModel2.getObject();
 
-        String role = roleModel.role;
-        roleModel = new LinkWithRoleModel();
-        roleModel.role = role;
-        links.set(0, roleModel);
+        String role = roleModel2.role;
+        roleModel2 = new LinkWithRoleModel();
+        roleModel2.role = role;
+        links.set(0, roleModel2);
 
         // Auto-commit if working on existing annotation
         if (state.getSelection().getAnnotation().isSet()) {
             try {
-                actionHandler.actionCreateOrUpdate(aTarget, actionHandler.getEditorCas());
+                actionHandler2.actionCreateOrUpdate(aTarget, actionHandler2.getEditorCas());
             }
             catch (Exception e) {
-                handleException(this, aTarget, e);
+                handleException1(this, aTarget, e);
             }
         }
     }
@@ -202,24 +202,24 @@ public class SubjectObjectFeatureEditor
             return "<Select to fill>";
         }
         else {
-            return roleModel.label;
+            return roleModel2.label;
         }
     }
 
     private boolean roleLabelIsFilled()
     {
 
-        return roleModel.targetAddr != -1;
+        return roleModel2.targetAddr != -1;
     }
 
     private boolean roleLabelSlotIsSelected()
     {
-        return stateModel.getObject().isArmedSlot(getModelObject(), 0);
+        return stateModel2.getObject().isArmedSlot(getModelObject(), 0);
     }
 
     private void actionToggleArmedState(AjaxRequestTarget aTarget)
     {
-        AnnotatorState state = stateModel.getObject();
+        AnnotatorState state = stateModel2.getObject();
 
         if (roleLabelSlotIsSelected()) {
             state.clearArmedSlot();
@@ -240,7 +240,7 @@ public class SubjectObjectFeatureEditor
     @Override
     public Component getFocusComponent()
     {
-        return focusComponent;
+        return focusComponent2;
     }
 
     @Override
@@ -250,15 +250,15 @@ public class SubjectObjectFeatureEditor
         
         List<LinkWithRoleModel> links = (List<LinkWithRoleModel>) this.getModelObject().value;
         if (links.size() == 0) {
-            String role = roleModel.role;
-            roleModel = new LinkWithRoleModel();
-            roleModel.role = role;
-            links.add(roleModel);
+            String role = roleModel2.role;
+            roleModel2 = new LinkWithRoleModel();
+            roleModel2.role = role;
+            links.add(roleModel2);
         }
         else {
-            roleModel = links.get(0);
+            roleModel2 = links.get(0);
         }
-        linkedAnnotationFeature = getLinkedAnnotationFeature();
+        linkedAnnotationFeature2 = getLinkedAnnotationFeature();
     }
 
     private AutoCompleteTextField<KBHandle> createAutoCompleteTextField()
@@ -272,7 +272,7 @@ public class SubjectObjectFeatureEditor
 
             @Override protected List<KBHandle> getChoices(String input)
             {
-                return listInstances(actionHandler, input);
+                return listInstances(actionHandler2, input);
             }
 
             @Override
@@ -302,9 +302,9 @@ public class SubjectObjectFeatureEditor
         
         if (roleLabelIsFilled()) {
             try {
-                CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
-                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature,
+                CAS cas = actionHandler2.getEditorCas();
+                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel2.targetAddr);
+                WebAnnoCasUtil.setFeature(selectedFS, linkedAnnotationFeature2,
                     value != null ? value.getIdentifier() : value);
             }
             catch (Exception e) {
@@ -321,10 +321,10 @@ public class SubjectObjectFeatureEditor
             String selectedKBItemIdentifier;
             
             try {
-                CAS cas = actionHandler.getEditorCas();
-                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel.targetAddr);
+                CAS cas = actionHandler2.getEditorCas();
+                FeatureStructure selectedFS = selectFsByAddr(cas, roleModel2.targetAddr);
                 selectedKBItemIdentifier = WebAnnoCasUtil.getFeature(selectedFS,
-                        linkedAnnotationFeature.getName());
+                        linkedAnnotationFeature2.getName());
             }
             catch (Exception e) {
                 LOG.error("Error loading CAS:  " + e.getMessage(), e);
@@ -336,9 +336,9 @@ public class SubjectObjectFeatureEditor
             
             if (selectedKBItemIdentifier != null) {
                 try {
-                    ConceptFeatureTraits traits = factService.getFeatureTraits(project);
-                    selectedKBHandleItem = factService.getKBInstancesByIdentifierAndTraits(
-                            selectedKBItemIdentifier, project, traits);
+                    ConceptFeatureTraits traits = factService2.getFeatureTraits(project2);
+                    selectedKBHandleItem = factService2.getKBInstancesByIdentifierAndTraits(
+                            selectedKBItemIdentifier, project2, traits);
                 }
                 catch (Exception e) {
                     LOG.error("Unable to resolve [" + selectedKBItemIdentifier + "]: "
@@ -356,23 +356,23 @@ public class SubjectObjectFeatureEditor
 
     private List<KBHandle> listInstances(AnnotationActionHandler aHandler, String aTypedString)
     {
-        if (linkedAnnotationFeature == null) {
-            linkedAnnotationFeature = getLinkedAnnotationFeature();
+        if (linkedAnnotationFeature2 == null) {
+            linkedAnnotationFeature2 = getLinkedAnnotationFeature();
         }
         List<KBHandle> handles = new ArrayList<>();
 
-        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature);
+        ConceptFeatureTraits traits = readFeatureTraits(linkedAnnotationFeature2);
         String repoId = traits.getRepositoryId();
         // Check if kb is actually enabled
-        if (!(repoId == null || kbService.isKnowledgeBaseEnabled(project, repoId))) {
+        if (!(repoId == null || kbService2.isKnowledgeBaseEnabled(project2, repoId))) {
             return Collections.emptyList();
         }
 
         // Use concept linking if enabled
         try {
-            handles = clService.getLinkingInstancesInKBScope(traits.getRepositoryId(),
-                    traits.getScope(), traits.getAllowedValueType(), aTypedString, roleModel.label,
-                    roleModel.targetAddr, getEditorCas(aHandler), project);
+            handles = clService2.getLinkingInstancesInKBScope(traits.getRepositoryId(),
+                    traits.getScope(), traits.getAllowedValueType(), aTypedString, roleModel2.label,
+                    roleModel2.targetAddr, getEditorCas(aHandler), project2);
         }
         catch (IOException e) {
             LOG.error("An error occurred while retrieving entity candidates.", e);
@@ -385,15 +385,15 @@ public class SubjectObjectFeatureEditor
 
     private AnnotationFeature getLinkedAnnotationFeature() {
         String linkedType = this.getModelObject().feature.getType();
-        AnnotationLayer linkedLayer = annotationService
-            .findLayer(this.stateModel.getObject().getProject(), linkedType);
-        AnnotationFeature linkedAnnotationFeature = annotationService
+        AnnotationLayer linkedLayer = annotationService2
+            .findLayer(this.stateModel2.getObject().getProject(), linkedType);
+        AnnotationFeature linkedAnnotationFeature2 = annotationService2
             .getFeature(FactLinkingConstants.LINKED_LAYER_FEATURE, linkedLayer);
-        return linkedAnnotationFeature;
+        return linkedAnnotationFeature2;
     }
 
     private ConceptFeatureTraits readFeatureTraits(AnnotationFeature aAnnotationFeature) {
-        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry
+        FeatureSupport<ConceptFeatureTraits> fs = featureSupportRegistry2
             .getFeatureSupport(aAnnotationFeature);
         ConceptFeatureTraits traits = fs.readTraits(aAnnotationFeature);
         return traits;
@@ -404,7 +404,7 @@ public class SubjectObjectFeatureEditor
         return aHandler.getEditorCas();
     }
 
-    public static void handleException(Component aComponent, AjaxRequestTarget aTarget,
+    public static void handleException1(Component aComponent, AjaxRequestTarget aTarget,
         Exception aException)
     {
         try {
@@ -431,10 +431,10 @@ public class SubjectObjectFeatureEditor
 
     private DisabledKBWarning createDisabledKbWarningLabel()
     {
-        if (linkedAnnotationFeature == null) {
-            linkedAnnotationFeature = getLinkedAnnotationFeature();
+        if (linkedAnnotationFeature2 == null) {
+            linkedAnnotationFeature2 = getLinkedAnnotationFeature();
         }
-        return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature));
+        return new DisabledKBWarning("disabledKBWarning", Model.of(linkedAnnotationFeature2));
     }
 
     @OnEvent

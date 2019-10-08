@@ -92,32 +92,32 @@ public class ExportedRecommender
         layerName = aLayerName;
     }
 
-    public String getTool()
+    public String getTool_1()
     {
         return tool;
     }
 
-    public void setTool(String aTool)
+    public void setTool_1(String aTool)
     {
         tool = aTool;
     }
 
-    public double getThreshold()
+    public double getThreshold_1()
     {
         return threshold;
     }
 
-    public void setThreshold(double aThreshold)
+    public void setThreshold_1(double aThreshold)
     {
         threshold = aThreshold;
     }
 
-    public boolean isAlwaysSelected()
+    public boolean isAlwaysSelected_1()
     {
         return alwaysSelected;
     }
 
-    public void setAlwaysSelected(boolean aAlwaysSelected)
+    public void setAlwaysSelected_1(boolean aAlwaysSelected)
     {
         alwaysSelected = aAlwaysSelected;
     }
@@ -142,32 +142,32 @@ public class ExportedRecommender
         skipEvaluation = aSkipEvaluation;
     }
 
-    public int getMaxRecommendations()
+    public int getMaxRecommendations_1()
     {
         return maxRecommendations;
     }
 
-    public void setMaxRecommendations(int aMaxRecommendations)
+    public void setMaxRecommendations_1(int aMaxRecommendations)
     {
         maxRecommendations = aMaxRecommendations;
     }
 
-    public Set<AnnotationDocumentState> getStatesIgnoredForTraining()
+    public Set<AnnotationDocumentState> getStatesIgnoredForTraining_1()
     {
         return statesIgnoredForTraining;
     }
 
-    public void setStatesIgnoredForTraining(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
+    public void setStatesIgnoredForTraining_1(Set<AnnotationDocumentState> aStatesIgnoredForTraining)
     {
         statesIgnoredForTraining = aStatesIgnoredForTraining;
     }
 
-    public String getTraits()
+    public String getTraits_1()
     {
         return traits;
     }
 
-    public void setTraits(String aTraits)
+    public void setTraits_1(String aTraits)
     {
         traits = aTraits;
     }

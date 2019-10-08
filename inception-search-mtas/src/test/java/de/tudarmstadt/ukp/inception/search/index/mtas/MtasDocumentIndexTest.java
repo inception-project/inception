@@ -224,242 +224,242 @@ public class MtasDocumentIndexTest
     @Test
     public void testRawTextQuery() throws Exception
     {
-        Project project = new Project();
-        project.setName("TestRawTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        Project project8 = new Project();
+        project8.setName("TestRawTextQuery");
+        project8.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        createProject(project8);
 
-        SourceDocument sourceDocument = new SourceDocument();
+        SourceDocument sourceDocument8 = new SourceDocument();
 
-        sourceDocument.setName("Raw text document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
+        sourceDocument8.setName("Raw text document");
+        sourceDocument8.setProject(project8);
+        sourceDocument8.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        String fileContent8 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadDocument(Pair.of(sourceDocument8, fileContent8));
 
-        User user = userRepository.get("admin");
+        User user8 = userRepository.get("admin");
 
-        String query = "Galicia";
+        String query8 = "Galicia";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        List<SearchResult> results8 = searchService.query(user8, project8, query8);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("Raw text document");
-        expectedResult.setLeftContext("The capital of ");
-        expectedResult.setText("Galicia");
-        expectedResult.setRightContext(" is Santiago de");
-        expectedResult.setOffsetStart(15);
-        expectedResult.setOffsetEnd(22);
-        expectedResult.setTokenStart(3);
-        expectedResult.setTokenLength(1);
+        SearchResult expectedResult8 = new SearchResult();
+        expectedResult8.setDocumentId(sourceDocument8.getId());
+        expectedResult8.setDocumentTitle("Raw text document");
+        expectedResult8.setLeftContext("The capital of ");
+        expectedResult8.setText("Galicia");
+        expectedResult8.setRightContext(" is Santiago de");
+        expectedResult8.setOffsetStart(15);
+        expectedResult8.setOffsetEnd(22);
+        expectedResult8.setTokenStart(3);
+        expectedResult8.setTokenLength(1);
 
-        assertThat(results)
+        assertThat(results8)
                 .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+                .containsExactly(expectedResult8);
     }
 
     @Test
     public void thatLastTokenInDocumentCanBeFound() throws Exception
     {
-        Project project = new Project();
-        project.setName("LastTokenInDocumentCanBeFound");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        Project project7 = new Project();
+        project7.setName("LastTokenInDocumentCanBeFound");
+        project7.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        createProject(project7);
 
-        SourceDocument sourceDocument = new SourceDocument();
+        SourceDocument sourceDocument7 = new SourceDocument();
 
-        sourceDocument.setName("Raw text document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
+        sourceDocument7.setName("Raw text document");
+        sourceDocument7.setProject(project7);
+        sourceDocument7.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        String fileContent7 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadDocument(Pair.of(sourceDocument7, fileContent7));
 
-        User user = userRepository.get("admin");
+        User user7 = userRepository.get("admin");
 
-        String query = "\"\\.\"";
+        String query7 = "\"\\.\"";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        List<SearchResult> results7 = searchService.query(user7, project7, query7);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("Raw text document");
-        expectedResult.setLeftContext("Santiago de Compostela");
-        expectedResult.setText(".");
-        expectedResult.setRightContext("");
-        expectedResult.setOffsetStart(48);
-        expectedResult.setOffsetEnd(49);
-        expectedResult.setTokenStart(8);
-        expectedResult.setTokenLength(1);
+        SearchResult expectedResult7 = new SearchResult();
+        expectedResult7.setDocumentId(sourceDocument7.getId());
+        expectedResult7.setDocumentTitle("Raw text document");
+        expectedResult7.setLeftContext("Santiago de Compostela");
+        expectedResult7.setText(".");
+        expectedResult7.setRightContext("");
+        expectedResult7.setOffsetStart(48);
+        expectedResult7.setOffsetEnd(49);
+        expectedResult7.setTokenStart(8);
+        expectedResult7.setTokenLength(1);
 
-        assertThat(results)
+        assertThat(results7)
                 .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+                .containsExactly(expectedResult7);
     }
     @Test
     public void testLimitQueryToDocument() throws Exception
     {
-        Project project = new Project();
-        project.setName("TestLimitQueryToDocument");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        Project project6 = new Project();
+        project6.setName("TestLimitQueryToDocument");
+        project6.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        createProject(project6);
 
-        SourceDocument sourceDocument1 = new SourceDocument();
-        sourceDocument1.setName("Raw text document 1");
-        sourceDocument1.setProject(project);
-        sourceDocument1.setFormat("text");
-        String fileContent1 = "The capital of Galicia is Santiago de Compostela.";
+        SourceDocument sourceDocument6 = new SourceDocument();
+        sourceDocument6.setName("Raw text document 1");
+        sourceDocument6.setProject(project6);
+        sourceDocument6.setFormat("text");
+        String fileContent6 = "The capital of Galicia is Santiago de Compostela.";
 
-        SourceDocument sourceDocument2 = new SourceDocument();
-        sourceDocument2.setName("Raw text document 2");
-        sourceDocument2.setProject(project);
-        sourceDocument2.setFormat("text");
-        String fileContent2 = "The capital of Portugal is Lissabon.";
+        SourceDocument sourceDocument66 = new SourceDocument();
+        sourceDocument66.setName("Raw text document 2");
+        sourceDocument66.setProject(project6);
+        sourceDocument66.setFormat("text");
+        String fileContent66 = "The capital of Portugal is Lissabon.";
         
         uploadDocument(
-                Pair.of(sourceDocument1, fileContent1),
-                Pair.of(sourceDocument2, fileContent2));
+                Pair.of(sourceDocument6, fileContent6),
+                Pair.of(sourceDocument66, fileContent66));
 
-        User user = userRepository.get("admin");
+        User user6 = userRepository.get("admin");
 
-        String query = "capital";
+        String query6 = "capital";
 
         // Execute query
-        SourceDocument sourceDocument = documentService.getSourceDocument(project,
+        SourceDocument sourceDocument666 = documentService.getSourceDocument(project6,
                 "Raw text document 1");
-        List<SearchResult> resultsNotLimited = searchService.query(user, project, query);
-        List<SearchResult> resultsLimited = searchService.query(user, project, query,
-                sourceDocument);
+        List<SearchResult> resultsNotLimited6 = searchService.query(user6, project6, query6);
+        List<SearchResult> resultsLimited6 = searchService.query(user6, project6, query6,
+                sourceDocument6);
 
         // Test results
-        SearchResult expectedResult1 = new SearchResult();
-        expectedResult1.setDocumentId(sourceDocument1.getId());
-        expectedResult1.setDocumentTitle("Raw text document 1");
-        expectedResult1.setText("capital");
-        expectedResult1.setLeftContext("The ");
-        expectedResult1.setRightContext(" of Galicia is");
-        expectedResult1.setOffsetStart(4);
-        expectedResult1.setOffsetEnd(11);
-        expectedResult1.setTokenStart(1);
-        expectedResult1.setTokenLength(1);
+        SearchResult expectedResult6 = new SearchResult();
+        expectedResult6.setDocumentId(sourceDocument6.getId());
+        expectedResult6.setDocumentTitle("Raw text document 1");
+        expectedResult6.setText("capital");
+        expectedResult6.setLeftContext("The ");
+        expectedResult6.setRightContext(" of Galicia is");
+        expectedResult6.setOffsetStart(4);
+        expectedResult6.setOffsetEnd(11);
+        expectedResult6.setTokenStart(1);
+        expectedResult6.setTokenLength(1);
 
-        SearchResult expectedResult2 = new SearchResult();
-        expectedResult2.setDocumentId(sourceDocument2.getId());
-        expectedResult2.setDocumentTitle("Raw text document 2");
-        expectedResult2.setText("capital");
-        expectedResult2.setLeftContext("The ");
-        expectedResult2.setRightContext(" of Portugal is");
-        expectedResult2.setOffsetStart(4);
-        expectedResult2.setOffsetEnd(11);
-        expectedResult2.setTokenStart(1);
-        expectedResult2.setTokenLength(1);
+        SearchResult expectedResult66 = new SearchResult();
+        expectedResult66.setDocumentId(sourceDocument66.getId());
+        expectedResult66.setDocumentTitle("Raw text document 2");
+        expectedResult66.setText("capital");
+        expectedResult66.setLeftContext("The ");
+        expectedResult66.setRightContext(" of Portugal is");
+        expectedResult66.setOffsetStart(4);
+        expectedResult66.setOffsetEnd(11);
+        expectedResult66.setTokenStart(1);
+        expectedResult66.setTokenLength(1);
 
-        assertThat(resultsLimited)
+        assertThat(resultsLimited6)
                 .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult1);
+                .containsExactly(expectedResult6);
         
-        assertThat(resultsNotLimited)
+        assertThat(resultsNotLimited6)
                 .usingFieldByFieldElementComparator()
-                .containsExactlyInAnyOrder(expectedResult1, expectedResult2);
+                .containsExactlyInAnyOrder(expectedResult6, expectedResult66);
     }
 
     @Test
     public void testSimplifiedTokenTextQuery() throws Exception
     {
-        Project project = new Project();
-        project.setName("SimplifiedTokenTextQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        Project project9 = new Project();
+        project9.setName("SimplifiedTokenTextQuery");
+        project9.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        createProject(project9);
 
-        SourceDocument sourceDocument = new SourceDocument();
+        SourceDocument sourceDocument9 = new SourceDocument();
 
-        sourceDocument.setName("Raw text document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
+        sourceDocument9.setName("Raw text document");
+        sourceDocument9.setProject(project9);
+        sourceDocument9.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        String fileContent9 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
+        uploadDocument(Pair.of(sourceDocument9, fileContent9));
 
-        User user = userRepository.get("admin");
+        User user9 = userRepository.get("admin");
 
-        String query = "\"Galicia\"";
+        String query9 = "\"Galicia\"";
 
         // Execute query
-        List<SearchResult> results = searchService.query(user, project, query);
+        List<SearchResult> results9 = searchService.query(user9, project9, query9);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("Raw text document");
-        expectedResult.setText("Galicia");
-        expectedResult.setLeftContext("The capital of ");
-        expectedResult.setRightContext(" is Santiago de");
-        expectedResult.setOffsetStart(15);
-        expectedResult.setOffsetEnd(22);
-        expectedResult.setTokenStart(3);
-        expectedResult.setTokenLength(1);
+        SearchResult expectedResult9 = new SearchResult();
+        expectedResult9.setDocumentId(sourceDocument9.getId());
+        expectedResult9.setDocumentTitle("Raw text document");
+        expectedResult9.setText("Galicia");
+        expectedResult9.setLeftContext("The capital of ");
+        expectedResult9.setRightContext(" is Santiago de");
+        expectedResult9.setOffsetStart(15);
+        expectedResult9.setOffsetEnd(22);
+        expectedResult9.setTokenStart(3);
+        expectedResult9.setTokenLength(1);
 
-        assertThat(results)
+        assertThat(results9)
                 .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+                .containsExactly(expectedResult9);
     }
     
     @Test
     public void testAnnotationQuery() throws Exception
     {
-        Project project = new Project();
-        project.setName("TestAnnotationQuery");
-        project.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
+        Project project5 = new Project();
+        project5.setName("TestAnnotationQuery");
+        project5.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
 
-        createProject(project);
+        createProject(project5);
 
-        User user = userRepository.get("admin");
+        User user5 = userRepository.get("admin");
 
-        SourceDocument sourceDocument = new SourceDocument();
+        SourceDocument sourceDocument5 = new SourceDocument();
 
-        sourceDocument.setName("Annotation document");
-        sourceDocument.setProject(project);
-        sourceDocument.setFormat("text");
+        sourceDocument5.setName("Annotation document");
+        sourceDocument5.setProject(project5);
+        sourceDocument5.setFormat("text");
 
-        String fileContent = "The capital of Galicia is Santiago de Compostela.";
+        String fileContent5 = "The capital of Galicia is Santiago de Compostela.";
 
-        uploadDocument(Pair.of(sourceDocument, fileContent));
-        annotateDocument(project, user, sourceDocument);
+        uploadDocument(Pair.of(sourceDocument5, fileContent5));
+        annotateDocument(project5, user5, sourceDocument5);
 
-        String query = "<Named_entity.value=\"LOC\"/>";
+        String query5 = "<Named_entity.value=\"LOC\"/>";
 
-        List<SearchResult> results = searchService.query(user, project, query);
+        List<SearchResult> results5 = searchService.query(user5, project5, query5);
 
         // Test results
-        SearchResult expectedResult = new SearchResult();
-        expectedResult.setDocumentId(sourceDocument.getId());
-        expectedResult.setDocumentTitle("Annotation document");
+        SearchResult expectedResult5 = new SearchResult();
+        expectedResult5.setDocumentId(sourceDocument5.getId());
+        expectedResult5.setDocumentTitle("Annotation document");
         // When searching for an annotation, we don't get the matching
         // text back... not sure why...
-        expectedResult.setText("");
-        expectedResult.setLeftContext("");
-        expectedResult.setRightContext("");
-        expectedResult.setOffsetStart(15);
-        expectedResult.setOffsetEnd(22);
-        expectedResult.setTokenStart(3);
-        expectedResult.setTokenLength(1);
+        expectedResult5.setText("");
+        expectedResult5.setLeftContext("");
+        expectedResult5.setRightContext("");
+        expectedResult5.setOffsetStart(15);
+        expectedResult5.setOffsetEnd(22);
+        expectedResult5.setTokenStart(3);
+        expectedResult5.setTokenLength(1);
 
-        assertThat(results)
+        assertThat(results5)
                 .usingFieldByFieldElementComparator()
-                .containsExactly(expectedResult);
+                .containsExactly(expectedResult5);
     }
 
     @Configuration

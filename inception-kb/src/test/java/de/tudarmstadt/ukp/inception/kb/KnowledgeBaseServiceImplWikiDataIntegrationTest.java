@@ -66,20 +66,20 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
 
-    private static final String PROJECT_NAME = "Test project";
-    private static final String KB_NAME = "Wikidata (official/direct mapping)";
+    private static final String KBS_PROJECT_NAME = "Test project";
+    private static final String KBS_KB_NAME = "Wikidata (official/direct mapping)";
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder KBS_temporaryFolder = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager testEntityManager;
+    private TestEntityManager KBS_testEntityManager;
 
     @ClassRule
-    public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+    public static final SpringClassRule SBS_PRING_CLASS_RULE = new SpringClassRule();
 
     @Rule
-    public final SpringMethodRule springMethodRule = new SpringMethodRule();
+    public final SpringMethodRule KBS_springMethodRule = new SpringMethodRule();
 
     private KnowledgeBaseServiceImpl sut;
     private Project project;
@@ -111,12 +111,12 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     public void setUp() throws Exception
     {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
-        EntityManager entityManager = testEntityManager.getEntityManager();
-        testFixtures = new TestFixtures(testEntityManager);
+        repoProps.setPath(KBS_temporaryFolder.getRoot());
+        EntityManager entityManager = KBS_testEntityManager.getEntityManager();
+        testFixtures = new TestFixtures(KBS_testEntityManager);
         sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        project = createProject(PROJECT_NAME);
-        kb = buildKnowledgeBase(project, KB_NAME);
+        project = createProject(KBS_PROJECT_NAME);
+        kb = buildKnowledgeBase(project, KBS_KB_NAME);
         String wikidataAccessUrl = PROFILES.get("wikidata").getAccess().getAccessUrl();
         testFixtures.assumeEndpointIsAvailable(wikidataAccessUrl);
         sut.registerKnowledgeBase(kb, sut.getRemoteConfig(wikidataAccessUrl));
@@ -126,7 +126,7 @@ public class KnowledgeBaseServiceImplWikiDataIntegrationTest  {
     @After
     public void tearDown() throws Exception
     {
-        testEntityManager.clear();
+        KBS_testEntityManager.clear();
         sut.destroy();
     }
 

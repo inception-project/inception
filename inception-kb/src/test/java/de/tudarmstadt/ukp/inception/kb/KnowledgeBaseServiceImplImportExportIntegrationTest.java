@@ -65,40 +65,40 @@ import de.tudarmstadt.ukp.inception.kb.yaml.KnowledgeBaseProfile;
 @DataJpaTest
 public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
-    private static final String PROJECT_NAME = "Test project";
+    private static final String PROJECT_NAME = "Test project5";
     private static final String KB_NAME = "Test knowledge base";
 
     @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder5 = new TemporaryFolder();
 
     @Autowired
-    private TestEntityManager testEntityManager;
-    private TestFixtures testFixtures;
+    private TestEntityManager testEntityManager5;
+    private TestFixtures testFixtures5;
 
-    private KnowledgeBaseServiceImpl sut;
-    private Project project;
-    private KnowledgeBase kb;
+    private KnowledgeBaseServiceImpl sut5;
+    private Project project5;
+    private KnowledgeBase kb5;
 
     @BeforeClass
-    public static void setUpOnce() {
+    public static void setUpOnce5() {
         System.setProperty("org.eclipse.rdf4j.repository.debug", "true");
     }
 
     @Before
-    public void setUp() {
+    public void setUp5() {
         RepositoryProperties repoProps = new RepositoryProperties();
-        repoProps.setPath(temporaryFolder.getRoot());
-        EntityManager entityManager = testEntityManager.getEntityManager();
-        testFixtures = new TestFixtures(testEntityManager);
-        sut = new KnowledgeBaseServiceImpl(repoProps, entityManager);
-        project = createProject(PROJECT_NAME);
-        kb = buildKnowledgeBase(project, KB_NAME);
+        repoProps.setPath(temporaryFolder5.getRoot());
+        EntityManager entityManager = testEntityManager5.getEntityManager();
+        testFixtures5 = new TestFixtures(testEntityManager5);
+        sut5 = new KnowledgeBaseServiceImpl(repoProps, entityManager);
+        project5 = createProject(PROJECT_NAME);
+        kb5 = buildKnowledgeBase(project5, KB_NAME);
     }
 
     @After
-    public void tearDown() throws Exception {
-        testEntityManager.clear();
-        sut.destroy();
+    public void tearDown5() throws Exception {
+        testEntityManager5.clear();
+        sut5.destroy();
     }
 
     @Test
@@ -107,12 +107,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithExistingTtl_ShouldImportTriples() throws Exception {
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        sut5.registerKnowledgeBase(kb5, sut5.getNativeConfig());
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut5.listAllConcepts(kb5, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut5.listProperties(kb5, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
             .containsExactlyInAnyOrder("Animal", "Character", "Cat", "Dog");
@@ -123,13 +123,13 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithReadOnlyKb_ShouldDoNothing() throws Exception {
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        kb.setReadOnly(true);
+        sut5.registerKnowledgeBase(kb5, sut5.getNativeConfig());
+        kb5.setReadOnly(true);
 
         importKnowledgeBase("data/pets.ttl");
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut5.listAllConcepts(kb5, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut5.listProperties(kb5, false).stream().map(KBObject::getName);
         assertThat(conceptLabels)
             .as("Check that no concepts have been imported")
             .isEmpty();
@@ -140,14 +140,14 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void importData_WithTwoFilesAndOneKnowledgeBase_ShouldImportAllTriples() throws Exception {
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        sut5.registerKnowledgeBase(kb5, sut5.getNativeConfig());
         String[] resourceNames = {"data/pets.ttl", "data/more_pets.ttl"};
         for (String resourceName : resourceNames) {
             importKnowledgeBase(resourceName);
         }
 
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
+        Stream<String> conceptLabels = sut5.listAllConcepts(kb5, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut5.listProperties(kb5, false).stream().map(KBObject::getName);
 
         assertThat(conceptLabels)
             .as("Check that concepts all have been imported")
@@ -162,16 +162,16 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         ClassLoader classLoader = getClass().getClassLoader();
         String resourceName = "turtle/mismatching_literal_statement.ttl";
         String fileName = classLoader.getResource(resourceName).getFile();
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
+        sut5.registerKnowledgeBase(kb5, sut5.getNativeConfig());
 
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            sut.importData(kb, fileName, is);
+            sut5.importData(kb5, fileName, is);
         }
 
-        KBInstance kahmi = sut.readInstance(kb, "http://mbugert.de/pets#kahmi").get();
-        Stream<String> conceptLabels = sut.listAllConcepts(kb, false).stream().map(KBObject::getName);
-        Stream<String> propertyLabels = sut.listProperties(kb, false).stream().map(KBObject::getName);
-        Stream<Object> kahmiValues = sut.listStatements(kb, kahmi, false)
+        KBInstance kahmi = sut5.readInstance(kb5, "http://mbugert.de/pets#kahmi").get();
+        Stream<String> conceptLabels = sut5.listAllConcepts(kb5, false).stream().map(KBObject::getName);
+        Stream<String> propertyLabels = sut5.listProperties(kb5, false).stream().map(KBObject::getName);
+        Stream<Object> kahmiValues = sut5.listStatements(kb5, kahmi, false)
             .stream()
             .map(KBStatement::getValue);
         assertThat(conceptLabels)
@@ -191,25 +191,25 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         concept.setName("TestConcept");
         KBProperty property = new KBProperty();
         property.setName("TestProperty");
-        sut.registerKnowledgeBase(kb, sut.getNativeConfig());
-        sut.createConcept(kb, concept);
-        sut.createProperty(kb, property);
+        sut5.registerKnowledgeBase(kb5, sut5.getNativeConfig());
+        sut5.createConcept(kb5, concept);
+        sut5.createProperty(kb5, property);
 
-        File kbFile = temporaryFolder.newFile("exported_kb.ttl");
-        try (OutputStream os = new FileOutputStream(kbFile)) {
-            sut.exportData(kb, RDFFormat.TURTLE, os);
+        File kb5File = temporaryFolder5.newFile("exported_kb5.ttl");
+        try (OutputStream os = new FileOutputStream(kb5File)) {
+            sut5.exportData(kb5, RDFFormat.TURTLE, os);
         }
 
-        KnowledgeBase importedKb = buildKnowledgeBase(project, "Imported knowledge base");
-        sut.registerKnowledgeBase(importedKb, sut.getNativeConfig());
-        try (InputStream is = new FileInputStream(kbFile)) {
-            sut.importData(importedKb, kbFile.getAbsolutePath(), is);
+        KnowledgeBase importedKb = buildKnowledgeBase(project5, "Imported knowledge base");
+        sut5.registerKnowledgeBase(importedKb, sut5.getNativeConfig());
+        try (InputStream is = new FileInputStream(kb5File)) {
+            sut5.importData(importedKb, kb5File.getAbsolutePath(), is);
         }
-        List<String> conceptLabels = sut.listAllConcepts(importedKb, false)
+        List<String> conceptLabels = sut5.listAllConcepts(importedKb, false)
             .stream()
             .map(KBObject::getName)
             .collect(Collectors.toList());
-        List<String> propertyLabels = sut.listProperties(importedKb, false)
+        List<String> propertyLabels = sut5.listProperties(importedKb, false)
             .stream()
             .map(KBObject::getName)
             .filter(Objects::nonNull)
@@ -224,12 +224,12 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
 
     @Test
     public void exportData_WithRemoteKnowledgeBase_ShouldDoNothing() throws Exception {
-        File outputFile = temporaryFolder.newFile();
-        kb.setType(RepositoryType.REMOTE);
-        sut.registerKnowledgeBase(kb, sut.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
+        File outputFile = temporaryFolder5.newFile();
+        kb5.setType(RepositoryType.REMOTE);
+        sut5.registerKnowledgeBase(kb5, sut5.getRemoteConfig(KnowledgeBaseProfile.readKnowledgeBaseProfiles().get("babel_net").getAccess().getAccessUrl()));
 
         try (OutputStream os = new FileOutputStream(outputFile)) {
-            sut.exportData(kb, RDFFormat.TURTLE, os);
+            sut5.exportData(kb5, RDFFormat.TURTLE, os);
         }
 
         assertThat(outputFile)
@@ -243,18 +243,18 @@ public class KnowledgeBaseServiceImplImportExportIntegrationTest {
         Project p = new Project();
         p.setName(name);
         p.setMode(WebAnnoConst.PROJECT_TYPE_ANNOTATION);
-        return testEntityManager.persist(p);
+        return testEntityManager5.persist(p);
     }
 
-    private KnowledgeBase buildKnowledgeBase(Project project, String name) {
-        return testFixtures.buildKnowledgeBase(project, name, Reification.NONE);
+    private KnowledgeBase buildKnowledgeBase(Project project5, String name) {
+        return testFixtures5.buildKnowledgeBase(project5, name, Reification.NONE);
     }
 
     private void importKnowledgeBase(String resourceName) throws Exception {
         ClassLoader classLoader = getClass().getClassLoader();
         String fileName = classLoader.getResource(resourceName).getFile();
         try (InputStream is = classLoader.getResourceAsStream(resourceName)) {
-            sut.importData(kb, fileName, is);
+            sut5.importData(kb5, fileName, is);
         }
     }
 }

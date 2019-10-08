@@ -86,7 +86,7 @@ public class ExternalRecommenderIntegrationTest
     @Before
     public void setUp() throws Exception
     {
-        recommender = buildRecommender();
+        recommender = external_buildRecommender();
         context = new RecommenderContext();
 
         traits = new ExternalRecommenderTraits();
@@ -220,22 +220,22 @@ public class ExternalRecommenderIntegrationTest
         return casList;
     }
 
-    private static Recommender buildRecommender()
+    private static Recommender external_buildRecommender()
     {
-        AnnotationLayer layer = new AnnotationLayer();
-        layer.setName(TYPE);
-        layer.setCrossSentence(CROSS_SENTENCE);
-        layer.setAnchoringMode(ANCHORING_MODE);
+        AnnotationLayer external_layer = new AnnotationLayer();
+        external_layer.setName(TYPE);
+        external_layer.setCrossSentence(CROSS_SENTENCE);
+        external_layer.setAnchoringMode(ANCHORING_MODE);
 
-        AnnotationFeature feature = new AnnotationFeature();
-        feature.setName("value");
+        AnnotationFeature external_feature = new AnnotationFeature();
+        external_feature.setName("value");
         
-        Recommender recommender = new Recommender();
-        recommender.setLayer(layer);
-        recommender.setFeature(feature);
-        recommender.setMaxRecommendations(3);
+        Recommender external_recommender = new Recommender();
+        external_recommender.setLayer(external_layer);
+        external_recommender.setFeature(external_feature);
+        external_recommender.setMaxRecommendations(3);
         
-        return recommender;
+        return external_recommender;
     }
 
     private Dispatcher buildDispatcher()
