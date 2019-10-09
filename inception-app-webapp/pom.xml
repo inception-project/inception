@@ -196,6 +196,10 @@
       <groupId>org.dkpro.core</groupId>
       <artifactId>dkpro-core-io-perseus-asl</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.dkpro.core</groupId>
+      <artifactId>dkpro-core-io-xml-asl</artifactId>
+    </dependency>
 
     <!-- WEBANNO DEPENDENCIES -->
     <dependency>
@@ -460,6 +464,10 @@
         <exclusion>
           <groupId>ch.qos.logback</groupId>
           <artifactId>logback-classic</artifactId>
+        </exclusion>
+        <exclusion>
+          <artifactId>log4j-to-slf4j</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
         </exclusion>
       </exclusions>
     </dependency>

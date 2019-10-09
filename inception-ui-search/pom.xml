@@ -94,5 +94,9 @@
       <groupId>org.danekja</groupId>
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
+    <dependency>
+      <groupId>de.agilecoders.wicket</groupId>
+      <artifactId>wicket-bootstrap-extensions</artifactId>
+    </dependency>
   </dependencies>
 </project>
