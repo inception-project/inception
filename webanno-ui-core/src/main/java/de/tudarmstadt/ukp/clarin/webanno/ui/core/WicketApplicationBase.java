@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.core;
 
+import static org.apache.wicket.RuntimeConfigurationType.DEPLOYMENT;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.config.BaseLayoutCssResourceBehavior
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.BootstrapAwareJQueryUIJavaScriptResourceReference;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.CssBrowserSelectorResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.FontAwesomeResourceBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryJavascriptBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.JQueryUIResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.config.KendoResourceBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.css.theme.CustomBootstrapLessReference;
@@ -158,30 +161,29 @@ public abstract class WicketApplicationBase
 
     protected void initWebFrameworks()
     {
-        // Enable dynamic switching between JQuery 1 and JQuery 2 based on the browser
-        // identification. 
-        initDynamicJQueryResourceReference();
+        initJQueryResourceReference();
  
+        addJQueryJavascriptToAllPages();
+        
         initBootstrap();
         
-        initKendo();
+        addKendoResourcesToAllPages();
         
-        initJQueryUI();
+        addJQueryUIResourcesToAllPages();
         
-        initFontAwesome();
+        addFontAwesomeToAllPages();
         
-        initCssBrowserSelector();
+        addCssBrowserSelectorToAllPages();
         
         // Loading base layout CSS here so it can override JQuery/Kendo CSS
-        initBaseLayoutCss();
+        initAddBaseLayoutCssToAllPages();
     }
     
     protected void initBootstrap()
     {
         LessCompilerConfigurationFactory lessConfigFactory = () -> {
             Configuration lessConfig = new Configuration();
-            lessConfig.setCompressing(
-                    RuntimeConfigurationType.DEPLOYMENT.equals(getConfigurationType()));
+            lessConfig.setCompressing(DEPLOYMENT.equals(getConfigurationType()));
             return lessConfig;
         };
         
@@ -193,7 +195,7 @@ public abstract class WicketApplicationBase
         settings.setCssResourceReference(CustomBootstrapLessReference.get());
     }
 
-    protected void initBaseLayoutCss()
+    protected void initAddBaseLayoutCssToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
@@ -201,7 +203,7 @@ public abstract class WicketApplicationBase
             }
         });
     }
-    protected void initKendo()
+    protected void addKendoResourcesToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
@@ -211,7 +213,7 @@ public abstract class WicketApplicationBase
         });
     }
 
-    protected void initFontAwesome()
+    protected void addFontAwesomeToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
@@ -220,7 +222,7 @@ public abstract class WicketApplicationBase
         });
     }
     
-    protected void initCssBrowserSelector()
+    protected void addCssBrowserSelectorToAllPages()
     {
         getComponentInstantiationListeners().add(component -> {
             if (component instanceof Page) {
@@ -229,7 +231,7 @@ public abstract class WicketApplicationBase
         });
     }
     
-    protected void initJQueryUI()
+    protected void addJQueryUIResourcesToAllPages()
     {
         JQueryUILibrarySettings jqueryUiCfg = JQueryUILibrarySettings.get();
         // Here we ensure that bootstrap is loaded before JQuery UI such that the
@@ -244,6 +246,14 @@ public abstract class WicketApplicationBase
         });
     }
     
+    protected void addJQueryJavascriptToAllPages()
+    {
+        getComponentInstantiationListeners().add(component -> {
+            if (component instanceof Page) {
+                component.add(new JQueryJavascriptBehavior());
+            }
+        });
+    }
     protected void initMDCLifecycle()
     {
         getRequestCycleListeners().add(new AbstractRequestCycleListener()
@@ -312,8 +322,14 @@ public abstract class WicketApplicationBase
         mounts.mount(this);
     }
 
-    protected void initDynamicJQueryResourceReference()
+    protected void initJQueryResourceReference()
     {
+<<<<<<< HEAD
+=======
+        // See: 
+        // https://github.com/webanno/webanno/issues/1397
+        // https://github.com/sebfz1/wicket-jquery-ui/issues/311
+>>>>>>> 3.6.x
         getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
     }
 
