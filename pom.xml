@@ -54,24 +54,29 @@
     </repository>
   </distributionManagement>
   <properties>
-    <webanno.version>4.0.0-beta-1</webanno.version>
-    <uima.version>3.1.0</uima.version>
-    <dkpro.version>2.0.0</dkpro.version>
+    <maven.surefire.heap>6g</maven.surefire.heap>
+    <maven.compiler.target>8</maven.compiler.target>
+    <maven.compiler.source>8</maven.compiler.source>
+    <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
+
+    <mockito.version>2.28.2</mockito.version>
+    <assertj.version>3.13.2</assertj.version>
     <spring.version>5.1.10.RELEASE</spring.version>
-    <spring.boot.version>2.1.8.RELEASE</spring.boot.version>
+    <spring.boot.version>2.1.9.RELEASE</spring.boot.version>
+    <spring.security.version>5.1.6.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
+    <dkpro.version>2.0.0</dkpro.version>
+    <uima.version>3.1.0</uima.version>
+    <log4j.version>2.12.1</log4j.version>
+
+    <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
     <mtas.version>7.3.0.3</mtas.version>
     <rdf4j.version>2.5.1-inception-1</rdf4j.version>
-    <mockito.version>2.28.2</mockito.version>
-    <assertj.version>3.13.2</assertj.version>
     <okhttp.version>3.14.2</okhttp.version>
-    <maven.surefire.heap>6g</maven.surefire.heap>
-    <maven.compiler.target>8</maven.compiler.target>
-    <maven.compiler.source>8</maven.compiler.source>
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
   </properties>
   <modules>
@@ -508,6 +513,24 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
+      </dependency>
+      
+      <!-- LOG4J -->
+      
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
       </dependency>
       
       <!-- LUCENE MTAS -->
