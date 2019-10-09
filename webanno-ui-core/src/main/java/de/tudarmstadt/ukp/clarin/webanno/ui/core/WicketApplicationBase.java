@@ -324,12 +324,9 @@ public abstract class WicketApplicationBase
 
     protected void initJQueryResourceReference()
     {
-<<<<<<< HEAD
-=======
         // See: 
         // https://github.com/webanno/webanno/issues/1397
         // https://github.com/sebfz1/wicket-jquery-ui/issues/311
->>>>>>> 3.6.x
         getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
     }
 
