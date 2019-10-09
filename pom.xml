@@ -58,18 +58,20 @@
     <maven.compiler.target>8</maven.compiler.target>
     <maven.compiler.source>8</maven.compiler.source>
     <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
-
     <dkpro.core.testCachePath>${session.executionRootDirectory}/cache/dkpro-core-datasets</dkpro.core.testCachePath>
 
     <mockito.version>2.28.2</mockito.version>
     <assertj.version>3.13.2</assertj.version>
     <spring.version>5.1.10.RELEASE</spring.version>
     <spring.boot.version>2.1.9.RELEASE</spring.boot.version>
+    <spring.security.version>5.1.6.RELEASE</spring.security.version>
     <wicket.version>8.6.1</wicket.version>
     <wicketstuff.version>8.6.0</wicketstuff.version>
     <wicket-jquery-ui.version>8.3.0</wicket-jquery-ui.version>
     <dkpro.version>2.0.0</dkpro.version>
     <uima.version>3.1.0</uima.version>
+    <log4j.version>2.12.1</log4j.version>
+
     <webanno.version>4.0.0-SNAPSHOT</webanno.version>
     <lucene.version>7.3.1</lucene.version>
     <elasticsearch.version>6.3.0</elasticsearch.version>
@@ -511,6 +513,24 @@
         <groupId>org.springframework</groupId>
         <artifactId>spring-aspects</artifactId>
         <version>${spring.version}</version>
+      </dependency>
+      
+      <!-- LOG4J -->
+      
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
       </dependency>
       
       <!-- LUCENE MTAS -->
