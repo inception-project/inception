@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static com.googlecode.wicket.kendo.ui.KendoUIBehavior.widget;
 import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 
 import org.apache.wicket.MarkupContainer;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.googlecode.wicket.jquery.core.template.IJQueryTemplate;
-import com.googlecode.wicket.kendo.ui.KendoUIBehavior;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBox;
 import com.googlecode.wicket.kendo.ui.form.combobox.ComboBoxBehavior;
 
@@ -101,9 +101,18 @@ public class KendoComboboxTextFeatureEditor
                 // changed the ordering
                 RequestCycle.get().find(AjaxRequestTarget.class).ifPresent(target -> {
                     LOG.trace("onInitialize() requesting datasource re-reading");
-                    target.appendJavaScript(
-                            String.format("var $w = %s; if ($w) { $w.dataSource.read(); }",
-                                    KendoUIBehavior.widget(this, ComboBoxBehavior.METHOD)));
+                    target.appendJavaScript(String.join("\n",
+                            "try {",
+                            "  console.log('chugga');",
+                            "  var $w = " + widget(this, ComboBoxBehavior.METHOD) + ";",
+                            "  if ($w) {",
+                            "    $w.dataSource.read();",
+                            "    console.log('wumba');",
+                            "  }",
+                            "}",
+                            "catch(error) {",
+                            "  console.error(error);",
+                            "}"));
                 });
             }
         };
