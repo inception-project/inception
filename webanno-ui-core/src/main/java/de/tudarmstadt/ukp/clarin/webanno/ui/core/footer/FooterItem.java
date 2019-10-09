@@ -21,5 +21,9 @@ import org.apache.wicket.Component;
 
 public interface FooterItem
 {
+    static int ORDER_LEFT = -1000;
+    static int ORDER_RIGHT = 0;
+    static int ORDER_CENTER = 1000;
+    
     Component create(String aId);
 }
