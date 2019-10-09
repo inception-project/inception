@@ -314,7 +314,7 @@ public abstract class WicketApplicationBase
 
     protected void initDynamicJQueryResourceReference()
     {
-        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV3());
+        getJavaScriptLibrarySettings().setJQueryReference(JQueryResourceReference.getV2());
     }
 
     protected void initNestedStringResourceLoader()
