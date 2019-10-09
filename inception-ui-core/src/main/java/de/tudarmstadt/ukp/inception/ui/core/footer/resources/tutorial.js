@@ -15,10 +15,7 @@
 #See the License for the specific language governing permissions and
 #limitations under the License.
 */
-
-$(document).ready(
-		function() {
-
+$(document).ready(function() {
 			var enjoyhint_instance = new EnjoyHint({
 				onSkip : function() {
 					// reset all the cookies
@@ -32,7 +29,6 @@ $(document).ready(
 			var cName = document.location.pathname.match(/[^\/]+$/)[0];
 			//createCookieName(currentPage);
 			var ps = getCookie(cName); 
-			debugger;
 
 			if (currentPage.includes("projects.html")) {
 				ps = getCookie(cName);
@@ -65,12 +61,11 @@ $(document).ready(
 
 				}
 			} else if (currentPage.includes("projectsetting.html") 
-					&& projectId == 'NEW' && ps != "redirect") {
-
+					&& projectId == 'NEW' && ps != "projectSaved") {
 				enjoyhint_instance = new EnjoyHint({
 					onEnd : function() {
 						// reset all the cookies
-						setCookie(cName, 'redirect');
+						setCookie(cName, 'projectSaved');
 					},
 					onSkip : function() {
 						setCookie(cName, true);
@@ -81,7 +76,7 @@ $(document).ready(
 				ps = getCookie(cName);
 				if (ps == 'true') {
 				} else {
-					ps = 'redirect';
+					ps = 'projectSaved';
 					if (ps != "" && ps != null) {
 						setCookie(cName, ps, 365);
 					}
@@ -91,14 +86,21 @@ $(document).ready(
 					enjoyhint_instance.runScript();
 				}
 			} else if (currentPage.includes("projectsetting.html")
-					&& projectId == 'NEW' && ps == "redirect") {
+					&& projectId == 'NEW' && ps == "projectSaved") {
+
+				//save the project name in the cookie
+				var projectName = $('[name="p::name"]').val()
+				setCookie("projectName", projectName, 365);
+				
+				//re-initialize the instance
 				enjoyhint_instance = new EnjoyHint({});
 
-				ps = true;
+				//reset the projectsetting cookie so the tutorial shows up on the settings page later
+				ps = "";
 				if (ps != "" && ps != null) {
 					setCookie(cName, ps, 365);
 				}
-				enjoyhint_script_steps = createRedirectRoutine();
+				enjoyhint_script_steps = createProjectSavedRoutine();
 				enjoyhint_instance.set(enjoyhint_script_steps);
 				enjoyhint_instance.runScript();
 
@@ -118,11 +120,10 @@ $(document).ready(
 			} else if (currentPage.includes("projectsetting.html")) {
 				var ps = getCookie(cName);
 				
-				debugger;
-
 				if (ps == 'true') {
 					// alert("PS Visited? " + ps);
 				} 
+				//TODO do we need it
 				else if (ps == "recommenderSaved") {
 					ps = true;
 					if (ps != "" && ps != null) {
@@ -133,9 +134,10 @@ $(document).ready(
 					enjoyhint_instance.runScript();
 				}
 				else {
-					enjoyhint_instance = new EnjoyHint({
+					enjoyhint_instance = new EnjoyHint({     
+						
 						onEnd : function() {
-							ps = "recommenderSaved";
+							ps = "true";
 							if (ps != "" && ps != null) {
 								setCookie(cName, ps, 365);
 							}
@@ -146,13 +148,14 @@ $(document).ready(
 
 					});
 
-					enjoyhint_script_steps = createSettingsRoutine();
+					enjoyhint_script_steps = createSettingsRoutine(enjoyhint_instance);
 					enjoyhint_instance.set(enjoyhint_script_steps);
 					enjoyhint_instance.runScript();
 				}
 			}
-
 		});
+
+
 
 function setCookie(cname, cvalue, exdays) {
 	var d = new Date();
@@ -178,18 +181,11 @@ function getCookie(cname) {
 
 function createNewProjectRoutine() {
 	var a = [ {
-		'change [name=\'p::name\']' : 'Enter the name of the project and click next',
-		'nextButton' : {
-			className : "myNext",
-			text : "Next"
-		},
-		'skipButton' : {
-			className : "mySkip",
-			text : "Nope!"
-		}
-	}, {
-		'click [type=submit]' : 'Click save'
+		'key [name=\'p::name\']' : 'Write the name of the project and press Enter',
 	}
+//	, {
+//		'click [type=submit]' : 'Click save'
+//	}
 
 	];
 	return a;
@@ -198,14 +194,14 @@ function createNewProjectRoutine() {
 function createFirstPageRoutine() {
 	var a = [
 			{
-				'next .navbar-brand' : 'Welcome to INCEpTION! Let me guide you through its features.',
+				'next .navbar-brand' : 'Welcome to INCEpTION! Let me guide you through its features. At any time during the tutorial you can skip and exit the tour',
 				'nextButton' : {
 					className : "myNext",
 					text : "Sure"
 				},
 				'skipButton' : {
 					className : "mySkip",
-					text : "Nope!"
+					text : "Skip"
 				}
 			},
 			{
@@ -215,6 +211,13 @@ function createFirstPageRoutine() {
 }
 
 function createFirstPageRoutinePart2() {
+	var projectName = getCookie("projectName");
+	var selector = "a:contains('"+projectName+"'):first";
+	
+	var t = $('a').filter(function() {
+		 return $(this).text() == projectName;
+    });
+	
 	var a = [
 
 			{
@@ -224,35 +227,43 @@ function createFirstPageRoutinePart2() {
 				'next .input-group:last' : "You can filter the projects based on the ownership type",
 			},
 			{
-				'click .list-group-item' : "Click on the project to get started.",
+				"event": "click", 
+				"selector": t[0], 
+				"description": "Click on the project to get started.",
+				
 
-			} ];
+			} 
+			];
 	return a;
 }
 
 function createDashboardRoutine() {
 	var a = [
+		{
+			'next li:first-of-type' : 'Here, you can annotate your documents',
+		},
+		{
+			'next li:nth-of-type(2)' : 'Completely annotated documents can be curated to form the  final result documents.',
+		},
+		{
+			'next li:nth-of-type(3)' : 'This will show you the agreement between annotators across  documents.',
+		},
+		{
+			'next li:nth-of-type(4)' : 'Here, you can see the annotators\' progress and assign documents.',
+		},
+		{
+			'next li:nth-of-type(5)' : 'This allows you to evaluate your recommenders.',
+		},
 			{
-				'next .nav-pills' : 'Lets explore the main features regarding the project',
-				'nextButton' : {
-					className : "myNext",
-					text : "Okay!"
-				},
-				'skipButton' : {
-					className : "mySkip",
-					text : "Skip"
-				}
-			},
-			{
-				'click li:nth-last-child(1)' : "Before getting started, lets configure the project"
+				'click li:nth-last-child(1)' : "Before getting started, lets configure the project. Please click Settings"
 			} ];
 	return a;
 }
 
-function createSettingsRoutine() {
+function createSettingsRoutine(enjoyHint) {
 	var a = [
 			{
-				'click .tab2' : 'Click here to add a the document to the project',
+				'click .tab2' : 'Click here to add a document to the project',
 			},
 			{
 				'next [class=flex-h-container]' : "Upload a file and import. Then click Next.",
@@ -260,17 +271,71 @@ function createSettingsRoutine() {
 				'click .tab5' : "Now, lets add a recommender. Click here!",
 			}, {
 				'click [value=Create]' : "Click to create a new recommender",
-			}, {
-				'next form:last' : "Fill in the details and click next",
-			}, {
-				'click [name=save]' : "Click to save",
-			} ];
+			},
+			 {
+				'next .form-group:nth(2)' : "Select a Layer", 
+				onBeforeStart:function(){ 
+				       $('[name=layer]').on('change', function() {
+						  enjoyHint.trigger('next'); 
+				    	});
+					}
+			},
+			 {
+				'next .form-group:nth(3)' : "Select a Feature", 
+				onBeforeStart:function(){ 
+				       $('[name=feature]').on('change', function() {
+							  enjoyHint.trigger('next'); 
+				    	});
+					}
+			},
+			 {
+				'next .form-group:nth(4)' : "Select a Tool", 
+				onBeforeStart:function(){ 
+				       $('[name=tool]').on('change', function() {
+							enjoyHint.trigger('next'); 
+				    	});
+				},
+			},
+
+			{
+				"event_type": "custom", 
+				"event": "event-save-recommender", 
+				"selector": "[method=post]", 
+				"description": "Fill in the details and click save", 
+				onBeforeStart:function(){ 
+				     $("[name=\'save\']").on('click',
+								function(e) { 
+									enjoyHint.trigger('next'); 
+								});
+				     
+				}, 
+		     
+
+			}, 
+			{
+				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+			}
+			];
 
 	return a;
 }
 
-function createRedirectRoutine() {
-	debugger;
+function createSettingsRoutine2() {
+	var a = [
+			{
+				"event_type": "custom", 
+				"event": "event-save-recommender", 
+				"selector": "[method=post]", 
+				"description": "Fill in the details and click save", 
+			}, 
+			{
+				'click [href=\'./project.html\']:last' : 'Now, lets go to the Dashboard',
+			}
+			];
+
+	return a;
+}
+function createProjectSavedRoutine() {
 	var a = [ {
 		'click .navbar-link' : 'Click here to go back to the projects page'
 	} ];
@@ -304,3 +369,5 @@ function getUrlParameter(sParam) {
 		}
 	}
 };
+
+
