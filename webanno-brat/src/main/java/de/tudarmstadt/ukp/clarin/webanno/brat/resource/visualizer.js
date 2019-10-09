@@ -943,7 +943,7 @@ var Visualizer = (function($, window, undefined) {
 
           sentenceNo++;
           chunk.sentence = sentenceNo;
-          console.log("ASSIGN: line break ", sentenceNo ," at ", chunk);
+          // console.trace("ASSIGN: line break ", sentenceNo ," at ", chunk);
 
           // increase chunkNo counter for next seek iteration
           chunkNo++;
