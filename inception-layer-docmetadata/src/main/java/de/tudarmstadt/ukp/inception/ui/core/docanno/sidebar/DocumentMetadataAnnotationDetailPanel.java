@@ -435,7 +435,7 @@ public class DocumentMetadataAnnotationDetailPanel extends Panel
     }
     
     @OnEvent(stop = true)
-    public void onLinkFeatureSetEvent(FeatureEditorValueChangedEvent aEvent)
+    public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent)
     {
         actionAnnotate(aEvent.getTarget());
     }
