@@ -418,7 +418,7 @@ public class AccessSpecificSettingsPanel
         aTarget.add(listViewContainer, infoContainerLocal);
     }
 
-    private File uploadFile(FileUpload fu) throws Exception
+    private File uploadFile(FileUpload fu) throws IOException
     {
         String fileName = fu.getClientFileName();
         if (!uploadedFiles.containsKey(fileName)) {
