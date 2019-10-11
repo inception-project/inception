@@ -163,7 +163,7 @@ public class SearchServiceImpl
     }
 
     @EventListener
-    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws Exception
+    public void beforeDocumentRemove(BeforeDocumentRemovedEvent aEvent) throws IOException
     {
         log.trace("Starting beforeDocumentRemove");
 
