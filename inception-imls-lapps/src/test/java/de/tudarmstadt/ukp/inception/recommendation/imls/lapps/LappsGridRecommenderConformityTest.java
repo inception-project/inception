@@ -18,11 +18,16 @@
 package de.tudarmstadt.ukp.inception.recommendation.imls.lapps;
 
 import static de.tudarmstadt.ukp.clarin.webanno.support.JSONUtil.getObjectMapper;
+import static java.net.HttpURLConnection.HTTP_MOVED_PERM;
+import static java.net.HttpURLConnection.HTTP_MOVED_TEMP;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -99,6 +104,8 @@ public class LappsGridRecommenderConformityTest
 
     private void predict(String aUrl, CAS aCas) throws Exception
     {
+        assumeTrue(isReachable(aUrl));
+        
         LappsGridRecommenderTraits traits = new LappsGridRecommenderTraits();
         traits.setUrl(aUrl);
         LappsGridRecommender recommender = new LappsGridRecommender(buildRecommender(), traits);
@@ -166,4 +173,28 @@ public class LappsGridRecommenderConformityTest
 
         return recommender;
     }
+    
+    public static boolean isReachable(String aUrl)
+    {
+        try {
+            URL url = new URL(aUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+            con.setConnectTimeout(2500);
+            con.setReadTimeout(2500);
+            con.setRequestProperty("Content-Type", "application/sparql-query");
+            int status = con.getResponseCode();
+            
+            if (status == HTTP_MOVED_TEMP || status == HTTP_MOVED_PERM) {
+                String location = con.getHeaderField("Location");
+                return isReachable(location);
+            }
+            
+            return true;
+        }
+        catch (Exception e) {
+            return false;
+        }
+    }
 }
+

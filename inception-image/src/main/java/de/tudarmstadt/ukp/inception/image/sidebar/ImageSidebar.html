@@ -38,10 +38,12 @@
         <div wicket:id="mainContainer" class="flex-content flex-v-container flex-gutter">
           <wicket:container wicket:id="images">
             <div style="position: relative;">
-              <img wicket:id="image" class="img-thumbnail img-responsive" crossorigin="anonymous"/>
+              <a wicket:id="jumpTo">
+                <img wicket:id="image" class="img-thumbnail img-responsive" crossorigin="anonymous"/>
+              </a>
               <div style="position: absolute; top: 5px; right: 5px;" class="showOnHover">
                 <a wicket:id="open" target="_blank" class="btn btn-xs btn-default">
-                  <i class="fa fa-external-link" aria-hidden="true"></i>
+                  <i class="fas fa-external-link-alt"></i>
                 </a>
               </div>
             </div>

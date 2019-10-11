@@ -23,8 +23,6 @@ NOTE: It is assumed that you plan to test the {product-name} standalone version 
 
 All materials, including this guide, are available via the link:{product-website-url}[{product-name} homepage].
 
-
-
 = Introduction
 
 include::{include-dir}getting-started.adoc[leveloffset=+1]
@@ -141,6 +139,8 @@ include::{include-dir}projects_recommendation_conceptlinker.adoc[leveloffset=+2]
 include::{include-dir}projects_recommendation_external.adoc[leveloffset=+2]
 
 include::{include-dir}projects_recommendation_lappsgrid.adoc[leveloffset=+2]
+
+include::{include-dir}projects_recommendation_weblicht.adoc[leveloffset=+2]
 
 include::{include-dir}projects_tagsets.adoc[leveloffset=+2]
 

@@ -18,6 +18,8 @@
 package de.tudarmstadt.ukp.inception.search.index.mtas;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.ProjectService.PROJECT_FOLDER;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUimaParser.getIndexedName;
 import static de.tudarmstadt.ukp.inception.search.index.mtas.MtasUtils.decodeFSAddress;
 import static org.apache.uima.cas.SerialFormat.SERIALIZED_TSI;
@@ -305,6 +307,7 @@ public class MtasDocumentIndex
         return result;
     }
 
+
     private long countResults(IndexReader aIndexReader,
         SearchQueryRequest aRequest, MtasSpanQuery q) throws IOException
     {
@@ -404,7 +407,7 @@ public class MtasDocumentIndex
             .forEach(e -> annotateableDocuments.put(e.getKey().getId(), e.getValue().getId()));
         return annotateableDocuments;
     }
-
+    
     private Map<String, List<SearchResult>> doQuery(IndexReader aIndexReader,
         SearchQueryRequest aRequest, String field, MtasSpanQuery q)
         throws IOException
@@ -416,8 +419,11 @@ public class MtasDocumentIndex
 
         IndexSearcher searcher = new IndexSearcher(aIndexReader);
 
-        Map<Long, Long> annotatableDocuments = listAnnotatableDocuments(aRequest.getProject(),
-            aRequest.getUser());
+        Map<SourceDocument, AnnotationDocument> sourceAnnotationDocPairs = documentService
+                .listAnnotatableDocuments(aRequest.getProject(), aRequest.getUser());
+        Map<Long, SourceDocument> sourceDocumentIndex = new HashMap<>();
+        sourceAnnotationDocPairs.entrySet().stream()
+                .forEach(e -> sourceDocumentIndex.put(e.getKey().getId(), e.getKey()));
 
         final float boost = 0;
         SpanWeight spanweight = q.rewrite(aIndexReader).createWeight(searcher, false, boost);
@@ -455,9 +461,29 @@ public class MtasDocumentIndex
                                 continue;
 
                             }
+                            
                             long sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                             long annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
-
+                            boolean matchInSourceDocument = annotationDocumentId == -1;
+                            
+                            SourceDocument sourceDocument = sourceDocumentIndex
+                                    .get(sourceDocumentId);
+                            
+                            if (sourceDocument == null) {
+                                // Document is not annotatable by this user, so we skip this result
+                                continue;
+                            }
+                            
+                            AnnotationDocument annotationDocument = sourceAnnotationDocPairs
+                                    .get(sourceDocument);
+                            
+                            if (annotationDocument != null
+                                    && IGNORE != annotationDocument.getState()) {
+                                // Skip if the document is ignored for this user
+                                log.trace("Skipping results from ignored document {}",
+                                        sourceDocumentId);
+                            }
+                            
                             // If the query is limited to a given document, skip any results
                             // which are not in the given document
                             Optional<SourceDocument> limitedToDocument = aRequest
@@ -470,13 +496,13 @@ public class MtasDocumentIndex
                                 continue;
                             }
 
-                            if (annotatableDocuments.containsKey(sourceDocumentId)
-                                && annotationDocumentId == -1) {
+                            if (matchInSourceDocument && annotationDocument != null) {
                                 // Exclude result if the retrieved document is a sourcedocument
-                                // (that is, has annotationDocument = -1) AND it has a
-                                // corresponding annotation document for this user
-                                log.trace("Skipping results from indexed source document {} in" + "favor of results from the corresponding annotation "
-                                    + "document", sourceDocumentId);
+                                // AND it has a corresponding annotation document for this user
+                                // AND the document is not ignored for this user
+                                log.trace("Skipping results from indexed source document {} in"
+                                        + "favor of results from the corresponding annotation "
+                                        + "document", sourceDocumentId);
                                 continue;
                             }
                             else if (annotationDocumentId != -1 && !aRequest.getUser().getUsername()
@@ -540,7 +566,10 @@ public class MtasDocumentIndex
                                         .mapToInt(MtasTokenString::getOffsetEnd).max().getAsInt());
                                 result.setTokenStart(matchStart);
                                 result.setTokenLength(matchEnd - matchStart);
-
+                                result.setReadOnly(annotationDocument != null
+                                        && FINISHED.equals(annotationDocument.getState()));
+                                result.setSelectedForAnnotation(!result.isReadOnly());
+                                
                                 MtasTokenString prevToken = null;
                                 for (MtasTokenString token : tokens) {
                                     if (!token.getPrefix().equals(DEFAULT_PREFIX)) {
@@ -594,7 +623,6 @@ public class MtasDocumentIndex
                                     // if no annotation feature is specified group by document title
                                     addToResults(results, result.getDocumentTitle(), result);
                                 }
-
                             }
                         }
                     }
