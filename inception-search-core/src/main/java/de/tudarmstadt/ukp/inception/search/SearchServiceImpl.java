@@ -392,7 +392,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent) throws Exception
+    public void afterDocumentCreate(AfterDocumentCreatedEvent aEvent)
     {
         log.trace("Starting afterDocumentCreate");
 
