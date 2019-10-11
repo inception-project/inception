@@ -23,33 +23,19 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
 
 public abstract class LinkFeatureEvent
+    extends FeatureEditorEvent
 {
-    private final FeatureState fs;
-    
     private final LinkWithRoleModel linkWithRoleModel;
-    
-    private final AjaxRequestTarget target;
     
     public LinkFeatureEvent(FeatureState aFs, AjaxRequestTarget aTarget,
             LinkWithRoleModel aLinkWithRoleModel)
     {
-        fs = aFs;
+        super(aFs, aTarget);
         linkWithRoleModel = aLinkWithRoleModel;
-        target = aTarget;
-    }
-    
-    public FeatureState getFeatureState()
-    {
-        return fs;
     }
     
     public LinkWithRoleModel getLinkWithRoleModel()
     {
         return linkWithRoleModel;
-    }
-    
-    public AjaxRequestTarget getTarget()
-    {
-        return target;
     }
 }

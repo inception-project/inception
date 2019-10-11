@@ -16,25 +16,30 @@
  * limitations under the License.
  */
 function applyTooltip(aElement) {
-  if (!$(aElement).data('ui-tooltip')) {
-    $(aElement).tooltip({
-      position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
-      show: false,
-      hide: false,
-      create: function( event, ui ) {
-        // The elements to which the tooltips are bound may be dynamically discarded and reloaded
-        // and may not receive the events then which usually cause the tooltip to disappear. To
-        // avoid orphan tooltips hanging around, clear all JQuery tooltips here before rendering
-        // new ones.
-        $("[role='tooltip']").each(function() { $(this).remove(); });
-      },
-      content: function() { 
-        var html =  
-          '<div class="tooltip-title">' + ($(this).text() ? $(this).text() : 'no title') +
-          '</div> <div class="tooltip-content tooltip-pre">' + ($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</div>';
-        return html;
-      }
-    });
-    setTimeout(function() { $(aElement).tooltip().mouseover();; }, 0);
+  try {
+    if (!$(aElement).data('ui-tooltip')) {
+      $(aElement).tooltip({
+        position: { my: 'center bottom', at: 'center top', of: '.page-footer' },
+        show: false,
+        hide: false,
+        create: function( event, ui ) {
+          // The elements to which the tooltips are bound may be dynamically discarded and reloaded
+          // and may not receive the events then which usually cause the tooltip to disappear. To
+          // avoid orphan tooltips hanging around, clear all JQuery tooltips here before rendering
+          // new ones.
+          $("[role='tooltip']").each(function() { $(this).remove(); });
+        },
+        content: function() { 
+          var html =  
+            '<div class="tooltip-title">' + ($(this).text() ? $(this).text() : 'no title') +
+            '</div> <div class="tooltip-content tooltip-pre">' + ($(this).attr('title') ? $(this).attr('title') : 'no description' )+'</div>';
+          return html;
+        }
+      });
+      setTimeout(function() { $(aElement).tooltip().mouseover();; }, 0);
+    }
+  }
+  catch (e) {
+    consoler.error(e);
   }
 }

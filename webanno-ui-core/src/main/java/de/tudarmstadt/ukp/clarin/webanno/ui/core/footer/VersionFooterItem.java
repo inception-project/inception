@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.core.footer;
 import org.apache.wicket.Component;
 import org.springframework.core.annotation.Order;
 
-@Order(0)
+@Order(FooterItem.ORDER_CENTER)
 @org.springframework.stereotype.Component
 public class VersionFooterItem
     implements FooterItem
