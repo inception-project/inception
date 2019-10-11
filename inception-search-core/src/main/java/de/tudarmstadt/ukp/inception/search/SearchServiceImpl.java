@@ -305,7 +305,7 @@ public class SearchServiceImpl
 
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
-    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent) throws Exception
+    public void afterAnnotationUpdate(AfterCasWrittenEvent aEvent)
     {
         log.trace("Starting afterAnnotationUpdate");
 
