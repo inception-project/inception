@@ -404,7 +404,6 @@ public class SearchServiceImpl
     @TransactionalEventListener(fallbackExecution = true)
     @Transactional
     public void beforeLayerConfigurationChanged(LayerConfigurationChangedEvent aEvent)
-        throws Exception
     {
         log.trace("Starting beforeLayerConfigurationChanged");
 
