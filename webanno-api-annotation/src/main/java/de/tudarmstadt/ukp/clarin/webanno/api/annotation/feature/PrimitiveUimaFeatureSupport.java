@@ -23,6 +23,8 @@ import static java.util.Arrays.asList;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.resource.metadata.TypeDescription;
@@ -45,6 +47,9 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.InputFiel
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoAutoCompleteTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.KendoComboboxTextFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraits;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.NumberFeatureTraitsEditor;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.RatingFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.TextAreaFeatureEditor;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraits;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor.UimaStringTraitsEditor;
@@ -60,7 +65,7 @@ public class PrimitiveUimaFeatureSupport
     implements FeatureSupport<Void>, InitializingBean
 {
     private final Logger log = LoggerFactory.getLogger(getClass());
-    
+
     private final PrimitiveUimaFeatureSupportProperties properties;
     
     private final AnnotationSchemaService schemaService;
@@ -182,6 +187,8 @@ public class PrimitiveUimaFeatureSupport
             switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER:
             case CAS.TYPE_NAME_FLOAT:
+                editor = new NumberFeatureTraitsEditor(aId, this, aFeatureModel);
+                break;
             case CAS.TYPE_NAME_BOOLEAN:
                 editor = FeatureSupport.super.createTraitsEditor(aId, aFeatureModel);
                 break;
@@ -212,11 +219,22 @@ public class PrimitiveUimaFeatureSupport
         case NONE:
             switch (feature.getType()) {
             case CAS.TYPE_NAME_INTEGER: {
-                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel);
+                NumberFeatureTraits traits = readNumberFeatureTraits(feature);
+                if (traits.getEditorType().equals(NumberFeatureTraits.EDITOR_TYPE.RADIO_BUTTONS)) {
+                    int min = (int) traits.getMinimum();
+                    int max = (int) traits.getMaximum();
+                    List<Integer> range =
+                        IntStream.range(min, max + 1).boxed().collect(Collectors.toList());
+                    editor =
+                        new RatingFeatureEditor(aId, aOwner, aFeatureStateModel, range);
+                } else {
+                    editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
+                }
                 break;
             }
             case CAS.TYPE_NAME_FLOAT: {
-                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel);
+                NumberFeatureTraits traits = readNumberFeatureTraits(feature);
+                editor = new NumberFeatureEditor(aId, aOwner, aFeatureStateModel, traits);
                 break;
             }
             case CAS.TYPE_NAME_BOOLEAN: {
@@ -290,6 +308,24 @@ public class PrimitiveUimaFeatureSupport
         }
     }
     
+    // TODO: trait reading/writing needs to be handled in another way to avoid duplicate code
+    public NumberFeatureTraits readNumberFeatureTraits(AnnotationFeature aFeature)
+    {
+        NumberFeatureTraits traits = null;
+        try {
+            traits = JSONUtil.fromJsonString(NumberFeatureTraits.class, aFeature.getTraits());
+        }
+        catch (IOException e) {
+            log.error("Unable to read traits", e);
+        }
+        
+        if (traits == null) {
+            traits = new NumberFeatureTraits();
+        }
+        
+        return traits;
+    }
+    
     public UimaStringTraits readUimaStringTraits(AnnotationFeature aFeature)
     {
         UimaStringTraits traits = null;
@@ -299,12 +335,22 @@ public class PrimitiveUimaFeatureSupport
         catch (IOException e) {
             log.error("Unable to read traits", e);
         }
-        
+    
         if (traits == null) {
             traits = new UimaStringTraits();
         }
-        
+    
         return traits;
+    }
+    
+    public void writeNumberFeatureTraits(AnnotationFeature aFeature, NumberFeatureTraits aTraits)
+    {
+        try {
+            aFeature.setTraits(JSONUtil.toJsonString(aTraits));
+        }
+        catch (IOException e) {
+            log.error("Unable to write traits", e);
+        }
     }
     
     public void writeUimaStringTraits(AnnotationFeature aFeature, UimaStringTraits aTraits)

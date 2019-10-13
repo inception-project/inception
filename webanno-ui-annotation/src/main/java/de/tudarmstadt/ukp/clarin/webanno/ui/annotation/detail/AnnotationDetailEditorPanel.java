@@ -87,8 +87,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.event.AnnotationCreatedE
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.AnnotationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.FeatureEditorValueChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureDeletedEvent;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.event.LinkFeatureSetEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.AnnotatorState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.FeatureState;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.model.LinkWithRoleModel;
@@ -1714,8 +1714,7 @@ public abstract class AnnotationDetailEditorPanel
     }
     
     @OnEvent(stop = true)
-    public void onLinkFeatureSetEvent(LinkFeatureSetEvent aEvent)
-    {
+    public void onFeatureUpdatedEvent(FeatureEditorValueChangedEvent aEvent) {
         AjaxRequestTarget target = aEvent.getTarget();
         try {
             actionCreateOrUpdate(target, getEditorCas());

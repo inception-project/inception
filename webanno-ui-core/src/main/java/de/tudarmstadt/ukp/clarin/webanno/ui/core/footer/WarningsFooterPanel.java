@@ -22,6 +22,8 @@ import java.util.Properties;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.wicket.Session;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -69,6 +71,26 @@ public class WarningsFooterPanel
         WebMarkupContainer warningsContainer = new WebMarkupContainer("warnings");
         warningsContainer.setVisible(isBrowserWarningVisible || isDatabaseWarningVisible);  
         add(warningsContainer);
+    }
+    
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+        
+        aResponse.render(JavaScriptHeaderItem.forReference(
+                getApplication().getJavaScriptLibrarySettings().getJQueryReference()));
+        String script = String.join("\n",
+                "$(function () {",
+                "  $('[data-toggle=\"popover\"]').popover({",
+                "    html : true,",
+                "    content: function() {",
+                "      var content = $(this).attr('data-popover-content');",
+                "      return $(content).children('.popover-body').html();",
+                "    }",
+                "  });",
+                "});");
+        aResponse.render(JavaScriptHeaderItem.forScript(script, "popover"));
     }
     
     private boolean isDatabaseWarningVisible(Properties settings) {

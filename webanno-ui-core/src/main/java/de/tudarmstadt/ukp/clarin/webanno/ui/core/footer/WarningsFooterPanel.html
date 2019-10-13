@@ -17,22 +17,6 @@
 #limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<head>
-  <wicket:head>
-    <script>
-      /* see https://stackoverflow.com/a/26408903 */
-      $(function () {
-        $('[data-toggle="popover"]').popover({
-          html : true,
-          content: function() {
-                var content = $(this).attr("data-popover-content");
-                return $(content).children(".popover-body").html();
-              }
-        });
-      });
-    </script>
-  </wicket:head>
-</head>
 <body>
   <wicket:panel>
     <wicket:container wicket:id="warnings">
@@ -46,7 +30,7 @@
            title="Warnings"
            data-html="true"
            data-popover-content="#warning-popover">
-             <i class="fa fa-fw fa-warning"></i> Warnings</a>
+             <i class="fas fa-exclamation-triangle"></i> Warnings</a>
       </div>
     </wicket:container>
     

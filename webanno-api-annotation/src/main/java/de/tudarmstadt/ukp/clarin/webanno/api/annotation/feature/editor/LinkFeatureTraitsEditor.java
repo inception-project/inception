@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.editor;
 
+import static de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaBehavior.visibleWhen;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
@@ -36,13 +39,13 @@ import com.googlecode.wicket.jquery.core.JQueryBehavior;
 import com.googlecode.wicket.jquery.core.Options;
 import com.googlecode.wicket.kendo.ui.form.multiselect.MultiSelect;
 
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.feature.SlotFeatureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.support.bootstrap.select.BootstrapSelect;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.clarin.webanno.support.lambda.LambdaModel;
 
@@ -81,15 +84,11 @@ public class LinkFeatureTraitsEditor
             protected void onSubmit()
             {
                 super.onSubmit();
+                // when saving reset the selected tagset if role labels are not enabled
+                if (!traits.getObject().isEnableRoleLabels()) {
+                    feature.getObject().setTagset(null);
+                }
                 writeTraits();
-            }
-            
-            @Override
-            protected void onConfigure()
-            {
-                super.onConfigure();
-                
-                setVisible(feature.getObject().getTagset() != null);
             }
         };
         form.setOutputMarkupPlaceholderTag(true);
@@ -109,7 +108,16 @@ public class LinkFeatureTraitsEditor
         };
         defaultSlots.setChoices(LambdaModel.of(this::listTags));
         defaultSlots.setChoiceRenderer(new ChoiceRenderer<>("name"));
-        form.add(defaultSlots);        
+        defaultSlots.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()
+                && feature.getObject().getTagset() != null));
+        form.add(defaultSlots);
+    
+        CheckBox enableRoleLabels = new CheckBox("enableRoleLabels");
+        enableRoleLabels.setModel(PropertyModel.of(traits, "enableRoleLabels"));
+        enableRoleLabels.add(new LambdaAjaxFormComponentUpdatingBehavior("change", 
+            target -> target.add(form)
+        ));
+        form.add(enableRoleLabels);
         
         DropDownChoice<TagSet> tagset = new BootstrapSelect<>("tagset");
         tagset.setOutputMarkupPlaceholderTag(true);
@@ -123,7 +131,8 @@ public class LinkFeatureTraitsEditor
             traits.getObject().setDefaultSlots(new ArrayList<>());
             target.add(form);
         }));
-        add(tagset);
+        tagset.add(visibleWhen(() -> traits.getObject().isEnableRoleLabels()));
+        form.add(tagset);
     }
     
     private List<Tag> listTags()
@@ -151,6 +160,8 @@ public class LinkFeatureTraitsEditor
                 .filter(tag -> t.getDefaultSlots().contains(tag.getId()))
                 .forEach(result.getDefaultSlots()::add);
         
+        result.setEnableRoleLabels(t.isEnableRoleLabels());
+        
         return result;
     }
     
@@ -162,9 +173,16 @@ public class LinkFeatureTraitsEditor
     {
         LinkFeatureTraits t = new LinkFeatureTraits();
         
-        traits.getObject().getDefaultSlots().stream()
-                .map(tag -> tag.getId())
-                .forEach(t.getDefaultSlots()::add);
+        boolean enableRoleLabels = traits.getObject().isEnableRoleLabels();
+    
+        t.setEnableRoleLabels(enableRoleLabels);
+        
+        if (enableRoleLabels) {
+            // only set default slot values for tagsets if the role labels are enabled
+            traits.getObject().getDefaultSlots().stream()
+                    .map(tag -> tag.getId())
+                    .forEach(t.getDefaultSlots()::add);
+        }
         
         getFeatureSupport().writeTraits(feature.getObject(), t);
     }
@@ -184,6 +202,8 @@ public class LinkFeatureTraitsEditor
         private static final long serialVersionUID = 5804584375190949088L;
 
         private List<Tag> defaultSlots = new ArrayList<>();
+        
+        private boolean enableRoleLabels;
 
         public List<Tag> getDefaultSlots()
         {
@@ -194,6 +214,16 @@ public class LinkFeatureTraitsEditor
         public void setDefaultSlots(List<Tag> aDefaultSlots)
         {
             defaultSlots = aDefaultSlots;
+        }
+    
+        public boolean isEnableRoleLabels()
+        {
+            return enableRoleLabels;
+        }
+    
+        public void setEnableRoleLabels(boolean enableRoleLabels)
+        {
+            this.enableRoleLabels = enableRoleLabels;
         }
     }
 }
