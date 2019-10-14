@@ -46,6 +46,7 @@ import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.IAnnotationUnit;
+import org.dkpro.statistics.agreement.InsufficientDataException;
 import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
@@ -86,14 +87,18 @@ public class AgreementUtils
             else {
                 agreementResult.setAgreement(Double.NaN);
             }
-            return agreementResult;
             
+        }
+        catch (InsufficientDataException e) {
+            agreementResult.setAgreement(Double.NaN);
         }
         catch (RuntimeException e) {
             // FIXME
             dumpAgreementStudy(System.out, agreementResult);
             throw e;
         }
+
+        return agreementResult;
     }
     
     public static CodingAgreementResult makeCodingStudy(CasDiff aDiff, String aType,
