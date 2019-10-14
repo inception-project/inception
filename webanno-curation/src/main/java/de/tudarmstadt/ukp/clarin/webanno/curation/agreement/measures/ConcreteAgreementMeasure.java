@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.curation.agreement;
+package de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures;
 
 import org.dkpro.statistics.agreement.IAgreementMeasure;
 import org.dkpro.statistics.agreement.coding.CohenKappaAgreement;
@@ -24,6 +24,11 @@ import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.dkpro.statistics.agreement.coding.KrippendorffAlphaAgreement;
 import org.dkpro.statistics.agreement.distance.NominalDistanceFunction;
 
+/**
+ * @deprecated No longer to be used and going to be removed soon. This is replaced by the pluggable
+ *             mechanism provided by {@link AggreementMeasureSupport}.
+ */
+@Deprecated
 public enum ConcreteAgreementMeasure
 {
     COHEN_KAPPA_AGREEMENT(false),

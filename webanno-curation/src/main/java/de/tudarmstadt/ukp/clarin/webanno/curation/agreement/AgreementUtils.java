@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.curation.agreement;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.util.WebAnnoCasUtil.getFeature;
-import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
+import static de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.ConcreteAgreementMeasure.COHEN_KAPPA_AGREEMENT;
 import static java.util.Arrays.asList;
 
 import java.io.ByteArrayInputStream;
@@ -51,6 +51,7 @@ import org.dkpro.statistics.agreement.coding.CodingAnnotationStudy;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationItem;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 
+import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.measures.ConcreteAgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.curation.agreement.results.coding.CodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.Configuration;
@@ -68,6 +69,7 @@ public class AgreementUtils
         return getAgreement(COHEN_KAPPA_AGREEMENT, true, aDiff, aType, aFeature, aCasMap);
     }
 
+    @Deprecated
     public static CodingAgreementResult getAgreement(ConcreteAgreementMeasure aMeasure,
             boolean aExcludeIncomplete, CasDiff aDiff, String aType, String aFeature,
             Map<String, List<CAS>> aCasMap)
