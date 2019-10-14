@@ -1,0 +1,33 @@
+/*
+ * Copyright 2019
+ * Ubiquitous Knowledge Processing (UKP) Lab and FG Language Technology
+ * Technische Universität Darmstadt
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+function resizeDynamicTextArea(element) {
+  element.style.height = 'auto';
+  element.style.height = (2 + element.scrollHeight) + 'px';
+};
+
+function resizeTextAreas () {
+  var textareas = document.getElementsByClassName('dynamic-textarea');
+  for (var i = 0; i < textareas.length; i++) {
+    var textarea = textareas.item(i);
+    resizeDynamicTextArea(textarea);
+  };
+};
+
+window.addEventListener('load', resizeTextAreas);
+
+resizeTextAreas();

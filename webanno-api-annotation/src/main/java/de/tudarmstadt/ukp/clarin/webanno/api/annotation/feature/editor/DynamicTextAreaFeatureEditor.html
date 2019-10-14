@@ -19,27 +19,15 @@
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
   <div class="form-group" wicket:enclosure="value">
-    <script type="application/javascript">
-      function resizeDynamicTextArea(element) {
-        element.style.height = "auto";
-        element.style.height = (8 + element.scrollHeight) + "px";
-      };
-      
-      function resizeTextAreaDiv() {
-        var textarea = document.getElementById("textAreaDiv").getElementsByTagName("textarea")[0];
-        resizeDynamicTextArea(textarea);
-      }
-      
-      window.addEventListener("load", resizeTextAreaDiv);
-      
-      resizeTextAreaDiv();
-    </script>
     <label wicket:for="value" class="col-sm-3 control-label">
       <span wicket:id="feature"/><wicket:enclosure child="textIndicator">&nbsp;<span wicket:id="textIndicator"></span></wicket:enclosure>
     </label>
-    <div id="textAreaDiv" class="col-sm-9">
-      <textarea wicket:id="value" class="form-control" style="resize: none;" oninput="resizeDynamicTextArea(this)"></textarea>
+    <div class="col-sm-9">
+      <textarea wicket:id="value" class="form-control dynamic-textarea" style="resize: none;" oninput="resizeDynamicTextArea(this)"></textarea>
     </div>
   </div>
+  <script type="application/javascript">
+    resizeTextAreas();
+  </script>
 </wicket:panel>
 </html>
